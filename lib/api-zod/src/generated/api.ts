@@ -747,6 +747,8 @@ export const GetAiConfigResponse = zod.object({
   "tone": zod.string(),
   "announceGifts": zod.boolean(),
   "announceGiftThreshold": zod.number(),
+  "announceLevelUp": zod.boolean(),
+  "announceBossKill": zod.boolean(),
   "moderationEnabled": zod.boolean()
 })
 
@@ -759,6 +761,8 @@ export const UpdateAiConfigBody = zod.object({
   "tone": zod.string().optional(),
   "announceGifts": zod.boolean().optional(),
   "announceGiftThreshold": zod.number().optional(),
+  "announceLevelUp": zod.boolean().optional(),
+  "announceBossKill": zod.boolean().optional(),
   "moderationEnabled": zod.boolean().optional()
 })
 
@@ -769,6 +773,8 @@ export const UpdateAiConfigResponse = zod.object({
   "tone": zod.string(),
   "announceGifts": zod.boolean(),
   "announceGiftThreshold": zod.number(),
+  "announceLevelUp": zod.boolean(),
+  "announceBossKill": zod.boolean(),
   "moderationEnabled": zod.boolean()
 })
 
@@ -816,10 +822,13 @@ export const GenerateAiQuestsResponseItem = zod.object({
   "id": zod.number(),
   "sessionId": zod.number(),
   "streamerId": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "targetCount": zod.number(),
-  "reward": zod.string(),
+  "questText": zod.string(),
+  "metric": zod.string(),
+  "target": zod.number(),
+  "current": zod.number(),
+  "xpReward": zod.number(),
+  "completed": zod.boolean(),
+  "completedAt": zod.union([zod.coerce.date(),zod.null()]).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GenerateAiQuestsResponse = zod.array(GenerateAiQuestsResponseItem)
@@ -836,10 +845,13 @@ export const GetAiQuestsResponseItem = zod.object({
   "id": zod.number(),
   "sessionId": zod.number(),
   "streamerId": zod.number(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "targetCount": zod.number(),
-  "reward": zod.string(),
+  "questText": zod.string(),
+  "metric": zod.string(),
+  "target": zod.number(),
+  "current": zod.number(),
+  "xpReward": zod.number(),
+  "completed": zod.boolean(),
+  "completedAt": zod.union([zod.coerce.date(),zod.null()]).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetAiQuestsResponse = zod.array(GetAiQuestsResponseItem)

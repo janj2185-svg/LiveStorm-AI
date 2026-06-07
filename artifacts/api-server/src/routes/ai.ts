@@ -176,6 +176,13 @@ router.post("/ai/generate-quests", requireAuth, async (req: any, res: any) => {
     const { sessionId, viewerCount, sessionStats } = req.body;
     if (!sessionId) return res.status(400).json({ error: "sessionId is required" });
 
+    const session = await db.query.sessionsTable.findFirst({
+      where: eq(sessionsTable.id, Number(sessionId)),
+    });
+    if (!session || session.streamerId !== streamer.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     const persona = await getOrCreatePersona(streamer.id);
 
     const quests = await generateQuests({

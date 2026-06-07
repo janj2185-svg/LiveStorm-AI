@@ -1747,9 +1747,13 @@ components:
           type: boolean
         announceGiftThreshold:
           type: integer
+        announceLevelUp:
+          type: boolean
+        announceBossKill:
+          type: boolean
         moderationEnabled:
           type: boolean
-      required: [id, streamerId, personaName, tone, announceGifts, announceGiftThreshold, moderationEnabled]
+      required: [id, streamerId, personaName, tone, announceGifts, announceGiftThreshold, announceLevelUp, announceBossKill, moderationEnabled]
 
     AiPersonaConfigUpdate:
       type: object
@@ -1762,6 +1766,10 @@ components:
           type: boolean
         announceGiftThreshold:
           type: integer
+        announceLevelUp:
+          type: boolean
+        announceBossKill:
+          type: boolean
         moderationEnabled:
           type: boolean
 
@@ -1790,18 +1798,27 @@ components:
           type: integer
         streamerId:
           type: integer
-        title:
+        questText:
           type: string
-        description:
+        metric:
           type: string
-        targetCount:
+        target:
           type: integer
-        reward:
-          type: string
+        current:
+          type: integer
+        xpReward:
+          type: integer
+        completed:
+          type: boolean
+        completedAt:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
         createdAt:
           type: string
           format: date-time
-      required: [id, sessionId, streamerId, title, description, targetCount, reward, createdAt]
+      required: [id, sessionId, streamerId, questText, metric, target, current, xpReward, completed, createdAt]
 
     AiEventIdea:
       type: object

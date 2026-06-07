@@ -364,6 +364,8 @@ export interface AiPersonaConfig {
   tone: string;
   announceGifts: boolean;
   announceGiftThreshold: number;
+  announceLevelUp: boolean;
+  announceBossKill: boolean;
   moderationEnabled: boolean;
 }
 
@@ -372,6 +374,8 @@ export interface AiPersonaConfigUpdate {
   tone?: string;
   announceGifts?: boolean;
   announceGiftThreshold?: number;
+  announceLevelUp?: boolean;
+  announceBossKill?: boolean;
   moderationEnabled?: boolean;
 }
 
@@ -387,10 +391,13 @@ export interface AiQuest {
   id: number;
   sessionId: number;
   streamerId: number;
-  title: string;
-  description: string;
-  targetCount: number;
-  reward: string;
+  questText: string;
+  metric: string;
+  target: number;
+  current: number;
+  xpReward: number;
+  completed: boolean;
+  completedAt?: string | null;
   createdAt: string;
 }
 

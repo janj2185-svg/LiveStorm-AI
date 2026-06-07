@@ -138,8 +138,20 @@ export function useLiveSession(sessionId: number | null | undefined) {
       });
 
       socket.on("moderation:flagged", (payload: Omit<ModerationFlaggedEvent, "timestamp">) => {
+        const flaggedAt = Date.now();
         setFlaggedComments((prev) =>
-          [{ ...payload, timestamp: Date.now() }, ...prev].slice(0, 30),
+          [{ ...payload, timestamp: flaggedAt }, ...prev].slice(0, 30),
+        );
+        // Remove the flagged comment from the activity feed
+        setEvents((prev) =>
+          prev.filter(
+            (e) =>
+              !(
+                e.type === "comment" &&
+                e.username === payload.viewerName &&
+                (e.data.text as string) === payload.comment
+              ),
+          ),
         );
       });
 

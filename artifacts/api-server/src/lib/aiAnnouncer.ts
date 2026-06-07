@@ -40,7 +40,7 @@ export async function emitAiLevelUpAnnouncement(
 ) {
   try {
     const config = await getPersona(streamerId);
-    if (!config) return;
+    if (!config || !config.announceLevelUp) return;
     const text = await generateAnnouncement({
       type: "level_up",
       viewerName,
@@ -62,7 +62,7 @@ export async function emitAiBossDefeatedAnnouncement(
 ) {
   try {
     const config = await getPersona(streamerId);
-    if (!config) return;
+    if (!config || !config.announceBossKill) return;
     const text = await generateAnnouncement({
       type: "boss_kill",
       viewerName: killedBy,

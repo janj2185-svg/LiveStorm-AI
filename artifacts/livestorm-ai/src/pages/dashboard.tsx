@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Users, Gift, Heart, UserPlus, MessageSquare, Zap, Activity,
-  PlayCircle, Square, Clock, Share, Bot, ShieldAlert
+  PlayCircle, Square, Clock, Share, Bot, ShieldAlert, Swords, RefreshCw
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -286,7 +286,12 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* AI Announcements */}
+          {/* AI Quests Widget */}
+          {isActive && activeSessionId && (
+            <AiQuestsWidget sessionId={activeSessionId} cardGlow={cardGlow} />
+          )}
+
+          {/* AI Announcements + Moderation */}
           {isActive && (
             <Card className={`bg-card ${cardGlow} transition-colors duration-500`}>
               <CardHeader className="pb-3 border-b border-border/50">
@@ -296,7 +301,7 @@ export function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="h-[200px] overflow-y-auto p-3 space-y-2">
+                <div className="h-[180px] overflow-y-auto p-3 space-y-2">
                   {aiAnnouncements.length === 0 && flaggedComments.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
                       AI announcements will appear here
@@ -378,6 +383,109 @@ export function Dashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+interface AiQuestData {
+  id: number;
+  questText: string;
+  metric: string;
+  target: number;
+  current: number;
+  xpReward: number;
+  completed: boolean;
+}
+
+function AiQuestsWidget({ sessionId, cardGlow }: { sessionId: number; cardGlow: string }) {
+  const [quests, setQuests] = useState<AiQuestData[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  const fetchQuests = async () => {
+    try {
+      const res = await fetch(`${BASE}/api/ai/quests?sessionId=${sessionId}`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setQuests(data);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchQuests();
+  }, [sessionId]);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch(`${BASE}/api/ai/generate-quests`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setQuests(data);
+      }
+    } catch {} finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <Card className={`bg-card ${cardGlow} transition-colors duration-500`}>
+      <CardHeader className="pb-3 border-b border-border/50">
+        <CardTitle className="text-lg flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Swords className="h-5 w-5 text-purple-400" />
+            AI Quests
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-purple-400 hover:text-purple-300 px-2"
+            onClick={handleGenerate}
+            disabled={generating}
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${generating ? "animate-spin" : ""}`} />
+            {quests.length === 0 ? "Generate" : "Refresh"}
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-3 space-y-3">
+        {quests.length === 0 ? (
+          <div className="text-xs text-muted-foreground text-center py-3">
+            No quests yet — click Generate to create AI-crafted challenges
+          </div>
+        ) : (
+          quests.slice(0, 3).map((q) => {
+            const pct = Math.min(100, Math.round((q.current / q.target) * 100));
+            return (
+              <div key={q.id} className={`p-2 rounded-lg border ${q.completed ? "bg-green-500/10 border-green-500/20" : "bg-white/5 border-white/5"}`}>
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="text-xs text-white font-medium leading-tight flex-1">{q.questText}</p>
+                  <Badge variant="outline" className="text-[10px] shrink-0 border-purple-500/30 text-purple-400 px-1">
+                    +{q.xpReward} XP
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-white/10 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${q.completed ? "bg-green-400" : "bg-purple-500"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    {q.current}/{q.target}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

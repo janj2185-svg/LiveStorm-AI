@@ -13,5 +13,7 @@ export interface AiPersonaConfig {
   tone: string;
   announceGifts: boolean;
   announceGiftThreshold: number;
+  announceLevelUp: boolean;
+  announceBossKill: boolean;
   moderationEnabled: boolean;
 }

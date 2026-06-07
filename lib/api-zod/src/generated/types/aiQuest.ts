@@ -10,9 +10,12 @@ export interface AiQuest {
   id: number;
   sessionId: number;
   streamerId: number;
-  title: string;
-  description: string;
-  targetCount: number;
-  reward: string;
+  questText: string;
+  metric: string;
+  target: number;
+  current: number;
+  xpReward: number;
+  completed: boolean;
+  completedAt?: Date | null;
   createdAt: Date;
 }
