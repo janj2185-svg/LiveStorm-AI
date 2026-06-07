@@ -14,6 +14,7 @@ import obsRouter from "./obs";
 import aiRouter from "./ai";
 import billingRouter from "./billing";
 import adminRouter from "./admin";
+import tiktokRouter from "./tiktok";
 
 const router: IRouter = Router();
 
@@ -30,6 +31,7 @@ router.use(miniGamesRouter);
 router.use(universeRouter);
 router.use(obsRouter);
 router.use(aiRouter);
+router.use(tiktokRouter);
 router.use(billingRouter);
 router.use(adminRouter);
 

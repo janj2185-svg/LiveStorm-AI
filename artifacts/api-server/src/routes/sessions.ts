@@ -3,7 +3,13 @@ import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, getOrCreateUser } from "./users";
 import { getIO } from "../lib/socketServer";
-import { startTikTokConnection, stopTikTokConnection, getConnectionMode } from "../lib/tiktokConnector";
+import {
+  startTikTokConnection,
+  stopTikTokConnection,
+  getConnectionMode,
+  getConnectionError,
+  type ConnectionMode,
+} from "../lib/tiktokConnector";
 
 const router = Router();
 
@@ -42,7 +48,7 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
     const demoMode = req.body?.demoMode === true || !tiktokUsername;
 
     const io = getIO();
-    let actualMode: "live" | "demo" = demoMode ? "demo" : "live";
+    let actualMode: ConnectionMode = demoMode ? "demo" : "real";
     if (io) {
       actualMode = await startTikTokConnection(io, tiktokUsername, session.id, user.id, demoMode);
     }
@@ -140,6 +146,9 @@ router.get("/sessions/active", requireAuth, async (req: any, res: any) => {
         totalFollowers: activeSession.totalFollowers,
         totalComments: activeSession.totalComments,
         totalShares: activeSession.totalShares,
+        // Connection mode persisted across page refreshes
+        mode: getConnectionMode(activeSession.id) ?? "demo",
+        connectionError: getConnectionError(activeSession.id) ?? null,
       },
     });
   } catch (err) {

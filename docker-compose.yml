@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+
+      # ── TikTok mode ──────────────────────────────────────────────────────────
+      # Set to "real" on your production VPS to connect to actual TikTok LIVE.
+      # Keep "demo" while testing — the built-in simulator generates fake events.
+      TIKTOK_MODE: "${TIKTOK_MODE:-real}"
+
+      # ── Database ─────────────────────────────────────────────────────────────
+      DATABASE_URL: "${DATABASE_URL}"
+
+      # ── Clerk auth ───────────────────────────────────────────────────────────
+      CLERK_PUBLISHABLE_KEY: "${CLERK_PUBLISHABLE_KEY}"
+      CLERK_SECRET_KEY: "${CLERK_SECRET_KEY}"
+
+      # ── OpenAI (via Replit AI Integrations proxy or direct) ──────────────────
+      AI_INTEGRATIONS_OPENAI_BASE_URL: "${AI_INTEGRATIONS_OPENAI_BASE_URL:-https://api.openai.com/v1}"
+      AI_INTEGRATIONS_OPENAI_API_KEY: "${AI_INTEGRATIONS_OPENAI_API_KEY}"
+
+      # ── Stripe (optional) ────────────────────────────────────────────────────
+      STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
+      STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET:-}"
+
+    restart: unless-stopped
+
+    # Optional: persist logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"

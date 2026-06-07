@@ -21,6 +21,7 @@ import {
   Wand2, Target, Star, MessageSquare, Mic, Volume2, VolumeX,
   Globe, Gift, Users, Heart, Share2, Loader2, Radio, Play,
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
+  Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
@@ -318,8 +319,16 @@ export function AiAssistant() {
   const isSessionActive = (activeSessionRes as any)?.active ?? false;
 
   // ── Live events (socket) ──────────────────────────────────────────────────────
-  const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice } =
-    useLiveSession(activeSessionId);
+  // Pass the HTTP-fetched mode as initialMode so the badge is correct immediately on refresh.
+  const initialMode = (activeSessionRes as any)?.session?.mode ?? null;
+  const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
+  const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice,
+    tiktokMode, tiktokError: socketError, tiktokUsername,
+  } = useLiveSession(activeSessionId, initialMode);
+
+  // Effective values: prefer socket-live data, fall back to HTTP snapshot
+  const effectiveMode = tiktokMode ?? (isSessionActive ? "demo" : null);
+  const effectiveError = socketError ?? initialError;
 
   // ── Config ───────────────────────────────────────────────────────────────────
   const { data: config, isLoading: configLoading } = useQuery<PersonaConfig>({
@@ -449,6 +458,28 @@ export function AiAssistant() {
   const [generatedEvent, setGeneratedEvent] = useState<GeneratedEvent | null>(null);
   const [isGeneratingEvent, setIsGeneratingEvent] = useState(false);
 
+  // ── TikTok connection test UI ──────────────────────────────────────────────
+  const [testUsername, setTestUsername] = useState("");
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; error?: string; latencyMs?: number } | null>(null);
+
+  const handleTestConnection = async () => {
+    if (!testUsername.trim()) return;
+    setIsTesting(true);
+    setTestResult(null);
+    try {
+      const res = await apiFetch("/tiktok/test-connection", {
+        method: "POST",
+        body: JSON.stringify({ username: testUsername.trim() }),
+      });
+      setTestResult(res);
+    } catch (err: any) {
+      setTestResult({ ok: false, error: err?.message ?? "Request failed" });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
   const handleGenerateQuests = async () => {
     if (!activeSessionId) return;
     setIsGeneratingQuests(true);
@@ -528,7 +559,7 @@ export function AiAssistant() {
               <StatBubble label="follows" value={stats.totalFollows} icon={<Users className="h-3.5 w-3.5 text-green-400" />} />
             </>
           )}
-          {/* Connection badge */}
+          {/* Socket connection badge */}
           <Badge
             variant="outline"
             className={cn(
@@ -546,6 +577,27 @@ export function AiAssistant() {
             )} />
             {isSessionActive && connected ? "Live — connected" : isSessionActive ? "Connecting…" : "No active session"}
           </Badge>
+
+          {/* TikTok mode badge */}
+          {isSessionActive && effectiveMode === "demo" && (
+            <Badge variant="outline" className="px-3 py-1.5 border border-orange-500/50 text-orange-300 bg-orange-500/10 gap-1.5">
+              <Server className="h-3 w-3" />
+              DEMO
+            </Badge>
+          )}
+          {isSessionActive && effectiveMode === "real" && (
+            <Badge variant="outline" className="px-3 py-1.5 border border-emerald-500/50 text-emerald-300 bg-emerald-500/10 gap-1.5">
+              <CheckCircle2 className="h-3 w-3" />
+              REAL TIKTOK
+              {tiktokUsername && <span className="text-emerald-400/70">@{tiktokUsername}</span>}
+            </Badge>
+          )}
+          {isSessionActive && effectiveMode === "error" && (
+            <Badge variant="outline" className="px-3 py-1.5 border border-red-500/50 text-red-300 bg-red-500/10 gap-1.5 cursor-pointer" title={effectiveError ?? "Connection failed"}>
+              <WifiOff className="h-3 w-3" />
+              CONNECTION FAILED
+            </Badge>
+          )}
           {/* Persona badge */}
           <Badge variant="outline" className="border-purple-500/50 text-purple-300 bg-purple-500/10 px-3 py-1.5">
             <div className="h-2 w-2 rounded-full bg-purple-400 mr-2 animate-pulse" />
@@ -553,6 +605,20 @@ export function AiAssistant() {
           </Badge>
         </div>
       </div>
+
+      {/* ── Connection error banner ── */}
+      {isSessionActive && effectiveMode === "error" && effectiveError && (
+        <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex-shrink-0">
+          <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-red-300 mb-0.5">TikTok connection failed</p>
+            <p className="text-xs text-red-300/80 font-mono whitespace-pre-wrap break-words">{effectiveError}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1.5">
+              See the TikTok Connection panel in the sidebar to test and diagnose, or check DEPLOY.md.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Body: sidebar + main ── */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
@@ -781,6 +847,96 @@ export function AiAssistant() {
                 {flaggedComments.length} flagged this session
               </Badge>
             )}
+          </SidebarSection>
+
+          {/* ── TikTok Connection ── */}
+          <SidebarSection isOpen={expandedSections.has("tiktok")} onToggle={() => toggleSection("tiktok")} title="TikTok Connection" icon={<Plug className="h-4 w-4 text-pink-400" />}>
+
+            {/* Current mode */}
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10">
+              {effectiveMode === "real" ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-emerald-300">Real TikTok LIVE</p>
+                    {tiktokUsername && <p className="text-[10px] text-muted-foreground">@{tiktokUsername}</p>}
+                  </div>
+                </>
+              ) : effectiveMode === "error" ? (
+                <>
+                  <WifiOff className="h-4 w-4 text-red-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-red-300">Connection failed</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{effectiveError}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Server className="h-4 w-4 text-orange-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-orange-300">Demo simulator</p>
+                    <p className="text-[10px] text-muted-foreground">Fake events (set TIKTOK_MODE=real on VPS)</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Error detail */}
+            {effectiveMode === "error" && effectiveError && (
+              <div className="p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-[11px] text-red-300 font-mono whitespace-pre-wrap break-words">{effectiveError}</p>
+              </div>
+            )}
+
+            {/* Test connection */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Test a TikTok username</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  placeholder="@username"
+                  value={testUsername}
+                  onChange={(e) => { setTestUsername(e.target.value); setTestResult(null); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleTestConnection()}
+                  className="flex-1 h-8 text-xs bg-white/5 border-white/10"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-2.5 border-white/10 hover:bg-white/10"
+                  onClick={handleTestConnection}
+                  disabled={isTesting || !testUsername.trim()}
+                >
+                  {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <TestTube2 className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
+
+              {/* Test result */}
+              {testResult && (
+                <div className={cn(
+                  "p-2 rounded-lg border text-xs",
+                  testResult.ok
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+                    : "bg-red-500/10 border-red-500/20 text-red-300",
+                )}>
+                  {testResult.ok ? (
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" />
+                      Connected! ({testResult.latencyMs}ms)
+                    </span>
+                  ) : (
+                    <span className="flex items-start gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-px" />
+                      <span className="font-mono whitespace-pre-wrap break-words">{testResult.error}</span>
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+              Set <code className="bg-white/10 rounded px-1">TIKTOK_MODE=real</code> on your VPS/Docker server
+              to connect to real TikTok LIVE. See <code className="bg-white/10 rounded px-1">DEPLOY.md</code> for setup.
+            </p>
           </SidebarSection>
 
         </div>

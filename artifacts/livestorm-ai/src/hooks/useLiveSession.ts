@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { io, type Socket } from "socket.io-client";
 import { useAuth } from "@clerk/react";
 
+export type ConnectionMode = "real" | "demo" | "error";
+
 export interface LiveEvent {
   type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "ai_announcement";
   sessionId: number;
@@ -35,6 +37,12 @@ export interface ModerationFlaggedEvent {
   timestamp: number;
 }
 
+export interface TikTokStatusEvent {
+  mode: ConnectionMode;
+  error?: string;
+  username?: string;
+}
+
 export interface LiveStats {
   viewerCount: number;
   totalGifts: number;
@@ -58,7 +66,14 @@ async function playOpenAiTts(text: string, voice: string): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, voice }),
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const msg = body?.error ?? `HTTP ${res.status}`;
+      console.warn(`[TTS] OpenAI TTS error: ${msg}`);
+      // Surface error to the page via custom event so the UI can show it
+      window.dispatchEvent(new CustomEvent("tts:error", { detail: msg }));
+      return;
+    }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
@@ -66,7 +81,9 @@ async function playOpenAiTts(text: string, voice: string): Promise<void> {
     audio.onerror = () => URL.revokeObjectURL(url);
     await audio.play();
   } catch (err) {
-    console.warn("[TTS] OpenAI TTS playback error:", err);
+    const msg = (err as Error)?.message ?? String(err);
+    console.warn("[TTS] OpenAI TTS playback error:", msg);
+    window.dispatchEvent(new CustomEvent("tts:error", { detail: msg }));
   }
 }
 
@@ -79,32 +96,43 @@ function playBrowserTts(text: string): void {
   window.speechSynthesis.speak(utt);
 }
 
-export function useLiveSession(sessionId: number | null | undefined) {
+export function useLiveSession(
+  sessionId: number | null | undefined,
+  initialMode?: ConnectionMode | null,
+) {
   const { getToken } = useAuth();
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [automationsFired, setAutomationsFired] = useState<AutomationFiredEvent[]>([]);
   const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
 
+  // TikTok connection status — initialised from HTTP session data, then updated by socket
+  const [tiktokMode, setTiktokMode] = useState<ConnectionMode | null>(initialMode ?? null);
+  const [tiktokError, setTiktokError] = useState<string | null>(null);
+  const [tiktokUsername, setTiktokUsername] = useState<string | null>(null);
+
+  // Sync initialMode once when it first arrives (e.g. after session query resolves).
+  // Uses functional updater so we never overwrite a live socket update.
+  useEffect(() => {
+    if (initialMode != null) {
+      setTiktokMode((prev) => prev ?? initialMode);
+    }
+  }, [initialMode]);
+
   const ttsModeRef = useRef<TtsMode>("off");
   const ttsVoiceRef = useRef<string>("nova");
 
-  const setTtsMode = useCallback((mode: TtsMode) => {
-    ttsModeRef.current = mode;
-  }, []);
+  const setTtsMode = useCallback((mode: TtsMode) => { ttsModeRef.current = mode; }, []);
+  const setTtsVoice = useCallback((voice: string) => { ttsVoiceRef.current = voice; }, []);
 
-  const setTtsVoice = useCallback((voice: string) => {
-    ttsVoiceRef.current = voice;
-  }, []);
-
-  // Legacy compatibility: setTtsEnabled maps to browser/off
+  // Legacy compatibility
   const setTtsEnabled = useCallback((enabled: boolean) => {
     ttsModeRef.current = enabled ? "browser" : "off";
   }, []);
 
   const [stats, setStats] = useState<LiveStats>({
-    viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0, totalComments: 0, totalShares: 0,
-    topSupporters: [],
+    viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0,
+    totalComments: 0, totalShares: 0, topSupporters: [],
   });
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -115,7 +143,10 @@ export function useLiveSession(sessionId: number | null | undefined) {
     setAutomationsFired([]);
     setAiAnnouncements([]);
     setFlaggedComments([]);
-    setStats({ viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0, totalComments: 0, totalShares: 0, topSupporters: [] });
+    setStats({
+      viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0,
+      totalComments: 0, totalShares: 0, topSupporters: [],
+    });
     supportersRef.current = new Map();
   }, []);
 
@@ -145,6 +176,14 @@ export function useLiveSession(sessionId: number | null | undefined) {
         console.error("[LiveSession] Socket auth error:", err.message);
       });
 
+      // ── TikTok connection status updates ──────────────────────────────────
+      socket.on("tiktok:status", (payload: TikTokStatusEvent) => {
+        setTiktokMode(payload.mode);
+        setTiktokError(payload.error ?? null);
+        setTiktokUsername(payload.username ?? null);
+      });
+
+      // ── Live events ───────────────────────────────────────────────────────
       socket.on("live:event", (event: LiveEvent) => {
         setEvents((prev) => [event, ...prev].slice(0, 200));
 
@@ -246,5 +285,8 @@ export function useLiveSession(sessionId: number | null | undefined) {
     setTtsEnabled,
     setTtsMode,
     setTtsVoice,
+    tiktokMode,
+    tiktokError,
+    tiktokUsername,
   };
 }
