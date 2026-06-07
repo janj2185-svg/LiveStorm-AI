@@ -1,4 +1,6 @@
-FROM node:20-slim
+# Force linux/amd64 — pnpm-workspace.yaml excludes all non-x64 native binaries (esbuild, etc.)
+# Build on ARM (M1 Mac, ARM VPS): docker build --platform linux/amd64 .
+FROM --platform=linux/amd64 node:20-slim
 
 WORKDIR /app
 
