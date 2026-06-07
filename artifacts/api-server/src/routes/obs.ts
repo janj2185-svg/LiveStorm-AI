@@ -13,7 +13,11 @@ import { requireAuth } from "./users";
 
 const router = Router();
 
-const OBS_TOKEN_SECRET = process.env.CLERK_SECRET_KEY ?? "obs-dev-secret-fallback";
+const _rawSecret = process.env.CLERK_SECRET_KEY;
+if (!_rawSecret) {
+  throw new Error("CLERK_SECRET_KEY environment variable is required for OBS overlay token signing");
+}
+const OBS_TOKEN_SECRET: string = _rawSecret;
 
 export function generateObsToken(streamerId: number): { token: string; expiresAt: number } {
   const exp = Date.now() + 24 * 60 * 60 * 1000;
@@ -131,9 +135,9 @@ router.get("/obs/state/:streamerId", async (req: any, res: any) => {
         ? {
             id: activeBossBattle.id,
             bossName: activeBossBattle.bossName,
+            bossEmoji: activeBossBattle.bossEmoji,
             currentHp: activeBossBattle.currentHp,
             maxHp: activeBossBattle.maxHp,
-            difficulty: activeBossBattle.status,
           }
         : null,
       leaderboard: leaderboard.map((r, i) => ({

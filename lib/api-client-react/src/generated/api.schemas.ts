@@ -343,9 +343,9 @@ export interface ObsSessionSummary {
 export interface ObsBossBattleSummary {
   id: number;
   bossName: string;
+  bossEmoji: string;
   currentHp: number;
   maxHp: number;
-  difficulty: string;
 }
 
 export interface ObsOverlayState {

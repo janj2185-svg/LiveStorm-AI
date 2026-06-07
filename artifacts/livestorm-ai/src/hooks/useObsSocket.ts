@@ -24,9 +24,18 @@ export interface ObsSessionState {
 export interface ObsBossBattle {
   id: number;
   bossName: string;
+  bossEmoji: string;
   currentHp: number;
   maxHp: number;
-  difficulty: string;
+}
+
+export interface ObsAttack {
+  battleId: number;
+  viewerName: string;
+  attackType: string;
+  damage: number;
+  currentHp: number;
+  timestamp: number;
 }
 
 export interface ObsOverlayState {
@@ -48,8 +57,14 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
   const [connected, setConnected] = useState(false);
   const [overlayState, setOverlayState] = useState<ObsOverlayState | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
+  const [attacks, setAttacks] = useState<ObsAttack[]>([]);
   const socketRef = useRef<Socket | null>(null);
   const sessionIdRef = useRef<number | null>(null);
+  const tokenRef = useRef(token);
+  const streamerIdRef = useRef(streamerId);
+
+  tokenRef.current = token;
+  streamerIdRef.current = streamerId;
 
   const BASE_URL = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
@@ -57,35 +72,57 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
     setEvents((prev) => [event, ...prev].slice(0, 50));
   }, []);
 
+  const fetchState = useCallback(
+    (onNewSession?: (sessionId: number) => void) => {
+      const sid = streamerIdRef.current;
+      const tok = tokenRef.current;
+      if (!sid || !tok) return;
+
+      fetch(`${BASE_URL}/api/obs/state/${sid}?token=${encodeURIComponent(tok)}`)
+        .then((r) => {
+          if (!r.ok) throw new Error("Failed to fetch overlay state");
+          return r.json();
+        })
+        .then((data: ObsOverlayState) => {
+          setOverlayState(data);
+          if (data.sessionId && data.sessionId !== sessionIdRef.current) {
+            sessionIdRef.current = data.sessionId;
+            onNewSession?.(data.sessionId);
+          }
+        })
+        .catch(() => {});
+    },
+    [BASE_URL]
+  );
+
   useEffect(() => {
     if (!streamerId || !token) return;
 
-    let cancelled = false;
+    fetchState((sessionId) => {
+      if (socketRef.current) {
+        socketRef.current.emit("obs:subscribe", { token, streamerId, sessionId });
+      }
+    });
+  }, [streamerId, token, fetchState]);
 
-    fetch(`${BASE_URL}/api/obs/state/${streamerId}?token=${encodeURIComponent(token)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed to fetch overlay state");
-        return r.json();
-      })
-      .then((data: ObsOverlayState) => {
-        if (cancelled) return;
-        setOverlayState(data);
-        sessionIdRef.current = data.sessionId;
+  useEffect(() => {
+    if (!streamerId || !token) return;
 
-        if (socketRef.current && data.sessionId) {
+    const pollInterval = setInterval(() => {
+      if (sessionIdRef.current !== null) return;
+      fetchState((sessionId) => {
+        if (socketRef.current) {
           socketRef.current.emit("obs:subscribe", {
-            token,
-            streamerId,
-            sessionId: data.sessionId,
+            token: tokenRef.current,
+            streamerId: streamerIdRef.current,
+            sessionId,
           });
         }
-      })
-      .catch(() => {});
+      });
+    }, 10000);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [streamerId, token, BASE_URL]);
+    return () => clearInterval(pollInterval);
+  }, [streamerId, token, fetchState]);
 
   useEffect(() => {
     if (!streamerId || !token) return;
@@ -99,11 +136,13 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
 
     socket.on("connect", () => {
       setConnected(true);
-      socket.emit("obs:subscribe", {
-        token,
-        streamerId,
-        sessionId: sessionIdRef.current ?? undefined,
-      });
+      if (sessionIdRef.current) {
+        socket.emit("obs:subscribe", {
+          token,
+          streamerId,
+          sessionId: sessionIdRef.current,
+        });
+      }
     });
 
     socket.on("disconnect", () => setConnected(false));
@@ -111,7 +150,7 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
     socket.on("obs:subscribed", ({ sessionId }: { sessionId: number | null }) => {
       if (sessionId && sessionId !== sessionIdRef.current) {
         sessionIdRef.current = sessionId;
-        setOverlayState((prev) => prev ? { ...prev, sessionId } : null);
+        setOverlayState((prev) => (prev ? { ...prev, sessionId } : null));
       }
     });
 
@@ -148,16 +187,19 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
     });
 
     socket.on("xp:awarded", () => {
-      if (!streamerId || !token) return;
-      fetch(`${BASE_URL}/api/obs/state/${streamerId}?token=${encodeURIComponent(token)}`)
+      if (!streamerIdRef.current || !tokenRef.current) return;
+      fetch(
+        `${BASE_URL}/api/obs/state/${streamerIdRef.current}?token=${encodeURIComponent(tokenRef.current)}`
+      )
         .then((r) => r.json())
         .then((data: ObsOverlayState) => {
-          setOverlayState((prev) => prev ? { ...prev, leaderboard: data.leaderboard } : data);
+          setOverlayState((prev) => (prev ? { ...prev, leaderboard: data.leaderboard } : data));
         })
         .catch(() => {});
     });
 
-    socket.on("boss:attacked", (data: { bossId: number; currentHp: number }) => {
+    socket.on("boss:attacked", (data: ObsAttack) => {
+      setAttacks((prev) => [data, ...prev].slice(0, 20));
       setOverlayState((prev) => {
         if (!prev?.activeBossBattle) return prev;
         return {
@@ -167,16 +209,39 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
       });
     });
 
-    socket.on("boss:defeated", () => {
+    socket.on("boss:defeated", (data: { battleId: number; bossName: string }) => {
       setOverlayState((prev) => {
         if (!prev?.activeBossBattle) return prev;
         return { ...prev, activeBossBattle: { ...prev.activeBossBattle, currentHp: 0 } };
       });
     });
 
-    socket.on("boss:spawned", (data: ObsBossBattle) => {
-      setOverlayState((prev) => prev ? { ...prev, activeBossBattle: data } : null);
-    });
+    socket.on(
+      "boss:spawned",
+      (data: {
+        battleId: number;
+        bossName: string;
+        bossEmoji: string;
+        maxHp: number;
+        currentHp: number;
+      }) => {
+        setAttacks([]);
+        setOverlayState((prev) =>
+          prev
+            ? {
+                ...prev,
+                activeBossBattle: {
+                  id: data.battleId,
+                  bossName: data.bossName,
+                  bossEmoji: data.bossEmoji ?? "🐉",
+                  maxHp: data.maxHp,
+                  currentHp: data.currentHp,
+                },
+              }
+            : null
+        );
+      }
+    );
 
     return () => {
       socket.disconnect();
@@ -184,5 +249,5 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
     };
   }, [streamerId, token, BASE_URL, addEvent]);
 
-  return { socket: socketRef.current, connected, overlayState, events };
+  return { socket: socketRef.current, connected, overlayState, events, attacks };
 }

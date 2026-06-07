@@ -1513,18 +1513,18 @@ components:
           type: integer
         bossName:
           type: string
+        bossEmoji:
+          type: string
         currentHp:
           type: integer
         maxHp:
           type: integer
-        difficulty:
-          type: string
       required:
         - id
         - bossName
+        - bossEmoji
         - currentHp
         - maxHp
-        - difficulty
 
     ObsOverlayState:
       type: object

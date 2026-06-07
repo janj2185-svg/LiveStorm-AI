@@ -9,7 +9,7 @@
 export interface ObsBossBattleSummary {
   id: number;
   bossName: string;
+  bossEmoji: string;
   currentHp: number;
   maxHp: number;
-  difficulty: string;
 }

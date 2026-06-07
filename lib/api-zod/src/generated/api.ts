@@ -722,9 +722,9 @@ export const GetObsStateResponse = zod.object({
   "activeBossBattle": zod.union([zod.object({
   "id": zod.number(),
   "bossName": zod.string(),
+  "bossEmoji": zod.string(),
   "currentHp": zod.number(),
-  "maxHp": zod.number(),
-  "difficulty": zod.string()
+  "maxHp": zod.number()
 }),zod.null()]),
   "leaderboard": zod.array(zod.object({
   "rank": zod.number(),
