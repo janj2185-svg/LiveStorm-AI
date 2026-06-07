@@ -159,7 +159,8 @@ export function useLiveSession(
 
     const connect = async () => {
       const token = await getToken();
-      if (cancelled) return;
+      // Don't connect if Clerk hasn't finished hydrating (no valid session yet)
+      if (cancelled || !token) return;
 
       const socket = io(window.location.origin, {
         path: `${BASE_URL}/api/socket.io`,
