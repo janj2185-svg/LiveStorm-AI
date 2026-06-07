@@ -3,7 +3,7 @@ import { db, sessionsTable, streamersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, getOrCreateUser } from "./users";
 import { getIO } from "../lib/socketServer";
-import { startSimulator, stopSimulator } from "../lib/tiktokSimulator";
+import { startTikTokConnection, stopTikTokConnection, getConnectionMode } from "../lib/tiktokConnector";
 
 const router = Router();
 
@@ -31,16 +31,21 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
       .set({ isLive: true, updatedAt: new Date() })
       .where(eq(streamersTable.id, streamer.id));
 
+    const tiktokUsername = typeof req.body?.tiktokUsername === "string"
+      ? req.body.tiktokUsername.trim() || null
+      : streamer.tiktokLiveId ?? null;
+    const demoMode = req.body?.demoMode === true || !tiktokUsername;
+
     const io = getIO();
     if (io) {
-      const roomId = `session:${session.id}`;
-      startSimulator(io, session.id, roomId, user.id);
+      startTikTokConnection(io, tiktokUsername, session.id, user.id, demoMode);
     }
 
     res.json({
       sessionId: session.id,
       streamerId: streamer.id,
       startedAt: session.startedAt,
+      mode: demoMode ? "demo" : "live",
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -64,7 +69,7 @@ router.post("/sessions/end", requireAuth, async (req: any, res: any) => {
       return res.status(400).json({ error: "No active session" });
     }
 
-    stopSimulator(activeSession.id);
+    stopTikTokConnection(activeSession.id);
 
     const [ended] = await db
       .update(sessionsTable)

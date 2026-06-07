@@ -1,11 +1,28 @@
-import { Server as SocketServer } from "socket.io";
+import { Server as SocketServer, type Socket } from "socket.io";
 import type { Server as HttpServer } from "http";
-import { db, streamersTable, sessionsTable } from "@workspace/db";
+import { verifyToken } from "@clerk/express";
+import { db, streamersTable, sessionsTable, usersTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { processAutomations } from "./automationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 
 let io: SocketServer | null = null;
+
+async function resolveUserIdFromToken(token: string): Promise<number | null> {
+  try {
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY!,
+    });
+    const clerkUserId = payload.sub;
+    if (!clerkUserId) return null;
+    const user = await db.query.usersTable.findFirst({
+      where: eq(usersTable.clerkId, clerkUserId),
+    });
+    return user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function initSocketServer(httpServer: HttpServer) {
   io = new SocketServer(httpServer, {
@@ -13,18 +30,42 @@ export function initSocketServer(httpServer: HttpServer) {
     path: "/api/socket.io",
   });
 
-  io.on("connection", (socket) => {
+  io.on("connection", (socket: Socket) => {
+    const authToken = socket.handshake.auth?.token as string | undefined;
+
     socket.on("session:join", async (sessionId: number) => {
       try {
+        const sid = Number(sessionId);
         const session = await db.query.sessionsTable.findFirst({
-          where: eq(sessionsTable.id, Number(sessionId)),
+          where: eq(sessionsTable.id, sid),
         });
         if (!session || session.endedAt) {
-          socket.emit("session:error", { message: "Session not found or ended" });
+          socket.emit("session:error", { message: "Session not found or already ended" });
           return;
         }
-        socket.join(`session:${sessionId}`);
-        socket.emit("session:joined", { sessionId });
+
+        if (!authToken) {
+          socket.emit("session:error", { message: "Authentication required" });
+          return;
+        }
+
+        const userId = await resolveUserIdFromToken(authToken);
+        if (!userId) {
+          socket.emit("session:error", { message: "Invalid auth token" });
+          return;
+        }
+
+        const streamer = await db.query.streamersTable.findFirst({
+          where: eq(streamersTable.id, session.streamerId),
+        });
+        if (!streamer || streamer.userId !== userId) {
+          socket.emit("session:error", { message: "Not authorized for this session" });
+          return;
+        }
+
+        socket.data.userId = userId;
+        socket.join(`session:${sid}`);
+        socket.emit("session:joined", { sessionId: sid });
       } catch (_err) {
         socket.emit("session:error", { message: "Could not join session" });
       }

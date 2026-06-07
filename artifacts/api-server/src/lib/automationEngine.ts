@@ -21,8 +21,36 @@ function evaluateCondition(
 ): boolean {
   if (event.type !== eventType) return false;
 
+  if (eventType === "comment") {
+    const text = String(event.data.text ?? "").toLowerCase();
+    const keyword = conditionValue.toLowerCase();
+    switch (operator) {
+      case "contains": return text.includes(keyword);
+      case "startsWith": return text.startsWith(keyword);
+      case "endsWith": return text.endsWith(keyword);
+      case "exact": return text === keyword;
+      case "regex": {
+        try {
+          return new RegExp(conditionValue, "i").test(String(event.data.text ?? ""));
+        } catch {
+          return false;
+        }
+      }
+      case "any":
+      default:
+        return true;
+    }
+  }
+
+  if (eventType === "follow" || eventType === "share") {
+    return true;
+  }
+
   const numValue = parseFloat(conditionValue);
-  if (isNaN(numValue)) return true;
+
+  if (isNaN(numValue)) {
+    return true;
+  }
 
   let eventValue = 0;
 
