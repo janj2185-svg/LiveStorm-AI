@@ -11,7 +11,8 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Menu,
-  X
+  X,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +21,7 @@ const NAVIGATION = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Live Studio", href: "/live-studio", icon: Video },
   { name: "Gamification", href: "/gamification", icon: Trophy },
+  { name: "Automation", href: "/automation", icon: Zap },
   { name: "Kingdom", href: "/kingdom", icon: Castle },
   { name: "Overlays", href: "/overlays", icon: Layers },
   { name: "AI Assistant", href: "/ai-assistant", icon: Bot },
@@ -115,12 +117,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <h1 className="text-xl font-semibold capitalize">
             {location.replace("/", "").replace("-", " ") || "Dashboard"}
           </h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 border border-border">
-              <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs font-bold text-red-500 tracking-wider">OFFLINE</span>
-            </div>
-          </div>
         </header>
         <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
           {children}

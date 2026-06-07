@@ -16,6 +16,10 @@ tags:
     description: Streamer profile operations
   - name: kingdoms
     description: Kingdom operations
+  - name: sessions
+    description: Live session operations
+  - name: automations
+    description: Automation trigger operations
 
 paths:
   /healthz:
@@ -157,6 +161,145 @@ paths:
                 items:
                   $ref: "#/components/schemas/Kingdom"
 
+  /sessions/start:
+    post:
+      operationId: startSession
+      tags: [sessions]
+      summary: Start a live session
+      responses:
+        "200":
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStarted"
+        "400":
+          description: Already live
+        "404":
+          description: No streamer profile
+
+  /sessions/end:
+    post:
+      operationId: endSession
+      tags: [sessions]
+      summary: End the current live session
+      responses:
+        "200":
+          description: Session ended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          description: No active session
+
+  /sessions/active:
+    get:
+      operationId: getActiveSession
+      tags: [sessions]
+      summary: Get the current active session (if any)
+      responses:
+        "200":
+          description: Active session status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActiveSessionResponse"
+
+  /sessions:
+    get:
+      operationId: getSessions
+      tags: [sessions]
+      summary: Get session history
+      responses:
+        "200":
+          description: Session list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+
+  /automations:
+    get:
+      operationId: getAutomations
+      tags: [automations]
+      summary: List all automations for current user
+      responses:
+        "200":
+          description: Automation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Automation"
+    post:
+      operationId: createAutomation
+      tags: [automations]
+      summary: Create a new automation trigger
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationCreate"
+      responses:
+        "200":
+          description: Created automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+
+  /automations/{id}:
+    patch:
+      operationId: updateAutomation
+      tags: [automations]
+      summary: Update an automation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationUpdate"
+      responses:
+        "200":
+          description: Updated automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+    delete:
+      operationId: deleteAutomation
+      tags: [automations]
+      summary: Delete an automation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required:
+                  - ok
+
 components:
   schemas:
     HealthStatus:
@@ -271,3 +414,139 @@ components:
         - wood
         - stone
         - totalBuildings
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+        streamerId:
+          type: integer
+        startedAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+        peakViewers:
+          type: integer
+        totalGifts:
+          type: integer
+        totalLikes:
+          type: integer
+        totalFollowers:
+          type: integer
+        totalComments:
+          type: integer
+      required:
+        - id
+        - streamerId
+        - startedAt
+        - peakViewers
+        - totalGifts
+        - totalLikes
+        - totalFollowers
+        - totalComments
+
+    SessionStarted:
+      type: object
+      properties:
+        sessionId:
+          type: integer
+        streamerId:
+          type: integer
+        startedAt:
+          type: string
+      required:
+        - sessionId
+        - streamerId
+        - startedAt
+
+    ActiveSessionResponse:
+      type: object
+      properties:
+        active:
+          type: boolean
+        session:
+          oneOf:
+            - $ref: "#/components/schemas/Session"
+            - type: "null"
+      required:
+        - active
+
+    Automation:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        eventType:
+          type: string
+        conditionOperator:
+          type: string
+        conditionValue:
+          type: string
+        actionType:
+          type: string
+        actionPayload:
+          type: string
+        isEnabled:
+          type: boolean
+        triggerCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - name
+        - eventType
+        - conditionOperator
+        - conditionValue
+        - actionType
+        - actionPayload
+        - isEnabled
+        - triggerCount
+        - createdAt
+        - updatedAt
+
+    AutomationCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        eventType:
+          type: string
+        conditionOperator:
+          type: string
+        conditionValue:
+          type: string
+        actionType:
+          type: string
+        actionPayload:
+          type: string
+      required:
+        - name
+        - eventType
+        - actionType
+
+    AutomationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        eventType:
+          type: string
+        conditionOperator:
+          type: string
+        conditionValue:
+          type: string
+        actionType:
+          type: string
+        actionPayload:
+          type: string
+        isEnabled:
+          type: boolean

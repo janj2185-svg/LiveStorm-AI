@@ -6,8 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './activeSessionResponse';
+export * from './automation';
+export * from './automationCreate';
+export * from './automationUpdate';
+export * from './deleteAutomation200';
 export * from './healthStatus';
 export * from './kingdom';
+export * from './session';
+export * from './sessionStarted';
 export * from './streamer';
 export * from './tiktokConnect';
 export * from './user';

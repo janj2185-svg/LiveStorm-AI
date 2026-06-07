@@ -12,6 +12,7 @@ import { Home } from "@/pages/home";
 import { Dashboard } from "@/pages/dashboard";
 import { LiveStudio } from "@/pages/live-studio";
 import { Gamification } from "@/pages/gamification";
+import { Automation } from "@/pages/automation";
 import { Kingdom } from "@/pages/kingdom";
 import { Overlays } from "@/pages/overlays";
 import { AiAssistant } from "@/pages/ai-assistant";
@@ -170,6 +171,9 @@ function AppRoutes() {
       </Route>
       <Route path="/gamification">
         <ProtectedRoute><Layout><Gamification /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/automation">
+        <ProtectedRoute><Layout><Automation /></Layout></ProtectedRoute>
       </Route>
       <Route path="/kingdom">
         <ProtectedRoute><Layout><Kingdom /></Layout></ProtectedRoute>

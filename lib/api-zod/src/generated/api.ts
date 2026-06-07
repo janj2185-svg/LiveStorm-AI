@@ -156,3 +156,158 @@ export const GetKingdomsResponseItem = zod.object({
 export const GetKingdomsResponse = zod.array(GetKingdomsResponseItem)
 
 
+/**
+ * @summary Start a live session
+ */
+export const StartSessionResponse = zod.object({
+  "sessionId": zod.number(),
+  "streamerId": zod.number(),
+  "startedAt": zod.string()
+})
+
+
+/**
+ * @summary End the current live session
+ */
+export const EndSessionResponse = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "peakViewers": zod.number(),
+  "totalGifts": zod.number(),
+  "totalLikes": zod.number(),
+  "totalFollowers": zod.number(),
+  "totalComments": zod.number()
+})
+
+
+/**
+ * @summary Get the current active session (if any)
+ */
+export const GetActiveSessionResponse = zod.object({
+  "active": zod.boolean(),
+  "session": zod.union([zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "peakViewers": zod.number(),
+  "totalGifts": zod.number(),
+  "totalLikes": zod.number(),
+  "totalFollowers": zod.number(),
+  "totalComments": zod.number()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * @summary Get session history
+ */
+export const GetSessionsResponseItem = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "peakViewers": zod.number(),
+  "totalGifts": zod.number(),
+  "totalLikes": zod.number(),
+  "totalFollowers": zod.number(),
+  "totalComments": zod.number()
+})
+export const GetSessionsResponse = zod.array(GetSessionsResponseItem)
+
+
+/**
+ * @summary List all automations for current user
+ */
+export const GetAutomationsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "eventType": zod.string(),
+  "conditionOperator": zod.string(),
+  "conditionValue": zod.string(),
+  "actionType": zod.string(),
+  "actionPayload": zod.string(),
+  "isEnabled": zod.boolean(),
+  "triggerCount": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const GetAutomationsResponse = zod.array(GetAutomationsResponseItem)
+
+
+/**
+ * @summary Create a new automation trigger
+ */
+export const CreateAutomationBody = zod.object({
+  "name": zod.string(),
+  "eventType": zod.string(),
+  "conditionOperator": zod.string().optional(),
+  "conditionValue": zod.string().optional(),
+  "actionType": zod.string(),
+  "actionPayload": zod.string().optional()
+})
+
+export const CreateAutomationResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "eventType": zod.string(),
+  "conditionOperator": zod.string(),
+  "conditionValue": zod.string(),
+  "actionType": zod.string(),
+  "actionPayload": zod.string(),
+  "isEnabled": zod.boolean(),
+  "triggerCount": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update an automation
+ */
+export const UpdateAutomationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateAutomationBody = zod.object({
+  "name": zod.string().optional(),
+  "eventType": zod.string().optional(),
+  "conditionOperator": zod.string().optional(),
+  "conditionValue": zod.string().optional(),
+  "actionType": zod.string().optional(),
+  "actionPayload": zod.string().optional(),
+  "isEnabled": zod.boolean().optional()
+})
+
+export const UpdateAutomationResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "eventType": zod.string(),
+  "conditionOperator": zod.string(),
+  "conditionValue": zod.string(),
+  "actionType": zod.string(),
+  "actionPayload": zod.string(),
+  "isEnabled": zod.boolean(),
+  "triggerCount": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an automation
+ */
+export const DeleteAutomationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAutomationResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+

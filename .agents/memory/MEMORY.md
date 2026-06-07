@@ -1,2 +1,3 @@
 - [Clerk Auth Setup](clerk-auth-setup.md) — exact patterns required for Clerk to work in Replit proxy environment
-- [LiveStorm AI Architecture](livestorm-architecture.md) — stack, artifact layout, DB schema, and task progress
+- [LiveStorm AI Architecture](livestorm-architecture.md) — stack, artifact layout, DB schema, task progress
+- [React Query Hook Patterns](react-query-patterns.md) — generated hook usage pitfalls and correct patterns

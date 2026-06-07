@@ -61,3 +61,65 @@ export interface Kingdom {
   totalBuildings: number;
 }
 
+export interface Session {
+  id: number;
+  streamerId: number;
+  startedAt: string;
+  /** @nullable */
+  endedAt?: string | null;
+  peakViewers: number;
+  totalGifts: number;
+  totalLikes: number;
+  totalFollowers: number;
+  totalComments: number;
+}
+
+export interface SessionStarted {
+  sessionId: number;
+  streamerId: number;
+  startedAt: string;
+}
+
+export interface ActiveSessionResponse {
+  active: boolean;
+  session?: Session | null;
+}
+
+export interface Automation {
+  id: number;
+  userId: number;
+  name: string;
+  eventType: string;
+  conditionOperator: string;
+  conditionValue: string;
+  actionType: string;
+  actionPayload: string;
+  isEnabled: boolean;
+  triggerCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AutomationCreate {
+  name: string;
+  eventType: string;
+  conditionOperator?: string;
+  conditionValue?: string;
+  actionType: string;
+  actionPayload?: string;
+}
+
+export interface AutomationUpdate {
+  name?: string;
+  eventType?: string;
+  conditionOperator?: string;
+  conditionValue?: string;
+  actionType?: string;
+  actionPayload?: string;
+  isEnabled?: boolean;
+}
+
+export type DeleteAutomation200 = {
+  ok: boolean;
+};
+
