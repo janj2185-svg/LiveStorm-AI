@@ -163,12 +163,13 @@ export function Dashboard() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard title="Viewers" value={stats.viewerCount} icon={Zap} glow={isActive} glowColor="green" isLive={isActive} />
         <StatCard title="Coins" value={stats.totalGifts} icon={Gift} glow={isActive} glowColor="amber" />
         <StatCard title="Likes" value={stats.totalLikes} icon={Heart} glow={isActive} glowColor="pink" />
         <StatCard title="Followers" value={stats.totalFollows} icon={UserPlus} glow={isActive} glowColor="primary" />
         <StatCard title="Comments" value={stats.totalComments} icon={MessageSquare} glow={isActive} glowColor="blue" />
+        <StatCard title="Shares" value={stats.totalShares} icon={Share} glow={isActive} glowColor="cyan" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

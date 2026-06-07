@@ -26,11 +26,19 @@ import { format } from "date-fns";
 
 const EVENT_TYPES = ["gift", "comment", "like", "follow", "share", "viewerCount"];
 const ACTION_TYPES = ["show_alert", "play_sound", "display_message", "send_chat_reply"];
-const OPERATORS = [
+const NUMERIC_OPERATORS = [
   { value: "gte", label: ">= (Greater than or equal)" },
   { value: "gt", label: "> (Greater than)" },
   { value: "lte", label: "<= (Less than or equal)" },
-  { value: "eq", label: "= (Equal)" }
+  { value: "eq", label: "= (Equal)" },
+];
+const COMMENT_OPERATORS = [
+  { value: "any", label: "Any comment (always fires)" },
+  { value: "contains", label: "Contains keyword" },
+  { value: "exact", label: "Exact match" },
+  { value: "startsWith", label: "Starts with" },
+  { value: "endsWith", label: "Ends with" },
+  { value: "regex", label: "Regex pattern" },
 ];
 
 export function Automation() {
@@ -52,10 +60,22 @@ export function Automation() {
     conditionOperator: "gte",
     conditionValue: "100",
     actionType: "show_alert",
-    actionPayload: "Thanks for the VIP gift!"
+    actionPayload: "Thanks for the VIP gift!",
   });
 
-  const needsCondition = ["gift", "like", "viewerCount"].includes(formData.eventType);
+  const handleEventTypeChange = (v: string) => {
+    const isComment = v === "comment";
+    setFormData({
+      ...formData,
+      eventType: v,
+      conditionOperator: isComment ? "any" : "gte",
+      conditionValue: isComment ? "" : "100",
+    });
+  };
+
+  const needsNumericCondition = ["gift", "like", "viewerCount"].includes(formData.eventType);
+  const isCommentEvent = formData.eventType === "comment";
+  const needsCondition = needsNumericCondition || isCommentEvent;
 
   const handleCreate = () => {
     if (!formData.name.trim()) {
@@ -63,15 +83,14 @@ export function Automation() {
       return;
     }
 
+    const includesCondition = needsNumericCondition || (isCommentEvent && formData.conditionOperator !== "any");
     const payload = {
       name: formData.name,
       eventType: formData.eventType,
       actionType: formData.actionType,
       actionPayload: formData.actionPayload,
-      ...(needsCondition && {
-        conditionOperator: formData.conditionOperator,
-        conditionValue: formData.conditionValue
-      })
+      conditionOperator: isCommentEvent ? formData.conditionOperator : (needsNumericCondition ? formData.conditionOperator : "any"),
+      conditionValue: includesCondition ? formData.conditionValue : "",
     };
 
     createAutomation.mutate({ data: payload }, {
@@ -152,7 +171,7 @@ export function Automation() {
 
               <div className="grid gap-2">
                 <Label>When this event happens:</Label>
-                <Select value={formData.eventType} onValueChange={v => setFormData({...formData, eventType: v})}>
+                <Select value={formData.eventType} onValueChange={handleEventTypeChange}>
                   <SelectTrigger className="bg-background border-white/10">
                     <SelectValue />
                   </SelectTrigger>
@@ -164,7 +183,40 @@ export function Automation() {
                 </Select>
               </div>
 
-              {needsCondition && (
+              {isCommentEvent && (
+                <div className="grid gap-4 bg-background/50 p-3 rounded-lg border border-white/5">
+                  <div className="grid gap-2">
+                    <Label>Comment Condition</Label>
+                    <Select
+                      value={formData.conditionOperator}
+                      onValueChange={v => setFormData({ ...formData, conditionOperator: v, conditionValue: v === "any" ? "" : formData.conditionValue })}
+                    >
+                      <SelectTrigger className="bg-background border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COMMENT_OPERATORS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {formData.conditionOperator !== "any" && (
+                    <div className="grid gap-2">
+                      <Label>Keyword / Pattern</Label>
+                      <Input
+                        type="text"
+                        value={formData.conditionValue}
+                        onChange={e => setFormData({ ...formData, conditionValue: e.target.value })}
+                        placeholder={formData.conditionOperator === "regex" ? "e.g. ^hello|^hi" : "e.g. hello world"}
+                        className="bg-background border-white/10"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {needsNumericCondition && (
                 <div className="grid grid-cols-2 gap-4 bg-background/50 p-3 rounded-lg border border-white/5">
                   <div className="grid gap-2">
                     <Label>Condition</Label>
@@ -173,7 +225,7 @@ export function Automation() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {OPERATORS.map(o => (
+                        {NUMERIC_OPERATORS.map(o => (
                           <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                         ))}
                       </SelectContent>
@@ -181,7 +233,7 @@ export function Automation() {
                   </div>
                   <div className="grid gap-2">
                     <Label>Value</Label>
-                    <Input 
+                    <Input
                       type="number"
                       value={formData.conditionValue}
                       onChange={e => setFormData({...formData, conditionValue: e.target.value})}

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, sessionsTable, streamersTable } from "@workspace/db";
+import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, getOrCreateUser } from "./users";
 import { getIO } from "../lib/socketServer";
@@ -31,9 +31,14 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
       .set({ isLive: true, updatedAt: new Date() })
       .where(eq(streamersTable.id, streamer.id));
 
-    const tiktokUsername = typeof req.body?.tiktokUsername === "string"
-      ? req.body.tiktokUsername.trim() || null
-      : streamer.tiktokLiveId ?? null;
+    const userRecord = await db.query.usersTable.findFirst({
+      where: eq(usersTable.id, user.id),
+    });
+    const tiktokUsername =
+      (typeof req.body?.tiktokUsername === "string" ? req.body.tiktokUsername.trim() : null) ||
+      userRecord?.tiktokUsername ||
+      streamer.tiktokLiveId ||
+      null;
     const demoMode = req.body?.demoMode === true || !tiktokUsername;
 
     const io = getIO();
