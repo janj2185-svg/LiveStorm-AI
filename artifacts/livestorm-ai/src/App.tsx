@@ -14,6 +14,9 @@ import { LiveStudio } from "@/pages/live-studio";
 import { Gamification } from "@/pages/gamification";
 import { Automation } from "@/pages/automation";
 import { Kingdom } from "@/pages/kingdom";
+import { BossBattle } from "@/pages/boss-battle";
+import { MiniGames } from "@/pages/mini-games";
+import { Universe } from "@/pages/universe";
 import { Overlays } from "@/pages/overlays";
 import { AiAssistant } from "@/pages/ai-assistant";
 import { Settings } from "@/pages/settings";
@@ -177,6 +180,15 @@ function AppRoutes() {
       </Route>
       <Route path="/kingdom">
         <ProtectedRoute><Layout><Kingdom /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/boss-battle">
+        <ProtectedRoute><Layout><BossBattle /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/mini-games">
+        <ProtectedRoute><Layout><MiniGames /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/universe">
+        <ProtectedRoute><Layout><Universe /></Layout></ProtectedRoute>
       </Route>
       <Route path="/overlays">
         <ProtectedRoute><Layout><Overlays /></Layout></ProtectedRoute>

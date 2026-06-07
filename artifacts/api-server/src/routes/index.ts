@@ -6,6 +6,10 @@ import streamersRouter from "./streamers";
 import kingdomsRouter from "./kingdoms";
 import sessionsRouter from "./sessions";
 import automationsRouter from "./automations";
+import gamificationRouter from "./gamification";
+import bossBattlesRouter from "./boss-battles";
+import miniGamesRouter from "./mini-games";
+import universeRouter from "./universe";
 
 const router: IRouter = Router();
 
@@ -16,5 +20,9 @@ router.use(streamersRouter);
 router.use(kingdomsRouter);
 router.use(sessionsRouter);
 router.use(automationsRouter);
+router.use(gamificationRouter);
+router.use(bossBattlesRouter);
+router.use(miniGamesRouter);
+router.use(universeRouter);
 
 export default router;

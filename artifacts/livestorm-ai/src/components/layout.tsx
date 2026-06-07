@@ -12,7 +12,10 @@ import {
   LogOut,
   Menu,
   X,
-  Zap
+  Zap,
+  Sword,
+  Gamepad2,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,8 +24,11 @@ const NAVIGATION = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Live Studio", href: "/live-studio", icon: Video },
   { name: "Gamification", href: "/gamification", icon: Trophy },
-  { name: "Automation", href: "/automation", icon: Zap },
+  { name: "Boss Battle", href: "/boss-battle", icon: Sword },
   { name: "Kingdom", href: "/kingdom", icon: Castle },
+  { name: "Mini-Games", href: "/mini-games", icon: Gamepad2 },
+  { name: "Universe", href: "/universe", icon: Globe },
+  { name: "Automation", href: "/automation", icon: Zap },
   { name: "Overlays", href: "/overlays", icon: Layers },
   { name: "AI Assistant", href: "/ai-assistant", icon: Bot },
   { name: "Settings", href: "/settings", icon: SettingsIcon },

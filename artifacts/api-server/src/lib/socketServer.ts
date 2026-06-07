@@ -4,6 +4,7 @@ import { verifyToken } from "@clerk/express";
 import { db, streamersTable, sessionsTable, usersTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { processAutomations } from "./automationEngine";
+import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 
 let io: SocketServer | null = null;
@@ -29,6 +30,8 @@ export function initSocketServer(httpServer: HttpServer) {
     cors: { origin: true, credentials: true },
     path: "/api/socket.io",
   });
+
+  seedAchievements().catch(() => {});
 
   io.on("connection", (socket: Socket) => {
     const authToken = socket.handshake.auth?.token as string | undefined;
@@ -93,6 +96,15 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   io.to(roomId).emit("live:event", event);
 
   await processAutomations(io, roomId, userId, event);
+
+  try {
+    const sessionForGamification = await db.query.sessionsTable.findFirst({
+      where: eq(sessionsTable.id, event.sessionId),
+    });
+    if (sessionForGamification) {
+      await processGamification(io, event, sessionForGamification.streamerId);
+    }
+  } catch (_err) {}
 
   try {
     if (event.type === "viewerCount") {

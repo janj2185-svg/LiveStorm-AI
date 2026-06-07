@@ -135,6 +135,161 @@ export interface AutomationUpdate {
   isEnabled?: boolean;
 }
 
+export interface LeaderboardEntry {
+  rank: number;
+  tiktokViewerId: string;
+  viewerName: string;
+  totalXp: number;
+  totalCoins: number;
+  totalGifts: number;
+  level: number;
+}
+
+export interface Achievement {
+  id: number;
+  key: string;
+  name: string;
+  description: string;
+  iconType: string;
+  xpReward: number;
+  coinReward: number;
+  unlocked: boolean;
+}
+
+export interface DailyClaimResult {
+  alreadyClaimed: boolean;
+  coinsAwarded: number;
+}
+
+export interface DailyClaimStatus {
+  alreadyClaimed: boolean;
+}
+
+export interface BossBattle {
+  id: number;
+  streamerId: number;
+  /** @nullable */
+  sessionId?: number | null;
+  bossName: string;
+  bossEmoji: string;
+  maxHp: number;
+  currentHp: number;
+  status: string;
+  startedAt: string;
+  /** @nullable */
+  endedAt?: string | null;
+}
+
+export interface ActiveBattleResponse {
+  battle: BossBattle | null;
+}
+
+export interface SpawnBossRequest {
+  bossName?: string;
+  bossEmoji?: string;
+  maxHp?: number;
+  sessionId?: number;
+}
+
+export interface BossAttack {
+  id: number;
+  battleId: number;
+  tiktokViewerId: string;
+  viewerName: string;
+  attackType: string;
+  damage: number;
+  createdAt: string;
+}
+
+export interface SessionIdBody {
+  sessionId?: number;
+}
+
+export interface SpinResult {
+  prize: string;
+  xp: number;
+  coins: number;
+}
+
+export interface LuckyDrawRequest {
+  streamerId: number;
+  sessionId?: number;
+}
+
+export interface LuckyDrawResult {
+  /** @nullable */
+  winner?: string | null;
+  /** @nullable */
+  tiktokViewerId?: string | null;
+  message?: string;
+}
+
+export interface PvpRequest {
+  player1: string;
+  player2: string;
+  streamerId?: number;
+  sessionId?: number;
+}
+
+export interface PvpResult {
+  winner: string;
+  loser: string;
+  player1Score: number;
+  player2Score: number;
+}
+
+export interface QuizStartRequest {
+  question: string;
+  answer: string;
+  sessionId?: number;
+}
+
+export interface TreasureHuntRequest {
+  keyword: string;
+  prize?: string;
+  sessionId?: number;
+}
+
+export interface OkResponse {
+  ok: boolean;
+}
+
+export interface Alliance {
+  id: number;
+  requesterId: number;
+  targetId: number;
+  status: string;
+  createdAt: string;
+  partnerName?: string;
+  isRequester?: boolean;
+}
+
+export interface AllianceRequest {
+  targetStreamerId: number;
+}
+
+export interface AllianceUpdate {
+  status: string;
+}
+
+export interface UniverseRanking {
+  kingdomId: number;
+  kingdomName: string;
+  streamerId: number;
+  streamerName: string;
+  level: number;
+  gold: number;
+  totalResources: number;
+}
+
+export type GetGamificationLeaderboardParams = {
+streamerId?: number;
+};
+
+export type GetAchievementsParams = {
+streamerId?: number;
+};
+
 export type DeleteAutomation200 = {
   ok: boolean;
 };

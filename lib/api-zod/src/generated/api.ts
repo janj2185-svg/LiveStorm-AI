@@ -292,6 +292,308 @@ export const CreateAutomationResponse = zod.object({
 
 
 /**
+ * @summary Get viewer leaderboard by XP
+ */
+export const GetGamificationLeaderboardQueryParams = zod.object({
+  "streamerId": zod.coerce.number().optional()
+})
+
+export const GetGamificationLeaderboardResponseItem = zod.object({
+  "rank": zod.number(),
+  "tiktokViewerId": zod.string(),
+  "viewerName": zod.string(),
+  "totalXp": zod.number(),
+  "totalCoins": zod.number(),
+  "totalGifts": zod.number(),
+  "level": zod.number()
+})
+export const GetGamificationLeaderboardResponse = zod.array(GetGamificationLeaderboardResponseItem)
+
+
+/**
+ * @summary Get all achievements with unlock status
+ */
+export const GetAchievementsQueryParams = zod.object({
+  "streamerId": zod.coerce.number().optional()
+})
+
+export const GetAchievementsResponseItem = zod.object({
+  "id": zod.number(),
+  "key": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "iconType": zod.string(),
+  "xpReward": zod.number(),
+  "coinReward": zod.number(),
+  "unlocked": zod.boolean()
+})
+export const GetAchievementsResponse = zod.array(GetAchievementsResponseItem)
+
+
+/**
+ * @summary Claim daily coins reward
+ */
+export const ClaimDailyRewardResponse = zod.object({
+  "alreadyClaimed": zod.boolean(),
+  "coinsAwarded": zod.number()
+})
+
+
+/**
+ * @summary Check if daily reward has been claimed today
+ */
+export const GetDailyClaimStatusResponse = zod.object({
+  "alreadyClaimed": zod.boolean()
+})
+
+
+/**
+ * @summary Get the active boss battle for current streamer
+ */
+export const GetActiveBossBattleResponse = zod.object({
+  "battle": zod.union([zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "sessionId": zod.number().nullish(),
+  "bossName": zod.string(),
+  "bossEmoji": zod.string(),
+  "maxHp": zod.number(),
+  "currentHp": zod.number(),
+  "status": zod.string(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish()
+}),zod.null()])
+})
+
+
+/**
+ * @summary List recent boss battles
+ */
+export const GetBossBattlesResponseItem = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "sessionId": zod.number().nullish(),
+  "bossName": zod.string(),
+  "bossEmoji": zod.string(),
+  "maxHp": zod.number(),
+  "currentHp": zod.number(),
+  "status": zod.string(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish()
+})
+export const GetBossBattlesResponse = zod.array(GetBossBattlesResponseItem)
+
+
+/**
+ * @summary Spawn a new boss battle
+ */
+export const SpawnBossBattleBody = zod.object({
+  "bossName": zod.string().optional(),
+  "bossEmoji": zod.string().optional(),
+  "maxHp": zod.number().optional(),
+  "sessionId": zod.number().optional()
+})
+
+export const SpawnBossBattleResponse = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "sessionId": zod.number().nullish(),
+  "bossName": zod.string(),
+  "bossEmoji": zod.string(),
+  "maxHp": zod.number(),
+  "currentHp": zod.number(),
+  "status": zod.string(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary End/expire a boss battle
+ */
+export const EndBossBattleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const EndBossBattleResponse = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "sessionId": zod.number().nullish(),
+  "bossName": zod.string(),
+  "bossEmoji": zod.string(),
+  "maxHp": zod.number(),
+  "currentHp": zod.number(),
+  "status": zod.string(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get attack feed for a battle
+ */
+export const GetBossAttacksParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetBossAttacksResponseItem = zod.object({
+  "id": zod.number(),
+  "battleId": zod.number(),
+  "tiktokViewerId": zod.string(),
+  "viewerName": zod.string(),
+  "attackType": zod.string(),
+  "damage": zod.number(),
+  "createdAt": zod.string()
+})
+export const GetBossAttacksResponse = zod.array(GetBossAttacksResponseItem)
+
+
+/**
+ * @summary Spin the prize wheel
+ */
+export const SpinWheelBody = zod.object({
+  "sessionId": zod.number().optional()
+})
+
+export const SpinWheelResponse = zod.object({
+  "prize": zod.string(),
+  "xp": zod.number(),
+  "coins": zod.number()
+})
+
+
+/**
+ * @summary Pick a random winner from active viewers
+ */
+export const RunLuckyDrawBody = zod.object({
+  "streamerId": zod.number(),
+  "sessionId": zod.number().optional()
+})
+
+export const RunLuckyDrawResponse = zod.object({
+  "winner": zod.string().nullish(),
+  "tiktokViewerId": zod.string().nullish(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary Run a PvP battle between two viewers
+ */
+export const RunPvpBattleBody = zod.object({
+  "player1": zod.string(),
+  "player2": zod.string(),
+  "streamerId": zod.number().optional(),
+  "sessionId": zod.number().optional()
+})
+
+export const RunPvpBattleResponse = zod.object({
+  "winner": zod.string(),
+  "loser": zod.string(),
+  "player1Score": zod.number(),
+  "player2Score": zod.number()
+})
+
+
+/**
+ * @summary Start a quiz question
+ */
+export const StartQuizBody = zod.object({
+  "question": zod.string(),
+  "answer": zod.string(),
+  "sessionId": zod.number().optional()
+})
+
+export const StartQuizResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Start a treasure hunt
+ */
+export const StartTreasureHuntBody = zod.object({
+  "keyword": zod.string(),
+  "prize": zod.string().optional(),
+  "sessionId": zod.number().optional()
+})
+
+export const StartTreasureHuntResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Get alliances for current streamer
+ */
+export const GetUniverseAlliancesResponseItem = zod.object({
+  "id": zod.number(),
+  "requesterId": zod.number(),
+  "targetId": zod.number(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "partnerName": zod.string().optional(),
+  "isRequester": zod.boolean().optional()
+})
+export const GetUniverseAlliancesResponse = zod.array(GetUniverseAlliancesResponseItem)
+
+
+/**
+ * @summary Request an alliance with another streamer
+ */
+export const CreateAllianceBody = zod.object({
+  "targetStreamerId": zod.number()
+})
+
+export const CreateAllianceResponse = zod.object({
+  "id": zod.number(),
+  "requesterId": zod.number(),
+  "targetId": zod.number(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "partnerName": zod.string().optional(),
+  "isRequester": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Accept or reject an alliance request
+ */
+export const UpdateAllianceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateAllianceBody = zod.object({
+  "status": zod.string()
+})
+
+export const UpdateAllianceResponse = zod.object({
+  "id": zod.number(),
+  "requesterId": zod.number(),
+  "targetId": zod.number(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "partnerName": zod.string().optional(),
+  "isRequester": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get global kingdom rankings
+ */
+export const GetUniverseRankingsResponseItem = zod.object({
+  "kingdomId": zod.number(),
+  "kingdomName": zod.string(),
+  "streamerId": zod.number(),
+  "streamerName": zod.string(),
+  "level": zod.number(),
+  "gold": zod.number(),
+  "totalResources": zod.number()
+})
+export const GetUniverseRankingsResponse = zod.array(GetUniverseRankingsResponseItem)
+
+
+/**
  * @summary Update an automation
  */
 export const UpdateAutomationParams = zod.object({

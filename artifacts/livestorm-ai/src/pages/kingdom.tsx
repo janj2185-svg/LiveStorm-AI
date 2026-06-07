@@ -1,27 +1,52 @@
 import { useGetMyKingdom, useGetKingdoms } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Castle, Pickaxe, Hammer, Coins, Map as MapIcon, Globe } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Castle, Pickaxe, Hammer, Coins, Globe } from "lucide-react";
+
+const BUILDINGS_CATALOG = [
+  { type: "Tavern", emoji: "🍺", desc: "Welcomes viewers", goldRequired: 100, woodRequired: 50, stoneRequired: 0, color: "border-amber-500/30 bg-amber-500/5" },
+  { type: "Farm", emoji: "🌾", desc: "Generates wood", goldRequired: 300, woodRequired: 0, stoneRequired: 100, color: "border-green-500/30 bg-green-500/5" },
+  { type: "Barracks", emoji: "⚔️", desc: "Trains fighters", goldRequired: 600, woodRequired: 200, stoneRequired: 200, color: "border-red-500/30 bg-red-500/5" },
+  { type: "Market", emoji: "🏪", desc: "Boosts resources", goldRequired: 1000, woodRequired: 400, stoneRequired: 200, color: "border-blue-500/30 bg-blue-500/5" },
+  { type: "Castle", emoji: "🏰", desc: "Kingdom HQ", goldRequired: 2000, woodRequired: 800, stoneRequired: 600, color: "border-purple-500/30 bg-purple-500/5" },
+  { type: "Cathedral", emoji: "⛪", desc: "Spiritual power", goldRequired: 5000, woodRequired: 1500, stoneRequired: 1500, color: "border-yellow-500/30 bg-yellow-500/5" },
+  { type: "Library", emoji: "📚", desc: "+XP multiplier", goldRequired: 800, woodRequired: 600, stoneRequired: 0, color: "border-cyan-500/30 bg-cyan-500/5" },
+  { type: "Forge", emoji: "⚒️", desc: "Crafts weapons", goldRequired: 1500, woodRequired: 300, stoneRequired: 1000, color: "border-orange-500/30 bg-orange-500/5" },
+];
 
 export function Kingdom() {
   const { data: kingdom, isLoading } = useGetMyKingdom();
   const { data: allKingdoms } = useGetKingdoms();
+
+  const gold = kingdom?.gold ?? 0;
+  const wood = kingdom?.wood ?? 0;
+  const stone = kingdom?.stone ?? 0;
+
+  function isUnlocked(b: typeof BUILDINGS_CATALOG[0]) {
+    return gold >= b.goldRequired && wood >= b.woodRequired && stone >= b.stoneRequired;
+  }
+
+  const unlockedCount = BUILDINGS_CATALOG.filter(isUnlocked).length;
+  const kingdomLevel = Math.max(1, unlockedCount);
+  const progressToNext = Math.min(100, (gold / BUILDINGS_CATALOG[Math.min(unlockedCount, BUILDINGS_CATALOG.length - 1)].goldRequired) * 100);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white">Your Kingdom</h2>
-          <p className="text-muted-foreground">Manage your resources and build your empire.</p>
+          <p className="text-muted-foreground">Build your empire through viewer gifts and engagement.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-white/5 shadow-sm">
           <Castle className="w-5 h-5 text-primary" />
-          <span className="font-bold text-white text-lg">Lv. {kingdom?.level || 1}</span>
+          <span className="font-bold text-white text-lg">Lv. {kingdomLevel}</span>
         </div>
       </div>
 
+      {/* Resources */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Resources */}
         <Card className="bg-card border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.05)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
@@ -31,8 +56,9 @@ export function Kingdom() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-white">
-              {isLoading ? <Skeleton className="h-9 w-20" /> : kingdom?.gold || 0}
+              {isLoading ? <Skeleton className="h-9 w-20" /> : gold.toLocaleString()}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">From viewer gifts</p>
           </CardContent>
         </Card>
 
@@ -45,8 +71,9 @@ export function Kingdom() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-white">
-              {isLoading ? <Skeleton className="h-9 w-20" /> : kingdom?.wood || 0}
+              {isLoading ? <Skeleton className="h-9 w-20" /> : wood.toLocaleString()}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">From viewer likes</p>
           </CardContent>
         </Card>
 
@@ -59,78 +86,108 @@ export function Kingdom() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-white">
-              {isLoading ? <Skeleton className="h-9 w-20" /> : kingdom?.stone || 0}
+              {isLoading ? <Skeleton className="h-9 w-20" /> : stone.toLocaleString()}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">From viewer follows</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Map View */}
-        <Card className="lg:col-span-2 bg-card border-white/5 overflow-hidden">
-          <CardHeader className="border-b border-border bg-black/20">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <MapIcon className="w-5 h-5 text-accent" />
-              Kingdom Map
-            </CardTitle>
-            <CardDescription>Visual representation coming in future update.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="w-full aspect-[16/9] bg-[url('https://images.unsplash.com/photo-1542840410-3092f99611a3?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center relative">
-              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
-                <Castle className="w-16 h-16 text-primary mb-4 opacity-50" />
-                <p className="text-xl font-bold text-white mb-2">{kingdom?.name || "Uncharted Territory"}</p>
-                <p className="text-muted-foreground">Viewers can drop gifts to construct buildings here.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Kingdom progress */}
+      <Card className="bg-card border-primary/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm text-muted-foreground">Kingdom Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-white font-medium">{unlockedCount} / {BUILDINGS_CATALOG.length} buildings unlocked</span>
+            <span className="text-primary">{Math.round(progressToNext)}% to next</span>
+          </div>
+          <Progress value={progressToNext} className="h-2 bg-background border border-border" />
+        </CardContent>
+      </Card>
 
-        <div className="space-y-6">
-          {/* Buildings List */}
-          <Card className="bg-card border-white/5 flex flex-col">
-            <CardHeader className="border-b border-border">
-              <CardTitle className="text-lg">Constructed Buildings</CardTitle>
-              <CardDescription>Total: {kingdom?.totalBuildings || 0}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-center justify-center p-6 text-center text-muted-foreground">
-              {kingdom?.totalBuildings && kingdom.totalBuildings > 0 ? (
-                <p>Buildings exist but list view is coming soon.</p>
-              ) : (
-                <div className="space-y-3">
-                  <Hammer className="w-10 h-10 mx-auto opacity-20" />
-                  <p>No buildings constructed yet.</p>
-                  <p className="text-sm">Go live and receive gifts to start building.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Global Kingdoms */}
-          <Card className="bg-card border-white/5 flex flex-col">
-            <CardHeader className="border-b border-border">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Globe className="w-5 h-5 text-accent" />
-                Global Realms
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-3">
-              {(allKingdoms || []).slice(0, 3).map((k) => (
-                <div key={k.id} className="flex items-center justify-between p-2 rounded bg-background border border-border">
-                  <div className="flex items-center gap-2">
-                    <Castle className="w-4 h-4 text-primary" />
-                    <span className="text-sm text-white">{k.name}</span>
+      {/* Buildings Grid */}
+      <div>
+        <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+          <Castle className="w-5 h-5 text-primary" />
+          Buildings
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {BUILDINGS_CATALOG.map((b) => {
+            const unlocked = isUnlocked(b);
+            return (
+              <Card
+                key={b.type}
+                className={`border transition-all ${b.color} ${unlocked ? "" : "opacity-50 grayscale"}`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-3xl">{b.emoji}</span>
+                    {unlocked ? (
+                      <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Built</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs text-muted-foreground">Locked</Badge>
+                    )}
                   </div>
-                  <span className="text-xs font-medium text-accent">Lv. {k.level}</span>
-                </div>
-              ))}
-              {(!allKingdoms || allKingdoms.length === 0) && (
-                <p className="text-sm text-muted-foreground text-center py-2">No other realms discovered.</p>
-              )}
-            </CardContent>
-          </Card>
+                  <p className="font-bold text-white text-sm">{b.type}</p>
+                  <p className="text-xs text-muted-foreground mb-3">{b.desc}</p>
+                  <div className="space-y-1 text-xs">
+                    {b.goldRequired > 0 && (
+                      <div className={`flex items-center gap-1 ${gold >= b.goldRequired ? "text-green-400" : "text-muted-foreground"}`}>
+                        <Coins className="w-3 h-3" />
+                        <span>{b.goldRequired.toLocaleString()} Gold {gold >= b.goldRequired ? "✓" : `(${Math.max(0, b.goldRequired - gold).toLocaleString()} needed)`}</span>
+                      </div>
+                    )}
+                    {b.woodRequired > 0 && (
+                      <div className={`flex items-center gap-1 ${wood >= b.woodRequired ? "text-green-400" : "text-muted-foreground"}`}>
+                        <Pickaxe className="w-3 h-3" />
+                        <span>{b.woodRequired.toLocaleString()} Wood {wood >= b.woodRequired ? "✓" : `(${Math.max(0, b.woodRequired - wood).toLocaleString()} needed)`}</span>
+                      </div>
+                    )}
+                    {b.stoneRequired > 0 && (
+                      <div className={`flex items-center gap-1 ${stone >= b.stoneRequired ? "text-green-400" : "text-muted-foreground"}`}>
+                        <Hammer className="w-3 h-3" />
+                        <span>{b.stoneRequired.toLocaleString()} Stone {stone >= b.stoneRequired ? "✓" : `(${Math.max(0, b.stoneRequired - stone).toLocaleString()} needed)`}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
+
+      {/* Global Kingdoms */}
+      <Card className="bg-card border-white/5">
+        <CardHeader className="border-b border-border">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Globe className="w-5 h-5 text-accent" />
+            Global Realms
+          </CardTitle>
+          <CardDescription>Other kingdoms around the world</CardDescription>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {(allKingdoms ?? []).slice(0, 6).map((k) => (
+              <div key={k.id} className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+                <div className="flex items-center gap-2">
+                  <Castle className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-bold text-white">{k.name}</p>
+                    <p className="text-xs text-muted-foreground">🪙 {k.gold.toLocaleString()} gold</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-xs">Lv. {k.level}</Badge>
+              </div>
+            ))}
+            {(!allKingdoms || allKingdoms.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-4 col-span-3">No other realms discovered yet.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

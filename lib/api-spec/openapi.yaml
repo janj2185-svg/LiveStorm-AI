@@ -20,6 +20,14 @@ tags:
     description: Live session operations
   - name: automations
     description: Automation trigger operations
+  - name: gamification
+    description: Gamification engine operations
+  - name: boss-battles
+    description: Boss battle operations
+  - name: mini-games
+    description: Mini-game operations
+  - name: universe
+    description: Global universe and alliance operations
 
 paths:
   /healthz:
@@ -273,6 +281,328 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Automation"
+
+  /gamification/leaderboard:
+    get:
+      operationId: getGamificationLeaderboard
+      tags: [gamification]
+      summary: Get viewer leaderboard by XP
+      parameters:
+        - name: streamerId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /gamification/achievements:
+    get:
+      operationId: getAchievements
+      tags: [gamification]
+      summary: Get all achievements with unlock status
+      parameters:
+        - name: streamerId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Achievements list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Achievement"
+
+  /gamification/daily-claim:
+    post:
+      operationId: claimDailyReward
+      tags: [gamification]
+      summary: Claim daily coins reward
+      responses:
+        "200":
+          description: Claim result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyClaimResult"
+
+  /gamification/daily-claim/status:
+    get:
+      operationId: getDailyClaimStatus
+      tags: [gamification]
+      summary: Check if daily reward has been claimed today
+      responses:
+        "200":
+          description: Claim status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyClaimStatus"
+
+  /boss-battles/active:
+    get:
+      operationId: getActiveBossBattle
+      tags: [boss-battles]
+      summary: Get the active boss battle for current streamer
+      responses:
+        "200":
+          description: Active battle or null
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActiveBattleResponse"
+
+  /boss-battles:
+    get:
+      operationId: getBossBattles
+      tags: [boss-battles]
+      summary: List recent boss battles
+      responses:
+        "200":
+          description: Battles list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BossBattle"
+    post:
+      operationId: spawnBossBattle
+      tags: [boss-battles]
+      summary: Spawn a new boss battle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpawnBossRequest"
+      responses:
+        "200":
+          description: Created battle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BossBattle"
+        "400":
+          description: Battle already active
+
+  /boss-battles/{id}/end:
+    post:
+      operationId: endBossBattle
+      tags: [boss-battles]
+      summary: End/expire a boss battle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated battle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BossBattle"
+
+  /boss-battles/{id}/attacks:
+    get:
+      operationId: getBossAttacks
+      tags: [boss-battles]
+      summary: Get attack feed for a battle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Attack list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BossAttack"
+
+  /mini-games/spin:
+    post:
+      operationId: spinWheel
+      tags: [mini-games]
+      summary: Spin the prize wheel
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionIdBody"
+      responses:
+        "200":
+          description: Spin result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpinResult"
+
+  /mini-games/lucky-draw:
+    post:
+      operationId: runLuckyDraw
+      tags: [mini-games]
+      summary: Pick a random winner from active viewers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LuckyDrawRequest"
+      responses:
+        "200":
+          description: Draw result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LuckyDrawResult"
+
+  /mini-games/pvp:
+    post:
+      operationId: runPvpBattle
+      tags: [mini-games]
+      summary: Run a PvP battle between two viewers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PvpRequest"
+      responses:
+        "200":
+          description: PvP result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PvpResult"
+
+  /mini-games/quiz/start:
+    post:
+      operationId: startQuiz
+      tags: [mini-games]
+      summary: Start a quiz question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizStartRequest"
+      responses:
+        "200":
+          description: Quiz started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /mini-games/treasure-hunt/start:
+    post:
+      operationId: startTreasureHunt
+      tags: [mini-games]
+      summary: Start a treasure hunt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TreasureHuntRequest"
+      responses:
+        "200":
+          description: Treasure hunt started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /universe/alliances:
+    get:
+      operationId: getUniverseAlliances
+      tags: [universe]
+      summary: Get alliances for current streamer
+      responses:
+        "200":
+          description: Alliances list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alliance"
+    post:
+      operationId: createAlliance
+      tags: [universe]
+      summary: Request an alliance with another streamer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AllianceRequest"
+      responses:
+        "200":
+          description: Created alliance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alliance"
+
+  /universe/alliances/{id}:
+    patch:
+      operationId: updateAlliance
+      tags: [universe]
+      summary: Accept or reject an alliance request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AllianceUpdate"
+      responses:
+        "200":
+          description: Updated alliance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alliance"
+
+  /universe/rankings:
+    get:
+      operationId: getUniverseRankings
+      tags: [universe]
+      summary: Get global kingdom rankings
+      responses:
+        "200":
+          description: Rankings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UniverseRanking"
 
   /automations/{id}:
     patch:
@@ -611,3 +941,330 @@ components:
           type: string
         isEnabled:
           type: boolean
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        tiktokViewerId:
+          type: string
+        viewerName:
+          type: string
+        totalXp:
+          type: integer
+        totalCoins:
+          type: integer
+        totalGifts:
+          type: integer
+        level:
+          type: integer
+      required:
+        - rank
+        - tiktokViewerId
+        - viewerName
+        - totalXp
+        - totalCoins
+        - totalGifts
+        - level
+
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: integer
+        key:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        iconType:
+          type: string
+        xpReward:
+          type: integer
+        coinReward:
+          type: integer
+        unlocked:
+          type: boolean
+      required:
+        - id
+        - key
+        - name
+        - description
+        - iconType
+        - xpReward
+        - coinReward
+        - unlocked
+
+    DailyClaimResult:
+      type: object
+      properties:
+        alreadyClaimed:
+          type: boolean
+        coinsAwarded:
+          type: integer
+      required:
+        - alreadyClaimed
+        - coinsAwarded
+
+    DailyClaimStatus:
+      type: object
+      properties:
+        alreadyClaimed:
+          type: boolean
+      required:
+        - alreadyClaimed
+
+    BossBattle:
+      type: object
+      properties:
+        id:
+          type: integer
+        streamerId:
+          type: integer
+        sessionId:
+          type: ["integer", "null"]
+        bossName:
+          type: string
+        bossEmoji:
+          type: string
+        maxHp:
+          type: integer
+        currentHp:
+          type: integer
+        status:
+          type: string
+        startedAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+      required:
+        - id
+        - streamerId
+        - bossName
+        - bossEmoji
+        - maxHp
+        - currentHp
+        - status
+        - startedAt
+
+    ActiveBattleResponse:
+      type: object
+      properties:
+        battle:
+          oneOf:
+            - $ref: "#/components/schemas/BossBattle"
+            - type: "null"
+      required:
+        - battle
+
+    SpawnBossRequest:
+      type: object
+      properties:
+        bossName:
+          type: string
+        bossEmoji:
+          type: string
+        maxHp:
+          type: integer
+        sessionId:
+          type: integer
+
+    BossAttack:
+      type: object
+      properties:
+        id:
+          type: integer
+        battleId:
+          type: integer
+        tiktokViewerId:
+          type: string
+        viewerName:
+          type: string
+        attackType:
+          type: string
+        damage:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - battleId
+        - tiktokViewerId
+        - viewerName
+        - attackType
+        - damage
+        - createdAt
+
+    SessionIdBody:
+      type: object
+      properties:
+        sessionId:
+          type: integer
+
+    SpinResult:
+      type: object
+      properties:
+        prize:
+          type: string
+        xp:
+          type: integer
+        coins:
+          type: integer
+      required:
+        - prize
+        - xp
+        - coins
+
+    LuckyDrawRequest:
+      type: object
+      properties:
+        streamerId:
+          type: integer
+        sessionId:
+          type: integer
+      required:
+        - streamerId
+
+    LuckyDrawResult:
+      type: object
+      properties:
+        winner:
+          type: ["string", "null"]
+        tiktokViewerId:
+          type: ["string", "null"]
+        message:
+          type: string
+      required: []
+
+    PvpRequest:
+      type: object
+      properties:
+        player1:
+          type: string
+        player2:
+          type: string
+        streamerId:
+          type: integer
+        sessionId:
+          type: integer
+      required:
+        - player1
+        - player2
+
+    PvpResult:
+      type: object
+      properties:
+        winner:
+          type: string
+        loser:
+          type: string
+        player1Score:
+          type: integer
+        player2Score:
+          type: integer
+      required:
+        - winner
+        - loser
+        - player1Score
+        - player2Score
+
+    QuizStartRequest:
+      type: object
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+        sessionId:
+          type: integer
+      required:
+        - question
+        - answer
+
+    TreasureHuntRequest:
+      type: object
+      properties:
+        keyword:
+          type: string
+        prize:
+          type: string
+        sessionId:
+          type: integer
+      required:
+        - keyword
+
+    OkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+        - ok
+
+    Alliance:
+      type: object
+      properties:
+        id:
+          type: integer
+        requesterId:
+          type: integer
+        targetId:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+        partnerName:
+          type: string
+        isRequester:
+          type: boolean
+      required:
+        - id
+        - requesterId
+        - targetId
+        - status
+        - createdAt
+
+    AllianceRequest:
+      type: object
+      properties:
+        targetStreamerId:
+          type: integer
+      required:
+        - targetStreamerId
+
+    AllianceUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    UniverseRanking:
+      type: object
+      properties:
+        kingdomId:
+          type: integer
+        kingdomName:
+          type: string
+        streamerId:
+          type: integer
+        streamerName:
+          type: string
+        level:
+          type: integer
+        gold:
+          type: integer
+        totalResources:
+          type: integer
+      required:
+        - kingdomId
+        - kingdomName
+        - streamerId
+        - streamerName
+        - level
+        - gold
+        - totalResources
