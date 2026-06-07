@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
@@ -401,21 +401,7 @@ function AiQuestsWidget({ sessionId, cardGlow }: { sessionId: number; cardGlow: 
   const [generating, setGenerating] = useState(false);
   const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  const fetchQuests = async () => {
-    try {
-      const res = await fetch(`${BASE}/api/ai/quests?sessionId=${sessionId}`, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setQuests(data);
-      }
-    } catch {}
-  };
-
-  useEffect(() => {
-    fetchQuests();
-  }, [sessionId]);
-
-  const handleGenerate = async () => {
+  const generateQuests = useCallback(async () => {
     setGenerating(true);
     try {
       const res = await fetch(`${BASE}/api/ai/generate-quests`, {
@@ -431,7 +417,28 @@ function AiQuestsWidget({ sessionId, cardGlow }: { sessionId: number; cardGlow: 
     } catch {} finally {
       setGenerating(false);
     }
-  };
+  }, [sessionId, BASE]);
+
+  const fetchQuests = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE}/api/ai/quests?sessionId=${sessionId}`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length === 0) {
+          // Auto-generate quests for new session
+          void generateQuests();
+        } else {
+          setQuests(data);
+        }
+      }
+    } catch {}
+  }, [sessionId, BASE, generateQuests]);
+
+  useEffect(() => {
+    fetchQuests();
+  }, [sessionId]);
+
+  const handleGenerate = generateQuests;
 
   return (
     <Card className={`bg-card ${cardGlow} transition-colors duration-500`}>

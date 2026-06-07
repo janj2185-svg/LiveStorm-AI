@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGetActiveSession, getGetActiveSessionQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,6 +121,11 @@ export function AiAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { data: activeSessionRes } = useGetActiveSession({
+    query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 10000 },
+  });
+  const activeSessionId = activeSessionRes?.session?.id ?? null;
+
   const { data: config, isLoading: configLoading } = useQuery<PersonaConfig>({
     queryKey: ["ai-config"],
     queryFn: () => apiFetch("/ai/config"),
@@ -217,12 +223,13 @@ export function AiAssistant() {
   };
 
   const handleGenerateQuests = async () => {
+    if (!activeSessionId) return;
     setIsGeneratingQuests(true);
     try {
       const data = await apiFetch("/ai/generate-quests", {
         method: "POST",
         body: JSON.stringify({
-          sessionId: 1,
+          sessionId: activeSessionId,
           viewerCount: 50,
           sessionStats: { gifts: 0, comments: 0, likes: 0, followers: 0 },
         }),

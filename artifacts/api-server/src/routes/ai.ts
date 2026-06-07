@@ -8,7 +8,7 @@ import {
   aiModerationLogsTable,
   sessionsTable,
 } from "@workspace/db";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, and } from "drizzle-orm";
 import { requireAuth, getOrCreateUser } from "./users";
 import {
   chatWithAssistant,
@@ -190,6 +190,16 @@ router.post("/ai/generate-quests", requireAuth, async (req: any, res: any) => {
       viewerCount: viewerCount ?? streamer.viewerCount ?? 10,
       persona: { name: persona.personaName, tone: persona.tone },
     });
+
+    // Replace all existing quests for this session (enforce exactly 3 active quests)
+    await db
+      .delete(aiQuestsTable)
+      .where(
+        and(
+          eq(aiQuestsTable.sessionId, Number(sessionId)),
+          eq(aiQuestsTable.streamerId, streamer.id),
+        ),
+      );
 
     const inserted = await db
       .insert(aiQuestsTable)
