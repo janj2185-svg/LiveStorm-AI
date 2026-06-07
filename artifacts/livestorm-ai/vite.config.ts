@@ -66,6 +66,27 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    proxy: (() => {
+      // API server runs on port 8080 (internal) — proxy both the bare /api path
+      // (used by the generated API client) and the base-prefixed path (used by
+      // manual apiFetch and socket.io).  ws:true enables WebSocket upgrade proxying
+      // so socket.io connections are forwarded correctly.
+      const apiProxy = {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        ws: true,
+      };
+      const proxies: Record<string, typeof apiProxy & { rewrite?: (p: string) => string }> = {
+        "/api": apiProxy,
+      };
+      if (basePath && basePath !== "/") {
+        proxies[`${basePath}/api`] = {
+          ...apiProxy,
+          rewrite: (path: string) => path.slice(basePath.length),
+        };
+      }
+      return proxies;
+    })(),
   },
   preview: {
     port,

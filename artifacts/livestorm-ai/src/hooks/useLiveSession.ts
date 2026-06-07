@@ -153,15 +153,20 @@ export function useLiveSession(
   useEffect(() => {
     if (!sessionId) return;
 
-    let socket: Socket;
+    // Prevent stale async continuations from attaching to a new socket after
+    // cleanup (React StrictMode double-invoke, rapid sessionId changes, etc.)
+    let cancelled = false;
 
     const connect = async () => {
       const token = await getToken();
+      if (cancelled) return;
 
-      socket = io(window.location.origin, {
+      const socket = io(window.location.origin, {
         path: `${BASE_URL}/api/socket.io`,
         transports: ["websocket", "polling"],
         auth: { token },
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
       socketRef.current = socket;
 
@@ -268,8 +273,16 @@ export function useLiveSession(
     connect();
 
     return () => {
-      socket?.disconnect();
-      socketRef.current = null;
+      cancelled = true;
+      // socketRef.current is set synchronously inside connect() after io() — if
+      // connect() hasn't completed yet (still awaiting getToken), the ref is null
+      // and no cleanup is needed. If the socket exists, disconnect gracefully.
+      const s = socketRef.current;
+      if (s) {
+        s.removeAllListeners();
+        s.disconnect();
+        socketRef.current = null;
+      }
       setConnected(false);
     };
   }, [sessionId, getToken]);
