@@ -15,9 +15,17 @@ import {
   generateQuests,
   generateEvent,
   generateVoice,
+  generateCommentReply,
 } from "../lib/aiService";
+import { getIO } from "../lib/socketServer";
 
 const router = Router();
+
+const VALID_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
+type VoiceOption = (typeof VALID_VOICES)[number];
+
+const VALID_LANGUAGES = ["auto", "en", "uk", "pl", "ru"] as const;
+type LangOption = (typeof VALID_LANGUAGES)[number];
 
 async function getStreamer(clerkId: string) {
   const user = await getOrCreateUser(clerkId);
@@ -40,6 +48,7 @@ async function getOrCreatePersona(streamerId: number) {
   return persona!;
 }
 
+// ── GET /ai/config ─────────────────────────────────────────────────────────────
 router.get("/ai/config", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -51,6 +60,7 @@ router.get("/ai/config", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── PUT /ai/config ─────────────────────────────────────────────────────────────
 router.put("/ai/config", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -64,40 +74,107 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
       announceLevelUp,
       announceBossKill,
       moderationEnabled,
+      autoReplyEnabled,
+      replyLanguage,
+      spamProtectionEnabled,
+      spamCooldownSeconds,
+      voiceEnabled,
+      voiceName,
     } = req.body;
 
     const existing = await db.query.aiPersonaConfigsTable.findFirst({
       where: eq(aiPersonaConfigsTable.streamerId, streamer.id),
     });
 
-    const updates: any = { updatedAt: new Date() };
-    if (personaName !== undefined) updates.personaName = personaName;
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (personaName !== undefined) updates.personaName = String(personaName).slice(0, 50);
     if (tone !== undefined) updates.tone = tone;
-    if (announceGifts !== undefined) updates.announceGifts = announceGifts;
-    if (announceGiftThreshold !== undefined) updates.announceGiftThreshold = announceGiftThreshold;
-    if (announceLevelUp !== undefined) updates.announceLevelUp = announceLevelUp;
-    if (announceBossKill !== undefined) updates.announceBossKill = announceBossKill;
-    if (moderationEnabled !== undefined) updates.moderationEnabled = moderationEnabled;
+    if (announceGifts !== undefined) updates.announceGifts = Boolean(announceGifts);
+    if (announceGiftThreshold !== undefined) updates.announceGiftThreshold = Math.max(0, Number(announceGiftThreshold));
+    if (announceLevelUp !== undefined) updates.announceLevelUp = Boolean(announceLevelUp);
+    if (announceBossKill !== undefined) updates.announceBossKill = Boolean(announceBossKill);
+    if (moderationEnabled !== undefined) updates.moderationEnabled = Boolean(moderationEnabled);
+    if (autoReplyEnabled !== undefined) updates.autoReplyEnabled = Boolean(autoReplyEnabled);
+    if (replyLanguage !== undefined && VALID_LANGUAGES.includes(replyLanguage)) {
+      updates.replyLanguage = replyLanguage as LangOption;
+    }
+    if (spamProtectionEnabled !== undefined) updates.spamProtectionEnabled = Boolean(spamProtectionEnabled);
+    if (spamCooldownSeconds !== undefined) {
+      updates.spamCooldownSeconds = Math.max(5, Math.min(300, Number(spamCooldownSeconds)));
+    }
+    if (voiceEnabled !== undefined) updates.voiceEnabled = Boolean(voiceEnabled);
+    if (voiceName !== undefined && VALID_VOICES.includes(voiceName)) {
+      updates.voiceName = voiceName as VoiceOption;
+    }
 
+    let result;
     if (existing) {
-      const [updated] = await db
+      [result] = await db
         .update(aiPersonaConfigsTable)
         .set(updates)
         .where(eq(aiPersonaConfigsTable.streamerId, streamer.id))
         .returning();
-      res.json(updated);
     } else {
-      const [created] = await db
+      [result] = await db
         .insert(aiPersonaConfigsTable)
         .values({ streamerId: streamer.id, ...updates })
         .returning();
-      res.json(created);
     }
+    res.json(result);
   } catch {
     res.status(500).json({ error: "Failed to update AI config" });
   }
 });
 
+// ── POST /ai/reply-to-comment ──────────────────────────────────────────────────
+// Manual one-shot reply: streamer clicks a specific viewer comment to reply
+router.post("/ai/reply-to-comment", requireAuth, async (req: any, res: any) => {
+  try {
+    const { streamer } = await getStreamer(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
+
+    const { comment, viewerName, sessionId, language } = req.body;
+    if (!comment?.trim()) return res.status(400).json({ error: "comment is required" });
+    if (!viewerName?.trim()) return res.status(400).json({ error: "viewerName is required" });
+
+    const persona = await getOrCreatePersona(streamer.id);
+    const safeLanguage = VALID_LANGUAGES.includes(language) ? language : (persona.replyLanguage ?? "auto");
+
+    const reply = await generateCommentReply(
+      String(comment).trim(),
+      String(viewerName).trim(),
+      { name: persona.personaName, tone: persona.tone },
+      safeLanguage,
+    );
+
+    if (!reply) {
+      return res.status(503).json({ error: "AI reply generation failed" });
+    }
+
+    // Emit to the session room so OBS overlays + other clients see it
+    if (sessionId) {
+      const session = await db.query.sessionsTable.findFirst({
+        where: eq(sessionsTable.id, Number(sessionId)),
+      });
+      if (session && session.streamerId === streamer.id && !session.endedAt) {
+        const io = getIO();
+        if (io) {
+          io.to(`session:${session.id}`).emit("ai:announcement", {
+            text: reply,
+            type: "comment_reply",
+            viewerName: String(viewerName).trim(),
+          });
+        }
+      }
+    }
+
+    res.json({ reply, viewerName: String(viewerName).trim(), language: safeLanguage });
+  } catch {
+    res.status(500).json({ error: "Failed to generate reply" });
+  }
+});
+
+// ── GET /ai/messages ───────────────────────────────────────────────────────────
 router.get("/ai/messages", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -116,6 +193,7 @@ router.get("/ai/messages", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── DELETE /ai/messages ────────────────────────────────────────────────────────
 router.delete("/ai/messages", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -127,6 +205,7 @@ router.delete("/ai/messages", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── POST /ai/chat ──────────────────────────────────────────────────────────────
 router.post("/ai/chat", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -169,6 +248,7 @@ router.post("/ai/chat", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── POST /ai/generate-quests ───────────────────────────────────────────────────
 router.post("/ai/generate-quests", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -192,7 +272,6 @@ router.post("/ai/generate-quests", requireAuth, async (req: any, res: any) => {
       persona: { name: persona.personaName, tone: persona.tone },
     });
 
-    // Replace all existing quests for this session (enforce exactly 3 active quests)
     await db
       .delete(aiQuestsTable)
       .where(
@@ -213,6 +292,7 @@ router.post("/ai/generate-quests", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── GET /ai/quests ─────────────────────────────────────────────────────────────
 router.get("/ai/quests", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -240,6 +320,7 @@ router.get("/ai/quests", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── POST /ai/generate-event ────────────────────────────────────────────────────
 router.post("/ai/generate-event", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -260,9 +341,7 @@ router.post("/ai/generate-event", requireAuth, async (req: any, res: any) => {
   }
 });
 
-const VALID_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
-type VoiceOption = (typeof VALID_VOICES)[number];
-
+// ── POST /ai/voice ─────────────────────────────────────────────────────────────
 router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
   try {
     const { text, voice } = req.body;
@@ -285,6 +364,7 @@ router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── GET /ai/moderation-log ─────────────────────────────────────────────────────
 router.get("/ai/moderation-log", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);

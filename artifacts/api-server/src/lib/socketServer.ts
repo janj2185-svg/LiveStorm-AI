@@ -14,10 +14,22 @@ import { processAutomations } from "./automationEngine";
 import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 import { verifyObsToken } from "../routes/obs";
-import { moderateComment } from "./aiService";
+import { moderateComment, generateCommentReply, generateAnnouncement } from "./aiService";
 import { emitAiGiftAnnouncement } from "./aiAnnouncer";
 
 let io: SocketServer | null = null;
+
+// ─── Anti-spam: per-session per-viewer last-reply timestamp ───────────────────
+// key: `${sessionId}:${viewerName}`, value: ms timestamp of last AI reply
+const autoReplySpamMap = new Map<string, number>();
+
+// Clean up spam map entries older than 10 minutes to prevent memory leaks
+setInterval(() => {
+  const cutoff = Date.now() - 10 * 60 * 1000;
+  for (const [key, ts] of autoReplySpamMap) {
+    if (ts < cutoff) autoReplySpamMap.delete(key);
+  }
+}, 5 * 60 * 1000);
 
 async function resolveUserIdFromToken(token: string): Promise<number | null> {
   try {
@@ -48,30 +60,97 @@ async function processAiAnnouncements(
 
     const roomId = `session:${event.sessionId}`;
     const viewerName = event.username ?? "Unknown";
+    const persona = { name: config.personaName, tone: config.tone };
+    const replyLanguage = config.replyLanguage ?? "auto";
 
+    // ── Gift announcements ─────────────────────────────────────────────────────
     if (event.type === "gift" && config.announceGifts) {
       const coins = (event.data.coins as number) ?? 0;
       if (coins >= config.announceGiftThreshold) {
         void emitAiGiftAnnouncement(io, roomId, streamerId, viewerName, coins);
       }
-    } else if (event.type === "comment" && config.moderationEnabled) {
-      const comment = ((event.data.text as string) ?? "").trim();
-      if (comment.length > 3) {
-        const { flagged, reason } = await moderateComment(comment);
-        if (flagged) {
-          io.to(roomId).emit("moderation:flagged", { viewerName, comment, reason });
-          await db.insert(aiModerationLogsTable).values({
-            sessionId: event.sessionId,
-            streamerId,
+    }
+
+    // ── Follow announcements ───────────────────────────────────────────────────
+    if (event.type === "follow" && config.announceLevelUp) {
+      try {
+        const reply = await generateCommentReply(
+          "just followed the stream!",
+          viewerName,
+          persona,
+          replyLanguage,
+        );
+        if (reply) {
+          io.to(roomId).emit("ai:announcement", {
+            text: reply,
+            type: "follow",
             viewerName,
-            comment,
-            reason,
           });
+        }
+      } catch {
+        // AI failures must not crash the pipeline
+      }
+    }
+
+    // ── Comment: moderation + auto-reply ───────────────────────────────────────
+    if (event.type === "comment") {
+      const comment = ((event.data.text as string) ?? "").trim();
+      if (comment.length <= 2) return;
+
+      let flagged = false;
+
+      // 1. Run moderation first (if enabled)
+      if (config.moderationEnabled) {
+        try {
+          const { flagged: isFlagged, reason } = await moderateComment(comment);
+          if (isFlagged) {
+            flagged = true;
+            io.to(roomId).emit("moderation:flagged", { viewerName, comment, reason });
+            await db.insert(aiModerationLogsTable).values({
+              sessionId: event.sessionId,
+              streamerId,
+              viewerName,
+              comment,
+              reason,
+            });
+          }
+        } catch {
+          // moderation errors are non-fatal
+        }
+      }
+
+      // 2. Auto-reply (only if comment wasn't flagged)
+      if (!flagged && config.autoReplyEnabled) {
+        const spamKey = `${event.sessionId}:${viewerName}`;
+        const lastReply = autoReplySpamMap.get(spamKey) ?? 0;
+        const cooldownMs = config.spamProtectionEnabled
+          ? Math.max(5, config.spamCooldownSeconds ?? 30) * 1000
+          : 0;
+
+        if (Date.now() - lastReply >= cooldownMs) {
+          try {
+            autoReplySpamMap.set(spamKey, Date.now());
+            const reply = await generateCommentReply(
+              comment,
+              viewerName,
+              persona,
+              replyLanguage,
+            );
+            if (reply) {
+              io.to(roomId).emit("ai:announcement", {
+                text: reply,
+                type: "comment_reply",
+                viewerName,
+              });
+            }
+          } catch {
+            // auto-reply errors are non-fatal
+          }
         }
       }
     }
   } catch {
-    // AI failures must never crash the pipeline
+    // Top-level catch — AI failures must never crash the event pipeline
   }
 }
 
@@ -195,7 +274,7 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
     }
   } catch (_err) {}
 
-  // AI announcements + moderation (non-blocking, fire-and-forget)
+  // AI announcements, auto-reply, moderation (non-blocking)
   if (streamerId) {
     void processAiAnnouncements(io, event, streamerId);
   }
