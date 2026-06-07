@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "EpnyIbUXbrlg-fhUvbP3Y"
+uri = "file://artifacts/livestorm-ai/public/hero-dashboard.png"
+type = "image"
+title = "Cyberpunk streaming mission control"

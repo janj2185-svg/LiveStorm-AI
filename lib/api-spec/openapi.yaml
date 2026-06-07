@@ -3,20 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: LiveStorm AI API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User profile operations
+  - name: streamers
+    description: Streamer profile operations
+  - name: kingdoms
+    description: Kingdom operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,133 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /users/me:
+    get:
+      operationId: getMyProfile
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+    patch:
+      operationId: updateMyProfile
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/me/tiktok:
+    post:
+      operationId: connectTiktok
+      tags: [users]
+      summary: Connect TikTok username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TiktokConnect"
+      responses:
+        "200":
+          description: Connected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /streamers/me:
+    get:
+      operationId: getMyStreamer
+      tags: [streamers]
+      summary: Get current user's streamer profile
+      responses:
+        "200":
+          description: Streamer profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Streamer"
+        "404":
+          description: Not found
+
+  /streamers:
+    get:
+      operationId: getStreamers
+      tags: [streamers]
+      summary: List all live streamers
+      responses:
+        "200":
+          description: List of streamers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Streamer"
+
+  /streamers/top:
+    get:
+      operationId: getTopStreamers
+      tags: [streamers]
+      summary: Get top streamers by gifts received
+      responses:
+        "200":
+          description: Top streamers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Streamer"
+
+  /kingdoms/me:
+    get:
+      operationId: getMyKingdom
+      tags: [kingdoms]
+      summary: Get current user's kingdom
+      responses:
+        "200":
+          description: Kingdom data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Kingdom"
+        "404":
+          description: Not found
+
+  /kingdoms:
+    get:
+      operationId: getKingdoms
+      tags: [kingdoms]
+      summary: List all kingdoms (global universe)
+      responses:
+        "200":
+          description: List of kingdoms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Kingdom"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +167,107 @@ components:
       required:
         - status
 
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        clerkId:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        tiktokUsername:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+        plan:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - clerkId
+        - email
+        - role
+        - plan
+        - createdAt
+
+    UserUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+
+    TiktokConnect:
+      type: object
+      properties:
+        tiktokUsername:
+          type: string
+      required:
+        - tiktokUsername
+
+    Streamer:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        displayName:
+          type: ["string", "null"]
+        tiktokUsername:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        isLive:
+          type: boolean
+        viewerCount:
+          type: integer
+        totalGiftsReceived:
+          type: integer
+        plan:
+          type: string
+      required:
+        - id
+        - userId
+        - isLive
+        - viewerCount
+        - totalGiftsReceived
+        - plan
+
+    Kingdom:
+      type: object
+      properties:
+        id:
+          type: integer
+        streamerId:
+          type: integer
+        streamerName:
+          type: ["string", "null"]
+        name:
+          type: string
+        level:
+          type: integer
+        gold:
+          type: integer
+        wood:
+          type: integer
+        stone:
+          type: integer
+        totalBuildings:
+          type: integer
+      required:
+        - id
+        - streamerId
+        - name
+        - level
+        - gold
+        - wood
+        - stone
+        - totalBuildings
