@@ -3,7 +3,7 @@ import { io, type Socket } from "socket.io-client";
 import { useAuth } from "@clerk/react";
 
 export interface LiveEvent {
-  type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount";
+  type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "ai_announcement";
   sessionId: number;
   username?: string;
   avatarUrl?: string;
@@ -53,6 +53,11 @@ export function useLiveSession(sessionId: number | null | undefined) {
   const [automationsFired, setAutomationsFired] = useState<AutomationFiredEvent[]>([]);
   const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
+  const ttsEnabledRef = useRef(false);
+
+  const setTtsEnabled = useCallback((enabled: boolean) => {
+    ttsEnabledRef.current = enabled;
+  }, []);
   const [stats, setStats] = useState<LiveStats>({
     viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0, totalComments: 0, totalShares: 0,
     topSupporters: [],
@@ -132,9 +137,28 @@ export function useLiveSession(sessionId: number | null | undefined) {
       });
 
       socket.on("ai:announcement", (payload: Omit<AiAnnouncementEvent, "timestamp">) => {
-        setAiAnnouncements((prev) =>
-          [{ ...payload, timestamp: Date.now() }, ...prev].slice(0, 30),
+        const ts = Date.now();
+        setAiAnnouncements((prev) => [{ ...payload, timestamp: ts }, ...prev].slice(0, 30));
+        // Inject into the main activity feed so announcements appear inline
+        setEvents((prev) =>
+          [
+            {
+              type: "ai_announcement" as const,
+              sessionId: sessionId!,
+              username: "AI Co-host",
+              data: { text: payload.text, announcementType: payload.type },
+              timestamp: ts,
+            },
+            ...prev,
+          ].slice(0, 200),
         );
+        // Browser TTS
+        if (ttsEnabledRef.current && "speechSynthesis" in window) {
+          const utt = new SpeechSynthesisUtterance(payload.text);
+          utt.rate = 1.1;
+          utt.pitch = 1.05;
+          window.speechSynthesis.speak(utt);
+        }
       });
 
       socket.on("moderation:flagged", (payload: Omit<ModerationFlaggedEvent, "timestamp">) => {
@@ -169,5 +193,5 @@ export function useLiveSession(sessionId: number | null | undefined) {
     };
   }, [sessionId, getToken]);
 
-  return { events, stats, automationsFired, aiAnnouncements, flaggedComments, connected, clearEvents };
+  return { events, stats, automationsFired, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled };
 }

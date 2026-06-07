@@ -9,6 +9,9 @@
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
+  "optionalDependencies": {
+    "tiktok-live-connector": "^2.3.5"
+  },
   "dependencies": {
     "@clerk/express": "^2.1.23",
     "@clerk/shared": "^4.15.0",

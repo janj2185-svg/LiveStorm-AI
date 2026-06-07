@@ -31,6 +31,7 @@ const EVENT_COLORS: Record<string, { bg: string, text: string, icon: any }> = {
   like: { bg: "bg-pink-500/10", text: "text-pink-500", icon: Heart },
   share: { bg: "bg-cyan-500/10", text: "text-cyan-500", icon: Share },
   viewerCount: { bg: "bg-purple-500/10", text: "text-purple-500", icon: Users },
+  ai_announcement: { bg: "bg-purple-600/20", text: "text-purple-300", icon: Bot },
 };
 
 export function Dashboard() {
@@ -46,7 +47,13 @@ export function Dashboard() {
   const endSession = useEndSession();
   
   const activeSessionId = activeSessionRes?.session?.id;
-  const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents } = useLiveSession(activeSessionId);
+  const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled } = useLiveSession(activeSessionId);
+  const [ttsOn, setTtsOn] = useState(false);
+
+  const handleTtsToggle = (val: boolean) => {
+    setTtsOn(val);
+    setTtsEnabled(val);
+  };
 
   const [duration, setDuration] = useState(0);
 
@@ -203,6 +210,7 @@ export function Dashboard() {
                       if (event.type === 'comment') desc = `said: "${event.data.text || ''}"`;
                       if (event.type === 'follow') desc = `started following you`;
                       if (event.type === 'share') desc = `shared the LIVE`;
+                      if (event.type === 'ai_announcement') desc = `${event.data.text || ''}`;
 
                       if (event.type === 'viewerCount') return null; // skip viewer count updates from feed
 
@@ -295,9 +303,20 @@ export function Dashboard() {
           {isActive && (
             <Card className={`bg-card ${cardGlow} transition-colors duration-500`}>
               <CardHeader className="pb-3 border-b border-border/50">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-purple-400" />
-                  AI Co-host
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Bot className="h-5 w-5 text-purple-400" />
+                    AI Co-host
+                  </span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-xs font-normal text-muted-foreground">🔊 TTS</span>
+                    <input
+                      type="checkbox"
+                      checked={ttsOn}
+                      onChange={(e) => handleTtsToggle(e.target.checked)}
+                      className="w-4 h-4 accent-purple-500 cursor-pointer"
+                    />
+                  </label>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
