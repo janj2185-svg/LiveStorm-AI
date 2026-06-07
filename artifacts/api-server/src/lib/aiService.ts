@@ -165,6 +165,26 @@ export async function generateEvent(context: {
   }
 }
 
+export async function generateVoice(
+  text: string,
+  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "nova",
+): Promise<Buffer | null> {
+  try {
+    const truncated = text.slice(0, 500);
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      voice,
+      input: truncated,
+      speed: 1.1,
+    });
+    const arrayBuffer = await mp3.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (err: any) {
+    console.error("[TTS] generateVoice error:", err?.message);
+    return null;
+  }
+}
+
 export async function chatWithAssistant(
   history: Array<{ role: "user" | "assistant"; content: string }>,
   message: string,

@@ -42,7 +42,7 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
     const demoMode = req.body?.demoMode === true || !tiktokUsername;
 
     const io = getIO();
-    let actualMode: "live" | "demo" = demoMode ? "demo" : "demo";
+    let actualMode: "live" | "demo" = demoMode ? "demo" : "live";
     if (io) {
       actualMode = await startTikTokConnection(io, tiktokUsername, session.id, user.id, demoMode);
     }

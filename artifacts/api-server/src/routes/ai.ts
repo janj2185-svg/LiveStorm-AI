@@ -14,6 +14,7 @@ import {
   chatWithAssistant,
   generateQuests,
   generateEvent,
+  generateVoice,
 } from "../lib/aiService";
 
 const router = Router();
@@ -256,6 +257,31 @@ router.post("/ai/generate-event", requireAuth, async (req: any, res: any) => {
     res.json(event);
   } catch {
     res.status(500).json({ error: "Failed to generate event" });
+  }
+});
+
+const VALID_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
+type VoiceOption = (typeof VALID_VOICES)[number];
+
+router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
+  try {
+    const { text, voice } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: "text is required" });
+
+    const safeVoice: VoiceOption = VALID_VOICES.includes(voice) ? voice : "nova";
+    const audioBuffer = await generateVoice(text.trim(), safeVoice);
+
+    if (!audioBuffer) {
+      return res.status(503).json({ error: "Voice generation failed. Check OpenAI configuration." });
+    }
+
+    res.set("Content-Type", "audio/mpeg");
+    res.set("Content-Length", String(audioBuffer.length));
+    res.set("Cache-Control", "no-store");
+    res.send(audioBuffer);
+  } catch (err: any) {
+    console.error("[AI] /ai/voice error:", err?.message);
+    res.status(500).json({ error: "Failed to generate voice" });
   }
 });
 

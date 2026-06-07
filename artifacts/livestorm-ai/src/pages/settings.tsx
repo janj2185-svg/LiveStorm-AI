@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -148,8 +149,8 @@ export function Settings() {
                   )}
                 />
                 <div className="space-y-2 max-w-md">
-                  <FormLabel>Email Address</FormLabel>
-                  <Input value={user?.email || ""} disabled className="bg-background/50 border-border opacity-50" />
+                  <Label htmlFor="email-readonly" className="text-sm font-medium">Email Address</Label>
+                  <Input id="email-readonly" value={user?.email || ""} disabled className="bg-background/50 border-border opacity-50" />
                   <p className="text-xs text-muted-foreground">Managed via Clerk</p>
                 </div>
                 <Button type="submit" className="mt-4 bg-primary hover:bg-primary/90" disabled={updateProfile.isPending || isLoading}>

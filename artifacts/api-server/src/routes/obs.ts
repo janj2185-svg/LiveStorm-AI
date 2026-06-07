@@ -13,17 +13,20 @@ import { requireAuth } from "./users";
 
 const router = Router();
 
-const _rawSecret = process.env.CLERK_SECRET_KEY;
-if (!_rawSecret) {
-  throw new Error("CLERK_SECRET_KEY environment variable is required for OBS overlay token signing");
+function getObsTokenSecret(): string {
+  const secret = process.env.CLERK_SECRET_KEY;
+  if (!secret) {
+    throw new Error("CLERK_SECRET_KEY environment variable is required for OBS overlay token signing");
+  }
+  return secret;
 }
-const OBS_TOKEN_SECRET: string = _rawSecret;
 
 export function generateObsToken(streamerId: number): { token: string; expiresAt: number } {
+  const secret = getObsTokenSecret();
   const exp = Date.now() + 24 * 60 * 60 * 1000;
   const payload = Buffer.from(JSON.stringify({ streamerId, exp })).toString("base64url");
   const sig = crypto
-    .createHmac("sha256", OBS_TOKEN_SECRET)
+    .createHmac("sha256", secret)
     .update(payload)
     .digest("base64url");
   return { token: `${payload}.${sig}`, expiresAt: exp };
@@ -31,13 +34,14 @@ export function generateObsToken(streamerId: number): { token: string; expiresAt
 
 export function verifyObsToken(token: string): { streamerId: number } | null {
   try {
-    if (!token || typeof token !== "string") return null;
+    const secret = process.env.CLERK_SECRET_KEY;
+    if (!secret || !token || typeof token !== "string") return null;
     const lastDot = token.lastIndexOf(".");
     if (lastDot < 0) return null;
     const payload = token.slice(0, lastDot);
     const sig = token.slice(lastDot + 1);
     const expectedSig = crypto
-      .createHmac("sha256", OBS_TOKEN_SECRET)
+      .createHmac("sha256", secret)
       .update(payload)
       .digest("base64url");
     if (sig !== expectedSig) return null;
@@ -59,11 +63,12 @@ router.post("/obs/token", requireAuth, async (req: any, res: any) => {
     const streamer = await db.query.streamersTable.findFirst({
       where: eq(streamersTable.userId, user.id),
     });
-    if (!streamer) return res.status(404).json({ error: "No streamer profile found" });
+    if (!streamer) return res.status(404).json({ error: "No streamer profile found. Connect TikTok first." });
 
     const { token, expiresAt } = generateObsToken(streamer.id);
     res.json({ token, expiresAt, streamerId: streamer.id });
-  } catch {
+  } catch (err: any) {
+    console.error("[OBS] Token generation error:", err?.message);
     res.status(500).json({ error: "Failed to generate overlay token" });
   }
 });
@@ -152,7 +157,8 @@ router.get("/obs/state/:streamerId", async (req: any, res: any) => {
         level: Math.min(100, Math.floor(Math.sqrt(Number(r.totalXp) / 50)) + 1),
       })),
     });
-  } catch {
+  } catch (err: any) {
+    console.error("[OBS] State fetch error:", err?.message);
     res.status(500).json({ error: "Failed to fetch overlay state" });
   }
 });

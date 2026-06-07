@@ -121,7 +121,7 @@ function buildOverlayUrl(
 
 export function Overlays() {
   const { toast } = useToast();
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const BASE_URL = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
   const baseUrl = `${window.location.origin}${BASE_URL}`;
 
@@ -165,8 +165,10 @@ export function Overlays() {
   };
 
   useEffect(() => {
-    fetchToken();
-  }, []);
+    if (isLoaded && isSignedIn) {
+      fetchToken();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const handleCopy = (url: string) => {
     navigator.clipboard.writeText(url);

@@ -45,7 +45,39 @@ export interface LiveStats {
   topSupporters: Array<{ username: string; coins: number }>;
 }
 
+export type TtsMode = "off" | "browser" | "openai";
+
 const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
+const API_BASE = `${BASE_URL}/api`;
+
+async function playOpenAiTts(text: string, voice: string): Promise<void> {
+  try {
+    const res = await fetch(`${API_BASE}/ai/voice`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice }),
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.onerror = () => URL.revokeObjectURL(url);
+    await audio.play();
+  } catch (err) {
+    console.warn("[TTS] OpenAI TTS playback error:", err);
+  }
+}
+
+function playBrowserTts(text: string): void {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 1.1;
+  utt.pitch = 1.05;
+  window.speechSynthesis.speak(utt);
+}
 
 export function useLiveSession(sessionId: number | null | undefined) {
   const { getToken } = useAuth();
@@ -53,11 +85,23 @@ export function useLiveSession(sessionId: number | null | undefined) {
   const [automationsFired, setAutomationsFired] = useState<AutomationFiredEvent[]>([]);
   const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
-  const ttsEnabledRef = useRef(false);
 
-  const setTtsEnabled = useCallback((enabled: boolean) => {
-    ttsEnabledRef.current = enabled;
+  const ttsModeRef = useRef<TtsMode>("off");
+  const ttsVoiceRef = useRef<string>("nova");
+
+  const setTtsMode = useCallback((mode: TtsMode) => {
+    ttsModeRef.current = mode;
   }, []);
+
+  const setTtsVoice = useCallback((voice: string) => {
+    ttsVoiceRef.current = voice;
+  }, []);
+
+  // Legacy compatibility: setTtsEnabled maps to browser/off
+  const setTtsEnabled = useCallback((enabled: boolean) => {
+    ttsModeRef.current = enabled ? "browser" : "off";
+  }, []);
+
   const [stats, setStats] = useState<LiveStats>({
     viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0, totalComments: 0, totalShares: 0,
     topSupporters: [],
@@ -139,7 +183,6 @@ export function useLiveSession(sessionId: number | null | undefined) {
       socket.on("ai:announcement", (payload: Omit<AiAnnouncementEvent, "timestamp">) => {
         const ts = Date.now();
         setAiAnnouncements((prev) => [{ ...payload, timestamp: ts }, ...prev].slice(0, 30));
-        // Inject into the main activity feed so announcements appear inline
         setEvents((prev) =>
           [
             {
@@ -152,12 +195,12 @@ export function useLiveSession(sessionId: number | null | undefined) {
             ...prev,
           ].slice(0, 200),
         );
-        // Browser TTS
-        if (ttsEnabledRef.current && "speechSynthesis" in window) {
-          const utt = new SpeechSynthesisUtterance(payload.text);
-          utt.rate = 1.1;
-          utt.pitch = 1.05;
-          window.speechSynthesis.speak(utt);
+
+        const mode = ttsModeRef.current;
+        if (mode === "openai") {
+          playOpenAiTts(payload.text, ttsVoiceRef.current);
+        } else if (mode === "browser") {
+          playBrowserTts(payload.text);
         }
       });
 
@@ -166,7 +209,6 @@ export function useLiveSession(sessionId: number | null | undefined) {
         setFlaggedComments((prev) =>
           [{ ...payload, timestamp: flaggedAt }, ...prev].slice(0, 30),
         );
-        // Remove the flagged comment from the activity feed
         setEvents((prev) =>
           prev.filter(
             (e) =>
@@ -193,5 +235,16 @@ export function useLiveSession(sessionId: number | null | undefined) {
     };
   }, [sessionId, getToken]);
 
-  return { events, stats, automationsFired, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled };
+  return {
+    events,
+    stats,
+    automationsFired,
+    aiAnnouncements,
+    flaggedComments,
+    connected,
+    clearEvents,
+    setTtsEnabled,
+    setTtsMode,
+    setTtsVoice,
+  };
 }
