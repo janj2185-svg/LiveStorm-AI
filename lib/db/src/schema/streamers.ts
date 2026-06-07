@@ -27,6 +27,7 @@ export const sessionsTable = pgTable("sessions", {
   totalLikes: integer("total_likes").notNull().default(0),
   totalFollowers: integer("total_followers").notNull().default(0),
   totalComments: integer("total_comments").notNull().default(0),
+  totalShares: integer("total_shares").notNull().default(0),
 });
 
 export const insertStreamerSchema = createInsertSchema(streamersTable).omit({

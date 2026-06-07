@@ -151,10 +151,13 @@ export async function startTikTokConnection(
   sessionId: number,
   userId: number,
   demoMode = false
-) {
+): Promise<"live" | "demo"> {
   if (!demoMode && tiktokUsername) {
     const connected = await startLiveConnector(tiktokUsername, sessionId, userId);
-    if (connected) return;
+    if (connected) return "live";
+    console.warn(
+      `[TikTokConnector] Live connection to @${tiktokUsername} failed — using demo simulator for session ${sessionId}.`
+    );
   }
 
   const roomId = `session:${sessionId}`;
@@ -164,13 +167,10 @@ export async function startTikTokConnection(
     stop: () => stopSimulator(sessionId),
   });
 
-  if (!demoMode && tiktokUsername) {
-    console.warn(
-      `[TikTokConnector] Using demo simulator for session ${sessionId} (live connection failed).`
-    );
-  } else {
+  if (demoMode) {
     console.log(`[TikTokConnector] Demo mode started for session ${sessionId}.`);
   }
+  return "demo";
 }
 
 export function stopTikTokConnection(sessionId: number) {

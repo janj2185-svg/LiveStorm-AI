@@ -457,6 +457,8 @@ components:
           type: integer
         totalComments:
           type: integer
+        totalShares:
+          type: integer
       required:
         - id
         - streamerId
@@ -466,6 +468,7 @@ components:
         - totalLikes
         - totalFollowers
         - totalComments
+        - totalShares
 
     SessionStarted:
       type: object
@@ -577,6 +580,8 @@ components:
           type: integer
         totalComments:
           type: integer
+        totalShares:
+          type: integer
       required:
         - id
         - streamerId
@@ -587,6 +592,7 @@ components:
         - totalLikes
         - totalFollowers
         - totalComments
+        - totalShares
 
     AutomationUpdate:
       type: object

@@ -72,6 +72,7 @@ export interface Session {
   totalLikes: number;
   totalFollowers: number;
   totalComments: number;
+  totalShares: number;
 }
 
 export interface SessionStarted {
@@ -121,6 +122,7 @@ export interface SessionStats {
   totalLikes: number;
   totalFollowers: number;
   totalComments: number;
+  totalShares: number;
 }
 
 export interface AutomationUpdate {

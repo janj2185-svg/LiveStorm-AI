@@ -18,4 +18,5 @@ export interface SessionStats {
   totalLikes: number;
   totalFollowers: number;
   totalComments: number;
+  totalShares: number;
 }

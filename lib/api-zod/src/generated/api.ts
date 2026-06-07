@@ -178,7 +178,8 @@ export const EndSessionResponse = zod.object({
   "totalGifts": zod.number(),
   "totalLikes": zod.number(),
   "totalFollowers": zod.number(),
-  "totalComments": zod.number()
+  "totalComments": zod.number(),
+  "totalShares": zod.number()
 })
 
 
@@ -196,7 +197,8 @@ export const GetActiveSessionResponse = zod.object({
   "totalGifts": zod.number(),
   "totalLikes": zod.number(),
   "totalFollowers": zod.number(),
-  "totalComments": zod.number()
+  "totalComments": zod.number(),
+  "totalShares": zod.number()
 }),zod.null()]).optional()
 })
 
@@ -218,7 +220,8 @@ export const GetSessionStatsResponse = zod.object({
   "totalGifts": zod.number(),
   "totalLikes": zod.number(),
   "totalFollowers": zod.number(),
-  "totalComments": zod.number()
+  "totalComments": zod.number(),
+  "totalShares": zod.number()
 })
 
 
@@ -234,7 +237,8 @@ export const GetSessionsResponseItem = zod.object({
   "totalGifts": zod.number(),
   "totalLikes": zod.number(),
   "totalFollowers": zod.number(),
-  "totalComments": zod.number()
+  "totalComments": zod.number(),
+  "totalShares": zod.number()
 })
 export const GetSessionsResponse = zod.array(GetSessionsResponseItem)
 

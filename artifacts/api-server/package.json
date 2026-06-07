@@ -23,6 +23,9 @@
     "pino-http": "^10.5.0",
     "socket.io": "^4.8.3"
   },
+  "optionalDependencies": {
+    "tiktok-live-connector": "^1.2.3"
+  },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",

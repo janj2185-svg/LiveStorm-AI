@@ -147,6 +147,11 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
         .update(sessionsTable)
         .set({ totalComments: sql`${sessionsTable.totalComments} + 1` })
         .where(eq(sessionsTable.id, event.sessionId));
+    } else if (event.type === "share") {
+      await db
+        .update(sessionsTable)
+        .set({ totalShares: sql`${sessionsTable.totalShares} + 1` })
+        .where(eq(sessionsTable.id, event.sessionId));
     }
   } catch (_err) {}
 }

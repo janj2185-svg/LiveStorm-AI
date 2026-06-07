@@ -17,4 +17,5 @@ export interface Session {
   totalLikes: number;
   totalFollowers: number;
   totalComments: number;
+  totalShares: number;
 }

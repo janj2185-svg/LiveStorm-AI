@@ -42,15 +42,16 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
     const demoMode = req.body?.demoMode === true || !tiktokUsername;
 
     const io = getIO();
+    let actualMode: "live" | "demo" = demoMode ? "demo" : "demo";
     if (io) {
-      startTikTokConnection(io, tiktokUsername, session.id, user.id, demoMode);
+      actualMode = await startTikTokConnection(io, tiktokUsername, session.id, user.id, demoMode);
     }
 
     res.json({
       sessionId: session.id,
       streamerId: streamer.id,
       startedAt: session.startedAt,
-      mode: demoMode ? "demo" : "live",
+      mode: actualMode,
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -102,6 +103,7 @@ router.post("/sessions/end", requireAuth, async (req: any, res: any) => {
       totalLikes: ended.totalLikes,
       totalFollowers: ended.totalFollowers,
       totalComments: ended.totalComments,
+      totalShares: ended.totalShares,
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -137,6 +139,7 @@ router.get("/sessions/active", requireAuth, async (req: any, res: any) => {
         totalLikes: activeSession.totalLikes,
         totalFollowers: activeSession.totalFollowers,
         totalComments: activeSession.totalComments,
+        totalShares: activeSession.totalShares,
       },
     });
   } catch (err) {
@@ -178,6 +181,7 @@ router.get("/sessions/:id/stats", requireAuth, async (req: any, res: any) => {
       totalLikes: session.totalLikes,
       totalFollowers: session.totalFollowers,
       totalComments: session.totalComments,
+      totalShares: session.totalShares,
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -210,6 +214,7 @@ router.get("/sessions", requireAuth, async (req: any, res: any) => {
         totalLikes: s.totalLikes,
         totalFollowers: s.totalFollowers,
         totalComments: s.totalComments,
+        totalShares: s.totalShares,
       }))
     );
   } catch (err) {
