@@ -10,6 +10,7 @@ import gamificationRouter from "./gamification";
 import bossBattlesRouter from "./boss-battles";
 import miniGamesRouter from "./mini-games";
 import universeRouter from "./universe";
+import obsRouter from "./obs";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(gamificationRouter);
 router.use(bossBattlesRouter);
 router.use(miniGamesRouter);
 router.use(universeRouter);
+router.use(obsRouter);
 
 export default router;

@@ -21,6 +21,12 @@ import { Overlays } from "@/pages/overlays";
 import { AiAssistant } from "@/pages/ai-assistant";
 import { Settings } from "@/pages/settings";
 
+import { ObsAlerts } from "@/pages/obs/alerts";
+import { ObsGoals } from "@/pages/obs/goals";
+import { ObsLeaderboard } from "@/pages/obs/leaderboard";
+import { ObsBossBattle } from "@/pages/obs/boss-battle";
+import { ObsActivityFeed } from "@/pages/obs/activity-feed";
+
 const queryClient = new QueryClient();
 
 const clerkPubKey = publishableKeyFromHost(
@@ -84,6 +90,24 @@ const clerkAppearance = {
     main: "gap-4",
   },
 };
+
+function ObsRoutes() {
+  return (
+    <Switch>
+      <Route path="/obs/alerts" component={ObsAlerts} />
+      <Route path="/obs/goals" component={ObsGoals} />
+      <Route path="/obs/leaderboard" component={ObsLeaderboard} />
+      <Route path="/obs/boss-battle" component={ObsBossBattle} />
+      <Route path="/obs/activity-feed" component={ObsActivityFeed} />
+      <Route>
+        <div style={{ padding: "32px", color: "#fff", fontFamily: "sans-serif" }}>
+          <h1>OBS Overlay Not Found</h1>
+          <p>Available overlays: /obs/alerts, /obs/goals, /obs/leaderboard, /obs/boss-battle, /obs/activity-feed</p>
+        </div>
+      </Route>
+    </Switch>
+  );
+}
 
 function SignInPage() {
   return (
@@ -233,7 +257,25 @@ function ClerkProviderWithRoutes() {
   );
 }
 
+function isObsPath(): boolean {
+  const path = window.location.pathname;
+  const rel = basePath && path.startsWith(basePath) ? path.slice(basePath.length) : path;
+  return rel.startsWith("/obs/") || rel === "/obs";
+}
+
 function App() {
+  if (isObsPath()) {
+    return (
+      <TooltipProvider>
+        <WouterRouter base={basePath}>
+          <QueryClientProvider client={queryClient}>
+            <ObsRoutes />
+          </QueryClientProvider>
+        </WouterRouter>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <WouterRouter base={basePath}>

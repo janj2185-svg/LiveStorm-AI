@@ -685,3 +685,55 @@ export const DeleteAutomationResponse = zod.object({
 })
 
 
+/**
+ * @summary Generate a short-lived overlay token for the current streamer
+ */
+export const GenerateObsTokenResponse = zod.object({
+  "token": zod.string(),
+  "expiresAt": zod.number(),
+  "streamerId": zod.number()
+})
+
+
+/**
+ * @summary Get overlay state (active session, boss battle, leaderboard)
+ */
+export const GetObsStateParams = zod.object({
+  "streamerId": zod.coerce.number()
+})
+
+export const GetObsStateQueryParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetObsStateResponse = zod.object({
+  "streamerId": zod.number(),
+  "sessionId": zod.number().nullable(),
+  "session": zod.union([zod.object({
+  "id": zod.number(),
+  "totalGifts": zod.number(),
+  "totalFollowers": zod.number(),
+  "totalLikes": zod.number(),
+  "totalComments": zod.number(),
+  "totalShares": zod.number(),
+  "peakViewers": zod.number(),
+  "startedAt": zod.string()
+}),zod.null()]),
+  "activeBossBattle": zod.union([zod.object({
+  "id": zod.number(),
+  "bossName": zod.string(),
+  "currentHp": zod.number(),
+  "maxHp": zod.number(),
+  "difficulty": zod.string()
+}),zod.null()]),
+  "leaderboard": zod.array(zod.object({
+  "rank": zod.number(),
+  "tiktokViewerId": zod.string(),
+  "viewerName": zod.string(),
+  "totalXp": zod.number(),
+  "giftCount": zod.number(),
+  "level": zod.number()
+}))
+})
+
+

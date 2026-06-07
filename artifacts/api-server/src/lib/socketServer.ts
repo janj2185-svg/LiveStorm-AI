@@ -6,6 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { processAutomations } from "./automationEngine";
 import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
+import { verifyObsToken } from "../routes/obs";
 
 let io: SocketServer | null = null;
 
@@ -35,6 +36,7 @@ export function initSocketServer(httpServer: HttpServer) {
 
   io.on("connection", (socket: Socket) => {
     const authToken = socket.handshake.auth?.token as string | undefined;
+    const obsToken = socket.handshake.auth?.obsToken as string | undefined;
 
     socket.on("session:join", async (sessionId: number) => {
       try {
@@ -71,6 +73,39 @@ export function initSocketServer(httpServer: HttpServer) {
         socket.emit("session:joined", { sessionId: sid });
       } catch (_err) {
         socket.emit("session:error", { message: "Could not join session" });
+      }
+    });
+
+    socket.on("obs:subscribe", async (data: { token: string; streamerId: number; sessionId?: number }) => {
+      try {
+        const tokenToVerify = data?.token ?? obsToken;
+        if (!tokenToVerify) {
+          socket.emit("obs:error", { message: "Missing overlay token" });
+          return;
+        }
+
+        const verified = verifyObsToken(tokenToVerify);
+        if (!verified || verified.streamerId !== Number(data?.streamerId)) {
+          socket.emit("obs:error", { message: "Invalid or expired overlay token" });
+          return;
+        }
+
+        socket.data.obsStreamerId = verified.streamerId;
+
+        if (data?.sessionId) {
+          const session = await db.query.sessionsTable.findFirst({
+            where: eq(sessionsTable.id, Number(data.sessionId)),
+          });
+          if (session && session.streamerId === verified.streamerId && !session.endedAt) {
+            socket.join(`session:${session.id}`);
+            socket.emit("obs:subscribed", { sessionId: session.id });
+            return;
+          }
+        }
+
+        socket.emit("obs:subscribed", { sessionId: null });
+      } catch (_err) {
+        socket.emit("obs:error", { message: "Could not subscribe to overlay events" });
       }
     });
 

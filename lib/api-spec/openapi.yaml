@@ -28,6 +28,8 @@ tags:
     description: Mini-game operations
   - name: universe
     description: Global universe and alliance operations
+  - name: obs
+    description: OBS Browser Source overlay operations
 
 paths:
   /healthz:
@@ -701,6 +703,47 @@ paths:
                     type: boolean
                 required:
                   - ok
+
+  /obs/token:
+    post:
+      operationId: generateObsToken
+      tags: [obs]
+      summary: Generate a short-lived overlay token for the current streamer
+      responses:
+        "200":
+          description: Overlay token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ObsToken"
+        "404":
+          description: No streamer profile
+
+  /obs/state/{streamerId}:
+    get:
+      operationId: getObsState
+      tags: [obs]
+      summary: Get overlay state (active session, boss battle, leaderboard)
+      parameters:
+        - name: streamerId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Overlay state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ObsOverlayState"
+        "401":
+          description: Invalid or expired token
 
 components:
   schemas:
@@ -1396,3 +1439,115 @@ components:
         - level
         - gold
         - totalResources
+
+    ObsToken:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: number
+        streamerId:
+          type: integer
+      required:
+        - token
+        - expiresAt
+        - streamerId
+
+    ObsLeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        tiktokViewerId:
+          type: string
+        viewerName:
+          type: string
+        totalXp:
+          type: integer
+        giftCount:
+          type: integer
+        level:
+          type: integer
+      required:
+        - rank
+        - tiktokViewerId
+        - viewerName
+        - totalXp
+        - giftCount
+        - level
+
+    ObsSessionSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        totalGifts:
+          type: integer
+        totalFollowers:
+          type: integer
+        totalLikes:
+          type: integer
+        totalComments:
+          type: integer
+        totalShares:
+          type: integer
+        peakViewers:
+          type: integer
+        startedAt:
+          type: string
+      required:
+        - id
+        - totalGifts
+        - totalFollowers
+        - totalLikes
+        - totalComments
+        - totalShares
+        - peakViewers
+        - startedAt
+
+    ObsBossBattleSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        bossName:
+          type: string
+        currentHp:
+          type: integer
+        maxHp:
+          type: integer
+        difficulty:
+          type: string
+      required:
+        - id
+        - bossName
+        - currentHp
+        - maxHp
+        - difficulty
+
+    ObsOverlayState:
+      type: object
+      properties:
+        streamerId:
+          type: integer
+        sessionId:
+          type: ["integer", "null"]
+        session:
+          oneOf:
+            - $ref: "#/components/schemas/ObsSessionSummary"
+            - type: "null"
+        activeBossBattle:
+          oneOf:
+            - $ref: "#/components/schemas/ObsBossBattleSummary"
+            - type: "null"
+        leaderboard:
+          type: array
+          items:
+            $ref: "#/components/schemas/ObsLeaderboardEntry"
+      required:
+        - streamerId
+        - sessionId
+        - session
+        - activeBossBattle
+        - leaderboard

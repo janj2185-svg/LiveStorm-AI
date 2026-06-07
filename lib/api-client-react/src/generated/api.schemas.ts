@@ -314,6 +314,49 @@ export interface UniverseRanking {
   totalResources: number;
 }
 
+export interface ObsToken {
+  token: string;
+  expiresAt: number;
+  streamerId: number;
+}
+
+export interface ObsLeaderboardEntry {
+  rank: number;
+  tiktokViewerId: string;
+  viewerName: string;
+  totalXp: number;
+  giftCount: number;
+  level: number;
+}
+
+export interface ObsSessionSummary {
+  id: number;
+  totalGifts: number;
+  totalFollowers: number;
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  peakViewers: number;
+  startedAt: string;
+}
+
+export interface ObsBossBattleSummary {
+  id: number;
+  bossName: string;
+  currentHp: number;
+  maxHp: number;
+  difficulty: string;
+}
+
+export interface ObsOverlayState {
+  streamerId: number;
+  /** @nullable */
+  sessionId: number | null;
+  session: ObsSessionSummary | null;
+  activeBossBattle: ObsBossBattleSummary | null;
+  leaderboard: ObsLeaderboardEntry[];
+}
+
 export type GetGamificationLeaderboardParams = {
 streamerId?: number;
 };
@@ -324,5 +367,9 @@ streamerId?: number;
 
 export type DeleteAutomation200 = {
   ok: boolean;
+};
+
+export type GetObsStateParams = {
+token: string;
 };
 

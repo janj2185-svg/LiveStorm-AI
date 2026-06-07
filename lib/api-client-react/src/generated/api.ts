@@ -38,11 +38,14 @@ import type {
   GamificationMe,
   GetAchievementsParams,
   GetGamificationLeaderboardParams,
+  GetObsStateParams,
   HealthStatus,
   Kingdom,
   LeaderboardEntry,
   LuckyDrawRequest,
   LuckyDrawResult,
+  ObsOverlayState,
+  ObsToken,
   OkResponse,
   PvpRequest,
   PvpResult,
@@ -2978,4 +2981,163 @@ export const useDeleteAutomation = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteAutomationMutationOptions(options));
     }
+
+export const getGenerateObsTokenUrl = () => {
+
+
+
+
+  return `/api/obs/token`
+}
+
+/**
+ * @summary Generate a short-lived overlay token for the current streamer
+ */
+export const generateObsToken = async ( options?: RequestInit): Promise<ObsToken> => {
+
+  return customFetch<ObsToken>(getGenerateObsTokenUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getGenerateObsTokenMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateObsToken>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateObsToken>>, TError,void, TContext> => {
+
+const mutationKey = ['generateObsToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateObsToken>>, void> = () => {
+
+
+          return  generateObsToken(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateObsTokenMutationResult = NonNullable<Awaited<ReturnType<typeof generateObsToken>>>
+
+    export type GenerateObsTokenMutationError = ErrorType<void>
+
+    /**
+ * @summary Generate a short-lived overlay token for the current streamer
+ */
+export const useGenerateObsToken = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateObsToken>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateObsToken>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getGenerateObsTokenMutationOptions(options));
+    }
+
+export const getGetObsStateUrl = (streamerId: number,
+    params: GetObsStateParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/obs/state/${streamerId}?${stringifiedParams}` : `/api/obs/state/${streamerId}`
+}
+
+/**
+ * @summary Get overlay state (active session, boss battle, leaderboard)
+ */
+export const getObsState = async (streamerId: number,
+    params: GetObsStateParams, options?: RequestInit): Promise<ObsOverlayState> => {
+
+  return customFetch<ObsOverlayState>(getGetObsStateUrl(streamerId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetObsStateQueryKey = (streamerId: number,
+    params?: GetObsStateParams,) => {
+    return [
+    `/api/obs/state/${streamerId}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetObsStateQueryOptions = <TData = Awaited<ReturnType<typeof getObsState>>, TError = ErrorType<void>>(streamerId: number,
+    params: GetObsStateParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getObsState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetObsStateQueryKey(streamerId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getObsState>>> = ({ signal }) => getObsState(streamerId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(streamerId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getObsState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetObsStateQueryResult = NonNullable<Awaited<ReturnType<typeof getObsState>>>
+export type GetObsStateQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get overlay state (active session, boss battle, leaderboard)
+ */
+
+export function useGetObsState<TData = Awaited<ReturnType<typeof getObsState>>, TError = ErrorType<void>>(
+ streamerId: number,
+    params: GetObsStateParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getObsState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetObsStateQueryOptions(streamerId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
