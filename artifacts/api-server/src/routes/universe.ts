@@ -6,8 +6,20 @@ import {
   streamersTable,
   usersTable,
   kingdomsTable,
+  kingdomBuildingsTable,
 } from "@workspace/db";
-import { eq, or, and, desc } from "drizzle-orm";
+import { eq, or, and, desc, sql } from "drizzle-orm";
+
+const BUILDING_BASE_COSTS: Record<string, { gold: number; wood: number; stone: number }> = {
+  Tavern:    { gold: 100,  wood: 50,   stone: 0    },
+  Farm:      { gold: 300,  wood: 0,    stone: 100  },
+  Barracks:  { gold: 600,  wood: 200,  stone: 200  },
+  Market:    { gold: 1000, wood: 400,  stone: 200  },
+  Castle:    { gold: 2000, wood: 800,  stone: 600  },
+  Cathedral: { gold: 5000, wood: 1500, stone: 1500 },
+  Library:   { gold: 800,  wood: 600,  stone: 0    },
+  Forge:     { gold: 1500, wood: 300,  stone: 1000 },
+};
 
 const router = Router();
 
@@ -123,6 +135,75 @@ router.patch("/universe/alliances/:id", requireAuth, async (req: any, res: any) 
     res.json(updated);
   } catch {
     res.status(500).json({ error: "Failed to update alliance" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /kingdoms/buildings/:type/upgrade
+// ---------------------------------------------------------------------------
+router.post("/kingdoms/buildings/:type/upgrade", requireAuth, async (req: any, res: any) => {
+  try {
+    const streamer = await getStreamerForUser(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const buildingType = req.params.type;
+    const baseCost = BUILDING_BASE_COSTS[buildingType];
+    if (!baseCost) return res.status(400).json({ error: "Unknown building type" });
+
+    // Building must already be unlocked
+    const building = await db.query.kingdomBuildingsTable.findFirst({
+      where: and(
+        eq(kingdomBuildingsTable.streamerId, streamer.id),
+        eq(kingdomBuildingsTable.buildingType, buildingType)
+      ),
+    });
+    if (!building) return res.status(404).json({ error: "Building not yet unlocked" });
+
+    const kingdom = await db.query.kingdomsTable.findFirst({
+      where: eq(kingdomsTable.streamerId, streamer.id),
+    });
+    if (!kingdom) return res.status(404).json({ error: "Kingdom not found" });
+
+    // Cost scales with current level
+    const currentLevel = building.level;
+    const goldCost  = baseCost.gold  * currentLevel;
+    const woodCost  = baseCost.wood  * currentLevel;
+    const stoneCost = baseCost.stone * currentLevel;
+
+    if (kingdom.gold < goldCost || kingdom.wood < woodCost || kingdom.stone < stoneCost) {
+      return res.status(400).json({
+        error: "Insufficient resources",
+        required: { gold: goldCost, wood: woodCost, stone: stoneCost },
+        current: { gold: kingdom.gold, wood: kingdom.wood, stone: kingdom.stone },
+      });
+    }
+
+    // Deduct resources
+    await db
+      .update(kingdomsTable)
+      .set({
+        gold:  sql`${kingdomsTable.gold}  - ${goldCost}`,
+        wood:  sql`${kingdomsTable.wood}  - ${woodCost}`,
+        stone: sql`${kingdomsTable.stone} - ${stoneCost}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(kingdomsTable.id, kingdom.id));
+
+    // Increment building level
+    const [upgraded] = await db
+      .update(kingdomBuildingsTable)
+      .set({ level: currentLevel + 1 })
+      .where(eq(kingdomBuildingsTable.id, building.id))
+      .returning();
+
+    res.json({
+      building: upgraded,
+      goldSpent: goldCost,
+      woodSpent: woodCost,
+      stoneSpent: stoneCost,
+    });
+  } catch {
+    res.status(500).json({ error: "Failed to upgrade building" });
   }
 });
 

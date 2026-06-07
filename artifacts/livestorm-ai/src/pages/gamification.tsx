@@ -5,6 +5,8 @@ import {
   useGetDailyClaimStatus,
   useClaimDailyReward,
   useGetMyStreamer,
+  useGetMyGamificationStats,
+  useGetStreamerLeaderboard,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -47,25 +49,35 @@ function getLevelTitle(level: number): string {
   return "Recruit";
 }
 
+type LeaderboardTab = "viewers" | "streamers";
+
 export function Gamification() {
   const { data: streamer } = useGetMyStreamer();
   const streamerId = streamer?.id;
 
+  // Current user's personal progression
+  const { data: myStats, isLoading: loadingMe } = useGetMyGamificationStats();
+
+  // Viewer leaderboard (for the current streamer's stream)
   const { data: leaderboard, isLoading: loadingLb } = useGetGamificationLeaderboard(
     streamerId ? { streamerId } : undefined
   );
-  const { data: achievements, isLoading: loadingAch } = useGetAchievements(
-    streamerId ? { streamerId } : {}
-  );
+
+  // Streamer leaderboard (global, ranked by XP awarded)
+  const { data: streamerLb, isLoading: loadingSlb } = useGetStreamerLeaderboard();
+
+  const { data: achievements, isLoading: loadingAch } = useGetAchievements();
   const { data: claimStatus, refetch: refetchStatus } = useGetDailyClaimStatus();
   const claimMutation = useClaimDailyReward();
   const { toast } = useToast();
 
   const [achFilter, setAchFilter] = useState<"all" | "unlocked" | "locked">("all");
+  const [lbTab, setLbTab] = useState<LeaderboardTab>("viewers");
 
-  const myEntry = leaderboard?.[0];
-  const myXp = myEntry?.totalXp ?? 0;
-  const myLevel = xpToLevel(myXp);
+  // Use dedicated /gamification/me for the progression panel
+  const myXp = myStats?.totalXp ?? 0;
+  const myLevel = myStats?.level ?? xpToLevel(myXp);
+  const myRank = myStats?.rank ?? null;
   const nextLevelXp = xpForLevel(myLevel + 1);
   const currentLevelXp = xpForLevel(myLevel);
   const xpProgress = nextLevelXp > currentLevelXp
@@ -101,7 +113,7 @@ export function Gamification() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          {/* XP Progress */}
+          {/* Your Progression — uses /gamification/me for accurate personal data */}
           <Card className="bg-card border-primary/20 shadow-[0_0_20px_rgba(124,58,237,0.1)] relative overflow-hidden">
             <div className="absolute right-0 top-0 w-32 h-32 bg-primary/20 blur-3xl pointer-events-none" />
             <CardHeader>
@@ -111,7 +123,7 @@ export function Gamification() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loadingLb ? (
+              {loadingMe ? (
                 <Skeleton className="h-20 w-full" />
               ) : (
                 <>
@@ -126,9 +138,9 @@ export function Gamification() {
                   </div>
                   <Progress value={xpProgress} className="h-3 bg-background border border-border" />
                   <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground">
-                    <span>🪙 {myEntry?.totalCoins ?? 0} Coins</span>
-                    <span>🎁 {myEntry?.totalGifts ?? 0} Gifts Sent</span>
-                    <span>🏆 Rank #{myEntry?.rank ?? "—"}</span>
+                    <span>🪙 {(myStats?.totalCoins ?? 0).toLocaleString()} Coins</span>
+                    <span>🎁 {(myStats?.totalGifts ?? 0)} Gifts</span>
+                    <span>🏆 Rank #{myRank ?? "—"}</span>
                   </div>
                 </>
               )}
@@ -144,7 +156,9 @@ export function Gamification() {
                   Achievements
                 </CardTitle>
                 <CardDescription>
-                  {achievements ? `${achievements.filter(a => a.unlocked).length} / ${achievements.length} unlocked` : "Loading..."}
+                  {achievements
+                    ? `${achievements.filter(a => a.unlocked).length} / ${achievements.length} unlocked`
+                    : "Loading..."}
                 </CardDescription>
               </div>
               <div className="flex gap-1">
@@ -187,7 +201,9 @@ export function Gamification() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
                             <p className="text-sm font-bold text-white truncate">{ach.name}</p>
-                            {ach.unlocked && <Badge variant="outline" className="text-[10px] h-4 px-1 border-primary/50 text-primary shrink-0">✓</Badge>}
+                            {ach.unlocked && (
+                              <Badge variant="outline" className="text-[10px] h-4 px-1 border-primary/50 text-primary shrink-0">✓</Badge>
+                            )}
                           </div>
                           <p className="text-xs text-muted-foreground truncate">{ach.description}</p>
                           <p className="text-xs text-yellow-500 mt-0.5">+{ach.xpReward} XP · +{ach.coinReward} coins</p>
@@ -227,7 +243,11 @@ export function Gamification() {
                 disabled={claimStatus?.alreadyClaimed || claimMutation.isPending}
                 variant={claimStatus?.alreadyClaimed ? "outline" : "default"}
               >
-                {claimStatus?.alreadyClaimed ? "✓ Claimed Today" : claimMutation.isPending ? "Claiming..." : "Claim +100 Coins"}
+                {claimStatus?.alreadyClaimed
+                  ? "✓ Claimed Today"
+                  : claimMutation.isPending
+                  ? "Claiming..."
+                  : "Claim +100 Coins"}
               </Button>
               {claimStatus?.alreadyClaimed && (
                 <p className="text-xs text-muted-foreground mt-2 text-center">Resets at midnight UTC</p>
@@ -235,36 +255,81 @@ export function Gamification() {
             </CardContent>
           </Card>
 
-          {/* Viewer Leaderboard */}
+          {/* Leaderboard — tabbed: Viewer | Streamer */}
           <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-yellow-400" />
-                Viewer Leaderboard
+                Leaderboard
               </CardTitle>
-              <CardDescription>Top viewers by XP earned</CardDescription>
+              <div className="flex gap-1 mt-1">
+                <Button
+                  size="sm"
+                  variant={lbTab === "viewers" ? "default" : "outline"}
+                  onClick={() => setLbTab("viewers")}
+                  className="text-xs h-6 px-2"
+                >
+                  Viewers
+                </Button>
+                <Button
+                  size="sm"
+                  variant={lbTab === "streamers" ? "default" : "outline"}
+                  onClick={() => setLbTab("streamers")}
+                  className="text-xs h-6 px-2"
+                >
+                  Streamers
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              {loadingLb ? (
-                [...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
-              ) : (leaderboard ?? []).slice(0, 8).map((entry) => (
-                <div key={entry.tiktokViewerId} className="flex items-center gap-2 p-2 rounded bg-background border border-border">
-                  <span className={`font-black text-sm w-5 text-center ${
-                    entry.rank === 1 ? "text-yellow-400" : entry.rank === 2 ? "text-slate-300" : entry.rank === 3 ? "text-amber-600" : "text-muted-foreground"
-                  }`}>{entry.rank}</span>
-                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                    {entry.level}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white truncate">{entry.viewerName}</p>
-                  </div>
-                  <span className="text-xs font-medium text-primary shrink-0">{entry.totalXp.toLocaleString()} XP</span>
-                </div>
-              ))}
-              {(!leaderboard || leaderboard.length === 0) && !loadingLb && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  {streamerId ? "No viewers ranked yet. Go live to earn XP!" : "Start streaming to see viewer rankings."}
-                </p>
+              {lbTab === "viewers" ? (
+                <>
+                  <p className="text-xs text-muted-foreground mb-2">Top viewers by XP earned in your stream</p>
+                  {loadingLb
+                    ? [...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
+                    : (leaderboard ?? []).slice(0, 8).map((entry) => (
+                        <div key={entry.tiktokViewerId} className="flex items-center gap-2 p-2 rounded bg-background border border-border">
+                          <span className={`font-black text-sm w-5 text-center ${
+                            entry.rank === 1 ? "text-yellow-400" : entry.rank === 2 ? "text-slate-300" : entry.rank === 3 ? "text-amber-600" : "text-muted-foreground"
+                          }`}>{entry.rank}</span>
+                          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                            {entry.level}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">{entry.viewerName}</p>
+                          </div>
+                          <span className="text-xs font-medium text-primary shrink-0">{entry.totalXp.toLocaleString()} XP</span>
+                        </div>
+                      ))}
+                  {(!leaderboard || leaderboard.length === 0) && !loadingLb && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      {streamerId ? "No viewers ranked yet. Go live to earn XP!" : "Start streaming to see viewer rankings."}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-2">Top streamers by engagement</p>
+                  {loadingSlb
+                    ? [...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
+                    : (streamerLb ?? []).slice(0, 8).map((entry) => (
+                        <div key={entry.streamerId} className="flex items-center gap-2 p-2 rounded bg-background border border-border">
+                          <span className={`font-black text-sm w-5 text-center ${
+                            entry.rank === 1 ? "text-yellow-400" : entry.rank === 2 ? "text-slate-300" : entry.rank === 3 ? "text-amber-600" : "text-muted-foreground"
+                          }`}>{entry.rank}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">{entry.streamerName}</p>
+                            <p className="text-xs text-muted-foreground">{entry.uniqueViewers} viewers · {entry.totalGiftsReceived} gifts</p>
+                          </div>
+                          <span className="text-xs font-medium text-accent shrink-0">{entry.totalXpAwarded.toLocaleString()} XP</span>
+                        </div>
+                      ))}
+                  {(!streamerLb || streamerLb.length === 0) && !loadingSlb && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No streamers ranked yet.
+                    </p>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

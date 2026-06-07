@@ -9,10 +9,19 @@ import {
   streamersTable,
   usersTable,
 } from "@workspace/db";
-import { eq, sql, and, desc } from "drizzle-orm";
+import { eq, sql, and, desc, count } from "drizzle-orm";
 
 const router = Router();
 
+async function getStreamerForUser(clerkId: string) {
+  const user = await db.query.usersTable.findFirst({ where: eq(usersTable.clerkId, clerkId) });
+  if (!user) return null;
+  return db.query.streamersTable.findFirst({ where: eq(streamersTable.userId, user.id) });
+}
+
+// ---------------------------------------------------------------------------
+// GET /gamification/leaderboard — viewer leaderboard ranked by XP
+// ---------------------------------------------------------------------------
 router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) => {
   try {
     const streamerId = req.query.streamerId ? Number(req.query.streamerId) : null;
@@ -48,24 +57,120 @@ router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) 
     }));
 
     res.json(leaderboard);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
 
+// ---------------------------------------------------------------------------
+// GET /gamification/me — current user's own XP / level / rank
+// ---------------------------------------------------------------------------
+router.get("/gamification/me", requireAuth, async (req: any, res: any) => {
+  try {
+    const streamer = await getStreamerForUser(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    // The current user's viewer identity for self-earned XP (spin wins, boss rewards, etc.)
+    const selfViewerId = `streamer:${streamer.id}`;
+
+    const [row] = await db
+      .select({
+        totalXp: sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)`,
+        totalCoins: sql<number>`coalesce(sum(${viewerXpEventsTable.coinsAwarded}), 0)`,
+        totalGifts: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'gift')`,
+      })
+      .from(viewerXpEventsTable)
+      .where(eq(viewerXpEventsTable.tiktokViewerId, selfViewerId));
+
+    const totalXp = Number(row?.totalXp ?? 0);
+    const totalCoins = Number(row?.totalCoins ?? 0);
+    const totalGifts = Number(row?.totalGifts ?? 0);
+    const level = Math.min(100, Math.floor(Math.sqrt(totalXp / 50)) + 1);
+
+    // Compute rank: count how many distinct viewerIds have higher total XP
+    const [rankRow] = await db
+      .select({ higherCount: count() })
+      .from(
+        db
+          .select({
+            xpSum: sql<number>`sum(${viewerXpEventsTable.xpAwarded})`.as("xp_sum"),
+          })
+          .from(viewerXpEventsTable)
+          .groupBy(viewerXpEventsTable.tiktokViewerId)
+          .having(sql`sum(${viewerXpEventsTable.xpAwarded}) > ${totalXp}`)
+          .as("higher")
+      );
+    const rank = Number(rankRow?.higherCount ?? 0) + 1;
+
+    res.json({ tiktokViewerId: selfViewerId, totalXp, totalCoins, totalGifts, level, rank });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch your progression" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /gamification/streamer-leaderboard — streamers ranked by engagement
+// ---------------------------------------------------------------------------
+router.get("/gamification/streamer-leaderboard", requireAuth, async (req: any, res: any) => {
+  try {
+    const rows = await db
+      .select({
+        streamerId: viewerXpEventsTable.streamerId,
+        totalXpAwarded: sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)`,
+        totalGiftsReceived: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'gift')`,
+        uniqueViewers: sql<number>`count(distinct ${viewerXpEventsTable.tiktokViewerId})`,
+      })
+      .from(viewerXpEventsTable)
+      .groupBy(viewerXpEventsTable.streamerId)
+      .orderBy(desc(sql`sum(${viewerXpEventsTable.xpAwarded})`))
+      .limit(20);
+
+    const enriched = await Promise.all(
+      rows.map(async (r, i) => {
+        const streamer = await db.query.streamersTable.findFirst({
+          where: eq(streamersTable.id, r.streamerId),
+        });
+        const user = streamer
+          ? await db.query.usersTable.findFirst({ where: eq(usersTable.id, streamer.userId) })
+          : null;
+        return {
+          rank: i + 1,
+          streamerId: r.streamerId,
+          streamerName: user?.displayName ?? user?.email ?? `Streamer #${r.streamerId}`,
+          totalXpAwarded: Number(r.totalXpAwarded),
+          totalGiftsReceived: Number(r.totalGiftsReceived),
+          uniqueViewers: Number(r.uniqueViewers),
+        };
+      })
+    );
+
+    res.json(enriched);
+  } catch {
+    res.status(500).json({ error: "Failed to fetch streamer leaderboard" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /gamification/achievements — all achievements with personal unlock status
+// ---------------------------------------------------------------------------
 router.get("/gamification/achievements", requireAuth, async (req: any, res: any) => {
   try {
-    const userId = req.clerkUserId;
-    const streamerId = req.query.streamerId ? Number(req.query.streamerId) : null;
-
+    const streamer = await getStreamerForUser(req.clerkUserId);
     const allAchievements = await db.select().from(achievementsTable);
 
     let unlockedKeys: string[] = [];
-    if (streamerId) {
+    if (streamer) {
+      // Check achievements specifically earned by this user's viewer identity
+      const selfViewerId = `streamer:${streamer.id}`;
       const unlocked = await db
         .select({ key: viewerAchievementsTable.achievementKey })
         .from(viewerAchievementsTable)
-        .where(eq(viewerAchievementsTable.streamerId, streamerId));
+        .where(
+          and(
+            eq(viewerAchievementsTable.streamerId, streamer.id),
+            eq(viewerAchievementsTable.tiktokViewerId, selfViewerId)
+          )
+        );
       unlockedKeys = unlocked.map((u) => u.key);
     }
 
@@ -75,11 +180,14 @@ router.get("/gamification/achievements", requireAuth, async (req: any, res: any)
     }));
 
     res.json(result);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch achievements" });
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /gamification/daily-claim
+// ---------------------------------------------------------------------------
 router.post("/gamification/daily-claim", requireAuth, async (req: any, res: any) => {
   try {
     const clerkId = req.clerkUserId;
@@ -111,11 +219,14 @@ router.post("/gamification/daily-claim", requireAuth, async (req: any, res: any)
     });
 
     res.json({ alreadyClaimed: false, coinsAwarded });
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: "Failed to claim daily reward" });
   }
 });
 
+// ---------------------------------------------------------------------------
+// GET /gamification/daily-claim/status
+// ---------------------------------------------------------------------------
 router.get("/gamification/daily-claim/status", requireAuth, async (req: any, res: any) => {
   try {
     const clerkId = req.clerkUserId;
@@ -136,7 +247,7 @@ router.get("/gamification/daily-claim/status", requireAuth, async (req: any, res
       );
 
     res.json({ alreadyClaimed: existing.length > 0 });
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: "Failed to get claim status" });
   }
 });

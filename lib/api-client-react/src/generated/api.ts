@@ -31,9 +31,11 @@ import type {
   AutomationUpdate,
   BossAttack,
   BossBattle,
+  BuildingUpgradeResult,
   DailyClaimResult,
   DailyClaimStatus,
   DeleteAutomation200,
+  GamificationMe,
   GetAchievementsParams,
   GetGamificationLeaderboardParams,
   HealthStatus,
@@ -52,6 +54,7 @@ import type {
   SpawnBossRequest,
   SpinResult,
   Streamer,
+  StreamerLeaderboardEntry,
   TiktokConnect,
   TreasureHuntRequest,
   UniverseRanking,
@@ -1438,6 +1441,230 @@ export function useGetAchievements<TData = Awaited<ReturnType<typeof getAchievem
 
 
 
+
+export const getGetMyGamificationStatsUrl = () => {
+
+
+
+
+  return `/api/gamification/me`
+}
+
+/**
+ * @summary Get current user's own XP, level, rank, and coins
+ */
+export const getMyGamificationStats = async ( options?: RequestInit): Promise<GamificationMe> => {
+
+  return customFetch<GamificationMe>(getGetMyGamificationStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyGamificationStatsQueryKey = () => {
+    return [
+    `/api/gamification/me`
+    ] as const;
+    }
+
+
+export const getGetMyGamificationStatsQueryOptions = <TData = Awaited<ReturnType<typeof getMyGamificationStats>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyGamificationStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyGamificationStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyGamificationStats>>> = ({ signal }) => getMyGamificationStats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyGamificationStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyGamificationStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyGamificationStats>>>
+export type GetMyGamificationStatsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get current user's own XP, level, rank, and coins
+ */
+
+export function useGetMyGamificationStats<TData = Awaited<ReturnType<typeof getMyGamificationStats>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyGamificationStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyGamificationStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetStreamerLeaderboardUrl = () => {
+
+
+
+
+  return `/api/gamification/streamer-leaderboard`
+}
+
+/**
+ * @summary Get top streamers ranked by XP awarded and gifts received
+ */
+export const getStreamerLeaderboard = async ( options?: RequestInit): Promise<StreamerLeaderboardEntry[]> => {
+
+  return customFetch<StreamerLeaderboardEntry[]>(getGetStreamerLeaderboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStreamerLeaderboardQueryKey = () => {
+    return [
+    `/api/gamification/streamer-leaderboard`
+    ] as const;
+    }
+
+
+export const getGetStreamerLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getStreamerLeaderboard>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamerLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStreamerLeaderboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreamerLeaderboard>>> = ({ signal }) => getStreamerLeaderboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStreamerLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStreamerLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getStreamerLeaderboard>>>
+export type GetStreamerLeaderboardQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get top streamers ranked by XP awarded and gifts received
+ */
+
+export function useGetStreamerLeaderboard<TData = Awaited<ReturnType<typeof getStreamerLeaderboard>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamerLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStreamerLeaderboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpgradeKingdomBuildingUrl = (type: string,) => {
+
+
+
+
+  return `/api/kingdoms/buildings/${type}/upgrade`
+}
+
+/**
+ * @summary Upgrade a building to the next level by spending resources
+ */
+export const upgradeKingdomBuilding = async (type: string, options?: RequestInit): Promise<BuildingUpgradeResult> => {
+
+  return customFetch<BuildingUpgradeResult>(getUpgradeKingdomBuildingUrl(type),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUpgradeKingdomBuildingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upgradeKingdomBuilding>>, TError,{type: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upgradeKingdomBuilding>>, TError,{type: string}, TContext> => {
+
+const mutationKey = ['upgradeKingdomBuilding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upgradeKingdomBuilding>>, {type: string}> = (props) => {
+          const {type} = props ?? {};
+
+          return  upgradeKingdomBuilding(type,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpgradeKingdomBuildingMutationResult = NonNullable<Awaited<ReturnType<typeof upgradeKingdomBuilding>>>
+
+    export type UpgradeKingdomBuildingMutationError = ErrorType<void>
+
+    /**
+ * @summary Upgrade a building to the next level by spending resources
+ */
+export const useUpgradeKingdomBuilding = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upgradeKingdomBuilding>>, TError,{type: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upgradeKingdomBuilding>>,
+        TError,
+        {type: string},
+        TContext
+      > => {
+      return useMutation(getUpgradeKingdomBuildingMutationOptions(options));
+    }
 
 export const getClaimDailyRewardUrl = () => {
 

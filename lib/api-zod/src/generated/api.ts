@@ -331,6 +331,53 @@ export const GetAchievementsResponse = zod.array(GetAchievementsResponseItem)
 
 
 /**
+ * @summary Get current user's own XP, level, rank, and coins
+ */
+export const GetMyGamificationStatsResponse = zod.object({
+  "tiktokViewerId": zod.string(),
+  "totalXp": zod.number(),
+  "totalCoins": zod.number(),
+  "totalGifts": zod.number(),
+  "level": zod.number(),
+  "rank": zod.number()
+})
+
+
+/**
+ * @summary Get top streamers ranked by XP awarded and gifts received
+ */
+export const GetStreamerLeaderboardResponseItem = zod.object({
+  "rank": zod.number(),
+  "streamerId": zod.number(),
+  "streamerName": zod.string(),
+  "totalXpAwarded": zod.number(),
+  "totalGiftsReceived": zod.number(),
+  "uniqueViewers": zod.number()
+})
+export const GetStreamerLeaderboardResponse = zod.array(GetStreamerLeaderboardResponseItem)
+
+
+/**
+ * @summary Upgrade a building to the next level by spending resources
+ */
+export const UpgradeKingdomBuildingParams = zod.object({
+  "type": zod.coerce.string()
+})
+
+export const UpgradeKingdomBuildingResponse = zod.object({
+  "building": zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "buildingType": zod.string(),
+  "level": zod.number()
+}),
+  "goldSpent": zod.number(),
+  "woodSpent": zod.number(),
+  "stoneSpent": zod.number()
+})
+
+
+/**
  * @summary Claim daily coins reward
  */
 export const ClaimDailyRewardResponse = zod.object({

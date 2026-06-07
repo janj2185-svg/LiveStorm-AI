@@ -324,6 +324,57 @@ paths:
                 items:
                   $ref: "#/components/schemas/Achievement"
 
+  /gamification/me:
+    get:
+      operationId: getMyGamificationStats
+      tags: [gamification]
+      summary: Get current user's own XP, level, rank, and coins
+      responses:
+        "200":
+          description: Current user's gamification stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GamificationMe"
+
+  /gamification/streamer-leaderboard:
+    get:
+      operationId: getStreamerLeaderboard
+      tags: [gamification]
+      summary: Get top streamers ranked by XP awarded and gifts received
+      responses:
+        "200":
+          description: Streamer leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StreamerLeaderboardEntry"
+
+  /kingdoms/buildings/{type}/upgrade:
+    post:
+      operationId: upgradeKingdomBuilding
+      tags: [kingdoms]
+      summary: Upgrade a building to the next level by spending resources
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Upgrade result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuildingUpgradeResult"
+        "400":
+          description: Insufficient resources or unknown building
+        "404":
+          description: Building not unlocked or kingdom not found
+
   /gamification/daily-claim:
     post:
       operationId: claimDailyReward
@@ -996,6 +1047,83 @@ components:
         - xpReward
         - coinReward
         - unlocked
+
+    GamificationMe:
+      type: object
+      properties:
+        tiktokViewerId:
+          type: string
+        totalXp:
+          type: integer
+        totalCoins:
+          type: integer
+        totalGifts:
+          type: integer
+        level:
+          type: integer
+        rank:
+          type: integer
+      required:
+        - tiktokViewerId
+        - totalXp
+        - totalCoins
+        - totalGifts
+        - level
+        - rank
+
+    StreamerLeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        streamerId:
+          type: integer
+        streamerName:
+          type: string
+        totalXpAwarded:
+          type: integer
+        totalGiftsReceived:
+          type: integer
+        uniqueViewers:
+          type: integer
+      required:
+        - rank
+        - streamerId
+        - streamerName
+        - totalXpAwarded
+        - totalGiftsReceived
+        - uniqueViewers
+
+    BuildingUpgradeResult:
+      type: object
+      properties:
+        building:
+          type: object
+          properties:
+            id:
+              type: integer
+            streamerId:
+              type: integer
+            buildingType:
+              type: string
+            level:
+              type: integer
+          required:
+            - id
+            - streamerId
+            - buildingType
+            - level
+        goldSpent:
+          type: integer
+        woodSpent:
+          type: integer
+        stoneSpent:
+          type: integer
+      required:
+        - building
+        - goldSpent
+        - woodSpent
+        - stoneSpent
 
     DailyClaimResult:
       type: object

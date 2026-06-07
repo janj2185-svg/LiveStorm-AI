@@ -156,6 +156,38 @@ export interface Achievement {
   unlocked: boolean;
 }
 
+export interface GamificationMe {
+  tiktokViewerId: string;
+  totalXp: number;
+  totalCoins: number;
+  totalGifts: number;
+  level: number;
+  rank: number;
+}
+
+export interface StreamerLeaderboardEntry {
+  rank: number;
+  streamerId: number;
+  streamerName: string;
+  totalXpAwarded: number;
+  totalGiftsReceived: number;
+  uniqueViewers: number;
+}
+
+export type BuildingUpgradeResultBuilding = {
+  id: number;
+  streamerId: number;
+  buildingType: string;
+  level: number;
+};
+
+export interface BuildingUpgradeResult {
+  building: BuildingUpgradeResultBuilding;
+  goldSpent: number;
+  woodSpent: number;
+  stoneSpent: number;
+}
+
 export interface DailyClaimResult {
   alreadyClaimed: boolean;
   coinsAwarded: number;
