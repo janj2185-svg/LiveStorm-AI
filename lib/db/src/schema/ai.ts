@@ -16,6 +16,12 @@ export const aiPersonaConfigsTable = pgTable("ai_persona_configs", {
   announceLevelUp: boolean("announce_level_up").notNull().default(true),
   announceBossKill: boolean("announce_boss_kill").notNull().default(true),
   moderationEnabled: boolean("moderation_enabled").notNull().default(false),
+  autoReplyEnabled: boolean("auto_reply_enabled").notNull().default(false),
+  replyLanguage: text("reply_language").notNull().default("auto"),
+  spamProtectionEnabled: boolean("spam_protection_enabled").notNull().default(true),
+  spamCooldownSeconds: integer("spam_cooldown_seconds").notNull().default(30),
+  voiceEnabled: boolean("voice_enabled").notNull().default(false),
+  voiceName: text("voice_name").notNull().default("nova"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

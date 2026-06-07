@@ -19,6 +19,14 @@ function getToneGuide(tone: string): string {
   );
 }
 
+const LANG_INSTRUCTIONS: Record<string, string> = {
+  en: "Always respond in English.",
+  uk: "Завжди відповідай українською мовою.",
+  pl: "Zawsze odpowiadaj po polsku.",
+  ru: "Всегда отвечай на русском языке.",
+  auto: "Detect the language of the viewer's message and respond in the SAME language they used. If the message is in Ukrainian (uk), respond in Ukrainian. If Polish (pl), respond in Polish. If Russian (ru), respond in Russian. Otherwise, respond in English.",
+};
+
 export async function generateAnnouncement(event: {
   type: string;
   viewerName?: string;
@@ -56,6 +64,43 @@ export async function generateAnnouncement(event: {
     });
     return resp.choices[0]?.message?.content?.trim() ?? "";
   } catch {
+    return "";
+  }
+}
+
+export async function generateCommentReply(
+  comment: string,
+  viewerName: string,
+  persona: { name: string; tone: string },
+  language: string = "auto",
+): Promise<string> {
+  const toneGuide = getToneGuide(persona.tone);
+  const langInstruction = LANG_INSTRUCTIONS[language] ?? LANG_INSTRUCTIONS.auto;
+
+  try {
+    const resp = await openai.chat.completions.create({
+      model: FAST_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: [
+            `You are ${persona.name}, a TikTok LIVE co-host AI with a ${toneGuide} personality.`,
+            langInstruction,
+            "Keep your reply SHORT — under 80 characters. Make it personal, engaging, and reference the viewer by name.",
+            "Never use hashtags. Never explain yourself. Just reply naturally like a real streamer.",
+          ].join(" "),
+        },
+        {
+          role: "user",
+          content: `Viewer @${viewerName} says in TikTok LIVE chat: "${comment}"\n\nWrite a short, engaging reply to them.`,
+        },
+      ],
+      max_tokens: 100,
+      temperature: 0.85,
+    });
+    return resp.choices[0]?.message?.content?.trim() ?? "";
+  } catch (err: any) {
+    console.error("[AI] generateCommentReply error:", err?.message);
     return "";
   }
 }
@@ -165,26 +210,6 @@ export async function generateEvent(context: {
   }
 }
 
-export async function generateVoice(
-  text: string,
-  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "nova",
-): Promise<Buffer | null> {
-  try {
-    const truncated = text.slice(0, 500);
-    const mp3 = await openai.audio.speech.create({
-      model: "tts-1",
-      voice,
-      input: truncated,
-      speed: 1.1,
-    });
-    const arrayBuffer = await mp3.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  } catch (err: any) {
-    console.error("[TTS] generateVoice error:", err?.message);
-    return null;
-  }
-}
-
 export async function chatWithAssistant(
   history: Array<{ role: "user" | "assistant"; content: string }>,
   message: string,
@@ -219,5 +244,25 @@ export async function chatWithAssistant(
     );
   } catch {
     return "I'm having trouble connecting right now. Please try again in a moment.";
+  }
+}
+
+export async function generateVoice(
+  text: string,
+  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "nova",
+): Promise<Buffer | null> {
+  try {
+    const truncated = text.slice(0, 500);
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      voice,
+      input: truncated,
+      speed: 1.1,
+    });
+    const arrayBuffer = await mp3.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (err: any) {
+    console.error("[TTS] generateVoice error:", err?.message);
+    return null;
   }
 }
