@@ -95,9 +95,29 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
     [BASE_URL]
   );
 
+  const refreshLeaderboardAndSession = useCallback(() => {
+    const sid = streamerIdRef.current;
+    const tok = tokenRef.current;
+    if (!sid || !tok || sessionIdRef.current === null) return;
+
+    fetch(`${BASE_URL}/api/obs/state/${sid}?token=${encodeURIComponent(tok)}`)
+      .then((r) => r.json())
+      .then((data: ObsOverlayState) => {
+        setOverlayState((prev) =>
+          prev
+            ? {
+                ...prev,
+                leaderboard: data.leaderboard,
+                session: data.session,
+              }
+            : data
+        );
+      })
+      .catch(() => {});
+  }, [BASE_URL]);
+
   useEffect(() => {
     if (!streamerId || !token) return;
-
     fetchState((sessionId) => {
       if (socketRef.current) {
         socketRef.current.emit("obs:subscribe", { token, streamerId, sessionId });
@@ -123,6 +143,16 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
 
     return () => clearInterval(pollInterval);
   }, [streamerId, token, fetchState]);
+
+  useEffect(() => {
+    if (!streamerId || !token) return;
+
+    const refreshInterval = setInterval(() => {
+      refreshLeaderboardAndSession();
+    }, 10000);
+
+    return () => clearInterval(refreshInterval);
+  }, [streamerId, token, refreshLeaderboardAndSession]);
 
   useEffect(() => {
     if (!streamerId || !token) return;
@@ -183,19 +213,19 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
             session: { ...prev.session, totalGifts: prev.session.totalGifts + coins },
           };
         });
+      } else if (event.type === "comment") {
+        setOverlayState((prev) => {
+          if (!prev?.session) return prev;
+          return {
+            ...prev,
+            session: { ...prev.session, totalComments: prev.session.totalComments + 1 },
+          };
+        });
       }
     });
 
     socket.on("xp:awarded", () => {
-      if (!streamerIdRef.current || !tokenRef.current) return;
-      fetch(
-        `${BASE_URL}/api/obs/state/${streamerIdRef.current}?token=${encodeURIComponent(tokenRef.current)}`
-      )
-        .then((r) => r.json())
-        .then((data: ObsOverlayState) => {
-          setOverlayState((prev) => (prev ? { ...prev, leaderboard: data.leaderboard } : data));
-        })
-        .catch(() => {});
+      refreshLeaderboardAndSession();
     });
 
     socket.on("boss:attacked", (data: ObsAttack) => {
@@ -209,7 +239,7 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
       });
     });
 
-    socket.on("boss:defeated", (data: { battleId: number; bossName: string }) => {
+    socket.on("boss:defeated", (_data: { battleId: number; bossName: string }) => {
       setOverlayState((prev) => {
         if (!prev?.activeBossBattle) return prev;
         return { ...prev, activeBossBattle: { ...prev.activeBossBattle, currentHp: 0 } };
@@ -247,7 +277,7 @@ export function useObsSocket(streamerId: number | null, token: string | null) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [streamerId, token, BASE_URL, addEvent]);
+  }, [streamerId, token, BASE_URL, addEvent, refreshLeaderboardAndSession]);
 
   return { socket: socketRef.current, connected, overlayState, events, attacks };
 }

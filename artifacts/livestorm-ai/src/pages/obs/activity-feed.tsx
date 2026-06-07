@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useObsSocket, type LiveEvent } from "@/hooks/useObsSocket";
+import { useOverlayTheme } from "@/lib/obsTheme";
 
 function getEventDisplay(event: LiveEvent): { icon: string; text: string; color: string } | null {
   const name = (event.data.viewerName ?? event.data.username ?? event.data.nickname ?? "Viewer") as string;
@@ -43,6 +44,7 @@ export function ObsActivityFeed() {
   const token = params.get("token") ?? "";
   const accentColor = params.get("color") ?? "7c3aed";
   const maxItems = Number(params.get("maxItems") ?? 20);
+  const { fontScale } = useOverlayTheme();
 
   const { events, overlayState } = useObsSocket(streamerId || null, token || null);
 
@@ -67,6 +69,7 @@ export function ObsActivityFeed() {
         padding: "24px",
         boxSizing: "border-box",
         fontFamily: "'Inter', 'Segoe UI', sans-serif",
+        zoom: fontScale,
       }}
     >
       <div

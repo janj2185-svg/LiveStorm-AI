@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useObsSocket, type ObsAttack } from "@/hooks/useObsSocket";
+import { useOverlayTheme } from "@/lib/obsTheme";
 
 interface DamageNumber {
   id: number;
@@ -13,6 +14,7 @@ export function ObsBossBattle() {
   const params = new URLSearchParams(window.location.search);
   const streamerId = Number(params.get("streamerId"));
   const token = params.get("token") ?? "";
+  const { fontScale, transitionMs } = useOverlayTheme();
 
   const { overlayState, attacks } = useObsSocket(streamerId || null, token || null);
   const [damageNumbers, setDamageNumbers] = useState<DamageNumber[]>([]);
@@ -71,6 +73,7 @@ export function ObsBossBattle() {
         justifyContent: "center",
         fontFamily: "'Inter', 'Segoe UI', sans-serif",
         gap: "32px",
+        zoom: fontScale,
       }}
     >
       {!boss ? (
@@ -156,7 +159,7 @@ export function ObsBossBattle() {
                   width: `${hpPct}%`,
                   background: `linear-gradient(90deg, ${hpColor}cc, ${hpColor})`,
                   borderRadius: "10px",
-                  transition: "width 0.4s ease, background 0.4s ease",
+                  transition: transitionMs > 0 ? `width ${transitionMs}ms ease, background ${transitionMs}ms ease` : "none",
                   boxShadow: `0 0 12px ${hpColor}66`,
                 }}
               />

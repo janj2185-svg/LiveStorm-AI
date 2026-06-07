@@ -111,7 +111,10 @@ router.get("/obs/state/:streamerId", async (req: any, res: any) => {
           : eq(viewerXpEventsTable.streamerId, streamerId)
       )
       .groupBy(viewerXpEventsTable.tiktokViewerId)
-      .orderBy(desc(sql<number>`sum(${viewerXpEventsTable.xpAwarded})`))
+      .orderBy(
+        desc(sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'gift')`),
+        desc(sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)`)
+      )
       .limit(10);
 
     const leaderboard = await leaderboardQuery;

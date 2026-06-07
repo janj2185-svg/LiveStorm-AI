@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useObsSocket } from "@/hooks/useObsSocket";
+import { useOverlayTheme } from "@/lib/obsTheme";
 
 const RANK_COLORS = ["#f59e0b", "#94a3b8", "#b45309", "#7c3aed", "#7c3aed"];
 const RANK_ICONS = ["🥇", "🥈", "🥉"];
@@ -10,6 +11,7 @@ export function ObsLeaderboard() {
   const token = params.get("token") ?? "";
   const accentColor = params.get("color") ?? "7c3aed";
   const title = params.get("title") ?? "Top Supporters";
+  const { fontScale } = useOverlayTheme();
 
   const { overlayState } = useObsSocket(streamerId || null, token || null);
   const entries = overlayState?.leaderboard ?? [];
@@ -33,6 +35,7 @@ export function ObsLeaderboard() {
         padding: "24px",
         boxSizing: "border-box",
         fontFamily: "'Inter', 'Segoe UI', sans-serif",
+        zoom: fontScale,
       }}
     >
       <div

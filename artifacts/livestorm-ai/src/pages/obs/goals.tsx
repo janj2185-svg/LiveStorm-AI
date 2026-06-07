@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useObsSocket } from "@/hooks/useObsSocket";
+import { useOverlayTheme } from "@/lib/obsTheme";
 
 export function ObsGoals() {
   const params = new URLSearchParams(window.location.search);
@@ -9,6 +10,7 @@ export function ObsGoals() {
   const goalTarget = Number(params.get("goalTarget") ?? 500);
   const label = params.get("label") ?? `${goalTarget} ${goalType}`;
   const accentColor = params.get("color") ?? "7c3aed";
+  const { fontScale, transitionMs } = useOverlayTheme();
 
   const { overlayState } = useObsSocket(streamerId || null, token || null);
 
@@ -47,6 +49,7 @@ export function ObsGoals() {
         padding: "32px",
         boxSizing: "border-box",
         fontFamily: "'Inter', 'Segoe UI', sans-serif",
+        zoom: fontScale,
       }}
     >
       <div
@@ -83,7 +86,7 @@ export function ObsGoals() {
                 ? "linear-gradient(90deg, #16a34a, #22c55e)"
                 : `linear-gradient(90deg, #${accentColor}, #a78bfa)`,
               borderRadius: "8px",
-              transition: "width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              transition: transitionMs > 0 ? `width ${transitionMs * 1.5}ms cubic-bezier(0.34, 1.56, 0.64, 1)` : "none",
               boxShadow: isComplete ? "0 0 16px rgba(34,197,94,0.6)" : `0 0 16px rgba(124,58,237,0.6)`,
             }}
           />

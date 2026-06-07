@@ -20,6 +20,8 @@ interface WidgetConfig {
   goalType: string;
   goalTarget: number;
   goalLabel: string;
+  fontScale: number;
+  animationStyle: "smooth" | "snappy" | "none";
 }
 
 const OVERLAYS = [
@@ -32,7 +34,7 @@ const OVERLAYS = [
     width: 1920,
     height: 1080,
     color: "#8b5cf6",
-    configurable: ["accentColor"],
+    configurable: ["accentColor", "fontScale", "animationStyle"],
   },
   {
     id: "goals",
@@ -43,29 +45,29 @@ const OVERLAYS = [
     width: 1920,
     height: 120,
     color: "#7c3aed",
-    configurable: ["accentColor", "goalType", "goalTarget", "goalLabel"],
+    configurable: ["accentColor", "goalType", "goalTarget", "goalLabel", "fontScale", "animationStyle"],
   },
   {
     id: "leaderboard",
     name: "Leaderboard",
     icon: Trophy,
-    desc: "Live top-10 viewer leaderboard ranked by XP and gifts.",
+    desc: "Live top-10 viewer leaderboard ranked by gifts this session.",
     path: "/obs/leaderboard",
     width: 360,
     height: 600,
     color: "#f59e0b",
-    configurable: ["accentColor"],
+    configurable: ["accentColor", "fontScale", "animationStyle"],
   },
   {
     id: "boss-battle",
     name: "Boss Battle",
     icon: Sword,
-    desc: "Boss HP bar, damage numbers, and defeat celebration.",
+    desc: "Boss HP bar, attack feed, damage numbers, and defeat celebration.",
     path: "/obs/boss-battle",
-    width: 500,
+    width: 640,
     height: 400,
     color: "#ef4444",
-    configurable: ["accentColor"],
+    configurable: ["accentColor", "fontScale", "animationStyle"],
   },
   {
     id: "activity-feed",
@@ -76,7 +78,7 @@ const OVERLAYS = [
     width: 360,
     height: 800,
     color: "#06b6d4",
-    configurable: ["accentColor"],
+    configurable: ["accentColor", "fontScale", "animationStyle"],
   },
 ];
 
@@ -88,11 +90,26 @@ const GOAL_TYPES = [
   { value: "viewers", label: "Peak Viewers" },
 ];
 
-function buildOverlayUrl(baseUrl: string, overlayPath: string, streamerId: number, token: string, config: WidgetConfig, overlayId: string): string {
+const ANIMATION_STYLES = [
+  { value: "smooth", label: "Smooth (0.4s transitions)" },
+  { value: "snappy", label: "Snappy (0.15s transitions)" },
+  { value: "none", label: "No animations" },
+];
+
+function buildOverlayUrl(
+  baseUrl: string,
+  overlayPath: string,
+  streamerId: number,
+  token: string,
+  config: WidgetConfig,
+  overlayId: string
+): string {
   const params = new URLSearchParams({
     streamerId: String(streamerId),
     token,
     color: config.accentColor.replace("#", ""),
+    fontScale: String(config.fontScale),
+    animation: config.animationStyle,
   });
   if (overlayId === "goals") {
     params.set("goalType", config.goalType);
@@ -118,6 +135,8 @@ export function Overlays() {
     goalType: "followers",
     goalTarget: 500,
     goalLabel: "",
+    fontScale: 1,
+    animationStyle: "smooth",
   });
 
   const fetchToken = async () => {
@@ -293,6 +312,44 @@ export function Overlays() {
                   </div>
                 )}
 
+                {activeWidget.configurable.includes("fontScale") && (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">
+                      Font Scale: <span className="text-white font-semibold">{config.fontScale.toFixed(1)}×</span>
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <Slider
+                        min={0.6}
+                        max={1.6}
+                        step={0.1}
+                        value={[config.fontScale]}
+                        onValueChange={([v]) => setConfig((c) => ({ ...c, fontScale: v }))}
+                        className="py-1 flex-1"
+                      />
+                      <span className="text-xs text-muted-foreground w-8 text-right">{config.fontScale.toFixed(1)}×</span>
+                    </div>
+                  </div>
+                )}
+
+                {activeWidget.configurable.includes("animationStyle") && (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Animation Style</Label>
+                    <Select
+                      value={config.animationStyle}
+                      onValueChange={(v) => setConfig((c) => ({ ...c, animationStyle: v as WidgetConfig["animationStyle"] }))}
+                    >
+                      <SelectTrigger className="bg-background border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ANIMATION_STYLES.map((a) => (
+                          <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {activeWidget.configurable.includes("goalType") && (
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Goal Type</Label>
@@ -363,12 +420,13 @@ export function Overlays() {
                     )}
                   </div>
 
-                  <div className="flex gap-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span className="bg-white/5 rounded px-2 py-1 font-mono">
                       {activeWidget.width} × {activeWidget.height}px
                     </span>
                     <span className="bg-white/5 rounded px-2 py-1">✓ Transparent background</span>
                     <span className="bg-white/5 rounded px-2 py-1">✓ Auto-updates via socket</span>
+                    <span className="bg-white/5 rounded px-2 py-1">✓ 10s leaderboard refresh</span>
                   </div>
                 </div>
               </CardContent>

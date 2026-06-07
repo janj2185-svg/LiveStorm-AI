@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useObsSocket, type LiveEvent } from "@/hooks/useObsSocket";
+import { useOverlayTheme } from "@/lib/obsTheme";
 
 interface AlertItem {
   id: number;
@@ -102,6 +103,7 @@ export function ObsAlerts() {
   const streamerId = Number(params.get("streamerId"));
   const token = params.get("token") ?? "";
   const accentColor = params.get("color") ?? "7c3aed";
+  const { fontScale, transitionMs } = useOverlayTheme();
 
   const { events } = useObsSocket(streamerId || null, token || null);
   const [queue, setQueue] = useState<AlertItem[]>([]);
@@ -161,13 +163,16 @@ export function ObsAlerts() {
         boxSizing: "border-box",
         fontFamily: "'Inter', 'Segoe UI', sans-serif",
         overflow: "hidden",
+        zoom: fontScale,
       }}
     >
       <div
         style={{
           transform: slideIn,
           opacity,
-          transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease",
+          transition: transitionMs > 0
+            ? `transform ${transitionMs}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${transitionMs * 0.75}ms ease`
+            : "none",
           background: "rgba(15, 15, 25, 0.92)",
           border: `2px solid #${accentColor}`,
           borderRadius: "16px",
