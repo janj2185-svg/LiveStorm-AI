@@ -11,7 +11,7 @@ import {
   kingdomsTable,
   streamersTable,
 } from "@workspace/db";
-import { eq, and, sql, count } from "drizzle-orm";
+import { eq, and, sql, count, desc } from "drizzle-orm";
 
 const XP_TABLE: Record<string, number> = {
   gift: 10,
@@ -60,6 +60,69 @@ export const ACHIEVEMENT_SEEDS = [
   { key: "treasure_finder", name: "Treasure Hunter", description: "Win a Treasure Hunt", iconType: "map", xpReward: 75, coinReward: 15 },
   { key: "pvp_champion", name: "PvP Champion", description: "Win a PvP Battle", iconType: "swords", xpReward: 100, coinReward: 20 },
 ];
+
+// ---------------------------------------------------------------------------
+// In-memory active mini-game state (per sessionId)
+// ---------------------------------------------------------------------------
+
+interface ActiveQuiz {
+  question: string;
+  normalizedAnswer: string;
+  xpReward: number;
+  coinReward: number;
+  streamerId: number;
+  resolvedAt: number | null;
+}
+
+interface ActiveTreasureHunt {
+  keyword: string;
+  prize: string;
+  xpReward: number;
+  coinReward: number;
+  streamerId: number;
+  resolvedAt: number | null;
+}
+
+const activeQuizzes = new Map<number, ActiveQuiz>();
+const activeTreasureHunts = new Map<number, ActiveTreasureHunt>();
+
+export function startQuizGame(
+  sessionId: number,
+  streamerId: number,
+  question: string,
+  answer: string,
+  xpReward = 300,
+  coinReward = 50
+) {
+  activeQuizzes.set(sessionId, {
+    question,
+    normalizedAnswer: answer.toLowerCase().trim(),
+    xpReward,
+    coinReward,
+    streamerId,
+    resolvedAt: null,
+  });
+}
+
+export function startTreasureHuntGame(
+  sessionId: number,
+  streamerId: number,
+  keyword: string,
+  prize: string,
+  xpReward = 200,
+  coinReward = 40
+) {
+  activeTreasureHunts.set(sessionId, {
+    keyword: keyword.toLowerCase().trim(),
+    prize,
+    xpReward,
+    coinReward,
+    streamerId,
+    resolvedAt: null,
+  });
+}
+
+// ---------------------------------------------------------------------------
 
 export async function seedAchievements() {
   try {
@@ -165,6 +228,73 @@ async function checkViewerAchievements(
   } catch (_err) {}
 }
 
+// ---------------------------------------------------------------------------
+// Boss battle reward distribution on defeat
+// ---------------------------------------------------------------------------
+
+async function distributeBossDefeatRewards(
+  io: SocketServer,
+  roomId: string,
+  battleId: number,
+  streamerId: number
+) {
+  try {
+    const participants = await db
+      .select({
+        tiktokViewerId: bossAttacksTable.tiktokViewerId,
+        viewerName: sql<string>`max(${bossAttacksTable.viewerName})`,
+        totalDamage: sql<number>`sum(${bossAttacksTable.damage})`,
+      })
+      .from(bossAttacksTable)
+      .where(eq(bossAttacksTable.battleId, battleId))
+      .groupBy(bossAttacksTable.tiktokViewerId)
+      .orderBy(desc(sql`sum(${bossAttacksTable.damage})`))
+      .limit(50);
+
+    if (participants.length === 0) return;
+
+    const totalDamageDealt = participants.reduce((s, p) => s + Number(p.totalDamage), 0);
+
+    const rewards: Array<{ viewerName: string; xp: number; coins: number; rank: number }> = [];
+
+    for (let i = 0; i < participants.length; i++) {
+      const p = participants[i];
+      const damageShare = Number(p.totalDamage) / Math.max(1, totalDamageDealt);
+
+      // Base participation reward
+      let xp = 50;
+      let coins = 10;
+
+      // Rank bonuses: top 3 get extra
+      if (i === 0) { xp += 300; coins += 100; }      // MVP / killing blow
+      else if (i === 1) { xp += 150; coins += 50; }  // 2nd
+      else if (i === 2) { xp += 75; coins += 25; }   // 3rd
+
+      // Proportional damage bonus (up to 200 xp / 50 coins extra)
+      xp += Math.floor(damageShare * 200);
+      coins += Math.floor(damageShare * 50);
+
+      await db.insert(viewerXpEventsTable).values({
+        tiktokViewerId: p.tiktokViewerId,
+        viewerName: p.viewerName,
+        streamerId,
+        eventType: "boss_reward",
+        xpAwarded: xp,
+        coinsAwarded: coins,
+      });
+
+      rewards.push({ viewerName: p.viewerName, xp, coins, rank: i + 1 });
+    }
+
+    io.to(roomId).emit("boss:rewards_distributed", {
+      battleId,
+      rewards: rewards.slice(0, 10),
+      totalParticipants: participants.length,
+      timestamp: Date.now(),
+    });
+  } catch (_err) {}
+}
+
 async function processBossBattle(
   io: SocketServer,
   roomId: string,
@@ -227,6 +357,7 @@ async function processBossBattle(
         timestamp: Date.now(),
       });
       await checkAndUnlockAchievement(io, roomId, tiktokViewerId, viewerName, streamerId, "boss_slayer");
+      await distributeBossDefeatRewards(io, roomId, battle.id, streamerId);
     }
   } catch (_err) {}
 }
@@ -294,6 +425,96 @@ async function processKingdomResources(streamerId: number, event: TikTokEvent) {
   } catch (_err) {}
 }
 
+// ---------------------------------------------------------------------------
+// Resolve mini-game comment matches (quiz / treasure hunt)
+// ---------------------------------------------------------------------------
+
+async function resolveMinigameComment(
+  io: SocketServer,
+  roomId: string,
+  sessionId: number,
+  tiktokViewerId: string,
+  viewerName: string,
+  commentText: string
+) {
+  const normalized = commentText.toLowerCase().trim();
+
+  // Quiz resolution
+  const quiz = activeQuizzes.get(sessionId);
+  if (quiz && quiz.resolvedAt === null) {
+    if (normalized === quiz.normalizedAnswer) {
+      quiz.resolvedAt = Date.now();
+      activeQuizzes.set(sessionId, quiz);
+
+      // Award XP/coins to winner
+      await db.insert(viewerXpEventsTable).values({
+        tiktokViewerId,
+        viewerName,
+        streamerId: quiz.streamerId,
+        sessionId,
+        eventType: "quiz_win",
+        xpAwarded: quiz.xpReward,
+        coinsAwarded: quiz.coinReward,
+      });
+
+      await checkAndUnlockAchievement(
+        io, roomId, tiktokViewerId, viewerName, quiz.streamerId, "quiz_winner"
+      );
+
+      io.to(roomId).emit("minigame:quiz_won", {
+        winner: viewerName,
+        question: quiz.question,
+        answer: quiz.normalizedAnswer,
+        xpAwarded: quiz.xpReward,
+        coinsAwarded: quiz.coinReward,
+        timestamp: Date.now(),
+      });
+
+      activeQuizzes.delete(sessionId);
+      return;
+    }
+  }
+
+  // Treasure hunt resolution
+  const hunt = activeTreasureHunts.get(sessionId);
+  if (hunt && hunt.resolvedAt === null) {
+    if (normalized.includes(hunt.keyword)) {
+      hunt.resolvedAt = Date.now();
+      activeTreasureHunts.set(sessionId, hunt);
+
+      await db.insert(viewerXpEventsTable).values({
+        tiktokViewerId,
+        viewerName,
+        streamerId: hunt.streamerId,
+        sessionId,
+        eventType: "treasure_win",
+        xpAwarded: hunt.xpReward,
+        coinsAwarded: hunt.coinReward,
+      });
+
+      await checkAndUnlockAchievement(
+        io, roomId, tiktokViewerId, viewerName, hunt.streamerId, "treasure_finder"
+      );
+
+      io.to(roomId).emit("minigame:treasure_found", {
+        winner: viewerName,
+        prize: hunt.prize,
+        keyword: hunt.keyword,
+        xpAwarded: hunt.xpReward,
+        coinsAwarded: hunt.coinReward,
+        timestamp: Date.now(),
+      });
+
+      activeTreasureHunts.delete(sessionId);
+      return;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main entry point called per live event
+// ---------------------------------------------------------------------------
+
 export async function processGamification(
   io: SocketServer,
   event: TikTokEvent,
@@ -341,6 +562,16 @@ export async function processGamification(
           newLevel,
           timestamp: Date.now(),
         });
+      }
+    }
+
+    // Resolve mini-game comments before other processing
+    if (event.type === "comment" && event.sessionId) {
+      const commentText = String(event.data.comment ?? event.data.text ?? "");
+      if (commentText) {
+        await resolveMinigameComment(
+          io, roomId, event.sessionId, tiktokViewerId, viewerName, commentText
+        );
       }
     }
 

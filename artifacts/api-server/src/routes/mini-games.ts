@@ -5,11 +5,17 @@ import {
   viewerXpEventsTable,
   streamersTable,
   usersTable,
+  sessionsTable,
   viewerAchievementsTable,
   achievementsTable,
 } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { getIO } from "../lib/socketServer";
+import {
+  startQuizGame,
+  startTreasureHuntGame,
+  ACHIEVEMENT_SEEDS,
+} from "../lib/gamificationEngine";
 
 const router = Router();
 
@@ -40,17 +46,47 @@ async function getStreamerForUser(clerkId: string) {
   return db.query.streamersTable.findFirst({ where: eq(streamersTable.userId, user.id) });
 }
 
+/**
+ * Verify that a session belongs to the authenticated streamer.
+ * Returns true if sessionId is undefined (no session restriction needed).
+ */
+async function verifySessionOwnership(
+  sessionId: number | undefined,
+  streamerId: number
+): Promise<boolean> {
+  if (sessionId === undefined) return true;
+  const session = await db.query.sessionsTable.findFirst({
+    where: eq(sessionsTable.id, sessionId),
+  });
+  if (!session) return false;
+  return session.streamerId === streamerId;
+}
+
+// ---------------------------------------------------------------------------
+// POST /mini-games/spin
+// Streamer spins the wheel on behalf of their own stream; sessionId must
+// belong to their streamer profile.
+// ---------------------------------------------------------------------------
 router.post("/mini-games/spin", requireAuth, async (req: any, res: any) => {
   try {
-    const prize = spinWheel();
     const clerkId = req.clerkUserId;
     const streamer = await getStreamerForUser(clerkId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
 
-    if (streamer && prize.xp > 0) {
+    const { sessionId } = req.body as { sessionId?: number };
+
+    if (!(await verifySessionOwnership(sessionId, streamer.id))) {
+      return res.status(403).json({ error: "Session does not belong to your account" });
+    }
+
+    const prize = spinWheel();
+
+    if (prize.xp > 0 || prize.coins > 0) {
       await db.insert(viewerXpEventsTable).values({
-        tiktokViewerId: `user:${clerkId}`,
-        viewerName: "Streamer",
+        tiktokViewerId: `streamer:${streamer.id}`,
+        viewerName: "Spin Winner",
         streamerId: streamer.id,
+        sessionId: sessionId ?? null,
         eventType: "spin_win",
         xpAwarded: prize.xp,
         coinsAwarded: prize.coins,
@@ -58,7 +94,6 @@ router.post("/mini-games/spin", requireAuth, async (req: any, res: any) => {
     }
 
     const io = getIO();
-    const { sessionId } = req.body as { sessionId?: number };
     if (io && sessionId) {
       io.to(`session:${sessionId}`).emit("minigame:spin", {
         prize: prize.label,
@@ -74,11 +109,22 @@ router.post("/mini-games/spin", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /mini-games/lucky-draw
+// Picks a random winner from viewers who engaged in the session.
+// streamerId is always derived from auth — never from client input.
+// ---------------------------------------------------------------------------
 router.post("/mini-games/lucky-draw", requireAuth, async (req: any, res: any) => {
   try {
-    const { streamerId, sessionId } = req.body as { streamerId?: number; sessionId?: number };
+    const clerkId = req.clerkUserId;
+    const streamer = await getStreamerForUser(clerkId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
 
-    if (!streamerId) return res.status(400).json({ error: "streamerId required" });
+    const { sessionId } = req.body as { sessionId?: number };
+
+    if (!(await verifySessionOwnership(sessionId, streamer.id))) {
+      return res.status(403).json({ error: "Session does not belong to your account" });
+    }
 
     const recentViewers = await db
       .select({
@@ -88,7 +134,7 @@ router.post("/mini-games/lucky-draw", requireAuth, async (req: any, res: any) =>
       .from(viewerXpEventsTable)
       .where(
         and(
-          eq(viewerXpEventsTable.streamerId, streamerId),
+          eq(viewerXpEventsTable.streamerId, streamer.id),
           ...(sessionId ? [eq(viewerXpEventsTable.sessionId, sessionId)] : [])
         )
       )
@@ -115,41 +161,49 @@ router.post("/mini-games/lucky-draw", requireAuth, async (req: any, res: any) =>
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /mini-games/pvp
+// Pits two named viewers against each other using their accumulated XP as
+// the base stat. streamerId is derived from auth.
+// ---------------------------------------------------------------------------
 router.post("/mini-games/pvp", requireAuth, async (req: any, res: any) => {
   try {
-    const { player1, player2, streamerId, sessionId } = req.body as {
+    const clerkId = req.clerkUserId;
+    const streamer = await getStreamerForUser(clerkId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const { player1, player2, sessionId } = req.body as {
       player1: string;
       player2: string;
-      streamerId?: number;
       sessionId?: number;
     };
     if (!player1 || !player2) return res.status(400).json({ error: "Both player names required" });
 
-    let p1Xp = 0;
-    let p2Xp = 0;
-
-    if (streamerId) {
-      const p1Row = await db
-        .select({ total: sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)` })
-        .from(viewerXpEventsTable)
-        .where(
-          and(
-            eq(viewerXpEventsTable.streamerId, streamerId),
-            eq(viewerXpEventsTable.viewerName, player1)
-          )
-        );
-      const p2Row = await db
-        .select({ total: sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)` })
-        .from(viewerXpEventsTable)
-        .where(
-          and(
-            eq(viewerXpEventsTable.streamerId, streamerId),
-            eq(viewerXpEventsTable.viewerName, player2)
-          )
-        );
-      p1Xp = Number(p1Row[0]?.total ?? 0);
-      p2Xp = Number(p2Row[0]?.total ?? 0);
+    if (!(await verifySessionOwnership(sessionId, streamer.id))) {
+      return res.status(403).json({ error: "Session does not belong to your account" });
     }
+
+    const p1Row = await db
+      .select({ total: sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)` })
+      .from(viewerXpEventsTable)
+      .where(
+        and(
+          eq(viewerXpEventsTable.streamerId, streamer.id),
+          eq(viewerXpEventsTable.viewerName, player1)
+        )
+      );
+    const p2Row = await db
+      .select({ total: sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)` })
+      .from(viewerXpEventsTable)
+      .where(
+        and(
+          eq(viewerXpEventsTable.streamerId, streamer.id),
+          eq(viewerXpEventsTable.viewerName, player2)
+        )
+      );
+
+    const p1Xp = Number(p1Row[0]?.total ?? 0);
+    const p2Xp = Number(p2Row[0]?.total ?? 0);
 
     const p1Score = p1Xp + Math.floor(Math.random() * 200);
     const p2Score = p2Xp + Math.floor(Math.random() * 200);
@@ -171,17 +225,44 @@ router.post("/mini-games/pvp", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /mini-games/quiz/start
+// Starts a quiz; the answer is stored server-side only — never echoed back.
+// Incoming comments during the session are matched against it in the
+// gamificationEngine (resolveMinigameComment). sessionId must belong to auth.
+// ---------------------------------------------------------------------------
 router.post("/mini-games/quiz/start", requireAuth, async (req: any, res: any) => {
   try {
-    const { question, answer, sessionId } = req.body as {
+    const clerkId = req.clerkUserId;
+    const streamer = await getStreamerForUser(clerkId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const { question, answer, sessionId, xpReward, coinReward } = req.body as {
       question: string;
       answer: string;
-      sessionId?: number;
+      sessionId: number;
+      xpReward?: number;
+      coinReward?: number;
     };
+
     if (!question || !answer) return res.status(400).json({ error: "question and answer required" });
+    if (!sessionId) return res.status(400).json({ error: "sessionId required" });
+
+    if (!(await verifySessionOwnership(sessionId, streamer.id))) {
+      return res.status(403).json({ error: "Session does not belong to your account" });
+    }
+
+    startQuizGame(
+      sessionId,
+      streamer.id,
+      question,
+      answer,
+      xpReward ?? 300,
+      coinReward ?? 50
+    );
 
     const io = getIO();
-    if (io && sessionId) {
+    if (io) {
       io.to(`session:${sessionId}`).emit("minigame:quiz_started", {
         question,
         sessionId,
@@ -189,31 +270,59 @@ router.post("/mini-games/quiz/start", requireAuth, async (req: any, res: any) =>
       });
     }
 
+    // Return without echoing the answer back to the client
     res.json({ ok: true, question });
   } catch {
     res.status(500).json({ error: "Quiz start failed" });
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /mini-games/treasure-hunt/start
+// Starts a treasure hunt with a secret keyword. Only the hint is broadcast;
+// the keyword is stored server-side. Comments are matched in the engine.
+// ---------------------------------------------------------------------------
 router.post("/mini-games/treasure-hunt/start", requireAuth, async (req: any, res: any) => {
   try {
-    const { keyword, prize, sessionId } = req.body as {
+    const clerkId = req.clerkUserId;
+    const streamer = await getStreamerForUser(clerkId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const { keyword, prize, sessionId, xpReward, coinReward } = req.body as {
       keyword: string;
       prize: string;
-      sessionId?: number;
+      sessionId: number;
+      xpReward?: number;
+      coinReward?: number;
     };
+
     if (!keyword) return res.status(400).json({ error: "keyword required" });
+    if (!sessionId) return res.status(400).json({ error: "sessionId required" });
+
+    if (!(await verifySessionOwnership(sessionId, streamer.id))) {
+      return res.status(403).json({ error: "Session does not belong to your account" });
+    }
+
+    startTreasureHuntGame(
+      sessionId,
+      streamer.id,
+      keyword,
+      prize ?? "a mystery prize",
+      xpReward ?? 200,
+      coinReward ?? 40
+    );
 
     const io = getIO();
-    if (io && sessionId) {
+    if (io) {
       io.to(`session:${sessionId}`).emit("minigame:treasure_hunt_started", {
-        hint: `A treasure is hidden! Type the magic word to win: ${prize || "a prize"}`,
+        hint: `🗺️ A treasure is hidden! Find the magic word to win: ${prize ?? "a mystery prize"}`,
         sessionId,
         timestamp: Date.now(),
       });
     }
 
-    res.json({ ok: true, keyword });
+    // Keyword is never sent back to the client
+    res.json({ ok: true, prize: prize ?? "a mystery prize" });
   } catch {
     res.status(500).json({ error: "Treasure hunt start failed" });
   }

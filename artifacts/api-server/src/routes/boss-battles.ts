@@ -134,7 +134,17 @@ router.post("/boss-battles/:id/end", requireAuth, async (req: any, res: any) => 
 
 router.get("/boss-battles/:id/attacks", requireAuth, async (req: any, res: any) => {
   try {
+    const streamer = await getStreamerForUser(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
     const battleId = Number(req.params.id);
+    const battle = await db.query.bossBattlesTable.findFirst({
+      where: eq(bossBattlesTable.id, battleId),
+    });
+
+    if (!battle) return res.status(404).json({ error: "Battle not found" });
+    if (battle.streamerId !== streamer.id) return res.status(403).json({ error: "Forbidden" });
+
     const attacks = await db
       .select()
       .from(bossAttacksTable)
