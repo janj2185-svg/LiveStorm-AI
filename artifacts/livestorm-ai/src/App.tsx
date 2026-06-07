@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
+import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from 'wouter';
@@ -110,6 +110,29 @@ function HomeRedirect() {
   );
 }
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isSignedIn, isLoaded } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      setLocation(`/sign-in`);
+    }
+  }, [isLoaded, isSignedIn, setLocation]);
+
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) return null;
+
+  return <>{children}</>;
+}
+
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
   const queryClient = useQueryClient();
@@ -140,25 +163,25 @@ function AppRoutes() {
       <Route path="/sign-up/*?" component={SignUpPage} />
       
       <Route path="/dashboard">
-        <Layout><Dashboard /></Layout>
+        <ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>
       </Route>
       <Route path="/live-studio">
-        <Layout><LiveStudio /></Layout>
+        <ProtectedRoute><Layout><LiveStudio /></Layout></ProtectedRoute>
       </Route>
       <Route path="/gamification">
-        <Layout><Gamification /></Layout>
+        <ProtectedRoute><Layout><Gamification /></Layout></ProtectedRoute>
       </Route>
       <Route path="/kingdom">
-        <Layout><Kingdom /></Layout>
+        <ProtectedRoute><Layout><Kingdom /></Layout></ProtectedRoute>
       </Route>
       <Route path="/overlays">
-        <Layout><Overlays /></Layout>
+        <ProtectedRoute><Layout><Overlays /></Layout></ProtectedRoute>
       </Route>
       <Route path="/ai-assistant">
-        <Layout><AiAssistant /></Layout>
+        <ProtectedRoute><Layout><AiAssistant /></Layout></ProtectedRoute>
       </Route>
       <Route path="/settings">
-        <Layout><Settings /></Layout>
+        <ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>
       </Route>
 
       <Route>
