@@ -29,6 +29,7 @@ import type {
   Kingdom,
   Session,
   SessionStarted,
+  SessionStats,
   Streamer,
   TiktokConnect,
   User,
@@ -933,6 +934,83 @@ export function useGetActiveSession<TData = Awaited<ReturnType<typeof getActiveS
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetActiveSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetSessionStatsUrl = (id: number,) => {
+
+
+
+
+  return `/api/sessions/${id}/stats`
+}
+
+/**
+ * @summary Get stats for a specific session
+ */
+export const getSessionStats = async (id: number, options?: RequestInit): Promise<SessionStats> => {
+
+  return customFetch<SessionStats>(getGetSessionStatsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionStatsQueryKey = (id: number,) => {
+    return [
+    `/api/sessions/${id}/stats`
+    ] as const;
+    }
+
+
+export const getGetSessionStatsQueryOptions = <TData = Awaited<ReturnType<typeof getSessionStats>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSessionStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSessionStatsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionStats>>> = ({ signal }) => getSessionStats(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSessionStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSessionStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionStats>>>
+export type GetSessionStatsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get stats for a specific session
+ */
+
+export function useGetSessionStats<TData = Awaited<ReturnType<typeof getSessionStats>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSessionStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSessionStatsQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

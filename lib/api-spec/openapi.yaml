@@ -206,6 +206,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/ActiveSessionResponse"
 
+  /sessions/{id}/stats:
+    get:
+      operationId: getSessionStats
+      tags: [sessions]
+      summary: Get stats for a specific session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStats"
+        "404":
+          description: Not found
+
   /sessions:
     get:
       operationId: getSessions
@@ -532,6 +553,40 @@ components:
         - name
         - eventType
         - actionType
+
+    SessionStats:
+      type: object
+      properties:
+        id:
+          type: integer
+        streamerId:
+          type: integer
+        startedAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+        durationSeconds:
+          type: integer
+        peakViewers:
+          type: integer
+        totalGifts:
+          type: integer
+        totalLikes:
+          type: integer
+        totalFollowers:
+          type: integer
+        totalComments:
+          type: integer
+      required:
+        - id
+        - streamerId
+        - startedAt
+        - durationSeconds
+        - peakViewers
+        - totalGifts
+        - totalLikes
+        - totalFollowers
+        - totalComments
 
     AutomationUpdate:
       type: object

@@ -1,8 +1,7 @@
 import { Server as SocketServer } from "socket.io";
 import type { Server as HttpServer } from "http";
-import { getAuth } from "@clerk/express";
 import { db, streamersTable, sessionsTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { processAutomations } from "./automationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 
@@ -16,8 +15,19 @@ export function initSocketServer(httpServer: HttpServer) {
 
   io.on("connection", (socket) => {
     socket.on("session:join", async (sessionId: number) => {
-      socket.join(`session:${sessionId}`);
-      socket.emit("session:joined", { sessionId });
+      try {
+        const session = await db.query.sessionsTable.findFirst({
+          where: eq(sessionsTable.id, Number(sessionId)),
+        });
+        if (!session || session.endedAt) {
+          socket.emit("session:error", { message: "Session not found or ended" });
+          return;
+        }
+        socket.join(`session:${sessionId}`);
+        socket.emit("session:joined", { sessionId });
+      } catch (_err) {
+        socket.emit("session:error", { message: "Could not join session" });
+      }
     });
 
     socket.on("session:leave", (sessionId: number) => {
@@ -34,28 +44,16 @@ export function getIO(): SocketServer | null {
   return io;
 }
 
-export async function broadcastEvent(
-  event: TikTokEvent,
-  userId: number,
-) {
+export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   if (!io) return;
 
   const roomId = `session:${event.sessionId}`;
+
   io.to(roomId).emit("live:event", event);
 
   await processAutomations(io, roomId, userId, event);
 
   try {
-    const updateFields: Record<string, unknown> = {};
-
-    if (event.type === "gift") {
-      const coins = (event.data.coins as number) ?? 0;
-      await db
-        .update(streamersTable)
-        .set({ totalGiftsReceived: (await db.query.streamersTable.findFirst({ where: eq(streamersTable.id, (await db.query.sessionsTable.findFirst({ where: eq(sessionsTable.id, event.sessionId) }))?.streamerId ?? 0) }))?.totalGiftsReceived ?? 0 + coins })
-        .where(eq(streamersTable.id, (await db.query.sessionsTable.findFirst({ where: eq(sessionsTable.id, event.sessionId) }))?.streamerId ?? 0));
-    }
-
     if (event.type === "viewerCount") {
       const count = (event.data.count as number) ?? 0;
       const session = await db.query.sessionsTable.findFirst({
@@ -67,13 +65,47 @@ export async function broadcastEvent(
           .set({ viewerCount: count, updatedAt: new Date() })
           .where(eq(streamersTable.id, session.streamerId));
 
-        if (count > (session.peakViewers ?? 0)) {
+        if (count > session.peakViewers) {
           await db
             .update(sessionsTable)
             .set({ peakViewers: count })
             .where(eq(sessionsTable.id, event.sessionId));
         }
       }
+    } else if (event.type === "gift") {
+      const coins = (event.data.coins as number) ?? 0;
+      await db
+        .update(sessionsTable)
+        .set({ totalGifts: sql`${sessionsTable.totalGifts} + ${coins}` })
+        .where(eq(sessionsTable.id, event.sessionId));
+      const session = await db.query.sessionsTable.findFirst({
+        where: eq(sessionsTable.id, event.sessionId),
+      });
+      if (session) {
+        await db
+          .update(streamersTable)
+          .set({
+            totalGiftsReceived: sql`${streamersTable.totalGiftsReceived} + ${coins}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(streamersTable.id, session.streamerId));
+      }
+    } else if (event.type === "like") {
+      const likeCount = (event.data.likeCount as number) ?? 1;
+      await db
+        .update(sessionsTable)
+        .set({ totalLikes: sql`${sessionsTable.totalLikes} + ${likeCount}` })
+        .where(eq(sessionsTable.id, event.sessionId));
+    } else if (event.type === "follow") {
+      await db
+        .update(sessionsTable)
+        .set({ totalFollowers: sql`${sessionsTable.totalFollowers} + 1` })
+        .where(eq(sessionsTable.id, event.sessionId));
+    } else if (event.type === "comment") {
+      await db
+        .update(sessionsTable)
+        .set({ totalComments: sql`${sessionsTable.totalComments} + 1` })
+        .where(eq(sessionsTable.id, event.sessionId));
     }
   } catch (_err) {}
 }

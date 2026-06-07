@@ -17,10 +17,7 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
       return res.status(404).json({ error: "No streamer profile. Connect TikTok first." });
     }
 
-    const existingLive = await db.query.streamersTable.findFirst({
-      where: eq(streamersTable.id, streamer.id),
-    });
-    if (existingLive?.isLive) {
+    if (streamer.isLive) {
       return res.status(400).json({ error: "Already live" });
     }
 
@@ -37,7 +34,7 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
     const io = getIO();
     if (io) {
       const roomId = `session:${session.id}`;
-      startSimulator(io, session.id, roomId);
+      startSimulator(io, session.id, roomId, user.id);
     }
 
     res.json({
@@ -86,10 +83,15 @@ router.post("/sessions/end", requireAuth, async (req: any, res: any) => {
     }
 
     res.json({
-      sessionId: ended.id,
+      id: ended.id,
       streamerId: streamer.id,
       startedAt: ended.startedAt,
       endedAt: ended.endedAt,
+      peakViewers: ended.peakViewers,
+      totalGifts: ended.totalGifts,
+      totalLikes: ended.totalLikes,
+      totalFollowers: ended.totalFollowers,
+      totalComments: ended.totalComments,
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -119,12 +121,53 @@ router.get("/sessions/active", requireAuth, async (req: any, res: any) => {
         id: activeSession.id,
         streamerId: activeSession.streamerId,
         startedAt: activeSession.startedAt,
+        endedAt: null,
         peakViewers: activeSession.peakViewers,
         totalGifts: activeSession.totalGifts,
         totalLikes: activeSession.totalLikes,
         totalFollowers: activeSession.totalFollowers,
         totalComments: activeSession.totalComments,
       },
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/sessions/:id/stats", requireAuth, async (req: any, res: any) => {
+  try {
+    const user = await getOrCreateUser(req.clerkUserId);
+    const sessionId = parseInt(req.params.id, 10);
+    if (isNaN(sessionId)) return res.status(400).json({ error: "Invalid session id" });
+
+    const streamer = await db.query.streamersTable.findFirst({
+      where: eq(streamersTable.userId, user.id),
+    });
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const session = await db.query.sessionsTable.findFirst({
+      where: eq(sessionsTable.id, sessionId),
+    });
+
+    if (!session || session.streamerId !== streamer.id) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    const durationSeconds = session.endedAt
+      ? Math.floor((new Date(session.endedAt).getTime() - new Date(session.startedAt).getTime()) / 1000)
+      : Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000);
+
+    res.json({
+      id: session.id,
+      streamerId: session.streamerId,
+      startedAt: session.startedAt,
+      endedAt: session.endedAt ?? null,
+      durationSeconds,
+      peakViewers: session.peakViewers,
+      totalGifts: session.totalGifts,
+      totalLikes: session.totalLikes,
+      totalFollowers: session.totalFollowers,
+      totalComments: session.totalComments,
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
@@ -151,7 +194,7 @@ router.get("/sessions", requireAuth, async (req: any, res: any) => {
         id: s.id,
         streamerId: s.streamerId,
         startedAt: s.startedAt,
-        endedAt: s.endedAt,
+        endedAt: s.endedAt ?? null,
         peakViewers: s.peakViewers,
         totalGifts: s.totalGifts,
         totalLikes: s.totalLikes,

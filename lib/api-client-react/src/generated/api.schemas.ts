@@ -109,6 +109,20 @@ export interface AutomationCreate {
   actionPayload?: string;
 }
 
+export interface SessionStats {
+  id: number;
+  streamerId: number;
+  startedAt: string;
+  /** @nullable */
+  endedAt?: string | null;
+  durationSeconds: number;
+  peakViewers: number;
+  totalGifts: number;
+  totalLikes: number;
+  totalFollowers: number;
+  totalComments: number;
+}
+
 export interface AutomationUpdate {
   name?: string;
   eventType?: string;

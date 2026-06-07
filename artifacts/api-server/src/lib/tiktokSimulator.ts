@@ -1,4 +1,5 @@
 import type { Server as SocketServer } from "socket.io";
+import { ingestLiveEvent } from "./socketServer";
 
 export interface TikTokEvent {
   type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount";
@@ -24,21 +25,19 @@ const DEMO_USERS = [
 ];
 
 const DEMO_COMMENTS = [
-  "Let's go!! 🔥",
+  "Let's go!!",
   "This stream is insane",
   "First time here, love it!",
   "GG GG GG",
   "You're the best streamer",
   "More content please!!",
   "From Brazil here",
-  "POG POG POG",
-  "How long have you been streaming?",
   "This is wild",
-  "Drop the link!",
+  "Can you do a shoutout?",
   "Watching from the UK!",
   "W streamer W chat",
-  "Can you do a shoutout?",
-  "Subbing right now",
+  "How long have you been streaming?",
+  "Drop the link!",
 ];
 
 const GIFT_TYPES = [
@@ -72,95 +71,91 @@ function randomGift() {
   return GIFT_TYPES[0];
 }
 
-const activeSimulators = new Map<number, NodeJS.Timeout>();
+interface SimulatorEntry {
+  interval: NodeJS.Timeout;
+  userId: number;
+}
 
-export function startSimulator(io: SocketServer, sessionId: number, roomId: string) {
+const activeSimulators = new Map<number, SimulatorEntry>();
+
+export function startSimulator(_io: SocketServer, sessionId: number, _roomId: string, userId: number) {
   if (activeSimulators.has(sessionId)) return;
 
   let viewerCount = Math.floor(Math.random() * 100) + 20;
   let tickCount = 0;
 
-  function emitEvent() {
+  async function emitEvent() {
     tickCount++;
     const rand = Math.random();
 
     if (tickCount % 10 === 0) {
       const delta = Math.floor(Math.random() * 20) - 8;
       viewerCount = Math.max(5, viewerCount + delta);
-      const event: TikTokEvent = {
+      await ingestLiveEvent({
         type: "viewerCount",
         sessionId,
         data: { count: viewerCount },
         timestamp: Date.now(),
-      };
-      io.to(roomId).emit("live:event", event);
+      }, userId);
     }
 
     if (rand < 0.45) {
       const user = randomUser();
-      const event: TikTokEvent = {
+      await ingestLiveEvent({
         type: "comment",
         sessionId,
         username: user.username,
-        avatarUrl: user.avatarUrl ?? undefined,
         data: { text: randomComment() },
         timestamp: Date.now(),
-      };
-      io.to(roomId).emit("live:event", event);
+      }, userId);
     } else if (rand < 0.6) {
       const user = randomUser();
       const gift = randomGift();
-      const event: TikTokEvent = {
+      await ingestLiveEvent({
         type: "gift",
         sessionId,
         username: user.username,
-        avatarUrl: user.avatarUrl ?? undefined,
         data: { giftName: gift.name, coins: gift.coins, count: 1 },
         timestamp: Date.now(),
-      };
-      io.to(roomId).emit("live:event", event);
+      }, userId);
     } else if (rand < 0.75) {
       const user = randomUser();
-      const event: TikTokEvent = {
+      await ingestLiveEvent({
         type: "like",
         sessionId,
         username: user.username,
         data: { likeCount: Math.floor(Math.random() * 20) + 1 },
         timestamp: Date.now(),
-      };
-      io.to(roomId).emit("live:event", event);
+      }, userId);
     } else if (rand < 0.85) {
       const user = randomUser();
-      const event: TikTokEvent = {
+      await ingestLiveEvent({
         type: "follow",
         sessionId,
         username: user.username,
-        avatarUrl: user.avatarUrl ?? undefined,
         data: {},
         timestamp: Date.now(),
-      };
-      io.to(roomId).emit("live:event", event);
+      }, userId);
     } else {
       const user = randomUser();
-      const event: TikTokEvent = {
+      await ingestLiveEvent({
         type: "share",
         sessionId,
         username: user.username,
         data: {},
         timestamp: Date.now(),
-      };
-      io.to(roomId).emit("live:event", event);
+      }, userId);
     }
   }
 
   const interval = setInterval(emitEvent, 1200);
-  activeSimulators.set(sessionId, interval);
+  activeSimulators.set(sessionId, { interval, userId });
 }
 
 export function stopSimulator(sessionId: number) {
-  const interval = activeSimulators.get(sessionId);
-  if (interval) {
-    clearInterval(interval);
+  const entry = activeSimulators.get(sessionId);
+  if (entry) {
+    clearInterval(entry.interval);
     activeSimulators.delete(sessionId);
   }
 }

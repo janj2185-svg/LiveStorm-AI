@@ -15,6 +15,7 @@ export * from './healthStatus';
 export * from './kingdom';
 export * from './session';
 export * from './sessionStarted';
+export * from './sessionStats';
 export * from './streamer';
 export * from './tiktokConnect';
 export * from './user';

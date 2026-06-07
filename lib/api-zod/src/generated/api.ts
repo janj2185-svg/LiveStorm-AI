@@ -202,6 +202,27 @@ export const GetActiveSessionResponse = zod.object({
 
 
 /**
+ * @summary Get stats for a specific session
+ */
+export const GetSessionStatsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetSessionStatsResponse = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "durationSeconds": zod.number(),
+  "peakViewers": zod.number(),
+  "totalGifts": zod.number(),
+  "totalLikes": zod.number(),
+  "totalFollowers": zod.number(),
+  "totalComments": zod.number()
+})
+
+
+/**
  * @summary Get session history
  */
 export const GetSessionsResponseItem = zod.object({

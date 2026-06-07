@@ -199,7 +199,7 @@ export function Dashboard() {
                       let desc = "interacted";
                       if (event.type === 'gift') desc = `sent ${event.data.giftName || 'a gift'} (${event.data.coins || 1} coins)`;
                       if (event.type === 'like') desc = `liked the LIVE (${event.data.likeCount || 1}x)`;
-                      if (event.type === 'comment') desc = `said: "${event.data.comment || ''}"`;
+                      if (event.type === 'comment') desc = `said: "${event.data.text || ''}"`;
                       if (event.type === 'follow') desc = `started following you`;
                       if (event.type === 'share') desc = `shared the LIVE`;
 
