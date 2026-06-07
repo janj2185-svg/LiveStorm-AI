@@ -468,3 +468,39 @@ export type GetAiModerationLogParams = {
 sessionId?: number;
 };
 
+export type GetBillingSubscription200 = { [key: string]: unknown };
+
+export type GetBillingProducts200Item = { [key: string]: unknown };
+
+export type CreateCheckoutSessionBody = {
+  priceId: string;
+};
+
+export type CreateCheckoutSession200 = {
+  url?: string;
+};
+
+export type CreatePortalSession200 = {
+  url?: string;
+};
+
+export type GetAdminStats200 = { [key: string]: unknown };
+
+export type GetAdminUsersParams = {
+search?: string;
+limit?: number;
+offset?: number;
+};
+
+export type GetAdminUsers200Item = { [key: string]: unknown };
+
+export type UpdateAdminUserBody = {
+  plan?: string;
+  role?: string;
+  banned?: boolean;
+};
+
+export type GetAdminSubscriptions200Item = { [key: string]: unknown };
+
+export type GetAdminLogs200Item = { [key: string]: unknown };
+

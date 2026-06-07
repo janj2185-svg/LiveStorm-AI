@@ -20,6 +20,8 @@ import { Universe } from "@/pages/universe";
 import { Overlays } from "@/pages/overlays";
 import { AiAssistant } from "@/pages/ai-assistant";
 import { Settings } from "@/pages/settings";
+import { Pricing } from "@/pages/pricing";
+import { Admin } from "@/pages/admin";
 
 import { ObsAlerts } from "@/pages/obs/alerts";
 import { ObsGoals } from "@/pages/obs/goals";
@@ -222,6 +224,12 @@ function AppRoutes() {
       </Route>
       <Route path="/settings">
         <ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/pricing">
+        <ProtectedRoute><Pricing /></ProtectedRoute>
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>
       </Route>
 
       <Route>

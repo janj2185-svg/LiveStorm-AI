@@ -894,3 +894,95 @@ export const GetAiModerationLogResponseItem = zod.object({
 export const GetAiModerationLogResponse = zod.array(GetAiModerationLogResponseItem)
 
 
+/**
+ * @summary Get current subscription status
+ */
+export const GetBillingSubscriptionResponse = zod.object({
+
+}).passthrough()
+
+
+/**
+ * @summary List Stripe products with prices
+ */
+export const GetBillingProductsResponseItem = zod.object({
+
+}).passthrough()
+export const GetBillingProductsResponse = zod.array(GetBillingProductsResponseItem)
+
+
+/**
+ * @summary Create Stripe Checkout session
+ */
+export const CreateCheckoutSessionBody = zod.object({
+  "priceId": zod.string()
+})
+
+export const CreateCheckoutSessionResponse = zod.object({
+  "url": zod.string().optional()
+})
+
+
+/**
+ * @summary Create Stripe Customer Portal session
+ */
+export const CreatePortalSessionResponse = zod.object({
+  "url": zod.string().optional()
+})
+
+
+/**
+ * @summary Platform overview statistics
+ */
+export const GetAdminStatsResponse = zod.object({
+
+}).passthrough()
+
+
+/**
+ * @summary List all users
+ */
+export const GetAdminUsersQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().optional(),
+  "offset": zod.coerce.number().optional()
+})
+
+export const GetAdminUsersResponseItem = zod.object({
+
+}).passthrough()
+export const GetAdminUsersResponse = zod.array(GetAdminUsersResponseItem)
+
+
+/**
+ * @summary Update user plan or role
+ */
+export const UpdateAdminUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateAdminUserBody = zod.object({
+  "plan": zod.string().optional(),
+  "role": zod.string().optional(),
+  "banned": zod.boolean().optional()
+})
+
+
+/**
+ * @summary List all Stripe subscriptions
+ */
+export const GetAdminSubscriptionsResponseItem = zod.object({
+
+}).passthrough()
+export const GetAdminSubscriptionsResponse = zod.array(GetAdminSubscriptionsResponseItem)
+
+
+/**
+ * @summary Get recent platform events
+ */
+export const GetAdminLogsResponseItem = zod.object({
+
+}).passthrough()
+export const GetAdminLogsResponse = zod.array(GetAdminLogsResponseItem)
+
+

@@ -12,6 +12,8 @@ import miniGamesRouter from "./mini-games";
 import universeRouter from "./universe";
 import obsRouter from "./obs";
 import aiRouter from "./ai";
+import billingRouter from "./billing";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -28,5 +30,7 @@ router.use(miniGamesRouter);
 router.use(universeRouter);
 router.use(obsRouter);
 router.use(aiRouter);
+router.use(billingRouter);
+router.use(adminRouter);
 
 export default router;

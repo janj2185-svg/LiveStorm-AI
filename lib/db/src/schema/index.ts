@@ -5,3 +5,4 @@ export * from "./subscriptions";
 export * from "./automations";
 export * from "./gamification";
 export * from "./ai";
+export * from "./admin";

@@ -420,7 +420,8 @@ function AiQuestsWidget({ sessionId, cardGlow }: { sessionId: number; cardGlow: 
   const [generating, setGenerating] = useState(false);
   const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  const generateQuests = useCallback(async () => {
+  const generateQuestsRef = useRef<(() => Promise<void>) | null>(null);
+  const doGenerate = useCallback(async () => {
     setGenerating(true);
     try {
       const res = await fetch(`${BASE}/api/ai/generate-quests`, {
@@ -429,35 +430,34 @@ function AiQuestsWidget({ sessionId, cardGlow }: { sessionId: number; cardGlow: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setQuests(data);
-      }
+      if (res.ok) setQuests(await res.json());
     } catch {} finally {
       setGenerating(false);
     }
   }, [sessionId, BASE]);
+  generateQuestsRef.current = doGenerate;
 
-  const fetchQuests = useCallback(async () => {
-    try {
-      const res = await fetch(`${BASE}/api/ai/quests?sessionId=${sessionId}`, { credentials: "include" });
-      if (res.ok) {
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch(`${BASE}/api/ai/quests?sessionId=${sessionId}`, { credentials: "include" });
+        if (!res.ok || cancelled) return;
         const data = await res.json();
         if (data.length === 0) {
-          // Auto-generate quests for new session
-          void generateQuests();
+          // Auto-generate once for new sessions
+          void generateQuestsRef.current?.();
         } else {
           setQuests(data);
         }
-      }
-    } catch {}
-  }, [sessionId, BASE, generateQuests]);
-
-  useEffect(() => {
-    fetchQuests();
+      } catch {}
+    }
+    load();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  const handleGenerate = generateQuests;
+  const handleGenerate = doGenerate;
 
   return (
     <Card className={`bg-card ${cardGlow} transition-colors duration-500`}>
