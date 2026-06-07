@@ -1,12 +1,20 @@
 import { Server as SocketServer, type Socket } from "socket.io";
 import type { Server as HttpServer } from "http";
 import { verifyToken } from "@clerk/express";
-import { db, streamersTable, sessionsTable, usersTable } from "@workspace/db";
+import {
+  db,
+  streamersTable,
+  sessionsTable,
+  usersTable,
+  aiPersonaConfigsTable,
+  aiModerationLogsTable,
+} from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { processAutomations } from "./automationEngine";
 import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 import { verifyObsToken } from "../routes/obs";
+import { generateAnnouncement, moderateComment } from "./aiService";
 
 let io: SocketServer | null = null;
 
@@ -23,6 +31,59 @@ async function resolveUserIdFromToken(token: string): Promise<number | null> {
     return user?.id ?? null;
   } catch {
     return null;
+  }
+}
+
+async function processAiAnnouncements(
+  io: SocketServer,
+  event: TikTokEvent,
+  streamerId: number,
+) {
+  try {
+    const config = await db.query.aiPersonaConfigsTable.findFirst({
+      where: eq(aiPersonaConfigsTable.streamerId, streamerId),
+    });
+    if (!config) return;
+
+    const roomId = `session:${event.sessionId}`;
+    const persona = { name: config.personaName, tone: config.tone };
+
+    if (event.type === "gift" && config.announceGifts) {
+      const coins = (event.data.coins as number) ?? 0;
+      if (coins >= config.announceGiftThreshold) {
+        const text = await generateAnnouncement({
+          type: "gift",
+          viewerName: event.data.viewerName as string,
+          amount: coins,
+          persona,
+        });
+        if (text) {
+          io.to(roomId).emit("ai:announcement", {
+            text,
+            type: "gift",
+            viewerName: event.data.viewerName,
+          });
+        }
+      }
+    } else if (event.type === "comment" && config.moderationEnabled) {
+      const comment = ((event.data.comment as string) ?? "").trim();
+      if (comment.length > 3) {
+        const { flagged, reason } = await moderateComment(comment);
+        if (flagged) {
+          const viewerName = (event.data.viewerName as string) ?? "Unknown";
+          io.to(roomId).emit("moderation:flagged", { viewerName, comment, reason });
+          await db.insert(aiModerationLogsTable).values({
+            sessionId: event.sessionId,
+            streamerId,
+            viewerName,
+            comment,
+            reason,
+          });
+        }
+      }
+    }
+  } catch {
+    // AI failures must never crash the pipeline
   }
 }
 
@@ -76,38 +137,41 @@ export function initSocketServer(httpServer: HttpServer) {
       }
     });
 
-    socket.on("obs:subscribe", async (data: { token: string; streamerId: number; sessionId?: number }) => {
-      try {
-        const tokenToVerify = data?.token ?? obsToken;
-        if (!tokenToVerify) {
-          socket.emit("obs:error", { message: "Missing overlay token" });
-          return;
-        }
-
-        const verified = verifyObsToken(tokenToVerify);
-        if (!verified || verified.streamerId !== Number(data?.streamerId)) {
-          socket.emit("obs:error", { message: "Invalid or expired overlay token" });
-          return;
-        }
-
-        socket.data.obsStreamerId = verified.streamerId;
-
-        if (data?.sessionId) {
-          const session = await db.query.sessionsTable.findFirst({
-            where: eq(sessionsTable.id, Number(data.sessionId)),
-          });
-          if (session && session.streamerId === verified.streamerId && !session.endedAt) {
-            socket.join(`session:${session.id}`);
-            socket.emit("obs:subscribed", { sessionId: session.id });
+    socket.on(
+      "obs:subscribe",
+      async (data: { token: string; streamerId: number; sessionId?: number }) => {
+        try {
+          const tokenToVerify = data?.token ?? obsToken;
+          if (!tokenToVerify) {
+            socket.emit("obs:error", { message: "Missing overlay token" });
             return;
           }
-        }
 
-        socket.emit("obs:subscribed", { sessionId: null });
-      } catch (_err) {
-        socket.emit("obs:error", { message: "Could not subscribe to overlay events" });
-      }
-    });
+          const verified = verifyObsToken(tokenToVerify);
+          if (!verified || verified.streamerId !== Number(data?.streamerId)) {
+            socket.emit("obs:error", { message: "Invalid or expired overlay token" });
+            return;
+          }
+
+          socket.data.obsStreamerId = verified.streamerId;
+
+          if (data?.sessionId) {
+            const session = await db.query.sessionsTable.findFirst({
+              where: eq(sessionsTable.id, Number(data.sessionId)),
+            });
+            if (session && session.streamerId === verified.streamerId && !session.endedAt) {
+              socket.join(`session:${session.id}`);
+              socket.emit("obs:subscribed", { sessionId: session.id });
+              return;
+            }
+          }
+
+          socket.emit("obs:subscribed", { sessionId: null });
+        } catch (_err) {
+          socket.emit("obs:error", { message: "Could not subscribe to overlay events" });
+        }
+      },
+    );
 
     socket.on("session:leave", (sessionId: number) => {
       socket.leave(`session:${sessionId}`);
@@ -132,14 +196,21 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
 
   await processAutomations(io, roomId, userId, event);
 
+  let streamerId: number | null = null;
   try {
     const sessionForGamification = await db.query.sessionsTable.findFirst({
       where: eq(sessionsTable.id, event.sessionId),
     });
     if (sessionForGamification) {
+      streamerId = sessionForGamification.streamerId;
       await processGamification(io, event, sessionForGamification.streamerId);
     }
   } catch (_err) {}
+
+  // AI announcements + moderation (non-blocking, fire-and-forget)
+  if (streamerId) {
+    void processAiAnnouncements(io, event, streamerId);
+  }
 
   try {
     if (event.type === "viewerCount") {

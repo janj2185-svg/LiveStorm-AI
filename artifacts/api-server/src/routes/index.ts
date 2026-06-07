@@ -11,6 +11,7 @@ import bossBattlesRouter from "./boss-battles";
 import miniGamesRouter from "./mini-games";
 import universeRouter from "./universe";
 import obsRouter from "./obs";
+import aiRouter from "./ai";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(bossBattlesRouter);
 router.use(miniGamesRouter);
 router.use(universeRouter);
 router.use(obsRouter);
+router.use(aiRouter);
 
 export default router;
