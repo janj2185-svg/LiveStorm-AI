@@ -737,3 +737,148 @@ export const GetObsStateResponse = zod.object({
 })
 
 
+/**
+ * @summary Get AI persona config
+ */
+export const GetAiConfigResponse = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "personaName": zod.string(),
+  "tone": zod.string(),
+  "announceGifts": zod.boolean(),
+  "announceGiftThreshold": zod.number(),
+  "moderationEnabled": zod.boolean()
+})
+
+
+/**
+ * @summary Update AI persona config
+ */
+export const UpdateAiConfigBody = zod.object({
+  "personaName": zod.string().optional(),
+  "tone": zod.string().optional(),
+  "announceGifts": zod.boolean().optional(),
+  "announceGiftThreshold": zod.number().optional(),
+  "moderationEnabled": zod.boolean().optional()
+})
+
+export const UpdateAiConfigResponse = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "personaName": zod.string(),
+  "tone": zod.string(),
+  "announceGifts": zod.boolean(),
+  "announceGiftThreshold": zod.number(),
+  "moderationEnabled": zod.boolean()
+})
+
+
+/**
+ * @summary Get chat history with AI assistant
+ */
+export const GetAiMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "streamerId": zod.number(),
+  "role": zod.string(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const GetAiMessagesResponse = zod.array(GetAiMessagesResponseItem)
+
+
+/**
+ * @summary Send a message to the AI assistant
+ */
+export const ChatWithAiBody = zod.object({
+  "message": zod.string(),
+  "sessionContext": zod.object({
+
+}).passthrough().optional()
+})
+
+export const ChatWithAiResponse = zod.object({
+  "reply": zod.string()
+})
+
+
+/**
+ * @summary Generate AI quests for a live session
+ */
+export const GenerateAiQuestsBody = zod.object({
+  "sessionId": zod.number(),
+  "viewerCount": zod.number().optional(),
+  "sessionStats": zod.object({
+
+}).passthrough().optional()
+})
+
+export const GenerateAiQuestsResponseItem = zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "streamerId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "targetCount": zod.number(),
+  "reward": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const GenerateAiQuestsResponse = zod.array(GenerateAiQuestsResponseItem)
+
+
+/**
+ * @summary Get quests for a session
+ */
+export const GetAiQuestsQueryParams = zod.object({
+  "sessionId": zod.coerce.number()
+})
+
+export const GetAiQuestsResponseItem = zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "streamerId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "targetCount": zod.number(),
+  "reward": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const GetAiQuestsResponse = zod.array(GetAiQuestsResponseItem)
+
+
+/**
+ * @summary Generate an AI-crafted live event idea
+ */
+export const GenerateAiEventBody = zod.object({
+  "currentViewers": zod.number().optional(),
+  "sessionStats": zod.object({
+
+}).passthrough().optional()
+})
+
+export const GenerateAiEventResponse = zod.object({
+  "title": zod.string(),
+  "description": zod.string(),
+  "mechanic": zod.string(),
+  "duration": zod.string()
+})
+
+
+/**
+ * @summary Get AI moderation log
+ */
+export const GetAiModerationLogQueryParams = zod.object({
+  "sessionId": zod.coerce.number().optional()
+})
+
+export const GetAiModerationLogResponseItem = zod.object({
+  "id": zod.number(),
+  "sessionId": zod.number(),
+  "streamerId": zod.number(),
+  "viewerName": zod.string(),
+  "comment": zod.string(),
+  "reason": zod.string(),
+  "flaggedAt": zod.coerce.date()
+})
+export const GetAiModerationLogResponse = zod.array(GetAiModerationLogResponseItem)
+
+

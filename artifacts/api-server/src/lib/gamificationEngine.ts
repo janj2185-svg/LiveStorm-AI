@@ -12,6 +12,7 @@ import {
   streamersTable,
 } from "@workspace/db";
 import { eq, and, sql, count, desc } from "drizzle-orm";
+import { emitAiLevelUpAnnouncement, emitAiBossDefeatedAnnouncement } from "./aiAnnouncer";
 
 const XP_TABLE: Record<string, number> = {
   gift: 10,
@@ -356,6 +357,7 @@ async function processBossBattle(
         killingBlowBy: viewerName,
         timestamp: Date.now(),
       });
+      void emitAiBossDefeatedAnnouncement(io, roomId, streamerId, battle.bossName, viewerName);
       await checkAndUnlockAchievement(io, roomId, tiktokViewerId, viewerName, streamerId, "boss_slayer");
       await distributeBossDefeatRewards(io, roomId, battle.id, streamerId);
     }
@@ -562,6 +564,7 @@ export async function processGamification(
           newLevel,
           timestamp: Date.now(),
         });
+        void emitAiLevelUpAnnouncement(io, roomId, streamerId, viewerName, newLevel);
       }
     }
 

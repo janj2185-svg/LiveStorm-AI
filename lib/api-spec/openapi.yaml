@@ -28,6 +28,8 @@ tags:
     description: Mini-game operations
   - name: universe
     description: Global universe and alliance operations
+  - name: ai
+    description: AI assistant and moderation operations
   - name: obs
     description: OBS Browser Source overlay operations
 
@@ -744,6 +746,184 @@ paths:
                 $ref: "#/components/schemas/ObsOverlayState"
         "401":
           description: Invalid or expired token
+
+  /ai/config:
+    get:
+      tags: [ai]
+      summary: Get AI persona config
+      operationId: getAiConfig
+      responses:
+        "200":
+          description: AI persona config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiPersonaConfig"
+    put:
+      tags: [ai]
+      summary: Update AI persona config
+      operationId: updateAiConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiPersonaConfigUpdate"
+      responses:
+        "200":
+          description: Updated config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiPersonaConfig"
+
+  /ai/messages:
+    get:
+      tags: [ai]
+      summary: Get chat history with AI assistant
+      operationId: getAiMessages
+      responses:
+        "200":
+          description: List of chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiMessage"
+    delete:
+      tags: [ai]
+      summary: Clear chat history
+      operationId: clearAiMessages
+      responses:
+        "200":
+          description: Cleared
+
+  /ai/chat:
+    post:
+      tags: [ai]
+      summary: Send a message to the AI assistant
+      operationId: chatWithAi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                sessionContext:
+                  type: object
+              required: [message]
+      responses:
+        "200":
+          description: AI reply
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+                required: [reply]
+
+  /ai/generate-quests:
+    post:
+      tags: [ai]
+      summary: Generate AI quests for a live session
+      operationId: generateAiQuests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: integer
+                viewerCount:
+                  type: integer
+                sessionStats:
+                  type: object
+              required: [sessionId]
+      responses:
+        "200":
+          description: Generated quests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiQuest"
+
+  /ai/quests:
+    get:
+      tags: [ai]
+      summary: Get quests for a session
+      operationId: getAiQuests
+      parameters:
+        - in: query
+          name: sessionId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of quests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiQuest"
+        "403":
+          description: Forbidden
+
+  /ai/generate-event:
+    post:
+      tags: [ai]
+      summary: Generate an AI-crafted live event idea
+      operationId: generateAiEvent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentViewers:
+                  type: integer
+                sessionStats:
+                  type: object
+      responses:
+        "200":
+          description: Generated event idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiEventIdea"
+
+  /ai/moderation-log:
+    get:
+      tags: [ai]
+      summary: Get AI moderation log
+      operationId: getAiModerationLog
+      parameters:
+        - in: query
+          name: sessionId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Moderation log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiModerationLog"
+        "403":
+          description: Forbidden
 
 components:
   schemas:
@@ -1551,3 +1731,107 @@ components:
         - session
         - activeBossBattle
         - leaderboard
+
+    AiPersonaConfig:
+      type: object
+      properties:
+        id:
+          type: integer
+        streamerId:
+          type: integer
+        personaName:
+          type: string
+        tone:
+          type: string
+        announceGifts:
+          type: boolean
+        announceGiftThreshold:
+          type: integer
+        moderationEnabled:
+          type: boolean
+      required: [id, streamerId, personaName, tone, announceGifts, announceGiftThreshold, moderationEnabled]
+
+    AiPersonaConfigUpdate:
+      type: object
+      properties:
+        personaName:
+          type: string
+        tone:
+          type: string
+        announceGifts:
+          type: boolean
+        announceGiftThreshold:
+          type: integer
+        moderationEnabled:
+          type: boolean
+
+    AiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        streamerId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, streamerId, role, content, createdAt]
+
+    AiQuest:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        streamerId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        targetCount:
+          type: integer
+        reward:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, sessionId, streamerId, title, description, targetCount, reward, createdAt]
+
+    AiEventIdea:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        mechanic:
+          type: string
+        duration:
+          type: string
+      required: [title, description, mechanic, duration]
+
+    AiModerationLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        streamerId:
+          type: integer
+        viewerName:
+          type: string
+        comment:
+          type: string
+        reason:
+          type: string
+        flaggedAt:
+          type: string
+          format: date-time
+      required: [id, sessionId, streamerId, viewerName, comment, reason, flaggedAt]

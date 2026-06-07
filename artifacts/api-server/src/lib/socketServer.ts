@@ -14,7 +14,8 @@ import { processAutomations } from "./automationEngine";
 import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 import { verifyObsToken } from "../routes/obs";
-import { generateAnnouncement, moderateComment } from "./aiService";
+import { moderateComment } from "./aiService";
+import { emitAiGiftAnnouncement } from "./aiAnnouncer";
 
 let io: SocketServer | null = null;
 
@@ -46,31 +47,18 @@ async function processAiAnnouncements(
     if (!config) return;
 
     const roomId = `session:${event.sessionId}`;
-    const persona = { name: config.personaName, tone: config.tone };
+    const viewerName = event.username ?? "Unknown";
 
     if (event.type === "gift" && config.announceGifts) {
       const coins = (event.data.coins as number) ?? 0;
       if (coins >= config.announceGiftThreshold) {
-        const text = await generateAnnouncement({
-          type: "gift",
-          viewerName: event.data.viewerName as string,
-          amount: coins,
-          persona,
-        });
-        if (text) {
-          io.to(roomId).emit("ai:announcement", {
-            text,
-            type: "gift",
-            viewerName: event.data.viewerName,
-          });
-        }
+        void emitAiGiftAnnouncement(io, roomId, streamerId, viewerName, coins);
       }
     } else if (event.type === "comment" && config.moderationEnabled) {
-      const comment = ((event.data.comment as string) ?? "").trim();
+      const comment = ((event.data.text as string) ?? "").trim();
       if (comment.length > 3) {
         const { flagged, reason } = await moderateComment(comment);
         if (flagged) {
-          const viewerName = (event.data.viewerName as string) ?? "Unknown";
           io.to(roomId).emit("moderation:flagged", { viewerName, comment, reason });
           await db.insert(aiModerationLogsTable).values({
             sessionId: event.sessionId,

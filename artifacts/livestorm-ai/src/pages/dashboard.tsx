@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Users, Gift, Heart, UserPlus, MessageSquare, Zap, Activity,
-  PlayCircle, Square, Clock, Share
+  PlayCircle, Square, Clock, Share, Bot, ShieldAlert
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -46,7 +46,7 @@ export function Dashboard() {
   const endSession = useEndSession();
   
   const activeSessionId = activeSessionRes?.session?.id;
-  const { events, stats, connected, clearEvents } = useLiveSession(activeSessionId);
+  const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents } = useLiveSession(activeSessionId);
 
   const [duration, setDuration] = useState(0);
 
@@ -285,6 +285,61 @@ export function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Announcements */}
+          {isActive && (
+            <Card className={`bg-card ${cardGlow} transition-colors duration-500`}>
+              <CardHeader className="pb-3 border-b border-border/50">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-purple-400" />
+                  AI Co-host
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="h-[200px] overflow-y-auto p-3 space-y-2">
+                  {aiAnnouncements.length === 0 && flaggedComments.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                      AI announcements will appear here
+                    </div>
+                  ) : (
+                    <>
+                      <AnimatePresence initial={false}>
+                        {aiAnnouncements.slice(0, 5).map((a, i) => (
+                          <motion.div
+                            key={`ann-${a.timestamp}-${i}`}
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-200"
+                          >
+                            <span className="font-bold text-purple-400 mr-1">
+                              {a.type === "boss_defeated" ? "⚔️" : a.type === "level_up" ? "⬆️" : "🎁"}
+                            </span>
+                            {a.text}
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                      <AnimatePresence initial={false}>
+                        {flaggedComments.slice(0, 3).map((f, i) => (
+                          <motion.div
+                            key={`flag-${f.timestamp}-${i}`}
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-xs p-2 rounded-lg bg-red-500/10 border border-red-500/20"
+                          >
+                            <div className="flex items-center gap-1 text-red-400 font-bold mb-1">
+                              <ShieldAlert className="h-3 w-3" />
+                              Flagged: {f.viewerName}
+                            </div>
+                            <span className="text-muted-foreground truncate block">{f.comment}</span>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Session History */}
           {!isActive && sessions && sessions.length > 0 && (

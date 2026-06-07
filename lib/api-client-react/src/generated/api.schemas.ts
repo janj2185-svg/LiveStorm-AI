@@ -357,6 +357,60 @@ export interface ObsOverlayState {
   leaderboard: ObsLeaderboardEntry[];
 }
 
+export interface AiPersonaConfig {
+  id: number;
+  streamerId: number;
+  personaName: string;
+  tone: string;
+  announceGifts: boolean;
+  announceGiftThreshold: number;
+  moderationEnabled: boolean;
+}
+
+export interface AiPersonaConfigUpdate {
+  personaName?: string;
+  tone?: string;
+  announceGifts?: boolean;
+  announceGiftThreshold?: number;
+  moderationEnabled?: boolean;
+}
+
+export interface AiMessage {
+  id: number;
+  streamerId: number;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface AiQuest {
+  id: number;
+  sessionId: number;
+  streamerId: number;
+  title: string;
+  description: string;
+  targetCount: number;
+  reward: string;
+  createdAt: string;
+}
+
+export interface AiEventIdea {
+  title: string;
+  description: string;
+  mechanic: string;
+  duration: string;
+}
+
+export interface AiModerationLog {
+  id: number;
+  sessionId: number;
+  streamerId: number;
+  viewerName: string;
+  comment: string;
+  reason: string;
+  flaggedAt: string;
+}
+
 export type GetGamificationLeaderboardParams = {
 streamerId?: number;
 };
@@ -371,5 +425,39 @@ export type DeleteAutomation200 = {
 
 export type GetObsStateParams = {
 token: string;
+};
+
+export type ChatWithAiBodySessionContext = { [key: string]: unknown };
+
+export type ChatWithAiBody = {
+  message: string;
+  sessionContext?: ChatWithAiBodySessionContext;
+};
+
+export type ChatWithAi200 = {
+  reply: string;
+};
+
+export type GenerateAiQuestsBodySessionStats = { [key: string]: unknown };
+
+export type GenerateAiQuestsBody = {
+  sessionId: number;
+  viewerCount?: number;
+  sessionStats?: GenerateAiQuestsBodySessionStats;
+};
+
+export type GetAiQuestsParams = {
+sessionId: number;
+};
+
+export type GenerateAiEventBodySessionStats = { [key: string]: unknown };
+
+export type GenerateAiEventBody = {
+  currentViewers?: number;
+  sessionStats?: GenerateAiEventBodySessionStats;
+};
+
+export type GetAiModerationLogParams = {
+sessionId?: number;
 };
 

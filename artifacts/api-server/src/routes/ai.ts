@@ -203,6 +203,13 @@ router.get("/ai/quests", requireAuth, async (req: any, res: any) => {
     const { sessionId } = req.query;
     if (!sessionId) return res.status(400).json({ error: "sessionId is required" });
 
+    const session = await db.query.sessionsTable.findFirst({
+      where: eq(sessionsTable.id, Number(sessionId)),
+    });
+    if (!session || session.streamerId !== streamer.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     const quests = await db
       .select()
       .from(aiQuestsTable)
@@ -241,6 +248,15 @@ router.get("/ai/moderation-log", requireAuth, async (req: any, res: any) => {
     if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
 
     const { sessionId } = req.query;
+
+    if (sessionId) {
+      const session = await db.query.sessionsTable.findFirst({
+        where: eq(sessionsTable.id, Number(sessionId)),
+      });
+      if (!session || session.streamerId !== streamer.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+    }
 
     const logs = await db
       .select()

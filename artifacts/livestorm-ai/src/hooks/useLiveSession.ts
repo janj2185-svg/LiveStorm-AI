@@ -20,6 +20,21 @@ export interface AutomationFiredEvent {
   timestamp: number;
 }
 
+export interface AiAnnouncementEvent {
+  text: string;
+  type: "gift" | "level_up" | "boss_defeated" | string;
+  viewerName?: string;
+  bossName?: string;
+  timestamp: number;
+}
+
+export interface ModerationFlaggedEvent {
+  viewerName: string;
+  comment: string;
+  reason: string;
+  timestamp: number;
+}
+
 export interface LiveStats {
   viewerCount: number;
   totalGifts: number;
@@ -36,6 +51,8 @@ export function useLiveSession(sessionId: number | null | undefined) {
   const { getToken } = useAuth();
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [automationsFired, setAutomationsFired] = useState<AutomationFiredEvent[]>([]);
+  const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
+  const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
   const [stats, setStats] = useState<LiveStats>({
     viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0, totalComments: 0, totalShares: 0,
     topSupporters: [],
@@ -47,6 +64,8 @@ export function useLiveSession(sessionId: number | null | undefined) {
   const clearEvents = useCallback(() => {
     setEvents([]);
     setAutomationsFired([]);
+    setAiAnnouncements([]);
+    setFlaggedComments([]);
     setStats({ viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0, totalComments: 0, totalShares: 0, topSupporters: [] });
     supportersRef.current = new Map();
   }, []);
@@ -112,6 +131,18 @@ export function useLiveSession(sessionId: number | null | undefined) {
         setAutomationsFired((prev) => [event, ...prev].slice(0, 50));
       });
 
+      socket.on("ai:announcement", (payload: Omit<AiAnnouncementEvent, "timestamp">) => {
+        setAiAnnouncements((prev) =>
+          [{ ...payload, timestamp: Date.now() }, ...prev].slice(0, 30),
+        );
+      });
+
+      socket.on("moderation:flagged", (payload: Omit<ModerationFlaggedEvent, "timestamp">) => {
+        setFlaggedComments((prev) =>
+          [{ ...payload, timestamp: Date.now() }, ...prev].slice(0, 30),
+        );
+      });
+
       socket.on("session:ended", () => {
         socket.disconnect();
       });
@@ -126,5 +157,5 @@ export function useLiveSession(sessionId: number | null | undefined) {
     };
   }, [sessionId, getToken]);
 
-  return { events, stats, automationsFired, connected, clearEvents };
+  return { events, stats, automationsFired, aiAnnouncements, flaggedComments, connected, clearEvents };
 }
