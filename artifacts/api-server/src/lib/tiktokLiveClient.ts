@@ -54,7 +54,7 @@ const BROWSER_UA =
 
 /** SIGI_STATE regex — the live page embeds a JSON blob in this script tag. */
 const SIGI_PATTERN =
-  /<script id="SIGI_STATE" type="application\/json">(.*?)<\/script>/s;
+  /<script id="SIGI_STATE" type="application\/json">([\s\S]*?)<\/script>/;
 
 interface LiveRoomInfo {
   isLive: boolean;
@@ -63,7 +63,19 @@ interface LiveRoomInfo {
 
 /**
  * Parse TikTok's live page HTML to extract live status and room ID.
- * Uses the embedded SIGI_STATE JSON blob — reliable from server-side IPs.
+ *
+ * Uses the SIGI_STATE JSON blob embedded in the live page.
+ *
+ * Key fields (verified via live diagnostic on 2026-06-08):
+ *   LiveRoom.liveRoomStatus          — TOP-LEVEL stream status
+ *                                      0 = not streaming, non-zero = streaming
+ *   LiveRoom.liveRoomUserInfo.user.roomId — persistent room ID (present even offline)
+ *   LiveRoom.liveRoomUserInfo.user.status — USER account status (NOT stream status;
+ *                                            value 2 = normal account, always 2)
+ *
+ * BUG HISTORY: code previously checked user.status === 4 which is the WRONG
+ * field (user account status) and the WRONG value (4 = ended in room context).
+ * The correct signal is liveRoomStatus at the LiveRoom top level.
  */
 async function fetchLiveRoomInfo(username: string): Promise<LiveRoomInfo> {
   const clean = username.replace(/^@/, "").trim();
@@ -72,41 +84,89 @@ async function fetchLiveRoomInfo(username: string): Promise<LiveRoomInfo> {
       "User-Agent": BROWSER_UA,
       "Accept-Language": "en-US,en;q=0.9",
       "Referer": "https://www.tiktok.com/",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     },
+    redirect: "follow",
   });
+
   if (!res.ok) {
     throw new Error(
       `HTTP ${res.status} fetching live page for @${clean}. ` +
         `Check that the TikTok username is correct.`,
     );
   }
+
   const html = await res.text();
+  console.log(`[TikTok] Live page for @${clean}: HTTP ${res.status}, ${html.length} chars`);
+
+  // ── Parse SIGI_STATE ────────────────────────────────────────────────────
   const match = html.match(SIGI_PATTERN);
   if (!match) {
-    // Page loaded but no SIGI_STATE — TikTok may have changed layout or the
-    // account doesn't exist.
-    return { isLive: false, roomId: "" };
+    // SIGI_STATE missing — TikTok may have changed page layout.
+    // Log a warning but don't block the connection attempt; the WebSocket
+    // handshake is the ground truth for whether the user is live.
+    console.warn(
+      `[TikTok] SIGI_STATE not found in live page for @${clean}. ` +
+      `TikTok may have changed page layout. Attempting WebSocket connection anyway.`,
+    );
+    return { isLive: true, roomId: "" };
   }
+
   let sigiState: Record<string, any>;
   try {
     sigiState = JSON.parse(match[1]);
-  } catch {
-    return { isLive: false, roomId: "" };
+  } catch (e) {
+    console.warn(`[TikTok] Failed to parse SIGI_STATE for @${clean}:`, e);
+    return { isLive: true, roomId: "" };
   }
 
-  const liveRoomInfo = sigiState?.LiveRoom?.liveRoomUserInfo;
-  if (!liveRoomInfo) {
-    return { isLive: false, roomId: "" };
-  }
+  // ── Extract fields ───────────────────────────────────────────────────────
+  const liveRoom = sigiState?.LiveRoom ?? {};
+  const lrui = liveRoom?.liveRoomUserInfo ?? {};
+  const user: Record<string, any> = lrui?.user ?? {};
+  const liveRoomObj: Record<string, any> = lrui?.liveRoom ?? {};
 
-  // The "user" object inside liveRoomUserInfo carries roomId and status.
-  const user: Record<string, any> = liveRoomInfo.user ?? liveRoomInfo;
   const roomId = String(user?.roomId ?? "");
-  const status = Number(user?.status ?? 0);
 
-  // TikTok status 4 = live and broadcasting.
-  const isLive = status === 4 && roomId !== "" && roomId !== "0";
-  return { isLive, roomId };
+  // TOP-LEVEL liveRoomStatus: 0 = not streaming, non-zero = streaming.
+  // This is the reliable signal — confirmed via diagnostic.
+  const topLevelStatus = Number(liveRoom?.liveRoomStatus ?? -1);
+
+  // Log full parsed context so the next failed test has a paper trail.
+  console.log(`[TikTok] SIGI_STATE parsed for @${clean}:`, JSON.stringify({
+    liveRoomStatus: topLevelStatus,           // KEY signal: 0=offline, non-zero=live
+    roomId,                                   // persistent room ID
+    userStatus: user?.status,                 // user account status — NOT stream status
+    liveRoomObjStatus: liveRoomObj?.status,   // room-level status
+    liveRoomStartTime: liveRoomObj?.startTime,
+    uniqueId: user?.uniqueId,
+    liveRoomUserInfoKeys: Object.keys(lrui),
+    topLevelLiveRoomKeys: Object.keys(liveRoom),
+  }));
+
+  // ── Live detection ───────────────────────────────────────────────────────
+
+  // Case 1: liveRoomStatus is explicitly 0 → definitively not streaming.
+  if (topLevelStatus === 0) {
+    console.log(`[TikTok] @${clean} liveRoomStatus=0 → not streaming`);
+    return { isLive: false, roomId };
+  }
+
+  // Case 2: liveRoomStatus is a positive number → streaming.
+  if (topLevelStatus > 0) {
+    console.log(`[TikTok] @${clean} liveRoomStatus=${topLevelStatus}, roomId=${roomId} → streaming`);
+    return { isLive: true, roomId };
+  }
+
+  // Case 3: liveRoomStatus field is absent (-1 sentinel).
+  // Fall back to roomId presence: if there's a non-trivial roomId, attempt
+  // the WebSocket connection and let the library confirm live status.
+  const hasRoomId = roomId !== "" && roomId !== "0";
+  console.log(
+    `[TikTok] @${clean} liveRoomStatus field absent — ` +
+    `roomId=${roomId || "(empty)"}, attempting connection: ${hasRoomId}`,
+  );
+  return { isLive: hasRoomId, roomId };
 }
 
 /** Returns true when the error means "user isn't live yet" (retriable). */

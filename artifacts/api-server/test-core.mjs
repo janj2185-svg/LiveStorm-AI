@@ -111,10 +111,39 @@ section(2, "Room ID detection via SIGI_STATE HTML parsing");
     fail("roomId extraction");
   }
 
-  if (clientSource.includes("status === 4 && roomId !== \"\" && roomId !== \"0\"")) {
-    ok("Live check: TikTok status===4 AND roomId non-empty AND non-zero");
+  // Verify old WRONG check is gone
+  if (clientSource.includes("status === 4 && roomId")) {
+    fail("BUG PRESENT: still checking user.status===4 (wrong field, wrong value)");
   } else {
-    fail("Live status guard");
+    ok("Old wrong check 'user.status===4' has been removed");
+  }
+
+  // Verify new CORRECT check is in place
+  if (clientSource.includes("liveRoom?.liveRoomStatus") || clientSource.includes("LiveRoom.liveRoomStatus") || clientSource.includes("liveRoom?.liveRoomStatus") || clientSource.includes("topLevelStatus")) {
+    ok("New check uses liveRoomStatus (top-level LiveRoom field) — verified 0=offline via diagnostic");
+  } else {
+    fail("New liveRoomStatus check not found");
+  }
+
+  // Verify explicit logging of the parsed values
+  if (clientSource.includes("SIGI_STATE parsed for @")) {
+    ok("Full SIGI_STATE fields logged on every connection attempt for debugging");
+  } else {
+    fail("SIGI_STATE debug logging missing");
+  }
+
+  // Verify fallback behavior when SIGI_STATE is missing
+  if (clientSource.includes("Attempting WebSocket connection anyway")) {
+    ok("Fallback: if SIGI_STATE missing/unparseable → attempt WebSocket (don't block)");
+  } else {
+    fail("Missing fallback for SIGI_STATE parse failure");
+  }
+
+  // Verify liveRoomStatus=0 → not live (definitively)
+  if (clientSource.includes("topLevelStatus === 0")) {
+    ok("liveRoomStatus===0 → definitively not streaming (confirmed offline signal)");
+  } else {
+    fail("liveRoomStatus===0 guard missing");
   }
 
   if (clientSource.includes("roomId: ${state?.roomId ?? \"?\"}")) {

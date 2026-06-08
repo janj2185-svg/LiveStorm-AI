@@ -6,3 +6,4 @@
 - [tiktok-live-connector install workaround](tiktok-connector-install.md) — protobufjs blocked by Replit firewall; add symlink in build.mjs pointing to pnpm store; never add as direct dep.
 - [Eulerstream free tier limits](eulerstream-limits.md) — anonymous fallback disconnects immediately; SIGN_API_KEY env var needed for sustained events; rate limit is per-minute on connections.
 - [TikTok connector race condition](tiktok-connector-race.md) — use pendingConnectors Set alongside activeConnectors to prevent duplicate connectors during async startup recovery.
+- [TikTok SIGI_STATE live detection bug](tiktok-sigi-state-detection.md) — user.status is account status (always 2), NOT stream status; correct field is top-level LiveRoom.liveRoomStatus (0=offline, non-zero=live).
