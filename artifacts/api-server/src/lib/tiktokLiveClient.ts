@@ -277,6 +277,21 @@ export class TikTokLiveClient extends EventEmitter {
       let settled = false;
       const settle = () => { if (!settled) { settled = true; resolve(); } };
 
+      // ── REQ-2: Catch-all interceptor — logs EVERY event the library fires ──
+      // This is the definitive test: if nothing appears here after "connected",
+      // the library itself is receiving zero decoded messages from TikTok.
+      {
+        const _origEmit = (client as any).emit.bind(client);
+        const SKIP_NOISY = new Set(["decodedData", "websocketData"]);
+        (client as any).emit = (event: string | symbol, ...args: unknown[]) => {
+          const name = String(event);
+          if (!SKIP_NOISY.has(name)) {
+            console.log(`[Pipeline:0] library.emit("${name}") @${this.username}`);
+          }
+          return _origEmit(event, ...args);
+        };
+      }
+
       // ── Signing pipeline diagnostics ─────────────────────────────────────
       {
         const signApiUrl  = process.env.SIGN_API_URL ?? 'https://tiktok.eulerstream.com';

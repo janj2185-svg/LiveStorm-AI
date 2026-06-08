@@ -359,6 +359,8 @@ export async function recoverActiveSessions(io: SocketServer): Promise<void> {
     const rows = await db
       .select({
         sessionId: sessionsTable.id,
+        streamerId: sessionsTable.streamerId,
+        startedAt: sessionsTable.startedAt,
         userId: usersTable.id,
         tiktokUsername: usersTable.tiktokUsername,
       })
@@ -372,8 +374,45 @@ export async function recoverActiveSessions(io: SocketServer): Promise<void> {
       return;
     }
 
-    console.log(`[TikTok] Found ${rows.length} active session(s) to recover.`);
+    console.log(`[TikTok] Found ${rows.length} open session(s) total.`);
+
+    // ── Dedup: keep only the most recent open session per streamer ────────────
+    // Multiple open sessions for the same streamer happen when a server restart
+    // leaves ghost sessions in the DB.  Recovering ALL of them creates duplicate
+    // connectors that hammer the same TikTok room simultaneously, burning through
+    // Eulerstream's rate limit and causing immediate 1006 disconnects.
+    const latestByStreamer = new Map<number, typeof rows[0]>();
     for (const row of rows) {
+      const existing = latestByStreamer.get(row.streamerId);
+      if (!existing || row.startedAt > existing.startedAt) {
+        latestByStreamer.set(row.streamerId, row);
+      }
+    }
+
+    // Close every session that lost the dedup race
+    for (const row of rows) {
+      const winner = latestByStreamer.get(row.streamerId)!;
+      if (row.sessionId !== winner.sessionId) {
+        console.log(
+          `[TikTok] Dedup: closing stale open session ${row.sessionId} for streamer ${row.streamerId}` +
+          ` (keeping session ${winner.sessionId} started ${winner.startedAt.toISOString()})`,
+        );
+        stopTikTokConnection(row.sessionId);
+        await db
+          .update(sessionsTable)
+          .set({ endedAt: new Date() })
+          .where(dbEq(sessionsTable.id, row.sessionId));
+        await db
+          .update(streamersTable)
+          .set({ isLive: false, updatedAt: new Date() })
+          .where(dbEq(streamersTable.id, row.streamerId));
+      }
+    }
+
+    const toRecover = Array.from(latestByStreamer.values());
+    console.log(`[TikTok] Recovering ${toRecover.length} de-duplicated session(s).`);
+
+    for (const row of toRecover) {
       if (activeConnectors.has(row.sessionId)) continue; // already connected
       const username = row.tiktokUsername;
       if (!username) {
