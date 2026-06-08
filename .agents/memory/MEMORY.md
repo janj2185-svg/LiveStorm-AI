@@ -1,12 +1,1 @@
-- [Clerk Auth Setup](clerk-auth-setup.md) — exact patterns required for Clerk to work in Replit proxy environment
-- [LiveStorm AI Architecture](livestorm-architecture.md) — stack, artifact layout, DB schema, task progress
-- [React Query Hook Patterns](react-query-patterns.md) — generated hook usage pitfalls and correct patterns
-- [LiveStorm Bug Fixes](livestorm-bugfixes.md) — OBS 404 root cause, FormLabel bug pattern, TTS modes, sessions mode bug
-- [TikTok connector architecture](tiktok-connector.md) — switched from custom pbf+ws to tiktok-live-connector@2.1.1-beta1 via pnpm-store symlink; SIGI_STATE HTML parsing for live detection.
-- [tiktok-live-connector install workaround](tiktok-connector-install.md) — protobufjs blocked by Replit firewall; add symlink in build.mjs pointing to pnpm store; never add as direct dep.
-- [Eulerstream free tier limits](eulerstream-limits.md) — anonymous fallback disconnects immediately; SIGN_API_KEY env var needed for sustained events; rate limit is per-minute on connections.
-- [TikTok connector race condition](tiktok-connector-race.md) — use pendingConnectors Set alongside activeConnectors to prevent duplicate connectors during async startup recovery.
-- [TikTok SIGI_STATE live detection bug](tiktok-sigi-state-detection.md) — user.status is account status (always 2), NOT stream status; correct field is top-level LiveRoom.liveRoomStatus (0=offline, non-zero=live).
-- [Ghost session fix](ghost-session-fix.md) — POST /sessions/start must handle 3 cases: stale isLive flag, dead connector, active connector — never return 400 "Already live".
-- [TikTok stopConnection missing](tiktok-stop-bug.md) — stopConnection() was missing from TikTokLiveClient; all stop() calls silently threw; ghost sessions reconnected forever.
-- [TikTok im_enter_room rejection](tiktok-im-enter-room.md) — code=1000 reason="payload_handler_im_enter_room" = Eulerstream cookie pool stale; fix: connectWithUniqueId:true + 120s backoff.
+- [TikTok im_enter_room diagnosis](tiktok-im-enter-room.md) — `code=1000, reason=payload_handler_im_enter_room` + 0 packets = user offline (not rate limit); Eulerstream plan limits; fixes applied.

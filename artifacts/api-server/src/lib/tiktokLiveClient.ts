@@ -284,11 +284,6 @@ export class TikTokLiveClient extends EventEmitter {
         websocketPingIntervalMs: 10_000,
         websocketTimeout: 20_000,
         reconnectEnabled: false, // we handle reconnect
-        // connectWithUniqueId=true: pass username to Eulerstream for signing
-        // instead of roomId. Forces a fresh per-username credential/cookie lookup
-        // at Eulerstream's end — avoids reusing stale pooled TikTok cookies that
-        // trigger payload_handler_im_enter_room rejections.
-        connectWithUniqueId: true,
       }) as any;
 
       this.currentClient = client;
@@ -440,14 +435,28 @@ export class TikTokLiveClient extends EventEmitter {
         this.emit("disconnected", code);
         settle(); // resolve the promise if not yet done
         if (!this.stopped) {
-          // payload_handler_im_enter_room = TikTok rejected the room entry because
-          // Eulerstream's pooled TikTok cookies are rate-limited / invalid.
-          // Use a much longer backoff to let Eulerstream's pool cool down.
           const isEnterRoomRejection = reason.includes("im_enter_room");
-          if (isEnterRoomRejection) {
+          if (isEnterRoomRejection && rawEventCount === 0) {
+            // Zero raw packets + im_enter_room = TikTok refused room entry before
+            // sending any data. Diagnostic evidence (2026-06-08): this occurs when
+            // the user is offline/not streaming — Eulerstream returns cursor="0"
+            // and TikTok's WebSocket closes immediately after the enter_room frame.
+            // Treat identically to "not live": emit notLive and poll every 30 s.
+            const notLiveMsg =
+              `@${this.username} is not currently streaming on TikTok LIVE. ` +
+              `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+            console.log(
+              `[TikTok] im_enter_room rejection + 0 packets @${this.username} — ` +
+              `user is offline → emitting notLive, polling in 30 s`,
+            );
+            this.emit("notLive", { username: this.username, message: notLiveMsg });
+            this._scheduleRetry(30_000, /* fullConnect */ true);
+          } else if (isEnterRoomRejection && rawEventCount > 0) {
+            // Had live packets then got kicked with im_enter_room — Eulerstream
+            // session/cookie pool exhausted mid-stream. Back off 120 s.
             console.warn(
-              `[TikTok] im_enter_room rejection for @${this.username} — ` +
-              `Eulerstream cookie pool likely rate-limited. Backing off 120 s.`,
+              `[TikTok] im_enter_room rejection after ${rawEventCount} packet(s) @${this.username} — ` +
+              `Eulerstream pool exhausted. Backing off 120 s.`,
             );
             this._scheduleRetry(120_000, /* fullConnect */ false);
           } else {

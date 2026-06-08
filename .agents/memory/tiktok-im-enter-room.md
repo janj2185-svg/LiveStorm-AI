@@ -1,17 +1,37 @@
 ---
-name: TikTok im_enter_room rejection
-description: code=1000 reason="payload_handler_im_enter_room" = Eulerstream's pooled TikTok cookies are stale/rate-limited; fixes and diagnosis notes.
+name: TikTok im_enter_room diagnostic findings
+description: Root cause and fix for payload_handler_im_enter_room disconnect on Eulerstream ws-fallback
 ---
 
-**The symptom**: Every WS connection attempt logs `[Pipeline:DISCONNECT] code=1000 (normal closure) | reason="payload_handler_im_enter_room" | rawPacketsReceived=0`. TikTok intentionally closes 700ms after the WS opens.
+## Root cause (confirmed 2026-06-08)
 
-**What it means**: After `setupWebsocket` opens, `client.switchRooms(roomId)` sends an `im_enter_room` protobuf message. TikTok's `payload_handler_im_enter_room` handler processes it and closes the connection because the TikTok session cookies bundled by Eulerstream are stale or rate-limited from the shared account pool.
+`code=1000, reason="payload_handler_im_enter_room"` with `rawPacketsReceived=0` means the TikTok user is **not currently live**. It does NOT indicate a rate-limit or cookie issue.
 
-**Evidence**: `ws-fallback.eulerstream.com` always returned (never primary) = Eulerstream routing through fallback proxy. Hundreds of failed attempts per hour further exhaust the shared cookie pool.
+## Evidence chain
 
-**Fixes applied**:
-1. `connectWithUniqueId: true` in `WebcastPushConnection` options — signs with username instead of roomId, forces a fresh per-username credential lookup at Eulerstream's end rather than reusing cached roomId-based cookies.
-2. 120s backoff specifically for `im_enter_room` reason — prevents hammering Eulerstream's pool while it's exhausted.
-3. `onBeforeReconnect` DB guard in reconnect loop — stops ghost connectors for ended sessions before they retry.
+- `cursor="0"` (len=1) from `fetchSignedWebSocketFromEuler` → Eulerstream cannot get a real cursor → room is offline
+- `fetchIsLive() = false` → library confirms user not live
+- TikTok HTML `liveRoomStatus: 0` → SIGI_STATE confirms offline
+- TikTok live detail API → `status_code: 10201` (room not found/offline)
+- WebcastSystemMessage decodes to "Connected through Euler Stream fallback proxy" — this is normal/informational
+- Patching `switchRooms()` to skip `im_enter_room` send had NO effect → Eulerstream's proxy sends its own `im_enter_room` to TikTok; TikTok closes when the room is offline
 
-**How to apply**: If `payload_handler_im_enter_room` reappears after `connectWithUniqueId: true`, the next step is to upgrade the Eulerstream API key tier (paid tier uses dedicated TikTok accounts, not shared pool) or enable `authenticateWs: true` with a real user TikTok session cookie.
+## Eulerstream plan limitations (current key)
+
+- `connectWithUniqueId: true` → 404 "Route '/webcast/fetch' DNE" (not supported on current plan)
+- `useMobile: true` → 400 error (higher plan required)
+- `fetchRoomIdFromEuler` → 401 "requires Business plan"
+- Current plan only supports `fetchWebcastURL` with `roomId`
+
+## Fix applied
+
+1. `connectWithUniqueId: true` removed from `WebcastPushConnection` options — causes 404 SignAPIError
+2. `disconnected` handler: `im_enter_room` + `rawEventCount === 0` → emit `notLive` + poll 30s (same as other offline cases)
+3. `im_enter_room` + `rawEventCount > 0` → still 120s backoff (Eulerstream pool exhausted mid-stream)
+4. `client.disconnect()` → `client.stopConnection()` in catch blocks
+
+## How to apply
+
+When seeing `payload_handler_im_enter_room` in logs with `rawPacketsReceived=0`:
+- User is simply not live. Stop hammering. Wait for them to go live.
+- When `rawPacketsReceived > 0` with same reason: Eulerstream mid-session issue, back off 120s.

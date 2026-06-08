@@ -224,7 +224,7 @@ async function startLiveConnector(
     return { ok: true };
   } catch (err: any) {
     const raw = err?.message ?? String(err);
-    client.disconnect();
+    client.stopConnection();
     return { ok: false, error: friendlyError(raw, tiktokUsername) };
   }
 }
@@ -500,7 +500,7 @@ export async function testTikTokConnection(
     const client = new TikTokLiveClient(clean);
     await client.connect();
     const latencyMs = Date.now() - start;
-    client.disconnect();
+    client.stopConnection();
     return { ok: true, latencyMs };
   } catch (err: any) {
     const raw = err?.message ?? String(err);
