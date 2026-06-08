@@ -4,15 +4,63 @@ import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm } from "node:fs/promises";
+import fs from "node:fs";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * tiktok-live-connector depends on protobufjs which is blocked by Replit's
+ * package firewall.  The package IS already in the pnpm virtual store from a
+ * previous install.  We create a symlink in this package's node_modules so
+ * that the runtime `require('tiktok-live-connector')` resolves to the store
+ * path — where protobufjs is already accessible via the store's own
+ * node_modules layout.
+ */
+function ensureTikTokLiveConnectorSymlink() {
+  const pnpmStore = path.resolve(
+    artifactDir,
+    "../../node_modules/.pnpm",
+  );
+  if (!fs.existsSync(pnpmStore)) return;
+
+  // Find the highest version of tiktok-live-connector in the pnpm store.
+  const entries = fs.readdirSync(pnpmStore).filter((e) =>
+    e.startsWith("tiktok-live-connector@"),
+  );
+  if (entries.length === 0) {
+    console.warn(
+      "[build] tiktok-live-connector not found in pnpm store — skipping symlink",
+    );
+    return;
+  }
+  entries.sort().reverse(); // highest semver-ish last after reverse
+  const storeEntry = entries[0];
+  const src = path.join(
+    pnpmStore,
+    storeEntry,
+    "node_modules",
+    "tiktok-live-connector",
+  );
+  const nodeModulesDir = path.resolve(artifactDir, "node_modules");
+  const dst = path.join(nodeModulesDir, "tiktok-live-connector");
+
+  if (!fs.existsSync(dst)) {
+    if (!fs.existsSync(nodeModulesDir)) {
+      fs.mkdirSync(nodeModulesDir, { recursive: true });
+    }
+    fs.symlinkSync(src, dst, "dir");
+    console.log(`[build] Symlinked tiktok-live-connector → ${storeEntry}`);
+  }
+}
+
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
+
+  ensureTikTokLiveConnectorSymlink();
 
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts")],

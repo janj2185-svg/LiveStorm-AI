@@ -38,6 +38,14 @@ interface ConnectorEntry {
 
 const activeConnectors = new Map<number, ConnectorEntry>();
 
+/**
+ * Sessions whose connector is being started asynchronously but hasn't yet
+ * written an entry into activeConnectors.  Used to prevent race-condition
+ * duplicates where recoverActiveSessions and a concurrent HTTP request both
+ * check getConnectionMode() before the first caller's entry is committed.
+ */
+const pendingConnectors = new Set<number>();
+
 const TIKTOK_MODE = (process.env.TIKTOK_MODE ?? "demo").trim().toLowerCase();
 export const isRealModeEnabled = TIKTOK_MODE === "real";
 
@@ -61,8 +69,16 @@ function friendlyError(raw: string, username: string): string {
   if (raw.includes("ECONNREFUSED") || raw.includes("ENOTFOUND") || raw.toLowerCase().includes("network")) {
     return "Network error: server cannot reach TikTok. Check firewall rules and outbound internet access.";
   }
-  if (raw.includes("429") || raw.toLowerCase().includes("rate limit")) {
-    return "TikTok rate-limited this server IP. Wait a few minutes before retrying.";
+  if (
+    raw.includes("429") ||
+    raw.toLowerCase().includes("rate limit") ||
+    raw.toLowerCase().includes("rate_limit")
+  ) {
+    return (
+      "Eulerstream rate limit reached — too many connection attempts. " +
+      "Sign up for a free API key at https://eulerstream.com/pricing and set " +
+      "SIGN_API_KEY in your server environment for stable, sustained connections."
+    );
   }
   // WebSocket 404 = TikTok rejected the connection. Usually means the room isn't
   // actually broadcasting even though room/info returned status 4.
@@ -199,9 +215,26 @@ export async function startTikTokConnection(
 ): Promise<ConnectionMode> {
   const roomId = `session:${sessionId}`;
 
+  // Prevent duplicate connectors caused by concurrent calls (e.g. session
+  // recovery + simultaneous HTTP request) both seeing getConnectionMode()=null
+  // before the first caller commits its entry to activeConnectors.
+  if (activeConnectors.has(sessionId) || pendingConnectors.has(sessionId)) {
+    const mode = activeConnectors.get(sessionId)?.type ?? "real";
+    console.log(
+      `[TikTok] Session ${sessionId} already has an active/pending connector (${mode}) — skipping duplicate start`,
+    );
+    return mode;
+  }
+
   if (!demoMode && tiktokUsername && isRealModeEnabled) {
-    console.log(`[TikTok] REAL mode — connecting to @${tiktokUsername} (session ${sessionId})`);
-    const result = await startLiveConnector(io, tiktokUsername, sessionId, userId);
+    pendingConnectors.add(sessionId);
+    let result: { ok: boolean; error?: string; polling?: boolean };
+    try {
+      console.log(`[TikTok] REAL mode — connecting to @${tiktokUsername} (session ${sessionId})`);
+      result = await startLiveConnector(io, tiktokUsername, sessionId, userId);
+    } finally {
+      pendingConnectors.delete(sessionId);
+    }
 
     if (result.ok) {
       io.to(roomId).emit("tiktok:status", { mode: "real", username: tiktokUsername });
@@ -237,6 +270,7 @@ export async function startTikTokConnection(
 }
 
 export function stopTikTokConnection(sessionId: number) {
+  pendingConnectors.delete(sessionId);
   const entry = activeConnectors.get(sessionId);
   if (entry) {
     entry.stop();
@@ -245,7 +279,11 @@ export function stopTikTokConnection(sessionId: number) {
 }
 
 export function getConnectionMode(sessionId: number): ConnectionMode | null {
-  return activeConnectors.get(sessionId)?.type ?? null;
+  if (activeConnectors.has(sessionId)) return activeConnectors.get(sessionId)!.type;
+  // A pending connector is in-flight (async live check underway) — treat as "real"
+  // so callers don't start a duplicate connector while the first is initializing.
+  if (pendingConnectors.has(sessionId)) return "real";
+  return null;
 }
 
 export function getConnectionError(sessionId: number): string | undefined {

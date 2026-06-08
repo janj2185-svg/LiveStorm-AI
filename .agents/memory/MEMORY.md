@@ -2,5 +2,7 @@
 - [LiveStorm AI Architecture](livestorm-architecture.md) — stack, artifact layout, DB schema, task progress
 - [React Query Hook Patterns](react-query-patterns.md) — generated hook usage pitfalls and correct patterns
 - [LiveStorm Bug Fixes](livestorm-bugfixes.md) — OBS 404 root cause, FormLabel bug pattern, TTS modes, sessions mode bug
-- [TikTok connector architecture](tiktok-connector.md) — custom pbf+ws connector replaces tiktok-live-connector; protobufjs ALL versions blocked on Replit; pbf v5 PbfReader is the solution.
-- [TikTok not-live detection](tiktok-not-live-detection.md) — room/info returns `{"data":{}}` when not streaming; im/fetch returns 0 bytes; both are definitive "not live" signals.
+- [TikTok connector architecture](tiktok-connector.md) — switched from custom pbf+ws to tiktok-live-connector@2.1.1-beta1 via pnpm-store symlink; SIGI_STATE HTML parsing for live detection.
+- [tiktok-live-connector install workaround](tiktok-connector-install.md) — protobufjs blocked by Replit firewall; add symlink in build.mjs pointing to pnpm store; never add as direct dep.
+- [Eulerstream free tier limits](eulerstream-limits.md) — anonymous fallback disconnects immediately; SIGN_API_KEY env var needed for sustained events; rate limit is per-minute on connections.
+- [TikTok connector race condition](tiktok-connector-race.md) — use pendingConnectors Set alongside activeConnectors to prevent duplicate connectors during async startup recovery.
