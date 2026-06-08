@@ -102,7 +102,31 @@ async function startLiveConnector(
 ): Promise<{ ok: boolean; error?: string; polling?: boolean }> {
   const roomId = `session:${sessionId}`;
 
-  const client = new TikTokLiveClient(tiktokUsername);
+  const client = new TikTokLiveClient(tiktokUsername, {
+    // Before every reconnect attempt: verify this session is still open in the DB.
+    // Stops ghost connectors for sessions whose ended_at was set (e.g. after a stop
+    // call that couldn't reach the in-memory client due to the missing stopConnection bug).
+    onBeforeReconnect: async () => {
+      try {
+        const row = await db.query.sessionsTable.findFirst({
+          columns: { id: true, endedAt: true },
+          where: dbEq(sessionsTable.id, sessionId),
+        });
+        if (!row) {
+          console.log(`[TikTok] onBeforeReconnect: session ${sessionId} not found in DB — stopping @${tiktokUsername}`);
+          return false;
+        }
+        if (row.endedAt) {
+          console.log(`[TikTok] onBeforeReconnect: session ${sessionId} has ended_at=${row.endedAt.toISOString()} — stopping @${tiktokUsername}`);
+          return false;
+        }
+        return true;
+      } catch (err: any) {
+        console.error(`[TikTok] onBeforeReconnect DB check error for session ${sessionId}: ${err?.message}`);
+        return true; // DB error → allow reconnect (fail open)
+      }
+    },
+  });
 
   // Wire up events → ingestLiveEvent
   // REQ-2/3: Pipeline:3 — connector receives event from TikTokLiveClient, before ingestLiveEvent

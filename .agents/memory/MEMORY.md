@@ -8,3 +8,5 @@
 - [TikTok connector race condition](tiktok-connector-race.md) — use pendingConnectors Set alongside activeConnectors to prevent duplicate connectors during async startup recovery.
 - [TikTok SIGI_STATE live detection bug](tiktok-sigi-state-detection.md) — user.status is account status (always 2), NOT stream status; correct field is top-level LiveRoom.liveRoomStatus (0=offline, non-zero=live).
 - [Ghost session fix](ghost-session-fix.md) — POST /sessions/start must handle 3 cases: stale isLive flag, dead connector, active connector — never return 400 "Already live".
+- [TikTok stopConnection missing](tiktok-stop-bug.md) — stopConnection() was missing from TikTokLiveClient; all stop() calls silently threw; ghost sessions reconnected forever.
+- [TikTok im_enter_room rejection](tiktok-im-enter-room.md) — code=1000 reason="payload_handler_im_enter_room" = Eulerstream cookie pool stale; fix: connectWithUniqueId:true + 120s backoff.

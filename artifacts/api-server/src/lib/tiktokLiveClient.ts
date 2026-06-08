@@ -223,6 +223,15 @@ export function isNotLiveError(err: unknown): boolean {
  * on every request regardless of actual stream state. The library's internal
  * webcast API calls work correctly from server IPs and are the ground truth.
  */
+export interface TikTokLiveClientOptions {
+  /**
+   * Called before every reconnect attempt.
+   * Return `true` to proceed, `false` to abort and stop the client.
+   * Use this to guard reconnects against sessions that have been ended in the DB.
+   */
+  onBeforeReconnect?: () => Promise<boolean>;
+}
+
 export class TikTokLiveClient extends EventEmitter {
   readonly username: string;
   private stopped = false;
@@ -231,10 +240,12 @@ export class TikTokLiveClient extends EventEmitter {
   private reconnectDelay = 15_000;
   /** Last WebSocket URL host used — included in DISCONNECT log for traceability. */
   lastWsUrlHost: string | null = null;
+  private onBeforeReconnect?: () => Promise<boolean>;
 
-  constructor(username: string) {
+  constructor(username: string, options?: TikTokLiveClientOptions) {
     super();
     this.username = username.replace(/^@/, "").trim();
+    this.onBeforeReconnect = options?.onBeforeReconnect;
   }
 
   /**
@@ -273,6 +284,11 @@ export class TikTokLiveClient extends EventEmitter {
         websocketPingIntervalMs: 10_000,
         websocketTimeout: 20_000,
         reconnectEnabled: false, // we handle reconnect
+        // connectWithUniqueId=true: pass username to Eulerstream for signing
+        // instead of roomId. Forces a fresh per-username credential/cookie lookup
+        // at Eulerstream's end — avoids reusing stale pooled TikTok cookies that
+        // trigger payload_handler_im_enter_room rejections.
+        connectWithUniqueId: true,
       }) as any;
 
       this.currentClient = client;
@@ -324,9 +340,15 @@ export class TikTokLiveClient extends EventEmitter {
               try { wsHost = new URL(result.wsUrl).hostname; } catch { wsHost = String(result.wsUrl ?? '').slice(0, 80); }
               capturedWsUrl = result.wsUrl ?? null;
               this.lastWsUrlHost = wsHost; // tracked for DISCONNECT log
-              console.log(
-                `[TikTok:Signing] ← response OK | wsUrl host: ${wsHost} | cursor: ${result.cursor ? 'present' : 'absent'}`,
-              );
+              // Log the full ProtoMessageFetchResult so we can see all Eulerstream fields
+              const fullLog: Record<string, unknown> = {
+                wsHost,
+                cursor: result.cursor ? `${String(result.cursor).slice(0, 30)}…` : 'ABSENT',
+                internalExt: result.internalExt ? `${String(result.internalExt).slice(0, 40)}…` : 'absent',
+                wsParamKeys: Object.keys(result.wsParams ?? {}),
+                messageCount: result.messages?.length ?? 0,
+              };
+              console.log(`[TikTok:Signing] ← FULL result: ${JSON.stringify(fullLog)}`);
               return result;
             } catch (err: any) {
               console.error(
@@ -418,8 +440,20 @@ export class TikTokLiveClient extends EventEmitter {
         this.emit("disconnected", code);
         settle(); // resolve the promise if not yet done
         if (!this.stopped) {
-          this._scheduleRetry(this.reconnectDelay, /* fullConnect */ false);
-          this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
+          // payload_handler_im_enter_room = TikTok rejected the room entry because
+          // Eulerstream's pooled TikTok cookies are rate-limited / invalid.
+          // Use a much longer backoff to let Eulerstream's pool cool down.
+          const isEnterRoomRejection = reason.includes("im_enter_room");
+          if (isEnterRoomRejection) {
+            console.warn(
+              `[TikTok] im_enter_room rejection for @${this.username} — ` +
+              `Eulerstream cookie pool likely rate-limited. Backing off 120 s.`,
+            );
+            this._scheduleRetry(120_000, /* fullConnect */ false);
+          } else {
+            this._scheduleRetry(this.reconnectDelay, /* fullConnect */ false);
+            this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
+          }
         }
       });
 
@@ -612,6 +646,24 @@ export class TikTokLiveClient extends EventEmitter {
     this.reconnectTimer = setTimeout(async () => {
       if (this.stopped) return;
       this.reconnectTimer = null;
+      // Guard: check if this session should still be running before reconnecting.
+      // Prevents ghost connectors for ended/deleted sessions from reconnecting
+      // indefinitely even after the DB guard on the initial start path.
+      if (this.onBeforeReconnect) {
+        let shouldContinue = false;
+        try {
+          shouldContinue = await this.onBeforeReconnect();
+        } catch (err: any) {
+          console.error(`[TikTok] onBeforeReconnect check failed for @${this.username}: ${err?.message} — stopping`);
+          this.stopConnection();
+          return;
+        }
+        if (!shouldContinue) {
+          console.log(`[TikTok] onBeforeReconnect returned false for @${this.username} — session ended, stopping reconnect loop`);
+          this.stopConnection();
+          return;
+        }
+      }
       try {
         if (fullConnect) {
           await this._fullConnect();
@@ -630,8 +682,12 @@ export class TikTokLiveClient extends EventEmitter {
     }, delay);
   }
 
-  /** Stop all connections and prevent further reconnects. */
-  disconnect(): void {
+  /**
+   * Stop all connections and prevent any further reconnects.
+   * This is the canonical "stop" method — sets stopped=true so the internal
+   * reconnect timer never fires again after this call.
+   */
+  stopConnection(): void {
     this.stopped = true;
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -645,5 +701,11 @@ export class TikTokLiveClient extends EventEmitter {
       }
       this.currentClient = null;
     }
+    console.log(`[TikTok] stopConnection() called — @${this.username} fully stopped`);
+  }
+
+  /** @deprecated Use stopConnection() instead. */
+  disconnect(): void {
+    this.stopConnection();
   }
 }
