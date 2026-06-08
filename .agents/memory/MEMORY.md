@@ -1,1 +1,2 @@
 - [TikTok im_enter_room diagnosis](tiktok-im-enter-room.md) — `code=1000, reason=payload_handler_im_enter_room` + 0 packets = user offline (not rate limit); Eulerstream plan limits; fixes applied.
+- [Eulerstream proxy cursor zero](eulerstream-cursor-zero.md) — cursor="0" from fetchWebcastURL = proxy cannot auth to TikTok; 0 bytes delivered regardless of room activity; plan upgrade required.

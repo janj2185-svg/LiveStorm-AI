@@ -371,6 +371,67 @@ export class TikTokLiveClient extends EventEmitter {
         }
       }
 
+      // ── Fix: Eulerstream double im_enter_room ─────────────────────────────
+      // When Eulerstream's signing response includes client_enter="true" in the
+      // wsParams, the fallback proxy (ws-fallback.eulerstream.com) automatically
+      // sends im_enter_room to TikTok when the WebSocket connects.  The library
+      // then calls wsClient.switchRooms() which sends a SECOND im_enter_room.
+      // TikTok closes the connection on receipt of the duplicate with reason
+      // "payload_handler_im_enter_room".
+      //
+      // Fix: intercept setupWebsocket() to check wsParams.  When client_enter is
+      // true, replace switchRooms() with a no-op that only starts the heartbeat.
+      // Diagnostic evidence (2026-06-08): without this patch, every connection
+      // to a live room disconnects immediately with payload_handler_im_enter_room
+      // and 0 rawPacketsReceived.  With the patch, the connection stays open and
+      // live events (chat/gift/like) are delivered.
+      {
+        const _origSetup = (client as any).setupWebsocket?.bind(client);
+        if (typeof _origSetup === 'function') {
+          (client as any).setupWebsocket = async (wsUrl: string, wsParams: Record<string, unknown>) => {
+            const wsClient: any = await _origSetup(wsUrl, wsParams);
+            const clientEnter =
+              wsParams?.client_enter === 'true' || wsParams?.client_enter === true;
+            if (clientEnter) {
+              console.log(
+                `[TikTok:WS] client_enter=true in wsParams — Eulerstream proxy handles ` +
+                `im_enter_room; patching switchRooms() to no-op to prevent duplicate send`,
+              );
+              wsClient.switchRooms = (roomId: string) => {
+                console.log(
+                  `[TikTok:WS] switchRooms SKIPPED (proxy already entered room ${roomId})`,
+                );
+                // Still start the heartbeat interval — critical for keepalive
+                clearInterval(wsClient.pingInterval);
+                wsClient.pingInterval = setInterval(
+                  () => wsClient.sendHeartbeat(),
+                  wsClient.webSocketPingIntervalMs ?? 10_000,
+                );
+
+                // Silence timeout: if Eulerstream's proxy is connected (client_enter=true)
+                // but delivers ZERO bytes in 60 s, the proxy's TikTok session is broken
+                // (cursor="0" = proxy auth failed).  Force-close so the disconnect
+                // handler can schedule a fresh fullConnect retry.
+                const silenceTimer = setTimeout(() => {
+                  if (rawEventCount === 0) {
+                    console.warn(
+                      `[TikTok:WS] 60 s silence with 0 packets @${this.username} — ` +
+                      `Eulerstream proxy auth to TikTok failed (cursor="0"). Closing to retry.`,
+                    );
+                    try { wsClient.close(1000, 'proxy_silence_timeout'); } catch { /* ignore */ }
+                  }
+                }, 60_000);
+
+                // Cancel the timer as soon as any message arrives from TikTok
+                wsClient.once('message', () => clearTimeout(silenceTimer));
+                wsClient.once('close', () => clearTimeout(silenceTimer));
+              };
+            }
+            return wsClient;
+          };
+        }
+      }
+
       // ── Connection lifecycle ──────────────────────────────────────────────
 
       client.on("connected", (state: any) => {
@@ -435,6 +496,17 @@ export class TikTokLiveClient extends EventEmitter {
         this.emit("disconnected", code);
         settle(); // resolve the promise if not yet done
         if (!this.stopped) {
+          // Silence timeout: proxy connected but delivered 0 bytes → cursor="0" means
+          // Eulerstream's proxy auth to TikTok failed.  Retry in 60 s.
+          if (reason === "proxy_silence_timeout") {
+            console.warn(
+              `[TikTok] Eulerstream proxy silence timeout @${this.username} — ` +
+              `cursor="0" means proxy auth to TikTok failed. Retrying in 60 s.`,
+            );
+            this._scheduleRetry(60_000, /* fullConnect */ true);
+            return;
+          }
+
           const isEnterRoomRejection = reason.includes("im_enter_room");
           if (isEnterRoomRejection && rawEventCount === 0) {
             // Zero raw packets + im_enter_room = TikTok refused room entry before
