@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useGetMyProfile, useUpdateMyProfile, getGetMyProfileQueryKey } from "@workspace/api-client-react";
+import { useGetMyProfile, useUpdateMyProfile, useConnectTiktok, getGetMyProfileQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +56,7 @@ type SettingsTab = "profile" | "billing" | "language";
 export function Settings() {
   const { data: user, isLoading } = useGetMyProfile();
   const updateProfile = useUpdateMyProfile();
+  const connectTiktok = useConnectTiktok();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { language, setLanguage, t } = useLanguage();
@@ -64,6 +65,8 @@ export function Settings() {
   const [aiReplyLang, setAiReplyLang] = useState("auto");
   const [langSaving, setLangSaving] = useState(false);
   const [persona, setPersona] = useState<any>(null);
+  const [tiktokEditing, setTiktokEditing] = useState(false);
+  const [tiktokInput, setTiktokInput] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -132,6 +135,25 @@ export function Settings() {
     } finally {
       setLangSaving(false);
     }
+  };
+
+  const handleSaveTiktok = () => {
+    const username = tiktokInput.replace(/^@/, "").trim();
+    if (!username) return;
+    connectTiktok.mutate(
+      { data: { tiktokUsername: username } },
+      {
+        onSuccess: () => {
+          toast({ title: "TikTok account saved", description: `@${username} is now linked.` });
+          setTiktokInput("");
+          setTiktokEditing(false);
+          queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Failed to save TikTok username.", variant: "destructive" });
+        },
+      },
+    );
   };
 
   const planMeta = PLAN_META[(user?.plan as string) ?? "free"] ?? PLAN_META.free;
@@ -207,6 +229,81 @@ export function Settings() {
                   </Button>
                 </form>
               </Form>
+            </CardContent>
+          </Card>
+
+          {/* TikTok Account */}
+          <Card className="bg-card border-white/5">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <span className="text-primary font-black text-lg">@</span>
+                TikTok Account
+              </CardTitle>
+              <CardDescription>
+                Link your TikTok username so the app can connect to your LIVE stream.
+                Each user has their own independent session — changing your username only affects your account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {user?.tiktokUsername && !tiktokEditing ? (
+                <div className="flex items-center justify-between p-4 rounded-lg bg-black/20 border border-primary/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-primary font-black">@</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-white">@{user.tiktokUsername}</p>
+                      <p className="text-xs text-green-400 font-medium flex items-center gap-1 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                        Account linked
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-white/10 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setTiktokEditing(true); setTiktokInput(user.tiktokUsername ?? ""); }}
+                  >
+                    Change
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3 max-w-md">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">@</span>
+                      <Input
+                        className="pl-7 bg-background border-border"
+                        placeholder="yourhandle"
+                        value={tiktokInput}
+                        onChange={(e) => setTiktokInput(e.target.value.replace(/^@/, ""))}
+                        onKeyDown={(e) => e.key === "Enter" && handleSaveTiktok()}
+                        autoFocus={tiktokEditing}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSaveTiktok}
+                      disabled={connectTiktok.isPending || !tiktokInput.trim()}
+                      className="bg-primary hover:bg-primary/90 text-white shrink-0"
+                    >
+                      {connectTiktok.isPending ? "Saving…" : "Save"}
+                    </Button>
+                    {tiktokEditing && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => { setTiktokEditing(false); setTiktokInput(""); }}
+                        className="shrink-0"
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enter your TikTok handle without the @. Example: <span className="text-foreground font-medium">yourhandle</span>
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

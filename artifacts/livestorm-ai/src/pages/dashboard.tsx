@@ -8,18 +8,23 @@ import {
   useStartSession,
   useEndSession,
   useGetSessions,
+  useConnectTiktok,
   getGetActiveSessionQueryKey,
-  getGetSessionsQueryKey
+  getGetSessionsQueryKey,
+  getGetMyProfileQueryKey,
 } from "@workspace/api-client-react";
 import { useLiveSession, type LiveEvent } from "@/hooks/useLiveSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Users, Gift, Heart, UserPlus, MessageSquare, Zap, Activity,
-  PlayCircle, Square, Clock, Share, Bot, ShieldAlert, Swords, RefreshCw
+  PlayCircle, Square, Clock, Share, Bot, ShieldAlert, Swords, RefreshCw,
+  PlugZap,
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +43,9 @@ export function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: profile } = useGetMyProfile();
-  
+  const connectTiktok = useConnectTiktok();
+  const [tiktokInput, setTiktokInput] = useState("");
+
   const { data: activeSessionRes, isLoading: isLoadingSession } = useGetActiveSession({ 
     query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 5000 } 
   });
@@ -49,6 +56,24 @@ export function Dashboard() {
   const activeSessionId = activeSessionRes?.session?.id;
   const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled } = useLiveSession(activeSessionId);
   const [ttsOn, setTtsOn] = useState(false);
+
+  const handleConnectTiktok = () => {
+    const username = tiktokInput.replace(/^@/, "").trim();
+    if (!username) return;
+    connectTiktok.mutate(
+      { data: { tiktokUsername: username } },
+      {
+        onSuccess: () => {
+          toast({ title: "TikTok account connected!", description: `@${username} is ready to go live.` });
+          setTiktokInput("");
+          queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+        },
+        onError: () => {
+          toast({ title: "Connection failed", description: "Could not save TikTok username. Try again.", variant: "destructive" });
+        },
+      },
+    );
+  };
 
   const handleTtsToggle = (val: boolean) => {
     setTtsOn(val);
@@ -121,19 +146,56 @@ export function Dashboard() {
   const isActive = activeSessionRes?.active;
   const cardGlow = isActive ? "border-primary/50 shadow-[0_0_15px_rgba(124,58,237,0.15)]" : "border-white/5";
 
-  return (
-    <div className="space-y-6">
-      {/* Missing TikTok Banner */}
-      {!profile?.tiktokUsername && (
-        <Card className="bg-red-500/10 border-red-500/20 text-red-400">
-          <CardContent className="p-4 flex items-center justify-between">
-            <span className="font-medium">Connect your TikTok username in Settings to go live.</span>
-            <Button variant="outline" size="sm" className="border-red-500/20 text-red-400 hover:bg-red-500/20" asChild>
-              <Link href="/settings">Settings</Link>
-            </Button>
+  // If no TikTok username set, show an inline setup screen instead of the full dashboard
+  if (!profile?.tiktokUsername) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="bg-card border-white/5 shadow-xl w-full max-w-md">
+          <CardHeader className="text-center pb-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/15 flex items-center justify-center mb-4 ring-2 ring-primary/20">
+              <PlugZap className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl text-white">Connect Your TikTok</CardTitle>
+            <CardDescription className="text-muted-foreground mt-1">
+              Enter your TikTok username to start capturing live events. Each user manages their own stream independently.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tiktok-dash-input">TikTok Username</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">@</span>
+                  <Input
+                    id="tiktok-dash-input"
+                    className="pl-7 bg-background border-border"
+                    placeholder="yourhandle"
+                    value={tiktokInput}
+                    onChange={(e) => setTiktokInput(e.target.value.replace(/^@/, ""))}
+                    onKeyDown={(e) => e.key === "Enter" && handleConnectTiktok()}
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  onClick={handleConnectTiktok}
+                  disabled={connectTiktok.isPending || !tiktokInput.trim()}
+                  className="bg-primary hover:bg-primary/90 text-white font-bold shrink-0"
+                >
+                  {connectTiktok.isPending ? "Saving…" : "Connect"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                You can change this any time in <Link href="/settings" className="text-primary hover:underline">Settings</Link>.
+              </p>
+            </div>
           </CardContent>
         </Card>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
 
       {/* Header controls & stats */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
