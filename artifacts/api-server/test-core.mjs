@@ -122,22 +122,43 @@ section(2, "Library-based live detection — no SIGI_STATE HTML pre-check");
     fail("_fullConnect() or _connectClient() missing");
   }
 
-  // isNotLiveError must catch library error patterns
+  // isNotLiveError must handle the exact UserOfflineError the library throws
+  if (clientSource.includes("isn't online")) {
+    ok("isNotLiveError() matches UserOfflineError: \"The requested user isn't online :(\"");
+  } else {
+    fail("isNotLiveError() missing \"isn't online\" — won't catch library's UserOfflineError");
+  }
+
+  // isNotLiveError must accept { info, exception } format (what the library emits via handleError)
+  if (clientSource.includes("errPayload?.exception") || clientSource.includes("asObj?.exception")) {
+    ok("isNotLiveError() / on(\"error\") extracts exception from library's { info, exception } payload");
+  } else {
+    fail("on(\"error\") does not extract exception from { info, exception } — gets [object Object] as msg");
+  }
+
+  // isNotLiveError must cover all library error patterns and be case-insensitive
   if (
     clientSource.includes("live has ended") &&
     clientSource.includes("failed to retrieve room") &&
     clientSource.includes("status is not") &&
     clientSource.includes(".toLowerCase()")
   ) {
-    ok("isNotLiveError() covers library error patterns and is case-insensitive");
+    ok("isNotLiveError() covers all library error patterns and is case-insensitive");
   } else {
     fail("isNotLiveError() missing library error patterns or case-insensitivity");
   }
 
-  // Both error paths (on("error") and .catch()) must route notLiveErrors to 30s polling
+  // .catch() must early-exit when on("error") already handled the error (prevents double-firing)
+  if (clientSource.includes("if (settled) return;")) {
+    ok(".catch() early-exits when on(\"error\") already fired — prevents double retry scheduling");
+  } else {
+    fail(".catch() missing early-exit guard — library's double-emit (handleError + rethrow) causes duplicate retries");
+  }
+
+  // isNotLiveError checked in both paths
   const errorHandlerCount = (clientSource.match(/isNotLiveError/g) ?? []).length;
   if (errorHandlerCount >= 2) {
-    ok(`isNotLiveError() checked in ${errorHandlerCount} error paths (on("error") + .catch())`);
+    ok(`isNotLiveError() checked in ${errorHandlerCount} error paths (on("error") + .catch() fallback)`);
   } else {
     fail(`isNotLiveError() only checked ${errorHandlerCount} time(s) — needs to cover both on("error") and .catch()`);
   }

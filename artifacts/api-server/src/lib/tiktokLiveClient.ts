@@ -171,23 +171,36 @@ async function fetchLiveRoomInfo(username: string): Promise<LiveRoomInfo> {
 
 /**
  * Returns true when the error means "user isn't live yet" (retriable with 30s polling).
- * Covers both our own messages and patterns from tiktok-live-connector's internal checks.
+ *
+ * Covers our own messages AND the exact error strings thrown by tiktok-live-connector:
+ *   - UserOfflineError: "The requested user isn't online :("  [status===4 from webcast API]
+ *   - FetchIsLiveError: "Failed to retrieve Room ID from all sources."
+ *   - Generic "not live" patterns from all 3 fallback routes (HTML, API, Euler)
  */
 export function isNotLiveError(err: unknown): boolean {
-  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+  // The library emits { info, exception } via handleError() — accept both shapes.
+  const asObj = err as any;
+  const exception: unknown = asObj?.exception ?? err;
+  const msg = (
+    (exception instanceof Error ? exception.message : "") ||
+    asObj?.info ||
+    String(err)
+  ).toLowerCase();
+
   return (
+    msg.includes("isn't online")            || // UserOfflineError: "The requested user isn't online :("
     msg.includes("not currently streaming") || // our own message
-    msg.includes("not started")              || // library: room not started
-    msg.includes("no room id found")         || // library: no room for username
-    msg.includes("start a tiktok live")      || // our own message
-    msg.includes("not live")                 || // generic
-    msg.includes("status is not")            || // library: "Live status is not 4"
-    msg.includes("live has ended")           || // library: stream ended mid-session
-    msg.includes("failed to retrieve room")  || // library: room lookup failed
-    msg.includes("failed to get room")       || // library: room API error
-    msg.includes("room not found")           || // library: no active room
-    msg.includes("is offline")               || // library: user offline
-    msg.includes("not online")                  // library: user not online
+    msg.includes("not started")             || // library: room not started
+    msg.includes("no room id found")        || // library: no room for username
+    msg.includes("start a tiktok live")     || // our own message
+    msg.includes("not live")                || // generic
+    msg.includes("status is not")           || // library: status check failed
+    msg.includes("live has ended")          || // library: stream ended mid-session
+    msg.includes("failed to retrieve room") || // FetchIsLiveError: all sources exhausted
+    msg.includes("failed to get room")      || // library: room API error
+    msg.includes("room not found")          || // library: no active room
+    msg.includes("is offline")              || // library: user offline
+    msg.includes("not online")                 // library: user not online
   );
 }
 
@@ -281,22 +294,29 @@ export class TikTokLiveClient extends EventEmitter {
         }
       });
 
-      client.on("error", (err: any) => {
-        const msg: string = err?.message ?? String(err);
-        if (isNotLiveError(new Error(msg))) {
-          // Library's own live-check determined the user isn't streaming yet.
+      client.on("error", (errPayload: any) => {
+        // The library's handleError() emits { info: string, exception: Error }.
+        // It also re-throws, so .catch() will fire too — settle() here prevents
+        // double-handling by marking the promise resolved first.
+        const exception: any = errPayload?.exception ?? errPayload;
+        const msg: string = (
+          (exception instanceof Error ? exception.message : "") ||
+          errPayload?.info ||
+          String(errPayload)
+        );
+        console.log(`[TikTok] on("error") for @${this.username}: ${msg}`);
+        if (isNotLiveError(errPayload)) {
           const notLiveMsg =
             `@${this.username} is not currently streaming on TikTok LIVE. ` +
             `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
-          console.log(`[TikTok] @${this.username} not live (library error: ${msg}) — polling in 30 s`);
+          console.log(`[TikTok] @${this.username} not live — polling in 30 s`);
           this.emit("notLive", { username: this.username, message: notLiveMsg });
           this._scheduleRetry(30_000, /* fullConnect */ true);
         } else {
           console.error(`[TikTok] Error for @${this.username}: ${msg}`);
-          this.emit("wsError", err instanceof Error ? err : new Error(msg));
+          this.emit("wsError", exception instanceof Error ? exception : new Error(msg));
         }
-        // Don't reject — reconnect is scheduled above or by disconnect handler.
-        settle();
+        settle(); // marks promise resolved so .catch() below becomes a no-op
       });
 
       // ── Live events ───────────────────────────────────────────────────────
@@ -359,13 +379,19 @@ export class TikTokLiveClient extends EventEmitter {
         .connect()
         .then(() => settle())
         .catch((err: any) => {
+          // The library calls handleError() (→ emits 'error' event) AND rethrows.
+          // on("error") fires first and calls settle(), so by the time we get here
+          // settled is already true. Early-exit to avoid double-handling.
+          if (settled) return;
+
+          // This path handles errors that bypass handleError() (e.g. promise
+          // rejections from setupWebsocket that don't go through the error event).
           const msg: string = err?.message ?? String(err);
-          if (isNotLiveError(new Error(msg))) {
-            // Library confirmed user isn't live — fall into 30 s polling.
+          if (isNotLiveError(err)) {
             const notLiveMsg =
               `@${this.username} is not currently streaming on TikTok LIVE. ` +
               `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
-            console.log(`[TikTok] @${this.username} not live (library: ${msg}) — polling in 30 s`);
+            console.log(`[TikTok] @${this.username} not live (.catch: ${msg}) — polling in 30 s`);
             this.emit("notLive", { username: this.username, message: notLiveMsg });
             this._scheduleRetry(30_000, /* fullConnect */ true);
           } else {
