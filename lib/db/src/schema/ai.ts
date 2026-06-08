@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { streamersTable } from "./streamers";
@@ -11,6 +11,9 @@ export const aiPersonaConfigsTable = pgTable("ai_persona_configs", {
     .unique(),
   personaName: text("persona_name").notNull().default("Storm"),
   tone: text("tone").notNull().default("hype"),
+  personalityType: text("personality_type").notNull().default("friendly"),
+  customPersonality: text("custom_personality"),
+  operatingMode: text("operating_mode").notNull().default("assistant"),
   announceGifts: boolean("announce_gifts").notNull().default(true),
   announceGiftThreshold: integer("announce_gift_threshold").notNull().default(100),
   announceLevelUp: boolean("announce_level_up").notNull().default(true),
@@ -22,6 +25,9 @@ export const aiPersonaConfigsTable = pgTable("ai_persona_configs", {
   spamCooldownSeconds: integer("spam_cooldown_seconds").notNull().default(30),
   voiceEnabled: boolean("voice_enabled").notNull().default(false),
   voiceName: text("voice_name").notNull().default("nova"),
+  voiceSpeed: real("voice_speed").notNull().default(1.0),
+  voiceVolume: real("voice_volume").notNull().default(1.0),
+  voiceEmotion: text("voice_emotion").notNull().default("neutral"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

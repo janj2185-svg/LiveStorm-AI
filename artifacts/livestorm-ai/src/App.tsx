@@ -7,6 +7,7 @@ import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from 'wo
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 import { Layout } from "@/components/layout";
 import { Home } from "@/pages/home";
@@ -20,6 +21,7 @@ import { MiniGames } from "@/pages/mini-games";
 import { Universe } from "@/pages/universe";
 import { Overlays } from "@/pages/overlays";
 import { AiAssistant } from "@/pages/ai-assistant";
+import { AiContent } from "@/pages/ai-content";
 import { Settings } from "@/pages/settings";
 import { Pricing } from "@/pages/pricing";
 import { Admin } from "@/pages/admin";
@@ -232,6 +234,9 @@ function AppRoutes() {
       <Route path="/ai-assistant">
         <ProtectedRoute><Layout><AiAssistant /></Layout></ProtectedRoute>
       </Route>
+      <Route path="/ai-content">
+        <ProtectedRoute><Layout><AiContent /></Layout></ProtectedRoute>
+      </Route>
       <Route path="/settings">
         <ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>
       </Route>
@@ -298,7 +303,9 @@ function App() {
   return (
     <TooltipProvider>
       <WouterRouter base={basePath}>
-        <ClerkProviderWithRoutes />
+        <LanguageProvider>
+          <ClerkProviderWithRoutes />
+        </LanguageProvider>
       </WouterRouter>
       <Toaster />
     </TooltipProvider>

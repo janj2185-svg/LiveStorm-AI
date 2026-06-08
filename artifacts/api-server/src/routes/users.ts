@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 
 const router = Router();
 
+const VALID_UI_LANGUAGES = ["en", "uk", "pl", "de"] as const;
+
 function requireAuth(req: any, res: any, next: any) {
   const auth = getAuth(req);
   const userId = auth?.sessionClaims?.userId || auth?.userId;
@@ -34,50 +36,49 @@ async function getOrCreateUser(clerkId: string, email?: string) {
   return user;
 }
 
+function serializeUser(user: typeof usersTable.$inferSelect) {
+  return {
+    id: user.id,
+    clerkId: user.clerkId,
+    email: user.email,
+    displayName: user.displayName,
+    tiktokUsername: user.tiktokUsername,
+    avatarUrl: user.avatarUrl,
+    role: user.role,
+    plan: user.plan,
+    uiLanguage: user.uiLanguage ?? "en",
+    createdAt: user.createdAt,
+  };
+}
+
 router.get("/users/me", requireAuth, async (req: any, res: any) => {
   try {
     const user = await getOrCreateUser(req.clerkUserId);
-    res.json({
-      id: user.id,
-      clerkId: user.clerkId,
-      email: user.email,
-      displayName: user.displayName,
-      tiktokUsername: user.tiktokUsername,
-      avatarUrl: user.avatarUrl,
-      role: user.role,
-      plan: user.plan,
-      createdAt: user.createdAt,
-    });
-  } catch (err) {
+    res.json(serializeUser(user));
+  } catch {
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.patch("/users/me", requireAuth, async (req: any, res: any) => {
   try {
-    const { displayName, avatarUrl } = req.body;
+    const { displayName, avatarUrl, uiLanguage } = req.body;
     const user = await getOrCreateUser(req.clerkUserId);
+
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (displayName !== undefined) updates.displayName = displayName;
+    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+    if (uiLanguage !== undefined && VALID_UI_LANGUAGES.includes(uiLanguage)) {
+      updates.uiLanguage = uiLanguage;
+    }
+
     const [updated] = await db
       .update(usersTable)
-      .set({
-        ...(displayName !== undefined && { displayName }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
-        updatedAt: new Date(),
-      })
+      .set(updates)
       .where(eq(usersTable.id, user.id))
       .returning();
-    res.json({
-      id: updated.id,
-      clerkId: updated.clerkId,
-      email: updated.email,
-      displayName: updated.displayName,
-      tiktokUsername: updated.tiktokUsername,
-      avatarUrl: updated.avatarUrl,
-      role: updated.role,
-      plan: updated.plan,
-      createdAt: updated.createdAt,
-    });
-  } catch (err) {
+    res.json(serializeUser(updated));
+  } catch {
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -117,18 +118,8 @@ router.post("/users/me/tiktok", requireAuth, async (req: any, res: any) => {
       }
     }
 
-    res.json({
-      id: updated.id,
-      clerkId: updated.clerkId,
-      email: updated.email,
-      displayName: updated.displayName,
-      tiktokUsername: updated.tiktokUsername,
-      avatarUrl: updated.avatarUrl,
-      role: updated.role,
-      plan: updated.plan,
-      createdAt: updated.createdAt,
-    });
-  } catch (err) {
+    res.json(serializeUser(updated));
+  } catch {
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -16,6 +16,7 @@ import {
   generateEvent,
   generateVoice,
   generateCommentReply,
+  generateContent,
 } from "../lib/aiService";
 import { getIO } from "../lib/socketServer";
 
@@ -24,8 +25,12 @@ const router = Router();
 const VALID_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
 type VoiceOption = (typeof VALID_VOICES)[number];
 
-const VALID_LANGUAGES = ["auto", "en", "uk", "pl", "ru"] as const;
+const VALID_LANGUAGES = ["auto", "en", "uk", "pl", "de", "ru"] as const;
 type LangOption = (typeof VALID_LANGUAGES)[number];
+
+const VALID_OPERATING_MODES = ["assistant", "semi-auto", "autopilot"] as const;
+const VALID_PERSONALITIES = ["funny", "serious", "troll", "motivator", "battle", "friendly", "custom"] as const;
+const VALID_EMOTIONS = ["neutral", "excited", "calm", "dramatic", "warm"] as const;
 
 async function getStreamer(clerkId: string) {
   const user = await getOrCreateUser(clerkId);
@@ -69,6 +74,9 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     const {
       personaName,
       tone,
+      personalityType,
+      customPersonality,
+      operatingMode,
       announceGifts,
       announceGiftThreshold,
       announceLevelUp,
@@ -80,6 +88,9 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
       spamCooldownSeconds,
       voiceEnabled,
       voiceName,
+      voiceSpeed,
+      voiceVolume,
+      voiceEmotion,
     } = req.body;
 
     const existing = await db.query.aiPersonaConfigsTable.findFirst({
@@ -89,6 +100,18 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (personaName !== undefined) updates.personaName = String(personaName).slice(0, 50);
     if (tone !== undefined) updates.tone = tone;
+    if (personalityType !== undefined && VALID_PERSONALITIES.includes(personalityType)) {
+      updates.personalityType = personalityType;
+    }
+    if (customPersonality !== undefined) {
+      updates.customPersonality = String(customPersonality).slice(0, 500);
+    }
+    if (operatingMode !== undefined && VALID_OPERATING_MODES.includes(operatingMode)) {
+      updates.operatingMode = operatingMode;
+      // Sync autoReplyEnabled with operating mode
+      if (operatingMode === "assistant") updates.autoReplyEnabled = false;
+      else if (operatingMode === "autopilot") updates.autoReplyEnabled = true;
+    }
     if (announceGifts !== undefined) updates.announceGifts = Boolean(announceGifts);
     if (announceGiftThreshold !== undefined) updates.announceGiftThreshold = Math.max(0, Number(announceGiftThreshold));
     if (announceLevelUp !== undefined) updates.announceLevelUp = Boolean(announceLevelUp);
@@ -105,6 +128,15 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     if (voiceEnabled !== undefined) updates.voiceEnabled = Boolean(voiceEnabled);
     if (voiceName !== undefined && VALID_VOICES.includes(voiceName)) {
       updates.voiceName = voiceName as VoiceOption;
+    }
+    if (voiceSpeed !== undefined) {
+      updates.voiceSpeed = Math.max(0.25, Math.min(4.0, Number(voiceSpeed)));
+    }
+    if (voiceVolume !== undefined) {
+      updates.voiceVolume = Math.max(0, Math.min(1.0, Number(voiceVolume)));
+    }
+    if (voiceEmotion !== undefined && VALID_EMOTIONS.includes(voiceEmotion)) {
+      updates.voiceEmotion = voiceEmotion;
     }
 
     let result;
@@ -127,7 +159,6 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
 });
 
 // ── POST /ai/reply-to-comment ──────────────────────────────────────────────────
-// Manual one-shot reply: streamer clicks a specific viewer comment to reply
 router.post("/ai/reply-to-comment", requireAuth, async (req: any, res: any) => {
   try {
     const { streamer } = await getStreamer(req.clerkUserId);
@@ -143,7 +174,7 @@ router.post("/ai/reply-to-comment", requireAuth, async (req: any, res: any) => {
     const reply = await generateCommentReply(
       String(comment).trim(),
       String(viewerName).trim(),
-      { name: persona.personaName, tone: persona.tone },
+      { name: persona.personaName, tone: persona.tone, personalityType: persona.personalityType ?? undefined },
       safeLanguage,
     );
 
@@ -151,7 +182,6 @@ router.post("/ai/reply-to-comment", requireAuth, async (req: any, res: any) => {
       return res.status(503).json({ error: "AI reply generation failed" });
     }
 
-    // Emit to the session room so OBS overlays + other clients see it
     if (sessionId) {
       const session = await db.query.sessionsTable.findFirst({
         where: eq(sessionsTable.id, Number(sessionId)),
@@ -234,7 +264,7 @@ router.post("/ai/chat", requireAuth, async (req: any, res: any) => {
     const reply = await chatWithAssistant(
       orderedHistory,
       message.trim(),
-      { name: persona.personaName, tone: persona.tone },
+      { name: persona.personaName, tone: persona.tone, personalityType: persona.personalityType ?? undefined },
       sessionContext,
     );
 
@@ -344,11 +374,12 @@ router.post("/ai/generate-event", requireAuth, async (req: any, res: any) => {
 // ── POST /ai/voice ─────────────────────────────────────────────────────────────
 router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
   try {
-    const { text, voice } = req.body;
+    const { text, voice, speed } = req.body;
     if (!text?.trim()) return res.status(400).json({ error: "text is required" });
 
     const safeVoice: VoiceOption = VALID_VOICES.includes(voice) ? voice : "nova";
-    const audioBuffer = await generateVoice(text.trim(), safeVoice);
+    const safeSpeed = Math.max(0.25, Math.min(4.0, Number(speed) || 1.0));
+    const audioBuffer = await generateVoice(text.trim(), safeVoice, safeSpeed);
 
     if (!audioBuffer) {
       return res.status(503).json({ error: "Voice generation failed. Check OpenAI configuration." });
@@ -361,6 +392,30 @@ router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
   } catch (err: any) {
     console.error("[AI] /ai/voice error:", err?.message);
     res.status(500).json({ error: "Failed to generate voice" });
+  }
+});
+
+// ── POST /ai/content ───────────────────────────────────────────────────────────
+router.post("/ai/content", requireAuth, async (req: any, res: any) => {
+  try {
+    const { type, topic, style, audience, language } = req.body;
+    if (!topic?.trim()) return res.status(400).json({ error: "topic is required" });
+
+    const VALID_TYPES = ["ideas", "titles", "descriptions", "hashtags", "script"];
+    const safeType = VALID_TYPES.includes(type) ? type : "ideas";
+    const safeLang = VALID_LANGUAGES.includes(language) ? language : "en";
+
+    const result = await generateContent({
+      type: safeType,
+      topic: String(topic).trim().slice(0, 200),
+      style: style ? String(style).slice(0, 100) : undefined,
+      audience: audience ? String(audience).slice(0, 100) : undefined,
+      language: safeLang,
+    });
+
+    res.json(result);
+  } catch {
+    res.status(500).json({ error: "Failed to generate content" });
   }
 });
 

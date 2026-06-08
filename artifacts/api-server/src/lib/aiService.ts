@@ -19,12 +19,26 @@ function getToneGuide(tone: string): string {
   );
 }
 
+function getPersonalityGuide(personalityType: string): string {
+  return (
+    {
+      funny: "comedic, uses jokes and humor, keeps things lighthearted and entertaining",
+      serious: "focused, professional, serious — no jokes, delivers real value",
+      troll: "playfully provocative, edgy banter, witty comebacks — never actually mean",
+      motivator: "intensely inspiring, always uplifting, encourages viewers to push harder",
+      battle: "intense sports commentator energy, dramatic play-by-play of every stream event",
+      friendly: "warm, welcoming, supportive and encouraging",
+    }[personalityType] ?? "enthusiastic and engaging"
+  );
+}
+
 const LANG_INSTRUCTIONS: Record<string, string> = {
   en: "Always respond in English.",
   uk: "Завжди відповідай українською мовою.",
   pl: "Zawsze odpowiadaj po polsku.",
+  de: "Antworte immer auf Deutsch.",
   ru: "Всегда отвечай на русском языке.",
-  auto: "Detect the language of the viewer's message and respond in the SAME language they used. If the message is in Ukrainian (uk), respond in Ukrainian. If Polish (pl), respond in Polish. If Russian (ru), respond in Russian. Otherwise, respond in English.",
+  auto: "Detect the language of the viewer's message and respond in the SAME language they used. If the message is in Ukrainian (uk), respond in Ukrainian. If Polish (pl), respond in Polish. If German (de), respond in German. If Russian (ru), respond in Russian. Otherwise, respond in English.",
 };
 
 export async function generateAnnouncement(event: {
@@ -71,10 +85,11 @@ export async function generateAnnouncement(event: {
 export async function generateCommentReply(
   comment: string,
   viewerName: string,
-  persona: { name: string; tone: string },
+  persona: { name: string; tone: string; personalityType?: string },
   language: string = "auto",
 ): Promise<string> {
   const toneGuide = getToneGuide(persona.tone);
+  const personalityGuide = persona.personalityType ? getPersonalityGuide(persona.personalityType) : "";
   const langInstruction = LANG_INSTRUCTIONS[language] ?? LANG_INSTRUCTIONS.auto;
 
   try {
@@ -85,10 +100,13 @@ export async function generateCommentReply(
           role: "system",
           content: [
             `You are ${persona.name}, a TikTok LIVE co-host AI with a ${toneGuide} personality.`,
+            personalityGuide ? `Additional personality trait: ${personalityGuide}.` : "",
             langInstruction,
             "Keep your reply SHORT — under 80 characters. Make it personal, engaging, and reference the viewer by name.",
             "Never use hashtags. Never explain yourself. Just reply naturally like a real streamer.",
-          ].join(" "),
+          ]
+            .filter(Boolean)
+            .join(" "),
         },
         {
           role: "user",
@@ -213,13 +231,15 @@ export async function generateEvent(context: {
 export async function chatWithAssistant(
   history: Array<{ role: "user" | "assistant"; content: string }>,
   message: string,
-  persona: { name: string; tone: string },
+  persona: { name: string; tone: string; personalityType?: string },
   sessionContext?: string,
 ): Promise<string> {
   const toneGuide = getToneGuide(persona.tone);
+  const personalityGuide = persona.personalityType ? getPersonalityGuide(persona.personalityType) : "";
   const systemPrompt = [
     `You are ${persona.name}, an AI co-host and strategy assistant for TikTok LIVE streamers.`,
     `Your tone is ${toneGuide}.`,
+    personalityGuide ? `Your personality is ${personalityGuide}.` : "",
     `You help streamers grow their audience, plan engaging content, understand their analytics, run games, manage boss battles, and optimize their LIVE sessions.`,
     `Keep responses concise and actionable (under 200 words). Use line breaks for readability.`,
     sessionContext ? `\nCurrent session context:\n${sessionContext}` : "",
@@ -250,19 +270,73 @@ export async function chatWithAssistant(
 export async function generateVoice(
   text: string,
   voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "nova",
+  speed = 1.0,
 ): Promise<Buffer | null> {
   try {
     const truncated = text.slice(0, 500);
+    const safeSpeed = Math.max(0.25, Math.min(4.0, speed));
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice,
       input: truncated,
-      speed: 1.1,
+      speed: safeSpeed,
     });
     const arrayBuffer = await mp3.arrayBuffer();
     return Buffer.from(arrayBuffer);
   } catch (err: any) {
     console.error("[TTS] generateVoice error:", err?.message);
     return null;
+  }
+}
+
+export async function generateContent(params: {
+  type: string;
+  topic: string;
+  style?: string;
+  audience?: string;
+  language?: string;
+}): Promise<{ items?: string[]; script?: string }> {
+  const langInstruction = LANG_INSTRUCTIONS[params.language ?? "en"] ?? LANG_INSTRUCTIONS.en;
+
+  const styleNote = params.style ? ` in ${params.style} style` : "";
+  const audienceNote = params.audience ? ` for ${params.audience}` : "";
+
+  const typePrompts: Record<string, string> = {
+    ideas: `Generate 6 creative and viral TikTok LIVE stream ideas about "${params.topic}"${styleNote}${audienceNote}. Each idea should be unique, actionable, and engaging. Return JSON: {"items": ["idea1", "idea2", ...]}`,
+    titles: `Generate 8 catchy TikTok LIVE stream titles about "${params.topic}"${audienceNote}. Make them attention-grabbing and click-worthy with emojis where appropriate. Return JSON: {"items": ["title1", "title2", ...]}`,
+    descriptions: `Generate 5 compelling TikTok LIVE stream descriptions about "${params.topic}"${styleNote}. Each description is 2-3 sentences. Include a hook and call-to-action. Return JSON: {"items": ["desc1", "desc2", ...]}`,
+    hashtags: `Generate 20 TikTok hashtags for a LIVE stream about "${params.topic}"${audienceNote}. Mix very popular (#fyp, #viral), niche-specific, and topic-specific hashtags. Return JSON: {"items": ["#tag1", "#tag2", ...]}`,
+    script: `Write a 90-second TikTok LIVE stream opening script about "${params.topic}"${styleNote}${audienceNote}. Include: energetic greeting, attention hook, what viewers will experience, interactive element prompt, and follow/subscribe call-to-action. Make it natural and conversational. Return JSON: {"script": "full script text here with natural paragraph breaks"}`,
+  };
+
+  const prompt = typePrompts[params.type] ?? typePrompts.ideas;
+
+  try {
+    const resp = await openai.chat.completions.create({
+      model: SMART_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `You are an expert TikTok content strategist and viral content creator. ${langInstruction} Always return valid JSON only — no text outside JSON.`,
+        },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 1000,
+      temperature: 0.87,
+      response_format: { type: "json_object" },
+    });
+
+    const raw = JSON.parse(resp.choices[0]?.message?.content ?? "{}");
+
+    if (params.type === "script") {
+      return { script: String(raw.script ?? "") };
+    }
+
+    const items = Array.isArray(raw.items) ? raw.items.map(String) : [];
+    return { items };
+  } catch (err: any) {
+    console.error("[AI] generateContent error:", err?.message);
+    if (params.type === "script") return { script: "" };
+    return { items: [] };
   }
 }

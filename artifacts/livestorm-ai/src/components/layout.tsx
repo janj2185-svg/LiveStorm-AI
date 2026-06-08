@@ -16,31 +16,35 @@ import {
   Sword,
   Gamepad2,
   Globe,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-const NAVIGATION = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Live Studio", href: "/live-studio", icon: Video },
-  { name: "Gamification", href: "/gamification", icon: Trophy },
-  { name: "Boss Battle", href: "/boss-battle", icon: Sword },
-  { name: "Kingdom", href: "/kingdom", icon: Castle },
-  { name: "Mini-Games", href: "/mini-games", icon: Gamepad2 },
-  { name: "Universe", href: "/universe", icon: Globe },
-  { name: "Automation", href: "/automation", icon: Zap },
-  { name: "Overlays", href: "/overlays", icon: Layers },
-  { name: "AI Assistant", href: "/ai-assistant", icon: Bot },
-  { name: "Settings", href: "/settings", icon: SettingsIcon },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { t } = useLanguage();
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  const NAVIGATION = [
+    { name: t("nav_dashboard"), href: "/dashboard", icon: LayoutDashboard, testId: "dashboard" },
+    { name: t("nav_live_studio"), href: "/live-studio", icon: Video, testId: "live-studio" },
+    { name: t("nav_gamification"), href: "/gamification", icon: Trophy, testId: "gamification" },
+    { name: t("nav_boss_battle"), href: "/boss-battle", icon: Sword, testId: "boss-battle" },
+    { name: t("nav_kingdom"), href: "/kingdom", icon: Castle, testId: "kingdom" },
+    { name: t("nav_mini_games"), href: "/mini-games", icon: Gamepad2, testId: "mini-games" },
+    { name: t("nav_universe"), href: "/universe", icon: Globe, testId: "universe" },
+    { name: t("nav_automation"), href: "/automation", icon: Zap, testId: "automation" },
+    { name: t("nav_overlays"), href: "/overlays", icon: Layers, testId: "overlays" },
+    { name: t("nav_ai_assistant"), href: "/ai-assistant", icon: Bot, testId: "ai-assistant" },
+    { name: t("nav_ai_content"), href: "/ai-content", icon: Wand2, testId: "ai-content" },
+    { name: t("nav_settings"), href: "/settings", icon: SettingsIcon, testId: "settings" },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
@@ -66,22 +70,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <span className="font-bold text-xl tracking-tight text-white">LiveStorm AI</span>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4 md:mt-0 overflow-y-auto">
+        <nav className="flex-1 px-4 space-y-1 mt-4 md:mt-0 overflow-y-auto">
           {NAVIGATION.map((item) => {
             const isActive = location === item.href;
             const Icon = item.icon;
             return (
-              <Link key={item.name} href={item.href} className="block" onClick={() => setIsSidebarOpen(false)}>
+              <Link key={item.href} href={item.href} className="block" onClick={() => setIsSidebarOpen(false)}>
                 <div
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-pointer ${
                     isActive
                       ? "bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(124,58,237,0.2)]"
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                   }`}
-                  data-testid={`link-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
+                  data-testid={`link-${item.testId}`}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.name}</span>
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <span className="font-medium text-sm truncate">{item.name}</span>
                 </div>
               </Link>
             );
@@ -111,17 +115,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
               data-testid="button-logout"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+              {t("sign_out")}
             </Button>
           </div>
         )}
       </aside>
 
+      {/* Overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="hidden md:flex items-center justify-between p-4 border-b border-border bg-card/50 backdrop-blur">
           <h1 className="text-xl font-semibold capitalize">
-            {location.replace("/", "").replace("-", " ") || "Dashboard"}
+            {location.replace("/", "").replace(/-/g, " ") || "Dashboard"}
           </h1>
         </header>
         <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">

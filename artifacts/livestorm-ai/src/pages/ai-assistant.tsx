@@ -46,6 +46,9 @@ type PersonaConfig = {
   streamerId: number;
   personaName: string;
   tone: string;
+  personalityType: string;
+  customPersonality: string | null;
+  operatingMode: string;
   announceGifts: boolean;
   announceGiftThreshold: number;
   announceLevelUp: boolean;
@@ -57,6 +60,9 @@ type PersonaConfig = {
   spamCooldownSeconds: number;
   voiceEnabled: boolean;
   voiceName: string;
+  voiceSpeed: number;
+  voiceVolume: number;
+  voiceEmotion: string;
 };
 
 type ChatMessage = {
@@ -101,7 +107,23 @@ const LANGUAGE_OPTIONS = [
   { value: "en", label: "English", flag: "🇬🇧" },
   { value: "uk", label: "Українська", flag: "🇺🇦" },
   { value: "pl", label: "Polski", flag: "🇵🇱" },
+  { value: "de", label: "Deutsch", flag: "🇩🇪" },
   { value: "ru", label: "Русский", flag: "🇷🇺" },
+];
+
+const PERSONALITY_OPTIONS = [
+  { value: "funny", label: "Funny", emoji: "😂" },
+  { value: "serious", label: "Serious", emoji: "🎯" },
+  { value: "troll", label: "Troll", emoji: "😈" },
+  { value: "motivator", label: "Motivator", emoji: "💪" },
+  { value: "battle", label: "Battle", emoji: "⚔️" },
+  { value: "friendly", label: "Friendly", emoji: "😊" },
+];
+
+const OPERATING_MODES = [
+  { value: "assistant", label: "Assistant", emoji: "💡", desc: "AI suggests replies, you approve before sending" },
+  { value: "semi-auto", label: "Semi-Auto", emoji: "⚡", desc: "AI auto-handles simple messages, you control the rest" },
+  { value: "autopilot", label: "Autopilot", emoji: "🤖", desc: "AI fully manages all chat interactions" },
 ];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -516,6 +538,33 @@ export function AiAssistant() {
     }
   };
 
+  const handleVoicePreview = async () => {
+    if (!config || isVoicePreviewing) return;
+    setIsVoicePreviewing(true);
+    try {
+      const previewText = `Hey! I'm ${config.personaName}, your AI co-host. Let's make this stream absolutely amazing!`;
+      const resp = await fetch(`${API_BASE}/ai/voice`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: previewText,
+          voice: config.voiceName ?? "nova",
+          speed: config.voiceSpeed ?? 1.0,
+        }),
+      });
+      if (!resp.ok) throw new Error("Voice generation failed");
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => { URL.revokeObjectURL(url); setIsVoicePreviewing(false); };
+      audio.onerror = () => { URL.revokeObjectURL(url); setIsVoicePreviewing(false); };
+      await audio.play();
+    } catch {
+      setIsVoicePreviewing(false);
+    }
+  };
+
   // ── Filtered event feed ───────────────────────────────────────────────────────
   const feedEvents = useMemo(
     () => events.filter((e) => e.type !== "viewerCount").slice(0, 80),
@@ -526,8 +575,9 @@ export function AiAssistant() {
 
   // ── Settings sidebar sections (collapsible on mobile) ─────────────────────────
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["persona", "voice", "language", "autoreply"]),
+    new Set(["persona", "mode", "voice", "language", "autoreply"]),
   );
+  const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -663,8 +713,52 @@ export function AiAssistant() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Personality</Label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {PERSONALITY_OPTIONS.map((p) => (
+                      <button
+                        key={p.value}
+                        onClick={() => updateConfig.mutate({ personalityType: p.value })}
+                        className={cn(
+                          "flex flex-col items-center justify-center py-1.5 px-1 rounded-md border text-xs transition-all",
+                          (config?.personalityType ?? "friendly") === p.value
+                            ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
+                            : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                        )}
+                      >
+                        <span className="text-base leading-none mb-0.5">{p.emoji}</span>
+                        <span className="font-medium text-[10px]">{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
+          </SidebarSection>
+
+          {/* Operating Mode */}
+          <SidebarSection isOpen={expandedSections.has("mode")} onToggle={() => toggleSection("mode")} title="Operating Mode" icon={<Radio className="h-4 w-4 text-emerald-400" />}>
+            <div className="space-y-1.5">
+              {OPERATING_MODES.map((mode) => (
+                <button
+                  key={mode.value}
+                  onClick={() => updateConfig.mutate({ operatingMode: mode.value })}
+                  className={cn(
+                    "w-full flex items-start gap-2.5 p-2.5 rounded-lg border text-left transition-all",
+                    (config?.operatingMode ?? "assistant") === mode.value
+                      ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300"
+                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                  )}
+                >
+                  <span className="text-base mt-0.5 flex-shrink-0">{mode.emoji}</span>
+                  <div>
+                    <div className="text-xs font-semibold">{mode.label}</div>
+                    <div className="text-[10px] opacity-70 leading-relaxed mt-0.5">{mode.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </SidebarSection>
 
           {/* Voice Controls */}
@@ -699,25 +793,64 @@ export function AiAssistant() {
               )}
             </div>
             {ttsMode === "openai" && (
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Voice</Label>
-                <div className="grid grid-cols-2 gap-1">
-                  {VOICE_OPTIONS.map((v) => (
-                    <button
-                      key={v.value}
-                      onClick={() => handleTtsVoiceChange(v.value)}
-                      className={cn(
-                        "text-left px-2.5 py-1.5 rounded-md border text-xs transition-all",
-                        ttsVoice === v.value
-                          ? "border-blue-500/50 bg-blue-500/10 text-blue-300"
-                          : "border-white/5 bg-white/3 text-muted-foreground hover:border-white/10 hover:text-white",
-                      )}
-                    >
-                      <div className="font-medium">{v.label}</div>
-                      <div className="text-[10px] opacity-70">{v.desc}</div>
-                    </button>
-                  ))}
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Voice</Label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {VOICE_OPTIONS.map((v) => (
+                      <button
+                        key={v.value}
+                        onClick={() => handleTtsVoiceChange(v.value)}
+                        className={cn(
+                          "text-left px-2.5 py-1.5 rounded-md border text-xs transition-all",
+                          ttsVoice === v.value
+                            ? "border-blue-500/50 bg-blue-500/10 text-blue-300"
+                            : "border-white/5 bg-white/3 text-muted-foreground hover:border-white/10 hover:text-white",
+                        )}
+                      >
+                        <div className="font-medium">{v.label}</div>
+                        <div className="text-[10px] opacity-70">{v.desc}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                <div className="space-y-1.5 pt-1 border-t border-white/5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">Speed</Label>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {(config?.voiceSpeed ?? 1.0).toFixed(2)}x
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.25"
+                    max="2"
+                    step="0.05"
+                    key={config?.voiceSpeed}
+                    defaultValue={config?.voiceSpeed ?? 1.0}
+                    onMouseUp={(e) => updateConfig.mutate({ voiceSpeed: Number((e.target as HTMLInputElement).value) })}
+                    onTouchEnd={(e) => updateConfig.mutate({ voiceSpeed: Number((e.target as HTMLInputElement).value) })}
+                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                    <span>0.25×</span>
+                    <span>1×</span>
+                    <span>2×</span>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-500/10 h-7 text-xs"
+                  onClick={handleVoicePreview}
+                  disabled={isVoicePreviewing}
+                >
+                  {isVoicePreviewing ? (
+                    <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Generating…</>
+                  ) : (
+                    <><Play className="h-3 w-3 mr-1.5" />Preview Voice</>
+                  )}
+                </Button>
               </div>
             )}
           </SidebarSection>
