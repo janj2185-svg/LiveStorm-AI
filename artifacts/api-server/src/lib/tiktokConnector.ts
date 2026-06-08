@@ -25,6 +25,31 @@ import {
   type TikTokSocialEvent,
   type TikTokViewerCountEvent,
 } from "./tiktokLiveClient.js";
+import { TikToolsClient } from "./tikToolsClient.js";
+
+// ── Provider factory ──────────────────────────────────────────────────────────
+// Set LIVE_PROVIDER=tiktools + TIKTOOL_API_KEY to use tik.tools.
+// Any other value (or unset) falls back to the Eulerstream path.
+
+function createLiveProvider(
+  username: string,
+  options: { onBeforeReconnect?: () => Promise<boolean> },
+): TikTokLiveClient | TikToolsClient {
+  const provider = (process.env.LIVE_PROVIDER ?? "").trim().toLowerCase();
+  if (provider === "tiktools") {
+    if (!process.env.TIKTOOL_API_KEY) {
+      console.warn(
+        "[LiveProvider] LIVE_PROVIDER=tiktools but TIKTOOL_API_KEY is not set. " +
+        "Get a free key at https://tik.tools — falling back to Eulerstream.",
+      );
+      return new TikTokLiveClient(username, options);
+    }
+    console.log(`[LiveProvider] Using tik.tools provider for @${username}`);
+    return new TikToolsClient(username, options);
+  }
+  console.log(`[LiveProvider] Using Eulerstream provider for @${username}`);
+  return new TikTokLiveClient(username, options);
+}
 import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
 import { isNull, eq as dbEq, lt, and as dbAnd } from "drizzle-orm";
 
@@ -102,7 +127,7 @@ async function startLiveConnector(
 ): Promise<{ ok: boolean; error?: string; polling?: boolean }> {
   const roomId = `session:${sessionId}`;
 
-  const client = new TikTokLiveClient(tiktokUsername, {
+  const client = createLiveProvider(tiktokUsername, {
     // Before every reconnect attempt: verify this session is still open in the DB.
     // Stops ghost connectors for sessions whose ended_at was set (e.g. after a stop
     // call that couldn't reach the in-memory client due to the missing stopConnection bug).

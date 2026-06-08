@@ -1,0 +1,379 @@
+/**
+ * TikTools (tik.tools) LIVE client — drop-in replacement for TikTokLiveClient.
+ *
+ * Uses tik.tools' JWT-authenticated WebSocket API (wss://api.tik.tools).
+ * Emits identical events to TikTokLiveClient so tiktokConnector.ts needs
+ * zero changes beyond swapping the constructor.
+ *
+ * Requires: TIKTOOL_API_KEY env var (free key at https://tik.tools).
+ * Activate: set LIVE_PROVIDER=tiktools in environment.
+ */
+
+import { EventEmitter } from "node:events";
+import WebSocket from "ws";
+
+// ── Event types (mirrors TikTokLiveClient interface exactly) ──────────────────
+
+export interface TikToolsChatEvent {
+  username: string;
+  comment: string;
+}
+export interface TikToolsGiftEvent {
+  username: string;
+  giftName: string;
+  coins: number;
+  count: number;
+  repeatEnd: boolean;
+}
+export interface TikToolsLikeEvent {
+  username: string;
+  likeCount: number;
+  total: number;
+}
+export interface TikToolsSocialEvent {
+  username: string;
+  action: "follow" | "share" | "join";
+}
+export interface TikToolsViewerCountEvent {
+  count: number;
+}
+
+interface TikToolsOptions {
+  onBeforeReconnect?: () => Promise<boolean>;
+}
+
+interface TikToolsRawEvent {
+  event: string;
+  data?: Record<string, any>;
+}
+
+const API_BASE = "https://api.tik.tools";
+const WS_BASE = "wss://api.tik.tools";
+
+// ── TikToolsClient ────────────────────────────────────────────────────────────
+
+export class TikToolsClient extends EventEmitter {
+  private username: string;
+  private stopped = false;
+  private ws: WebSocket | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectDelay = 15_000;
+  private rawEventCount = 0;
+  private options: TikToolsOptions;
+
+  constructor(username: string, options: TikToolsOptions = {}) {
+    super();
+    this.username = username.replace(/^@/, "").trim();
+    this.options = options;
+  }
+
+  /**
+   * Begin connecting. Resolves once the WebSocket is open OR once "notLive"
+   * polling is established — mirroring TikTokLiveClient.connect() behaviour.
+   */
+  async connect(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      let settled = false;
+      const settle = () => {
+        if (!settled) {
+          settled = true;
+          resolve();
+        }
+      };
+      void this._connectAttempt(settle);
+    });
+  }
+
+  private async _connectAttempt(settle: () => void): Promise<void> {
+    if (this.stopped) {
+      settle();
+      return;
+    }
+
+    // Guard: ask the session layer whether we should still reconnect
+    if (this.options.onBeforeReconnect) {
+      try {
+        const shouldContinue = await this.options.onBeforeReconnect();
+        if (!shouldContinue) {
+          this.stopped = true;
+          settle();
+          return;
+        }
+      } catch (err: any) {
+        console.error(`[TikTools] onBeforeReconnect error: ${err?.message}`);
+      }
+    }
+
+    const apiKey = process.env.TIKTOOL_API_KEY;
+    if (!apiKey) {
+      const msg =
+        "TIKTOOL_API_KEY is not set. Get a free key at https://tik.tools " +
+        "and add it as TIKTOOL_API_KEY in your environment secrets.";
+      console.error(`[TikTools] ${msg}`);
+      this.emit("wsError", new Error(msg));
+      settle();
+      return;
+    }
+
+    // ── 1. Obtain JWT from tik.tools ─────────────────────────────────────────
+    let token: string;
+    try {
+      const resp = await fetch(
+        `${API_BASE}/authentication/jwt?apiKey=${encodeURIComponent(apiKey)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            allowed_creators: [this.username],
+            expire_after: 3600,
+            max_websockets: 1,
+          }),
+        },
+      );
+      const j = (await resp.json()) as any;
+
+      if (!j?.data?.token) {
+        const errMsg: string =
+          j?.error ?? j?.message ?? `HTTP ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`;
+        console.warn(`[TikTools] JWT auth failed for @${this.username}: ${errMsg}`);
+        if (this._isNotLiveError(errMsg)) {
+          const msg =
+            `@${this.username} is not currently streaming on TikTok LIVE. ` +
+            `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+          this.emit("notLive", { username: this.username, message: msg });
+          this._scheduleRetry(30_000, settle);
+          return;
+        }
+        throw new Error(errMsg);
+      }
+      token = j.data.token as string;
+      console.log(`[TikTools] JWT acquired for @${this.username} — opening WebSocket`);
+    } catch (err: any) {
+      console.error(`[TikTools] JWT fetch error for @${this.username}: ${err?.message}`);
+      if (!this.stopped) {
+        this.emit("wsError", err instanceof Error ? err : new Error(String(err)));
+        this._scheduleRetry(this.reconnectDelay, settle);
+        this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
+      }
+      return;
+    }
+
+    // ── 2. Connect WebSocket ──────────────────────────────────────────────────
+    this.rawEventCount = 0;
+    const wsUrl = `${WS_BASE}?uniqueId=${encodeURIComponent(this.username)}&jwtKey=${encodeURIComponent(token)}`;
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (err: any) {
+      console.error(`[TikTools] WS constructor failed: ${err?.message}`);
+      this.emit("wsError", err instanceof Error ? err : new Error(String(err)));
+      settle();
+      return;
+    }
+    this.ws = ws;
+
+    let connectedAt: number | null = null;
+    let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    ws.on("open", () => {
+      connectedAt = Date.now();
+      this.reconnectDelay = 15_000; // reset backoff on successful open
+      console.log(`[TikTools] ✓ WebSocket open for @${this.username}`);
+      this.emit("connected", { roomId: this.username });
+      settle();
+
+      // If connected but silent for 60 s → likely not live
+      silenceTimer = setTimeout(() => {
+        if (this.rawEventCount === 0 && !this.stopped) {
+          console.warn(
+            `[TikTools] 60 s silence with 0 events @${this.username} — ` +
+            `stream may not be live. Closing to retry.`,
+          );
+          ws.close(1000, "silence_timeout");
+        }
+      }, 60_000);
+    });
+
+    ws.on("message", (data: Buffer | string) => {
+      // Cancel the silence watchdog on first message
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+
+      let msg: TikToolsRawEvent;
+      try {
+        msg = JSON.parse(data.toString()) as TikToolsRawEvent;
+      } catch {
+        return;
+      }
+
+      if (msg.event !== "roomInfo") {
+        this.rawEventCount++;
+        if (this.rawEventCount === 1) {
+          console.log(
+            `[Pipeline:1] [TikTools] FIRST packet from @${this.username} — event=${msg.event}`,
+          );
+        } else if (this.rawEventCount <= 10 || this.rawEventCount % 50 === 0) {
+          console.log(
+            `[Pipeline:1] [TikTools] Packet #${this.rawEventCount} event=${msg.event} @${this.username}`,
+          );
+        }
+      }
+
+      this._handleEvent(msg);
+    });
+
+    ws.on("close", (code: number, reasonBuf: Buffer) => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+      this.ws = null;
+      this.emit("disconnected", code);
+      settle(); // idempotent — no-op if already settled
+
+      if (this.stopped) return;
+
+      const reason = reasonBuf?.toString?.() ?? "";
+      const connectedMs = connectedAt != null ? Date.now() - connectedAt : 0;
+
+      if (reason === "silence_timeout") {
+        // Our own watchdog fired → user is not streaming
+        const msg =
+          `@${this.username} is not currently streaming on TikTok LIVE. ` +
+          `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+        this.emit("notLive", { username: this.username, message: msg });
+        this._scheduleRetry(30_000, settle);
+      } else if (this.rawEventCount === 0 && connectedMs < 20_000) {
+        // Quick close with zero events = room not live / JWT rejected
+        console.warn(
+          `[TikTools] Quick close (${connectedMs} ms, 0 events, code=${code}) ` +
+          `@${this.username} — treating as not-live, polling in 30 s`,
+        );
+        const msg =
+          `@${this.username} is not currently streaming on TikTok LIVE. ` +
+          `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+        this.emit("notLive", { username: this.username, message: msg });
+        this._scheduleRetry(30_000, settle);
+      } else {
+        // Normal disconnect mid-stream → reconnect with backoff
+        console.warn(
+          `[TikTools] WS closed (code=${code} reason="${reason}" packets=${this.rawEventCount}) ` +
+          `@${this.username} — reconnecting in ${this.reconnectDelay / 1000}s`,
+        );
+        this._scheduleRetry(this.reconnectDelay, settle);
+        this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
+      }
+    });
+
+    ws.on("error", (err: Error) => {
+      console.error(`[TikTools] WS error @${this.username}: ${err?.message}`);
+      if (!this.stopped) {
+        this.emit("wsError", err);
+      }
+    });
+  }
+
+  // ── Event mapping ───────────────────────────────────────────────────────────
+
+  private _handleEvent(msg: TikToolsRawEvent): void {
+    const d = msg.data ?? {};
+    const username: string =
+      d.user?.nickname ??
+      d.user?.uniqueId ??
+      d.user?.unique_id ??
+      d.user_unique_id ??
+      "unknown";
+
+    switch (msg.event) {
+      case "chat":
+        this.emit("chat", {
+          username,
+          comment: String(d.comment ?? ""),
+        } satisfies TikToolsChatEvent);
+        break;
+
+      case "gift":
+        this.emit("gift", {
+          username,
+          giftName: String(d.giftName ?? d.gift_name ?? "Gift"),
+          coins: Number(d.diamondCount ?? d.diamond_count ?? 0),
+          count: Number(d.repeatCount ?? d.repeat_count ?? 1),
+          repeatEnd: Boolean(d.repeatEnd ?? d.repeat_end ?? true),
+        } satisfies TikToolsGiftEvent);
+        break;
+
+      case "like":
+        this.emit("like", {
+          username,
+          likeCount: Number(d.likeCount ?? d.like_count ?? 1),
+          total: Number(d.totalLikeCount ?? d.total_like_count ?? 0),
+        } satisfies TikToolsLikeEvent);
+        break;
+
+      case "follow":
+        this.emit("social", { username, action: "follow" } satisfies TikToolsSocialEvent);
+        break;
+
+      case "share":
+        this.emit("social", { username, action: "share" } satisfies TikToolsSocialEvent);
+        break;
+
+      case "member":
+        this.emit("social", { username, action: "join" } satisfies TikToolsSocialEvent);
+        break;
+
+      case "roomInfo":
+        this.emit("viewerCount", {
+          count: Number(d.viewerCount ?? d.viewer_count ?? 0),
+        } satisfies TikToolsViewerCountEvent);
+        break;
+
+      // Unknown events are silently ignored
+    }
+  }
+
+  private _isNotLiveError(msg: string): boolean {
+    const m = msg.toLowerCase();
+    return (
+      m.includes("not live") ||
+      m.includes("not_live") ||
+      m.includes("offline") ||
+      m.includes("no active") ||
+      m.includes("room not found") ||
+      m.includes("creator not found") ||
+      m.includes("invalid creator") ||
+      m.includes("creator_not_found") ||
+      m.includes("not found") ||
+      m.includes("no stream")
+    );
+  }
+
+  private _scheduleRetry(delay: number, settle: () => void): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
+    this.reconnectTimer = setTimeout(() => {
+      if (!this.stopped) {
+        void this._connectAttempt(settle);
+      }
+    }, delay);
+  }
+
+  stopConnection(): void {
+    this.stopped = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    if (this.ws) {
+      try {
+        this.ws.close(1000, "stopped");
+      } catch {
+        // ignore
+      }
+      this.ws = null;
+    }
+  }
+}
