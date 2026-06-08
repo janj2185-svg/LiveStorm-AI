@@ -68,6 +68,21 @@ async function getRoomId(username: string): Promise<string> {
 
 // ── Step 2: Verify live ───────────────────────────────────────────────────────
 
+const NOT_LIVE_MSG = (username: string) =>
+  `@${username} is not currently streaming on TikTok LIVE. ` +
+  `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+
+/** Returns true when the error means "user isn't live yet" (retriable). */
+export function isNotLiveError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    msg.includes("not currently streaming") ||
+    msg.includes("not started") ||
+    msg.includes("no room ID found") ||
+    msg.includes("Start a TikTok LIVE")
+  );
+}
+
 async function verifyRoomIsLive(roomId: string, username: string): Promise<void> {
   const res = await tiktokFetch(
     `https://webcast.tiktok.com/webcast/room/info/?room_id=${roomId}&aid=1988`,
@@ -76,13 +91,21 @@ async function verifyRoomIsLive(roomId: string, username: string): Promise<void>
     throw new Error(`Room info API returned HTTP ${res.status}.`);
   }
   const body = (await res.json()) as Record<string, any>;
-  const status: number | undefined = body?.data?.status;
+  const data = body?.data as Record<string, unknown> | undefined;
+
+  // TikTok returns {"data": {}} (empty object) when the room is not live.
+  // status field is only present when the room IS active.
+  if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
+    throw new Error(NOT_LIVE_MSG(username));
+  }
+
+  const status = data.status as number | undefined;
   if (status !== undefined && status !== 4) {
     throw new Error(
       status === 2
-        ? `@${username} has not started their LIVE yet.`
-        : `@${username} is not currently streaming (room status: ${status}). ` +
-          `Start a TikTok LIVE first.`,
+        ? `@${username} has not started their LIVE yet. ` +
+          `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`
+        : NOT_LIVE_MSG(username),
     );
   }
 }
@@ -199,7 +222,13 @@ export class TikTokLiveClient extends EventEmitter {
     this.username = username.replace(/^@/, "").trim();
   }
 
-  /** Connect to TikTok LIVE. Throws on initial connection failure. */
+  /**
+   * Connect to TikTok LIVE.
+   * - Throws on hard errors (network, auth).
+   * - If @username is not live yet: emits "notLive" and auto-retries every 30 s
+   *   in the background. Does NOT throw in this case — caller should listen for
+   *   the "notLive" event to show an appropriate UI message.
+   */
   async connect(): Promise<void> {
     this.stopped = false;
     await this._fullConnect();
@@ -209,16 +238,32 @@ export class TikTokLiveClient extends EventEmitter {
     if (this.stopped) return;
 
     console.log(`[TikTok] Connecting to @${this.username}...`);
-    const roomId = await getRoomId(this.username);
-    console.log(`[TikTok] Room ID: ${roomId}`);
+    try {
+      const roomId = await getRoomId(this.username);
+      console.log(`[TikTok] Room ID: ${roomId}`);
 
-    await verifyRoomIsLive(roomId, this.username);
-    console.log(`[TikTok] Room verified live.`);
+      await verifyRoomIsLive(roomId, this.username);
+      console.log(`[TikTok] Room verified live.`);
 
-    const wsUrl = await getWebSocketUrl(roomId);
-    console.log(`[TikTok] Connecting WebSocket...`);
+      const wsUrl = await getWebSocketUrl(roomId);
+      console.log(`[TikTok] Connecting WebSocket...`);
 
-    await this._connectWebSocket(wsUrl, roomId);
+      await this._connectWebSocket(wsUrl, roomId);
+    } catch (err: any) {
+      if (this.stopped) return;
+
+      if (isNotLiveError(err)) {
+        // @username isn't live yet — emit event, then silently poll every 30 s
+        console.log(
+          `[TikTok] @${this.username} is not live yet — will retry in 30 s. (${err.message.split(".")[0]})`,
+        );
+        this.emit("notLive", { username: this.username, message: err.message });
+        setTimeout(() => this._fullConnect(), 30_000);
+        return; // do not throw — polling is now active
+      }
+
+      throw err; // hard error — propagate to connect()
+    }
   }
 
   private _connectWebSocket(wsUrl: string, roomId: string): Promise<void> {

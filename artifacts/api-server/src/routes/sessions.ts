@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, isNull, and } from "drizzle-orm";
 import { requireAuth, getOrCreateUser } from "./users";
 import { getIO } from "../lib/socketServer";
 import {
@@ -8,6 +8,7 @@ import {
   stopTikTokConnection,
   getConnectionMode,
   getConnectionError,
+  isRealModeEnabled,
   type ConnectionMode,
 } from "../lib/tiktokConnector";
 
@@ -23,7 +24,40 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
       return res.status(404).json({ error: "No streamer profile. Connect TikTok first." });
     }
 
+    // Helper: resolve the TikTok username for this user
+    const resolveUsername = async (): Promise<string | null> => {
+      const fromBody = typeof req.body?.tiktokUsername === "string" ? req.body.tiktokUsername.trim() : null;
+      if (fromBody) return fromBody;
+      const ur = await db.query.usersTable.findFirst({ where: eq(usersTable.id, user.id) });
+      return ur?.tiktokUsername || streamer.tiktokLiveId || null;
+    };
+
     if (streamer.isLive) {
+      // The DB says this streamer is live. Check if the connector is actually running.
+      // It won't be after a server restart — the in-memory map is cleared on boot.
+      const existingSession = await db.query.sessionsTable.findFirst({
+        where: and(eq(sessionsTable.streamerId, streamer.id), isNull(sessionsTable.endedAt)),
+        orderBy: [desc(sessionsTable.startedAt)],
+      });
+
+      if (existingSession && !getConnectionMode(existingSession.id)) {
+        // Connector died (server restart) — reconnect without creating a new session
+        const tiktokUsername = await resolveUsername();
+        const forceDemoMode = req.body?.demoMode === true || !tiktokUsername;
+        const io = getIO();
+        let actualMode: ConnectionMode = forceDemoMode ? "demo" : "real";
+        if (io) {
+          actualMode = await startTikTokConnection(io, tiktokUsername, existingSession.id, user.id, forceDemoMode);
+        }
+        return res.json({
+          sessionId: existingSession.id,
+          streamerId: existingSession.streamerId,
+          startedAt: existingSession.startedAt,
+          mode: actualMode,
+        });
+      }
+
+      // Connector IS running (or no session found) — truly already live
       return res.status(400).json({ error: "Already live" });
     }
 
@@ -37,14 +71,7 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
       .set({ isLive: true, updatedAt: new Date() })
       .where(eq(streamersTable.id, streamer.id));
 
-    const userRecord = await db.query.usersTable.findFirst({
-      where: eq(usersTable.id, user.id),
-    });
-    const tiktokUsername =
-      (typeof req.body?.tiktokUsername === "string" ? req.body.tiktokUsername.trim() : null) ||
-      userRecord?.tiktokUsername ||
-      streamer.tiktokLiveId ||
-      null;
+    const tiktokUsername = await resolveUsername();
     const demoMode = req.body?.demoMode === true || !tiktokUsername;
 
     const io = getIO();
@@ -133,6 +160,25 @@ router.get("/sessions/active", requireAuth, async (req: any, res: any) => {
       return res.json({ active: false, session: null });
     }
 
+    // Determine connection mode. After a server restart the in-memory connector map
+    // is cleared, so getConnectionMode() returns null even though the session is live.
+    // In that case, kick off a background reconnect and tell the client to wait.
+    let connMode: ConnectionMode | null = getConnectionMode(activeSession.id);
+    if (connMode === null && isRealModeEnabled) {
+      // Connector died — trigger recovery in background (socket will emit tiktok:status when ready)
+      const io = getIO();
+      if (io) {
+        const userRecord = await db.query.usersTable.findFirst({ where: eq(usersTable.id, user.id) });
+        const tiktokUsername = userRecord?.tiktokUsername || streamer.tiktokLiveId || null;
+        if (tiktokUsername) {
+          startTikTokConnection(io, tiktokUsername, activeSession.id, user.id, false).catch(() => {});
+        }
+      }
+      connMode = null; // frontend will show "Establishing connection..." until socket fires
+    } else if (connMode === null) {
+      connMode = "demo"; // demo mode: null → demo is fine
+    }
+
     res.json({
       active: true,
       session: {
@@ -146,8 +192,7 @@ router.get("/sessions/active", requireAuth, async (req: any, res: any) => {
         totalFollowers: activeSession.totalFollowers,
         totalComments: activeSession.totalComments,
         totalShares: activeSession.totalShares,
-        // Connection mode persisted across page refreshes
-        mode: getConnectionMode(activeSession.id) ?? "demo",
+        mode: connMode,
         connectionError: getConnectionError(activeSession.id) ?? null,
       },
     });

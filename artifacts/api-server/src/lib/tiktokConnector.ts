@@ -18,12 +18,15 @@ import { ingestLiveEvent } from "./socketServer.js";
 import { startSimulator, stopSimulator, type TikTokEvent } from "./tiktokSimulator.js";
 import {
   TikTokLiveClient,
+  isNotLiveError,
   type TikTokChatEvent,
   type TikTokGiftEvent,
   type TikTokLikeEvent,
   type TikTokSocialEvent,
   type TikTokViewerCountEvent,
 } from "./tiktokLiveClient.js";
+import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
+import { isNull, eq as dbEq } from "drizzle-orm";
 
 export type ConnectionMode = "real" | "demo" | "error";
 
@@ -52,14 +55,22 @@ function makeEvent(
 // ── Real connector ────────────────────────────────────────────────────────────
 
 function friendlyError(raw: string, username: string): string {
-  if (raw.includes("not currently streaming") || raw.includes("not started") || raw.includes("no room ID found")) {
+  if (isNotLiveError(new Error(raw))) {
     return raw; // already user-friendly from tiktokLiveClient
   }
-  if (raw.includes("ECONNREFUSED") || raw.includes("ENOTFOUND") || raw.includes("network")) {
+  if (raw.includes("ECONNREFUSED") || raw.includes("ENOTFOUND") || raw.toLowerCase().includes("network")) {
     return "Network error: server cannot reach TikTok. Check firewall rules and outbound internet access.";
   }
   if (raw.includes("429") || raw.toLowerCase().includes("rate limit")) {
     return "TikTok rate-limited this server IP. Wait a few minutes before retrying.";
+  }
+  // WebSocket 404 = TikTok rejected the connection. Usually means the room isn't
+  // actually broadcasting even though room/info returned status 4.
+  if (raw.includes("Unexpected server response: 404") || raw.includes("server response: 404")) {
+    return (
+      `@${username} is not currently streaming on TikTok LIVE. ` +
+      `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`
+    );
   }
   if (raw.includes("HTTP 4") || raw.includes("HTTP 5")) {
     return `TikTok API error connecting to @${username}: ${raw}`;
@@ -72,7 +83,7 @@ async function startLiveConnector(
   tiktokUsername: string,
   sessionId: number,
   userId: number,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; polling?: boolean }> {
   const roomId = `session:${sessionId}`;
 
   const client = new TikTokLiveClient(tiktokUsername);
@@ -132,8 +143,29 @@ async function startLiveConnector(
     io.to(roomId).emit("tiktok:status", { mode: "real", username: tiktokUsername });
   });
 
+  // Track if the initial connect() entered "not live" polling mode
+  let notLiveMessage: string | null = null;
+
+  client.on("notLive", ({ message }: { message: string }) => {
+    const errMsg = friendlyError(message, tiktokUsername);
+    notLiveMessage = errMsg;
+    console.log(`[TikTok] @${tiktokUsername} not live yet — connector polling every 30 s`);
+    // Store connector entry NOW (with a real stop fn) so the client can be stopped later
+    activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => client.disconnect() });
+    io.to(roomId).emit("tiktok:status", { mode: "error", error: errMsg, username: tiktokUsername });
+  });
+
   try {
     await client.connect();
+    // connect() resolves without throwing in two cases:
+    //   A) WebSocket connected successfully → set "real" entry
+    //   B) User isn't live yet → "notLive" event already fired, entry already set, polling running
+
+    if (notLiveMessage) {
+      // Polling is active — entry was already set by the notLive handler above.
+      // Tell the caller not to overwrite the entry.
+      return { ok: false, error: notLiveMessage, polling: true };
+    }
 
     activeConnectors.set(sessionId, {
       type: "real",
@@ -176,11 +208,17 @@ export async function startTikTokConnection(
       return "real";
     }
 
-    // Real mode failed — surface the exact error, no silent fallback
     const errMsg = result.error!;
     console.error(`[TikTok] REAL mode connection FAILED for @${tiktokUsername}: ${errMsg}`);
-    activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => {} });
-    io.to(roomId).emit("tiktok:status", { mode: "error", error: errMsg, username: tiktokUsername });
+
+    if (!result.polling) {
+      // Hard failure — connector is dead; set an inert error entry
+      activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => {} });
+      io.to(roomId).emit("tiktok:status", { mode: "error", error: errMsg, username: tiktokUsername });
+    }
+    // polling=true → entry + tiktok:status already emitted by startLiveConnector's notLive handler;
+    //                 client is still running and will auto-connect when user goes live.
+
     return "error";
   }
 
@@ -212,6 +250,54 @@ export function getConnectionMode(sessionId: number): ConnectionMode | null {
 
 export function getConnectionError(sessionId: number): string | undefined {
   return activeConnectors.get(sessionId)?.error;
+}
+
+/**
+ * Called once on server startup to reconnect TikTok for any sessions that were
+ * live when the server last shut down. The in-memory activeConnectors map is
+ * cleared on every restart, so without this, a deployed server would lose all
+ * real connections and silently fall back to "demo" for existing sessions.
+ */
+export async function recoverActiveSessions(io: SocketServer): Promise<void> {
+  if (!isRealModeEnabled) {
+    console.log("[TikTok] Demo mode — skipping active session recovery.");
+    return;
+  }
+
+  console.log("[TikTok] Scanning for active sessions to recover after restart...");
+  try {
+    const rows = await db
+      .select({
+        sessionId: sessionsTable.id,
+        userId: usersTable.id,
+        tiktokUsername: usersTable.tiktokUsername,
+      })
+      .from(sessionsTable)
+      .innerJoin(streamersTable, dbEq(streamersTable.id, sessionsTable.streamerId))
+      .innerJoin(usersTable, dbEq(usersTable.id, streamersTable.userId))
+      .where(isNull(sessionsTable.endedAt));
+
+    if (rows.length === 0) {
+      console.log("[TikTok] No active sessions found — nothing to recover.");
+      return;
+    }
+
+    console.log(`[TikTok] Found ${rows.length} active session(s) to recover.`);
+    for (const row of rows) {
+      if (activeConnectors.has(row.sessionId)) continue; // already connected
+      const username = row.tiktokUsername;
+      if (!username) {
+        console.warn(`[TikTok] Session ${row.sessionId} has no TikTok username — skipping recovery.`);
+        continue;
+      }
+      console.log(`[TikTok] Recovering session ${row.sessionId} → @${username}`);
+      startTikTokConnection(io, username, row.sessionId, row.userId, false).catch((err: Error) => {
+        console.error(`[TikTok] Recovery failed for session ${row.sessionId}:`, err.message);
+      });
+    }
+  } catch (err: any) {
+    console.error("[TikTok] Session recovery error:", err.message);
+  }
 }
 
 /**

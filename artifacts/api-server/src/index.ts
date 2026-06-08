@@ -1,9 +1,10 @@
 import { createServer } from "http";
 import app from "./app";
-import { initSocketServer } from "./lib/socketServer";
+import { initSocketServer, getIO } from "./lib/socketServer";
 import { logger } from "./lib/logger";
 import { runMigrations } from "stripe-replit-sync";
 import { getStripeSync } from "./lib/stripeClient";
+import { recoverActiveSessions } from "./lib/tiktokConnector";
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -53,4 +54,13 @@ httpServer.listen(port, (err?: Error) => {
     process.exit(1);
   }
   logger.info({ port }, "Server listening");
+
+  // Reconnect TikTok for any sessions that were live before this restart.
+  // Must run after listen() so Socket.IO is fully initialised and getIO() returns the instance.
+  const io = getIO();
+  if (io) {
+    recoverActiveSessions(io).catch((err) =>
+      logger.error({ err }, "TikTok session recovery failed"),
+    );
+  }
 });

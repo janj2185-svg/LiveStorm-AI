@@ -3,3 +3,4 @@
 - [React Query Hook Patterns](react-query-patterns.md) — generated hook usage pitfalls and correct patterns
 - [LiveStorm Bug Fixes](livestorm-bugfixes.md) — OBS 404 root cause, FormLabel bug pattern, TTS modes, sessions mode bug
 - [TikTok connector architecture](tiktok-connector.md) — custom pbf+ws connector replaces tiktok-live-connector; protobufjs ALL versions blocked on Replit; pbf v5 PbfReader is the solution.
+- [TikTok not-live detection](tiktok-not-live-detection.md) — room/info returns `{"data":{}}` when not streaming; im/fetch returns 0 bytes; both are definitive "not live" signals.
