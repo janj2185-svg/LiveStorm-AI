@@ -33,3 +33,8 @@ externalPort = 3000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+euler_MTY2ZTg1Nzk1MmE2ZTUyNDdkYTNkODdkOGU0Y2Y2ODBiY2QwZmFmZjc1ZjQzNDhlZGI4Y2I1 = "EulerStream"
