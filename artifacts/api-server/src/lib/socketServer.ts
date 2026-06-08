@@ -259,6 +259,7 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
 
   const roomId = `session:${event.sessionId}`;
 
+  console.log(`[Socket] live:event type=${event.type} → room=${roomId} username=${event.username ?? "-"}`);
   io.to(roomId).emit("live:event", event);
 
   await processAutomations(io, roomId, userId, event);

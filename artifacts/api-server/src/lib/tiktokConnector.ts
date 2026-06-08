@@ -106,10 +106,12 @@ async function startLiveConnector(
 
   // Wire up events → ingestLiveEvent
   client.on("chat", (ev: TikTokChatEvent) => {
+    console.log(`[TikTok] ▶ comment → session ${sessionId}: ${ev.username}: "${ev.comment}"`);
     void ingestLiveEvent(makeEvent("comment", sessionId, ev.username, { text: ev.comment }), userId);
   });
 
   client.on("gift", (ev: TikTokGiftEvent) => {
+    console.log(`[TikTok] ▶ gift → session ${sessionId}: ${ev.username}: ${ev.giftName}`);
     void ingestLiveEvent(
       makeEvent("gift", sessionId, ev.username, {
         giftName: ev.giftName,
@@ -121,19 +123,23 @@ async function startLiveConnector(
   });
 
   client.on("like", (ev: TikTokLikeEvent) => {
+    console.log(`[TikTok] ▶ like → session ${sessionId}: ${ev.username}: ${ev.likeCount}`);
     void ingestLiveEvent(makeEvent("like", sessionId, ev.username, { likeCount: ev.likeCount }), userId);
   });
 
   client.on("social", (ev: TikTokSocialEvent) => {
     if (ev.action === "follow") {
+      console.log(`[TikTok] ▶ follow → session ${sessionId}: ${ev.username}`);
       void ingestLiveEvent(makeEvent("follow", sessionId, ev.username, {}), userId);
     } else if (ev.action === "share") {
+      console.log(`[TikTok] ▶ share → session ${sessionId}: ${ev.username}`);
       void ingestLiveEvent(makeEvent("share", sessionId, ev.username, {}), userId);
     }
     // "join" events are ignored (no matching TikTokEvent type)
   });
 
   client.on("viewerCount", (ev: TikTokViewerCountEvent) => {
+    console.log(`[TikTok] ▶ viewerCount → session ${sessionId}: ${ev.count}`);
     void ingestLiveEvent(makeEvent("viewerCount", sessionId, undefined, { count: ev.count }), userId);
   });
 

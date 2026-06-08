@@ -169,6 +169,11 @@ async function fetchLiveRoomInfo(username: string): Promise<LiveRoomInfo> {
   return { isLive: hasRoomId, roomId };
 }
 
+function isRateLimitError(msg: string): boolean {
+  const m = msg.toLowerCase();
+  return m.includes("429") || m.includes("rate limit") || m.includes("rate_limit");
+}
+
 /**
  * Returns true when the error means "user isn't live yet" (retriable with 30s polling).
  *
@@ -223,7 +228,7 @@ export class TikTokLiveClient extends EventEmitter {
   private stopped = false;
   private currentClient: InstanceType<typeof WebcastPushConnection> | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private reconnectDelay = 3_000;
+  private reconnectDelay = 15_000;
 
   constructor(username: string) {
     super();
@@ -238,7 +243,7 @@ export class TikTokLiveClient extends EventEmitter {
    */
   async connect(): Promise<void> {
     this.stopped = false;
-    this.reconnectDelay = 3_000;
+    this.reconnectDelay = 15_000;
     await this._fullConnect();
   }
 
@@ -278,7 +283,7 @@ export class TikTokLiveClient extends EventEmitter {
         console.log(
           `[TikTok] ✓ Connected to @${this.username} LIVE (roomId: ${state?.roomId ?? "?"})`,
         );
-        this.reconnectDelay = 3_000;
+        this.reconnectDelay = 15_000; // reset on success
         settle();
         this.emit("connected");
       });
@@ -290,7 +295,7 @@ export class TikTokLiveClient extends EventEmitter {
         settle(); // resolve the promise if not yet done
         if (!this.stopped) {
           this._scheduleRetry(this.reconnectDelay, /* fullConnect */ false);
-          this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 30_000);
+          this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
         }
       });
 
@@ -312,6 +317,13 @@ export class TikTokLiveClient extends EventEmitter {
           console.log(`[TikTok] @${this.username} not live — polling in 30 s`);
           this.emit("notLive", { username: this.username, message: notLiveMsg });
           this._scheduleRetry(30_000, /* fullConnect */ true);
+        } else if (isRateLimitError(msg)) {
+          // Rate limit — force a 60 s cooling-off period before retrying.
+          // Anonymous Eulerstream tier has a per-minute connection quota; retrying
+          // in 15 s would immediately trigger it again.
+          console.warn(`[TikTok] Rate limit for @${this.username} — backing off 60 s`);
+          this.reconnectDelay = 60_000;
+          this.emit("wsError", exception instanceof Error ? exception : new Error(msg));
         } else {
           console.error(`[TikTok] Error for @${this.username}: ${msg}`);
           this.emit("wsError", exception instanceof Error ? exception : new Error(msg));
@@ -319,56 +331,82 @@ export class TikTokLiveClient extends EventEmitter {
         settle(); // marks promise resolved so .catch() below becomes a no-op
       });
 
+      // ── Raw event tracing (fires for every decoded TikTok message) ───────
+      // This is the first line of defence: if decodedData never fires,
+      // the WebSocket is open but no messages are arriving from TikTok.
+      client.on("decodedData", (type: string, _data: any) => {
+        console.log(`[TikTok] RawEvent type=${type} @${this.username}`);
+      });
+
       // ── Live events ───────────────────────────────────────────────────────
 
       client.on("chat", (d: any) => {
-        const comment: string = d?.comment ?? "";
+        // v2 schema: primary field is "comment"; fallback to "content" in case of schema changes.
+        const comment: string = d?.comment ?? d?.content ?? "";
+        const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
+        console.log(`[TikTok] chat @${this.username} ← ${username}: "${comment}"`);
         if (!comment.trim()) return;
-        this.emit("chat", {
-          username: d?.uniqueId ?? d?.user?.uniqueId ?? "unknown",
-          comment,
-        } satisfies TikTokChatEvent);
+        this.emit("chat", { username, comment } satisfies TikTokChatEvent);
       });
 
       client.on("gift", (d: any) => {
+        const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
+        const giftName = d?.giftName ?? d?.gift?.name ?? "Gift";
+        const coins = Number(d?.diamondCount ?? d?.gift?.diamondCount ?? 0);
+        console.log(`[TikTok] gift @${this.username} ← ${username}: ${giftName} (${coins} coins)`);
         this.emit("gift", {
-          username: d?.uniqueId ?? d?.user?.uniqueId ?? "unknown",
-          giftName: d?.giftName ?? d?.gift?.name ?? "Gift",
-          coins: Number(d?.diamondCount ?? 0),
+          username,
+          giftName,
+          coins,
           count: Number(d?.repeatCount ?? 1),
           repeatEnd: !!d?.repeatEnd,
         } satisfies TikTokGiftEvent);
       });
 
       client.on("like", (d: any) => {
+        const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
+        const likeCount = Number(d?.likeCount ?? 0);
+        console.log(`[TikTok] like @${this.username} ← ${username}: ${likeCount}`);
         this.emit("like", {
-          username: d?.uniqueId ?? d?.user?.uniqueId ?? "unknown",
-          likeCount: Number(d?.likeCount ?? 0),
+          username,
+          likeCount,
           total: Number(d?.totalLikeCount ?? 0),
         } satisfies TikTokLikeEvent);
       });
 
+      // The library emits "follow" and "share" as separate events (WebcastEvent.FOLLOW /
+      // WebcastEvent.SHARE) — NOT through "social". We listen to all three.
+      client.on("follow", (d: any) => {
+        const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
+        console.log(`[TikTok] follow @${this.username} ← ${username}`);
+        this.emit("social", { username, action: "follow" } satisfies TikTokSocialEvent);
+      });
+
+      client.on("share", (d: any) => {
+        const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
+        console.log(`[TikTok] share @${this.username} ← ${username}`);
+        this.emit("social", { username, action: "share" } satisfies TikTokSocialEvent);
+      });
+
       client.on("social", (d: any) => {
-        const dt: string = (d?.displayType ?? "").toLowerCase();
-        const action: TikTokSocialEvent["action"] = dt.includes("share")
-          ? "share"
-          : "follow";
-        this.emit("social", {
-          username: d?.uniqueId ?? d?.user?.uniqueId ?? "unknown",
-          action,
-        } satisfies TikTokSocialEvent);
+        // Fallback for any "social" events not routed to "follow"/"share" above.
+        const dt: string = (d?.displayType ?? d?.common?.displayText?.displayType ?? "").toLowerCase();
+        const action: TikTokSocialEvent["action"] = dt.includes("share") ? "share" : "follow";
+        const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
+        console.log(`[TikTok] social @${this.username} ← ${username} (${action})`);
+        this.emit("social", { username, action } satisfies TikTokSocialEvent);
       });
 
       client.on("member", (d: any) => {
         // "member" = viewer joined the room
-        this.emit("social", {
-          username: d?.uniqueId ?? d?.user?.uniqueId ?? "unknown",
-          action: "join",
-        } satisfies TikTokSocialEvent);
+        const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
+        console.log(`[TikTok] member join @${this.username} ← ${username}`);
+        this.emit("social", { username, action: "join" } satisfies TikTokSocialEvent);
       });
 
       client.on("roomUser", (d: any) => {
         const count = Number(d?.viewerCount ?? d?.totalUserCount ?? 0);
+        console.log(`[TikTok] viewerCount @${this.username}: ${count}`);
         if (count > 0) {
           this.emit("viewerCount", { count } satisfies TikTokViewerCountEvent);
         }
@@ -399,7 +437,7 @@ export class TikTokLiveClient extends EventEmitter {
             this.emit("wsError", new Error(msg));
             if (!this.stopped) {
               this._scheduleRetry(this.reconnectDelay, /* fullConnect */ false);
-              this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 30_000);
+              this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
             }
           }
           settle();

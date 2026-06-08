@@ -227,6 +227,25 @@ await new Promise((resolve) => {
     }
   }
 
+  // Verify "follow" and "share" are listened to as direct events (not through "social")
+  // The library emits WebcastEvent.FOLLOW="follow" and WebcastEvent.SHARE="share" directly.
+  const clientSource = readFileSync(new URL("src/lib/tiktokLiveClient.ts", import.meta.url), "utf8");
+  if (clientSource.includes('client.on("follow"')) {
+    ok('tiktokLiveClient listens to direct "follow" event from library');
+  } else {
+    fail('Missing client.on("follow") — library emits follow/share as separate events, not through "social"');
+  }
+  if (clientSource.includes('client.on("share"')) {
+    ok('tiktokLiveClient listens to direct "share" event from library');
+  } else {
+    fail('Missing client.on("share") — library emits share as a separate event');
+  }
+  if (clientSource.includes('client.on("decodedData"')) {
+    ok('tiktokLiveClient logs all raw decoded events via decodedData handler');
+  } else {
+    fail('Missing decodedData handler — no way to see if TikTok is sending messages');
+  }
+
   resolve();
 });
 
@@ -254,10 +273,10 @@ section(5, "Reconnect loop — pendingConnectors race fix + exponential backoff"
     fail("pendingConnectors lifecycle");
   }
 
-  if (clientSource.includes("reconnectDelay = 3_000") && clientSource.includes("Math.min(this.reconnectDelay * 1.5, 30_000)")) {
-    ok("Exponential backoff: starts at 3s, multiplies by 1.5×, caps at 30s");
+  if (clientSource.includes("reconnectDelay = 15_000") && clientSource.includes("Math.min(this.reconnectDelay * 1.5, 60_000)")) {
+    ok("Exponential backoff: starts at 15s, multiplies by 1.5×, caps at 60s");
   } else {
-    fail("Exponential backoff parameters");
+    fail("Exponential backoff parameters (expected 15_000 start, 60_000 cap)");
   }
 
   if (clientSource.includes("reconnectEnabled: false")) {
@@ -267,10 +286,10 @@ section(5, "Reconnect loop — pendingConnectors race fix + exponential backoff"
   }
 
   // Verify backoff math
-  let delay = 3000;
+  let delay = 15000;
   const sequence = [delay];
   for (let i = 0; i < 6; i++) {
-    delay = Math.min(delay * 1.5, 30000);
+    delay = Math.min(delay * 1.5, 60000);
     sequence.push(Math.round(delay));
   }
   ok(`Backoff sequence: ${sequence.map(d => d >= 1000 ? `${(d/1000).toFixed(1)}s` : `${d}ms`).join(" → ")}`);
