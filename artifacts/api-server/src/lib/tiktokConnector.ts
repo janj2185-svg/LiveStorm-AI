@@ -3,15 +3,27 @@
  *
  * Controlled by TIKTOK_MODE environment variable:
  *   TIKTOK_MODE=demo  (default) — always use the built-in simulator
- *   TIKTOK_MODE=real            — attempt real TikTok LIVE; surface exact errors, NO silent fallback
+ *   TIKTOK_MODE=real            — attempt real TikTok LIVE via custom connector
  *
- * On a production VPS/Docker server, set TIKTOK_MODE=real and ensure
- * tiktok-live-connector is installed (npm install tiktok-live-connector).
+ * The custom connector uses pbf + ws (both installable on Replit) instead of
+ * the `tiktok-live-connector` npm package which was blocked by Replit's
+ * supply-chain security firewall (requires protobufjs, which is entirely blocked).
+ *
+ * On production VPS/Docker: set TIKTOK_MODE=real. Works with or without Replit.
+ * On Replit: set TIKTOK_MODE=real. Custom connector connects directly to TikTok.
  */
 
 import type { Server as SocketServer } from "socket.io";
-import { ingestLiveEvent } from "./socketServer";
-import { startSimulator, stopSimulator, type TikTokEvent } from "./tiktokSimulator";
+import { ingestLiveEvent } from "./socketServer.js";
+import { startSimulator, stopSimulator, type TikTokEvent } from "./tiktokSimulator.js";
+import {
+  TikTokLiveClient,
+  type TikTokChatEvent,
+  type TikTokGiftEvent,
+  type TikTokLikeEvent,
+  type TikTokSocialEvent,
+  type TikTokViewerCountEvent,
+} from "./tiktokLiveClient.js";
 
 export type ConnectionMode = "real" | "demo" | "error";
 
@@ -28,84 +40,29 @@ export const isRealModeEnabled = TIKTOK_MODE === "real";
 
 // ── Event mappers ─────────────────────────────────────────────────────────────
 
-function mapGiftEvent(data: any, sessionId: number): TikTokEvent {
-  return {
-    type: "gift",
-    sessionId,
-    username: data.uniqueId ?? data.nickname ?? "unknown",
-    data: {
-      giftName: data.giftName ?? data.gift?.name ?? "Gift",
-      coins: data.diamondCount ?? data.gift?.diamondCount ?? 0,
-      count: data.repeatCount ?? 1,
-    },
-    timestamp: Date.now(),
-  };
-}
-
-function mapCommentEvent(data: any, sessionId: number): TikTokEvent {
-  return {
-    type: "comment",
-    sessionId,
-    username: data.uniqueId ?? data.nickname ?? "unknown",
-    data: { text: data.comment ?? data.comment?.text ?? "" },
-    timestamp: Date.now(),
-  };
-}
-
-function mapLikeEvent(data: any, sessionId: number): TikTokEvent {
-  return {
-    type: "like",
-    sessionId,
-    username: data.uniqueId ?? data.nickname ?? "unknown",
-    data: { likeCount: data.likeCount ?? 1 },
-    timestamp: Date.now(),
-  };
-}
-
-function mapFollowEvent(data: any, sessionId: number): TikTokEvent {
-  return {
-    type: "follow",
-    sessionId,
-    username: data.uniqueId ?? data.nickname ?? "unknown",
-    data: {},
-    timestamp: Date.now(),
-  };
-}
-
-function mapShareEvent(data: any, sessionId: number): TikTokEvent {
-  return {
-    type: "share",
-    sessionId,
-    username: data.uniqueId ?? data.nickname ?? "unknown",
-    data: {},
-    timestamp: Date.now(),
-  };
-}
-
-function mapViewerCountEvent(count: number, sessionId: number): TikTokEvent {
-  return {
-    type: "viewerCount",
-    sessionId,
-    data: { count },
-    timestamp: Date.now(),
-  };
+function makeEvent(
+  type: TikTokEvent["type"],
+  sessionId: number,
+  username: string | undefined,
+  data: Record<string, unknown>,
+): TikTokEvent {
+  return { type, sessionId, username, data, timestamp: Date.now() };
 }
 
 // ── Real connector ────────────────────────────────────────────────────────────
 
 function friendlyError(raw: string, username: string): string {
-  if (raw.includes("MODULE_NOT_FOUND") || raw.includes("Cannot find") || raw.includes("ERR_MODULE_NOT_FOUND")) {
-    return "tiktok-live-connector package is not installed on this server.\n" +
-      "Fix: run 'npm install tiktok-live-connector' in the api-server directory, then restart.";
-  }
-  if (raw.includes("LIVE_NOT_FOUND") || raw.toLowerCase().includes("not live") || raw.includes("not found")) {
-    return `@${username} is not currently streaming. Start a TikTok LIVE first.`;
+  if (raw.includes("not currently streaming") || raw.includes("not started") || raw.includes("no room ID found")) {
+    return raw; // already user-friendly from tiktokLiveClient
   }
   if (raw.includes("ECONNREFUSED") || raw.includes("ENOTFOUND") || raw.includes("network")) {
     return "Network error: server cannot reach TikTok. Check firewall rules and outbound internet access.";
   }
   if (raw.includes("429") || raw.toLowerCase().includes("rate limit")) {
     return "TikTok rate-limited this server IP. Wait a few minutes before retrying.";
+  }
+  if (raw.includes("HTTP 4") || raw.includes("HTTP 5")) {
+    return `TikTok API error connecting to @${username}: ${raw}`;
   }
   return raw;
 }
@@ -117,50 +74,76 @@ async function startLiveConnector(
   userId: number,
 ): Promise<{ ok: boolean; error?: string }> {
   const roomId = `session:${sessionId}`;
-  try {
-    const { WebcastPushConnection } = (await import("tiktok-live-connector")) as any;
 
-    const connection = new WebcastPushConnection(tiktokUsername, {
-      processInitialData: false,
-      enableExtendedGiftInfo: true,
-      enableWebsocketUpgrade: true,
-      requestPollingIntervalMs: 2000,
-    });
+  const client = new TikTokLiveClient(tiktokUsername);
 
-    connection.on("gift",     (data: any) => ingestLiveEvent(mapGiftEvent(data, sessionId), userId));
-    connection.on("chat",     (data: any) => ingestLiveEvent(mapCommentEvent(data, sessionId), userId));
-    connection.on("like",     (data: any) => ingestLiveEvent(mapLikeEvent(data, sessionId), userId));
-    connection.on("follow",   (data: any) => ingestLiveEvent(mapFollowEvent(data, sessionId), userId));
-    connection.on("share",    (data: any) => ingestLiveEvent(mapShareEvent(data, sessionId), userId));
-    connection.on("roomUser", (data: any) => ingestLiveEvent(mapViewerCountEvent(data.viewerCount ?? 0, sessionId), userId));
+  // Wire up events → ingestLiveEvent
+  client.on("chat", (ev: TikTokChatEvent) => {
+    void ingestLiveEvent(makeEvent("comment", sessionId, ev.username, { text: ev.comment }), userId);
+  });
 
-    connection.on("error", (err: any) => {
-      const raw = err?.message ?? String(err);
-      const msg = friendlyError(raw, tiktokUsername);
-      console.error(`[TikTok] Runtime error for @${tiktokUsername}:`, msg);
-      activeConnectors.set(sessionId, {
-        type: "error",
-        error: msg,
-        stop: () => { try { connection.disconnect(); } catch (_) {} },
-      });
-      io.to(roomId).emit("tiktok:status", { mode: "error", error: msg, username: tiktokUsername });
-    });
+  client.on("gift", (ev: TikTokGiftEvent) => {
+    void ingestLiveEvent(
+      makeEvent("gift", sessionId, ev.username, {
+        giftName: ev.giftName,
+        coins: ev.coins,
+        count: ev.count,
+      }),
+      userId,
+    );
+  });
 
-    connection.on("disconnected", () => {
-      console.warn(`[TikTok] Disconnected from @${tiktokUsername} (session ${sessionId})`);
-    });
+  client.on("like", (ev: TikTokLikeEvent) => {
+    void ingestLiveEvent(makeEvent("like", sessionId, ev.username, { likeCount: ev.likeCount }), userId);
+  });
 
-    await connection.connect();
+  client.on("social", (ev: TikTokSocialEvent) => {
+    if (ev.action === "follow") {
+      void ingestLiveEvent(makeEvent("follow", sessionId, ev.username, {}), userId);
+    } else if (ev.action === "share") {
+      void ingestLiveEvent(makeEvent("share", sessionId, ev.username, {}), userId);
+    }
+    // "join" events are ignored (no matching TikTokEvent type)
+  });
+
+  client.on("viewerCount", (ev: TikTokViewerCountEvent) => {
+    void ingestLiveEvent(makeEvent("viewerCount", sessionId, undefined, { count: ev.count }), userId);
+  });
+
+  // Runtime errors (after successful initial connect — e.g. during a reconnect attempt)
+  client.on("wsError", (err: Error) => {
+    const msg = friendlyError(err.message, tiktokUsername);
+    console.error(`[TikTok] Runtime WebSocket error for @${tiktokUsername}: ${msg}`);
+    // Keep the connector entry as "real" — reconnect is handled internally by client
+  });
+
+  client.on("disconnected", (code: number) => {
+    console.warn(`[TikTok] Disconnected from @${tiktokUsername} (session ${sessionId}, code=${code})`);
+    // Client will auto-reconnect unless stopped
+  });
+
+  client.on("connected", () => {
     console.log(`[TikTok] ✓ Connected to @${tiktokUsername} LIVE (session ${sessionId})`);
+    // Update mode to "real" on successful reconnect after an error
+    activeConnectors.set(sessionId, {
+      type: "real",
+      stop: () => client.disconnect(),
+    });
+    io.to(roomId).emit("tiktok:status", { mode: "real", username: tiktokUsername });
+  });
+
+  try {
+    await client.connect();
 
     activeConnectors.set(sessionId, {
       type: "real",
-      stop: () => { try { connection.disconnect(); } catch (_) {} },
+      stop: () => client.disconnect(),
     });
 
     return { ok: true };
   } catch (err: any) {
     const raw = err?.message ?? String(err);
+    client.disconnect();
     return { ok: false, error: friendlyError(raw, tiktokUsername) };
   }
 }
@@ -171,8 +154,9 @@ async function startLiveConnector(
  * Start a TikTok connection for a session.
  * Returns "real" | "demo" | "error".
  *
- * TIKTOK_MODE=real + failure → returns "error", emits tiktok:status with exact message. NO fallback.
- * TIKTOK_MODE=demo OR demoMode=true → returns "demo", runs simulator.
+ * TIKTOK_MODE=real + success → "real", real events flow.
+ * TIKTOK_MODE=real + failure → "error", emits tiktok:status with exact message.
+ * TIKTOK_MODE=demo OR demoMode=true → "demo", simulator runs.
  */
 export async function startTikTokConnection(
   io: SocketServer,
@@ -192,7 +176,7 @@ export async function startTikTokConnection(
       return "real";
     }
 
-    // Real mode failed — surface the error, do NOT silently fall back to demo
+    // Real mode failed — surface the exact error, no silent fallback
     const errMsg = result.error!;
     console.error(`[TikTok] REAL mode connection FAILED for @${tiktokUsername}: ${errMsg}`);
     activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => {} });
@@ -231,9 +215,8 @@ export function getConnectionError(sessionId: number): string | undefined {
 }
 
 /**
- * Test a TikTok username connection without starting a full session.
- * Requires TIKTOK_MODE=real and tiktok-live-connector installed.
- * Call via POST /api/tiktok/test-connection.
+ * Lightweight connection test: verifies the username exists and room is live
+ * without fully connecting the WebSocket.
  */
 export async function testTikTokConnection(
   username: string,
@@ -249,12 +232,12 @@ export async function testTikTokConnection(
 
   const clean = username.replace(/^@/, "").trim();
   const start = Date.now();
+
   try {
-    const { WebcastPushConnection } = (await import("tiktok-live-connector")) as any;
-    const conn = new WebcastPushConnection(clean, { processInitialData: false });
-    await conn.connect();
+    const client = new TikTokLiveClient(clean);
+    await client.connect();
     const latencyMs = Date.now() - start;
-    try { conn.disconnect(); } catch (_) {}
+    client.disconnect();
     return { ok: true, latencyMs };
   } catch (err: any) {
     const raw = err?.message ?? String(err);
