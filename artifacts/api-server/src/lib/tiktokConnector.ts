@@ -158,10 +158,12 @@ async function startLiveConnector(
 
   client.on("connected", () => {
     console.log(`[TikTok] ✓ Connected to @${tiktokUsername} LIVE (session ${sessionId})`);
-    // Update mode to "real" on successful reconnect after an error
+    // Update mode to "real" on successful reconnect after an error.
+    // MUST use stopConnection() not disconnect() — stopConnection sets this.stopped=true
+    // which prevents the internal reconnect timer from firing again after a stop call.
     activeConnectors.set(sessionId, {
       type: "real",
-      stop: () => client.disconnect(),
+      stop: () => client.stopConnection(),
     });
     io.to(roomId).emit("tiktok:status", { mode: "real", username: tiktokUsername });
   });
@@ -174,7 +176,7 @@ async function startLiveConnector(
     notLiveMessage = errMsg;
     console.log(`[TikTok] @${tiktokUsername} not live yet — connector polling every 30 s`);
     // Store connector entry NOW (with a real stop fn) so the client can be stopped later
-    activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => client.disconnect() });
+    activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => client.stopConnection() });
     io.to(roomId).emit("tiktok:status", { mode: "error", error: errMsg, username: tiktokUsername });
   });
 
@@ -192,7 +194,7 @@ async function startLiveConnector(
 
     activeConnectors.set(sessionId, {
       type: "real",
-      stop: () => client.disconnect(),
+      stop: () => client.stopConnection(),
     });
 
     return { ok: true };
