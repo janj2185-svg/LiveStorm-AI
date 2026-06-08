@@ -25,6 +25,7 @@ import { AiContent } from "@/pages/ai-content";
 import { Settings } from "@/pages/settings";
 import { Pricing } from "@/pages/pricing";
 import { Admin } from "@/pages/admin";
+import { Analytics } from "@/pages/analytics";
 
 import { ObsAlerts } from "@/pages/obs/alerts";
 import { ObsGoals } from "@/pages/obs/goals";
@@ -236,6 +237,9 @@ function AppRoutes() {
       </Route>
       <Route path="/ai-content">
         <ProtectedRoute><Layout><AiContent /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/analytics">
+        <ProtectedRoute><Layout><Analytics /></Layout></ProtectedRoute>
       </Route>
       <Route path="/settings">
         <ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>

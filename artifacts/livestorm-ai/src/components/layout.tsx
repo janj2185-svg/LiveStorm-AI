@@ -17,17 +17,20 @@ import {
   Gamepad2,
   Globe,
   Wand2,
+  BarChart2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { type Language } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -43,6 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { name: t("nav_overlays"), href: "/overlays", icon: Layers, testId: "overlays" },
     { name: t("nav_ai_assistant"), href: "/ai-assistant", icon: Bot, testId: "ai-assistant" },
     { name: t("nav_ai_content"), href: "/ai-content", icon: Wand2, testId: "ai-content" },
+    { name: t("nav_analytics"), href: "/analytics", icon: BarChart2, testId: "analytics" },
     { name: t("nav_settings"), href: "/settings", icon: SettingsIcon, testId: "settings" },
   ];
 
@@ -108,6 +112,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </p>
               </div>
             </div>
+            {/* Language switcher */}
+            <div className="mb-3">
+              <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-1.5 px-0.5">
+                {t("settings_tab_language")}
+              </p>
+              <div className="grid grid-cols-4 gap-1">
+                {(["en", "uk", "pl", "de"] as Language[]).map((code) => {
+                  const flags: Record<Language, string> = { en: "🇬🇧", uk: "🇺🇦", pl: "🇵🇱", de: "🇩🇪" };
+                  return (
+                    <button
+                      key={code}
+                      onClick={() => setLanguage(code)}
+                      title={code.toUpperCase()}
+                      className={cn(
+                        "py-1.5 rounded-md text-base border transition-all text-center",
+                        language === code
+                          ? "border-primary/50 bg-primary/20"
+                          : "border-white/5 hover:border-white/20",
+                      )}
+                    >
+                      {flags[code]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <Button
               variant="outline"
               className="w-full justify-start text-muted-foreground hover:text-white"

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const API_BASE = `${BASE}/api`;
@@ -332,6 +333,7 @@ function StatBubble({ label, value, icon }: { label: string; value: number | str
 
 export function AiAssistant() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   // ── Session ──────────────────────────────────────────────────────────────────
   const { data: activeSessionRes } = useGetActiveSession({
@@ -565,6 +567,35 @@ export function AiAssistant() {
     }
   };
 
+  const handleTranslateComment = async (eventId: number, text: string) => {
+    if (translatingComments.has(eventId)) return;
+    setTranslatingComments((prev) => new Set(prev).add(eventId));
+    try {
+      const resp = await fetch(`${API_BASE}/ai/content`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "script",
+          topic: `Translate exactly to ${chatTranslateLang}. Reply with only the translation, nothing else: "${text}"`,
+          language: chatTranslateLang,
+        }),
+      });
+      if (!resp.ok) throw new Error("Translation failed");
+      const data = await resp.json();
+      const translated = (data.script ?? data.content ?? "").trim() || text;
+      setTranslatedComments((prev) => ({ ...prev, [eventId]: translated }));
+    } catch {
+      setTranslatedComments((prev) => ({ ...prev, [eventId]: null }));
+    } finally {
+      setTranslatingComments((prev) => {
+        const next = new Set(prev);
+        next.delete(eventId);
+        return next;
+      });
+    }
+  };
+
   // ── Filtered event feed ───────────────────────────────────────────────────────
   const feedEvents = useMemo(
     () => events.filter((e) => e.type !== "viewerCount").slice(0, 80),
@@ -578,6 +609,10 @@ export function AiAssistant() {
     new Set(["persona", "mode", "voice", "language", "autoreply"]),
   );
   const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
+  const [chatTranslateEnabled, setChatTranslateEnabled] = useState(false);
+  const [chatTranslateLang, setChatTranslateLang] = useState("en");
+  const [translatedComments, setTranslatedComments] = useState<Record<number, string | null>>({});
+  const [translatingComments, setTranslatingComments] = useState<Set<number>>(new Set());
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -879,6 +914,50 @@ export function AiAssistant() {
             </p>
           </SidebarSection>
 
+          {/* Chat Translation */}
+          <SidebarSection
+            isOpen={expandedSections.has("translate")}
+            onToggle={() => toggleSection("translate")}
+            title={t("chat_translate_title")}
+            icon={<Globe className="h-4 w-4 text-teal-400" />}
+          >
+            <div className="flex items-center justify-between">
+              <Label className="text-sm text-muted-foreground">{t("chat_translate_enable")}</Label>
+              <Switch
+                checked={chatTranslateEnabled}
+                onCheckedChange={setChatTranslateEnabled}
+              />
+            </div>
+            {chatTranslateEnabled && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">{t("chat_translate_lang")}</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
+                    <button
+                      key={lang.value}
+                      onClick={() => {
+                        setChatTranslateLang(lang.value);
+                        setTranslatedComments({});
+                      }}
+                      className={cn(
+                        "flex items-center gap-2 px-2.5 py-1.5 rounded-md border text-xs transition-all text-left",
+                        chatTranslateLang === lang.value
+                          ? "border-teal-500/50 bg-teal-500/10 text-teal-300"
+                          : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                      )}
+                    >
+                      <span>{lang.flag}</span>
+                      <span className="font-medium truncate">{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+                  {t("chat_translate_note")}
+                </p>
+              </div>
+            )}
+          </SidebarSection>
+
           {/* Auto-Reply */}
           <SidebarSection isOpen={expandedSections.has("autoreply")} onToggle={() => toggleSection("autoreply")} title="Auto-Reply" icon={<MessageSquare className="h-4 w-4 text-orange-400" />}>
             <div className="flex items-center justify-between">
@@ -1141,14 +1220,35 @@ export function AiAssistant() {
                   )}
                   {feedEvents.map((event) => {
                     if (event.type === "comment") {
+                      const evtId = event.timestamp;
+                      const translated = translatedComments[evtId];
+                      const isTranslating = translatingComments.has(evtId);
                       return (
-                        <CommentCard
-                          key={event.timestamp}
-                          event={event}
-                          onReply={handleReply}
-                          isReplying={replyingTo.has(event.timestamp)}
-                          sessionId={activeSessionId}
-                        />
+                        <div key={event.timestamp} className="space-y-1">
+                          <CommentCard
+                            event={event}
+                            onReply={handleReply}
+                            isReplying={replyingTo.has(event.timestamp)}
+                            sessionId={activeSessionId}
+                          />
+                          {chatTranslateEnabled && (
+                            <div className="ml-10 flex items-start gap-2">
+                              {translated ? (
+                                <p className="text-xs text-teal-300 bg-teal-500/10 border border-teal-500/20 rounded px-2 py-1 flex-1">
+                                  🌐 {translated}
+                                </p>
+                              ) : (
+                                <button
+                                  onClick={() => handleTranslateComment(evtId, (event.data.text as string) ?? "")}
+                                  disabled={isTranslating}
+                                  className="text-[11px] text-teal-400/60 hover:text-teal-300 flex items-center gap-1 transition-colors disabled:opacity-40"
+                                >
+                                  {isTranslating ? t("chat_translate_translating") : "🌐 Translate"}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       );
                     }
                     if (event.type === "gift") return <GiftCard key={event.timestamp} event={event} />;
