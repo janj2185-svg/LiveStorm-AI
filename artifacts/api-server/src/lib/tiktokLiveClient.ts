@@ -277,6 +277,58 @@ export class TikTokLiveClient extends EventEmitter {
       let settled = false;
       const settle = () => { if (!settled) { settled = true; resolve(); } };
 
+      // ── Signing pipeline diagnostics ─────────────────────────────────────
+      {
+        const signApiUrl  = process.env.SIGN_API_URL ?? 'https://tiktok.eulerstream.com';
+        const hasSignKey  = !!process.env.SIGN_API_KEY;
+        console.log(
+          `[TikTok:Signing] Provider: Eulerstream | endpoint: ${signApiUrl} | API key: ${hasSignKey ? 'SET' : 'NOT SET (anonymous tier)'}`,
+        );
+
+        const webClient = (client as any).webClient;
+        if (typeof webClient?.fetchSignedWebSocketFromEuler === 'function') {
+          let capturedWsUrl: string | null = null;
+          const _originalSign = webClient.fetchSignedWebSocketFromEuler.bind(webClient);
+
+          webClient.fetchSignedWebSocketFromEuler = async (opts: any) => {
+            console.log(
+              `[TikTok:Signing] → request  roomId=${opts?.roomId ?? '-'}  uniqueId=${opts?.uniqueId ?? '-'}`,
+            );
+            try {
+              const result = await _originalSign(opts);
+              let wsHost = '?';
+              try { wsHost = new URL(result.wsUrl).hostname; } catch { wsHost = String(result.wsUrl ?? '').slice(0, 80); }
+              capturedWsUrl = result.wsUrl ?? null;
+              console.log(
+                `[TikTok:Signing] ← response OK | wsUrl host: ${wsHost} | cursor: ${result.cursor ? 'present' : 'absent'}`,
+              );
+              return result;
+            } catch (err: any) {
+              console.error(
+                `[TikTok:Signing] ← request FAILED: ${err?.message ?? String(err)} | httpStatus: ${err?.response?.status ?? 'n/a'}`,
+              );
+              throw err;
+            }
+          };
+
+          // Log first raw WebSocket packet after the WS is established
+          client.on('websocketConnected', (_wsClient: any) => {
+            console.log(
+              `[TikTok:WS] WebSocket open to TikTok | wsUrl host: ${capturedWsUrl ? (() => { try { return new URL(capturedWsUrl!).hostname; } catch { return capturedWsUrl!.slice(0, 60); } })() : '(unknown)'}`,
+            );
+            let firstPacket = true;
+            client.on('websocketData', (data: any) => {
+              if (!firstPacket) return;
+              firstPacket = false;
+              const size = data?.byteLength ?? data?.length ?? '?';
+              console.log(`[TikTok:WS] First raw WebSocket packet from TikTok: ${size} bytes`);
+            });
+          });
+        } else {
+          console.warn('[TikTok:Signing] webClient.fetchSignedWebSocketFromEuler not found — cannot wrap signing call');
+        }
+      }
+
       // ── Connection lifecycle ──────────────────────────────────────────────
 
       client.on("connected", (state: any) => {
