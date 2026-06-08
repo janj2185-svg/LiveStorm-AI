@@ -2,6 +2,7 @@ import type { Server as SocketServer } from "socket.io";
 import { ingestLiveEvent } from "./socketServer";
 
 export interface TikTokEvent {
+  source?: string;
   type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount";
   sessionId: number;
   userId?: string;

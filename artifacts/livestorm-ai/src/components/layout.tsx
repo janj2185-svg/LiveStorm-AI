@@ -18,6 +18,8 @@ import {
   Globe,
   Wand2,
   BarChart2,
+  Plug,
+  UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,19 +37,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   const NAVIGATION = [
-    { name: t("nav_dashboard"), href: "/dashboard", icon: LayoutDashboard, testId: "dashboard" },
-    { name: t("nav_live_studio"), href: "/live-studio", icon: Video, testId: "live-studio" },
-    { name: t("nav_gamification"), href: "/gamification", icon: Trophy, testId: "gamification" },
-    { name: t("nav_boss_battle"), href: "/boss-battle", icon: Sword, testId: "boss-battle" },
-    { name: t("nav_kingdom"), href: "/kingdom", icon: Castle, testId: "kingdom" },
-    { name: t("nav_mini_games"), href: "/mini-games", icon: Gamepad2, testId: "mini-games" },
-    { name: t("nav_universe"), href: "/universe", icon: Globe, testId: "universe" },
-    { name: t("nav_automation"), href: "/automation", icon: Zap, testId: "automation" },
-    { name: t("nav_overlays"), href: "/overlays", icon: Layers, testId: "overlays" },
-    { name: t("nav_ai_assistant"), href: "/ai-assistant", icon: Bot, testId: "ai-assistant" },
-    { name: t("nav_ai_content"), href: "/ai-content", icon: Wand2, testId: "ai-content" },
-    { name: t("nav_analytics"), href: "/analytics", icon: BarChart2, testId: "analytics" },
-    { name: t("nav_settings"), href: "/settings", icon: SettingsIcon, testId: "settings" },
+    { name: t("nav_dashboard"),    href: "/dashboard",    icon: LayoutDashboard, testId: "dashboard" },
+    { name: "Platforms",           href: "/platforms",    icon: Plug,            testId: "platforms" },
+    { name: t("nav_live_studio"),  href: "/live-studio",  icon: Video,           testId: "live-studio" },
+    { name: t("nav_gamification"), href: "/gamification", icon: Trophy,          testId: "gamification" },
+    { name: t("nav_boss_battle"),  href: "/boss-battle",  icon: Sword,           testId: "boss-battle" },
+    { name: t("nav_kingdom"),      href: "/kingdom",      icon: Castle,          testId: "kingdom" },
+    { name: t("nav_mini_games"),   href: "/mini-games",   icon: Gamepad2,        testId: "mini-games" },
+    { name: t("nav_universe"),     href: "/universe",     icon: Globe,           testId: "universe" },
+    { name: t("nav_automation"),   href: "/automation",   icon: Zap,             testId: "automation" },
+    { name: t("nav_overlays"),     href: "/overlays",     icon: Layers,          testId: "overlays" },
+    { name: t("nav_ai_assistant"), href: "/ai-assistant", icon: Bot,             testId: "ai-assistant" },
+    { name: t("nav_ai_content"),   href: "/ai-content",   icon: Wand2,           testId: "ai-content" },
+    { name: t("nav_analytics"),    href: "/analytics",    icon: BarChart2,       testId: "analytics" },
+    { name: "Profile",             href: "/profile",      icon: UserCircle,      testId: "profile" },
+    { name: t("nav_settings"),     href: "/settings",     icon: SettingsIcon,    testId: "settings" },
   ];
 
   return (

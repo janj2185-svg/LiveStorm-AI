@@ -26,6 +26,8 @@ import { Settings } from "@/pages/settings";
 import { Pricing } from "@/pages/pricing";
 import { Admin } from "@/pages/admin";
 import { Analytics } from "@/pages/analytics";
+import { Platforms } from "@/pages/platforms";
+import { Profile } from "@/pages/profile";
 
 import { ObsAlerts } from "@/pages/obs/alerts";
 import { ObsGoals } from "@/pages/obs/goals";
@@ -240,6 +242,12 @@ function AppRoutes() {
       </Route>
       <Route path="/analytics">
         <ProtectedRoute><Layout><Analytics /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/platforms">
+        <ProtectedRoute><Layout><Platforms /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/profile">
+        <ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>
       </Route>
       <Route path="/settings">
         <ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>
