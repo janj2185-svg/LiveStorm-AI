@@ -224,6 +224,28 @@ export async function startTikTokConnection(
 ): Promise<ConnectionMode> {
   const roomId = `session:${sessionId}`;
 
+  // Hard DB guard — refuse to start a connector for a session that is already
+  // closed in the database.  This prevents ghost connectors on the old
+  // autoscale instance from reconnecting after a deploy rolls over instances,
+  // and also prevents any caller from accidentally restarting an ended session.
+  if (!demoMode && isRealModeEnabled) {
+    try {
+      const row = await db.query.sessionsTable.findFirst({
+        columns: { id: true, endedAt: true },
+        where: dbEq(sessionsTable.id, sessionId),
+      });
+      if (row?.endedAt) {
+        console.warn(
+          `[TikTok] BLOCKED startTikTokConnection for session ${sessionId} — session already ended at ${row.endedAt.toISOString()} (ghost/stale call)`,
+        );
+        return "error";
+      }
+    } catch (dbErr: any) {
+      // Non-fatal — proceed rather than hard-blocking on a DB timeout
+      console.warn(`[TikTok] DB guard check failed for session ${sessionId}: ${dbErr?.message}`);
+    }
+  }
+
   // Prevent duplicate connectors caused by concurrent calls (e.g. session
   // recovery + simultaneous HTTP request) both seeing getConnectionMode()=null
   // before the first caller commits its entry to activeConnectors.

@@ -229,6 +229,8 @@ export class TikTokLiveClient extends EventEmitter {
   private currentClient: InstanceType<typeof WebcastPushConnection> | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectDelay = 15_000;
+  /** Last WebSocket URL host used — included in DISCONNECT log for traceability. */
+  lastWsUrlHost: string | null = null;
 
   constructor(username: string) {
     super();
@@ -286,7 +288,14 @@ export class TikTokLiveClient extends EventEmitter {
         (client as any).emit = (event: string | symbol, ...args: unknown[]) => {
           const name = String(event);
           if (!SKIP_NOISY.has(name)) {
-            console.log(`[Pipeline:0] library.emit("${name}") @${this.username}`);
+            // For disconnected, log the raw argument so we can see the actual shape
+            if (name === "disconnected") {
+              let raw = "undefined";
+              try { raw = JSON.stringify(args[0]); } catch { raw = String(args[0]); }
+              console.log(`[Pipeline:0] library.emit("disconnected") @${this.username} | raw arg: ${raw}`);
+            } else {
+              console.log(`[Pipeline:0] library.emit("${name}") @${this.username}`);
+            }
           }
           return _origEmit(event, ...args);
         };
@@ -314,6 +323,7 @@ export class TikTokLiveClient extends EventEmitter {
               let wsHost = '?';
               try { wsHost = new URL(result.wsUrl).hostname; } catch { wsHost = String(result.wsUrl ?? '').slice(0, 80); }
               capturedWsUrl = result.wsUrl ?? null;
+              this.lastWsUrlHost = wsHost; // tracked for DISCONNECT log
               console.log(
                 `[TikTok:Signing] ← response OK | wsUrl host: ${wsHost} | cursor: ${result.cursor ? 'present' : 'absent'}`,
               );
@@ -355,13 +365,40 @@ export class TikTokLiveClient extends EventEmitter {
         this.emit("connected");
       });
 
-      client.on("disconnected", (wsCode?: number) => {
-        // REQ-10: WebSocket close code explanation to pinpoint where events stop
-        const code = wsCode ?? 1006;
+      client.on("disconnected", (wsCodeOrEvent?: any) => {
+        // The library may pass a number OR a CloseEvent-shaped object depending on version.
+        // Log the raw payload first so we can see the exact shape.
+        let rawPayload = "undefined";
+        try { rawPayload = JSON.stringify(wsCodeOrEvent); } catch { rawPayload = String(wsCodeOrEvent); }
+
+        // Extract numeric close code from whatever shape is passed
+        let code: number;
+        let reason = "";
+        if (typeof wsCodeOrEvent === "number") {
+          code = wsCodeOrEvent;
+        } else if (wsCodeOrEvent !== null && typeof wsCodeOrEvent === "object") {
+          // CloseEvent: { code, reason, wasClean }
+          // Library object: { disconnectReason, disconnectReasonString }
+          // Fallback to 1006 if none of the known fields are numeric
+          const c =
+            wsCodeOrEvent.code ??
+            wsCodeOrEvent.disconnectReason ??
+            wsCodeOrEvent.statusCode ??
+            wsCodeOrEvent.status;
+          code = typeof c === "number" ? c : 1006;
+          reason =
+            wsCodeOrEvent.reason ??
+            wsCodeOrEvent.disconnectReasonString ??
+            wsCodeOrEvent.message ??
+            "";
+        } else {
+          code = 1006;
+        }
+
         const codeExplain: Record<number, string> = {
           1000: "normal closure",
           1001: "going away",
-          1006: "abnormal closure — no close frame sent (proxy/server dropped connection, rate limit, or keepalive timeout)",
+          1006: "abnormal closure — no close frame sent (proxy/server dropped, rate limit, or keepalive timeout)",
           1011: "server error",
           1012: "server restart",
           1013: "try again later (rate limit / server overload)",
@@ -369,8 +406,13 @@ export class TikTokLiveClient extends EventEmitter {
           4004: "TikTok: room not found",
         };
         const explain = codeExplain[code] ?? `unknown code ${code}`;
+        const reasonStr = reason ? ` | reason="${reason}"` : "";
+
         console.warn(
-          `[Pipeline:DISCONNECT] @${this.username} WebSocket closed | code=${code} (${explain}) | rawPacketsReceived=${rawEventCount}`,
+          `[Pipeline:DISCONNECT] @${this.username} | code=${code} (${explain})${reasonStr}` +
+          ` | rawPacketsReceived=${rawEventCount}` +
+          ` | wsUrl=${this.lastWsUrlHost ?? "unknown"}` +
+          ` | rawPayload=${rawPayload}`,
         );
         this.currentClient = null;
         this.emit("disconnected", code);
