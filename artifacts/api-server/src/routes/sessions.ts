@@ -12,6 +12,14 @@ import {
   type ConnectionMode,
 } from "../lib/tiktokConnector";
 
+// ── helpers ───────────────────────────────────────────────────────────────────
+async function clearStreamerLiveFlag(streamerId: number) {
+  await db
+    .update(streamersTable)
+    .set({ isLive: false, viewerCount: 0, updatedAt: new Date() })
+    .where(eq(streamersTable.id, streamerId));
+}
+
 const router = Router();
 
 router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
@@ -33,32 +41,60 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
     };
 
     if (streamer.isLive) {
-      // The DB says this streamer is live. Check if the connector is actually running.
-      // It won't be after a server restart — the in-memory map is cleared on boot.
+      // The DB says this streamer is live. Resolve the actual state before deciding.
       const existingSession = await db.query.sessionsTable.findFirst({
         where: and(eq(sessionsTable.streamerId, streamer.id), isNull(sessionsTable.endedAt)),
         orderBy: [desc(sessionsTable.startedAt)],
       });
 
-      if (existingSession && !getConnectionMode(existingSession.id)) {
-        // Connector died (server restart) — reconnect without creating a new session
-        const tiktokUsername = await resolveUsername();
-        const forceDemoMode = req.body?.demoMode === true || !tiktokUsername;
-        const io = getIO();
-        let actualMode: ConnectionMode = forceDemoMode ? "demo" : "real";
-        if (io) {
-          actualMode = await startTikTokConnection(io, tiktokUsername, existingSession.id, user.id, forceDemoMode);
+      // ── CASE A: isLive=true but no open session in DB ─────────────────────
+      // Stale flag from a previous crash/force-stop. Clear it and fall through
+      // to create a new session below.
+      if (!existingSession) {
+        console.log(
+          `[Session] streamer ${streamer.id}: isLive=true but no open session — clearing stale flag`,
+        );
+        await clearStreamerLiveFlag(streamer.id);
+        // fall through ↓
+      } else {
+        const connMode = getConnectionMode(existingSession.id);
+        console.log(
+          `[Session] Existing session ${existingSession.id} | connector: ${connMode ?? "DEAD"} | wsState: ${connMode ? "active" : "disconnected"}`,
+        );
+
+        // ── CASE B: connector dead or in error state ───────────────────────
+        // Reconnect without creating a new session.
+        if (!connMode || connMode === "error") {
+          if (connMode === "error") {
+            console.log(`[Session] Stopping stale error connector for session ${existingSession.id}`);
+            stopTikTokConnection(existingSession.id);
+          }
+          const tiktokUsername = await resolveUsername();
+          const forceDemoMode = req.body?.demoMode === true || !tiktokUsername;
+          const io = getIO();
+          let actualMode: ConnectionMode = forceDemoMode ? "demo" : "real";
+          if (io) {
+            actualMode = await startTikTokConnection(io, tiktokUsername, existingSession.id, user.id, forceDemoMode);
+          }
+          console.log(`[Session] Reconnected session ${existingSession.id} — mode: ${actualMode}`);
+          return res.json({
+            sessionId: existingSession.id,
+            streamerId: existingSession.streamerId,
+            startedAt: existingSession.startedAt,
+            mode: actualMode,
+          });
         }
+
+        // ── CASE C: connector is running (real/demo) ───────────────────────
+        // Return the existing session instead of blocking with 400.
+        console.log(`[Session] Returning active session ${existingSession.id} (mode: ${connMode}) — no new session needed`);
         return res.json({
           sessionId: existingSession.id,
           streamerId: existingSession.streamerId,
           startedAt: existingSession.startedAt,
-          mode: actualMode,
+          mode: connMode,
         });
       }
-
-      // Connector IS running (or no session found) — truly already live
-      return res.status(400).json({ error: "Already live" });
     }
 
     const [session] = await db
@@ -87,6 +123,51 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
       mode: actualMode,
     });
   } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── POST /sessions/force-stop ─────────────────────────────────────────────────
+// Hard-resets any stale/ghost session for this user.  Safe to call at any time.
+router.post("/sessions/force-stop", requireAuth, async (req: any, res: any) => {
+  try {
+    const user = await getOrCreateUser(req.clerkUserId);
+    const streamer = await db.query.streamersTable.findFirst({
+      where: eq(streamersTable.userId, user.id),
+    });
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const openSession = await db.query.sessionsTable.findFirst({
+      where: and(eq(sessionsTable.streamerId, streamer.id), isNull(sessionsTable.endedAt)),
+      orderBy: [desc(sessionsTable.startedAt)],
+    });
+
+    const connMode = openSession ? getConnectionMode(openSession.id) : null;
+    console.log(
+      `[Session] Force-stop requested — streamer ${streamer.id} | session: ${openSession?.id ?? "none"} | connector: ${connMode ?? "DEAD"}`,
+    );
+
+    if (openSession) {
+      stopTikTokConnection(openSession.id);
+      await db
+        .update(sessionsTable)
+        .set({ endedAt: new Date() })
+        .where(eq(sessionsTable.id, openSession.id));
+    }
+
+    await clearStreamerLiveFlag(streamer.id);
+
+    const io = getIO();
+    if (io && openSession) {
+      io.to(`session:${openSession.id}`).emit("session:ended", { sessionId: openSession.id });
+    }
+
+    console.log(
+      `[Session] Force-stop complete — streamer ${streamer.id}, cleared session ${openSession?.id ?? "none"}`,
+    );
+    res.json({ ok: true, clearedSessionId: openSession?.id ?? null });
+  } catch (err) {
+    console.error("[Session] force-stop error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

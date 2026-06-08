@@ -26,7 +26,7 @@ import {
   type TikTokViewerCountEvent,
 } from "./tiktokLiveClient.js";
 import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
-import { isNull, eq as dbEq } from "drizzle-orm";
+import { isNull, eq as dbEq, lt, and as dbAnd } from "drizzle-orm";
 
 export type ConnectionMode = "real" | "demo" | "error";
 
@@ -294,6 +294,51 @@ export function getConnectionMode(sessionId: number): ConnectionMode | null {
 
 export function getConnectionError(sessionId: number): string | undefined {
   return activeConnectors.get(sessionId)?.error;
+}
+
+/**
+ * Called once on server startup to mark sessions that have been open for more
+ * than STALE_HOURS as ended. Prevents ghost sessions that accumulate after
+ * repeated crashes or forced restarts.
+ */
+export async function cleanupStaleSessions(): Promise<void> {
+  const STALE_HOURS = 24;
+  const cutoff = new Date(Date.now() - STALE_HOURS * 60 * 60 * 1000);
+  try {
+    const stale = await db
+      .select({
+        sessionId: sessionsTable.id,
+        streamerId: sessionsTable.streamerId,
+        startedAt: sessionsTable.startedAt,
+      })
+      .from(sessionsTable)
+      .where(dbAnd(isNull(sessionsTable.endedAt), lt(sessionsTable.startedAt, cutoff)));
+
+    if (stale.length === 0) {
+      console.log("[Session:Cleanup] No stale sessions found.");
+      return;
+    }
+
+    console.log(
+      `[Session:Cleanup] Ending ${stale.length} stale session(s) older than ${STALE_HOURS}h`,
+    );
+    for (const s of stale) {
+      console.log(
+        `[Session:Cleanup] Ending session ${s.sessionId} (started ${s.startedAt.toISOString()})`,
+      );
+      stopTikTokConnection(s.sessionId);
+      await db
+        .update(sessionsTable)
+        .set({ endedAt: new Date() })
+        .where(dbEq(sessionsTable.id, s.sessionId));
+      await db
+        .update(streamersTable)
+        .set({ isLive: false, viewerCount: 0, updatedAt: new Date() })
+        .where(dbEq(streamersTable.id, s.streamerId));
+    }
+  } catch (err: any) {
+    console.error("[Session:Cleanup] Error:", err.message);
+  }
 }
 
 /**

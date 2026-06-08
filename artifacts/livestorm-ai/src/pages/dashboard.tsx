@@ -9,6 +9,7 @@ import {
   useEndSession,
   useGetSessions,
   useConnectTiktok,
+  useForceStopSession,
   getGetActiveSessionQueryKey,
   getGetSessionsQueryKey,
   getGetMyProfileQueryKey,
@@ -52,7 +53,8 @@ export function Dashboard() {
   const { data: sessions } = useGetSessions();
   const startSession = useStartSession();
   const endSession = useEndSession();
-  
+  const forceStop = useForceStopSession();
+
   const activeSessionId = activeSessionRes?.session?.id;
   const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled } = useLiveSession(activeSessionId);
   const [ttsOn, setTtsOn] = useState(false);
@@ -121,6 +123,24 @@ export function Dashboard() {
         queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetSessionsQueryKey() });
       }
+    });
+  };
+
+  const handleForceStop = () => {
+    forceStop.mutate(undefined, {
+      onSuccess: (data) => {
+        toast({
+          title: "Session Reset",
+          description: data.clearedSessionId
+            ? `Cleared session #${data.clearedSessionId}. Ready to start fresh.`
+            : "No active session found — state cleared.",
+        });
+        queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetSessionsQueryKey() });
+      },
+      onError: () => {
+        toast({ title: "Reset Failed", description: "Could not reset session.", variant: "destructive" });
+      },
     });
   };
 
@@ -216,7 +236,7 @@ export function Dashboard() {
             {isActive ? `Session active for ${formatDuration(duration)}` : "Start a session to capture live events."}
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
           {isActive ? (
             <Button variant="destructive" onClick={handleEndSession} disabled={endSession.isPending} className="font-bold gap-2">
               <Square className="h-4 w-4" fill="currentColor" /> 
@@ -228,6 +248,17 @@ export function Dashboard() {
               {startSession.isPending ? "Starting..." : "Go Live"}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleForceStop}
+            disabled={forceStop.isPending}
+            className="gap-1.5 text-xs text-muted-foreground border-white/10 hover:border-red-500/40 hover:text-red-400"
+            title="Force-clears any stuck or ghost session. Use if Go Live is blocked."
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            {forceStop.isPending ? "Resetting…" : "Reset"}
+          </Button>
         </div>
       </div>
 

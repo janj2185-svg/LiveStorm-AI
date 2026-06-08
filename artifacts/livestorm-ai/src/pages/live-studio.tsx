@@ -6,6 +6,7 @@ import {
   useStartSession,
   useEndSession,
   useGetActiveSession,
+  useForceStopSession,
   getGetMyProfileQueryKey,
   getGetActiveSessionQueryKey
 } from "@workspace/api-client-react";
@@ -18,7 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
   Video, PlugZap, RefreshCw, StopCircle, PlayCircle, Activity,
-  AlertTriangle, Radio, Bot,
+  AlertTriangle, Radio, Bot, RotateCcw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,7 +37,8 @@ export function LiveStudio() {
   });
   const startSession = useStartSession();
   const endSession = useEndSession();
-  
+  const forceStop = useForceStopSession();
+
   const activeSessionId = activeSessionRes?.session?.id;
   const sessionMode = (activeSessionRes?.session as any)?.mode ?? null;
 
@@ -88,6 +90,23 @@ export function LiveStudio() {
       onSuccess: () => {
         toast({ title: "Broadcast Ended" });
         queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
+      },
+    });
+  };
+
+  const handleForceStop = () => {
+    forceStop.mutate(undefined, {
+      onSuccess: (data) => {
+        toast({
+          title: "Session Reset",
+          description: data.clearedSessionId
+            ? `Cleared session #${data.clearedSessionId}. You can start a new session now.`
+            : "No active session found — state has been cleared.",
+        });
+        queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
+      },
+      onError: () => {
+        toast({ title: "Reset Failed", description: "Could not reset session. Try again.", variant: "destructive" });
       },
     });
   };
@@ -245,8 +264,20 @@ export function LiveStudio() {
                   {startSession.isPending ? "Starting..." : "Start Live Session"}
                 </Button>
               )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 text-xs text-muted-foreground border-white/10 hover:border-red-500/40 hover:text-red-400"
+                onClick={handleForceStop}
+                disabled={forceStop.isPending}
+                title="Force-clears any stuck session from the database. Use if Start is blocked."
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {forceStop.isPending ? "Resetting..." : "Force Reset Session"}
+              </Button>
               
-              <p className="text-xs text-muted-foreground text-center mt-3">
+              <p className="text-xs text-muted-foreground text-center">
                 {isActive
                   ? effectiveMode === "real"
                     ? "Receiving real TikTok LIVE events."
