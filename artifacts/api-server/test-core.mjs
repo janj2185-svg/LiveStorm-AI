@@ -94,58 +94,62 @@ section(7, "No hardcoded TikTok username in source code");
   }
 }
 
-// ─── 2. Correct room ID detected ───────────────────────────────────────────
-section(2, "Room ID detection via SIGI_STATE HTML parsing");
+// ─── 2. Library-based live detection (SIGI_STATE pre-check removed) ─────────
+section(2, "Library-based live detection — no SIGI_STATE HTML pre-check");
 {
   const clientSource = readFileSync(new URL("src/lib/tiktokLiveClient.ts", import.meta.url), "utf8");
 
-  if (clientSource.includes("SIGI_STATE") && clientSource.includes("LiveRoom")) {
-    ok("SIGI_STATE parser present — reads JSON blob from TikTok live page");
+  // SIGI_STATE pre-check must be GONE from _fullConnect() — it always returned
+  // liveRoomStatus=0 from server IPs even during an active stream.
+  if (clientSource.includes("await fetchLiveRoomInfo") && clientSource.includes("if (!info.isLive)")) {
+    fail("BUG: SIGI_STATE pre-check still present in _fullConnect() — must be removed");
   } else {
-    fail("SIGI_STATE parser not found");
+    ok("SIGI_STATE HTML pre-check removed from _fullConnect() — library is the live detector");
   }
 
-  if (clientSource.includes("const roomId = String(user?.roomId ?? \"\")")) {
-    ok("roomId extracted from SIGI_STATE.LiveRoom.liveRoomUserInfo.user.roomId");
+  // Old wrong status===4 check must be gone from actual code (comments are OK)
+  const nonCommentLines = clientSource.split("\n").filter(l => !l.trim().startsWith("*") && !l.trim().startsWith("//"));
+  if (nonCommentLines.some(l => l.includes("status === 4"))) {
+    fail("BUG PRESENT: still checking user.status===4 in live code (wrong field — account status, not stream status)");
   } else {
-    fail("roomId extraction");
+    ok("Old wrong check 'user.status===4' absent from live code (only in comments)");
   }
 
-  // Verify old WRONG check is gone
-  if (clientSource.includes("status === 4 && roomId")) {
-    fail("BUG PRESENT: still checking user.status===4 (wrong field, wrong value)");
+  // _fullConnect() must go directly to _connectClient()
+  if (clientSource.includes("_fullConnect") && clientSource.includes("_connectClient")) {
+    ok("_fullConnect() delegates immediately to _connectClient() — no pre-check blocking");
   } else {
-    ok("Old wrong check 'user.status===4' has been removed");
+    fail("_fullConnect() or _connectClient() missing");
   }
 
-  // Verify new CORRECT check is in place
-  if (clientSource.includes("liveRoom?.liveRoomStatus") || clientSource.includes("LiveRoom.liveRoomStatus") || clientSource.includes("liveRoom?.liveRoomStatus") || clientSource.includes("topLevelStatus")) {
-    ok("New check uses liveRoomStatus (top-level LiveRoom field) — verified 0=offline via diagnostic");
+  // isNotLiveError must catch library error patterns
+  if (
+    clientSource.includes("live has ended") &&
+    clientSource.includes("failed to retrieve room") &&
+    clientSource.includes("status is not") &&
+    clientSource.includes(".toLowerCase()")
+  ) {
+    ok("isNotLiveError() covers library error patterns and is case-insensitive");
   } else {
-    fail("New liveRoomStatus check not found");
+    fail("isNotLiveError() missing library error patterns or case-insensitivity");
   }
 
-  // Verify explicit logging of the parsed values
-  if (clientSource.includes("SIGI_STATE parsed for @")) {
-    ok("Full SIGI_STATE fields logged on every connection attempt for debugging");
+  // Both error paths (on("error") and .catch()) must route notLiveErrors to 30s polling
+  const errorHandlerCount = (clientSource.match(/isNotLiveError/g) ?? []).length;
+  if (errorHandlerCount >= 2) {
+    ok(`isNotLiveError() checked in ${errorHandlerCount} error paths (on("error") + .catch())`);
   } else {
-    fail("SIGI_STATE debug logging missing");
+    fail(`isNotLiveError() only checked ${errorHandlerCount} time(s) — needs to cover both on("error") and .catch()`);
   }
 
-  // Verify fallback behavior when SIGI_STATE is missing
-  if (clientSource.includes("Attempting WebSocket connection anyway")) {
-    ok("Fallback: if SIGI_STATE missing/unparseable → attempt WebSocket (don't block)");
+  // notLive event must be emitted from _connectClient() error handlers
+  if (clientSource.includes("emit(\"notLive\"") && clientSource.includes("polling in 30 s")) {
+    ok("notLive event emitted with 30 s retry from _connectClient() error handlers");
   } else {
-    fail("Missing fallback for SIGI_STATE parse failure");
+    fail("notLive emit or 30 s retry missing from _connectClient() error handlers");
   }
 
-  // Verify liveRoomStatus=0 → not live (definitively)
-  if (clientSource.includes("topLevelStatus === 0")) {
-    ok("liveRoomStatus===0 → definitively not streaming (confirmed offline signal)");
-  } else {
-    fail("liveRoomStatus===0 guard missing");
-  }
-
+  // roomId still logged on successful WebSocket connect
   if (clientSource.includes("roomId: ${state?.roomId ?? \"?\"}")) {
     ok("roomId logged on WebSocket connect: '[TikTok] ✓ Connected ... (roomId: X)'");
   } else {

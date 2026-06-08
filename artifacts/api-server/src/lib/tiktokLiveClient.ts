@@ -169,16 +169,25 @@ async function fetchLiveRoomInfo(username: string): Promise<LiveRoomInfo> {
   return { isLive: hasRoomId, roomId };
 }
 
-/** Returns true when the error means "user isn't live yet" (retriable). */
+/**
+ * Returns true when the error means "user isn't live yet" (retriable with 30s polling).
+ * Covers both our own messages and patterns from tiktok-live-connector's internal checks.
+ */
 export function isNotLiveError(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
+  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
   return (
-    msg.includes("not currently streaming") ||
-    msg.includes("not started") ||
-    msg.includes("no room ID found") ||
-    msg.includes("Start a TikTok LIVE") ||
-    msg.includes("not live") ||
-    msg.includes("status is not")
+    msg.includes("not currently streaming") || // our own message
+    msg.includes("not started")              || // library: room not started
+    msg.includes("no room id found")         || // library: no room for username
+    msg.includes("start a tiktok live")      || // our own message
+    msg.includes("not live")                 || // generic
+    msg.includes("status is not")            || // library: "Live status is not 4"
+    msg.includes("live has ended")           || // library: stream ended mid-session
+    msg.includes("failed to retrieve room")  || // library: room lookup failed
+    msg.includes("failed to get room")       || // library: room API error
+    msg.includes("room not found")           || // library: no active room
+    msg.includes("is offline")               || // library: user offline
+    msg.includes("not online")                  // library: user not online
   );
 }
 
@@ -186,10 +195,15 @@ export function isNotLiveError(err: unknown): boolean {
 
 /**
  * Thin wrapper around WebcastPushConnection that:
- *  - Checks live status via SIGI_STATE before attempting a WebSocket connection.
+ *  - Connects directly via the library's own webcast-API live detection.
  *  - Emits "notLive" and polls every 30 s when the user isn't streaming yet.
  *  - Auto-reconnects on disconnect (exponential back-off, max 30 s).
  *  - Maps tiktok-live-connector events to this app's typed event interface.
+ *
+ * NOTE: We do NOT use our own SIGI_STATE HTML pre-check. Production logs
+ * confirmed that TikTok serves liveRoomStatus=0 to server/datacenter IPs
+ * on every request regardless of actual stream state. The library's internal
+ * webcast API calls work correctly from server IPs and are the ground truth.
  */
 export class TikTokLiveClient extends EventEmitter {
   readonly username: string;
@@ -215,33 +229,15 @@ export class TikTokLiveClient extends EventEmitter {
     await this._fullConnect();
   }
 
-  /** Full round-trip: check live status, then connect WebSocket. */
+  /**
+   * Initiate a connection attempt.
+   * Goes straight to _connectClient() — no SIGI_STATE pre-check.
+   * The library's own webcast API calls determine live status and are
+   * reliable from server IPs. "Not live" errors are caught in _connectClient().
+   */
   private async _fullConnect(): Promise<void> {
     if (this.stopped) return;
-
-    console.log(`[TikTok] Checking live status for @${this.username}...`);
-    let info: LiveRoomInfo;
-    try {
-      info = await fetchLiveRoomInfo(this.username);
-    } catch (err: any) {
-      throw err; // network / HTTP error — propagate to caller
-    }
-
-    if (!info.isLive) {
-      const msg =
-        `@${this.username} is not currently streaming on TikTok LIVE. ` +
-        `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
-      console.log(
-        `[TikTok] @${this.username} is not live — polling again in 30 s.`,
-      );
-      this.emit("notLive", { username: this.username, message: msg });
-      this._scheduleRetry(30_000, /* fullConnect */ true);
-      return;
-    }
-
-    console.log(
-      `[TikTok] @${this.username} is live (roomId: ${info.roomId}) — opening WebSocket...`,
-    );
+    console.log(`[TikTok] Connecting to @${this.username}...`);
     await this._connectClient();
   }
 
@@ -287,9 +283,19 @@ export class TikTokLiveClient extends EventEmitter {
 
       client.on("error", (err: any) => {
         const msg: string = err?.message ?? String(err);
-        console.error(`[TikTok] Error for @${this.username}: ${msg}`);
-        this.emit("wsError", err instanceof Error ? err : new Error(msg));
-        // Don't reject — disconnect handler will schedule a reconnect.
+        if (isNotLiveError(new Error(msg))) {
+          // Library's own live-check determined the user isn't streaming yet.
+          const notLiveMsg =
+            `@${this.username} is not currently streaming on TikTok LIVE. ` +
+            `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+          console.log(`[TikTok] @${this.username} not live (library error: ${msg}) — polling in 30 s`);
+          this.emit("notLive", { username: this.username, message: notLiveMsg });
+          this._scheduleRetry(30_000, /* fullConnect */ true);
+        } else {
+          console.error(`[TikTok] Error for @${this.username}: ${msg}`);
+          this.emit("wsError", err instanceof Error ? err : new Error(msg));
+        }
+        // Don't reject — reconnect is scheduled above or by disconnect handler.
         settle();
       });
 
@@ -354,15 +360,23 @@ export class TikTokLiveClient extends EventEmitter {
         .then(() => settle())
         .catch((err: any) => {
           const msg: string = err?.message ?? String(err);
-          console.error(
-            `[TikTok] connect() rejected for @${this.username}: ${msg}`,
-          );
-          this.emit("wsError", new Error(msg));
-          settle();
-          if (!this.stopped) {
-            this._scheduleRetry(this.reconnectDelay, /* fullConnect */ false);
-            this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 30_000);
+          if (isNotLiveError(new Error(msg))) {
+            // Library confirmed user isn't live — fall into 30 s polling.
+            const notLiveMsg =
+              `@${this.username} is not currently streaming on TikTok LIVE. ` +
+              `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+            console.log(`[TikTok] @${this.username} not live (library: ${msg}) — polling in 30 s`);
+            this.emit("notLive", { username: this.username, message: notLiveMsg });
+            this._scheduleRetry(30_000, /* fullConnect */ true);
+          } else {
+            console.error(`[TikTok] connect() rejected for @${this.username}: ${msg}`);
+            this.emit("wsError", new Error(msg));
+            if (!this.stopped) {
+              this._scheduleRetry(this.reconnectDelay, /* fullConnect */ false);
+              this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 30_000);
+            }
           }
+          settle();
         });
 
       // Safety timeout — avoid hanging indefinitely if no event fires.
