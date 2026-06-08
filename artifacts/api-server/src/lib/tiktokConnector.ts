@@ -105,13 +105,14 @@ async function startLiveConnector(
   const client = new TikTokLiveClient(tiktokUsername);
 
   // Wire up events → ingestLiveEvent
+  // REQ-2/3: Pipeline:3 — connector receives event from TikTokLiveClient, before ingestLiveEvent
   client.on("chat", (ev: TikTokChatEvent) => {
-    console.log(`[TikTok] ▶ comment → session ${sessionId}: ${ev.username}: "${ev.comment}"`);
+    console.log(`[Pipeline:3] connector→ingest | comment | session=${sessionId} | user=${ev.username} | text="${ev.comment.slice(0, 80)}"`);
     void ingestLiveEvent(makeEvent("comment", sessionId, ev.username, { text: ev.comment }), userId);
   });
 
   client.on("gift", (ev: TikTokGiftEvent) => {
-    console.log(`[TikTok] ▶ gift → session ${sessionId}: ${ev.username}: ${ev.giftName}`);
+    console.log(`[Pipeline:3] connector→ingest | gift | session=${sessionId} | user=${ev.username} | gift=${ev.giftName} coins=${ev.coins}`);
     void ingestLiveEvent(
       makeEvent("gift", sessionId, ev.username, {
         giftName: ev.giftName,
@@ -123,23 +124,23 @@ async function startLiveConnector(
   });
 
   client.on("like", (ev: TikTokLikeEvent) => {
-    console.log(`[TikTok] ▶ like → session ${sessionId}: ${ev.username}: ${ev.likeCount}`);
+    console.log(`[Pipeline:3] connector→ingest | like | session=${sessionId} | user=${ev.username} | count=${ev.likeCount}`);
     void ingestLiveEvent(makeEvent("like", sessionId, ev.username, { likeCount: ev.likeCount }), userId);
   });
 
   client.on("social", (ev: TikTokSocialEvent) => {
     if (ev.action === "follow") {
-      console.log(`[TikTok] ▶ follow → session ${sessionId}: ${ev.username}`);
+      console.log(`[Pipeline:3] connector→ingest | follow | session=${sessionId} | user=${ev.username}`);
       void ingestLiveEvent(makeEvent("follow", sessionId, ev.username, {}), userId);
     } else if (ev.action === "share") {
-      console.log(`[TikTok] ▶ share → session ${sessionId}: ${ev.username}`);
+      console.log(`[Pipeline:3] connector→ingest | share | session=${sessionId} | user=${ev.username}`);
       void ingestLiveEvent(makeEvent("share", sessionId, ev.username, {}), userId);
     }
     // "join" events are ignored (no matching TikTokEvent type)
   });
 
   client.on("viewerCount", (ev: TikTokViewerCountEvent) => {
-    console.log(`[TikTok] ▶ viewerCount → session ${sessionId}: ${ev.count}`);
+    console.log(`[Pipeline:3] connector→ingest | viewerCount | session=${sessionId} | count=${ev.count}`);
     void ingestLiveEvent(makeEvent("viewerCount", sessionId, undefined, { count: ev.count }), userId);
   });
 

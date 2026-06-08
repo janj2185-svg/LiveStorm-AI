@@ -340,10 +340,25 @@ export class TikTokLiveClient extends EventEmitter {
         this.emit("connected");
       });
 
-      client.on("disconnected", () => {
-        console.warn(`[TikTok] Disconnected from @${this.username}`);
+      client.on("disconnected", (wsCode?: number) => {
+        // REQ-10: WebSocket close code explanation to pinpoint where events stop
+        const code = wsCode ?? 1006;
+        const codeExplain: Record<number, string> = {
+          1000: "normal closure",
+          1001: "going away",
+          1006: "abnormal closure — no close frame sent (proxy/server dropped connection, rate limit, or keepalive timeout)",
+          1011: "server error",
+          1012: "server restart",
+          1013: "try again later (rate limit / server overload)",
+          4000: "TikTok: stream ended",
+          4004: "TikTok: room not found",
+        };
+        const explain = codeExplain[code] ?? `unknown code ${code}`;
+        console.warn(
+          `[Pipeline:DISCONNECT] @${this.username} WebSocket closed | code=${code} (${explain}) | rawPacketsReceived=${rawEventCount}`,
+        );
         this.currentClient = null;
-        this.emit("disconnected", 1006);
+        this.emit("disconnected", code);
         settle(); // resolve the promise if not yet done
         if (!this.stopped) {
           this._scheduleRetry(this.reconnectDelay, /* fullConnect */ false);
@@ -384,10 +399,21 @@ export class TikTokLiveClient extends EventEmitter {
       });
 
       // ── Raw event tracing (fires for every decoded TikTok message) ───────
-      // This is the first line of defence: if decodedData never fires,
-      // the WebSocket is open but no messages are arriving from TikTok.
-      client.on("decodedData", (type: string, _data: any) => {
-        console.log(`[TikTok] RawEvent type=${type} @${this.username}`);
+      // REQ-1/8/9: If this never fires after connect, TikTok sent no data
+      // packets before the WebSocket closed — events stop at Stage 1 (WS level).
+      let rawEventCount = 0;
+      client.on("decodedData", (type: string, data: any) => {
+        rawEventCount++;
+        if (rawEventCount === 1) {
+          // REQ-8: Log the full first raw packet from TikTok
+          let preview = "";
+          try { preview = JSON.stringify(data).slice(0, 200); } catch { preview = String(data).slice(0, 200); }
+          console.log(
+            `[Pipeline:1] FIRST raw packet from TikTok | type=${type} | @${this.username} | data=${preview}`,
+          );
+        } else if (rawEventCount <= 10 || rawEventCount % 50 === 0) {
+          console.log(`[Pipeline:1] RawEvent #${rawEventCount} type=${type} @${this.username}`);
+        }
       });
 
       // ── Live events ───────────────────────────────────────────────────────
@@ -396,8 +422,13 @@ export class TikTokLiveClient extends EventEmitter {
         // v2 schema: primary field is "comment"; fallback to "content" in case of schema changes.
         const comment: string = d?.comment ?? d?.content ?? "";
         const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
-        console.log(`[TikTok] chat @${this.username} ← ${username}: "${comment}"`);
-        if (!comment.trim()) return;
+        console.log(`[Pipeline:2a] library→chat @${this.username} | user=${username} | text="${comment.slice(0, 80)}"`);
+        if (!comment.trim()) {
+          console.log(`[Pipeline:2a] chat DROPPED — empty comment from ${username}`);
+          return;
+        }
+        // REQ-9: first comment event
+        console.log(`[Pipeline:2b] this.emit("chat") → connector | user=${username} | text="${comment.slice(0, 80)}"`);
         this.emit("chat", { username, comment } satisfies TikTokChatEvent);
       });
 
@@ -405,7 +436,8 @@ export class TikTokLiveClient extends EventEmitter {
         const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
         const giftName = d?.giftName ?? d?.gift?.name ?? "Gift";
         const coins = Number(d?.diamondCount ?? d?.gift?.diamondCount ?? 0);
-        console.log(`[TikTok] gift @${this.username} ← ${username}: ${giftName} (${coins} coins)`);
+        console.log(`[Pipeline:2a] library→gift @${this.username} | user=${username} | gift=${giftName} coins=${coins}`);
+        console.log(`[Pipeline:2b] this.emit("gift") → connector`);
         this.emit("gift", {
           username,
           giftName,
@@ -418,7 +450,8 @@ export class TikTokLiveClient extends EventEmitter {
       client.on("like", (d: any) => {
         const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
         const likeCount = Number(d?.likeCount ?? 0);
-        console.log(`[TikTok] like @${this.username} ← ${username}: ${likeCount}`);
+        console.log(`[Pipeline:2a] library→like @${this.username} | user=${username} | count=${likeCount}`);
+        console.log(`[Pipeline:2b] this.emit("like") → connector`);
         this.emit("like", {
           username,
           likeCount,
@@ -430,13 +463,15 @@ export class TikTokLiveClient extends EventEmitter {
       // WebcastEvent.SHARE) — NOT through "social". We listen to all three.
       client.on("follow", (d: any) => {
         const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
-        console.log(`[TikTok] follow @${this.username} ← ${username}`);
+        console.log(`[Pipeline:2a] library→follow @${this.username} | user=${username}`);
+        console.log(`[Pipeline:2b] this.emit("social/follow") → connector`);
         this.emit("social", { username, action: "follow" } satisfies TikTokSocialEvent);
       });
 
       client.on("share", (d: any) => {
         const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
-        console.log(`[TikTok] share @${this.username} ← ${username}`);
+        console.log(`[Pipeline:2a] library→share @${this.username} | user=${username}`);
+        console.log(`[Pipeline:2b] this.emit("social/share") → connector`);
         this.emit("social", { username, action: "share" } satisfies TikTokSocialEvent);
       });
 
@@ -445,21 +480,23 @@ export class TikTokLiveClient extends EventEmitter {
         const dt: string = (d?.displayType ?? d?.common?.displayText?.displayType ?? "").toLowerCase();
         const action: TikTokSocialEvent["action"] = dt.includes("share") ? "share" : "follow";
         const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
-        console.log(`[TikTok] social @${this.username} ← ${username} (${action})`);
+        console.log(`[Pipeline:2a] library→social(fallback) @${this.username} | user=${username} | action=${action}`);
+        console.log(`[Pipeline:2b] this.emit("social/${action}") → connector`);
         this.emit("social", { username, action } satisfies TikTokSocialEvent);
       });
 
       client.on("member", (d: any) => {
         // "member" = viewer joined the room
         const username = d?.uniqueId ?? d?.user?.uniqueId ?? d?.userDetails?.user?.uniqueId ?? "unknown";
-        console.log(`[TikTok] member join @${this.username} ← ${username}`);
+        console.log(`[Pipeline:2a] library→member(join) @${this.username} | user=${username}`);
         this.emit("social", { username, action: "join" } satisfies TikTokSocialEvent);
       });
 
       client.on("roomUser", (d: any) => {
         const count = Number(d?.viewerCount ?? d?.totalUserCount ?? 0);
-        console.log(`[TikTok] viewerCount @${this.username}: ${count}`);
+        console.log(`[Pipeline:2a] library→roomUser @${this.username} | viewers=${count}`);
         if (count > 0) {
+          console.log(`[Pipeline:2b] this.emit("viewerCount") → connector`);
           this.emit("viewerCount", { count } satisfies TikTokViewerCountEvent);
         }
       });

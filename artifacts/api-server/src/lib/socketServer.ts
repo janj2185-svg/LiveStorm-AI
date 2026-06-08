@@ -167,23 +167,28 @@ export function initSocketServer(httpServer: HttpServer) {
     const obsToken = socket.handshake.auth?.obsToken as string | undefined;
 
     socket.on("session:join", async (sessionId: number) => {
+      // REQ-7: Pipeline:7 — log the room ID the frontend is subscribing to
+      console.log(`[Pipeline:7] session:join received | socketId=${socket.id} | sessionId=${sessionId} | room=session:${sessionId}`);
       try {
         const sid = Number(sessionId);
         const session = await db.query.sessionsTable.findFirst({
           where: eq(sessionsTable.id, sid),
         });
         if (!session || session.endedAt) {
+          console.warn(`[Pipeline:7] session:join REJECTED — session ${sid} not found or ended`);
           socket.emit("session:error", { message: "Session not found or already ended" });
           return;
         }
 
         if (!authToken) {
+          console.warn(`[Pipeline:7] session:join REJECTED — no auth token | socketId=${socket.id}`);
           socket.emit("session:error", { message: "Authentication required" });
           return;
         }
 
         const userId = await resolveUserIdFromToken(authToken);
         if (!userId) {
+          console.warn(`[Pipeline:7] session:join REJECTED — invalid auth token | socketId=${socket.id}`);
           socket.emit("session:error", { message: "Invalid auth token" });
           return;
         }
@@ -192,14 +197,19 @@ export function initSocketServer(httpServer: HttpServer) {
           where: eq(streamersTable.id, session.streamerId),
         });
         if (!streamer || streamer.userId !== userId) {
+          console.warn(`[Pipeline:7] session:join REJECTED — not authorized | userId=${userId} | session=${sid}`);
           socket.emit("session:error", { message: "Not authorized for this session" });
           return;
         }
 
         socket.data.userId = userId;
         socket.join(`session:${sid}`);
+        // Count sockets now in the room so we can correlate with emit logs
+        const roomSockets = await io!.in(`session:${sid}`).fetchSockets();
+        console.log(`[Pipeline:7] session:join SUCCESS | socketId=${socket.id} | userId=${userId} | room=session:${sid} | totalSocketsInRoom=${roomSockets.length}`);
         socket.emit("session:joined", { sessionId: sid });
       } catch (_err) {
+        console.error(`[Pipeline:7] session:join ERROR | socketId=${socket.id} | sessionId=${sessionId}`, _err);
         socket.emit("session:error", { message: "Could not join session" });
       }
     });
@@ -255,11 +265,24 @@ export function getIO(): SocketServer | null {
 }
 
 export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
-  if (!io) return;
+  if (!io) {
+    console.error(`[Pipeline:4] ingestLiveEvent called but io=null — Socket.IO not initialised`);
+    return;
+  }
 
   const roomId = `session:${event.sessionId}`;
 
-  console.log(`[Socket] live:event type=${event.type} → room=${roomId} username=${event.username ?? "-"}`);
+  // REQ-4/5/6: Pipeline:4 — every ingestLiveEvent call; Pipeline:5/6 — emit + room ID + socket count
+  const roomSockets = await io.in(roomId).fetchSockets();
+  console.log(
+    `[Pipeline:4] ingestLiveEvent | type=${event.type} | session=${event.sessionId} | user=${event.username ?? "-"}`,
+  );
+  console.log(
+    `[Pipeline:5/6] io.to(${roomId}).emit("live:event") | socketsInRoom=${roomSockets.length}` +
+    (roomSockets.length === 0
+      ? " ⚠️  NO FRONTEND SOCKETS IN ROOM — event will be lost"
+      : ` | socketIds=${roomSockets.map((s) => s.id).join(",")}`),
+  );
   io.to(roomId).emit("live:event", event);
 
   await processAutomations(io, roomId, userId, event);
