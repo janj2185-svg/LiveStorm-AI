@@ -203,9 +203,15 @@ export class TikToolsClient extends EventEmitter {
           throw new Error(errMsg);
         }
         token = j.data.token as string;
-        // Cache JWT for 55 min (expire_after=3600, minus 5 min stale margin)
-        this.cachedJwt = { token, expiresAt: now + 55 * 60 * 1000 };
-        console.log(`[TikTools] JWT acquired for @${this.username} — opening WebSocket`);
+        // Cache JWT for 55 min (expire_after=3600s, minus 5 min stale margin).
+        // Never log the token itself — only log the expiry timestamp.
+        const jwtExpiresAt = now + 55 * 60 * 1000;
+        this.cachedJwt = { token, expiresAt: jwtExpiresAt };
+        console.log(
+          `[TikTools] JWT acquired for @${this.username} — ` +
+          `expires at ${new Date(jwtExpiresAt).toISOString()} ` +
+          `(in ${Math.round((jwtExpiresAt - now) / 1000)}s) — opening WebSocket`,
+        );
       } catch (err: any) {
         console.error(`[TikTools] JWT fetch error for @${this.username}: ${err?.message}`);
         if (!this.stopped) {
@@ -322,7 +328,26 @@ export class TikToolsClient extends EventEmitter {
       const reason = reasonBuf?.toString?.() ?? "";
       const connectedMs = connectedAt != null ? Date.now() - connectedAt : 0;
 
-      if (code === 4429 || reason.toLowerCase().includes("rate limit")) {
+      if (code === 4401 || reason.toLowerCase().includes("invalid or expired jwt")) {
+        // tik.tools rejected the JWT — the cached token is no longer valid.
+        // Evict the cache so the next attempt fetches a fresh JWT.
+        // This prevents an infinite retry loop with a permanently-rejected token.
+        if (this.cachedJwt) {
+          const remainingSec = Math.round((this.cachedJwt.expiresAt - Date.now()) / 1000);
+          console.warn(
+            `[TikTools:4401] JWT rejected by server @${this.username} ` +
+            `(cached token had ${remainingSec}s remaining — clearing cache, ` +
+            `will force-fetch new JWT on next attempt) — reconnecting in 15s`,
+          );
+          this.cachedJwt = null;
+        } else {
+          console.warn(
+            `[TikTools:4401] JWT rejected by server @${this.username} ` +
+            `(no cached token) — reconnecting in 15s`,
+          );
+        }
+        this._scheduleRetry(15_000, settle);
+      } else if (code === 4429 || reason.toLowerCase().includes("rate limit")) {
         // tik.tools sandbox rate-limit close.
         // The free Sandbox plan allows 60 WS connections per hour (1/min).
         // Rapid retries burn through the quota instantly. Back off for 90s so
