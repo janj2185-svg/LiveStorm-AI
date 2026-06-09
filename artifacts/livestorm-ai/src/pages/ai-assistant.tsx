@@ -2003,7 +2003,7 @@ export function AiAssistant() {
       {/* Avatar Creator Modal */}
       <AvatarCreatorModal
         open={creatorModalOpen}
-        onClose={() => setCreatorModalOpen(false)}
+        onOpenChange={setCreatorModalOpen}
         onSave={handleCreatorSave}
       />
     </div>
