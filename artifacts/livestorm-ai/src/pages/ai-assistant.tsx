@@ -12,6 +12,9 @@ import {
 import { AvatarCanvas, VRMUploadButton, type RendererStats } from "@/components/avatar/AvatarCanvas";
 import { AvatarThumbnail } from "@/components/avatar/AvatarThumbnail";
 import { BUILT_IN_AVATARS, isVRMBacked, formatVRMSize } from "@/components/avatar/avatarAssets";
+import { AvatarAnimationMachine, type AnimationState, ANIMATION_LABELS, ANIMATION_EMOJI } from "@/components/avatar/avatarAnimationMachine";
+import { useLipSync } from "@/hooks/useLipSync";
+import { useAvatarReactions } from "@/hooks/useAvatarReactions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -349,6 +352,7 @@ export function AiAssistant() {
   const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
   const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume, setTtsSpeed,
     tiktokMode, tiktokError: socketError, tiktokUsername,
+    aiAnnouncements, luckyDrops, achievementUnlocks,
   } = useLiveSession(activeSessionId, initialMode);
 
   // Effective values: prefer socket-live data, fall back to HTTP snapshot
@@ -457,6 +461,45 @@ export function AiAssistant() {
   const [uploadedVrmUrl, setUploadedVrmUrl] = useState<string | null>(null);
   const [uploadedVrmName, setUploadedVrmName] = useState<string | null>(null);
   const [rendererStats, setRendererStats] = useState<RendererStats | null>(null);
+
+  // ── Phase 4: Animation machine + lip sync ─────────────────────────────────
+  const machineRef = useRef<AvatarAnimationMachine>(new AvatarAnimationMachine());
+  const [animState, setAnimState] = useState<AnimationState>("idle");
+  const [lipSyncSensitivity, setLipSyncSensitivity] = useState(0.75);
+  const [expressionIntensity, setExpressionIntensity] = useState(0.8);
+
+  // Subscribe to animation state changes + tick for expiry
+  useEffect(() => {
+    const machine = machineRef.current;
+    const unsubscribe = machine.subscribe(setAnimState);
+    const interval = setInterval(() => machine.tick(), 100);
+    return () => { unsubscribe(); clearInterval(interval); };
+  }, []);
+
+  // Wire TTS start/end to animation machine base state
+  useEffect(() => {
+    const handleStart = () => machineRef.current.setBase("talking");
+    const handleEnd = () => machineRef.current.setBase("idle");
+    window.addEventListener("tts:start", handleStart);
+    window.addEventListener("tts:end", handleEnd);
+    return () => {
+      window.removeEventListener("tts:start", handleStart);
+      window.removeEventListener("tts:end", handleEnd);
+    };
+  }, []);
+
+  const { mouthOpen, isSpeaking } = useLipSync({
+    sensitivity: lipSyncSensitivity,
+    enabled: avatarConfig?.avatarEnabled ?? false,
+  });
+
+  const { lastReaction } = useAvatarReactions({
+    machine: machineRef.current,
+    events,
+    aiAnnouncements: aiAnnouncements ?? [],
+    luckyDrops: luckyDrops ?? [],
+    achievementUnlocks: achievementUnlocks ?? [],
+  });
 
   // ── AI private chat ───────────────────────────────────────────────────────────
   const [chatInput, setChatInput] = useState("");
@@ -1505,7 +1548,7 @@ export function AiAssistant() {
                 <div className="flex items-center gap-2">
                   <Boxes className="h-3.5 w-3.5 text-violet-400" />
                   <span className="text-sm font-medium">3D AI Co-Host</span>
-                  <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5">Phase 3</Badge>
+                  <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5">Phase 4</Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Enabled</span>
@@ -1544,6 +1587,9 @@ export function AiAssistant() {
                           avatarUrl={uploadedVrmUrl}
                           showFps
                           onStats={setRendererStats}
+                          animationState={animState}
+                          mouthOpenAmount={mouthOpen}
+                          expressionIntensity={expressionIntensity}
                           className="w-[220px] h-[300px] flex-shrink-0 border border-violet-500/20"
                         />
                         {avatarSaving && (
@@ -1695,21 +1741,101 @@ export function AiAssistant() {
 
                         <Separator className="bg-white/5" />
 
-                        {/* Phase 3 status */}
+                        {/* Reactions & Lip Sync (Phase 4) */}
+                        <div>
+                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                            <Zap className="h-3.5 w-3.5 text-violet-400" />
+                            Reactions & Lip Sync
+                            <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5 ml-1">Phase 4</Badge>
+                          </p>
+
+                          {/* Live state indicator */}
+                          <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-black/30 border border-white/5">
+                            <span className="text-xl leading-none">{ANIMATION_EMOJI[animState]}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-white">{ANIMATION_LABELS[animState]}</p>
+                              {lastReaction && (
+                                <p className="text-[10px] text-muted-foreground/60 truncate">{lastReaction}</p>
+                              )}
+                            </div>
+                            {isSpeaking && (
+                              <div className="flex items-center gap-1 text-[9px] text-violet-400 flex-shrink-0">
+                                <Mic className="h-2.5 w-2.5 animate-pulse" />
+                                <span>lip sync</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Test reaction buttons */}
+                          <div className="flex gap-1.5 flex-wrap mb-3">
+                            {(["gift_reaction", "follow_reaction", "victory", "excited", "happy"] as AnimationState[]).map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => machineRef.current.push(s)}
+                                className="text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-violet-500/20 border border-white/10 hover:border-violet-500/40 text-muted-foreground hover:text-violet-300 transition-all"
+                              >
+                                {ANIMATION_EMOJI[s]} {ANIMATION_LABELS[s]}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Sliders */}
+                          <div className="space-y-3">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                  <Mic className="h-3 w-3" />
+                                  Lip Sync Sensitivity
+                                </Label>
+                                <span className="text-xs font-mono text-violet-300">{Math.round(lipSyncSensitivity * 100)}%</span>
+                              </div>
+                              <input
+                                type="range" min="0" max="1" step="0.05"
+                                value={lipSyncSensitivity}
+                                onChange={(e) => setLipSyncSensitivity(parseFloat(e.target.value))}
+                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                  <Zap className="h-3 w-3" />
+                                  Expression Intensity
+                                </Label>
+                                <span className="text-xs font-mono text-violet-300">{Math.round(expressionIntensity * 100)}%</span>
+                              </div>
+                              <input
+                                type="range" min="0" max="1" step="0.05"
+                                value={expressionIntensity}
+                                onChange={(e) => setExpressionIntensity(parseFloat(e.target.value))}
+                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <Separator className="bg-white/5" />
+
+                        {/* Phase 4 status */}
                         <div>
                           <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
                             <Cpu className="h-3.5 w-3.5 text-violet-400" />
-                            Phase 3 Status
+                            Phase 4 Status
                           </p>
                           <div className="space-y-1.5">
                             {[
                               { label: "Real-time 3D rendering", done: true, desc: "React Three Fiber + WebGL" },
                               { label: "Real VRM 1.0 models", done: true, desc: "Seed-san + Constraint sample (10+ MB each)" },
                               { label: "VRM upload support", done: true, desc: "Drop any VRoid Studio export" },
-                              { label: "Avatar thumbnail previews", done: true, desc: "Per-style SVG silhouettes" },
                               { label: "FPS + memory monitoring", done: true, desc: "Live renderer.info stats" },
-                              { label: "Lip sync", done: false, desc: "Mouth moves with AI voice — Phase 4" },
-                              { label: "Event animations", done: false, desc: "Gifts, follows, boss battle — Phase 4" },
+                              { label: "TikTok event reactions", done: true, desc: "Gift → gift_reaction · Follow → follow_reaction · Like → happy · Share → excited" },
+                              { label: "Platform event reactions", done: true, desc: "Boss defeated → victory · Lucky Drop → excited · Achievement → happy" },
+                              { label: "Animation state machine", done: true, desc: "7 states, priority queue, auto-expire timers" },
+                              { label: "Animation priority system", done: true, desc: "victory(9) > gift(8) > follow(7) > excited(6) > happy(5) > talking(3) > idle(0)" },
+                              { label: "AI voice lip sync", done: true, desc: "Web Audio API AnalyserNode · simulated fallback for browser TTS" },
+                              { label: "Lip sync + expression controls", done: true, desc: "Sensitivity + intensity sliders · test buttons" },
                             ].map((item) => (
                               <div key={item.label} className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/5">
                                 <div className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5", item.done ? "bg-emerald-500/70" : "bg-violet-500/30")} />

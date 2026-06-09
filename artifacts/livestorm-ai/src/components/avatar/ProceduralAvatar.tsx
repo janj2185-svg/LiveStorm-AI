@@ -1,6 +1,7 @@
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import type { AnimationState } from "./avatarAnimationMachine";
 
 export type AvatarStyle = "anime" | "realistic" | "chibi";
 export type QualityTier = "high" | "medium" | "low";
@@ -9,17 +10,17 @@ interface Props {
   style: AvatarStyle;
   accentColor: string;
   quality: QualityTier;
+  animationState?: AnimationState;
+  mouthOpenAmount?: number;
+  expressionIntensity?: number;
 }
 
-// Geometry segment counts per quality tier
 const SEG = {
   high: { sphere: 24, cap: 6, rad: 12 },
   medium: { sphere: 16, cap: 4, rad: 8 },
   low: { sphere: 8, cap: 3, rad: 6 },
 } as const;
 
-// Per-style body proportions (all units in Three.js world space)
-// Avatar stands with feet at Y≈0, total height ~1.6–1.8 units
 interface StyleDef {
   headR: number;
   headOffY: number;
@@ -72,8 +73,6 @@ const STYLES: Record<AvatarStyle, StyleDef> = {
     emissive: 0.22,
   },
 };
-
-// ── Hair sub-components ────────────────────────────────────────────────────────
 
 function SpikyHair({ headR, mat }: { headR: number; mat: THREE.MeshStandardMaterial }) {
   const spikes: [number, number, number][] = [
@@ -128,12 +127,18 @@ function RoundHair({ headR, mat }: { headR: number; mat: THREE.MeshStandardMater
   );
 }
 
-// ── Main procedural avatar ─────────────────────────────────────────────────────
-
-export function ProceduralAvatar({ style, accentColor, quality }: Props) {
+export function ProceduralAvatar({
+  style,
+  accentColor,
+  quality,
+  animationState = "idle",
+  mouthOpenAmount = 0,
+  expressionIntensity = 0.8,
+}: Props) {
   const p = STYLES[style];
   const s = SEG[quality];
 
+  // ── Mesh refs ──────────────────────────────────────────────────────────────
   const rootRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Mesh>(null);
@@ -141,7 +146,24 @@ export function ProceduralAvatar({ style, accentColor, quality }: Props) {
   const leftPupilRef = useRef<THREE.Mesh>(null);
   const rightPupilRef = useRef<THREE.Mesh>(null);
   const shadowDiscRef = useRef<THREE.Mesh>(null);
+  const mouthRef = useRef<THREE.Mesh>(null);
 
+  // ── Animation lerp state refs ──────────────────────────────────────────────
+  const leftCurZRef = useRef(-p.armRotZ);
+  const rightCurZRef = useRef(p.armRotZ);
+  const leftCurXRef = useRef(0);
+  const rightCurXRef = useRef(0);
+  const mouthCurYRef = useRef(p.eyeR * 0.12);
+
+  // Live prop refs (avoid stale closures inside useFrame)
+  const animStateRef = useRef(animationState);
+  animStateRef.current = animationState;
+  const mouthOpenRef = useRef(mouthOpenAmount);
+  mouthOpenRef.current = mouthOpenAmount;
+  const exprRef = useRef(expressionIntensity);
+  exprRef.current = expressionIntensity;
+
+  // ── Materials ──────────────────────────────────────────────────────────────
   const bodyMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
@@ -170,54 +192,157 @@ export function ProceduralAvatar({ style, accentColor, quality }: Props) {
     [],
   );
 
-  // ── Idle animation ──────────────────────────────────────────────────────────
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
+  const mouthMat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: "#cc3355",
+        transparent: true,
+        opacity: 0.85,
+      }),
+    [],
+  );
 
-    // Whole-body float + gentle sway
+  // ── Animation ──────────────────────────────────────────────────────────────
+  useFrame((state, delta) => {
+    const t = state.clock.elapsedTime;
+    const anim = animStateRef.current;
+    const expr = exprRef.current;
+    const mouthOpen = mouthOpenRef.current;
+
+    // Smooth lerp factor — snappy ~120ms settle
+    const lf = 1 - Math.pow(0.001, delta);
+
+    // ── Arm pose targets per state ─────────────────────────────────────────
+    let tLeftZ = -p.armRotZ;
+    let tRightZ = p.armRotZ;
+    let tLeftX = 0;
+    let tRightX = 0;
+    let bounceFreq = 0.85;
+    let bounceAmp = 0.019;
+    let swayAmpL = 0.055;
+    let swayAmpR = 0.055;
+
+    switch (anim) {
+      case "talking":
+        tLeftZ = -p.armRotZ * 0.88;
+        tRightZ = p.armRotZ * 0.88;
+        bounceFreq = 1.15;
+        bounceAmp = 0.021;
+        break;
+      case "happy":
+        tLeftZ = -p.armRotZ * 0.55;
+        tRightZ = p.armRotZ * 0.55;
+        bounceFreq = 1.5;
+        bounceAmp = 0.026;
+        break;
+      case "excited":
+        tLeftZ = -p.armRotZ * 0.28;
+        tRightZ = p.armRotZ * 0.28;
+        bounceFreq = 2.2;
+        bounceAmp = 0.034;
+        swayAmpL = 0.12;
+        swayAmpR = 0.12;
+        break;
+      case "gift_reaction":
+        tLeftZ = -p.armRotZ * 0.65;
+        tRightZ = p.armRotZ * 0.65;
+        tLeftX = -0.55;
+        tRightX = -0.55;
+        bounceFreq = 0.9;
+        bounceAmp = 0.015;
+        break;
+      case "follow_reaction":
+        tLeftZ = -(p.armRotZ + Math.PI * 0.30);
+        tRightZ = p.armRotZ + Math.PI * 0.30;
+        bounceFreq = 1.9;
+        bounceAmp = 0.030;
+        swayAmpL = 0.20;
+        swayAmpR = 0.20;
+        break;
+      case "victory":
+        tLeftZ = -(p.armRotZ + Math.PI * 0.42);
+        tRightZ = p.armRotZ + Math.PI * 0.42;
+        bounceFreq = 2.6;
+        bounceAmp = 0.044;
+        swayAmpL = 0.08;
+        swayAmpR = 0.08;
+        break;
+    }
+
+    leftCurZRef.current += (tLeftZ - leftCurZRef.current) * lf;
+    rightCurZRef.current += (tRightZ - rightCurZRef.current) * lf;
+    leftCurXRef.current += (tLeftX - leftCurXRef.current) * lf;
+    rightCurXRef.current += (tRightX - rightCurXRef.current) * lf;
+
+    // ── Root body float ────────────────────────────────────────────────────
     if (rootRef.current) {
-      rootRef.current.position.y = Math.sin(t * 0.85) * 0.019;
+      rootRef.current.position.y = Math.sin(t * bounceFreq) * bounceAmp;
       rootRef.current.rotation.y = Math.sin(t * 0.32) * 0.07;
     }
 
-    // Head look-around + nod
+    // ── Head motion ────────────────────────────────────────────────────────
     if (headRef.current) {
       headRef.current.rotation.y = Math.sin(t * 0.68) * 0.13;
-      headRef.current.rotation.x = Math.sin(t * 0.48) * 0.045;
+      const nodAmp = anim === "talking" ? 0.07 : 0.045;
+      const nodFreq = anim === "talking" ? 2.8 : 0.48;
+      headRef.current.rotation.x = Math.sin(t * nodFreq) * nodAmp;
       headRef.current.rotation.z = Math.sin(t * 0.55) * 0.025;
     }
 
-    // Arm gentle sway (opposite phase)
+    // ── Arm sway ───────────────────────────────────────────────────────────
+    const waveFreq = anim === "follow_reaction" ? 3.0 : anim === "excited" ? 2.4 : 0.88;
+    const swayL = Math.sin(t * waveFreq) * swayAmpL;
+    const swayR = Math.sin(t * waveFreq + Math.PI) * swayAmpR;
+
     if (leftArmRef.current) {
-      leftArmRef.current.rotation.z = -p.armRotZ + Math.sin(t * 0.88) * 0.055;
+      leftArmRef.current.rotation.z = leftCurZRef.current + swayL;
+      leftArmRef.current.rotation.x = leftCurXRef.current;
     }
     if (rightArmRef.current) {
-      rightArmRef.current.rotation.z = p.armRotZ + Math.sin(t * 0.88 + Math.PI) * 0.055;
+      rightArmRef.current.rotation.z = rightCurZRef.current + swayR;
+      rightArmRef.current.rotation.x = rightCurXRef.current;
     }
 
-    // Blink: every ~3.8s, close pupils for 0.18s
+    // ── Pupils (scale up when excited/happy) ──────────────────────────────
+    const isExcited = anim === "excited" || anim === "gift_reaction" || anim === "victory";
+    const isHappy = anim === "happy" || anim === "follow_reaction";
+    const pupilXZ = isExcited ? 1.28 : isHappy ? 1.12 : 1.0;
     const blinkPhase = t % 3.8;
-    const blinkOpen = blinkPhase < 3.62 ? 1 : Math.max(0.05, 1 - (blinkPhase - 3.62) * 26);
-    if (leftPupilRef.current) leftPupilRef.current.scale.y = blinkOpen;
-    if (rightPupilRef.current) rightPupilRef.current.scale.y = blinkOpen;
+    const blinkMul = blinkPhase < 3.62 ? 1 : Math.max(0.05, 1 - (blinkPhase - 3.62) * 26);
+    if (leftPupilRef.current) {
+      leftPupilRef.current.scale.set(pupilXZ, pupilXZ * blinkMul, pupilXZ);
+    }
+    if (rightPupilRef.current) {
+      rightPupilRef.current.scale.set(pupilXZ, pupilXZ * blinkMul, pupilXZ);
+    }
 
-    // Shadow disc pulse
+    // ── Mouth lip sync ─────────────────────────────────────────────────────
+    if (mouthRef.current) {
+      const baseH = p.eyeR * 0.35;
+      const target = baseH * (0.12 + mouthOpen * expr * 2.8);
+      mouthCurYRef.current += (target - mouthCurYRef.current) * 0.35;
+      mouthRef.current.scale.y = mouthCurYRef.current;
+    }
+
+    // ── Shadow disc pulse ──────────────────────────────────────────────────
     if (shadowDiscRef.current) {
       (shadowDiscRef.current.material as THREE.MeshBasicMaterial).opacity =
-        0.08 + Math.sin(t * 0.85) * 0.03;
+        0.08 + Math.sin(t * bounceFreq) * 0.03;
     }
   });
 
   const legOffY = p.bodyOffY - p.bodyH / 2 - p.legH / 2;
+  const mouthY = -(p.eyeOffY * 2.8 + p.eyeR * 0.6);
+  const mouthZ = p.eyeOffZ * 0.88;
 
   return (
     <group ref={rootRef}>
-      {/* ── Torso ── */}
+      {/* Torso */}
       <mesh position={[0, p.bodyOffY, 0]} material={bodyMat} castShadow>
         <cylinderGeometry args={[p.bodyTopR, p.bodyBotR, p.bodyH, s.rad]} />
       </mesh>
 
-      {/* ── Left arm ── */}
+      {/* Left arm */}
       <mesh
         ref={leftArmRef}
         position={[-p.armOffX, p.armOffY, 0]}
@@ -228,7 +353,7 @@ export function ProceduralAvatar({ style, accentColor, quality }: Props) {
         <capsuleGeometry args={[p.armR, p.armH, s.cap, s.rad]} />
       </mesh>
 
-      {/* ── Right arm ── */}
+      {/* Right arm */}
       <mesh
         ref={rightArmRef}
         position={[p.armOffX, p.armOffY, 0]}
@@ -239,17 +364,17 @@ export function ProceduralAvatar({ style, accentColor, quality }: Props) {
         <capsuleGeometry args={[p.armR, p.armH, s.cap, s.rad]} />
       </mesh>
 
-      {/* ── Left leg ── */}
+      {/* Left leg */}
       <mesh position={[-p.legOffX, legOffY, 0]} material={bodyMat} castShadow>
         <capsuleGeometry args={[p.legR, p.legH, s.cap, s.rad]} />
       </mesh>
 
-      {/* ── Right leg ── */}
+      {/* Right leg */}
       <mesh position={[p.legOffX, legOffY, 0]} material={bodyMat} castShadow>
         <capsuleGeometry args={[p.legR, p.legH, s.cap, s.rad]} />
       </mesh>
 
-      {/* ── Head group ── */}
+      {/* Head group */}
       <group ref={headRef} position={[0, p.headOffY, 0]}>
         {/* Head sphere */}
         <mesh material={bodyMat} castShadow>
@@ -282,13 +407,23 @@ export function ProceduralAvatar({ style, accentColor, quality }: Props) {
           <sphereGeometry args={[p.eyeR * 0.62, 10, 10]} />
         </mesh>
 
+        {/* Mouth (lip sync visualization) */}
+        <mesh
+          ref={mouthRef}
+          position={[0, mouthY, mouthZ]}
+          scale={[p.eyeR * 1.6, p.eyeR * 0.12, p.eyeR * 0.55]}
+          material={mouthMat}
+        >
+          <sphereGeometry args={[1, 8, 6]} />
+        </mesh>
+
         {/* Hair */}
         {p.hairStyle === "spiky" && <SpikyHair headR={p.headR} mat={bodyMat} />}
         {p.hairStyle === "neat" && <NeatHair headR={p.headR} mat={bodyMat} />}
         {p.hairStyle === "round" && <RoundHair headR={p.headR} mat={bodyMat} />}
       </group>
 
-      {/* ── Ground glow disc ── */}
+      {/* Ground glow disc */}
       {quality !== "low" && (
         <mesh
           ref={shadowDiscRef}
@@ -297,11 +432,7 @@ export function ProceduralAvatar({ style, accentColor, quality }: Props) {
           receiveShadow
         >
           <circleGeometry args={[0.28, 24]} />
-          <meshBasicMaterial
-            color={accentColor}
-            transparent
-            opacity={0.1}
-          />
+          <meshBasicMaterial color={accentColor} transparent opacity={0.1} />
         </mesh>
       )}
     </group>

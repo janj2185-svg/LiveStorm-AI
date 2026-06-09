@@ -7,8 +7,10 @@ import { Boxes, Loader2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProceduralAvatar, type QualityTier, type AvatarStyle } from "./ProceduralAvatar";
 import { getAvatarVRMPath, isVRMBacked } from "./avatarAssets";
+import type { AnimationState } from "./avatarAnimationMachine";
+import { ANIMATION_EMOJI } from "./avatarAnimationMachine";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface RendererStats {
   geometries: number;
@@ -26,11 +28,13 @@ export interface AvatarCanvasProps {
   positionY: number;
   lightingPreset: string;
   avatarEnabled: boolean;
-  /** Explicit VRM URL — overrides the built-in asset for this avatarKey. */
   avatarUrl?: string | null;
   showFps?: boolean;
   onStats?: (stats: RendererStats) => void;
   className?: string;
+  animationState?: AnimationState;
+  mouthOpenAmount?: number;
+  expressionIntensity?: number;
 }
 
 type VRMState =
@@ -39,7 +43,7 @@ type VRMState =
   | { status: "loaded"; vrm: VRM }
   | { status: "error"; message: string };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const AVATAR_STYLE_MAP: Record<string, AvatarStyle> = {
   "storm-default": "anime",
@@ -56,15 +60,12 @@ function detectInitialQuality(): QualityTier {
   return cores >= 6 ? "medium" : "low";
 }
 
-// Apply a subtle accent tint to a loaded VRM model's materials.
-// Works for both PBR (MeshStandardMaterial) and MToon materials.
 function applyVRMAccentTint(vrm: VRM, accentColor: string, strength = 0.18) {
   const accent = new THREE.Color(accentColor);
   vrm.scene.traverse((obj) => {
     if (!(obj instanceof THREE.Mesh)) return;
     const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
     mats.forEach((mat) => {
-      // MeshStandardMaterial / MeshBasicMaterial / MToon all expose .color
       if (mat && "color" in mat && mat.color instanceof THREE.Color) {
         mat.color.lerp(accent, strength);
         if ("needsUpdate" in mat) (mat as THREE.Material).needsUpdate = true;
@@ -73,7 +74,7 @@ function applyVRMAccentTint(vrm: VRM, accentColor: string, strength = 0.18) {
   });
 }
 
-// ── @pixiv/three-vrm loader hook ──────────────────────────────────────────────
+// ── VRM loader hook ───────────────────────────────────────────────────────────
 
 function useVRMLoader(url: string | null | undefined): VRMState {
   const [state, setState] = useState<VRMState>({ status: "idle" });
@@ -85,11 +86,7 @@ function useVRMLoader(url: string | null | undefined): VRMState {
   }, []);
 
   useEffect(() => {
-    if (!url) {
-      setState({ status: "idle" });
-      return;
-    }
-
+    if (!url) { setState({ status: "idle" }); return; }
     setState({ status: "loading" });
 
     (async () => {
@@ -98,19 +95,13 @@ function useVRMLoader(url: string | null | undefined): VRMState {
           import("three/examples/jsm/loaders/GLTFLoader.js"),
           import("@pixiv/three-vrm"),
         ]);
-
         const loader = new GLTFLoader();
         loader.register((parser) => new VRMLoaderPlugin(parser));
-
         const gltf = await loader.loadAsync(url);
         const vrm = gltf.userData.vrm as VRM;
-
         VRMUtils.removeUnnecessaryVertices(vrm.scene);
         VRMUtils.removeUnnecessaryJoints(vrm.scene);
-
-        // VRM 1.0 models face away — rotate to face camera
         vrm.scene.rotation.y = Math.PI;
-
         if (mounted.current) setState({ status: "loaded", vrm });
       } catch (err) {
         if (mounted.current) {
@@ -126,10 +117,32 @@ function useVRMLoader(url: string | null | undefined): VRMState {
   return state;
 }
 
-// ── VRM avatar renderer ───────────────────────────────────────────────────────
+// ── VRM avatar renderer (with animation + lip sync) ───────────────────────────
 
-function VRMAvatarView({ vrm, accentColor }: { vrm: VRM; accentColor: string; quality: QualityTier }) {
+function VRMAvatarView({
+  vrm,
+  accentColor,
+  quality,
+  animationState,
+  mouthOpenRef,
+  expressionIntensityRef,
+}: {
+  vrm: VRM;
+  accentColor: string;
+  quality: QualityTier;
+  animationState: AnimationState;
+  mouthOpenRef: React.MutableRefObject<number>;
+  expressionIntensityRef: React.MutableRefObject<number>;
+}) {
   const tinted = useRef(false);
+  const animRef = useRef(animationState);
+  animRef.current = animationState;
+
+  // Smooth arm pose lerp refs — VRM arm natural pose is ~0.3 rad out
+  const leftArmZRef = useRef(0.30);
+  const rightArmZRef = useRef(-0.30);
+  const leftArmXRef = useRef(0);
+  const rightArmXRef = useRef(0);
 
   useEffect(() => {
     if (!tinted.current) {
@@ -140,42 +153,111 @@ function VRMAvatarView({ vrm, accentColor }: { vrm: VRM; accentColor: string; qu
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
+    const anim = animRef.current;
+    const intensity = expressionIntensityRef.current;
+    const mouthOpen = mouthOpenRef.current;
+    const lf = 1 - Math.pow(0.001, delta);
 
+    // ── Arm pose targets ────────────────────────────────────────────────────
+    let tLeftZ = 0.30, tRightZ = -0.30;
+    let tLeftX = 0, tRightX = 0;
+    let bounceFreq = 0.85, bounceAmp = 0.012;
+
+    switch (anim) {
+      case "talking":
+        tLeftZ = 0.28; tRightZ = -0.28;
+        bounceFreq = 1.1; bounceAmp = 0.014;
+        break;
+      case "happy":
+        tLeftZ = 0.14; tRightZ = -0.14;
+        bounceFreq = 1.45; bounceAmp = 0.022;
+        break;
+      case "excited":
+        tLeftZ = 0.06; tRightZ = -0.06;
+        bounceFreq = 2.2; bounceAmp = 0.032;
+        break;
+      case "gift_reaction":
+        tLeftZ = 0.18; tRightZ = -0.18;
+        tLeftX = -0.5; tRightX = -0.5;
+        bounceFreq = 0.9; bounceAmp = 0.014;
+        break;
+      case "follow_reaction":
+        tLeftZ = -0.55; tRightZ = 0.55;
+        bounceFreq = 1.8; bounceAmp = 0.028;
+        break;
+      case "victory":
+        tLeftZ = -1.1; tRightZ = 1.1;
+        bounceFreq = 2.5; bounceAmp = 0.042;
+        break;
+    }
+
+    leftArmZRef.current += (tLeftZ - leftArmZRef.current) * lf;
+    rightArmZRef.current += (tRightZ - rightArmZRef.current) * lf;
+    leftArmXRef.current += (tLeftX - leftArmXRef.current) * lf;
+    rightArmXRef.current += (tRightX - rightArmXRef.current) * lf;
+
+    // ── Apply humanoid bones ────────────────────────────────────────────────
     const hips = vrm.humanoid?.getNormalizedBoneNode("hips");
     if (hips) {
-      hips.position.y = Math.sin(t * 0.85) * 0.012;
+      hips.position.y = Math.sin(t * bounceFreq) * bounceAmp;
       hips.rotation.y = Math.sin(t * 0.32) * 0.06;
     }
 
     const neck = vrm.humanoid?.getNormalizedBoneNode("neck");
     if (neck) {
       neck.rotation.y = Math.sin(t * 0.68) * 0.12;
-      neck.rotation.x = Math.sin(t * 0.48) * 0.04;
+      const nodAmp = anim === "talking" ? 0.065 : 0.04;
+      const nodFreq = anim === "talking" ? 2.8 : 0.48;
+      neck.rotation.x = Math.sin(t * nodFreq) * nodAmp;
     }
 
     const leftArm = vrm.humanoid?.getNormalizedBoneNode("leftUpperArm");
     const rightArm = vrm.humanoid?.getNormalizedBoneNode("rightUpperArm");
-    if (leftArm) leftArm.rotation.z = 0.3 + Math.sin(t * 0.88) * 0.05;
-    if (rightArm) rightArm.rotation.z = -0.3 + Math.sin(t * 0.88 + Math.PI) * 0.05;
+    const swayBase = anim === "excited" || anim === "follow_reaction" ? 0.12 : 0.04;
+    const swayFreq = anim === "follow_reaction" ? 2.8 : 0.88;
+    if (leftArm) {
+      leftArm.rotation.z = leftArmZRef.current + Math.sin(t * swayFreq) * swayBase;
+      leftArm.rotation.x = leftArmXRef.current;
+    }
+    if (rightArm) {
+      rightArm.rotation.z = rightArmZRef.current + Math.sin(t * swayFreq + Math.PI) * swayBase;
+      rightArm.rotation.x = rightArmXRef.current;
+    }
 
-    // Blink
+    // ── Blink (always active) ───────────────────────────────────────────────
     const blinkPhase = t % 3.8;
     const blinkVal = blinkPhase > 3.62 ? Math.max(0, 1 - (blinkPhase - 3.62) * 26) : 0;
     vrm.expressionManager?.setValue("blink", blinkVal);
     vrm.expressionManager?.setValue("blinkLeft", blinkVal);
     vrm.expressionManager?.setValue("blinkRight", blinkVal);
 
+    // ── State-based facial expressions ──────────────────────────────────────
+    const aa = anim === "talking" || anim === "victory" ? mouthOpen * intensity : 0;
+    const happy =
+      anim === "happy" ? 0.7 * intensity :
+      anim === "follow_reaction" ? 0.9 * intensity :
+      anim === "victory" ? 1.0 * intensity :
+      anim === "excited" ? 0.45 * intensity : 0;
+    const surprised =
+      anim === "excited" ? 0.85 * intensity :
+      anim === "gift_reaction" ? 1.0 * intensity :
+      anim === "victory" ? 0.45 * intensity : 0;
+
+    vrm.expressionManager?.setValue("aa", aa);
+    vrm.expressionManager?.setValue("happy", happy);
+    vrm.expressionManager?.setValue("surprised", surprised);
+
     vrm.update(delta);
   });
 
+  void quality;
   return <primitive object={vrm.scene} dispose={null} />;
 }
 
-// ── Lighting presets ─────────────────────────────────────────────────────────
+// ── Lighting presets ──────────────────────────────────────────────────────────
 
 function LightingRig({ preset, quality }: { preset: string; quality: QualityTier }) {
   const castShadow = quality === "high";
-
   if (preset === "dramatic") {
     return (
       <>
@@ -268,6 +350,9 @@ function AvatarScene({
   quality,
   onStats,
   onQualityDecline,
+  animationState,
+  mouthOpenRef,
+  expressionIntensityRef,
 }: {
   avatarKey: string;
   accentColor: string;
@@ -278,6 +363,9 @@ function AvatarScene({
   quality: QualityTier;
   onStats: (s: RendererStats) => void;
   onQualityDecline: () => void;
+  animationState: AnimationState;
+  mouthOpenRef: React.MutableRefObject<number>;
+  expressionIntensityRef: React.MutableRefObject<number>;
 }) {
   const style: AvatarStyle = AVATAR_STYLE_MAP[avatarKey] ?? "anime";
   const vrmState = useVRMLoader(effectiveVrmUrl);
@@ -290,9 +378,23 @@ function AvatarScene({
 
       <group position={[0, positionY, 0]} scale={[scale, scale, scale]}>
         {vrmState.status === "loaded" ? (
-          <VRMAvatarView vrm={vrmState.vrm} accentColor={accentColor} quality={quality} />
+          <VRMAvatarView
+            vrm={vrmState.vrm}
+            accentColor={accentColor}
+            quality={quality}
+            animationState={animationState}
+            mouthOpenRef={mouthOpenRef}
+            expressionIntensityRef={expressionIntensityRef}
+          />
         ) : (
-          <ProceduralAvatar style={style} accentColor={accentColor} quality={quality} />
+          <ProceduralAvatar
+            style={style}
+            accentColor={accentColor}
+            quality={quality}
+            animationState={animationState}
+            mouthOpenAmount={mouthOpenRef.current}
+            expressionIntensity={expressionIntensityRef.current}
+          />
         )}
       </group>
 
@@ -308,6 +410,27 @@ function AvatarScene({
   );
 }
 
+// ── ProceduralUpdater: sync mouthOpen + expressionIntensity into scene refs ────
+// (props → refs bridge so R3F useFrame always reads the latest value)
+
+function ProceduralUpdater({
+  mouthOpenAmount,
+  expressionIntensity,
+  mouthOpenRef,
+  expressionIntensityRef,
+}: {
+  mouthOpenAmount: number;
+  expressionIntensity: number;
+  mouthOpenRef: React.MutableRefObject<number>;
+  expressionIntensityRef: React.MutableRefObject<number>;
+}) {
+  useFrame(() => {
+    mouthOpenRef.current = mouthOpenAmount;
+    expressionIntensityRef.current = expressionIntensity;
+  });
+  return null;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function AvatarCanvas({
@@ -321,16 +444,19 @@ export function AvatarCanvas({
   showFps = true,
   onStats,
   className,
+  animationState = "idle",
+  mouthOpenAmount = 0,
+  expressionIntensity = 0.8,
 }: AvatarCanvasProps) {
   const [stats, setStats] = useState<RendererStats>({
     geometries: 0, textures: 0, triangles: 0, drawCalls: 0, fps: 60, quality: "high",
   });
   const [quality, setQuality] = useState<QualityTier>(detectInitialQuality);
 
-  // Resolve effective VRM URL:
-  // - explicit avatarUrl prop wins (e.g. user-uploaded file)
-  // - else look up built-in asset path for this avatarKey
-  // - null → procedural fallback
+  // Refs for passing live values into R3F without causing re-renders
+  const mouthOpenRef = useRef(mouthOpenAmount);
+  const expressionIntensityRef = useRef(expressionIntensity);
+
   const effectiveVrmUrl = avatarUrl !== undefined
     ? avatarUrl
     : getAvatarVRMPath(avatarKey);
@@ -366,13 +492,13 @@ export function AvatarCanvas({
       : "text-red-400 border-red-500/25";
 
   const qualityColor =
-    quality === "high"
-      ? "text-violet-300"
-      : quality === "medium"
-      ? "text-blue-300"
-      : "text-gray-400";
+    quality === "high" ? "text-violet-300"
+    : quality === "medium" ? "text-blue-300"
+    : "text-gray-400";
 
   const vrmBacked = isVRMBacked(avatarKey) || !!avatarUrl;
+
+  const animEmoji = ANIMATION_EMOJI[animationState] ?? "😐";
 
   return (
     <div className={cn("relative rounded-2xl overflow-hidden", className)}>
@@ -399,6 +525,12 @@ export function AvatarCanvas({
         dpr={dpr}
         style={{ position: "relative" }}
       >
+        <ProceduralUpdater
+          mouthOpenAmount={mouthOpenAmount}
+          expressionIntensity={expressionIntensity}
+          mouthOpenRef={mouthOpenRef}
+          expressionIntensityRef={expressionIntensityRef}
+        />
         <Suspense fallback={null}>
           <AvatarScene
             avatarKey={avatarKey}
@@ -412,6 +544,9 @@ export function AvatarCanvas({
             onQualityDecline={() =>
               setQuality((q) => (q === "high" ? "medium" : "low"))
             }
+            animationState={animationState}
+            mouthOpenRef={mouthOpenRef}
+            expressionIntensityRef={expressionIntensityRef}
           />
         </Suspense>
       </Canvas>
@@ -427,6 +562,14 @@ export function AvatarCanvas({
           </div>
         </div>
       )}
+
+      {/* Animation state badge (top-left) */}
+      <div className="absolute top-2 left-2 pointer-events-none">
+        <div className="text-[9px] px-1.5 py-0.5 rounded bg-black/70 border border-white/10 text-white/60 font-mono flex items-center gap-1">
+          <span>{animEmoji}</span>
+          <span>{animationState}</span>
+        </div>
+      </div>
 
       {/* VRM badge (bottom-left) */}
       <div className="absolute bottom-6 left-2 pointer-events-none">
@@ -450,7 +593,6 @@ export function AvatarCanvas({
 }
 
 // ── Upload button (standalone) ────────────────────────────────────────────────
-// Used in ai-assistant.tsx to wire a file-input to the canvas avatarUrl.
 
 export interface VRMUploadButtonProps {
   onUpload: (url: string, filename: string) => void;
@@ -480,13 +622,7 @@ export function VRMUploadButton({ onUpload, onClear, uploadedName, className }: 
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".vrm"
-        className="hidden"
-        onChange={handleChange}
-      />
+      <input ref={inputRef} type="file" accept=".vrm" className="hidden" onChange={handleChange} />
       {uploadedName ? (
         <>
           <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/25 min-w-0">

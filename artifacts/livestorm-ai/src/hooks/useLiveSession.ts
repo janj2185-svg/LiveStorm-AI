@@ -125,9 +125,14 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
     const audio = new Audio(url);
     audio.volume = Math.max(0, Math.min(1, volume));
 
+    // Dispatch tts:audio so useLipSync can tap in via Web Audio API
+    window.dispatchEvent(new CustomEvent("tts:audio", { detail: audio }));
+    window.dispatchEvent(new CustomEvent("tts:start"));
+
     await new Promise<void>((resolve) => {
       audio.onended = () => {
         URL.revokeObjectURL(url);
+        window.dispatchEvent(new CustomEvent("tts:end"));
         resolve();
       };
       audio.onerror = () => {
@@ -159,6 +164,8 @@ function playBrowserTts(text: string): void {
   const utt = new SpeechSynthesisUtterance(text);
   utt.rate = 1.1;
   utt.pitch = 1.05;
+  utt.onstart = () => window.dispatchEvent(new CustomEvent("tts:start"));
+  utt.onend = () => window.dispatchEvent(new CustomEvent("tts:end"));
   window.speechSynthesis.speak(utt);
 }
 
