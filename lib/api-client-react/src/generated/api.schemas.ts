@@ -419,7 +419,54 @@ export interface AiModerationLog {
 }
 
 export type GetGamificationLeaderboardParams = {
-streamerId?: number;
+  streamerId?: number;
+  period?: 'daily' | 'weekly' | 'all-time';
+};
+
+export interface LuckyDropRecord {
+  id: number;
+  dropName: string;
+  prizeDescription: string;
+  xpReward: number;
+  coinReward: number;
+  triggerType: string;
+  winnerName: string | null;
+  droppedAt: string;
+}
+
+export interface ViewerProfile {
+  tiktokViewerId: string;
+  viewerName: string;
+  totalXp: number;
+  level: number;
+  totalCoins: number;
+  giftCount: number;
+  commentCount: number;
+  followCount: number;
+  likeCount: number;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  achievements: Array<{
+    key: string;
+    name: string;
+    description: string;
+    iconType: string;
+    unlockedAt: string;
+  }>;
+}
+
+export interface TriggerLuckyDropBody {
+  sessionId?: number;
+}
+
+export interface TriggerLuckyDropResult {
+  ok: boolean;
+  winnerName: string | null;
+  dropName: string | null;
+}
+
+export type GetLuckyDropHistoryParams = {
+  limit?: number;
 };
 
 export type GetAchievementsParams = {

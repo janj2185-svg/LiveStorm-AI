@@ -53,6 +53,47 @@ export interface LiveStats {
   topSupporters: Array<{ username: string; coins: number }>;
 }
 
+export interface XpAwardedEvent {
+  viewerName: string;
+  tiktokViewerId: string;
+  xp: number;
+  coins: number;
+  totalXp: number;
+  level: number;
+  eventType: string;
+  timestamp: number;
+}
+
+export interface LevelUpEvent {
+  viewerName: string;
+  newLevel: number;
+  timestamp: number;
+}
+
+export interface AchievementUnlockEvent {
+  viewerName: string;
+  achievement: {
+    key: string;
+    name: string;
+    description: string;
+    iconType: string;
+    xpReward: number;
+    coinReward: number;
+  };
+  timestamp: number;
+}
+
+export interface LuckyDropEvent {
+  id?: number;
+  dropName: string;
+  prizeDescription: string;
+  xpReward: number;
+  coinReward: number;
+  winnerName: string;
+  triggerType: string;
+  timestamp: number;
+}
+
 export type TtsMode = "off" | "browser" | "openai";
 
 const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -91,7 +132,6 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
       };
       audio.onerror = () => {
         URL.revokeObjectURL(url);
-        // Fallback to browser TTS on audio error
         playBrowserTts(text);
         resolve();
       };
@@ -100,7 +140,6 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
       if (playPromise !== undefined) {
         playPromise.catch(() => {
           URL.revokeObjectURL(url);
-          // Mobile autoplay restriction — fall back to browser TTS
           playBrowserTts(text);
           resolve();
         });
@@ -136,6 +175,10 @@ export function useLiveSession(
   const [automationsFired, setAutomationsFired] = useState<AutomationFiredEvent[]>([]);
   const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
+  const [recentXpAwards, setRecentXpAwards] = useState<XpAwardedEvent[]>([]);
+  const [achievementUnlocks, setAchievementUnlocks] = useState<AchievementUnlockEvent[]>([]);
+  const [luckyDrops, setLuckyDrops] = useState<LuckyDropEvent[]>([]);
+  const [levelUps, setLevelUps] = useState<LevelUpEvent[]>([]);
 
   const [tiktokMode, setTiktokMode] = useState<ConnectionMode | null>(initialMode ?? null);
   const [tiktokError, setTiktokError] = useState<string | null>(null);
@@ -179,6 +222,10 @@ export function useLiveSession(
     setAutomationsFired([]);
     setAiAnnouncements([]);
     setFlaggedComments([]);
+    setRecentXpAwards([]);
+    setAchievementUnlocks([]);
+    setLuckyDrops([]);
+    setLevelUps([]);
     setStats({
       viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0,
       totalComments: 0, totalShares: 0, topSupporters: [],
@@ -253,6 +300,22 @@ export function useLiveSession(
         });
       });
 
+      socket.on("xp:awarded", (payload: XpAwardedEvent) => {
+        setRecentXpAwards((prev) => [payload, ...prev].slice(0, 30));
+      });
+
+      socket.on("level:up", (payload: LevelUpEvent) => {
+        setLevelUps((prev) => [payload, ...prev].slice(0, 20));
+      });
+
+      socket.on("achievement:unlocked", (payload: AchievementUnlockEvent) => {
+        setAchievementUnlocks((prev) => [payload, ...prev].slice(0, 20));
+      });
+
+      socket.on("lucky_drop:fired", (payload: LuckyDropEvent) => {
+        setLuckyDrops((prev) => [payload, ...prev].slice(0, 20));
+      });
+
       socket.on("automation:fired", (event: AutomationFiredEvent) => {
         setAutomationsFired((prev) => [event, ...prev].slice(0, 50));
       });
@@ -275,7 +338,6 @@ export function useLiveSession(
 
         const mode = ttsModeRef.current;
         if (mode === "openai") {
-          // Enqueue to prevent overlapping audio — pass speed so it matches the slider
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current));
         } else if (mode === "browser") {
           playBrowserTts(payload.text);
@@ -324,6 +386,10 @@ export function useLiveSession(
     automationsFired,
     aiAnnouncements,
     flaggedComments,
+    recentXpAwards,
+    achievementUnlocks,
+    luckyDrops,
+    levelUps,
     connected,
     clearEvents,
     setTtsEnabled,

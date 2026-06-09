@@ -8,8 +8,11 @@ import {
   dailyClaimsTable,
   streamersTable,
   usersTable,
+  luckyDropsTable,
 } from "@workspace/db";
-import { eq, sql, and, desc, count } from "drizzle-orm";
+import { eq, sql, and, desc, count, gte } from "drizzle-orm";
+import { getIO } from "../lib/socketServer";
+import { triggerManualLuckyDrop } from "../lib/gamificationEngine";
 
 const router = Router();
 
@@ -19,12 +22,29 @@ async function getStreamerForUser(clerkId: string) {
   return db.query.streamersTable.findFirst({ where: eq(streamersTable.userId, user.id) });
 }
 
+function periodToDate(period: string | undefined): Date | null {
+  if (period === "daily") {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  if (period === "weekly") {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d;
+  }
+  return null; // all-time
+}
+
 // ---------------------------------------------------------------------------
 // GET /gamification/leaderboard — viewer leaderboard ranked by XP
+// Supports ?streamerId=N&period=daily|weekly|all-time
 // ---------------------------------------------------------------------------
 router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) => {
   try {
     const streamerId = req.query.streamerId ? Number(req.query.streamerId) : null;
+    const period = req.query.period as string | undefined;
+    const since = periodToDate(period);
 
     const base = db
       .select({
@@ -33,12 +53,18 @@ router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) 
         totalXp: sql<number>`sum(${viewerXpEventsTable.xpAwarded})`,
         totalCoins: sql<number>`sum(${viewerXpEventsTable.coinsAwarded})`,
         totalGifts: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'gift')`,
+        totalComments: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'comment')`,
+        totalFollows: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'follow')`,
       })
       .from(viewerXpEventsTable)
       .$dynamic();
 
-    const query = streamerId
-      ? base.where(eq(viewerXpEventsTable.streamerId, streamerId))
+    const conditions: any[] = [];
+    if (streamerId) conditions.push(eq(viewerXpEventsTable.streamerId, streamerId));
+    if (since) conditions.push(gte(viewerXpEventsTable.createdAt, since));
+
+    const query = conditions.length > 0
+      ? base.where(conditions.length === 1 ? conditions[0] : and(...conditions))
       : base;
 
     const rows = await query
@@ -53,6 +79,8 @@ router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) 
       totalXp: Number(r.totalXp),
       totalCoins: Number(r.totalCoins),
       totalGifts: Number(r.totalGifts),
+      totalComments: Number(r.totalComments),
+      totalFollows: Number(r.totalFollows),
       level: Math.min(100, Math.floor(Math.sqrt(Number(r.totalXp) / 50)) + 1),
     }));
 
@@ -70,7 +98,6 @@ router.get("/gamification/me", requireAuth, async (req: any, res: any) => {
     const streamer = await getStreamerForUser(req.clerkUserId);
     if (!streamer) return res.status(404).json({ error: "No streamer profile" });
 
-    // The current user's viewer identity for self-earned XP (spin wins, boss rewards, etc.)
     const selfViewerId = `streamer:${streamer.id}`;
 
     const [row] = await db
@@ -87,7 +114,6 @@ router.get("/gamification/me", requireAuth, async (req: any, res: any) => {
     const totalGifts = Number(row?.totalGifts ?? 0);
     const level = Math.min(100, Math.floor(Math.sqrt(totalXp / 50)) + 1);
 
-    // Compute rank: count how many distinct viewerIds have higher total XP
     const [rankRow] = await db
       .select({ higherCount: count() })
       .from(
@@ -105,6 +131,85 @@ router.get("/gamification/me", requireAuth, async (req: any, res: any) => {
     res.json({ tiktokViewerId: selfViewerId, totalXp, totalCoins, totalGifts, level, rank });
   } catch {
     res.status(500).json({ error: "Failed to fetch your progression" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /gamification/viewer/:tiktokViewerId — fan profile
+// Optional query: ?streamerId=N
+// ---------------------------------------------------------------------------
+router.get("/gamification/viewer/:tiktokViewerId", requireAuth, async (req: any, res: any) => {
+  try {
+    const { tiktokViewerId } = req.params;
+    const streamerId = req.query.streamerId ? Number(req.query.streamerId) : null;
+
+    const conditions: any[] = [eq(viewerXpEventsTable.tiktokViewerId, tiktokViewerId)];
+    if (streamerId) conditions.push(eq(viewerXpEventsTable.streamerId, streamerId));
+
+    const [statsRow] = await db
+      .select({
+        viewerName: sql<string>`max(${viewerXpEventsTable.viewerName})`,
+        totalXp: sql<number>`coalesce(sum(${viewerXpEventsTable.xpAwarded}), 0)`,
+        totalCoins: sql<number>`coalesce(sum(${viewerXpEventsTable.coinsAwarded}), 0)`,
+        giftCount: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'gift')`,
+        commentCount: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'comment')`,
+        followCount: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'follow')`,
+        likeCount: sql<number>`count(*) filter (where ${viewerXpEventsTable.eventType} = 'like')`,
+        firstSeenAt: sql<string>`min(${viewerXpEventsTable.createdAt})`,
+        lastSeenAt: sql<string>`max(${viewerXpEventsTable.createdAt})`,
+      })
+      .from(viewerXpEventsTable)
+      .where(conditions.length === 1 ? conditions[0] : and(...conditions));
+
+    if (!statsRow || !statsRow.viewerName) {
+      return res.status(404).json({ error: "Viewer not found" });
+    }
+
+    const totalXp = Number(statsRow.totalXp ?? 0);
+    const level = Math.min(100, Math.floor(Math.sqrt(totalXp / 50)) + 1);
+
+    // Get unlocked achievements
+    const achConditions: any[] = [eq(viewerAchievementsTable.tiktokViewerId, tiktokViewerId)];
+    if (streamerId) achConditions.push(eq(viewerAchievementsTable.streamerId, streamerId));
+
+    const unlockedAchs = await db
+      .select()
+      .from(viewerAchievementsTable)
+      .where(achConditions.length === 1 ? achConditions[0] : and(...achConditions))
+      .orderBy(desc(viewerAchievementsTable.unlockedAt))
+      .limit(20);
+
+    const achDetails = await Promise.all(
+      unlockedAchs.map(async (ua) => {
+        const ach = await db.query.achievementsTable.findFirst({
+          where: eq(achievementsTable.key, ua.achievementKey),
+        });
+        return {
+          key: ua.achievementKey,
+          name: ach?.name ?? ua.achievementKey,
+          description: ach?.description ?? "",
+          iconType: ach?.iconType ?? "trophy",
+          unlockedAt: ua.unlockedAt.toISOString(),
+        };
+      })
+    );
+
+    res.json({
+      tiktokViewerId,
+      viewerName: statsRow.viewerName,
+      totalXp,
+      level,
+      totalCoins: Number(statsRow.totalCoins ?? 0),
+      giftCount: Number(statsRow.giftCount ?? 0),
+      commentCount: Number(statsRow.commentCount ?? 0),
+      followCount: Number(statsRow.followCount ?? 0),
+      likeCount: Number(statsRow.likeCount ?? 0),
+      firstSeenAt: statsRow.firstSeenAt ?? null,
+      lastSeenAt: statsRow.lastSeenAt ?? null,
+      achievements: achDetails,
+    });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch viewer profile" });
   }
 });
 
@@ -160,7 +265,6 @@ router.get("/gamification/achievements", requireAuth, async (req: any, res: any)
 
     let unlockedKeys: string[] = [];
     if (streamer) {
-      // Check achievements specifically earned by this user's viewer identity
       const selfViewerId = `streamer:${streamer.id}`;
       const unlocked = await db
         .select({ key: viewerAchievementsTable.achievementKey })
@@ -249,6 +353,64 @@ router.get("/gamification/daily-claim/status", requireAuth, async (req: any, res
     res.json({ alreadyClaimed: existing.length > 0 });
   } catch {
     res.status(500).json({ error: "Failed to get claim status" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /gamification/lucky-drops — history of lucky drops for current streamer
+// ---------------------------------------------------------------------------
+router.get("/gamification/lucky-drops", requireAuth, async (req: any, res: any) => {
+  try {
+    const streamer = await getStreamerForUser(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const limit = Math.min(50, Number(req.query.limit ?? 20));
+
+    const drops = await db
+      .select()
+      .from(luckyDropsTable)
+      .where(eq(luckyDropsTable.streamerId, streamer.id))
+      .orderBy(desc(luckyDropsTable.droppedAt))
+      .limit(limit);
+
+    res.json(drops.map((d) => ({
+      id: d.id,
+      dropName: d.dropName,
+      prizeDescription: d.prizeDescription,
+      xpReward: d.xpReward,
+      coinReward: d.coinReward,
+      triggerType: d.triggerType,
+      winnerName: d.winnerName,
+      droppedAt: d.droppedAt.toISOString(),
+    })));
+  } catch {
+    res.status(500).json({ error: "Failed to fetch lucky drop history" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /gamification/lucky-drops/trigger — manually fire a lucky drop
+// ---------------------------------------------------------------------------
+router.post("/gamification/lucky-drops/trigger", requireAuth, async (req: any, res: any) => {
+  try {
+    const streamer = await getStreamerForUser(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "No streamer profile" });
+
+    const io = getIO();
+    if (!io) return res.status(503).json({ error: "Socket server not ready" });
+
+    const sessionId = req.body.sessionId ? Number(req.body.sessionId) : null;
+    const result = await triggerManualLuckyDrop(io, streamer.id, sessionId);
+
+    if (!result.ok) {
+      return res.status(400).json({
+        error: "No active viewers to pick from. Viewers need to comment or interact first.",
+      });
+    }
+
+    res.json({ ok: true, winnerName: result.winnerName, dropName: result.dropName });
+  } catch {
+    res.status(500).json({ error: "Failed to trigger lucky drop" });
   }
 });
 

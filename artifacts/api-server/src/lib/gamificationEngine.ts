@@ -10,8 +10,9 @@ import {
   kingdomBuildingsTable,
   kingdomsTable,
   streamersTable,
+  luckyDropsTable,
 } from "@workspace/db";
-import { eq, and, sql, count, desc } from "drizzle-orm";
+import { eq, and, sql, count, desc, gte } from "drizzle-orm";
 import { emitAiLevelUpAnnouncement, emitAiBossDefeatedAnnouncement } from "./aiAnnouncer";
 
 const XP_TABLE: Record<string, number> = {
@@ -60,6 +61,7 @@ export const ACHIEVEMENT_SEEDS = [
   { key: "quiz_winner", name: "Quiz Champion", description: "Win a Quiz Mode game", iconType: "brain", xpReward: 75, coinReward: 15 },
   { key: "treasure_finder", name: "Treasure Hunter", description: "Win a Treasure Hunt", iconType: "map", xpReward: 75, coinReward: 15 },
   { key: "pvp_champion", name: "PvP Champion", description: "Win a PvP Battle", iconType: "swords", xpReward: 100, coinReward: 20 },
+  { key: "lucky_drop_winner", name: "Lucky Winner", description: "Win a Lucky Drop during a LIVE", iconType: "gift", xpReward: 75, coinReward: 15 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -86,6 +88,201 @@ interface ActiveTreasureHunt {
 
 const activeQuizzes = new Map<number, ActiveQuiz>();
 const activeTreasureHunts = new Map<number, ActiveTreasureHunt>();
+
+// ---------------------------------------------------------------------------
+// Lucky Drop — per-streamer event counter + active viewer ring buffer
+// ---------------------------------------------------------------------------
+
+interface ActiveViewer {
+  tiktokViewerId: string;
+  viewerName: string;
+  lastSeen: number;
+}
+
+// Map<streamerId, event count since last drop>
+const dropEventCounters = new Map<number, number>();
+// Map<streamerId, Map<tiktokViewerId, ActiveViewer>>
+const activeViewersByStreamer = new Map<number, Map<string, ActiveViewer>>();
+
+const LUCKY_DROP_TIERS = [
+  { name: "Common Drop 🎁", description: "XP & Coin bonus", xp: 100, coins: 20, weight: 50 },
+  { name: "Rare Drop 💎", description: "Rare XP surge", xp: 300, coins: 60, weight: 30 },
+  { name: "Epic Drop ⚡", description: "Epic XP explosion", xp: 600, coins: 120, weight: 15 },
+  { name: "Legendary Drop 👑", description: "Legendary reward", xp: 1200, coins: 250, weight: 5 },
+];
+
+function pickDropTier() {
+  const total = LUCKY_DROP_TIERS.reduce((s, t) => s + t.weight, 0);
+  let r = Math.random() * total;
+  for (const tier of LUCKY_DROP_TIERS) {
+    r -= tier.weight;
+    if (r <= 0) return tier;
+  }
+  return LUCKY_DROP_TIERS[0];
+}
+
+function trackActiveViewer(streamerId: number, tiktokViewerId: string, viewerName: string) {
+  if (!activeViewersByStreamer.has(streamerId)) {
+    activeViewersByStreamer.set(streamerId, new Map());
+  }
+  const map = activeViewersByStreamer.get(streamerId)!;
+  map.set(tiktokViewerId, { tiktokViewerId, viewerName, lastSeen: Date.now() });
+
+  // Prune viewers inactive for > 5 minutes
+  const cutoff = Date.now() - 5 * 60 * 1000;
+  for (const [id, v] of map) {
+    if (v.lastSeen < cutoff) map.delete(id);
+  }
+}
+
+function pickRandomActiveViewer(streamerId: number): ActiveViewer | null {
+  const map = activeViewersByStreamer.get(streamerId);
+  if (!map || map.size === 0) return null;
+  const viewers = Array.from(map.values());
+  return viewers[Math.floor(Math.random() * viewers.length)] ?? null;
+}
+
+async function processLuckyDrop(
+  io: SocketServer,
+  roomId: string,
+  streamerId: number,
+  sessionId: number | undefined,
+  isLargeGift: boolean
+): Promise<void> {
+  try {
+    // Increment event counter
+    const count = (dropEventCounters.get(streamerId) ?? 0) + 1;
+    dropEventCounters.set(streamerId, count);
+
+    // Fire condition: every 50 events with 40% chance, OR large gift with 25% chance
+    const shouldFire =
+      (count >= 50 && Math.random() < 0.40) ||
+      (isLargeGift && Math.random() < 0.25);
+
+    if (!shouldFire) return;
+
+    // Reset counter
+    dropEventCounters.set(streamerId, 0);
+
+    const winner = pickRandomActiveViewer(streamerId);
+    if (!winner) return;
+
+    const tier = pickDropTier();
+
+    console.log(`[LuckyDrop] Firing "${tier.name}" for streamerId=${streamerId} → winner=${winner.viewerName} (+${tier.xp}XP +${tier.coins}coins)`);
+
+    // Insert drop record
+    const [drop] = await db
+      .insert(luckyDropsTable)
+      .values({
+        streamerId,
+        sessionId: sessionId ?? null,
+        dropName: tier.name,
+        prizeDescription: tier.description,
+        xpReward: tier.xp,
+        coinReward: tier.coins,
+        triggerType: isLargeGift ? "gift" : "auto",
+        winnerTiktokViewerId: winner.tiktokViewerId,
+        winnerName: winner.viewerName,
+      })
+      .returning();
+
+    // Award XP + coins to winner
+    await db.insert(viewerXpEventsTable).values({
+      tiktokViewerId: winner.tiktokViewerId,
+      viewerName: winner.viewerName,
+      streamerId,
+      sessionId: sessionId ?? null,
+      eventType: "lucky_drop",
+      xpAwarded: tier.xp,
+      coinsAwarded: tier.coins,
+    });
+
+    // Check achievement
+    await checkAndUnlockAchievement(
+      io, roomId, winner.tiktokViewerId, winner.viewerName, streamerId, "lucky_drop_winner"
+    );
+
+    // Broadcast to frontend
+    io.to(roomId).emit("lucky_drop:fired", {
+      id: drop?.id,
+      dropName: tier.name,
+      prizeDescription: tier.description,
+      xpReward: tier.xp,
+      coinReward: tier.coins,
+      winnerName: winner.viewerName,
+      triggerType: isLargeGift ? "gift" : "auto",
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    console.error("[LuckyDrop] Error:", err);
+  }
+}
+
+// Public API: trigger a lucky drop manually (called from route handler)
+export async function triggerManualLuckyDrop(
+  io: SocketServer,
+  streamerId: number,
+  sessionId: number | null
+): Promise<{ ok: boolean; winnerName: string | null; dropName: string | null }> {
+  try {
+    const roomId = `session:${sessionId}`;
+    const winner = pickRandomActiveViewer(streamerId);
+    if (!winner) {
+      return { ok: false, winnerName: null, dropName: null };
+    }
+
+    const tier = pickDropTier();
+
+    const [drop] = await db
+      .insert(luckyDropsTable)
+      .values({
+        streamerId,
+        sessionId,
+        dropName: tier.name,
+        prizeDescription: tier.description,
+        xpReward: tier.xp,
+        coinReward: tier.coins,
+        triggerType: "manual",
+        winnerTiktokViewerId: winner.tiktokViewerId,
+        winnerName: winner.viewerName,
+      })
+      .returning();
+
+    await db.insert(viewerXpEventsTable).values({
+      tiktokViewerId: winner.tiktokViewerId,
+      viewerName: winner.viewerName,
+      streamerId,
+      sessionId,
+      eventType: "lucky_drop",
+      xpAwarded: tier.xp,
+      coinsAwarded: tier.coins,
+    });
+
+    if (sessionId) {
+      await checkAndUnlockAchievement(
+        io, roomId, winner.tiktokViewerId, winner.viewerName, streamerId, "lucky_drop_winner"
+      );
+    }
+
+    io.to(roomId).emit("lucky_drop:fired", {
+      id: drop?.id,
+      dropName: tier.name,
+      prizeDescription: tier.description,
+      xpReward: tier.xp,
+      coinReward: tier.coins,
+      winnerName: winner.viewerName,
+      triggerType: "manual",
+      timestamp: Date.now(),
+    });
+
+    console.log(`[LuckyDrop:manual] streamerId=${streamerId} winner=${winner.viewerName} drop="${tier.name}"`);
+    return { ok: true, winnerName: winner.viewerName, dropName: tier.name };
+  } catch (err) {
+    console.error("[LuckyDrop:manual] Error:", err);
+    return { ok: false, winnerName: null, dropName: null };
+  }
+}
 
 export function startQuizGame(
   sessionId: number,
@@ -128,8 +325,11 @@ export function startTreasureHuntGame(
 export async function seedAchievements() {
   try {
     const existing = await db.select().from(achievementsTable);
-    if (existing.length > 0) return;
-    await db.insert(achievementsTable).values(ACHIEVEMENT_SEEDS);
+    const existingKeys = new Set(existing.map((a) => a.key));
+    const toInsert = ACHIEVEMENT_SEEDS.filter((s) => !existingKeys.has(s.key));
+    if (toInsert.length > 0) {
+      await db.insert(achievementsTable).values(toInsert);
+    }
   } catch (_err) {}
 }
 
@@ -183,9 +383,17 @@ async function checkAndUnlockAchievement(
     });
 
     if (achievement) {
+      console.log(`[Achievement] Unlocked "${achievement.name}" for ${viewerName} (streamerId=${streamerId})`);
       io.to(roomId).emit("achievement:unlocked", {
         viewerName,
-        achievement: { key: achievement.key, name: achievement.name, description: achievement.description },
+        achievement: {
+          key: achievement.key,
+          name: achievement.name,
+          description: achievement.description,
+          iconType: achievement.iconType,
+          xpReward: achievement.xpReward,
+          coinReward: achievement.coinReward,
+        },
         timestamp: Date.now(),
       });
     }
@@ -317,9 +525,6 @@ async function processBossBattle(
     }
     if (damage === 0) return;
 
-    // Atomic HP update — prevents race condition with concurrent attacks.
-    // GREATEST(0, currentHp - damage) prevents going below 0.
-    // Status and endedAt are set in the same statement to avoid a second round-trip.
     const [updated] = await db
       .update(bossBattlesTable)
       .set({
@@ -335,9 +540,8 @@ async function processBossBattle(
       )
       .returning();
 
-    if (!updated) return; // Battle was already ended by a concurrent update
+    if (!updated) return;
 
-    // Record the attack after the HP update so we see the actual game state
     await db.insert(bossAttacksTable).values({
       battleId: battle.id,
       tiktokViewerId,
@@ -536,6 +740,11 @@ export async function processGamification(
     const viewerName = String(event.data.nickname ?? event.data.uniqueId ?? "Viewer");
     const roomId = `session:${event.sessionId}`;
 
+    // Track as active viewer for lucky drops
+    if (tiktokViewerId !== "anonymous") {
+      trackActiveViewer(streamerId, tiktokViewerId, viewerName);
+    }
+
     const xp = XP_TABLE[event.type] ?? 0;
     let coins = 0;
     if (event.type === "gift") {
@@ -560,10 +769,12 @@ export async function processGamification(
 
       io.to(roomId).emit("xp:awarded", {
         viewerName,
+        tiktokViewerId,
         xp,
         coins,
         totalXp,
         level: newLevel,
+        eventType: event.type,
         timestamp: Date.now(),
       });
 
@@ -589,5 +800,9 @@ export async function processGamification(
     await processBossBattle(io, roomId, tiktokViewerId, viewerName, streamerId, event);
     await processKingdomResources(streamerId, event);
     await checkViewerAchievements(io, roomId, tiktokViewerId, viewerName, streamerId, event);
+
+    // Lucky drop processing (non-blocking)
+    const isLargeGift = event.type === "gift" && ((event.data.coins as number) ?? 0) >= 100;
+    void processLuckyDrop(io, roomId, streamerId, event.sessionId, isLargeGift);
   } catch (_err) {}
 }

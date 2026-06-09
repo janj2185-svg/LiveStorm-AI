@@ -83,6 +83,22 @@ export const kingdomBuildingsTable = pgTable("kingdom_buildings", {
   unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
 });
 
+export const luckyDropsTable = pgTable("lucky_drops", {
+  id: serial("id").primaryKey(),
+  streamerId: integer("streamer_id")
+    .notNull()
+    .references(() => streamersTable.id, { onDelete: "cascade" }),
+  sessionId: integer("session_id"),
+  dropName: text("drop_name").notNull().default("Lucky Drop"),
+  prizeDescription: text("prize_description").notNull().default("XP Bonus"),
+  xpReward: integer("xp_reward").notNull().default(0),
+  coinReward: integer("coin_reward").notNull().default(0),
+  triggerType: text("trigger_type").notNull().default("auto"),
+  winnerTiktokViewerId: text("winner_tiktok_viewer_id"),
+  winnerName: text("winner_name"),
+  droppedAt: timestamp("dropped_at").notNull().defaultNow(),
+});
+
 export const streamerAlliancesTable = pgTable("streamer_alliances", {
   id: serial("id").primaryKey(),
   requesterId: integer("requester_id")
@@ -94,6 +110,8 @@ export const streamerAlliancesTable = pgTable("streamer_alliances", {
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export type LuckyDrop = typeof luckyDropsTable.$inferSelect;
 
 export const insertBossBattleSchema = createInsertSchema(bossBattlesTable).omit({
   id: true,
