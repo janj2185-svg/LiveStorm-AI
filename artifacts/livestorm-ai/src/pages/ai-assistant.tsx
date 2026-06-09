@@ -1,6 +1,14 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useGetActiveSession, getGetActiveSessionQueryKey } from "@workspace/api-client-react";
+import {
+  useGetActiveSession,
+  getGetActiveSessionQueryKey,
+  useGetAvatarConfig,
+  useUpdateAvatarConfig,
+  useGetAvatarPresets,
+  type AvatarConfig,
+  type BuiltInAvatar,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +30,7 @@ import {
   Globe, Gift, Users, Heart, Share2, Loader2, Radio, Play,
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
+  Boxes, SlidersHorizontal, Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
@@ -430,7 +439,16 @@ export function AiAssistant() {
   }, [replyingTo, activeSessionId, config?.replyLanguage]);
 
   // ── Tabs ──────────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<"live" | "chat" | "moderation">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "chat" | "moderation" | "avatar">("live");
+
+  // ── Avatar config ─────────────────────────────────────────────────────────────
+  const { data: avatarConfig, isLoading: avatarLoading } = useGetAvatarConfig();
+  const { mutate: saveAvatar, isPending: avatarSaving } = useUpdateAvatarConfig({
+    mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["avatarConfig"] }) },
+  });
+  const { data: avatarPresets } = useGetAvatarPresets();
+  const builtInAvatars: BuiltInAvatar[] = avatarConfig?.builtInAvatars ?? [];
+  const selectedAvatar = builtInAvatars.find((a) => a.key === avatarConfig?.avatarKey) ?? builtInAvatars[0];
 
   // ── AI private chat ───────────────────────────────────────────────────────────
   const [chatInput, setChatInput] = useState("");
@@ -1157,6 +1175,62 @@ export function AiAssistant() {
             </p>
           </SidebarSection>
 
+          {/* ── 3D Avatar ── */}
+          <SidebarSection
+            isOpen={expandedSections.has("avatar")}
+            onToggle={() => toggleSection("avatar")}
+            title="3D Avatar"
+            icon={<Boxes className="h-4 w-4 text-violet-400" />}
+          >
+            {avatarLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((i) => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Enable toggle */}
+                <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Boxes className="h-3.5 w-3.5 text-violet-400" />
+                    <div>
+                      <p className="text-xs font-medium text-white">3D Co-Host</p>
+                      <p className="text-[10px] text-muted-foreground leading-tight">Show avatar on stream</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={avatarConfig?.avatarEnabled ?? false}
+                    onCheckedChange={(v) => saveAvatar({ avatarEnabled: v })}
+                    disabled={avatarSaving}
+                    className="data-[state=checked]:bg-violet-600 flex-shrink-0"
+                  />
+                </div>
+
+                {/* Selected avatar */}
+                {avatarConfig?.avatarEnabled && selectedAvatar && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                    <div
+                      className="w-6 h-6 rounded-full flex-shrink-0"
+                      style={{ background: `radial-gradient(circle at 35% 35%, ${selectedAvatar.accentColor}cc, ${selectedAvatar.accentColor}55)` }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-violet-200 truncate">{selectedAvatar.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{selectedAvatar.style}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Open avatar tab */}
+                <button
+                  onClick={() => setActiveTab("avatar")}
+                  className="w-full text-xs text-violet-400 hover:text-violet-300 flex items-center justify-center gap-1.5 py-1.5 rounded-lg hover:bg-violet-500/10 transition-colors border border-violet-500/20"
+                >
+                  <Monitor className="h-3.5 w-3.5" />
+                  {avatarConfig?.avatarEnabled ? "Configure Avatar" : "Set Up Avatar"}
+                </button>
+              </div>
+            )}
+          </SidebarSection>
+
         </div>
 
         {/* ── RIGHT: Tab content ── */}
@@ -1168,6 +1242,7 @@ export function AiAssistant() {
               { key: "live", label: "Live Feed", icon: <Radio className="h-3.5 w-3.5" />, badge: feedEvents.length > 0 ? feedEvents.filter(e => e.type === "comment").length : null },
               { key: "chat", label: "AI Chat", icon: <Bot className="h-3.5 w-3.5" />, badge: null },
               { key: "moderation", label: "Flagged", icon: <Shield className="h-3.5 w-3.5" />, badge: flaggedComments.length > 0 ? flaggedComments.length : null },
+              { key: "avatar", label: "3D Avatar", icon: <Boxes className="h-3.5 w-3.5" />, badge: null },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -1411,6 +1486,286 @@ export function AiAssistant() {
                     </div>
                   ))}
                 </div>
+              </ScrollArea>
+            </Card>
+          )}
+
+          {/* ── AVATAR TAB ── */}
+          {activeTab === "avatar" && (
+            <Card className="bg-card border-white/5 flex flex-col flex-1 min-h-0">
+              <div className="px-4 py-2.5 flex items-center justify-between flex-shrink-0 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                  <Boxes className="h-3.5 w-3.5 text-violet-400" />
+                  <span className="text-sm font-medium">3D AI Co-Host</span>
+                  <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5">Phase 1</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Enabled</span>
+                  <Switch
+                    checked={avatarConfig?.avatarEnabled ?? false}
+                    onCheckedChange={(v) => saveAvatar({ avatarEnabled: v })}
+                    disabled={avatarSaving || avatarLoading}
+                    className="data-[state=checked]:bg-violet-600"
+                  />
+                </div>
+              </div>
+
+              <ScrollArea className="flex-1">
+                {avatarLoading ? (
+                  <div className="p-6 space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-20 bg-white/5 rounded-xl animate-pulse" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 space-y-5">
+
+                    {/* ── Main layout: preview + settings ── */}
+                    <div className="flex flex-col lg:flex-row gap-5">
+
+                      {/* Avatar Preview */}
+                      <div className="flex flex-col items-center gap-3 flex-shrink-0">
+                        <p className="text-xs font-medium text-muted-foreground self-start lg:self-center">Preview</p>
+                        <div
+                          className="relative w-[180px] h-[240px] rounded-2xl overflow-hidden border border-violet-500/20 flex-shrink-0"
+                          style={{ background: "linear-gradient(160deg, #1e0a3c 0%, #0d0117 60%, #000000 100%)" }}
+                        >
+                          {/* Grid floor */}
+                          <div
+                            className="absolute bottom-0 left-0 right-0 h-16 opacity-20"
+                            style={{
+                              backgroundImage:
+                                "linear-gradient(0deg, rgba(139,92,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.5) 1px, transparent 1px)",
+                              backgroundSize: "18px 18px",
+                            }}
+                          />
+                          {/* Ground glow */}
+                          <div
+                            className="absolute bottom-6 left-1/2 -translate-x-1/2 w-28 h-10 blur-2xl rounded-full opacity-50"
+                            style={{ background: selectedAvatar?.accentColor ?? "#8b5cf6" }}
+                          />
+                          {/* Avatar silhouette */}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            {avatarConfig?.avatarEnabled ? (
+                              <div className="flex flex-col items-center" style={{ marginTop: "-20px" }}>
+                                <div
+                                  className="w-14 h-14 rounded-full shadow-2xl"
+                                  style={{
+                                    background: `radial-gradient(circle at 35% 30%, ${selectedAvatar?.accentColor ?? "#8b5cf6"}ff, ${selectedAvatar?.accentColor ?? "#8b5cf6"}66)`,
+                                    boxShadow: `0 0 30px ${selectedAvatar?.accentColor ?? "#8b5cf6"}55`,
+                                  }}
+                                />
+                                <div
+                                  className="w-5 h-3"
+                                  style={{ background: `linear-gradient(to bottom, ${selectedAvatar?.accentColor ?? "#8b5cf6"}88, transparent)` }}
+                                />
+                                <div
+                                  className="w-[70px] h-[80px] rounded-t-[2rem]"
+                                  style={{ background: `linear-gradient(160deg, ${selectedAvatar?.accentColor ?? "#8b5cf6"}aa, ${selectedAvatar?.accentColor ?? "#8b5cf6"}22)` }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-2 opacity-30">
+                                <Boxes className="h-10 w-10 text-violet-400" />
+                                <span className="text-xs text-violet-400">Disabled</span>
+                              </div>
+                            )}
+                          </div>
+                          {/* Name badge */}
+                          {avatarConfig?.avatarEnabled && selectedAvatar && (
+                            <div className="absolute top-2 left-0 right-0 flex justify-center">
+                              <span className="text-[10px] font-bold text-white/80 bg-black/50 px-2 py-0.5 rounded-full border border-white/10">
+                                {selectedAvatar.name}
+                              </span>
+                            </div>
+                          )}
+                          {/* Phase badge */}
+                          <div className="absolute bottom-2 left-0 right-0 flex justify-center">
+                            <span className="text-[9px] text-violet-300/50 bg-black/40 px-2 py-0.5 rounded-full border border-violet-500/10">
+                              3D Render · Phase 2
+                            </span>
+                          </div>
+                        </div>
+                        {avatarSaving && (
+                          <div className="flex items-center gap-1.5 text-xs text-violet-400">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Saving…
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Settings column */}
+                      <div className="flex-1 space-y-4 min-w-0">
+
+                        {/* Avatar selector */}
+                        <div>
+                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                            <Boxes className="h-3.5 w-3.5 text-violet-400" />
+                            Choose Avatar
+                          </p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {builtInAvatars.map((avatar) => {
+                              const isSel = avatarConfig?.avatarKey === avatar.key;
+                              return (
+                                <button
+                                  key={avatar.key}
+                                  onClick={() => saveAvatar({ avatarKey: avatar.key })}
+                                  disabled={avatarSaving}
+                                  className={cn(
+                                    "relative flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all text-center",
+                                    isSel
+                                      ? "border-violet-500/60 bg-violet-500/15 shadow-lg"
+                                      : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10",
+                                  )}
+                                >
+                                  <div
+                                    className="w-10 h-10 rounded-full shadow-lg transition-transform"
+                                    style={{
+                                      background: `radial-gradient(circle at 35% 30%, ${avatar.accentColor}ff, ${avatar.accentColor}55)`,
+                                      boxShadow: isSel ? `0 0 16px ${avatar.accentColor}66` : undefined,
+                                      transform: isSel ? "scale(1.1)" : "scale(1)",
+                                    }}
+                                  />
+                                  <div>
+                                    <p className="text-xs font-semibold text-white leading-none">{avatar.name}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{avatar.style}</p>
+                                  </div>
+                                  {isSel && (
+                                    <div className="absolute top-1.5 right-1.5">
+                                      <CheckCircle2 className="h-3 w-3 text-violet-400" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {selectedAvatar && (
+                            <p className="text-[11px] text-muted-foreground mt-2 px-0.5">{selectedAvatar.description}</p>
+                          )}
+                        </div>
+
+                        <Separator className="bg-white/5" />
+
+                        {/* Scene settings */}
+                        <div>
+                          <p className="text-xs font-semibold text-white mb-2.5 flex items-center gap-1.5">
+                            <SlidersHorizontal className="h-3.5 w-3.5 text-violet-400" />
+                            Scene Settings
+                          </p>
+                          <div className="space-y-3">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground">Scale</Label>
+                                <span className="text-xs font-mono text-violet-300">{(avatarConfig?.scale ?? 1.0).toFixed(1)}×</span>
+                              </div>
+                              <input
+                                type="range" min="0.5" max="2.0" step="0.1"
+                                value={avatarConfig?.scale ?? 1.0}
+                                onChange={(e) => saveAvatar({ scale: parseFloat(e.target.value) })}
+                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-muted-foreground">Vertical Position</Label>
+                                <span className="text-xs font-mono text-violet-300">{(avatarConfig?.positionY ?? -0.8).toFixed(1)}</span>
+                              </div>
+                              <input
+                                type="range" min="-2.0" max="1.0" step="0.1"
+                                value={avatarConfig?.positionY ?? -0.8}
+                                onChange={(e) => saveAvatar({ positionY: parseFloat(e.target.value) })}
+                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs text-muted-foreground">Lighting</Label>
+                              <Select value={avatarConfig?.lightingPreset ?? "studio"} onValueChange={(v) => saveAvatar({ lightingPreset: v })}>
+                                <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="studio">🎥 Studio</SelectItem>
+                                  <SelectItem value="dramatic">🎭 Dramatic</SelectItem>
+                                  <SelectItem value="soft">☁️ Soft</SelectItem>
+                                  <SelectItem value="neon">🌆 Neon</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs text-muted-foreground">Background</Label>
+                              <Select value={avatarConfig?.backgroundType ?? "transparent"} onValueChange={(v) => saveAvatar({ backgroundType: v })}>
+                                <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="transparent">⬜ Transparent (OBS)</SelectItem>
+                                  <SelectItem value="color">🎨 Solid Color</SelectItem>
+                                  <SelectItem value="gradient">🌅 Gradient</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Separator className="bg-white/5" />
+
+                        {/* Phase 2 roadmap */}
+                        <div>
+                          <p className="text-xs font-semibold text-muted-foreground mb-2">Coming in Phase 2</p>
+                          <div className="space-y-1.5">
+                            {[
+                              { label: "Real-time 3D rendering", desc: "React Three Fiber + VRM avatar" },
+                              { label: "Lip sync", desc: "Mouth moves with AI voice output" },
+                              { label: "Event animations", desc: "Reacts to gifts, follows, boss battles" },
+                              { label: "OBS overlay", desc: "Transparent browser source for streaming" },
+                            ].map((item) => (
+                              <div key={item.label} className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-violet-500/40 flex-shrink-0 mt-1.5" />
+                                <div>
+                                  <p className="text-xs text-muted-foreground/70 font-medium">{item.label}</p>
+                                  <p className="text-[10px] text-muted-foreground/40">{item.desc}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Animation presets library */}
+                    {avatarPresets && avatarPresets.length > 0 && (
+                      <>
+                        <Separator className="bg-white/5" />
+                        <div>
+                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                            <Star className="h-3.5 w-3.5 text-violet-400" />
+                            Animation Library
+                            <Badge variant="outline" className="text-[10px] border-white/10 text-muted-foreground ml-1">
+                              {avatarPresets.length} clips
+                            </Badge>
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {avatarPresets.slice(0, 6).map((preset) => (
+                              <div key={preset.id} className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5">
+                                <div className="w-6 h-6 rounded-md bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                                  <Play className="h-2.5 w-2.5 text-violet-400" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-medium text-foreground/80 truncate">{preset.name}</p>
+                                  <p className="text-[10px] text-muted-foreground capitalize">{preset.category}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {avatarPresets.length > 6 && (
+                            <p className="text-[10px] text-muted-foreground/50 mt-2 text-center">
+                              +{avatarPresets.length - 6} more clips · assignable to events in Phase 2
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                  </div>
+                )}
               </ScrollArea>
             </Card>
           )}

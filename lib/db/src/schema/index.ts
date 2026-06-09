@@ -7,3 +7,4 @@ export * from "./gamification";
 export * from "./ai";
 export * from "./admin";
 export * from "./moderation-rules";
+export * from "./avatar";

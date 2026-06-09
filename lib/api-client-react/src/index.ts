@@ -180,6 +180,121 @@ export const useUpdateModerationRule = <TError = unknown, TContext = unknown>(
 };
 
 // ---------------------------------------------------------------------------
+// Avatar config
+// ---------------------------------------------------------------------------
+
+export type BuiltInAvatar = {
+  key: string;
+  name: string;
+  tagline: string;
+  description: string;
+  style: string;
+  accentColor: string;
+  personalities: string[];
+};
+
+export type AvatarConfig = {
+  id: number;
+  streamerId: number;
+  avatarEnabled: boolean;
+  avatarKey: string;
+  avatarUrl: string | null;
+  avatarThumbnailUrl: string | null;
+  renderer: string;
+  positionX: number;
+  positionY: number;
+  positionZ: number;
+  rotationY: number;
+  scale: number;
+  backgroundType: string;
+  backgroundValue: string | null;
+  lightingPreset: string;
+  shadowEnabled: boolean;
+  lipSyncEnabled: boolean;
+  lipSyncSensitivity: number;
+  expressionIntensity: number;
+  blinkEnabled: boolean;
+  blinkIntervalMs: number;
+  obsWidth: number;
+  obsHeight: number;
+  obsShowSpeechBubble: boolean;
+  obsShowNameTag: boolean;
+  createdAt: string;
+  updatedAt: string;
+  builtInAvatars: BuiltInAvatar[];
+};
+
+export type AvatarAnimationPreset = {
+  id: number;
+  name: string;
+  category: string;
+  description: string | null;
+  glbUrl: string;
+  previewGifUrl: string | null;
+  durationMs: number;
+  isLoop: boolean;
+  isDefault: boolean;
+  createdAt: string;
+};
+
+export const getAvatarConfig = async (options?: RequestInit): Promise<AvatarConfig> =>
+  customFetch<AvatarConfig>("/api/avatar/config", options);
+
+export const useGetAvatarConfig = <TData = AvatarConfig, TError = unknown>(options?: {
+  query?: UseQueryOptions<AvatarConfig, TError, TData>;
+}): UseQueryResult<TData, TError> => {
+  const queryOptions = {
+    queryKey: ["avatarConfig"],
+    queryFn: ({ signal }: { signal?: AbortSignal }) => getAvatarConfig({ signal }),
+    ...options?.query,
+  } as UseQueryOptions<AvatarConfig, TError, TData>;
+  return useQuery(queryOptions);
+};
+
+export const updateAvatarConfig = async (
+  body: Partial<Omit<AvatarConfig, "id" | "streamerId" | "createdAt" | "updatedAt" | "builtInAvatars">>,
+  options?: RequestInit,
+): Promise<AvatarConfig> =>
+  customFetch<AvatarConfig>("/api/avatar/config", {
+    ...options,
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+
+export const useUpdateAvatarConfig = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    AvatarConfig,
+    TError,
+    Partial<Omit<AvatarConfig, "id" | "streamerId" | "createdAt" | "updatedAt" | "builtInAvatars">>,
+    TContext
+  >;
+}): UseMutationResult<
+  AvatarConfig,
+  TError,
+  Partial<Omit<AvatarConfig, "id" | "streamerId" | "createdAt" | "updatedAt" | "builtInAvatars">>,
+  TContext
+> => {
+  const mutationFn = (
+    body: Partial<Omit<AvatarConfig, "id" | "streamerId" | "createdAt" | "updatedAt" | "builtInAvatars">>,
+  ) => updateAvatarConfig(body);
+  return useMutation({ mutationKey: ["updateAvatarConfig"], mutationFn, ...options?.mutation });
+};
+
+export const getAvatarPresets = async (options?: RequestInit): Promise<AvatarAnimationPreset[]> =>
+  customFetch<AvatarAnimationPreset[]>("/api/avatar/presets", options);
+
+export const useGetAvatarPresets = <TData = AvatarAnimationPreset[], TError = unknown>(options?: {
+  query?: UseQueryOptions<AvatarAnimationPreset[], TError, TData>;
+}): UseQueryResult<TData, TError> => {
+  const queryOptions = {
+    queryKey: ["avatarPresets"],
+    queryFn: ({ signal }: { signal?: AbortSignal }) => getAvatarPresets({ signal }),
+    ...options?.query,
+  } as UseQueryOptions<AvatarAnimationPreset[], TError, TData>;
+  return useQuery(queryOptions);
+};
+
+// ---------------------------------------------------------------------------
 // Force stop session
 // ---------------------------------------------------------------------------
 
