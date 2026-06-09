@@ -143,6 +143,12 @@ export class TikToolsClient extends EventEmitter {
       settle();
       return;
     }
+    // Q5 — log first 6 + last 6 chars of the key actually used at runtime
+    const keyFingerprint = `${apiKey.slice(0, 6)}...${apiKey.slice(-6)}`;
+    console.log(
+      `[TikTools:key] @${this.username} using TIKTOOL_API_KEY fingerprint="${keyFingerprint}" ` +
+      `length=${apiKey.length} startsWithTk=${apiKey.startsWith("tk_")}`,
+    );
 
     // ── 1. Obtain JWT from tik.tools (cached to avoid rate-limit burn) ───────
     // JWT expires_after=3600s; we consider it stale 5 min before expiry so we
@@ -226,6 +232,12 @@ export class TikToolsClient extends EventEmitter {
     // ── 2. Connect WebSocket ──────────────────────────────────────────────────
     this.rawEventCount = 0;
     const wsUrl = `${WS_BASE}?uniqueId=${encodeURIComponent(this.username)}&jwtKey=${encodeURIComponent(token)}`;
+    // Q6 — log exact WS URL with jwtKey masked (first 12 chars + "...")
+    const maskedUrl = wsUrl.replace(
+      /jwtKey=[^&]*/,
+      `jwtKey=${token.slice(0, 12)}...[masked]`,
+    );
+    console.log(`[TikTools:ws-url] @${this.username} connecting to: ${maskedUrl}`);
     let ws: WebSocket;
     try {
       ws = new WebSocket(wsUrl);
@@ -348,19 +360,44 @@ export class TikToolsClient extends EventEmitter {
         }
         this._scheduleRetry(15_000, settle);
       } else if (code === 4429 || reason.toLowerCase().includes("rate limit")) {
-        // tik.tools sandbox rate-limit close.
-        // The free Sandbox plan allows 60 WS connections per hour (1/min).
-        // Rapid retries burn through the quota instantly. Back off for 90s so
-        // we stay within ~40 connections/hour, leaving headroom for normal usage.
-        this.rateLimitBackoff = Math.min(
-          (this.rateLimitBackoff ?? 60_000) * 1.5,
-          300_000, // max 5 min
-        );
-        console.warn(
-          `[TikTools:rate-limit] WS closed code=4429 @${this.username} ` +
-          `reason="${reason.slice(0, 120)}" — backing off ${this.rateLimitBackoff / 1000}s`,
-        );
-        this._scheduleRetry(this.rateLimitBackoff, settle);
+        // tik.tools 4429 has two distinct sub-types:
+        //
+        // A) "Daily Demo Limit Reached. Upgrade Required. (15 WS sessions / 24h on Community)"
+        //    → Account has exhausted its daily WS session quota. Every retry burns another
+        //      slot. Back off for the full remaining window (~23h) and stop retrying today.
+        //
+        // B) "Evicted - newer connection arrived (FIFO)"
+        //    → A newer connection from the same JWT displaced ours (dev+prod both running,
+        //      or a second browser tab).  Back off exponentially; the FIFO queue is shared.
+        const isDailyLimit =
+          reason.toLowerCase().includes("daily") ||
+          reason.toLowerCase().includes("limit reached") ||
+          reason.toLowerCase().includes("upgrade required");
+
+        if (isDailyLimit) {
+          // ~23 hours — slightly less than 24h so we don't permanently block after
+          // unlucky server restart timing near the reset window.
+          const dailyBackoff = 23 * 60 * 60 * 1000;
+          console.error(
+            `[TikTools:daily-limit] WS closed code=4429 @${this.username} ` +
+            `reason="${reason.slice(0, 200)}" — ` +
+            `Daily WS session quota (15/24h on Community plan) exhausted. ` +
+            `Backing off ${dailyBackoff / 3600_000}h. Upgrade at https://tik.tools/pricing ` +
+            `or wait for the 24h quota reset.`,
+          );
+          this._scheduleRetry(dailyBackoff, settle);
+        } else {
+          // FIFO eviction or other 4429 sub-type — exponential backoff
+          this.rateLimitBackoff = Math.min(
+            (this.rateLimitBackoff ?? 60_000) * 1.5,
+            300_000, // max 5 min
+          );
+          console.warn(
+            `[TikTools:rate-limit] WS closed code=4429 @${this.username} ` +
+            `reason="${reason.slice(0, 120)}" — backing off ${this.rateLimitBackoff / 1000}s`,
+          );
+          this._scheduleRetry(this.rateLimitBackoff, settle);
+        }
       } else if (reason === "silence_timeout") {
         // Our own watchdog fired → user is not streaming
         this.rateLimitBackoff = 60_000; // reset rate-limit backoff on normal flow

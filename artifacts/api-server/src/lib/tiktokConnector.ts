@@ -74,6 +74,35 @@ const pendingConnectors = new Set<number>();
 const TIKTOK_MODE = (process.env.TIKTOK_MODE ?? "demo").trim().toLowerCase();
 export const isRealModeEnabled = TIKTOK_MODE === "real";
 
+// Q7 — log all three provider-selection env vars at startup so there is no ambiguity
+{
+  const liveProvider = (process.env.LIVE_PROVIDER ?? "").trim().toLowerCase();
+  const apiKeyRaw = process.env.TIKTOOL_API_KEY ?? "";
+  const apiKeyFingerprint = apiKeyRaw
+    ? `"${apiKeyRaw.slice(0, 6)}...${apiKeyRaw.slice(-6)}" len=${apiKeyRaw.length} startsWithTk=${apiKeyRaw.startsWith("tk_")}`
+    : "(not set)";
+  console.log(
+    `[Env:startup] TIKTOK_MODE="${TIKTOK_MODE}" isRealModeEnabled=${isRealModeEnabled} | ` +
+    `LIVE_PROVIDER="${liveProvider || "(not set)"}" | ` +
+    `TIKTOOL_API_KEY=${apiKeyFingerprint}`,
+  );
+  if (!isRealModeEnabled) {
+    console.warn(
+      `[Env:startup] ⚠️  TIKTOK_MODE is "${TIKTOK_MODE}" (not "real") — all sessions will use the demo simulator`,
+    );
+  }
+  if (isRealModeEnabled && liveProvider !== "tiktools") {
+    console.warn(
+      `[Env:startup] ⚠️  LIVE_PROVIDER="${liveProvider || "(not set)"}" (not "tiktools") — using Eulerstream fallback`,
+    );
+  }
+  if (isRealModeEnabled && liveProvider === "tiktools" && !apiKeyRaw) {
+    console.error(
+      `[Env:startup] ❌ LIVE_PROVIDER=tiktools but TIKTOOL_API_KEY is empty — will fall back to Eulerstream`,
+    );
+  }
+}
+
 // ── Event mappers ─────────────────────────────────────────────────────────────
 
 function makeEvent(
