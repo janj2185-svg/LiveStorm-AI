@@ -228,7 +228,10 @@ async function startLiveConnector(
   client.on("notLive", ({ message }: { message: string }) => {
     const errMsg = friendlyError(message, tiktokUsername);
     notLiveMessage = errMsg;
-    console.log(`[TikTok] @${tiktokUsername} not live yet — connector polling every 30 s`);
+    console.warn(
+      `[TikTok:status:error] PATH=notLive-handler @${tiktokUsername} ` +
+      `roomId=${roomId} sessionId=${sessionId} errMsg="${errMsg}"`,
+    );
     // Store connector entry NOW (with a real stop fn) so the client can be stopped later
     activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => client.stopConnection() });
     io.to(roomId).emit("tiktok:status", { mode: "error", error: errMsg, username: tiktokUsername });
@@ -331,6 +334,10 @@ export async function startTikTokConnection(
 
     if (!result.polling) {
       // Hard failure — connector is dead; set an inert error entry
+      console.warn(
+        `[TikTok:status:error] PATH=hard-failure @${tiktokUsername} ` +
+        `roomId=${roomId} sessionId=${sessionId} polling=${result.polling} errMsg="${errMsg}"`,
+      );
       activeConnectors.set(sessionId, { type: "error", error: errMsg, stop: () => {} });
       io.to(roomId).emit("tiktok:status", { mode: "error", error: errMsg, username: tiktokUsername });
     }

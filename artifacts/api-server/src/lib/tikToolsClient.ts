@@ -140,6 +140,11 @@ export class TikToolsClient extends EventEmitter {
           const msg =
             `@${this.username} is not currently streaming on TikTok LIVE. ` +
             `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+          console.warn(
+            `[TikTools:notLive] PATH=jwt-not-live @${this.username} ` +
+            `wsState=no-ws rawEventCount=${this.rawEventCount} ` +
+            `hadAnyMessage=n/a(pre-ws) lastEvent=n/a jwtError="${errMsg}"`,
+          );
           this.emit("notLive", { username: this.username, message: msg });
           this._scheduleRetry(30_000, settle);
           return;
@@ -177,6 +182,8 @@ export class TikToolsClient extends EventEmitter {
     // True once ANY message arrives (including roomInfo). roomInfo proves the room is live —
     // a subsequent quick WS close is a server-side rotation, NOT a "not live" signal.
     let hadAnyMessage = false;
+    // Tracks the last event type received — logged on every notLive path for debugging.
+    let lastEventType: string | null = null;
 
     ws.on("open", () => {
       connectedAt = Date.now();
@@ -211,6 +218,7 @@ export class TikToolsClient extends EventEmitter {
       } catch {
         return;
       }
+      lastEventType = msg.event ?? null;
 
       if (msg.event !== "roomInfo") {
         this.rawEventCount++;
@@ -247,22 +255,28 @@ export class TikToolsClient extends EventEmitter {
         const msg =
           `@${this.username} is not currently streaming on TikTok LIVE. ` +
           `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+        console.warn(
+          `[TikTools:notLive] PATH=silence-timeout @${this.username} ` +
+          `wsState=${ws.readyState} rawEventCount=${this.rawEventCount} ` +
+          `hadAnyMessage=${hadAnyMessage} lastEvent=${lastEventType ?? "null"} ` +
+          `connectedMs=${connectedMs} code=${code}`,
+        );
         this.emit("notLive", { username: this.username, message: msg });
         this._scheduleRetry(30_000, settle);
       } else if (!hadAnyMessage && connectedMs < 20_000) {
-        // Quick close with zero messages of any kind = room not live / JWT rejected.
-        // NOTE: if ANY message (including roomInfo) arrived, hadAnyMessage=true and we fall
-        // through to the normal-reconnect branch below — roomInfo proves the room is live,
-        // so a subsequent fast close is a server-side WS rotation, not a "not live" signal.
+        // Quick close with zero messages before any data arrived.
+        // This is NOT a reliable "not live" signal — tik.tools can close the WS
+        // transiently for server-side reasons (JWT race, rotation, load-balancer) even
+        // when the creator IS streaming. We already have two authoritative "not live"
+        // paths: (1) JWT returns a not-live error, (2) 60s silence timer.
+        // → Reconnect silently with a short backoff; do NOT emit notLive.
         console.warn(
-          `[TikTools] Quick close (${connectedMs} ms, 0 messages, code=${code}) ` +
-          `@${this.username} — treating as not-live, polling in 30 s`,
+          `[TikTools:quick-close] PATH=quick-close (silent retry) @${this.username} ` +
+          `wsState=${ws.readyState} rawEventCount=${this.rawEventCount} ` +
+          `hadAnyMessage=${hadAnyMessage} lastEvent=${lastEventType ?? "null"} ` +
+          `connectedMs=${connectedMs} code=${code} reason="${reason}" — reconnecting in 10s`,
         );
-        const msg =
-          `@${this.username} is not currently streaming on TikTok LIVE. ` +
-          `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
-        this.emit("notLive", { username: this.username, message: msg });
-        this._scheduleRetry(30_000, settle);
+        this._scheduleRetry(10_000, settle);
       } else {
         // Normal disconnect mid-stream → reconnect with backoff
         console.warn(
