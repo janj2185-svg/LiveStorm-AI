@@ -16,6 +16,7 @@ import billingRouter from "./billing";
 import adminRouter from "./admin";
 import tiktokRouter from "./tiktok";
 import integrationsRouter from "./integrations";
+import devRouter from "./dev";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(tiktokRouter);
 router.use(integrationsRouter);
 router.use(billingRouter);
 router.use(adminRouter);
+router.use(devRouter);
 
 export default router;

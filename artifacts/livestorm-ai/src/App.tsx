@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from '@clerk/react';
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { publishableKeyFromHost } from '@clerk/react/internal';
@@ -149,12 +149,30 @@ function HomeRedirect() {
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
   const [, setLocation] = useLocation();
+  const isDevMode = import.meta.env.DEV &&
+    new URLSearchParams(window.location.search).get("_devMode") === "1";
+  const [devAuthReady, setDevAuthReady] = useState(false);
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
+    if (!isDevMode) return;
+    fetch("/api/dev/login", { credentials: "include" })
+      .finally(() => setDevAuthReady(true));
+  }, [isDevMode]);
+
+  useEffect(() => {
+    if (!isDevMode && isLoaded && !isSignedIn) {
       setLocation(`/sign-in`);
     }
-  }, [isLoaded, isSignedIn, setLocation]);
+  }, [isLoaded, isSignedIn, setLocation, isDevMode]);
+
+  if (isDevMode && !devAuthReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+  if (isDevMode) return <>{children}</>;
 
   if (!isLoaded) {
     return (
