@@ -38,7 +38,7 @@ const LANG_INSTRUCTIONS: Record<string, string> = {
   pl: "Zawsze odpowiadaj po polsku.",
   de: "Antworte immer auf Deutsch.",
   ru: "Всегда отвечай на русском языке.",
-  auto: "Detect the language of the viewer's message and respond in the SAME language they used. If the message is in Ukrainian (uk), respond in Ukrainian. If Polish (pl), respond in Polish. If German (de), respond in German. If Russian (ru), respond in Russian. Otherwise, respond in English.",
+  auto: "Detect the language of the viewer's message and respond in the SAME language they used. If Ukrainian → respond in Ukrainian. If Polish → respond in Polish. If German → respond in German. If Russian → respond in Russian. Otherwise respond in English.",
 };
 
 export async function generateAnnouncement(event: {
@@ -77,7 +77,8 @@ export async function generateAnnouncement(event: {
       temperature: 0.9,
     });
     return resp.choices[0]?.message?.content?.trim() ?? "";
-  } catch {
+  } catch (err: any) {
+    console.error("[AI] generateAnnouncement error:", err?.message);
     return "";
   }
 }
@@ -87,10 +88,24 @@ export async function generateCommentReply(
   viewerName: string,
   persona: { name: string; tone: string; personalityType?: string },
   language: string = "auto",
+  conversationContext?: string,
 ): Promise<string> {
   const toneGuide = getToneGuide(persona.tone);
   const personalityGuide = persona.personalityType ? getPersonalityGuide(persona.personalityType) : "";
   const langInstruction = LANG_INSTRUCTIONS[language] ?? LANG_INSTRUCTIONS.auto;
+
+  const systemLines = [
+    `You are ${persona.name}, a TikTok LIVE co-host AI with a ${toneGuide} personality.`,
+    personalityGuide ? `Additional personality trait: ${personalityGuide}.` : "",
+    langInstruction,
+    "Keep your reply SHORT — under 80 characters. Make it personal, engaging, and reference the viewer by name.",
+    "Never use hashtags. Never explain yourself. Just reply naturally like a real streamer.",
+  ].filter(Boolean);
+
+  // Inject conversation context as a separate section if provided
+  if (conversationContext) {
+    systemLines.push(`\nRecent chat context (use for continuity, don't repeat yourself):\n${conversationContext}`);
+  }
 
   try {
     const resp = await openai.chat.completions.create({
@@ -98,15 +113,7 @@ export async function generateCommentReply(
       messages: [
         {
           role: "system",
-          content: [
-            `You are ${persona.name}, a TikTok LIVE co-host AI with a ${toneGuide} personality.`,
-            personalityGuide ? `Additional personality trait: ${personalityGuide}.` : "",
-            langInstruction,
-            "Keep your reply SHORT — under 80 characters. Make it personal, engaging, and reference the viewer by name.",
-            "Never use hashtags. Never explain yourself. Just reply naturally like a real streamer.",
-          ]
-            .filter(Boolean)
-            .join(" "),
+          content: systemLines.join(" "),
         },
         {
           role: "user",
@@ -287,6 +294,36 @@ export async function generateVoice(
     console.error("[TTS] generateVoice error:", err?.message);
     return null;
   }
+}
+
+/**
+ * Fast local spam/pattern check — runs in <1ms, no API call.
+ * Catches obvious junk before spending an AI moderation call.
+ */
+export function fastSpamCheck(comment: string): { flagged: boolean; reason: string } {
+  const text = comment.trim();
+  if (!text) return { flagged: false, reason: "" };
+
+  // Repetitive single-character sequences (aaaaaaa, !!!!!!, .......)
+  if (text.length > 4 && /^(.)\1{7,}$/.test(text)) {
+    return { flagged: true, reason: "Repetitive character spam" };
+  }
+
+  // Promotional URL links (unsolicited links are almost always spam/self-promo)
+  if (/https?:\/\/\S{5,}/i.test(text)) {
+    return { flagged: true, reason: "Contains promotional URL" };
+  }
+
+  // Copy-paste word spam: same word ≥4 times in a short message
+  const words = text.toLowerCase().split(/\s+/);
+  if (words.length >= 4 && words.length <= 10) {
+    const freq = new Map<string, number>();
+    for (const w of words) freq.set(w, (freq.get(w) ?? 0) + 1);
+    const maxFreq = Math.max(...freq.values());
+    if (maxFreq >= 4) return { flagged: true, reason: "Repetitive word spam" };
+  }
+
+  return { flagged: false, reason: "" };
 }
 
 export async function generateContent(params: {

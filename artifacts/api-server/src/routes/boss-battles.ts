@@ -9,6 +9,7 @@ import {
 } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { getIO } from "../lib/socketServer";
+import { distributeBossDefeatRewards } from "../lib/gamificationEngine";
 
 const router = Router();
 
@@ -101,6 +102,7 @@ router.post("/boss-battles", requireAuth, async (req: any, res: any) => {
       });
     }
 
+    console.log(`[Boss] Spawned "${bossName}" ${bossEmoji} HP=${hp} for streamerId=${streamer.id} sessionId=${sessionId ?? "none"}`);
     res.json(battle);
   } catch {
     res.status(500).json({ error: "Failed to spawn boss" });
@@ -119,13 +121,30 @@ router.post("/boss-battles/:id/end", requireAuth, async (req: any, res: any) => 
 
     if (!battle) return res.status(404).json({ error: "Battle not found" });
     if (battle.streamerId !== streamer.id) return res.status(403).json({ error: "Forbidden" });
+    if (battle.status !== "active") return res.status(400).json({ error: "Battle is not active" });
 
     const [updated] = await db
       .update(bossBattlesTable)
       .set({ status: "expired", endedAt: new Date() })
-      .where(eq(bossBattlesTable.id, battleId))
+      .where(and(eq(bossBattlesTable.id, battleId), eq(bossBattlesTable.status, "active")))
       .returning();
 
+    if (!updated) return res.status(409).json({ error: "Battle already ended" });
+
+    // Distribute rewards to participants even when manually ended
+    const io = getIO();
+    const roomId = battle.sessionId ? `session:${battle.sessionId}` : null;
+    if (io && roomId) {
+      await distributeBossDefeatRewards(io, roomId, battleId, streamer.id);
+      io.to(roomId).emit("boss:ended", {
+        battleId,
+        bossName: battle.bossName,
+        reason: "expired",
+        timestamp: Date.now(),
+      });
+    }
+
+    console.log(`[Boss] "${battle.bossName}" manually ended by streamer. Rewards distributed.`);
     res.json(updated);
   } catch {
     res.status(500).json({ error: "Failed to end battle" });

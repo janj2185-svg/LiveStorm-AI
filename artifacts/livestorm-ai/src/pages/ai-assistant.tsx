@@ -346,7 +346,7 @@ export function AiAssistant() {
   // Pass the HTTP-fetched mode as initialMode so the badge is correct immediately on refresh.
   const initialMode = (activeSessionRes as any)?.session?.mode ?? null;
   const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
-  const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice,
+  const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume,
     tiktokMode, tiktokError: socketError, tiktokUsername,
   } = useLiveSession(activeSessionId, initialMode);
 
@@ -377,8 +377,9 @@ export function AiAssistant() {
       setTtsMode(mode);
       setTtsVoiceLocal(config.voiceName ?? "nova");
       setTtsVoice(config.voiceName ?? "nova");
+      setTtsVolume(config.voiceVolume ?? 1.0);
     }
-  }, [config?.voiceEnabled, config?.voiceName]);
+  }, [config?.voiceEnabled, config?.voiceName, config?.voiceVolume]);
 
   const handleTtsModeChange = useCallback((mode: TtsMode) => {
     setTtsModeLocal(mode);
@@ -559,6 +560,7 @@ export function AiAssistant() {
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
+      audio.volume = Math.max(0, Math.min(1, config.voiceVolume ?? 1.0));
       audio.onended = () => { URL.revokeObjectURL(url); setIsVoicePreviewing(false); };
       audio.onerror = () => { URL.revokeObjectURL(url); setIsVoicePreviewing(false); };
       await audio.play();
@@ -871,6 +873,38 @@ export function AiAssistant() {
                     <span>0.25×</span>
                     <span>1×</span>
                     <span>2×</span>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">Volume</Label>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {Math.round((config?.voiceVolume ?? 1.0) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    key={`vol-${config?.voiceVolume}`}
+                    defaultValue={config?.voiceVolume ?? 1.0}
+                    onMouseUp={(e) => {
+                      const v = Number((e.target as HTMLInputElement).value);
+                      setTtsVolume(v);
+                      updateConfig.mutate({ voiceVolume: v });
+                    }}
+                    onTouchEnd={(e) => {
+                      const v = Number((e.target as HTMLInputElement).value);
+                      setTtsVolume(v);
+                      updateConfig.mutate({ voiceVolume: v });
+                    }}
+                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
                   </div>
                 </div>
                 <Button

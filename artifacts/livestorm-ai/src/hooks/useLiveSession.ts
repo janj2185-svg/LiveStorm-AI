@@ -58,7 +58,10 @@ export type TtsMode = "off" | "browser" | "openai";
 const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
 const API_BASE = `${BASE_URL}/api`;
 
-async function playOpenAiTts(text: string, voice: string): Promise<void> {
+// Queue to prevent overlapping TTS playback
+let ttsQueue: Promise<void> = Promise.resolve();
+
+async function playOpenAiTts(text: string, voice: string, volume: number): Promise<void> {
   try {
     const res = await fetch(`${API_BASE}/ai/voice`, {
       method: "POST",
@@ -66,24 +69,48 @@ async function playOpenAiTts(text: string, voice: string): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, voice }),
     });
+
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       const msg = body?.error ?? `HTTP ${res.status}`;
-      console.warn(`[TTS] OpenAI TTS error: ${msg}`);
-      // Surface error to the page via custom event so the UI can show it
+      console.warn(`[TTS] OpenAI TTS error: ${msg} — falling back to browser TTS`);
       window.dispatchEvent(new CustomEvent("tts:error", { detail: msg }));
+      playBrowserTts(text);
       return;
     }
+
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    audio.onended = () => URL.revokeObjectURL(url);
-    audio.onerror = () => URL.revokeObjectURL(url);
-    await audio.play();
+    audio.volume = Math.max(0, Math.min(1, volume));
+
+    await new Promise<void>((resolve) => {
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        // Fallback to browser TTS on audio error
+        playBrowserTts(text);
+        resolve();
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          URL.revokeObjectURL(url);
+          // Mobile autoplay restriction — fall back to browser TTS
+          playBrowserTts(text);
+          resolve();
+        });
+      }
+    });
   } catch (err) {
     const msg = (err as Error)?.message ?? String(err);
-    console.warn("[TTS] OpenAI TTS playback error:", msg);
+    console.warn("[TTS] OpenAI TTS playback error:", msg, "— falling back to browser TTS");
     window.dispatchEvent(new CustomEvent("tts:error", { detail: msg }));
+    playBrowserTts(text);
   }
 }
 
@@ -96,6 +123,10 @@ function playBrowserTts(text: string): void {
   window.speechSynthesis.speak(utt);
 }
 
+function enqueueTts(fn: () => Promise<void>): void {
+  ttsQueue = ttsQueue.then(fn).catch(() => {});
+}
+
 export function useLiveSession(
   sessionId: number | null | undefined,
   initialMode?: ConnectionMode | null,
@@ -106,13 +137,10 @@ export function useLiveSession(
   const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
 
-  // TikTok connection status — initialised from HTTP session data, then updated by socket
   const [tiktokMode, setTiktokMode] = useState<ConnectionMode | null>(initialMode ?? null);
   const [tiktokError, setTiktokError] = useState<string | null>(null);
   const [tiktokUsername, setTiktokUsername] = useState<string | null>(null);
 
-  // Sync initialMode once when it first arrives (e.g. after session query resolves).
-  // Uses functional updater so we never overwrite a live socket update.
   useEffect(() => {
     if (initialMode != null) {
       setTiktokMode((prev) => prev ?? initialMode);
@@ -121,9 +149,13 @@ export function useLiveSession(
 
   const ttsModeRef = useRef<TtsMode>("off");
   const ttsVoiceRef = useRef<string>("nova");
+  const ttsVolumeRef = useRef<number>(1.0);
 
   const setTtsMode = useCallback((mode: TtsMode) => { ttsModeRef.current = mode; }, []);
   const setTtsVoice = useCallback((voice: string) => { ttsVoiceRef.current = voice; }, []);
+  const setTtsVolume = useCallback((volume: number) => {
+    ttsVolumeRef.current = Math.max(0, Math.min(1, volume));
+  }, []);
 
   // Legacy compatibility
   const setTtsEnabled = useCallback((enabled: boolean) => {
@@ -153,21 +185,19 @@ export function useLiveSession(
   useEffect(() => {
     if (!sessionId) return;
 
-    // Prevent stale async continuations from attaching to a new socket after
-    // cleanup (React StrictMode double-invoke, rapid sessionId changes, etc.)
     let cancelled = false;
 
     const connect = async () => {
       const token = await getToken();
-      // Don't connect if Clerk hasn't finished hydrating (no valid session yet)
       if (cancelled || !token) return;
 
       const socket = io(window.location.origin, {
         path: `${BASE_URL}/api/socket.io`,
         transports: ["websocket", "polling"],
         auth: { token },
-        reconnectionAttempts: 5,
+        reconnectionAttempts: 10,
         reconnectionDelay: 1000,
+        reconnectionDelayMax: 10000,
       });
       socketRef.current = socket;
 
@@ -182,14 +212,12 @@ export function useLiveSession(
         console.error("[LiveSession] Socket auth error:", err.message);
       });
 
-      // ── TikTok connection status updates ──────────────────────────────────
       socket.on("tiktok:status", (payload: TikTokStatusEvent) => {
         setTiktokMode(payload.mode);
         setTiktokError(payload.error ?? null);
         setTiktokUsername(payload.username ?? null);
       });
 
-      // ── Live events ───────────────────────────────────────────────────────
       socket.on("live:event", (event: LiveEvent) => {
         setEvents((prev) => [event, ...prev].slice(0, 200));
 
@@ -243,7 +271,8 @@ export function useLiveSession(
 
         const mode = ttsModeRef.current;
         if (mode === "openai") {
-          playOpenAiTts(payload.text, ttsVoiceRef.current);
+          // Enqueue to prevent overlapping audio
+          enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current));
         } else if (mode === "browser") {
           playBrowserTts(payload.text);
         }
@@ -275,9 +304,6 @@ export function useLiveSession(
 
     return () => {
       cancelled = true;
-      // socketRef.current is set synchronously inside connect() after io() — if
-      // connect() hasn't completed yet (still awaiting getToken), the ref is null
-      // and no cleanup is needed. If the socket exists, disconnect gracefully.
       const s = socketRef.current;
       if (s) {
         s.removeAllListeners();
@@ -299,6 +325,7 @@ export function useLiveSession(
     setTtsEnabled,
     setTtsMode,
     setTtsVoice,
+    setTtsVolume,
     tiktokMode,
     tiktokError,
     tiktokUsername,

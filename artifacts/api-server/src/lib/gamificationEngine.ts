@@ -230,10 +230,10 @@ async function checkViewerAchievements(
 }
 
 // ---------------------------------------------------------------------------
-// Boss battle reward distribution on defeat
+// Boss battle reward distribution on defeat — exported so /end route can call it
 // ---------------------------------------------------------------------------
 
-async function distributeBossDefeatRewards(
+export async function distributeBossDefeatRewards(
   io: SocketServer,
   roomId: string,
   battleId: number,
@@ -262,16 +262,13 @@ async function distributeBossDefeatRewards(
       const p = participants[i];
       const damageShare = Number(p.totalDamage) / Math.max(1, totalDamageDealt);
 
-      // Base participation reward
       let xp = 50;
       let coins = 10;
 
-      // Rank bonuses: top 3 get extra
-      if (i === 0) { xp += 300; coins += 100; }      // MVP / killing blow
-      else if (i === 1) { xp += 150; coins += 50; }  // 2nd
-      else if (i === 2) { xp += 75; coins += 25; }   // 3rd
+      if (i === 0) { xp += 300; coins += 100; }
+      else if (i === 1) { xp += 150; coins += 50; }
+      else if (i === 2) { xp += 75; coins += 25; }
 
-      // Proportional damage bonus (up to 200 xp / 50 coins extra)
       xp += Math.floor(damageShare * 200);
       coins += Math.floor(damageShare * 50);
 
@@ -320,6 +317,27 @@ async function processBossBattle(
     }
     if (damage === 0) return;
 
+    // Atomic HP update — prevents race condition with concurrent attacks.
+    // GREATEST(0, currentHp - damage) prevents going below 0.
+    // Status and endedAt are set in the same statement to avoid a second round-trip.
+    const [updated] = await db
+      .update(bossBattlesTable)
+      .set({
+        currentHp: sql`GREATEST(0, ${bossBattlesTable.currentHp} - ${damage})`,
+        status: sql`CASE WHEN GREATEST(0, ${bossBattlesTable.currentHp} - ${damage}) = 0 THEN 'defeated' ELSE ${bossBattlesTable.status} END`,
+        endedAt: sql`CASE WHEN GREATEST(0, ${bossBattlesTable.currentHp} - ${damage}) = 0 THEN NOW() ELSE ${bossBattlesTable.endedAt} END`,
+      })
+      .where(
+        and(
+          eq(bossBattlesTable.id, battle.id),
+          eq(bossBattlesTable.status, "active")
+        )
+      )
+      .returning();
+
+    if (!updated) return; // Battle was already ended by a concurrent update
+
+    // Record the attack after the HP update so we see the actual game state
     await db.insert(bossAttacksTable).values({
       battleId: battle.id,
       tiktokViewerId,
@@ -328,16 +346,10 @@ async function processBossBattle(
       damage,
     });
 
-    const newHp = Math.max(0, battle.currentHp - damage);
-    const isDefeated = newHp === 0;
+    const newHp = updated.currentHp;
+    const isDefeated = updated.status === "defeated";
 
-    await db
-      .update(bossBattlesTable)
-      .set({
-        currentHp: newHp,
-        ...(isDefeated ? { status: "defeated", endedAt: new Date() } : {}),
-      })
-      .where(eq(bossBattlesTable.id, battle.id));
+    console.log(`[Boss] ${viewerName} dealt ${damage} dmg to "${battle.bossName}" | HP: ${battle.currentHp} → ${newHp}${isDefeated ? " DEFEATED!" : ""}`);
 
     io.to(roomId).emit("boss:attacked", {
       battleId: battle.id,
@@ -441,14 +453,12 @@ async function resolveMinigameComment(
 ) {
   const normalized = commentText.toLowerCase().trim();
 
-  // Quiz resolution
   const quiz = activeQuizzes.get(sessionId);
   if (quiz && quiz.resolvedAt === null) {
     if (normalized === quiz.normalizedAnswer) {
       quiz.resolvedAt = Date.now();
       activeQuizzes.set(sessionId, quiz);
 
-      // Award XP/coins to winner
       await db.insert(viewerXpEventsTable).values({
         tiktokViewerId,
         viewerName,
@@ -477,7 +487,6 @@ async function resolveMinigameComment(
     }
   }
 
-  // Treasure hunt resolution
   const hunt = activeTreasureHunts.get(sessionId);
   if (hunt && hunt.resolvedAt === null) {
     if (normalized.includes(hunt.keyword)) {
@@ -568,7 +577,6 @@ export async function processGamification(
       }
     }
 
-    // Resolve mini-game comments before other processing
     if (event.type === "comment" && event.sessionId) {
       const commentText = String(event.data.comment ?? event.data.text ?? "");
       if (commentText) {

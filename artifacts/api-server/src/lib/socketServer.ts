@@ -14,14 +14,12 @@ import { processAutomations } from "./automationEngine";
 import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 import { verifyObsToken } from "../routes/obs";
-import { moderateComment, generateCommentReply, generateAnnouncement } from "./aiService";
+import { moderateComment, generateCommentReply, generateAnnouncement, fastSpamCheck } from "./aiService";
 import { emitAiGiftAnnouncement } from "./aiAnnouncer";
 
 let io: SocketServer | null = null;
 
 // ─── Per-session recent-events ring buffer (last 100 events, in-memory) ───────
-// Independent of Socket.IO — lets the REST endpoint verify events arrive even
-// when no browser tab is subscribed to the session room.
 const RECENT_EVENTS_MAX = 100;
 const recentEventsStore = new Map<number, TikTokEvent[]>();
 
@@ -56,16 +54,38 @@ export async function getSocketDiagnostics(): Promise<Record<string, unknown>> {
 }
 
 // ─── Anti-spam: per-session per-viewer last-reply timestamp ───────────────────
-// key: `${sessionId}:${viewerName}`, value: ms timestamp of last AI reply
 const autoReplySpamMap = new Map<string, number>();
 
-// Clean up spam map entries older than 10 minutes to prevent memory leaks
 setInterval(() => {
   const cutoff = Date.now() - 10 * 60 * 1000;
   for (const [key, ts] of autoReplySpamMap) {
     if (ts < cutoff) autoReplySpamMap.delete(key);
   }
 }, 5 * 60 * 1000);
+
+// ─── Per-session AI conversation context (last 10 exchanges) ──────────────────
+// Provides continuity for AI replies within a single LIVE session.
+interface AiExchange {
+  viewer: string;
+  comment: string;
+  reply: string;
+  ts: number;
+}
+const sessionAiContext = new Map<number, AiExchange[]>();
+
+// Clean up contexts older than 24 h
+setInterval(() => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  for (const [sid, history] of sessionAiContext) {
+    if (history.length === 0 || (history[history.length - 1]?.ts ?? 0) < cutoff) {
+      sessionAiContext.delete(sid);
+    }
+  }
+}, 60 * 60 * 1000);
+
+export function clearSessionAiContext(sessionId: number): void {
+  sessionAiContext.delete(sessionId);
+}
 
 async function resolveUserIdFromToken(token: string): Promise<number | null> {
   try {
@@ -96,19 +116,27 @@ async function processAiAnnouncements(
 
     const roomId = `session:${event.sessionId}`;
     const viewerName = event.username ?? "Unknown";
-    const persona = { name: config.personaName, tone: config.tone };
+
+    // Include personalityType so replies use the configured personality
+    const persona = {
+      name: config.personaName,
+      tone: config.tone,
+      personalityType: config.personalityType ?? undefined,
+    };
     const replyLanguage = config.replyLanguage ?? "auto";
 
     // ── Gift announcements ─────────────────────────────────────────────────────
     if (event.type === "gift" && config.announceGifts) {
       const coins = (event.data.coins as number) ?? 0;
       if (coins >= config.announceGiftThreshold) {
+        console.log(`[AI:gift] session=${event.sessionId} viewer=${viewerName} coins=${coins} threshold=${config.announceGiftThreshold} → announcing`);
         void emitAiGiftAnnouncement(io, roomId, streamerId, viewerName, coins);
       }
     }
 
-    // ── Follow announcements ───────────────────────────────────────────────────
+    // ── Follow announcements (uses announceLevelUp flag as "announce follows") ──
     if (event.type === "follow" && config.announceLevelUp) {
+      console.log(`[AI:follow] session=${event.sessionId} viewer=${viewerName} → generating follow announcement`);
       try {
         const reply = await generateCommentReply(
           "just followed the stream!",
@@ -117,14 +145,15 @@ async function processAiAnnouncements(
           replyLanguage,
         );
         if (reply) {
+          console.log(`[AI:follow] session=${event.sessionId} viewer=${viewerName} reply="${reply.slice(0, 60)}"`);
           io.to(roomId).emit("ai:announcement", {
             text: reply,
             type: "follow",
             viewerName,
           });
         }
-      } catch {
-        // AI failures must not crash the pipeline
+      } catch (err: any) {
+        console.error(`[AI:follow] session=${event.sessionId} error:`, err?.message);
       }
     }
 
@@ -133,14 +162,38 @@ async function processAiAnnouncements(
       const comment = ((event.data.text as string) ?? "").trim();
       if (comment.length <= 2) return;
 
+      console.log(
+        `[AI:comment] session=${event.sessionId} viewer=${viewerName} ` +
+        `comment="${comment.slice(0, 60)}" ` +
+        `autoReply=${config.autoReplyEnabled} moderation=${config.moderationEnabled} lang=${replyLanguage}`,
+      );
+
       let flagged = false;
 
-      // 1. Run moderation first (if enabled)
+      // 0. Fast local spam check — instant, no API call
       if (config.moderationEnabled) {
+        const spamResult = fastSpamCheck(comment);
+        if (spamResult.flagged) {
+          flagged = true;
+          console.log(`[AI:moderation] FAST-FLAG session=${event.sessionId} viewer=${viewerName} reason="${spamResult.reason}"`);
+          io.to(roomId).emit("moderation:flagged", { viewerName, comment, reason: spamResult.reason });
+          await db.insert(aiModerationLogsTable).values({
+            sessionId: event.sessionId,
+            streamerId,
+            viewerName,
+            comment,
+            reason: spamResult.reason,
+          }).catch(() => {});
+        }
+      }
+
+      // 1. AI moderation (only if not already caught by fast check)
+      if (!flagged && config.moderationEnabled) {
         try {
           const { flagged: isFlagged, reason } = await moderateComment(comment);
           if (isFlagged) {
             flagged = true;
+            console.log(`[AI:moderation] AI-FLAG session=${event.sessionId} viewer=${viewerName} reason="${reason}"`);
             io.to(roomId).emit("moderation:flagged", { viewerName, comment, reason });
             await db.insert(aiModerationLogsTable).values({
               sessionId: event.sessionId,
@@ -148,10 +201,12 @@ async function processAiAnnouncements(
               viewerName,
               comment,
               reason,
-            });
+            }).catch(() => {});
+          } else {
+            console.log(`[AI:moderation] AI-OK session=${event.sessionId} viewer=${viewerName}`);
           }
-        } catch {
-          // moderation errors are non-fatal
+        } catch (err: any) {
+          console.warn(`[AI:moderation] error (non-fatal) session=${event.sessionId}:`, err?.message);
         }
       }
 
@@ -162,31 +217,59 @@ async function processAiAnnouncements(
         const cooldownMs = config.spamProtectionEnabled
           ? Math.max(5, config.spamCooldownSeconds ?? 30) * 1000
           : 0;
+        const sinceLastReply = Date.now() - lastReply;
 
-        if (Date.now() - lastReply >= cooldownMs) {
+        if (sinceLastReply >= cooldownMs) {
+          console.log(
+            `[AI:reply] session=${event.sessionId} viewer=${viewerName} ` +
+            `cooldown OK (${sinceLastReply}ms >= ${cooldownMs}ms) — generating reply…`,
+          );
           try {
             autoReplySpamMap.set(spamKey, Date.now());
+
+            // Build conversation context from session history (last 5 exchanges)
+            const history = sessionAiContext.get(event.sessionId) ?? [];
+            const conversationContext = history.length > 0
+              ? history.slice(-5).map((h) => `@${h.viewer}: "${h.comment}" → AI: "${h.reply}"`).join("\n")
+              : undefined;
+
             const reply = await generateCommentReply(
               comment,
               viewerName,
               persona,
               replyLanguage,
+              conversationContext,
             );
+
             if (reply) {
+              // Store in session conversation context (max 10 entries)
+              const updatedHistory = [...history, { viewer: viewerName, comment, reply, ts: Date.now() }];
+              sessionAiContext.set(event.sessionId, updatedHistory.slice(-10));
+
+              console.log(`[AI:reply] session=${event.sessionId} viewer=${viewerName} → "${reply.slice(0, 70)}"`);
               io.to(roomId).emit("ai:announcement", {
                 text: reply,
                 type: "comment_reply",
                 viewerName,
               });
+            } else {
+              console.warn(`[AI:reply] session=${event.sessionId} viewer=${viewerName} — empty reply returned`);
             }
-          } catch {
-            // auto-reply errors are non-fatal
+          } catch (err: any) {
+            console.error(`[AI:reply] session=${event.sessionId} error:`, err?.message);
           }
+        } else {
+          console.log(
+            `[AI:reply] session=${event.sessionId} viewer=${viewerName} ` +
+            `COOLDOWN (${sinceLastReply}ms < ${cooldownMs}ms) — skipping`,
+          );
         }
+      } else if (!flagged && !config.autoReplyEnabled) {
+        console.log(`[AI:reply] session=${event.sessionId} auto-reply disabled — skipping`);
       }
     }
-  } catch {
-    // Top-level catch — AI failures must never crash the event pipeline
+  } catch (err: any) {
+    console.error(`[AI:pipeline] session=${event.sessionId} top-level error:`, err?.message);
   }
 }
 
@@ -211,7 +294,6 @@ export function initSocketServer(httpServer: HttpServer) {
     });
 
     socket.on("session:join", async (sessionId: number) => {
-      // REQ-7: Pipeline:7 — log the room ID the frontend is subscribing to
       console.log(`[Pipeline:7] session:join received | socketId=${socket.id} | sessionId=${sessionId} | room=session:${sessionId}`);
       try {
         const sid = Number(sessionId);
@@ -248,7 +330,6 @@ export function initSocketServer(httpServer: HttpServer) {
 
         socket.data.userId = userId;
         socket.join(`session:${sid}`);
-        // Count sockets now in the room so we can correlate with emit logs
         const roomSockets = await io!.in(`session:${sid}`).fetchSockets();
         console.log(`[Pipeline:7] session:join SUCCESS | socketId=${socket.id} | userId=${userId} | room=session:${sid} | totalSocketsInRoom=${roomSockets.length}`);
         socket.emit("session:joined", { sessionId: sid });
@@ -316,10 +397,8 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
 
   const roomId = `session:${event.sessionId}`;
 
-  // Store event in per-session ring buffer (REST-accessible, independent of Socket.IO)
   pushRecentEvent(event.sessionId, event);
 
-  // REQ-4/5/6: Pipeline:4 — every ingestLiveEvent call; Pipeline:5/6 — emit + room ID + socket count
   const roomSockets = await io.in(roomId).fetchSockets();
   console.log(
     `[Pipeline:4] ingestLiveEvent | type=${event.type} | session=${event.sessionId} | user=${event.username ?? "-"}`,
@@ -345,7 +424,6 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
     }
   } catch (_err) {}
 
-  // AI announcements, auto-reply, moderation (non-blocking)
   if (streamerId) {
     void processAiAnnouncements(io, event, streamerId);
   }
