@@ -5,15 +5,13 @@ import * as THREE from "three";
 import type { VRM } from "@pixiv/three-vrm";
 import { Boxes, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ProceduralAvatar, type AvatarStyle } from "./ProceduralAvatar";
-import { HumanPresenterAvatar, type QualityTier } from "./HumanPresenterAvatar";
-import { getAvatarVRMPath, isVRMBacked, isHumanPresenter } from "./avatarAssets";
+import { getAvatarVRMPath } from "./avatarAssets";
 import type { AnimationState } from "./avatarAnimationMachine";
 import { ANIMATION_EMOJI } from "./avatarAnimationMachine";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type { QualityTier };
+export type QualityTier = "low" | "medium" | "high";
 
 export interface RendererStats {
   geometries: number;
@@ -55,8 +53,6 @@ type GLBState =
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const AVATAR_STYLE_MAP: Record<string, AvatarStyle> = {
-};
 
 function detectInitialQuality(): QualityTier {
   if (typeof navigator === "undefined") return "medium";
@@ -531,6 +527,33 @@ function CanvasLoader() {
 
 // ── Scene ─────────────────────────────────────────────────────────────────────
 
+// ── Empty state shown when no avatar URL is configured ────────────────────────
+
+function EmptyAvatarPlaceholder() {
+  const groupRef = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (groupRef.current) groupRef.current.rotation.y += delta * 0.7;
+  });
+  return (
+    <group ref={groupRef} position={[0, 1.1, 0]}>
+      <mesh>
+        <torusGeometry args={[0.5, 0.045, 10, 48]} />
+        <meshBasicMaterial color="#8b5cf6" transparent opacity={0.25} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.5, 0.045, 10, 48]} />
+        <meshBasicMaterial color="#8b5cf6" transparent opacity={0.12} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[0.075, 12, 12]} />
+        <meshBasicMaterial color="#8b5cf6" transparent opacity={0.7} />
+      </mesh>
+    </group>
+  );
+}
+
+// ── AvatarScene ───────────────────────────────────────────────────────────────
+
 function AvatarScene({
   avatarKey, accentColor, scale, positionY, lightingPreset,
   effectiveVrmUrl, rpmUrl, quality, onStats, onQualityDecline,
@@ -543,8 +566,6 @@ function AvatarScene({
   animationState: AnimationState; mouthOpenRef: React.MutableRefObject<number>;
   expressionIntensityRef: React.MutableRefObject<number>;
 }) {
-  const style: AvatarStyle = AVATAR_STYLE_MAP[avatarKey] ?? "anime";
-  const humanPresenter = isHumanPresenter(avatarKey);
   const vrmState = useVRMLoader(rpmUrl ? null : effectiveVrmUrl);
   const glbState = useGLBLoader(rpmUrl ?? null);
 
@@ -561,7 +582,7 @@ function AvatarScene({
       {isLoading && <CanvasLoader />}
 
       <group position={[0, positionY, 0]} scale={[scale, scale, scale]}>
-        {/* Priority: RPM GLB > VRM > Human Presenter > Procedural */}
+        {/* Priority: RPM/Avaturn GLB > VRM > Empty placeholder */}
         {rpmUrl && glbState.status === "loaded" ? (
           <RPMAvatarView
             scene={glbState.scene}
@@ -579,24 +600,9 @@ function AvatarScene({
             mouthOpenRef={mouthOpenRef}
             expressionIntensityRef={expressionIntensityRef}
           />
-        ) : humanPresenter ? (
-          <HumanPresenterAvatar
-            avatarKey={avatarKey}
-            quality={quality}
-            animationState={animationState}
-            mouthOpenAmount={mouthOpenRef.current}
-            expressionIntensity={expressionIntensityRef.current}
-          />
-        ) : (
-          <ProceduralAvatar
-            style={style}
-            accentColor={accentColor}
-            quality={quality}
-            animationState={animationState}
-            mouthOpenAmount={mouthOpenRef.current}
-            expressionIntensity={expressionIntensityRef.current}
-          />
-        )}
+        ) : !isLoading ? (
+          <EmptyAvatarPlaceholder />
+        ) : null}
       </group>
 
       <OrbitControls
@@ -648,6 +654,8 @@ export function AvatarCanvas({
   const isRpmUrl = typeof avatarUrl === "string" && (
     avatarUrl.startsWith("https://models.readyplayer.me") ||
     avatarUrl.startsWith("https://api.readyplayer.me") ||
+    avatarUrl.startsWith("https://api.avaturn.me") ||
+    avatarUrl.startsWith("https://avaturn.me") ||
     avatarUrl.endsWith(".glb")
   );
 
@@ -676,9 +684,8 @@ export function AvatarCanvas({
   const fpsColor = stats.fps >= 50 ? "text-green-400 border-green-500/25" : stats.fps >= 30 ? "text-yellow-400 border-yellow-500/25" : "text-red-400 border-red-500/25";
   const qualityColor = quality === "high" ? "text-violet-300" : quality === "medium" ? "text-blue-300" : "text-gray-400";
 
-  const vrmBacked = isVRMBacked(avatarKey) || (!!avatarUrl && !isRpmUrl);
+  const vrmBacked = !!avatarUrl && !isRpmUrl;
   const rpmActive = !!rpmUrl;
-  const humanActive = isHumanPresenter(avatarKey) && !avatarUrl;
 
   const animEmoji = ANIMATION_EMOJI[animationState] ?? "😐";
 
@@ -745,13 +752,11 @@ export function AvatarCanvas({
       {/* Model type badge */}
       <div className="absolute bottom-6 left-2 pointer-events-none">
         {rpmActive ? (
-          <div className="text-[8px] px-1.5 py-0.5 rounded bg-blue-900/80 border border-blue-400/40 text-blue-300 font-mono">RPM GLB</div>
+          <div className="text-[8px] px-1.5 py-0.5 rounded bg-blue-900/80 border border-blue-400/40 text-blue-300 font-mono">GLB</div>
         ) : vrmBacked ? (
-          <div className="text-[8px] px-1.5 py-0.5 rounded bg-violet-900/70 border border-violet-500/30 text-violet-300 font-mono">VRM 1.0</div>
-        ) : humanActive ? (
-          <div className="text-[8px] px-1.5 py-0.5 rounded bg-emerald-900/70 border border-emerald-500/30 text-emerald-300 font-mono">Human 3D</div>
+          <div className="text-[8px] px-1.5 py-0.5 rounded bg-violet-900/70 border border-violet-500/30 text-violet-300 font-mono">VRM</div>
         ) : (
-          <div className="text-[8px] px-1.5 py-0.5 rounded bg-black/60 border border-white/10 text-white/30 font-mono">Procedural</div>
+          <div className="text-[8px] px-1.5 py-0.5 rounded bg-black/60 border border-white/10 text-white/30 font-mono">No Avatar</div>
         )}
       </div>
 

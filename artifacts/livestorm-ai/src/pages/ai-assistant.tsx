@@ -9,9 +9,10 @@ import {
   type AvatarConfig,
   type BuiltInAvatar,
 } from "@workspace/api-client-react";
-import { AvatarCanvas, VRMUploadButton, type RendererStats } from "@/components/avatar/AvatarCanvas";
+import { AvatarCanvas, type RendererStats } from "@/components/avatar/AvatarCanvas";
 import { AvatarThumbnail } from "@/components/avatar/AvatarThumbnail";
-import { BUILT_IN_AVATARS, HUMAN_PRESENTER_KEYS, isHumanPresenter, BACKGROUND_PRESETS, getBackgroundGradient } from "@/components/avatar/avatarAssets";
+import { BACKGROUND_PRESETS, getBackgroundGradient, rendererLabel } from "@/components/avatar/avatarAssets";
+import { AvatarCreatorModal, type AvatarCreatorResult } from "@/components/avatar/AvatarCreatorModal";
 import { AvatarAnimationMachine, type AnimationState, ANIMATION_LABELS, ANIMATION_EMOJI } from "@/components/avatar/avatarAnimationMachine";
 import { useLipSync } from "@/hooks/useLipSync";
 import { useAvatarReactions } from "@/hooks/useAvatarReactions";
@@ -37,7 +38,7 @@ import {
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
   Boxes, SlidersHorizontal, Monitor, Upload, Cpu,
-  Shirt, Tv2, Palette, Sun,
+  Shirt, Tv2, Palette, Sun, Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
@@ -462,10 +463,19 @@ export function AiAssistant() {
   const [uploadedVrmUrl, setUploadedVrmUrl] = useState<string | null>(null);
   const [uploadedVrmName, setUploadedVrmName] = useState<string | null>(null);
   const [rpmAvatarUrl, setRpmAvatarUrl] = useState<string | null>(null);
-  const [rpmUrlInput, setRpmUrlInput] = useState("");
-  const [rpmUrlError, setRpmUrlError] = useState<string | null>(null);
+  const [creatorModalOpen, setCreatorModalOpen] = useState(false);
+
+  const handleCreatorSave = useCallback((result: AvatarCreatorResult) => {
+    setRpmAvatarUrl(null);
+    setUploadedVrmUrl(null);
+    setUploadedVrmName(null);
+    saveAvatar({
+      avatarUrl: result.avatarUrl,
+      renderer: result.renderer,
+      avatarThumbnailUrl: result.thumbnailUrl ?? undefined,
+    });
+  }, [saveAvatar]);
   const [rendererStats, setRendererStats] = useState<RendererStats | null>(null);
-  const [selectedOutfit, setSelectedOutfit] = useState<string>("casual");
   const [selectedBackground, setSelectedBackground] = useState<string>("studio");
   const [lightingIntensity, setLightingIntensity] = useState<number>(80);
 
@@ -1570,7 +1580,7 @@ export function AiAssistant() {
               </div>
               {/* Feature badges */}
               <div className="flex flex-wrap gap-1.5 px-4 py-2 border-b border-white/5">
-                {["Realistic Humans", "Lip Sync Ready", "Expressions & Reactions", "TikTok LIVE Ready"].map((b) => (
+                {["RPM · Avaturn · VRM", "ARKit Lip Sync", "Expressions · Reactions", "TikTok LIVE Ready"].map((b) => (
                   <Badge key={b} variant="outline" className="text-[9px] border-blue-500/30 text-blue-400 bg-blue-500/5">{b}</Badge>
                 ))}
               </div>
@@ -1585,97 +1595,72 @@ export function AiAssistant() {
                 ) : (
                   <div className="p-4 space-y-5">
 
-                    {/* 2x2 Presenter Grid */}
+                    {/* Your AI Presenter */}
                     <div>
                       <p className="text-xs font-semibold text-white mb-2.5 flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-blue-400" />
-                        Choose Presenter
+                        <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                        Your AI Presenter
                       </p>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {HUMAN_PRESENTER_KEYS.map((key) => {
-                          const asset = BUILT_IN_AVATARS[key as keyof typeof BUILT_IN_AVATARS];
-                          const isSelected = (avatarConfig?.avatarKey ?? "marcus") === key;
-                          return (
-                            <button
-                              key={key}
-                              onClick={() => saveAvatar({ avatarKey: key })}
+                      {avatarConfig?.avatarUrl ? (
+                        <div className="rounded-xl border border-white/10 overflow-hidden bg-white/[0.02]">
+                          <div className="flex items-center gap-3 p-3">
+                            <AvatarThumbnail
+                              avatarKey={avatarConfig.avatarKey ?? ""}
+                              accentColor="#3b82f6"
+                              avatarUrl={avatarConfig.avatarUrl}
+                              renderer={avatarConfig.renderer ?? "rpm"}
+                              size={56}
+                              selected
+                            />
+                            <div className="flex-1 min-w-0">
+                              <Badge className="text-[9px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 mb-1">
+                                {rendererLabel(avatarConfig.renderer ?? "rpm")}
+                              </Badge>
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                {avatarConfig.avatarUrl.split("?")[0].split("/").pop() ?? "avatar"}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="h-7 text-[11px] bg-violet-600 hover:bg-violet-500 flex-shrink-0"
+                              onClick={() => setCreatorModalOpen(true)}
                               disabled={avatarSaving}
-                              className={cn(
-                                "relative rounded-xl overflow-hidden border-2 transition-all text-left",
-                                isSelected
-                                  ? "border-blue-500 shadow-lg shadow-blue-500/20"
-                                  : "border-white/10 hover:border-white/25",
-                              )}
                             >
-                              <div
-                                className="relative h-[130px] flex items-center justify-center"
-                                style={{ background: `radial-gradient(circle at 50% 40%, ${asset.accentColor}28, #050c18)` }}
-                              >
-                                <AvatarThumbnail
-                                  avatarKey={key}
-                                  accentColor={asset.accentColor}
-                                  skinTone={asset.skinTone}
-                                  hairColor={asset.hairColor}
-                                  clothingColor={asset.clothingColor}
-                                  size={72}
-                                  selected={isSelected}
-                                />
-                                {asset.isPrimary && (
-                                  <span className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wide">PRIMARY</span>
-                                )}
-                                {isSelected && (
-                                  <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                    <span className="text-[9px] text-green-400 font-medium">Live Ready</span>
-                                  </div>
-                                )}
-                                {isSelected && <div className="absolute inset-0 ring-2 ring-inset ring-blue-500/40 rounded-xl" />}
-                              </div>
-                              <div className="px-2.5 py-2" style={{ background: "rgba(5,10,20,0.95)" }}>
-                                <p className="font-semibold text-white text-[12px]">{asset.name}</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">{asset.role}</p>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  <span className="text-[9px] text-muted-foreground/60">{asset.gender}</span>
-                                  <span className="text-muted-foreground/30">·</span>
-                                  <span className="text-[9px] text-muted-foreground/60">{asset.ageRange}</span>
-                                </div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <Separator className="bg-white/5" />
-
-                    {/* Outfit selector */}
-                    <div>
-                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                        <Shirt className="h-3.5 w-3.5 text-violet-400" />
-                        Outfit
-                      </p>
-                      {(() => {
-                        const asset = BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "marcus") as keyof typeof BUILT_IN_AVATARS] ?? BUILT_IN_AVATARS["marcus"];
-                        return (
-                          <div className="flex gap-1.5 flex-wrap">
-                            {asset.outfits.map((outfit) => (
+                              Change
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-[11px] text-muted-foreground">No presenter set. Create a photorealistic avatar from a selfie, or upload a custom VRM.</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { label: "Ready Player Me", icon: Camera, color: "blue", desc: "Selfie → avatar" },
+                              { label: "Avaturn", icon: Sparkles, color: "rose", desc: "Photo-realistic" },
+                              { label: "Upload VRM", icon: Upload, color: "violet", desc: "Custom model" },
+                            ].map(({ label, icon: Icon, color, desc }) => (
                               <button
-                                key={outfit.id}
-                                onClick={() => setSelectedOutfit(outfit.id)}
-                                className={cn(
-                                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-all",
-                                  selectedOutfit === outfit.id
-                                    ? "bg-violet-500/20 border-violet-500/50 text-violet-300"
-                                    : "bg-white/5 border-white/10 text-muted-foreground hover:border-white/20",
-                                )}
+                                key={label}
+                                onClick={() => setCreatorModalOpen(true)}
+                                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-white/10 hover:border-white/25 bg-white/[0.02] hover:bg-white/[0.04] transition-all text-center"
                               >
-                                <span className="w-3 h-3 rounded-full flex-shrink-0 border border-white/20" style={{ background: outfit.clothingColor }} />
-                                {outfit.label}
+                                <Icon className={`h-4 w-4 text-${color}-400`} />
+                                <span className="text-[10px] font-medium text-white/70 leading-tight">{label}</span>
+                                <span className="text-[9px] text-muted-foreground/60">{desc}</span>
                               </button>
                             ))}
                           </div>
-                        );
-                      })()}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-8 text-xs border-violet-500/30 text-violet-300 hover:bg-violet-500/10"
+                            onClick={() => setCreatorModalOpen(true)}
+                          >
+                            <Sparkles className="h-3 w-3 mr-1.5" />
+                            Create Your AI Presenter
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Background selector */}
@@ -1755,7 +1740,7 @@ export function AiAssistant() {
                       </p>
                       <AvatarCanvas
                         avatarKey={avatarConfig?.avatarKey ?? "marcus"}
-                        accentColor={avatarConfig?.accentColor ?? BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "marcus") as keyof typeof BUILT_IN_AVATARS]?.accentColor ?? "#3b82f6"}
+                        accentColor={avatarConfig?.accentColor ?? "#3b82f6"}
                         scale={avatarConfig?.scale ?? 1.0}
                         positionY={avatarConfig?.positionY ?? -0.8}
                         lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
@@ -1784,24 +1769,6 @@ export function AiAssistant() {
                       </div>
                     </div>
 
-                    <Separator className="bg-white/5" />
-
-                    {/* Custom File Upload (Advanced) */}
-                    <div>
-                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                        <Upload className="h-3.5 w-3.5 text-violet-400" />
-                        Custom VRM / GLB
-                        {uploadedVrmName && <span className="text-[10px] font-normal text-violet-400 ml-1">— active</span>}
-                      </p>
-                      <VRMUploadButton
-                        onUpload={(url, name) => { setRpmAvatarUrl(null); setUploadedVrmUrl(url); setUploadedVrmName(name); }}
-                        onClear={() => { setUploadedVrmUrl(null); setUploadedVrmName(null); }}
-                        uploadedName={uploadedVrmName}
-                      />
-                      <p className="text-[10px] text-muted-foreground/50 mt-1.5">
-                        Upload any VRoid Studio .vrm or .glb — overrides built-in for this session
-                      </p>
-                    </div>
 
                     <Separator className="bg-white/5" />
 
@@ -1945,12 +1912,12 @@ export function AiAssistant() {
                       </p>
                       <div className="space-y-1.5">
                         {[
-                          { label: "4 Realistic Presenters",        desc: "Ivan Host · Marcus · Aria · Sofia" },
+                          { label: "RPM · Avaturn · VRM avatars",    desc: "Photorealistic GLB & VRM 1.0 support" },
                           { label: "Real-time 3D rendering",         desc: "React Three Fiber + WebGL" },
                           { label: "TikTok event reactions",         desc: "Gift · Follow · Like · Share" },
                           { label: "Animation state machine",        desc: "7 states, priority queue" },
                           { label: "AI voice lip sync",              desc: "Web Audio API AnalyserNode" },
-                          { label: "Outfit & background customiser", desc: "4 outfits · 4 backgrounds per presenter" },
+                          { label: "Background customiser",          desc: "4 scene presets + custom colour" },
                         ].map((item) => (
                           <div key={item.label} className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/5">
                             <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 bg-emerald-500/70" />
@@ -2032,6 +1999,13 @@ export function AiAssistant() {
 
         </div>
       </div>
+
+      {/* Avatar Creator Modal */}
+      <AvatarCreatorModal
+        open={creatorModalOpen}
+        onClose={() => setCreatorModalOpen(false)}
+        onSave={handleCreatorSave}
+      />
     </div>
   );
 }

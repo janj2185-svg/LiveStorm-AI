@@ -88,8 +88,6 @@ async function getOrCreateAvatarConfig(streamerId: number) {
         streamerId,
         avatarKey: "marcus",
         avatarEnabled: true,
-        accentColor: "#3b82f6",
-        animationState: "idle",
       })
       .returning();
   }
@@ -128,11 +126,24 @@ router.put("/config", requireAuth, async (req, res) => {
     const {
       avatarKey,
       avatarEnabled,
-      accentColor,
       animationState,
       lipSyncEnabled,
       expressionsEnabled,
       reactionsEnabled,
+      avatarUrl,
+      avatarThumbnailUrl,
+      renderer,
+      scale,
+      positionX,
+      positionY,
+      rotationY,
+      lightingPreset,
+      backgroundType,
+      backgroundValue,
+      lipSyncSensitivity,
+      expressionIntensity,
+      blinkEnabled,
+      shadowEnabled,
     } = req.body;
 
     const [updated] = await db
@@ -140,11 +151,25 @@ router.put("/config", requireAuth, async (req, res) => {
       .set({
         ...(avatarKey !== undefined && { avatarKey }),
         ...(avatarEnabled !== undefined && { avatarEnabled }),
-        ...(accentColor !== undefined && { accentColor }),
         ...(animationState !== undefined && { animationState }),
         ...(lipSyncEnabled !== undefined && { lipSyncEnabled }),
         ...(expressionsEnabled !== undefined && { expressionsEnabled }),
         ...(reactionsEnabled !== undefined && { reactionsEnabled }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
+        ...(avatarThumbnailUrl !== undefined && { avatarThumbnailUrl }),
+        ...(renderer !== undefined && { renderer }),
+        ...(scale !== undefined && { scale }),
+        ...(positionX !== undefined && { positionX }),
+        ...(positionY !== undefined && { positionY }),
+        ...(rotationY !== undefined && { rotationY }),
+        ...(lightingPreset !== undefined && { lightingPreset }),
+        ...(backgroundType !== undefined && { backgroundType }),
+        ...(backgroundValue !== undefined && { backgroundValue }),
+        ...(lipSyncSensitivity !== undefined && { lipSyncSensitivity }),
+        ...(expressionIntensity !== undefined && { expressionIntensity }),
+        ...(blinkEnabled !== undefined && { blinkEnabled }),
+        ...(shadowEnabled !== undefined && { shadowEnabled }),
+        updatedAt: new Date(),
       })
       .where(eq(avatarConfigsTable.id, config.id))
       .returning();
