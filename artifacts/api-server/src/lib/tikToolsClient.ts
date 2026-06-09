@@ -144,7 +144,7 @@ export class TikToolsClient extends EventEmitter {
       return;
     }
     // Q5 — log first 6 + last 6 chars of the key actually used at runtime
-    const keyFingerprint = `${apiKey.slice(0, 6)}...${apiKey.slice(-6)}`;
+    const keyFingerprint = `${apiKey.slice(0, 8)}...${apiKey.slice(-8)}`;
     console.log(
       `[TikTools:key] @${this.username} using TIKTOOL_API_KEY fingerprint="${keyFingerprint}" ` +
       `length=${apiKey.length} startsWithTk=${apiKey.startsWith("tk_")}`,

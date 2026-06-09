@@ -79,7 +79,7 @@ export const isRealModeEnabled = TIKTOK_MODE === "real";
   const liveProvider = (process.env.LIVE_PROVIDER ?? "").trim().toLowerCase();
   const apiKeyRaw = process.env.TIKTOOL_API_KEY ?? "";
   const apiKeyFingerprint = apiKeyRaw
-    ? `"${apiKeyRaw.slice(0, 6)}...${apiKeyRaw.slice(-6)}" len=${apiKeyRaw.length} startsWithTk=${apiKeyRaw.startsWith("tk_")}`
+    ? `"${apiKeyRaw.slice(0, 8)}...${apiKeyRaw.slice(-8)}" len=${apiKeyRaw.length} startsWithTk=${apiKeyRaw.startsWith("tk_")}`
     : "(not set)";
   console.log(
     `[Env:startup] TIKTOK_MODE="${TIKTOK_MODE}" isRealModeEnabled=${isRealModeEnabled} | ` +
