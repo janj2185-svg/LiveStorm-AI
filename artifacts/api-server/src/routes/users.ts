@@ -5,7 +5,11 @@ import { eq } from "drizzle-orm";
 
 const router = Router();
 
-const VALID_UI_LANGUAGES = ["en", "uk", "pl", "de"] as const;
+const VALID_UI_LANGUAGES = [
+  "en", "uk", "pl", "de", "fr", "es", "it", "pt",
+  "nl", "tr", "ar", "hi", "ja", "ko", "zh", "zh-TW",
+  "id", "vi", "th", "ru",
+] as const;
 
 function requireAuth(req: any, res: any, next: any) {
   if (process.env.NODE_ENV !== "production" && req.cookies?.dev_auth_clerk_id) {

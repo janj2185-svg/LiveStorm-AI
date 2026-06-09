@@ -29,6 +29,7 @@ import { Analytics } from "@/pages/analytics";
 import { Platforms } from "@/pages/platforms";
 import { Profile } from "@/pages/profile";
 import { Moderation } from "@/pages/moderation";
+import { AvatarRoadmap } from "@/pages/avatar-roadmap";
 
 import { ObsAlerts } from "@/pages/obs/alerts";
 import { ObsGoals } from "@/pages/obs/goals";
@@ -276,6 +277,9 @@ function AppRoutes() {
       </Route>
       <Route path="/pricing">
         <ProtectedRoute><Pricing /></ProtectedRoute>
+      </Route>
+      <Route path="/avatar-roadmap">
+        <ProtectedRoute><Layout><AvatarRoadmap /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin">
         <ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>

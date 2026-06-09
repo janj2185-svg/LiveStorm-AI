@@ -57,7 +57,13 @@ const SECONDARY_NAV: NavItem[] = [
 ];
 
 const BOTTOM_NAV_ITEMS = PRIMARY_NAV.slice(0, 4);
-const FLAGS: Record<Language, string> = { en: "🇬🇧", uk: "🇺🇦", pl: "🇵🇱", de: "🇩🇪" };
+const FLAGS: Record<Language, string> = {
+  en: "🇬🇧", uk: "🇺🇦", pl: "🇵🇱", de: "🇩🇪",
+  fr: "🇫🇷", es: "🇪🇸", it: "🇮🇹", pt: "🇧🇷",
+  nl: "🇳🇱", tr: "🇹🇷", ru: "🇷🇺", ar: "🇸🇦",
+  hi: "🇮🇳", ja: "🇯🇵", ko: "🇰🇷", zh: "🇨🇳",
+  "zh-TW": "🇹🇼", id: "🇮🇩", vi: "🇻🇳", th: "🇹🇭",
+};
 
 function SidebarLink({
   item,

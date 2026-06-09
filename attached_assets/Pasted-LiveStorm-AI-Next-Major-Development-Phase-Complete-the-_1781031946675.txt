@@ -1,0 +1,135 @@
+LiveStorm AI - Next Major Development Phase
+
+Complete the following systems in order.
+
+PRIORITY 1 — INTERNATIONALIZATION
+
+- Full i18n architecture.
+- Remove hardcoded UI text.
+- Dynamic language switching.
+- Store language preference in database.
+- Auto-detect browser/device language.
+- Support RTL languages.
+
+Launch languages:
+
+- English
+- Ukrainian
+- Polish
+- German
+- French
+- Spanish
+- Italian
+- Portuguese
+- Dutch
+- Turkish
+- Arabic
+- Hindi
+- Japanese
+- Korean
+- Chinese Simplified
+- Chinese Traditional
+- Indonesian
+- Vietnamese
+- Thai
+- Russian
+
+AI Co-Host:
+
+- Detect viewer language.
+- Reply in viewer language.
+- Multilingual chat support.
+
+PRIORITY 2 — SUBSCRIPTION SYSTEM
+
+Create complete billing system.
+
+FREE
+
+- Basic AI
+- Basic Boss Battle
+- Limited XP
+- 1 TikTok account
+
+PRO (€9.99/month)
+
+- AI Voice
+- Full XP system
+- Achievements
+- Lucky Drops
+- Fan Profiles
+- Leaderboards
+
+CREATOR (€19.99/month)
+
+- AI Translator
+- Advanced Analytics
+- Multiple TikTok accounts
+- Advanced Moderation
+- Custom Themes
+
+STUDIO (€39.99/month)
+
+- 3D AI Host
+- Voice Clone
+- Team Accounts
+- API Access
+- Early Access Features
+
+Implement:
+
+- Stripe
+- Billing page
+- Trial support
+- Subscription management
+- Upgrade/Downgrade
+- Feature gating
+- Usage limits
+- Mobile and desktop support
+
+PRIORITY 3 — AI VOICE VERIFICATION
+
+- Verify voice playback on Android.
+- Verify voice playback on iPhone.
+- Verify OpenAI TTS.
+- Verify browser fallback.
+- Verify volume controls.
+- Verify voice selector.
+- Verify speed controls.
+
+PRIORITY 4 — PLATFORM STABILITY
+
+- Remove dead code.
+- Remove debug code.
+- Error monitoring.
+- Recovery handling.
+- Production logging.
+- Database migration verification.
+
+PRIORITY 5 — PREPARE FOR 3D AI HOST
+
+Do NOT build final 3D avatar yet.
+
+Instead:
+
+- Design architecture.
+- Create avatar engine plan.
+- Create OBS overlay architecture.
+- Create lip-sync architecture.
+- Create emotion engine architecture.
+- Create avatar database schema.
+- Create implementation roadmap.
+
+Testing Requirements
+
+For every completed section:
+
+1. Build.
+2. Test.
+3. Show logs.
+4. Show screenshots.
+5. Verify mobile.
+6. Verify desktop.
+7. Verify database changes.
+
+Do not mark complete until all sections are verified.

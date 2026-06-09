@@ -38,17 +38,34 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const PLAN_META: Record<string, { label: string; icon: any; color: string; desc: string }> = {
-  free: { label: "Free", icon: Zap, color: "text-slate-400", desc: "Basic streaming and gamification features." },
-  pro: { label: "Pro", icon: Sparkles, color: "text-purple-400", desc: "AI Co-host, 10 automations, analytics." },
-  premium: { label: "Premium", icon: Crown, color: "text-amber-400", desc: "Unlimited automations and all features." },
+  free:    { label: "Free",    icon: Zap,      color: "text-slate-400", desc: "Basic streaming and gamification features." },
+  pro:     { label: "Pro",     icon: Sparkles, color: "text-purple-400", desc: "AI Voice, full XP, achievements, fan profiles." },
+  creator: { label: "Creator", icon: Crown,    color: "text-amber-400", desc: "AI Translator, analytics, multiple TikTok accounts." },
+  studio:  { label: "Studio",  icon: Crown,    color: "text-pink-400",  desc: "3D AI Host, voice clone, team accounts, API access." },
 };
 
 const AI_REPLY_LANGUAGES = [
-  { value: "auto", label: "Auto-detect", flag: "🌍" },
-  { value: "en", label: "English", flag: "🇬🇧" },
-  { value: "uk", label: "Українська", flag: "🇺🇦" },
-  { value: "pl", label: "Polski", flag: "🇵🇱" },
-  { value: "de", label: "Deutsch", flag: "🇩🇪" },
+  { value: "auto",  label: "Auto-detect",          flag: "🌍" },
+  { value: "en",    label: "English",               flag: "🇬🇧" },
+  { value: "uk",    label: "Українська",            flag: "🇺🇦" },
+  { value: "pl",    label: "Polski",                flag: "🇵🇱" },
+  { value: "de",    label: "Deutsch",               flag: "🇩🇪" },
+  { value: "fr",    label: "Français",              flag: "🇫🇷" },
+  { value: "es",    label: "Español",               flag: "🇪🇸" },
+  { value: "it",    label: "Italiano",              flag: "🇮🇹" },
+  { value: "pt",    label: "Português",             flag: "🇧🇷" },
+  { value: "nl",    label: "Nederlands",            flag: "🇳🇱" },
+  { value: "tr",    label: "Türkçe",                flag: "🇹🇷" },
+  { value: "ru",    label: "Русский",               flag: "🇷🇺" },
+  { value: "ar",    label: "العربية",               flag: "🇸🇦" },
+  { value: "hi",    label: "हिन्दी",                flag: "🇮🇳" },
+  { value: "ja",    label: "日本語",                flag: "🇯🇵" },
+  { value: "ko",    label: "한국어",                flag: "🇰🇷" },
+  { value: "zh",    label: "简体中文",              flag: "🇨🇳" },
+  { value: "zh-TW", label: "繁體中文",              flag: "🇹🇼" },
+  { value: "id",    label: "Bahasa Indonesia",      flag: "🇮🇩" },
+  { value: "vi",    label: "Tiếng Việt",            flag: "🇻🇳" },
+  { value: "th",    label: "ภาษาไทย",              flag: "🇹🇭" },
 ];
 
 type SettingsTab = "profile" | "billing" | "language";
@@ -453,28 +470,41 @@ export function Settings() {
               <div className="space-y-2 text-sm">
                 {(user?.plan === "free" || !user?.plan) && (
                   <>
-                    <p className="text-green-400">✓ Basic live dashboard</p>
-                    <p className="text-green-400">✓ 1 automation trigger</p>
+                    <p className="text-green-400">✓ Basic AI Co-Host</p>
+                    <p className="text-green-400">✓ Basic Boss Battle</p>
                     <p className="text-green-400">✓ Viewer leaderboard</p>
-                    <p className="text-muted-foreground line-through">✕ AI Co-host & quests (Pro+)</p>
-                    <p className="text-muted-foreground line-through">✕ Unlimited automations (Premium)</p>
+                    <p className="text-muted-foreground line-through">✕ AI Voice (Pro+)</p>
+                    <p className="text-muted-foreground line-through">✕ Achievements & Lucky Drops (Pro+)</p>
+                    <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
                   </>
                 )}
                 {user?.plan === "pro" && (
                   <>
-                    <p className="text-green-400">✓ Everything in Free</p>
-                    <p className="text-green-400">✓ AI Co-host & quests</p>
-                    <p className="text-green-400">✓ 10 automation triggers</p>
-                    <p className="text-green-400">✓ OBS Browser Sources</p>
-                    <p className="text-muted-foreground line-through">✕ Unlimited automations (Premium)</p>
+                    <p className="text-green-400">✓ AI Voice (OpenAI TTS)</p>
+                    <p className="text-green-400">✓ Full XP System & Achievements</p>
+                    <p className="text-green-400">✓ Fan Profiles & Leaderboards</p>
+                    <p className="text-green-400">✓ 10 automations + OBS Sources</p>
+                    <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
+                    <p className="text-muted-foreground line-through">✕ Multiple TikTok accounts (Creator+)</p>
                   </>
                 )}
-                {user?.plan === "premium" && (
+                {user?.plan === "creator" && (
                   <>
                     <p className="text-green-400">✓ Everything in Pro</p>
+                    <p className="text-green-400">✓ AI Translator (20 languages)</p>
+                    <p className="text-green-400">✓ Advanced Analytics</p>
+                    <p className="text-green-400">✓ Multiple TikTok accounts</p>
                     <p className="text-green-400">✓ Unlimited automations</p>
-                    <p className="text-green-400">✓ Priority support</p>
-                    <p className="text-green-400">✓ Early access to new features</p>
+                    <p className="text-muted-foreground line-through">✕ 3D AI Host (Studio)</p>
+                  </>
+                )}
+                {user?.plan === "studio" && (
+                  <>
+                    <p className="text-green-400">✓ Everything in Creator</p>
+                    <p className="text-green-400">✓ 3D AI Host (Early Access)</p>
+                    <p className="text-green-400">✓ Voice Clone</p>
+                    <p className="text-green-400">✓ Team Accounts & API Access</p>
+                    <p className="text-green-400">✓ Dedicated support</p>
                   </>
                 )}
               </div>
