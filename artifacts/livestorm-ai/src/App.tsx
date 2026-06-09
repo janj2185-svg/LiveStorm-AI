@@ -28,6 +28,7 @@ import { Admin } from "@/pages/admin";
 import { Analytics } from "@/pages/analytics";
 import { Platforms } from "@/pages/platforms";
 import { Profile } from "@/pages/profile";
+import { Moderation } from "@/pages/moderation";
 
 import { ObsAlerts } from "@/pages/obs/alerts";
 import { ObsGoals } from "@/pages/obs/goals";
@@ -257,6 +258,9 @@ function AppRoutes() {
       </Route>
       <Route path="/ai-content">
         <ProtectedRoute><Layout><AiContent /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/moderation">
+        <ProtectedRoute><Layout><Moderation /></Layout></ProtectedRoute>
       </Route>
       <Route path="/analytics">
         <ProtectedRoute><Layout><Analytics /></Layout></ProtectedRoute>
