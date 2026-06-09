@@ -19,6 +19,42 @@ import { emitAiGiftAnnouncement } from "./aiAnnouncer";
 
 let io: SocketServer | null = null;
 
+// ─── Per-session recent-events ring buffer (last 100 events, in-memory) ───────
+// Independent of Socket.IO — lets the REST endpoint verify events arrive even
+// when no browser tab is subscribed to the session room.
+const RECENT_EVENTS_MAX = 100;
+const recentEventsStore = new Map<number, TikTokEvent[]>();
+
+export function pushRecentEvent(sessionId: number, event: TikTokEvent): void {
+  let buf = recentEventsStore.get(sessionId);
+  if (!buf) {
+    buf = [];
+    recentEventsStore.set(sessionId, buf);
+  }
+  buf.push(event);
+  if (buf.length > RECENT_EVENTS_MAX) buf.shift();
+}
+
+export function getRecentEvents(sessionId: number): TikTokEvent[] {
+  return (recentEventsStore.get(sessionId) ?? []).slice();
+}
+
+export async function getSocketDiagnostics(): Promise<Record<string, unknown>> {
+  if (!io) return { error: "Socket.IO not initialised" };
+  const sockets = await io.fetchSockets();
+  const rooms: Record<string, number> = {};
+  for (const [roomName, roomSet] of io.sockets.adapter.rooms) {
+    if (roomName.startsWith("session:")) {
+      rooms[roomName] = roomSet.size;
+    }
+  }
+  return {
+    totalConnectedSockets: sockets.length,
+    sessionRooms: rooms,
+    sessionRoomCount: Object.keys(rooms).length,
+  };
+}
+
 // ─── Anti-spam: per-session per-viewer last-reply timestamp ───────────────────
 // key: `${sessionId}:${viewerName}`, value: ms timestamp of last AI reply
 const autoReplySpamMap = new Map<string, number>();
@@ -165,6 +201,14 @@ export function initSocketServer(httpServer: HttpServer) {
   io.on("connection", (socket: Socket) => {
     const authToken = socket.handshake.auth?.token as string | undefined;
     const obsToken = socket.handshake.auth?.obsToken as string | undefined;
+    const hasAuth = !!authToken || !!obsToken;
+    console.log(
+      `[Socket.IO] New connection | socketId=${socket.id} | transport=${socket.conn.transport.name} | hasAuth=${hasAuth}`,
+    );
+
+    socket.on("disconnect", (reason: string) => {
+      console.log(`[Socket.IO] Disconnected | socketId=${socket.id} | reason=${reason}`);
+    });
 
     socket.on("session:join", async (sessionId: number) => {
       // REQ-7: Pipeline:7 — log the room ID the frontend is subscribing to
@@ -271,6 +315,9 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   }
 
   const roomId = `session:${event.sessionId}`;
+
+  // Store event in per-session ring buffer (REST-accessible, independent of Socket.IO)
+  pushRecentEvent(event.sessionId, event);
 
   // REQ-4/5/6: Pipeline:4 — every ingestLiveEvent call; Pipeline:5/6 — emit + room ID + socket count
   const roomSockets = await io.in(roomId).fetchSockets();

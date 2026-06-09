@@ -56,13 +56,13 @@ interface RawEventEntry {
   ts: string;          // ISO timestamp
   username: string;    // creator username
   event: string;       // raw event name from tik.tools
-  dataPreview: string; // first 300 chars of JSON-stringified data
+  dataPreview: string; // first 800 chars of JSON-stringified data
   mapped: boolean;     // whether _handleEvent has a case for this event name
 }
 
-const KNOWN_EVENTS = new Set(["chat","gift","like","follow","share","member","roomInfo","ping"]);
+const KNOWN_EVENTS = new Set(["chat","gift","like","follow","share","member","roomInfo","ping","roomUserSeq"]);
 const RAW_EVENT_BUFFER: RawEventEntry[] = [];
-const RAW_BUFFER_MAX = 20;
+const RAW_BUFFER_MAX = 50;
 
 export function getRawEventBuffer(): RawEventEntry[] {
   return RAW_EVENT_BUFFER.slice();
@@ -283,7 +283,7 @@ export class TikToolsClient extends EventEmitter {
       lastEventType = msg.event ?? null;
 
       // ── Ring buffer + full raw logging ────────────────────────────────────
-      const dataPreview = raw.slice(0, 300);
+      const dataPreview = raw.slice(0, 800);
       const mapped = KNOWN_EVENTS.has(msg.event ?? "");
       pushToBuffer({
         ts: new Date().toISOString(),
@@ -458,6 +458,14 @@ export class TikToolsClient extends EventEmitter {
       case "member":
         this.emit("social", { username, action: "join" } satisfies TikToolsSocialEvent);
         break;
+
+      case "roomUserSeq": {
+        const count = Number(d.viewerCount ?? d.viewer_count ?? d.totalViewers ?? 0);
+        if (count > 0) {
+          this.emit("viewerCount", { count } satisfies TikToolsViewerCountEvent);
+        }
+        break;
+      }
 
       case "roomInfo": {
         // tik.tools puts roomInfo metadata at the top level (no msg.data wrapper).
