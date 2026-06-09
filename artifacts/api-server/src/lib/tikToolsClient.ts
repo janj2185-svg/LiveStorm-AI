@@ -174,6 +174,9 @@ export class TikToolsClient extends EventEmitter {
 
     let connectedAt: number | null = null;
     let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+    // True once ANY message arrives (including roomInfo). roomInfo proves the room is live —
+    // a subsequent quick WS close is a server-side rotation, NOT a "not live" signal.
+    let hadAnyMessage = false;
 
     ws.on("open", () => {
       connectedAt = Date.now();
@@ -195,7 +198,8 @@ export class TikToolsClient extends EventEmitter {
     });
 
     ws.on("message", (data: Buffer | string) => {
-      // Cancel the silence watchdog on first message
+      hadAnyMessage = true;
+      // Cancel the silence watchdog on first message (any type, including roomInfo)
       if (silenceTimer) {
         clearTimeout(silenceTimer);
         silenceTimer = null;
@@ -245,10 +249,13 @@ export class TikToolsClient extends EventEmitter {
           `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
         this.emit("notLive", { username: this.username, message: msg });
         this._scheduleRetry(30_000, settle);
-      } else if (this.rawEventCount === 0 && connectedMs < 20_000) {
-        // Quick close with zero events = room not live / JWT rejected
+      } else if (!hadAnyMessage && connectedMs < 20_000) {
+        // Quick close with zero messages of any kind = room not live / JWT rejected.
+        // NOTE: if ANY message (including roomInfo) arrived, hadAnyMessage=true and we fall
+        // through to the normal-reconnect branch below — roomInfo proves the room is live,
+        // so a subsequent fast close is a server-side WS rotation, not a "not live" signal.
         console.warn(
-          `[TikTools] Quick close (${connectedMs} ms, 0 events, code=${code}) ` +
+          `[TikTools] Quick close (${connectedMs} ms, 0 messages, code=${code}) ` +
           `@${this.username} — treating as not-live, polling in 30 s`,
         );
         const msg =
