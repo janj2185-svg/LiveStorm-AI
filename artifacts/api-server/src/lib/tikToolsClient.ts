@@ -324,11 +324,24 @@ export class TikToolsClient extends EventEmitter {
         this.emit("social", { username, action: "join" } satisfies TikToolsSocialEvent);
         break;
 
-      case "roomInfo":
-        this.emit("viewerCount", {
-          count: Number(d.viewerCount ?? d.viewer_count ?? 0),
-        } satisfies TikToolsViewerCountEvent);
+      case "roomInfo": {
+        // tik.tools puts roomInfo metadata at the top level (no msg.data wrapper).
+        // The event looks like: { event:"roomInfo", roomId:"...", uniqueId:"...", ... }
+        // Viewer count arrives in later real-time events (member, share, etc.).
+        // Emit with count=0 as a no-op placeholder so the pipeline stays consistent.
+        const roomMsg = msg as any;
+        const count = Number(
+          roomMsg.viewerCount ?? roomMsg.viewer_count ??
+          d.viewerCount ?? d.viewer_count ?? 0,
+        );
+        if (count > 0) {
+          this.emit("viewerCount", { count } satisfies TikToolsViewerCountEvent);
+        }
+        console.log(
+          `[TikTools] roomInfo @${this.username} roomId=${roomMsg.roomId ?? "?"} viewerCount=${count}`,
+        );
         break;
+      }
 
       // Unknown events are silently ignored
     }
