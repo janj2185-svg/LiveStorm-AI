@@ -9,7 +9,9 @@ import {
   type AvatarConfig,
   type BuiltInAvatar,
 } from "@workspace/api-client-react";
-import { AvatarCanvas } from "@/components/avatar/AvatarCanvas";
+import { AvatarCanvas, VRMUploadButton, type RendererStats } from "@/components/avatar/AvatarCanvas";
+import { AvatarThumbnail } from "@/components/avatar/AvatarThumbnail";
+import { BUILT_IN_AVATARS, isVRMBacked, formatVRMSize } from "@/components/avatar/avatarAssets";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +33,7 @@ import {
   Globe, Gift, Users, Heart, Share2, Loader2, Radio, Play,
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
-  Boxes, SlidersHorizontal, Monitor,
+  Boxes, SlidersHorizontal, Monitor, Upload, Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
@@ -450,6 +452,11 @@ export function AiAssistant() {
   const { data: avatarPresets } = useGetAvatarPresets();
   const builtInAvatars: BuiltInAvatar[] = avatarConfig?.builtInAvatars ?? [];
   const selectedAvatar = builtInAvatars.find((a) => a.key === avatarConfig?.avatarKey) ?? builtInAvatars[0];
+
+  // ── Avatar upload (session-only, cleared on refresh) ─────────────────────────
+  const [uploadedVrmUrl, setUploadedVrmUrl] = useState<string | null>(null);
+  const [uploadedVrmName, setUploadedVrmName] = useState<string | null>(null);
+  const [rendererStats, setRendererStats] = useState<RendererStats | null>(null);
 
   // ── AI private chat ───────────────────────────────────────────────────────────
   const [chatInput, setChatInput] = useState("");
@@ -1498,7 +1505,7 @@ export function AiAssistant() {
                 <div className="flex items-center gap-2">
                   <Boxes className="h-3.5 w-3.5 text-violet-400" />
                   <span className="text-sm font-medium">3D AI Co-Host</span>
-                  <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5">Phase 1</Badge>
+                  <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5">Phase 3</Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Enabled</span>
@@ -1534,7 +1541,9 @@ export function AiAssistant() {
                           positionY={avatarConfig?.positionY ?? -0.8}
                           lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
                           avatarEnabled={avatarConfig?.avatarEnabled ?? false}
+                          avatarUrl={uploadedVrmUrl}
                           showFps
+                          onStats={setRendererStats}
                           className="w-[220px] h-[300px] flex-shrink-0 border border-violet-500/20"
                         />
                         {avatarSaving && (
@@ -1557,29 +1566,38 @@ export function AiAssistant() {
                           <div className="grid grid-cols-3 gap-2">
                             {builtInAvatars.map((avatar) => {
                               const isSel = avatarConfig?.avatarKey === avatar.key;
+                              const assetInfo = BUILT_IN_AVATARS[avatar.key as keyof typeof BUILT_IN_AVATARS];
+                              const vrm = isVRMBacked(avatar.key);
                               return (
                                 <button
                                   key={avatar.key}
                                   onClick={() => saveAvatar({ avatarKey: avatar.key })}
                                   disabled={avatarSaving}
                                   className={cn(
-                                    "relative flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all text-center",
+                                    "relative flex flex-col items-center gap-1 p-2 rounded-xl border transition-all text-center",
                                     isSel
                                       ? "border-violet-500/60 bg-violet-500/15 shadow-lg"
                                       : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10",
                                   )}
                                 >
-                                  <div
-                                    className="w-10 h-10 rounded-full shadow-lg transition-transform"
-                                    style={{
-                                      background: `radial-gradient(circle at 35% 30%, ${avatar.accentColor}ff, ${avatar.accentColor}55)`,
-                                      boxShadow: isSel ? `0 0 16px ${avatar.accentColor}66` : undefined,
-                                      transform: isSel ? "scale(1.1)" : "scale(1)",
-                                    }}
+                                  <AvatarThumbnail
+                                    avatarKey={avatar.key}
+                                    accentColor={avatar.accentColor}
+                                    size={52}
+                                    selected={isSel}
                                   />
                                   <div>
                                     <p className="text-xs font-semibold text-white leading-none">{avatar.name}</p>
-                                    <p className="text-[10px] text-muted-foreground mt-0.5">{avatar.style}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{assetInfo?.tagline ?? avatar.style}</p>
+                                  </div>
+                                  {/* VRM / Procedural badge */}
+                                  <div className={cn(
+                                    "text-[8px] px-1.5 py-0.5 rounded font-mono",
+                                    vrm
+                                      ? "bg-violet-900/60 border border-violet-500/30 text-violet-300"
+                                      : "bg-black/40 border border-white/10 text-white/30",
+                                  )}>
+                                    {vrm ? "VRM 1.0" : "Procedural"}
                                   </div>
                                   {isSel && (
                                     <div className="absolute top-1.5 right-1.5">
@@ -1593,6 +1611,25 @@ export function AiAssistant() {
                           {selectedAvatar && (
                             <p className="text-[11px] text-muted-foreground mt-2 px-0.5">{selectedAvatar.description}</p>
                           )}
+                        </div>
+
+                        {/* VRM Upload */}
+                        <div>
+                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                            <Upload className="h-3.5 w-3.5 text-violet-400" />
+                            Custom VRM Model
+                            {uploadedVrmName && (
+                              <span className="text-[10px] font-normal text-violet-400 ml-1">— active</span>
+                            )}
+                          </p>
+                          <VRMUploadButton
+                            onUpload={(url, name) => { setUploadedVrmUrl(url); setUploadedVrmName(name); }}
+                            onClear={() => { setUploadedVrmUrl(null); setUploadedVrmName(null); }}
+                            uploadedName={uploadedVrmName}
+                          />
+                          <p className="text-[10px] text-muted-foreground/50 mt-1.5">
+                            Upload any VRoid Studio export (.vrm) — overrides built-in for this session
+                          </p>
                         </div>
 
                         <Separator className="bg-white/5" />
@@ -1658,26 +1695,59 @@ export function AiAssistant() {
 
                         <Separator className="bg-white/5" />
 
-                        {/* Phase 2 roadmap */}
+                        {/* Phase 3 status */}
                         <div>
-                          <p className="text-xs font-semibold text-muted-foreground mb-2">Coming in Phase 2</p>
+                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                            <Cpu className="h-3.5 w-3.5 text-violet-400" />
+                            Phase 3 Status
+                          </p>
                           <div className="space-y-1.5">
                             {[
-                              { label: "Real-time 3D rendering", desc: "React Three Fiber + VRM avatar" },
-                              { label: "Lip sync", desc: "Mouth moves with AI voice output" },
-                              { label: "Event animations", desc: "Reacts to gifts, follows, boss battles" },
-                              { label: "OBS overlay", desc: "Transparent browser source for streaming" },
+                              { label: "Real-time 3D rendering", done: true, desc: "React Three Fiber + WebGL" },
+                              { label: "Real VRM 1.0 models", done: true, desc: "Seed-san + Constraint sample (10+ MB each)" },
+                              { label: "VRM upload support", done: true, desc: "Drop any VRoid Studio export" },
+                              { label: "Avatar thumbnail previews", done: true, desc: "Per-style SVG silhouettes" },
+                              { label: "FPS + memory monitoring", done: true, desc: "Live renderer.info stats" },
+                              { label: "Lip sync", done: false, desc: "Mouth moves with AI voice — Phase 4" },
+                              { label: "Event animations", done: false, desc: "Gifts, follows, boss battle — Phase 4" },
                             ].map((item) => (
                               <div key={item.label} className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-violet-500/40 flex-shrink-0 mt-1.5" />
-                                <div>
-                                  <p className="text-xs text-muted-foreground/70 font-medium">{item.label}</p>
+                                <div className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5", item.done ? "bg-emerald-500/70" : "bg-violet-500/30")} />
+                                <div className="min-w-0 flex-1">
+                                  <p className={cn("text-xs font-medium", item.done ? "text-foreground/80" : "text-muted-foreground/50")}>{item.label}</p>
                                   <p className="text-[10px] text-muted-foreground/40">{item.desc}</p>
                                 </div>
+                                {item.done && <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0 mt-0.5" />}
                               </div>
                             ))}
                           </div>
                         </div>
+
+                        {/* Memory + performance stats */}
+                        {rendererStats && (
+                          <div>
+                            <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                              <Monitor className="h-3.5 w-3.5 text-violet-400" />
+                              Renderer Stats
+                            </p>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {[
+                                { label: "FPS", val: rendererStats.fps, color: rendererStats.fps >= 50 ? "text-emerald-400" : rendererStats.fps >= 30 ? "text-yellow-400" : "text-red-400" },
+                                { label: "Geo", val: rendererStats.geometries, color: "text-violet-300" },
+                                { label: "Tex", val: rendererStats.textures, color: "text-violet-300" },
+                                { label: "Calls", val: rendererStats.drawCalls, color: "text-violet-300" },
+                              ].map(({ label, val, color }) => (
+                                <div key={label} className="text-center p-2 rounded-lg bg-white/5 border border-white/5">
+                                  <p className={cn("text-[12px] font-mono font-semibold", color)}>{val}</p>
+                                  <p className="text-[9px] text-muted-foreground/60 mt-0.5">{label}</p>
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground/40 mt-1.5">
+                              Triangles: {rendererStats.triangles.toLocaleString()} · Quality: {rendererStats.quality}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 

@@ -30,6 +30,7 @@ import { Platforms } from "@/pages/platforms";
 import { Profile } from "@/pages/profile";
 import { Moderation } from "@/pages/moderation";
 import { AvatarRoadmap } from "@/pages/avatar-roadmap";
+import { AvatarShowcase } from "@/pages/avatar-showcase";
 
 import { ObsAlerts } from "@/pages/obs/alerts";
 import { ObsGoals } from "@/pages/obs/goals";
@@ -226,6 +227,7 @@ function AppRoutes() {
       <Route path="/" component={HomeRedirect} />
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
+      <Route path="/avatar-showcase" component={AvatarShowcase} />
       
       <Route path="/dashboard">
         <ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>
