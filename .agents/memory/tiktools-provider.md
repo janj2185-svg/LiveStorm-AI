@@ -1,12 +1,9 @@
 ---
 name: tik.tools provider
-description: tik.tools JWT+WebSocket provider for TikTok LIVE events — setup, demo key findings, architecture, and required env vars.
+description: tik.tools JWT+WebSocket provider for TikTok LIVE events — setup, close codes, diagnostics, and known behaviors.
 ---
 
 # tik.tools Provider
-
-## What it is
-Drop-in replacement for the Eulerstream TikTokLiveClient. Uses tik.tools' JWT-authenticated WebSocket API to receive TikTok LIVE events (chat, gift, like, follow, share, roomInfo, member).
 
 ## Architecture
 - `artifacts/api-server/src/lib/tikToolsClient.ts` — TikToolsClient class, same event interface as TikTokLiveClient
@@ -14,35 +11,42 @@ Drop-in replacement for the Eulerstream TikTokLiveClient. Uses tik.tools' JWT-au
 - `LIVE_PROVIDER=tiktools` → TikToolsClient; anything else → TikTokLiveClient (Eulerstream)
 
 ## Auth flow
-1. `POST https://api.tik.tools/authentication/jwt?apiKey=KEY` body `{ allowed_creators: [username], expire_after: 3600, max_websockets: 1 }`
-2. Response: `{ status_code: 0, data: { token: "JWT..." } }`
+1. `POST https://api.tik.tools/authentication/jwt?apiKey=KEY` body `{ allowed_creators: [username], expire_after: 3600, max_websockets: 5 }`
+2. JWT cached 55 min in-memory; cleared on 4401 rejection
 3. WS: `wss://api.tik.tools?uniqueId=USERNAME&jwtKey=TOKEN`
 
-## Demo key findings (tested 2026-06-09)
-- Key `your_api_key` is a **real functional key** (not a placeholder)
-- HTTP 200 with valid JWT (268 chars) ✓
-- WebSocket opens and delivers `roomInfo` event ✓
-- **BUT**: shared globally among all demo users → FIFO eviction (code `4429`, reason "Evicted - newer connection arrived (FIFO)") within ~5 seconds
-- Not usable for production — any other demo user evicts you
+**Why max_websockets:5:** App originally requested 1; fixed. Basic plan allows 5. Always request 5 so multiple sessions can share a JWT.
 
-## Required env vars
-- `LIVE_PROVIDER=tiktools` (set as shared env var) ✓
-- `TIKTOOL_API_KEY=<personal key>` — get free key at https://tik.tools (Community tier: 2,500 req/day, 15 concurrent WS, no credit card)
+## JWT payload logging (added)
+After every fresh JWT fetch, payload is decoded and logged:
+```
+[TikTools:jwt-payload] @{user} allowedCreators=[...] maxWebSockets=5 keyHash=... exp=...
+```
+Lets you verify plan (Basic=5, Community=1 maxWebSockets) without logging the token.
 
-## Event mapping (tik.tools → TikTokLiveClient interface)
-| tik.tools event | Emitted event | Key fields |
-|---|---|---|
-| chat | chat | user.nickname → username, comment |
-| gift | gift | giftName, diamondCount → coins, repeatCount → count |
-| like | like | likeCount, totalLikeCount → total |
-| follow | social | action="follow" |
-| share | social | action="share" |
-| member | social | action="join" |
-| roomInfo | viewerCount | viewerCount → count |
+## Pre-flight room_info check (added)
+Before every WS connect: `GET /webcast/room_info?uniqueId={user}&apiKey={key}`
+- HTTP 404 + `{"status_code":-1,"error":"Not found"}` → creator NOT live (expected, normal)
+- HTTP 200 → creator IS live; logs `roomId`, `isLive`, `viewerCount`
+- Non-blocking (fail-open) — WS attempt always proceeds regardless of result
+- Endpoint discovered via 301 redirect: `/webcast/roomInfo` → `/webcast/room_info`
 
-## Not-live detection
-- JWT auth returns error containing "not live" / "not found" → emit `notLive`, poll every 30s
-- WS closes within 20s with 0 events → emit `notLive`, poll every 30s
-- 60s silence timer → close with reason `silence_timeout` → emit `notLive`, poll every 30s
+## Close codes
+- `4404` "Creator is not currently live" — explicit tik.tools signal; now emits `notLive` (was falling into silent quick-close retry)
+- `4429` — rate limit. Sub-types: daily quota exhausted (23h backoff) vs FIFO eviction (60-300s exponential)
+- `4401` — JWT rejected; clears in-memory cache and refetches
+- `1000 reason=silence_timeout` — our own 60s watchdog; no events received
 
-**Why:** TikTokLiveClient and TikToolsClient must both emit `notLive` so `tiktokConnector.ts` can switch session mode to "not live" and show proper UI feedback without changes to the connector logic.
+## Username format
+`@` prefix stripped by constructor. `jan85oks` and `@jan85oks` as `uniqueId` produce identical results — format makes no difference to tik.tools.
+
+## Account (current key)
+- Account ID: `8cdd52d8-6608-4b28-9744-2154cf7dafed`
+- keyHash: `4775e3100410bb2a`
+- Plan: Basic (maxWebSockets=5 confirmed in JWT payload)
+
+## Not-live detection paths
+1. JWT auth returns error with "not live" / "not found" → emit `notLive`, retry 30s
+2. WS closes code=4404 "Creator is not currently live" → emit `notLive`, retry 30s
+3. 60s silence timer with 0 events → close silence_timeout → emit `notLive`, retry 30s
+4. Quick transient close (no message, <20s, other codes) → silent retry 30s, no notLive emit

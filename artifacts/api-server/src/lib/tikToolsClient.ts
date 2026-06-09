@@ -172,7 +172,7 @@ export class TikToolsClient extends EventEmitter {
             body: JSON.stringify({
               allowed_creators: [this.username],
               expire_after: 3600,
-              max_websockets: 1,
+              max_websockets: 5,
             }),
           },
         );
@@ -218,6 +218,23 @@ export class TikToolsClient extends EventEmitter {
           `expires at ${new Date(jwtExpiresAt).toISOString()} ` +
           `(in ${Math.round((jwtExpiresAt - now) / 1000)}s) — opening WebSocket`,
         );
+        // Decode and log the JWT payload so we can verify allowedCreators and
+        // maxWebSockets without ever logging the token string itself.
+        try {
+          const payloadB64 = token.split(".")[1] ?? "";
+          const payload = JSON.parse(
+            Buffer.from(payloadB64, "base64url").toString("utf8"),
+          ) as any;
+          console.log(
+            `[TikTools:jwt-payload] @${this.username} ` +
+            `allowedCreators=${JSON.stringify(payload.allowedCreators ?? [])} ` +
+            `maxWebSockets=${payload.maxWebSockets ?? "?"} ` +
+            `keyHash=${payload.keyHash ?? "?"} ` +
+            `exp=${new Date((payload.exp ?? 0) * 1000).toISOString()}`,
+          );
+        } catch {
+          /* ignore decode errors — token is still valid */
+        }
       } catch (err: any) {
         console.error(`[TikTools] JWT fetch error for @${this.username}: ${err?.message}`);
         if (!this.stopped) {
@@ -586,40 +603,48 @@ export class TikToolsClient extends EventEmitter {
    * Never throws and never blocks the WS attempt — fail open on any error.
    */
   private async _fetchRoomInfo(apiKey: string): Promise<void> {
+    const url = `${API_BASE}/webcast/room_info?uniqueId=${encodeURIComponent(this.username)}&apiKey=${encodeURIComponent(apiKey)}`;
+    console.log(`[TikTools:room_info] @${this.username} → GET /webcast/room_info uniqueId="${this.username}"`);
     try {
-      const resp = await fetch(
-        `${API_BASE}/webcast/room_info?uniqueId=${encodeURIComponent(this.username)}&apiKey=${encodeURIComponent(apiKey)}`,
-        { signal: AbortSignal.timeout(8_000) },
-      );
-      const j = (await resp.json()) as any;
+      const resp = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+      const rawText = await resp.text();
+      let j: any;
+      try { j = JSON.parse(rawText); } catch { j = null; }
 
-      if (j?.status_code === -1 || j?.error) {
-        // tik.tools cannot resolve this creator to a room.
-        // This matches WS code=4404 "Creator is not currently live".
+      // Always log HTTP status + full raw body so nothing is hidden
+      console.log(
+        `[TikTools:room_info] @${this.username} → HTTP ${resp.status} body=${rawText.slice(0, 500)}`,
+      );
+
+      if (!j || j?.status_code === -1 || j?.error) {
+        // tik.tools cannot resolve this creator to a room at this moment.
+        // Meaning: creator is not live OR username not found OR plan restriction.
+        // The WS will confirm with code=4404 if this is persistent.
         console.warn(
           `[TikTools:room_info] @${this.username} → NOT FOUND ` +
-          `(status_code=${j?.status_code ?? "?"} error="${j?.error ?? j?.message ?? "unknown"}") — ` +
-          `tik.tools cannot resolve uniqueId to a room; WS will likely close 4404`,
+          `(HTTP ${resp.status} status_code=${j?.status_code ?? "?"} error="${j?.error ?? "n/a"}") — ` +
+          `WS will likely close 4404 if creator is not live`,
         );
         return;
       }
 
-      // tik.tools found the room — log the roomId and live status
+      // tik.tools found an active room — log every field
       const roomId: string = String(
         j?.roomId ?? j?.room_id ?? j?.id ?? j?.data?.roomId ?? "unknown",
       );
       const isLive: boolean = Boolean(
-        j?.isLive ?? j?.is_live ?? j?.status === "live" ?? j?.data?.isLive ?? false,
+        j?.isLive ?? j?.is_live ?? (j?.status === "live") ?? j?.data?.isLive ?? false,
       );
       const viewerCount: number = Number(
         j?.viewerCount ?? j?.viewer_count ?? j?.data?.viewerCount ?? 0,
       );
       console.log(
-        `[TikTools:room_info] @${this.username} → roomId=${roomId} isLive=${isLive} viewerCount=${viewerCount} ` +
-        `| raw keys: ${Object.keys(j).join(",")}`,
+        `[TikTools:room_info] @${this.username} → FOUND ` +
+        `roomId=${roomId} isLive=${isLive} viewerCount=${viewerCount} ` +
+        `rawKeys=[${Object.keys(j).join(",")}]`,
       );
     } catch (err: any) {
-      // Network error or timeout — non-fatal, log and continue
+      // Network error or timeout — non-fatal
       console.warn(
         `[TikTools:room_info] @${this.username} → fetch error: ${err?.message ?? String(err)} ` +
         `(non-fatal — continuing to WS connect)`,
