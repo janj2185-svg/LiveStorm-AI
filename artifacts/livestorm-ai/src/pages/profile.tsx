@@ -37,11 +37,11 @@ export function Profile() {
   const { data: profile, isLoading: profileLoading } = useGetMyProfile();
   const { data: sessionsData } = useGetSessions();
 
-  const sessions = sessionsData?.sessions ?? [];
+  const sessions = (sessionsData ?? []) as any[];
   const totalSessions = sessions.length;
-  const totalGifts = sessions.reduce((sum, s: any) => sum + (s.totalGifts ?? 0), 0);
-  const totalLikes = sessions.reduce((sum, s: any) => sum + (s.totalLikes ?? 0), 0);
-  const totalFollowers = sessions.reduce((sum, s: any) => sum + (s.totalFollowers ?? 0), 0);
+  const totalGifts = sessions.reduce((sum: number, s: any) => sum + (s.totalGifts ?? 0), 0);
+  const totalLikes = sessions.reduce((sum: number, s: any) => sum + (s.totalLikes ?? 0), 0);
+  const totalFollowers = sessions.reduce((sum: number, s: any) => sum + (s.totalFollowers ?? 0), 0);
   const peakViewers = Math.max(...sessions.map((s: any) => s.peakViewers ?? 0), 0);
 
   const plan = profile?.plan ?? "free";

@@ -105,7 +105,7 @@ export function LiveStudio() {
 
   const handleForceStop = () => {
     forceStop.mutate(undefined, {
-      onSuccess: (data) => {
+      onSuccess: (data: any) => {
         toast({
           title: "Session Reset",
           description: data.clearedSessionId

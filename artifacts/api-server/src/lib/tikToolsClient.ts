@@ -648,7 +648,7 @@ export class TikToolsClient extends EventEmitter {
         j?.roomId ?? j?.room_id ?? j?.id ?? j?.data?.roomId ?? "unknown",
       );
       const isLive: boolean = Boolean(
-        j?.isLive ?? j?.is_live ?? (j?.status === "live") ?? j?.data?.isLive ?? false,
+        j?.isLive ?? j?.is_live ?? (j?.status === "live" || j?.data?.isLive || false),
       );
       const viewerCount: number = Number(
         j?.viewerCount ?? j?.viewer_count ?? j?.data?.viewerCount ?? 0,

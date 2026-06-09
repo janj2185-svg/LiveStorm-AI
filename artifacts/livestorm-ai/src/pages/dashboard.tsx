@@ -94,7 +94,7 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
   if (event.type === "comment") desc = `"${event.data.text || ""}"`;
   if (event.type === "follow")  desc = "started following";
   if (event.type === "share")   desc = "shared the LIVE";
-  if (event.type === "ai_announcement") desc = event.data.text || "";
+  if (event.type === "ai_announcement") desc = (event.data.text as string) || "";
 
   if (event.type === "viewerCount") return null;
 
@@ -214,7 +214,7 @@ export function Dashboard() {
 
   const handleForceStop = () => {
     forceStop.mutate(undefined, {
-      onSuccess: (data) => {
+      onSuccess: (data: any) => {
         toast({
           title: "Session Reset",
           description: data.clearedSessionId

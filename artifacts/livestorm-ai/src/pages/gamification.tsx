@@ -243,7 +243,7 @@ function FanProfileModal({ tiktokViewerId, viewerName, streamerId, onClose }: Fa
                       Achievements ({profile.achievements.length})
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {profile.achievements.slice(0, 8).map((ach) => {
+                      {profile.achievements.slice(0, 8).map((ach: any) => {
                         const Icon = ICON_MAP[ach.iconType] ?? Trophy;
                         return (
                           <div
@@ -641,7 +641,7 @@ export function Gamification() {
 
                 {/* Drop history */}
                 <div className="space-y-1.5">
-                  {(luckyDropHistory ?? []).slice(0, 5).map((drop) => {
+                  {(luckyDropHistory ?? []).slice(0, 5).map((drop: any) => {
                     const gradClass = getDropColor(drop.dropName);
                     return (
                       <div key={drop.id} className="flex items-center gap-2 p-2 rounded bg-background border border-border">

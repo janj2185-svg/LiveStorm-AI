@@ -7,10 +7,10 @@ import type { ConnectedIntegration } from "../integrations/types";
 
 const router = Router();
 
-router.get("/integrations", requireAuth, async (req, res) => {
+router.get("/integrations", requireAuth, async (req: any, res) => {
   try {
     const user = await db.query.usersTable.findFirst({
-      where: eq(usersTable.id, req.userId!),
+      where: eq(usersTable.clerkId, req.clerkUserId!),
     });
 
     const result: ConnectedIntegration[] = INTEGRATIONS.map((integration) => ({

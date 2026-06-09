@@ -271,7 +271,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 item={item}
                 location={location}
-                compact={false}
+                expanded={true}
                 onClick={() => setTabletExpanded(false)}
               />
             ))}
@@ -284,19 +284,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Language switcher */}
             <div className={cn(
               "transition-all duration-200 overflow-hidden",
-              tabletExpanded ? "max-h-24 opacity-100 px-3 pt-3" : "max-h-0 opacity-0 lg:max-h-24 lg:opacity-100 lg:px-3 lg:pt-3",
+              tabletExpanded ? "max-h-48 opacity-100 px-3 pt-3" : "max-h-0 opacity-0 lg:max-h-48 lg:opacity-100 lg:px-3 lg:pt-3",
             )}>
               <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-1.5">
                 {t("settings_tab_language")}
               </p>
-              <div className="grid grid-cols-4 gap-1 mb-3">
-                {(["en", "uk", "pl", "de"] as Language[]).map((code) => (
+              <div className="grid grid-cols-5 gap-1 mb-3">
+                {(Object.keys(FLAGS) as Language[]).map((code) => (
                   <button
                     key={code}
                     onClick={() => setLanguage(code)}
                     title={code.toUpperCase()}
                     className={cn(
-                      "py-1.5 rounded-md text-sm border transition-all text-center min-h-[36px]",
+                      "py-1 rounded-md text-sm border transition-all text-center min-h-[30px]",
                       language === code
                         ? "border-primary/50 bg-primary/15"
                         : "border-white/5 hover:border-white/15 hover:bg-white/5",
