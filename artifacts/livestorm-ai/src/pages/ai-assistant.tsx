@@ -9,6 +9,7 @@ import {
   type AvatarConfig,
   type BuiltInAvatar,
 } from "@workspace/api-client-react";
+import { AvatarCanvas } from "@/components/avatar/AvatarCanvas";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1526,66 +1527,16 @@ export function AiAssistant() {
                       {/* Avatar Preview */}
                       <div className="flex flex-col items-center gap-3 flex-shrink-0">
                         <p className="text-xs font-medium text-muted-foreground self-start lg:self-center">Preview</p>
-                        <div
-                          className="relative w-[180px] h-[240px] rounded-2xl overflow-hidden border border-violet-500/20 flex-shrink-0"
-                          style={{ background: "linear-gradient(160deg, #1e0a3c 0%, #0d0117 60%, #000000 100%)" }}
-                        >
-                          {/* Grid floor */}
-                          <div
-                            className="absolute bottom-0 left-0 right-0 h-16 opacity-20"
-                            style={{
-                              backgroundImage:
-                                "linear-gradient(0deg, rgba(139,92,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.5) 1px, transparent 1px)",
-                              backgroundSize: "18px 18px",
-                            }}
-                          />
-                          {/* Ground glow */}
-                          <div
-                            className="absolute bottom-6 left-1/2 -translate-x-1/2 w-28 h-10 blur-2xl rounded-full opacity-50"
-                            style={{ background: selectedAvatar?.accentColor ?? "#8b5cf6" }}
-                          />
-                          {/* Avatar silhouette */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            {avatarConfig?.avatarEnabled ? (
-                              <div className="flex flex-col items-center" style={{ marginTop: "-20px" }}>
-                                <div
-                                  className="w-14 h-14 rounded-full shadow-2xl"
-                                  style={{
-                                    background: `radial-gradient(circle at 35% 30%, ${selectedAvatar?.accentColor ?? "#8b5cf6"}ff, ${selectedAvatar?.accentColor ?? "#8b5cf6"}66)`,
-                                    boxShadow: `0 0 30px ${selectedAvatar?.accentColor ?? "#8b5cf6"}55`,
-                                  }}
-                                />
-                                <div
-                                  className="w-5 h-3"
-                                  style={{ background: `linear-gradient(to bottom, ${selectedAvatar?.accentColor ?? "#8b5cf6"}88, transparent)` }}
-                                />
-                                <div
-                                  className="w-[70px] h-[80px] rounded-t-[2rem]"
-                                  style={{ background: `linear-gradient(160deg, ${selectedAvatar?.accentColor ?? "#8b5cf6"}aa, ${selectedAvatar?.accentColor ?? "#8b5cf6"}22)` }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center gap-2 opacity-30">
-                                <Boxes className="h-10 w-10 text-violet-400" />
-                                <span className="text-xs text-violet-400">Disabled</span>
-                              </div>
-                            )}
-                          </div>
-                          {/* Name badge */}
-                          {avatarConfig?.avatarEnabled && selectedAvatar && (
-                            <div className="absolute top-2 left-0 right-0 flex justify-center">
-                              <span className="text-[10px] font-bold text-white/80 bg-black/50 px-2 py-0.5 rounded-full border border-white/10">
-                                {selectedAvatar.name}
-                              </span>
-                            </div>
-                          )}
-                          {/* Phase badge */}
-                          <div className="absolute bottom-2 left-0 right-0 flex justify-center">
-                            <span className="text-[9px] text-violet-300/50 bg-black/40 px-2 py-0.5 rounded-full border border-violet-500/10">
-                              3D Render · Phase 2
-                            </span>
-                          </div>
-                        </div>
+                        <AvatarCanvas
+                          avatarKey={avatarConfig?.avatarKey ?? "storm-default"}
+                          accentColor={selectedAvatar?.accentColor ?? "#8b5cf6"}
+                          scale={avatarConfig?.scale ?? 1.0}
+                          positionY={avatarConfig?.positionY ?? -0.8}
+                          lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
+                          avatarEnabled={avatarConfig?.avatarEnabled ?? false}
+                          showFps
+                          className="w-[220px] h-[300px] flex-shrink-0 border border-violet-500/20"
+                        />
                         {avatarSaving && (
                           <div className="flex items-center gap-1.5 text-xs text-violet-400">
                             <Loader2 className="h-3 w-3 animate-spin" />
