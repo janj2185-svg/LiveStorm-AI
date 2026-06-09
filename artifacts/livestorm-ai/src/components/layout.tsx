@@ -26,8 +26,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { type Language } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -61,13 +59,6 @@ const SECONDARY_NAV: NavItem[] = [
 ];
 
 const BOTTOM_NAV_ITEMS = PRIMARY_NAV.slice(0, 4);
-const FLAGS: Record<Language, string> = {
-  en: "🇬🇧", uk: "🇺🇦", pl: "🇵🇱", de: "🇩🇪",
-  fr: "🇫🇷", es: "🇪🇸", it: "🇮🇹", pt: "🇧🇷",
-  nl: "🇳🇱", tr: "🇹🇷", ru: "🇷🇺", ar: "🇸🇦",
-  hi: "🇮🇳", ja: "🇯🇵", ko: "🇰🇷", zh: "🇨🇳",
-  "zh-TW": "🇹🇼", id: "🇮🇩", vi: "🇻🇳", th: "🇹🇭",
-};
 
 function SidebarLink({
   item,
@@ -162,7 +153,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
-  const { t, language, setLanguage } = useLanguage();
   const [tabletExpanded, setTabletExpanded] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -285,33 +275,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* User area */}
         {user && (
           <div className="border-t border-sidebar-border/60">
-            {/* Language switcher */}
-            <div className={cn(
-              "transition-all duration-200 overflow-hidden",
-              tabletExpanded ? "max-h-48 opacity-100 px-3 pt-3" : "max-h-0 opacity-0 lg:max-h-48 lg:opacity-100 lg:px-3 lg:pt-3",
-            )}>
-              <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-1.5">
-                {t("settings_tab_language")}
-              </p>
-              <div className="grid grid-cols-5 gap-1 mb-3">
-                {(Object.keys(FLAGS) as Language[]).map((code) => (
-                  <button
-                    key={code}
-                    onClick={() => setLanguage(code)}
-                    title={code.toUpperCase()}
-                    className={cn(
-                      "py-1 rounded-md text-sm border transition-all text-center min-h-[30px]",
-                      language === code
-                        ? "border-primary/50 bg-primary/15"
-                        : "border-white/5 hover:border-white/15 hover:bg-white/5",
-                    )}
-                  >
-                    {FLAGS[code]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Profile row */}
             <div className={cn(
               "flex items-center gap-2.5 rounded-lg bg-white/5 border border-white/5 m-2",
@@ -495,29 +458,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
 
-              {/* Language + user */}
-              <div className="border-t border-sidebar-border/50 pt-4 space-y-4">
-                <div>
-                  <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-2">Language</p>
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {(Object.keys(FLAGS) as Language[]).map((code) => (
-                      <button
-                        key={code}
-                        onClick={() => setLanguage(code)}
-                        title={code.toUpperCase()}
-                        className={cn(
-                          "py-2 rounded-lg text-sm border transition-all text-center min-h-[40px]",
-                          language === code
-                            ? "border-primary/50 bg-primary/15"
-                            : "border-white/5 bg-white/5",
-                        )}
-                      >
-                        {FLAGS[code]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
+              {/* User */}
+              <div className="border-t border-sidebar-border/50 pt-4">
                 {user && (
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
                     <Avatar className="h-10 w-10 border border-white/10 flex-shrink-0">

@@ -17,8 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Bot, Send, Trash2, Sparkles, Zap, Shield, Trophy, RefreshCw,
-  Wand2, Target, Star, MessageSquare, Mic, Volume2, VolumeX,
+  Bot, Send, Trash2, Sparkles, Zap, Shield, RefreshCw,
+  Star, MessageSquare, Mic, Volume2, VolumeX,
   Globe, Gift, Users, Heart, Share2, Loader2, Radio, Play,
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
@@ -73,17 +73,6 @@ type ChatMessage = {
   createdAt: string;
 };
 
-type Quest = {
-  id: number;
-  questText: string;
-  metric: string;
-  target: number;
-  current: number;
-  xpReward: number;
-  completed: boolean;
-};
-
-type GeneratedEvent = { title: string; description: string; duration: string; mechanic: string };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -441,7 +430,7 @@ export function AiAssistant() {
   }, [replyingTo, activeSessionId, config?.replyLanguage]);
 
   // ── Tabs ──────────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<"live" | "chat" | "quests" | "moderation">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "chat" | "moderation">("live");
 
   // ── AI private chat ───────────────────────────────────────────────────────────
   const [chatInput, setChatInput] = useState("");
@@ -495,11 +484,6 @@ export function AiAssistant() {
     }
   }, [chatInput, isChatLoading, queryClient]);
 
-  // ── Quests ────────────────────────────────────────────────────────────────────
-  const [quests, setQuests] = useState<Quest[]>([]);
-  const [isGeneratingQuests, setIsGeneratingQuests] = useState(false);
-  const [generatedEvent, setGeneratedEvent] = useState<GeneratedEvent | null>(null);
-  const [isGeneratingEvent, setIsGeneratingEvent] = useState(false);
 
   // ── TikTok connection test UI ──────────────────────────────────────────────
   const [testUsername, setTestUsername] = useState("");
@@ -523,41 +507,6 @@ export function AiAssistant() {
     }
   };
 
-  const handleGenerateQuests = async () => {
-    if (!activeSessionId) return;
-    setIsGeneratingQuests(true);
-    try {
-      const data = await apiFetch("/ai/generate-quests", {
-        method: "POST",
-        body: JSON.stringify({
-          sessionId: activeSessionId,
-          viewerCount: stats.viewerCount,
-          sessionStats: {
-            gifts: stats.totalGifts,
-            comments: stats.totalComments,
-            likes: stats.totalLikes,
-            followers: stats.totalFollows,
-          },
-        }),
-      });
-      setQuests(data);
-    } catch { /* ignore */ } finally {
-      setIsGeneratingQuests(false);
-    }
-  };
-
-  const handleGenerateEvent = async () => {
-    setIsGeneratingEvent(true);
-    try {
-      const data = await apiFetch("/ai/generate-event", {
-        method: "POST",
-        body: JSON.stringify({ currentViewers: stats.viewerCount }),
-      });
-      setGeneratedEvent(data);
-    } catch { /* ignore */ } finally {
-      setIsGeneratingEvent(false);
-    }
-  };
 
   const handleVoicePreview = async () => {
     if (!config || isVoicePreviewing) return;
@@ -630,8 +579,8 @@ export function AiAssistant() {
     // feed is visible without scrolling. On wider screens open all main sections.
     const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
     return isMobile
-      ? new Set(["persona", "mode"])
-      : new Set(["persona", "mode", "voice", "language", "autoreply"]);
+      ? new Set(["persona", "mode", "autoreply", "announcements", "moderation"])
+      : new Set(["persona", "mode", "voice", "language", "autoreply", "announcements", "moderation"]);
   });
   const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
   const [chatTranslateEnabled, setChatTranslateEnabled] = useState(false);
@@ -1218,7 +1167,6 @@ export function AiAssistant() {
             {[
               { key: "live", label: "Live Feed", icon: <Radio className="h-3.5 w-3.5" />, badge: feedEvents.length > 0 ? feedEvents.filter(e => e.type === "comment").length : null },
               { key: "chat", label: "AI Chat", icon: <Bot className="h-3.5 w-3.5" />, badge: null },
-              { key: "quests", label: "Quests", icon: <Trophy className="h-3.5 w-3.5" />, badge: quests.length > 0 ? quests.length : null },
               { key: "moderation", label: "Flagged", icon: <Shield className="h-3.5 w-3.5" />, badge: flaggedComments.length > 0 ? flaggedComments.length : null },
             ].map((tab) => (
               <button
@@ -1412,104 +1360,6 @@ export function AiAssistant() {
                   </Button>
                 </div>
               </div>
-            </Card>
-          )}
-
-          {/* ── QUESTS TAB ── */}
-          {activeTab === "quests" && (
-            <Card className="bg-card border-white/5 flex flex-col flex-1 min-h-0">
-              <div className="px-4 py-2.5 flex-shrink-0 border-b border-white/5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">AI Quests</p>
-                    <p className="text-xs text-muted-foreground">Generate viewer challenges to boost engagement</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 h-8"
-                      onClick={handleGenerateEvent}
-                      disabled={isGeneratingEvent}
-                    >
-                      {isGeneratingEvent ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5 mr-1.5" />}
-                      Event Idea
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 h-8"
-                      onClick={handleGenerateQuests}
-                      disabled={isGeneratingQuests || !isSessionActive}
-                    >
-                      {isGeneratingQuests ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
-                      Generate Quests
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-3">
-                  {!isSessionActive && (
-                    <div className="text-center py-8 text-muted-foreground text-sm">
-                      Start a session to generate quests
-                    </div>
-                  )}
-                  {generatedEvent && (
-                    <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-4 space-y-2">
-                      <div className="font-semibold text-orange-300">{generatedEvent.title}</div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{generatedEvent.description}</p>
-                      <div className="text-xs text-muted-foreground">⏱️ {generatedEvent.duration}</div>
-                      <div className="text-xs bg-background/40 rounded p-2">
-                        <span className="text-muted-foreground font-medium">Mechanic: </span>{generatedEvent.mechanic}
-                      </div>
-                    </div>
-                  )}
-                  {quests.length === 0 && isSessionActive && (
-                    <div className="text-center py-8">
-                      <Trophy className="h-8 w-8 text-yellow-400/30 mx-auto mb-2" />
-                      <p className="text-muted-foreground text-sm">No quests yet. Generate some to engage your viewers!</p>
-                    </div>
-                  )}
-                  {quests.map((quest) => {
-                    const progress = Math.min(100, Math.round((quest.current / quest.target) * 100));
-                    const METRIC_ICONS: Record<string, React.ReactNode> = {
-                      gifts: <Gift className="h-3.5 w-3.5 text-amber-400" />,
-                      comments: <MessageSquare className="h-3.5 w-3.5 text-blue-400" />,
-                      likes: <Heart className="h-3.5 w-3.5 text-pink-400" />,
-                      followers: <Users className="h-3.5 w-3.5 text-green-400" />,
-                      shares: <Share2 className="h-3.5 w-3.5 text-cyan-400" />,
-                    };
-                    return (
-                      <div key={quest.id} className={cn("rounded-lg border p-4 space-y-3", quest.completed ? "border-green-500/30 bg-green-500/5" : "border-white/5 bg-white/3")}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            {METRIC_ICONS[quest.metric] ?? <Target className="h-3.5 w-3.5" />}
-                            <span className="text-sm font-medium">{quest.questText}</span>
-                          </div>
-                          <Badge variant="outline" className="border-purple-500/30 text-purple-300 text-xs flex-shrink-0">
-                            +{quest.xpReward} XP
-                          </Badge>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{quest.current} / {quest.target}</span>
-                            <span>{progress}%</span>
-                          </div>
-                          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div
-                              className={cn("h-full rounded-full transition-all", quest.completed ? "bg-green-500" : "bg-purple-500")}
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                        </div>
-                        {quest.completed && (
-                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">✓ Completed!</Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
             </Card>
           )}
 
