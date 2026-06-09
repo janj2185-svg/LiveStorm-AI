@@ -88,9 +88,16 @@ function makeEvent(
 // ── Real connector ────────────────────────────────────────────────────────────
 
 function friendlyError(raw: string, username: string): string {
-  if (isNotLiveError(new Error(raw))) {
-    return raw; // already user-friendly from tiktokLiveClient
+  // Already-friendly messages from TikToolsClient / TikTokLiveClient
+  if (
+    raw.includes("not currently streaming") ||
+    raw.includes("not live") ||
+    raw.includes("not_live") ||
+    isNotLiveError(new Error(raw))
+  ) {
+    return raw;
   }
+  if (raw.includes("TIKTOOL_API_KEY")) return raw; // already specific
   if (raw.includes("ECONNREFUSED") || raw.includes("ENOTFOUND") || raw.toLowerCase().includes("network")) {
     return "Network error: server cannot reach TikTok. Check firewall rules and outbound internet access.";
   }
@@ -100,13 +107,11 @@ function friendlyError(raw: string, username: string): string {
     raw.toLowerCase().includes("rate_limit")
   ) {
     return (
-      "Eulerstream rate limit reached — too many connection attempts. " +
-      "Sign up for a free API key at https://eulerstream.com/pricing and set " +
-      "SIGN_API_KEY in your server environment for stable, sustained connections."
+      "Rate limit reached — too many connection attempts. " +
+      "Wait a moment and try again. If the issue persists, check your TIKTOOL_API_KEY at https://tik.tools."
     );
   }
-  // WebSocket 404 = TikTok rejected the connection. Usually means the room isn't
-  // actually broadcasting even though room/info returned status 4.
+  // WebSocket 404 = TikTok rejected the connection
   if (raw.includes("Unexpected server response: 404") || raw.includes("server response: 404")) {
     return (
       `@${username} is not currently streaming on TikTok LIVE. ` +
@@ -503,12 +508,12 @@ export async function recoverActiveSessions(io: SocketServer): Promise<void> {
 }
 
 /**
- * Lightweight connection test: verifies the username exists and room is live
- * without fully connecting the WebSocket.
+ * Lightweight connection test: verifies the username is reachable via tik.tools
+ * and whether they are currently live, without opening a long-lived WebSocket.
  */
 export async function testTikTokConnection(
   username: string,
-): Promise<{ ok: boolean; error?: string; latencyMs?: number }> {
+): Promise<{ ok: boolean; error?: string; latencyMs?: number; isLive?: boolean }> {
   if (!isRealModeEnabled) {
     return {
       ok: false,
@@ -519,14 +524,48 @@ export async function testTikTokConnection(
   }
 
   const clean = username.replace(/^@/, "").trim();
+  const apiKey = process.env.TIKTOOL_API_KEY;
+
+  if (!apiKey) {
+    return {
+      ok: false,
+      error:
+        "TIKTOOL_API_KEY is not set. Get a free key at https://tik.tools and add it as a secret.",
+    };
+  }
+
   const start = Date.now();
 
   try {
-    const client = new TikTokLiveClient(clean);
-    await client.connect();
-    const latencyMs = Date.now() - start;
-    client.stopConnection();
-    return { ok: true, latencyMs };
+    // 1. Request a short-lived JWT — proves the key is valid and the username is acceptable
+    const jwtResp = await fetch(
+      `https://api.tik.tools/authentication/jwt?apiKey=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ allowed_creators: [clean], expire_after: 60, max_websockets: 1 }),
+      },
+    );
+    const jwtBody = (await jwtResp.json()) as any;
+    if (!jwtBody?.data?.token) {
+      const errMsg: string =
+        jwtBody?.error ?? jwtBody?.message ?? `HTTP ${jwtResp.status}: ${JSON.stringify(jwtBody).slice(0, 200)}`;
+      return { ok: false, error: friendlyError(errMsg, clean) };
+    }
+
+    // 2. Check live status — fast HTTP call, no WebSocket needed
+    let isLive: boolean | undefined;
+    try {
+      const infoResp = await fetch(
+        `https://api.tik.tools/user/info?username=${encodeURIComponent(clean)}&apiKey=${encodeURIComponent(apiKey)}`,
+      );
+      const info = (await infoResp.json()) as any;
+      isLive = info?.live_status?.is_live === true;
+    } catch {
+      // live-status check is best-effort; JWT success is the primary signal
+    }
+
+    return { ok: true, latencyMs: Date.now() - start, isLive };
   } catch (err: any) {
     const raw = err?.message ?? String(err);
     return { ok: false, error: friendlyError(raw, clean) };
