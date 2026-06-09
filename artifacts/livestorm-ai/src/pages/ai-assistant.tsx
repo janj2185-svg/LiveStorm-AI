@@ -11,7 +11,7 @@ import {
 } from "@workspace/api-client-react";
 import { AvatarCanvas, VRMUploadButton, type RendererStats } from "@/components/avatar/AvatarCanvas";
 import { AvatarThumbnail } from "@/components/avatar/AvatarThumbnail";
-import { BUILT_IN_AVATARS, isVRMBacked, formatVRMSize } from "@/components/avatar/avatarAssets";
+import { BUILT_IN_AVATARS, HUMAN_PRESENTER_KEYS, LEGACY_AVATAR_KEYS, isVRMBacked, isHumanPresenter, formatVRMSize } from "@/components/avatar/avatarAssets";
 import { AvatarAnimationMachine, type AnimationState, ANIMATION_LABELS, ANIMATION_EMOJI } from "@/components/avatar/avatarAnimationMachine";
 import { useLipSync } from "@/hooks/useLipSync";
 import { useAvatarReactions } from "@/hooks/useAvatarReactions";
@@ -460,6 +460,9 @@ export function AiAssistant() {
   // ── Avatar upload (session-only, cleared on refresh) ─────────────────────────
   const [uploadedVrmUrl, setUploadedVrmUrl] = useState<string | null>(null);
   const [uploadedVrmName, setUploadedVrmName] = useState<string | null>(null);
+  const [rpmAvatarUrl, setRpmAvatarUrl] = useState<string | null>(null);
+  const [rpmUrlInput, setRpmUrlInput] = useState("");
+  const [rpmUrlError, setRpmUrlError] = useState<string | null>(null);
   const [rendererStats, setRendererStats] = useState<RendererStats | null>(null);
 
   // ── Phase 4: Animation machine + lip sync ─────────────────────────────────
@@ -1584,7 +1587,7 @@ export function AiAssistant() {
                           positionY={avatarConfig?.positionY ?? -0.8}
                           lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
                           avatarEnabled={avatarConfig?.avatarEnabled ?? false}
-                          avatarUrl={uploadedVrmUrl}
+                          avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl}
                           showFps
                           onStats={setRendererStats}
                           animationState={animState}
@@ -1603,21 +1606,75 @@ export function AiAssistant() {
                       {/* Settings column */}
                       <div className="flex-1 space-y-4 min-w-0">
 
-                        {/* Avatar selector */}
+                        {/* Avatar selector — Human Presenters */}
                         <div>
-                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                          <p className="text-xs font-semibold text-white mb-1.5 flex items-center gap-1.5">
                             <Boxes className="h-3.5 w-3.5 text-violet-400" />
                             Choose Avatar
                           </p>
-                          <div className="grid grid-cols-3 gap-2">
-                            {builtInAvatars.map((avatar) => {
-                              const isSel = avatarConfig?.avatarKey === avatar.key;
-                              const assetInfo = BUILT_IN_AVATARS[avatar.key as keyof typeof BUILT_IN_AVATARS];
-                              const vrm = isVRMBacked(avatar.key);
+
+                          {/* Human presenters row */}
+                          <p className="text-[10px] text-emerald-400/80 font-medium mb-1.5 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                            Human Presenters
+                          </p>
+                          <div className="grid grid-cols-4 gap-1.5 mb-3">
+                            {HUMAN_PRESENTER_KEYS.map((key) => {
+                              const assetInfo = BUILT_IN_AVATARS[key];
+                              const isSel = avatarConfig?.avatarKey === key && !rpmAvatarUrl;
                               return (
                                 <button
-                                  key={avatar.key}
-                                  onClick={() => saveAvatar({ avatarKey: avatar.key })}
+                                  key={key}
+                                  onClick={() => { setRpmAvatarUrl(null); setRpmUrlInput(""); saveAvatar({ avatarKey: key }); }}
+                                  disabled={avatarSaving}
+                                  className={cn(
+                                    "relative flex flex-col items-center gap-1 p-2 rounded-xl border transition-all text-center",
+                                    isSel
+                                      ? "border-emerald-500/60 bg-emerald-500/12 shadow-lg"
+                                      : "border-white/10 bg-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5",
+                                  )}
+                                >
+                                  <AvatarThumbnail
+                                    avatarKey={key}
+                                    accentColor={assetInfo.accentColor}
+                                    skinTone={assetInfo.skinTone}
+                                    hairColor={assetInfo.hairColor}
+                                    clothingColor={assetInfo.clothingColor}
+                                    size={46}
+                                    selected={isSel}
+                                  />
+                                  <div>
+                                    <p className="text-[11px] font-semibold text-white leading-none">{assetInfo.name}</p>
+                                    <p className="text-[9px] text-muted-foreground mt-0.5 leading-tight">{assetInfo.tagline.split(" · ")[1]}</p>
+                                  </div>
+                                  <div className="text-[7px] px-1 py-0.5 rounded font-mono bg-emerald-900/50 border border-emerald-500/25 text-emerald-400">
+                                    Human 3D
+                                  </div>
+                                  {isSel && (
+                                    <div className="absolute top-1 right-1">
+                                      <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Legacy VRM / anime row */}
+                          <p className="text-[10px] text-violet-400/70 font-medium mb-1.5 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-violet-400/60 inline-block" />
+                            Anime / VRM
+                          </p>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {LEGACY_AVATAR_KEYS.map((key) => {
+                              const assetInfo = BUILT_IN_AVATARS[key];
+                              const isSel = avatarConfig?.avatarKey === key && !rpmAvatarUrl;
+                              const vrm = isVRMBacked(key);
+                              const human = isHumanPresenter(key);
+                              return (
+                                <button
+                                  key={key}
+                                  onClick={() => { setRpmAvatarUrl(null); setRpmUrlInput(""); saveAvatar({ avatarKey: key }); }}
                                   disabled={avatarSaving}
                                   className={cn(
                                     "relative flex flex-col items-center gap-1 p-2 rounded-xl border transition-all text-center",
@@ -1627,26 +1684,25 @@ export function AiAssistant() {
                                   )}
                                 >
                                   <AvatarThumbnail
-                                    avatarKey={avatar.key}
-                                    accentColor={avatar.accentColor}
-                                    size={52}
+                                    avatarKey={key}
+                                    accentColor={assetInfo.accentColor}
+                                    size={46}
                                     selected={isSel}
                                   />
                                   <div>
-                                    <p className="text-xs font-semibold text-white leading-none">{avatar.name}</p>
-                                    <p className="text-[10px] text-muted-foreground mt-0.5">{assetInfo?.tagline ?? avatar.style}</p>
+                                    <p className="text-[11px] font-semibold text-white leading-none">{assetInfo.name}</p>
+                                    <p className="text-[9px] text-muted-foreground mt-0.5">{assetInfo.tagline.split(" · ")[1]}</p>
                                   </div>
-                                  {/* VRM / Procedural badge */}
                                   <div className={cn(
-                                    "text-[8px] px-1.5 py-0.5 rounded font-mono",
-                                    vrm
-                                      ? "bg-violet-900/60 border border-violet-500/30 text-violet-300"
-                                      : "bg-black/40 border border-white/10 text-white/30",
+                                    "text-[7px] px-1 py-0.5 rounded font-mono",
+                                    vrm ? "bg-violet-900/60 border border-violet-500/30 text-violet-300"
+                                        : human ? "bg-emerald-900/50 border border-emerald-500/25 text-emerald-400"
+                                        : "bg-black/40 border border-white/10 text-white/30",
                                   )}>
-                                    {vrm ? "VRM 1.0" : "Procedural"}
+                                    {vrm ? "VRM 1.0" : human ? "Human 3D" : "Procedural"}
                                   </div>
                                   {isSel && (
-                                    <div className="absolute top-1.5 right-1.5">
+                                    <div className="absolute top-1 right-1">
                                       <CheckCircle2 className="h-3 w-3 text-violet-400" />
                                     </div>
                                   )}
@@ -1654,27 +1710,107 @@ export function AiAssistant() {
                               );
                             })}
                           </div>
-                          {selectedAvatar && (
-                            <p className="text-[11px] text-muted-foreground mt-2 px-0.5">{selectedAvatar.description}</p>
+
+                          {selectedAvatar && !rpmAvatarUrl && (
+                            <p className="text-[11px] text-muted-foreground/60 mt-2 px-0.5 italic">
+                              {BUILT_IN_AVATARS[avatarConfig?.avatarKey as keyof typeof BUILT_IN_AVATARS]?.personality ?? selectedAvatar.description}
+                            </p>
                           )}
                         </div>
 
-                        {/* VRM Upload */}
+                        {/* Ready Player Me — Track 2 */}
+                        <div>
+                          <p className="text-xs font-semibold text-white mb-1.5 flex items-center gap-1.5">
+                            <span className="text-blue-400">◈</span>
+                            Ready Player Me
+                            <span className="text-[9px] font-normal text-blue-400/70 ml-1">photorealistic</span>
+                            {rpmAvatarUrl && (
+                              <span className="text-[10px] font-normal text-blue-400 ml-auto">— active</span>
+                            )}
+                          </p>
+
+                          {rpmAvatarUrl ? (
+                            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/25">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse flex-shrink-0" />
+                              <span className="text-[11px] text-blue-300 flex-1 truncate">{rpmAvatarUrl.replace("https://", "")}</span>
+                              <button
+                                onClick={() => { setRpmAvatarUrl(null); setRpmUrlInput(""); }}
+                                className="text-[10px] text-muted-foreground hover:text-white px-2 py-1 rounded border border-white/10 hover:border-white/20 transition-colors flex-shrink-0"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="flex gap-2">
+                                <input
+                                  type="url"
+                                  placeholder="https://models.readyplayer.me/YOUR_ID.glb"
+                                  value={rpmUrlInput}
+                                  onChange={(e) => { setRpmUrlInput(e.target.value); setRpmUrlError(null); }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      const url = rpmUrlInput.trim();
+                                      if (!url.startsWith("https://") || !url.endsWith(".glb")) {
+                                        setRpmUrlError("Must be a .glb URL (e.g. models.readyplayer.me/…glb)");
+                                        return;
+                                      }
+                                      setRpmAvatarUrl(url);
+                                      setRpmUrlError(null);
+                                    }
+                                  }}
+                                  className="flex-1 min-w-0 px-2.5 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 focus:border-blue-500/50 focus:outline-none text-white placeholder:text-white/25"
+                                />
+                                <button
+                                  onClick={() => {
+                                    const url = rpmUrlInput.trim();
+                                    if (!url.startsWith("https://") || !url.endsWith(".glb")) {
+                                      setRpmUrlError("Must be a .glb URL ending in .glb");
+                                      return;
+                                    }
+                                    setRpmAvatarUrl(url);
+                                    setRpmUrlError(null);
+                                  }}
+                                  className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 transition-colors flex-shrink-0"
+                                >
+                                  Load
+                                </button>
+                              </div>
+                              {rpmUrlError && (
+                                <p className="text-[10px] text-red-400">{rpmUrlError}</p>
+                              )}
+                              <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
+                                Create your avatar free at{" "}
+                                <a
+                                  href="https://readyplayer.me"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400/80 hover:text-blue-300 underline"
+                                >
+                                  readyplayer.me
+                                </a>
+                                {" "}→ copy the .glb URL → paste above. Supports 52 ARKit morph targets for lip sync.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* VRM / GLB Upload */}
                         <div>
                           <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
                             <Upload className="h-3.5 w-3.5 text-violet-400" />
-                            Custom VRM Model
+                            Custom File
                             {uploadedVrmName && (
                               <span className="text-[10px] font-normal text-violet-400 ml-1">— active</span>
                             )}
                           </p>
                           <VRMUploadButton
-                            onUpload={(url, name) => { setUploadedVrmUrl(url); setUploadedVrmName(name); }}
+                            onUpload={(url, name) => { setRpmAvatarUrl(null); setUploadedVrmUrl(url); setUploadedVrmName(name); }}
                             onClear={() => { setUploadedVrmUrl(null); setUploadedVrmName(null); }}
                             uploadedName={uploadedVrmName}
                           />
                           <p className="text-[10px] text-muted-foreground/50 mt-1.5">
-                            Upload any VRoid Studio export (.vrm) — overrides built-in for this session
+                            Upload any VRoid Studio .vrm or .glb — overrides built-in for this session
                           </p>
                         </div>
 

@@ -3,14 +3,17 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
 import type { VRM } from "@pixiv/three-vrm";
-import { Boxes, Loader2, Upload } from "lucide-react";
+import { Boxes, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ProceduralAvatar, type QualityTier, type AvatarStyle } from "./ProceduralAvatar";
-import { getAvatarVRMPath, isVRMBacked } from "./avatarAssets";
+import { ProceduralAvatar, type AvatarStyle } from "./ProceduralAvatar";
+import { HumanPresenterAvatar, type QualityTier } from "./HumanPresenterAvatar";
+import { getAvatarVRMPath, isVRMBacked, isHumanPresenter } from "./avatarAssets";
 import type { AnimationState } from "./avatarAnimationMachine";
 import { ANIMATION_EMOJI } from "./avatarAnimationMachine";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+export type { QualityTier };
 
 export interface RendererStats {
   geometries: number;
@@ -41,6 +44,12 @@ type VRMState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "loaded"; vrm: VRM }
+  | { status: "error"; message: string };
+
+type GLBState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "loaded"; scene: THREE.Group; morphTargets: string[] }
   | { status: "error"; message: string };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -74,7 +83,7 @@ function applyVRMAccentTint(vrm: VRM, accentColor: string, strength = 0.18) {
   });
 }
 
-// ── VRM loader hook ───────────────────────────────────────────────────────────
+// ── VRM loader ────────────────────────────────────────────────────────────────
 
 function useVRMLoader(url: string | null | undefined): VRMState {
   const [state, setState] = useState<VRMState>({ status: "idle" });
@@ -117,7 +126,72 @@ function useVRMLoader(url: string | null | undefined): VRMState {
   return state;
 }
 
-// ── VRM avatar renderer (with animation + lip sync) ───────────────────────────
+// ── Ready Player Me / GLB loader ─────────────────────────────────────────────
+
+function useGLBLoader(url: string | null | undefined): GLBState {
+  const [state, setState] = useState<GLBState>({ status: "idle" });
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!url) { setState({ status: "idle" }); return; }
+    setState({ status: "loading" });
+
+    (async () => {
+      try {
+        const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+        const loader = new GLTFLoader();
+        // RPM CORS: fetch with mode cors, convert to blob URL
+        let loadUrl = url;
+        if (url.startsWith("https://models.readyplayer.me") || url.startsWith("https://api.readyplayer.me")) {
+          try {
+            const res = await fetch(url + (url.includes("?") ? "&" : "?") + "morphTargets=ARKit,Oculus+Visemes&textureAtlas=1024", {
+              mode: "cors",
+            });
+            if (res.ok) {
+              const blob = await res.blob();
+              loadUrl = URL.createObjectURL(blob);
+            }
+          } catch {
+            // Fall through to direct load
+          }
+        }
+        const gltf = await loader.loadAsync(loadUrl);
+        const scene = gltf.scene;
+        scene.rotation.y = Math.PI;
+
+        // Collect available morph target names for lip sync mapping
+        const morphTargets: string[] = [];
+        scene.traverse((obj) => {
+          if (obj instanceof THREE.Mesh && obj.morphTargetDictionary) {
+            morphTargets.push(...Object.keys(obj.morphTargetDictionary));
+          }
+        });
+
+        if (mounted.current) setState({ status: "loaded", scene, morphTargets: [...new Set(morphTargets)] });
+        // If we created a blob URL, release it after load
+        if (loadUrl !== url) {
+          URL.revokeObjectURL(loadUrl);
+        }
+      } catch (err) {
+        if (mounted.current) {
+          setState({
+            status: "error",
+            message: err instanceof Error ? err.message : "Failed to load avatar",
+          });
+        }
+      }
+    })();
+  }, [url]);
+
+  return state;
+}
+
+// ── VRM avatar renderer ───────────────────────────────────────────────────────
 
 function VRMAvatarView({
   vrm,
@@ -138,7 +212,6 @@ function VRMAvatarView({
   const animRef = useRef(animationState);
   animRef.current = animationState;
 
-  // Smooth arm pose lerp refs — VRM arm natural pose is ~0.3 rad out
   const leftArmZRef = useRef(0.30);
   const rightArmZRef = useRef(-0.30);
   const leftArmXRef = useRef(0);
@@ -158,45 +231,24 @@ function VRMAvatarView({
     const mouthOpen = mouthOpenRef.current;
     const lf = 1 - Math.pow(0.001, delta);
 
-    // ── Arm pose targets ────────────────────────────────────────────────────
     let tLeftZ = 0.30, tRightZ = -0.30;
     let tLeftX = 0, tRightX = 0;
     let bounceFreq = 0.85, bounceAmp = 0.012;
 
     switch (anim) {
-      case "talking":
-        tLeftZ = 0.28; tRightZ = -0.28;
-        bounceFreq = 1.1; bounceAmp = 0.014;
-        break;
-      case "happy":
-        tLeftZ = 0.14; tRightZ = -0.14;
-        bounceFreq = 1.45; bounceAmp = 0.022;
-        break;
-      case "excited":
-        tLeftZ = 0.06; tRightZ = -0.06;
-        bounceFreq = 2.2; bounceAmp = 0.032;
-        break;
-      case "gift_reaction":
-        tLeftZ = 0.18; tRightZ = -0.18;
-        tLeftX = -0.5; tRightX = -0.5;
-        bounceFreq = 0.9; bounceAmp = 0.014;
-        break;
-      case "follow_reaction":
-        tLeftZ = -0.55; tRightZ = 0.55;
-        bounceFreq = 1.8; bounceAmp = 0.028;
-        break;
-      case "victory":
-        tLeftZ = -1.1; tRightZ = 1.1;
-        bounceFreq = 2.5; bounceAmp = 0.042;
-        break;
+      case "talking":   tLeftZ = 0.28;  tRightZ = -0.28;  bounceFreq = 1.1;  bounceAmp = 0.014; break;
+      case "happy":     tLeftZ = 0.14;  tRightZ = -0.14;  bounceFreq = 1.45; bounceAmp = 0.022; break;
+      case "excited":   tLeftZ = 0.06;  tRightZ = -0.06;  bounceFreq = 2.2;  bounceAmp = 0.032; break;
+      case "gift_reaction":   tLeftZ = 0.18; tRightZ = -0.18; tLeftX = -0.5; tRightX = -0.5; bounceFreq = 0.9; bounceAmp = 0.014; break;
+      case "follow_reaction": tLeftZ = -0.55; tRightZ = 0.55; bounceFreq = 1.8; bounceAmp = 0.028; break;
+      case "victory":   tLeftZ = -1.1;  tRightZ = 1.1;   bounceFreq = 2.5;  bounceAmp = 0.042; break;
     }
 
-    leftArmZRef.current += (tLeftZ - leftArmZRef.current) * lf;
+    leftArmZRef.current  += (tLeftZ  - leftArmZRef.current)  * lf;
     rightArmZRef.current += (tRightZ - rightArmZRef.current) * lf;
-    leftArmXRef.current += (tLeftX - leftArmXRef.current) * lf;
+    leftArmXRef.current  += (tLeftX  - leftArmXRef.current)  * lf;
     rightArmXRef.current += (tRightX - rightArmXRef.current) * lf;
 
-    // ── Apply humanoid bones ────────────────────────────────────────────────
     const hips = vrm.humanoid?.getNormalizedBoneNode("hips");
     if (hips) {
       hips.position.y = Math.sin(t * bounceFreq) * bounceAmp;
@@ -206,45 +258,31 @@ function VRMAvatarView({
     const neck = vrm.humanoid?.getNormalizedBoneNode("neck");
     if (neck) {
       neck.rotation.y = Math.sin(t * 0.68) * 0.12;
-      const nodAmp = anim === "talking" ? 0.065 : 0.04;
-      const nodFreq = anim === "talking" ? 2.8 : 0.48;
+      const nodAmp  = anim === "talking" ? 0.065 : 0.04;
+      const nodFreq = anim === "talking" ? 2.8   : 0.48;
       neck.rotation.x = Math.sin(t * nodFreq) * nodAmp;
     }
 
-    const leftArm = vrm.humanoid?.getNormalizedBoneNode("leftUpperArm");
+    const leftArm  = vrm.humanoid?.getNormalizedBoneNode("leftUpperArm");
     const rightArm = vrm.humanoid?.getNormalizedBoneNode("rightUpperArm");
     const swayBase = anim === "excited" || anim === "follow_reaction" ? 0.12 : 0.04;
     const swayFreq = anim === "follow_reaction" ? 2.8 : 0.88;
-    if (leftArm) {
-      leftArm.rotation.z = leftArmZRef.current + Math.sin(t * swayFreq) * swayBase;
-      leftArm.rotation.x = leftArmXRef.current;
-    }
-    if (rightArm) {
-      rightArm.rotation.z = rightArmZRef.current + Math.sin(t * swayFreq + Math.PI) * swayBase;
-      rightArm.rotation.x = rightArmXRef.current;
-    }
+    if (leftArm)  { leftArm.rotation.z  = leftArmZRef.current  + Math.sin(t * swayFreq)           * swayBase; leftArm.rotation.x  = leftArmXRef.current; }
+    if (rightArm) { rightArm.rotation.z = rightArmZRef.current + Math.sin(t * swayFreq + Math.PI) * swayBase; rightArm.rotation.x = rightArmXRef.current; }
 
-    // ── Blink (always active) ───────────────────────────────────────────────
+    // Blink
     const blinkPhase = t % 3.8;
     const blinkVal = blinkPhase > 3.62 ? Math.max(0, 1 - (blinkPhase - 3.62) * 26) : 0;
-    vrm.expressionManager?.setValue("blink", blinkVal);
-    vrm.expressionManager?.setValue("blinkLeft", blinkVal);
+    vrm.expressionManager?.setValue("blink",      blinkVal);
+    vrm.expressionManager?.setValue("blinkLeft",  blinkVal);
     vrm.expressionManager?.setValue("blinkRight", blinkVal);
 
-    // ── State-based facial expressions ──────────────────────────────────────
-    const aa = anim === "talking" || anim === "victory" ? mouthOpen * intensity : 0;
-    const happy =
-      anim === "happy" ? 0.7 * intensity :
-      anim === "follow_reaction" ? 0.9 * intensity :
-      anim === "victory" ? 1.0 * intensity :
-      anim === "excited" ? 0.45 * intensity : 0;
-    const surprised =
-      anim === "excited" ? 0.85 * intensity :
-      anim === "gift_reaction" ? 1.0 * intensity :
-      anim === "victory" ? 0.45 * intensity : 0;
-
-    vrm.expressionManager?.setValue("aa", aa);
-    vrm.expressionManager?.setValue("happy", happy);
+    // Expressions
+    const aa = (anim === "talking" || anim === "victory") ? mouthOpen * intensity : 0;
+    const happy     = anim === "happy"   ? 0.7 * intensity : anim === "follow_reaction" ? 0.9 * intensity : anim === "victory" ? 1.0 * intensity : anim === "excited" ? 0.45 * intensity : 0;
+    const surprised = anim === "excited" ? 0.85 * intensity : anim === "gift_reaction" ? 1.0 * intensity : anim === "victory" ? 0.45 * intensity : 0;
+    vrm.expressionManager?.setValue("aa",        aa);
+    vrm.expressionManager?.setValue("happy",     happy);
     vrm.expressionManager?.setValue("surprised", surprised);
 
     vrm.update(delta);
@@ -254,69 +292,216 @@ function VRMAvatarView({
   return <primitive object={vrm.scene} dispose={null} />;
 }
 
-// ── Lighting presets ──────────────────────────────────────────────────────────
+// ── RPM / GLB avatar renderer ─────────────────────────────────────────────────
+
+function RPMAvatarView({
+  scene,
+  morphTargets,
+  animationState,
+  mouthOpenRef,
+  expressionIntensityRef,
+}: {
+  scene: THREE.Group;
+  morphTargets: string[];
+  animationState: AnimationState;
+  mouthOpenRef: React.MutableRefObject<number>;
+  expressionIntensityRef: React.MutableRefObject<number>;
+}) {
+  const animRef = useRef(animationState);
+  animRef.current = animationState;
+
+  // Map ARKit morph target names to indices per mesh
+  const morphMapRef = useRef<Map<THREE.Mesh, Record<string, number>>>(new Map());
+  useEffect(() => {
+    morphMapRef.current.clear();
+    scene.traverse((obj) => {
+      if (obj instanceof THREE.Mesh && obj.morphTargetDictionary) {
+        morphMapRef.current.set(obj, obj.morphTargetDictionary);
+      }
+    });
+  }, [scene]);
+
+  const leftArmZRef = useRef(0.30);
+  const rightArmZRef = useRef(-0.30);
+  const blinkTimer = useRef(0);
+  const nextBlink = useRef(2.8 + Math.random() * 2.4);
+  const blinkPhaseRef = useRef(0);
+
+  // RPM bone name mapping
+  const bonesRef = useRef<{
+    hips?: THREE.Bone; neck?: THREE.Bone; head?: THREE.Bone;
+    leftUpperArm?: THREE.Bone; rightUpperArm?: THREE.Bone;
+  }>({});
+
+  useEffect(() => {
+    scene.traverse((obj) => {
+      if (!(obj instanceof THREE.Bone)) return;
+      const n = obj.name.toLowerCase();
+      if (n.includes("hips") || n.includes("pelvis")) bonesRef.current.hips = obj;
+      else if (n.includes("neck")) bonesRef.current.neck = obj;
+      else if (n.includes("head")) bonesRef.current.head = obj;
+      else if ((n.includes("left") || n.includes("_l")) && n.includes("upperarm")) bonesRef.current.leftUpperArm = obj;
+      else if ((n.includes("right") || n.includes("_r")) && n.includes("upperarm")) bonesRef.current.rightUpperArm = obj;
+    });
+  }, [scene]);
+
+  void morphTargets;
+
+  function setMorph(name: string, value: number) {
+    morphMapRef.current.forEach((dict, mesh) => {
+      const idx = dict[name];
+      if (idx !== undefined && mesh.morphTargetInfluences) {
+        mesh.morphTargetInfluences[idx] = Math.max(0, Math.min(1, value));
+      }
+    });
+  }
+
+  useFrame((state, delta) => {
+    const t = state.clock.elapsedTime;
+    const anim = animRef.current;
+    const intensity = expressionIntensityRef.current;
+    const mouthOpen = mouthOpenRef.current;
+    const lf = 1 - Math.pow(0.001, delta);
+    const { hips, neck, leftUpperArm, rightUpperArm } = bonesRef.current;
+
+    // Body sway
+    if (hips) {
+      hips.rotation.y = Math.sin(t * 0.32) * 0.06;
+      hips.position.y = Math.sin(t * 0.38) * 0.008;
+    }
+    if (neck) {
+      neck.rotation.y = Math.sin(t * 0.68) * 0.10;
+      neck.rotation.x = Math.sin(t * 0.28) * 0.03;
+    }
+
+    // Arm poses
+    let tLZ = 0.30, tRZ = -0.30;
+    switch (anim) {
+      case "happy":           tLZ = 0.14;  tRZ = -0.14;  break;
+      case "excited":         tLZ = 0.06;  tRZ = -0.06;  break;
+      case "follow_reaction": tLZ = -0.55; tRZ = 0.55;   break;
+      case "victory":         tLZ = -1.1;  tRZ = 1.1;    break;
+    }
+    leftArmZRef.current  += (tLZ - leftArmZRef.current)  * lf;
+    rightArmZRef.current += (tRZ - rightArmZRef.current) * lf;
+    if (leftUpperArm)  leftUpperArm.rotation.z  = leftArmZRef.current;
+    if (rightUpperArm) rightUpperArm.rotation.z = rightArmZRef.current;
+
+    // Blink
+    blinkTimer.current += delta;
+    if (blinkPhaseRef.current === 0 && blinkTimer.current >= nextBlink.current) {
+      blinkPhaseRef.current = 1; blinkTimer.current = 0;
+    } else if (blinkPhaseRef.current === 1) {
+      const v = Math.min(1, blinkTimer.current / 0.08);
+      setMorph("eyeBlinkLeft", v); setMorph("eyeBlinkRight", v);
+      if (blinkTimer.current >= 0.08) { blinkPhaseRef.current = 2; blinkTimer.current = 0; }
+    } else if (blinkPhaseRef.current === 2) {
+      const v = 1 - Math.min(1, blinkTimer.current / 0.10);
+      setMorph("eyeBlinkLeft", v); setMorph("eyeBlinkRight", v);
+      if (blinkTimer.current >= 0.10) {
+        blinkPhaseRef.current = 0; blinkTimer.current = 0;
+        nextBlink.current = 2.2 + Math.random() * 3.2;
+      }
+    }
+
+    // Lip sync (ARKit visemes)
+    const aa = (anim === "talking" || anim === "victory") ? mouthOpen * intensity : 0;
+    setMorph("mouthOpen",  aa * 0.85);
+    setMorph("jawOpen",    aa * 0.55);
+    setMorph("viseme_aa",  aa * 0.9);
+    setMorph("viseme_PP",  Math.max(0, aa - 0.4) * intensity * 0.5);
+
+    // Expressions
+    const happyV     = anim === "happy" ? 0.7 * intensity : anim === "victory" ? 1.0 * intensity : anim === "excited" ? 0.4 * intensity : 0;
+    const surprisedV = anim === "excited" ? 0.85 * intensity : anim === "gift_reaction" ? 1.0 * intensity : 0;
+    setMorph("mouthSmile",       happyV * 0.8);
+    setMorph("mouthSmileLeft",   happyV);
+    setMorph("mouthSmileRight",  happyV);
+    setMorph("browInnerUp",      surprisedV * 0.9);
+    setMorph("eyeWideLeft",      surprisedV * 0.7);
+    setMorph("eyeWideRight",     surprisedV * 0.7);
+  });
+
+  return <primitive object={scene} dispose={null} />;
+}
+
+// ── Lighting presets (upgraded studio quality) ────────────────────────────────
 
 function LightingRig({ preset, quality }: { preset: string; quality: QualityTier }) {
   const castShadow = quality === "high";
+  if (preset === "broadcast") {
+    return (
+      <>
+        <ambientLight intensity={0.35} color="#d6e8ff" />
+        {/* Key light — warm, strong, 45° upper left */}
+        <directionalLight position={[-3.5, 5.5, 3.5]} intensity={2.4} color="#fff4e0" castShadow={castShadow}
+          shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-bias={-0.002} />
+        {/* Fill light — cool, soft, right */}
+        <directionalLight position={[4, 3, 2]} intensity={0.6} color="#c0d8ff" />
+        {/* Back/rim light — warm kick for hair */}
+        <pointLight position={[0, 4, -3]} intensity={1.2} color="#ffe0c0" />
+        {/* Subtle eye light from front-below */}
+        <pointLight position={[0, 0.5, 3.5]} intensity={0.35} color="#ffffff" />
+      </>
+    );
+  }
   if (preset === "dramatic") {
     return (
       <>
-        <ambientLight intensity={0.12} />
-        <directionalLight position={[3, 5, 2]} intensity={2.8} castShadow={castShadow} />
-        <pointLight position={[-4, 2, -3]} intensity={1.0} color="#ff7733" />
-        <pointLight position={[0, 0, 3]} intensity={0.4} color="#3366ff" />
+        <ambientLight intensity={0.08} />
+        <directionalLight position={[3, 5, 2]} intensity={3.2} color="#fff8f0" castShadow={castShadow} />
+        <pointLight position={[-4, 2, -3]} intensity={1.2} color="#ff6622" />
+        <pointLight position={[0, 0, 4]}   intensity={0.5} color="#3366ff" />
+        <pointLight position={[0, 5, -2]}  intensity={0.8} color="#ff9944" />
       </>
     );
   }
   if (preset === "soft") {
     return (
       <>
-        <ambientLight intensity={1.1} />
-        <directionalLight position={[0, 8, 4]} intensity={0.55} />
+        <ambientLight intensity={1.3} color="#f0f4ff" />
+        <directionalLight position={[0, 8, 4]}  intensity={0.55} color="#ffffff" />
         <directionalLight position={[-3, 4, -2]} intensity={0.3} color="#aaccff" />
+        <pointLight position={[2, 2, 3]} intensity={0.25} color="#fff0e0" />
       </>
     );
   }
   if (preset === "neon") {
     return (
       <>
-        <ambientLight intensity={0.07} />
-        <pointLight position={[0, 3, 2]} intensity={3.5} color="#ff00ff" />
-        <pointLight position={[2, 1, 1]} intensity={2.2} color="#00ffff" />
-        <pointLight position={[-2, 1, 1]} intensity={1.8} color="#ff44ee" />
-        <pointLight position={[0, -1, 2]} intensity={1.2} color="#4400ff" />
+        <ambientLight intensity={0.06} />
+        <pointLight position={[0, 3, 2]}  intensity={4.0} color="#ff00ff" />
+        <pointLight position={[2, 1, 1]}  intensity={2.5} color="#00ffff" />
+        <pointLight position={[-2, 1, 1]} intensity={2.0} color="#ff44ee" />
+        <pointLight position={[0, -1, 2]} intensity={1.4} color="#4400ff" />
+        <pointLight position={[0, 5, -2]} intensity={0.8} color="#ff00aa" />
       </>
     );
   }
+  // Default "studio" — three-point broadcast setup
   return (
     <>
-      <ambientLight intensity={0.38} />
+      <ambientLight intensity={0.30} color="#e0ecff" />
       <directionalLight
-        position={[4, 6, 4]}
-        intensity={1.9}
+        position={[-3, 6, 4]} intensity={2.2} color="#fff8f0"
         castShadow={castShadow}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={1024} shadow-mapSize-height={1024}
+        shadow-bias={-0.002}
       />
-      <directionalLight position={[-3, 2, -2]} intensity={0.38} color="#aabbdd" />
-      <pointLight position={[0, 2, 4]} intensity={0.55} />
+      <directionalLight position={[3.5, 3, 2]} intensity={0.7} color="#c8d8ff" />
+      <pointLight position={[0, 4, -2.5]} intensity={1.0} color="#ffe8c0" />
+      <pointLight position={[0, 0.8, 4]}  intensity={0.28} color="#ffffff" />
     </>
   );
 }
 
-// ── FPS + memory tracker ──────────────────────────────────────────────────────
+// ── Stats tracker ─────────────────────────────────────────────────────────────
 
-function StatsTracker({
-  quality,
-  onStats,
-}: {
-  quality: QualityTier;
-  onStats: (s: RendererStats) => void;
-}) {
+function StatsTracker({ quality, onStats }: { quality: QualityTier; onStats: (s: RendererStats) => void }) {
   const { gl } = useThree();
   const frames = useRef(0);
-  const last = useRef(performance.now());
-  const fps = useRef(60);
+  const last   = useRef(performance.now());
+  const fps    = useRef(60);
 
   useFrame(() => {
     frames.current++;
@@ -325,50 +510,49 @@ function StatsTracker({
       fps.current = Math.round((frames.current * 1000) / (now - last.current));
       frames.current = 0;
       last.current = now;
-      onStats({
-        geometries: gl.info.memory.geometries,
-        textures: gl.info.memory.textures,
-        triangles: gl.info.render.triangles,
-        drawCalls: gl.info.render.calls,
-        fps: fps.current,
-        quality,
-      });
+      onStats({ geometries: gl.info.memory.geometries, textures: gl.info.memory.textures, triangles: gl.info.render.triangles, drawCalls: gl.info.render.calls, fps: fps.current, quality });
     }
   });
   return null;
 }
 
-// ── Scene (inner Canvas children) ─────────────────────────────────────────────
+// ── Loading spinner inside canvas ─────────────────────────────────────────────
+
+function CanvasLoader() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  useFrame((_, delta) => {
+    if (meshRef.current) meshRef.current.rotation.y += delta * 2.2;
+  });
+  return (
+    <mesh ref={meshRef} position={[0, 1.2, 0]}>
+      <torusGeometry args={[0.18, 0.04, 8, 24]} />
+      <meshBasicMaterial color="#8b5cf6" />
+    </mesh>
+  );
+}
+
+// ── Scene ─────────────────────────────────────────────────────────────────────
 
 function AvatarScene({
-  avatarKey,
-  accentColor,
-  scale,
-  positionY,
-  lightingPreset,
-  effectiveVrmUrl,
-  quality,
-  onStats,
-  onQualityDecline,
-  animationState,
-  mouthOpenRef,
-  expressionIntensityRef,
+  avatarKey, accentColor, scale, positionY, lightingPreset,
+  effectiveVrmUrl, rpmUrl, quality, onStats, onQualityDecline,
+  animationState, mouthOpenRef, expressionIntensityRef,
 }: {
-  avatarKey: string;
-  accentColor: string;
-  scale: number;
-  positionY: number;
-  lightingPreset: string;
-  effectiveVrmUrl: string | null | undefined;
-  quality: QualityTier;
-  onStats: (s: RendererStats) => void;
-  onQualityDecline: () => void;
-  animationState: AnimationState;
-  mouthOpenRef: React.MutableRefObject<number>;
+  avatarKey: string; accentColor: string; scale: number; positionY: number;
+  lightingPreset: string; effectiveVrmUrl: string | null | undefined;
+  rpmUrl: string | null | undefined; quality: QualityTier;
+  onStats: (s: RendererStats) => void; onQualityDecline: () => void;
+  animationState: AnimationState; mouthOpenRef: React.MutableRefObject<number>;
   expressionIntensityRef: React.MutableRefObject<number>;
 }) {
   const style: AvatarStyle = AVATAR_STYLE_MAP[avatarKey] ?? "anime";
-  const vrmState = useVRMLoader(effectiveVrmUrl);
+  const humanPresenter = isHumanPresenter(avatarKey);
+  const vrmState = useVRMLoader(rpmUrl ? null : effectiveVrmUrl);
+  const glbState = useGLBLoader(rpmUrl ?? null);
+
+  const isLoading =
+    (rpmUrl && glbState.status === "loading") ||
+    (!rpmUrl && effectiveVrmUrl && vrmState.status === "loading");
 
   return (
     <>
@@ -376,8 +560,19 @@ function AvatarScene({
       <StatsTracker quality={quality} onStats={onStats} />
       <LightingRig preset={lightingPreset} quality={quality} />
 
+      {isLoading && <CanvasLoader />}
+
       <group position={[0, positionY, 0]} scale={[scale, scale, scale]}>
-        {vrmState.status === "loaded" ? (
+        {/* Priority: RPM GLB > VRM > Human Presenter > Procedural */}
+        {rpmUrl && glbState.status === "loaded" ? (
+          <RPMAvatarView
+            scene={glbState.scene}
+            morphTargets={glbState.morphTargets}
+            animationState={animationState}
+            mouthOpenRef={mouthOpenRef}
+            expressionIntensityRef={expressionIntensityRef}
+          />
+        ) : !rpmUrl && vrmState.status === "loaded" ? (
           <VRMAvatarView
             vrm={vrmState.vrm}
             accentColor={accentColor}
@@ -385,6 +580,14 @@ function AvatarScene({
             animationState={animationState}
             mouthOpenRef={mouthOpenRef}
             expressionIntensityRef={expressionIntensityRef}
+          />
+        ) : humanPresenter ? (
+          <HumanPresenterAvatar
+            avatarKey={avatarKey}
+            quality={quality}
+            animationState={animationState}
+            mouthOpenAmount={mouthOpenRef.current}
+            expressionIntensity={expressionIntensityRef.current}
           />
         ) : (
           <ProceduralAvatar
@@ -410,17 +613,12 @@ function AvatarScene({
   );
 }
 
-// ── ProceduralUpdater: sync mouthOpen + expressionIntensity into scene refs ────
-// (props → refs bridge so R3F useFrame always reads the latest value)
+// ── ProceduralUpdater ─────────────────────────────────────────────────────────
 
 function ProceduralUpdater({
-  mouthOpenAmount,
-  expressionIntensity,
-  mouthOpenRef,
-  expressionIntensityRef,
+  mouthOpenAmount, expressionIntensity, mouthOpenRef, expressionIntensityRef,
 }: {
-  mouthOpenAmount: number;
-  expressionIntensity: number;
+  mouthOpenAmount: number; expressionIntensity: number;
   mouthOpenRef: React.MutableRefObject<number>;
   expressionIntensityRef: React.MutableRefObject<number>;
 }) {
@@ -434,32 +632,31 @@ function ProceduralUpdater({
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function AvatarCanvas({
-  avatarKey,
-  accentColor,
-  scale,
-  positionY,
-  lightingPreset,
-  avatarEnabled,
-  avatarUrl,
-  showFps = true,
-  onStats,
-  className,
-  animationState = "idle",
-  mouthOpenAmount = 0,
-  expressionIntensity = 0.8,
+  avatarKey, accentColor, scale, positionY, lightingPreset,
+  avatarEnabled, avatarUrl, showFps = true, onStats, className,
+  animationState = "idle", mouthOpenAmount = 0, expressionIntensity = 0.8,
 }: AvatarCanvasProps) {
   const [stats, setStats] = useState<RendererStats>({
     geometries: 0, textures: 0, triangles: 0, drawCalls: 0, fps: 60, quality: "high",
   });
   const [quality, setQuality] = useState<QualityTier>(detectInitialQuality);
 
-  // Refs for passing live values into R3F without causing re-renders
   const mouthOpenRef = useRef(mouthOpenAmount);
   const expressionIntensityRef = useRef(expressionIntensity);
 
-  const effectiveVrmUrl = avatarUrl !== undefined
+  // avatarUrl could be a blob VRM, a blob GLB, or an RPM URL
+  // We detect RPM by checking the prefix; otherwise treat as VRM
+  const isRpmUrl = typeof avatarUrl === "string" && (
+    avatarUrl.startsWith("https://models.readyplayer.me") ||
+    avatarUrl.startsWith("https://api.readyplayer.me") ||
+    avatarUrl.endsWith(".glb")
+  );
+
+  const effectiveVrmUrl = avatarUrl && !isRpmUrl
     ? avatarUrl
     : getAvatarVRMPath(avatarKey);
+
+  const rpmUrl = isRpmUrl ? avatarUrl : null;
 
   const handleStats = useCallback((s: RendererStats) => {
     setStats(s);
@@ -468,12 +665,7 @@ export function AvatarCanvas({
 
   if (!avatarEnabled) {
     return (
-      <div
-        className={cn(
-          "flex flex-col items-center justify-center bg-black/20 rounded-2xl border border-white/5",
-          className,
-        )}
-      >
+      <div className={cn("flex flex-col items-center justify-center bg-black/20 rounded-2xl border border-white/5", className)}>
         <Boxes className="h-8 w-8 text-violet-400/20 mb-2" />
         <p className="text-xs text-muted-foreground/40">Avatar disabled</p>
         <p className="text-[10px] text-muted-foreground/25 mt-0.5">Enable via the toggle above</p>
@@ -481,47 +673,31 @@ export function AvatarCanvas({
     );
   }
 
-  const dpr: [number, number] =
-    quality === "low" ? [1, 1] : quality === "medium" ? [1, 1.5] : [1, 2];
+  const dpr: [number, number] = quality === "low" ? [1, 1] : quality === "medium" ? [1, 1.5] : [1, 2];
+  const fpsColor = stats.fps >= 50 ? "text-green-400 border-green-500/25" : stats.fps >= 30 ? "text-yellow-400 border-yellow-500/25" : "text-red-400 border-red-500/25";
+  const qualityColor = quality === "high" ? "text-violet-300" : quality === "medium" ? "text-blue-300" : "text-gray-400";
 
-  const fpsColor =
-    stats.fps >= 50
-      ? "text-green-400 border-green-500/25"
-      : stats.fps >= 30
-      ? "text-yellow-400 border-yellow-500/25"
-      : "text-red-400 border-red-500/25";
-
-  const qualityColor =
-    quality === "high" ? "text-violet-300"
-    : quality === "medium" ? "text-blue-300"
-    : "text-gray-400";
-
-  const vrmBacked = isVRMBacked(avatarKey) || !!avatarUrl;
+  const vrmBacked = isVRMBacked(avatarKey) || (!!avatarUrl && !isRpmUrl);
+  const rpmActive = !!rpmUrl;
+  const humanActive = isHumanPresenter(avatarKey) && !avatarUrl;
 
   const animEmoji = ANIMATION_EMOJI[animationState] ?? "😐";
 
+  // Background per lighting preset
+  const bgStyle =
+    lightingPreset === "neon"      ? "linear-gradient(160deg, #0d0024 0%, #000010 100%)" :
+    lightingPreset === "dramatic"  ? "linear-gradient(160deg, #1a0800 0%, #0a0000 100%)" :
+    lightingPreset === "broadcast" ? "linear-gradient(160deg, #060b14 0%, #020508 100%)" :
+                                     "linear-gradient(160deg, #0a0014 0%, #020008 100%)";
+
   return (
     <div className={cn("relative rounded-2xl overflow-hidden", className)}>
-      <div
-        className="absolute inset-0 rounded-2xl"
-        style={{
-          background:
-            lightingPreset === "neon"
-              ? "linear-gradient(160deg, #0d0024 0%, #000010 100%)"
-              : lightingPreset === "dramatic"
-              ? "linear-gradient(160deg, #1a0800 0%, #0a0000 100%)"
-              : "linear-gradient(160deg, #0e0018 0%, #000008 100%)",
-        }}
-      />
+      <div className="absolute inset-0 rounded-2xl" style={{ background: bgStyle }} />
 
       <Canvas
-        gl={{
-          antialias: quality !== "low",
-          alpha: true,
-          powerPreference: quality === "low" ? "low-power" : "high-performance",
-        }}
+        gl={{ antialias: quality !== "low", alpha: true, powerPreference: quality === "low" ? "low-power" : "high-performance" }}
         shadows={quality === "high"}
-        camera={{ position: [0, 1.1, 2.5], fov: 37 }}
+        camera={{ position: [0, 1.2, 2.4], fov: 36 }}
         dpr={dpr}
         style={{ position: "relative" }}
       >
@@ -531,7 +707,7 @@ export function AvatarCanvas({
           mouthOpenRef={mouthOpenRef}
           expressionIntensityRef={expressionIntensityRef}
         />
-        <Suspense fallback={null}>
+        <Suspense fallback={<CanvasLoader />}>
           <AvatarScene
             avatarKey={avatarKey}
             accentColor={accentColor}
@@ -539,11 +715,10 @@ export function AvatarCanvas({
             positionY={positionY}
             lightingPreset={lightingPreset}
             effectiveVrmUrl={effectiveVrmUrl}
+            rpmUrl={rpmUrl}
             quality={quality}
             onStats={handleStats}
-            onQualityDecline={() =>
-              setQuality((q) => (q === "high" ? "medium" : "low"))
-            }
+            onQualityDecline={() => setQuality((q) => (q === "high" ? "medium" : "low"))}
             animationState={animationState}
             mouthOpenRef={mouthOpenRef}
             expressionIntensityRef={expressionIntensityRef}
@@ -551,19 +726,15 @@ export function AvatarCanvas({
         </Suspense>
       </Canvas>
 
-      {/* FPS + quality overlay */}
+      {/* FPS + quality */}
       {showFps && (
         <div className="absolute top-2 right-2 flex items-center gap-1 pointer-events-none">
-          <div className={cn("text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/70 border", fpsColor)}>
-            {stats.fps}fps
-          </div>
-          <div className={cn("text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/70 border border-white/10", qualityColor)}>
-            {quality}
-          </div>
+          <div className={cn("text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/70 border", fpsColor)}>{stats.fps}fps</div>
+          <div className={cn("text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/70 border border-white/10", qualityColor)}>{quality}</div>
         </div>
       )}
 
-      {/* Animation state badge (top-left) */}
+      {/* Animation badge */}
       <div className="absolute top-2 left-2 pointer-events-none">
         <div className="text-[9px] px-1.5 py-0.5 rounded bg-black/70 border border-white/10 text-white/60 font-mono flex items-center gap-1">
           <span>{animEmoji}</span>
@@ -571,16 +742,16 @@ export function AvatarCanvas({
         </div>
       </div>
 
-      {/* VRM badge (bottom-left) */}
+      {/* Model type badge */}
       <div className="absolute bottom-6 left-2 pointer-events-none">
-        {vrmBacked ? (
-          <div className="text-[8px] px-1.5 py-0.5 rounded bg-violet-900/70 border border-violet-500/30 text-violet-300 font-mono">
-            VRM 1.0
-          </div>
+        {rpmActive ? (
+          <div className="text-[8px] px-1.5 py-0.5 rounded bg-blue-900/80 border border-blue-400/40 text-blue-300 font-mono">RPM GLB</div>
+        ) : vrmBacked ? (
+          <div className="text-[8px] px-1.5 py-0.5 rounded bg-violet-900/70 border border-violet-500/30 text-violet-300 font-mono">VRM 1.0</div>
+        ) : humanActive ? (
+          <div className="text-[8px] px-1.5 py-0.5 rounded bg-emerald-900/70 border border-emerald-500/30 text-emerald-300 font-mono">Human 3D</div>
         ) : (
-          <div className="text-[8px] px-1.5 py-0.5 rounded bg-black/60 border border-white/10 text-white/30 font-mono">
-            Procedural
-          </div>
+          <div className="text-[8px] px-1.5 py-0.5 rounded bg-black/60 border border-white/10 text-white/30 font-mono">Procedural</div>
         )}
       </div>
 
@@ -592,7 +763,7 @@ export function AvatarCanvas({
   );
 }
 
-// ── Upload button (standalone) ────────────────────────────────────────────────
+// ── VRM/GLB Upload button ─────────────────────────────────────────────────────
 
 export interface VRMUploadButtonProps {
   onUpload: (url: string, filename: string) => void;
@@ -622,7 +793,7 @@ export function VRMUploadButton({ onUpload, onClear, uploadedName, className }: 
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <input ref={inputRef} type="file" accept=".vrm" className="hidden" onChange={handleChange} />
+      <input ref={inputRef} type="file" accept=".vrm,.glb" className="hidden" onChange={handleChange} />
       {uploadedName ? (
         <>
           <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/25 min-w-0">
@@ -642,7 +813,7 @@ export function VRMUploadButton({ onUpload, onClear, uploadedName, className }: 
           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-white/15 hover:border-violet-500/50 hover:bg-violet-500/5 transition-all text-muted-foreground hover:text-violet-300 group"
         >
           <Upload className="h-3.5 w-3.5 group-hover:text-violet-400 transition-colors" />
-          <span className="text-xs">Upload custom .vrm</span>
+          <span className="text-xs">Upload .vrm or .glb</span>
         </button>
       )}
     </div>

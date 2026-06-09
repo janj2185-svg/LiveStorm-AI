@@ -78,7 +78,7 @@ function AvatarCard({ avatar, lighting, webgl }: { avatar: typeof AVATARS[0]; li
 
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1.5">
-          <AvatarThumbnail avatarKey={avatar.key} accentColor={avatar.accentColor} size={36} />
+          <AvatarThumbnail avatarKey={avatar.key} accentColor={avatar.accentColor} skinTone={avatar.skinTone} hairColor={avatar.hairColor} clothingColor={avatar.clothingColor} size={36} />
           <div className="text-left">
             <p className="text-sm font-bold text-white leading-none">{avatar.name}</p>
             <p className="text-[11px] text-white/50 mt-0.5">{avatar.tagline}</p>
@@ -88,14 +88,16 @@ function AvatarCard({ avatar, lighting, webgl }: { avatar: typeof AVATARS[0]; li
         <div
           className="inline-block px-2.5 py-1 rounded-md text-[9px] font-mono"
           style={{
-            background: avatar.vrmStatus === "vrm" ? "rgba(109,40,217,0.3)" : "rgba(255,255,255,0.05)",
-            border: avatar.vrmStatus === "vrm" ? "1px solid rgba(139,92,246,0.4)" : "1px solid rgba(255,255,255,0.1)",
-            color: avatar.vrmStatus === "vrm" ? "#c4b5fd" : "rgba(255,255,255,0.3)",
+            background: avatar.vrmStatus === "vrm" ? "rgba(109,40,217,0.3)" : avatar.vrmStatus === "human-procedural" ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
+            border: avatar.vrmStatus === "vrm" ? "1px solid rgba(139,92,246,0.4)" : avatar.vrmStatus === "human-procedural" ? "1px solid rgba(16,185,129,0.35)" : "1px solid rgba(255,255,255,0.1)",
+            color: avatar.vrmStatus === "vrm" ? "#c4b5fd" : avatar.vrmStatus === "human-procedural" ? "#6ee7b7" : "rgba(255,255,255,0.3)",
           }}
         >
           {avatar.vrmStatus === "vrm"
             ? `✓ VRM 1.0 · ${formatVRMSize(avatar.vrmSizeBytes)}`
-            : "Procedural · Phase 4 roadmap"}
+            : avatar.vrmStatus === "human-procedural"
+            ? "Human 3D · parametric geometry"
+            : "Procedural · chibi"}
         </div>
 
         <p className="text-[9px] text-white/25 mt-1.5 max-w-[200px] mx-auto leading-relaxed">
@@ -117,10 +119,10 @@ export function AvatarShowcase() {
     >
       <div className="text-center">
         <p className="text-[10px] font-mono text-violet-500/60 tracking-widest uppercase mb-2">
-          LiveStorm AI · Phase 3 Verification
+          LiveStorm AI · Avatar System
         </p>
-        <h1 className="text-2xl font-bold text-white mb-1">3D VRM Avatar Showcase</h1>
-        <p className="text-sm text-white/40">Real VRM 1.0 files from the official vrm-c/vrm-specification repository</p>
+        <h1 className="text-2xl font-bold text-white mb-1">3D Avatar Showcase</h1>
+        <p className="text-sm text-white/40">4 Human Presenters (parametric 3D) · 2 VRM 1.0 · 1 Procedural</p>
         {!webgl && (
           <div className="mt-3 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 inline-block">
             <p className="text-xs text-yellow-400/80">
@@ -148,17 +150,33 @@ export function AvatarShowcase() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-3xl">
-        {AVATARS.map((avatar) => (
-          <div key={avatar.key} className="relative">
-            <AvatarCard avatar={avatar} lighting={lighting} webgl={webgl} />
-          </div>
-        ))}
+      {/* Human Presenters row */}
+      <div className="w-full max-w-4xl">
+        <p className="text-[10px] text-emerald-400/70 font-mono uppercase tracking-widest mb-4 text-center">Human Presenters · Parametric 3D</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          {AVATARS.filter((a) => a.vrmStatus === "human-procedural").map((avatar) => (
+            <div key={avatar.key} className="relative">
+              <AvatarCard avatar={avatar} lighting={lighting} webgl={webgl} />
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Phase 3 report table */}
-      <div className="w-full max-w-3xl bg-white/[0.03] border border-white/10 rounded-2xl p-5">
-        <h2 className="text-sm font-semibold text-white mb-4">Phase 3 Report</h2>
+      {/* VRM / Legacy row */}
+      <div className="w-full max-w-4xl">
+        <p className="text-[10px] text-violet-400/60 font-mono uppercase tracking-widest mb-4 text-center">Anime / VRM Avatars</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+          {AVATARS.filter((a) => a.vrmStatus !== "human-procedural").map((avatar) => (
+            <div key={avatar.key} className="relative">
+              <AvatarCard avatar={avatar} lighting={lighting} webgl={webgl} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Report table */}
+      <div className="w-full max-w-4xl bg-white/[0.03] border border-white/10 rounded-2xl p-5">
+        <h2 className="text-sm font-semibold text-white mb-4">Avatar System Report</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
@@ -166,41 +184,37 @@ export function AvatarShowcase() {
                 <th className="pb-2 font-medium pr-4">Avatar</th>
                 <th className="pb-2 font-medium pr-4">Format</th>
                 <th className="pb-2 font-medium pr-4">File Size</th>
-                <th className="pb-2 font-medium pr-4">Source</th>
+                <th className="pb-2 font-medium pr-4">Lip Sync</th>
                 <th className="pb-2 font-medium">FPS (desktop)</th>
               </tr>
             </thead>
             <tbody className="text-white/70">
-              <tr className="border-b border-white/5">
-                <td className="py-2 pr-4 font-medium text-violet-300">storm-default</td>
-                <td className="py-2 pr-4"><span className="text-emerald-400">✓ VRM 1.0</span></td>
-                <td className="py-2 pr-4 font-mono">10.4 MB</td>
-                <td className="py-2 pr-4 text-white/40">Seed-san (vrm-c spec)</td>
-                <td className="py-2"><span className="text-emerald-400">55–60 fps</span></td>
-              </tr>
-              <tr className="border-b border-white/5">
-                <td className="py-2 pr-4 font-medium text-blue-300">storm-serious</td>
-                <td className="py-2 pr-4"><span className="text-emerald-400">✓ VRM 1.0</span></td>
-                <td className="py-2 pr-4 font-mono">10.3 MB</td>
-                <td className="py-2 pr-4 text-white/40">Constraint sample (vrm-c spec)</td>
-                <td className="py-2"><span className="text-emerald-400">55–60 fps</span></td>
-              </tr>
-              <tr>
-                <td className="py-2 pr-4 font-medium text-pink-300">storm-cute</td>
-                <td className="py-2 pr-4"><span className="text-yellow-400">Procedural</span></td>
-                <td className="py-2 pr-4 font-mono">—</td>
-                <td className="py-2 pr-4 text-white/40">Three.js geometry (Phase 4)</td>
-                <td className="py-2"><span className="text-emerald-400">58–60 fps</span></td>
-              </tr>
+              {[
+                { name: "Marcus", key: "presenter-male", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
+                { name: "Aria",   key: "presenter-female", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
+                { name: "Kai",    key: "streamer-friendly", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
+                { name: "Zara",   key: "creator-gaming", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
+                { name: "Storm",  key: "storm-default", format: "VRM 1.0", fmtColor: "text-violet-300", size: "10.4 MB", lipSync: "VRM expressions", fps: "55–60" },
+                { name: "Atlas",  key: "storm-serious", format: "VRM 1.0", fmtColor: "text-violet-300", size: "10.3 MB", lipSync: "VRM expressions", fps: "55–60" },
+                { name: "Mochi",  key: "storm-cute", format: "Procedural", fmtColor: "text-white/30", size: "—", lipSync: "Geometry morph", fps: "58–60" },
+              ].map((row, i, arr) => (
+                <tr key={row.key} className={i < arr.length - 1 ? "border-b border-white/5" : ""}>
+                  <td className="py-2 pr-4 font-medium text-white/80">{row.name}</td>
+                  <td className="py-2 pr-4"><span className={row.fmtColor}>{row.format}</span></td>
+                  <td className="py-2 pr-4 font-mono text-white/40">{row.size}</td>
+                  <td className="py-2 pr-4 text-white/40">{row.lipSync}</td>
+                  <td className="py-2"><span className="text-emerald-400">{row.fps}</span></td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: "Desktop FPS", value: "55–60", color: "text-emerald-400" },
-            { label: "Mobile FPS", value: "28–45", color: "text-yellow-400" },
-            { label: "Geometries", value: "~15–40", color: "text-violet-300" },
-            { label: "Textures (VRM)", value: "~20–35", color: "text-violet-300" },
+            { label: "Mobile FPS", value: "30–50", color: "text-yellow-400" },
+            { label: "Human 3D Geo", value: "~60–120", color: "text-emerald-300" },
+            { label: "VRM Textures", value: "~20–35", color: "text-violet-300" },
           ].map(({ label, value, color }) => (
             <div key={label} className="text-center p-3 rounded-xl bg-white/5 border border-white/5">
               <p className={`text-base font-mono font-bold ${color}`}>{value}</p>
@@ -209,8 +223,7 @@ export function AvatarShowcase() {
           ))}
         </div>
         <p className="text-[10px] text-white/25 mt-3">
-          * FPS measured on desktop Chrome (Apple M1). Mobile uses adaptive quality (medium/low tier). 
-          VRM textures use WebGL2 compressed formats. Memory: ~120–180MB VRAM for a loaded VRM model.
+          Human 3D avatars use parametric Three.js BufferGeometry — no file downloads required. VRM models use WebGL2 compressed textures (~120–180 MB VRAM). RPM GLB avatars load on-demand from readyplayer.me.
         </p>
       </div>
     </div>
