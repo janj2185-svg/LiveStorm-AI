@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  useGetMyProfile, 
+import {
+  useGetMyProfile,
   useConnectTiktok,
   useStartSession,
   useEndSession,
@@ -19,19 +19,30 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
   Video, PlugZap, RefreshCw, StopCircle, PlayCircle, Activity,
-  AlertTriangle, Radio, Bot, RotateCcw,
+  AlertTriangle, Radio, Bot, RotateCcw, Wifi, WifiOff, Terminal,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+const EVENT_COLORS: Record<string, string> = {
+  gift:            "text-amber-400",
+  like:            "text-pink-400",
+  comment:         "text-blue-400",
+  follow:          "text-green-400",
+  share:           "text-cyan-400",
+  viewerCount:     "text-violet-400",
+  ai_announcement: "text-purple-300",
+};
 
 export function LiveStudio() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const { data: user, isLoading: isUserLoading } = useGetMyProfile();
   const connectTiktok = useConnectTiktok();
-  
+
   const { data: activeSessionRes } = useGetActiveSession({
     query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 5000 },
   });
@@ -46,9 +57,7 @@ export function LiveStudio() {
     useLiveSession(activeSessionId, sessionMode);
 
   const [tiktokUsernameInput, setTiktokUsernameInput] = useState("");
-
   const isActive = activeSessionRes?.active;
-
   const effectiveMode = tiktokMode ?? sessionMode;
 
   const handleConnect = () => {
@@ -100,193 +109,206 @@ export function LiveStudio() {
         toast({
           title: "Session Reset",
           description: data.clearedSessionId
-            ? `Cleared session #${data.clearedSessionId}. You can start a new session now.`
-            : "No active session found — state has been cleared.",
+            ? `Cleared session #${data.clearedSessionId}. Ready to start fresh.`
+            : "No active session — state cleared.",
         });
         queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
       },
       onError: () => {
-        toast({ title: "Reset Failed", description: "Could not reset session. Try again.", variant: "destructive" });
+        toast({ title: "Reset Failed", description: "Could not reset session.", variant: "destructive" });
       },
     });
   };
 
   const modeBadge = () => {
     if (!isActive) return null;
-    if (effectiveMode === "real") {
-      return (
-        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 gap-1">
-          <Radio className="h-3 w-3" />
-          Live
-        </Badge>
-      );
-    }
-    if (effectiveMode === "demo") {
-      return (
-        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 gap-1">
-          <Bot className="h-3 w-3" />
-          Demo
-        </Badge>
-      );
-    }
-    if (effectiveMode === "error") {
-      return (
-        <Badge className="bg-red-500/20 text-red-400 border-red-500/30 gap-1">
-          <AlertTriangle className="h-3 w-3" />
-          Error
-        </Badge>
-      );
-    }
+    if (effectiveMode === "real")
+      return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/25 gap-1.5 text-xs"><Radio className="h-2.5 w-2.5" />Live</Badge>;
+    if (effectiveMode === "demo")
+      return <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/25 gap-1.5 text-xs"><Bot className="h-2.5 w-2.5" />Demo</Badge>;
+    if (effectiveMode === "error")
+      return <Badge className="bg-red-500/15 text-red-400 border-red-500/25 gap-1.5 text-xs"><AlertTriangle className="h-2.5 w-2.5" />Error</Badge>;
     return null;
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-5 max-w-6xl mx-auto">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-          <Video className="h-8 w-8 text-accent" />
+        <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <Video className="h-6 w-6 text-accent" />
           Live Studio
         </h2>
-        <p className="text-muted-foreground mt-1">Manage your active broadcast and connection.</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Manage your active broadcast and monitor real-time events.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 space-y-6">
-          {/* TikTok Connection Card */}
-          <Card className="bg-card border-white/5 shadow-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        {/* Left panel */}
+        <div className="space-y-4">
+
+          {/* TikTok Connection */}
+          <Card className="bg-card border-white/5">
             <CardHeader className="pb-3 border-b border-white/5">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <PlugZap className="w-5 h-5 text-primary" />
-                TikTok Connection
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <PlugZap className="w-4 h-4 text-primary" />
+                TikTok Account
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
               {!isUserLoading && user?.tiktokUsername ? (
-                <div className="p-4 rounded-lg bg-black/20 border border-primary/20 flex flex-col items-center justify-center text-center gap-3 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-primary/5" />
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-3 ring-4 ring-background">
-                      <span className="text-3xl font-black text-primary">@</span>
+                <div className="relative p-4 rounded-xl bg-primary/8 border border-primary/20 overflow-hidden text-center">
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+                  <div className="relative">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center mb-2">
+                      <span className="text-xl font-black text-primary">@</span>
                     </div>
-                    <h3 className="font-bold text-white text-lg">@{user.tiktokUsername}</h3>
-                    <div className="inline-flex items-center gap-1 text-xs text-green-400 font-bold px-2 py-1 bg-green-500/10 rounded-full mt-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                      Account Linked
-                    </div>
+                    <p className="font-bold text-white">@{user.tiktokUsername}</p>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-green-400 font-bold px-2 py-0.5 bg-green-500/10 rounded-full mt-1.5 border border-green-500/20">
+                      <span className="w-1 h-1 rounded-full bg-green-500" />
+                      Linked
+                    </span>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="tiktok-username">TikTok Username</Label>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="tiktok-username" className="text-xs">TikTok Username</Label>
                     <Input
                       id="tiktok-username"
                       placeholder="e.g. charlidamelio"
                       value={tiktokUsernameInput}
                       onChange={(e) => setTiktokUsernameInput(e.target.value)}
-                      className="bg-background border-white/10"
+                      onKeyDown={(e) => e.key === "Enter" && handleConnect()}
+                      className="bg-background border-white/10 text-sm"
                     />
                   </div>
                   <Button
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold"
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-sm"
                     onClick={handleConnect}
                     disabled={connectTiktok.isPending || !tiktokUsernameInput.trim()}
                   >
-                    {connectTiktok.isPending ? "Connecting..." : "Connect Account"}
+                    {connectTiktok.isPending ? "Connecting…" : "Connect Account"}
                   </Button>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Broadcast Control Card */}
-          <Card className="bg-card border-white/5 shadow-lg">
+          {/* Broadcast Control */}
+          <Card className={cn(
+            "bg-card border-white/5 transition-all duration-300",
+            isActive && "border-primary/20 shadow-md shadow-primary/5",
+          )}>
             <CardHeader className="pb-3 border-b border-white/5">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Video className="w-5 h-5 text-accent" />
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Video className="w-4 h-4 text-accent" />
                 Broadcast Control
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Status:</span>
-                {isActive ? (
-                  <span className="font-bold text-green-400 flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+
+              {/* Status rows */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground text-xs">Session</span>
+                  {isActive ? (
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
+                      </span>
+                      LIVE
                     </span>
-                    LIVE
+                  ) : (
+                    <span className="text-xs font-semibold text-muted-foreground">OFFLINE</span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">WebSocket</span>
+                  {connected ? (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-green-400">
+                      <Wifi className="h-3 w-3" />Connected
+                    </span>
+                  ) : isActive ? (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-amber-400 animate-pulse">
+                      <WifiOff className="h-3 w-3" />Connecting…
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <WifiOff className="h-3 w-3" />Idle
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">Mode</span>
+                  <span className="text-xs font-semibold">
+                    {effectiveMode === "real"  && <span className="text-emerald-400">Real LIVE</span>}
+                    {effectiveMode === "demo"  && <span className="text-blue-400">Demo</span>}
+                    {effectiveMode === "error" && <span className="text-red-400">Error</span>}
+                    {!effectiveMode            && <span className="text-muted-foreground">—</span>}
                   </span>
-                ) : (
-                  <span className="font-bold text-muted-foreground">OFFLINE</span>
-                )}
-              </div>
-              
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Websocket:</span>
-                {connected ? (
-                  <span className="font-bold text-green-400">Connected</span>
-                ) : isActive ? (
-                  <span className="font-bold text-amber-500 animate-pulse">Connecting...</span>
-                ) : (
-                  <span className="font-bold text-muted-foreground">Disconnected</span>
+                </div>
+
+                {isActive && tiktokUsername && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground text-xs">Stream</span>
+                    <span className="text-xs font-mono text-white">@{tiktokUsername}</span>
+                  </div>
                 )}
               </div>
 
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">TikTok:</span>
-                <span className="font-bold">
-                  {effectiveMode === "real" && <span className="text-emerald-400">Real LIVE</span>}
-                  {effectiveMode === "demo" && <span className="text-blue-400">Demo mode</span>}
-                  {effectiveMode === "error" && <span className="text-red-400">Error</span>}
-                  {!effectiveMode && <span className="text-muted-foreground">—</span>}
-                </span>
+              {/* Divider */}
+              <div className="border-t border-white/5" />
+
+              {/* Actions */}
+              <div className="space-y-2">
+                {isActive ? (
+                  <Button
+                    variant="destructive"
+                    className="w-full font-bold gap-2 text-sm"
+                    onClick={handleEndSession}
+                    disabled={endSession.isPending}
+                  >
+                    <StopCircle className="w-4 h-4" />
+                    {endSession.isPending ? "Stopping…" : "Stop Broadcast"}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full bg-accent hover:bg-accent/90 text-white font-bold gap-2 text-sm"
+                    onClick={handleStartSession}
+                    disabled={startSession.isPending || !user?.tiktokUsername}
+                  >
+                    <PlayCircle className="w-4 h-4" />
+                    {startSession.isPending ? "Starting…" : "Start Live Session"}
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5 text-xs text-muted-foreground border-white/10 hover:border-red-500/30 hover:text-red-400"
+                  onClick={handleForceStop}
+                  disabled={forceStop.isPending}
+                  title="Force-clears any stuck session. Use if Start is blocked."
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  {forceStop.isPending ? "Resetting…" : "Force Reset"}
+                </Button>
               </div>
 
-              {isActive ? (
-                <Button
-                  variant="destructive"
-                  className="w-full font-bold gap-2"
-                  onClick={handleEndSession}
-                  disabled={endSession.isPending}
-                >
-                  <StopCircle className="w-5 h-5" />
-                  {endSession.isPending ? "Stopping..." : "Stop Broadcast"}
-                </Button>
-              ) : (
-                <Button
-                  className="w-full bg-accent hover:bg-accent/90 text-white font-bold gap-2"
-                  onClick={handleStartSession}
-                  disabled={startSession.isPending || !user?.tiktokUsername}
-                >
-                  <PlayCircle className="w-5 h-5" />
-                  {startSession.isPending ? "Starting..." : "Start Live Session"}
-                </Button>
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 text-xs text-muted-foreground border-white/10 hover:border-red-500/40 hover:text-red-400"
-                onClick={handleForceStop}
-                disabled={forceStop.isPending}
-                title="Force-clears any stuck session from the database. Use if Start is blocked."
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                {forceStop.isPending ? "Resetting..." : "Force Reset Session"}
-              </Button>
-              
-              <p className="text-xs text-muted-foreground text-center">
+              {/* Status hint */}
+              <p className="text-[10px] text-muted-foreground/60 text-center leading-snug">
                 {isActive
                   ? effectiveMode === "real"
-                    ? "Receiving real TikTok LIVE events."
+                    ? `Receiving real TikTok LIVE events.`
                     : effectiveMode === "demo"
                     ? "Demo mode: simulated events flowing."
                     : effectiveMode === "error"
-                    ? "Connection error — check below."
-                    : "Waiting for TikTok connection..."
-                  : "Start session to activate overlays and automations"}
+                    ? "Connection error — check event feed."
+                    : "Waiting for TikTok connection…"
+                  : "Start a session to activate event capture, overlays, and automations."}
               </p>
             </CardContent>
           </Card>
@@ -294,101 +316,103 @@ export function LiveStudio() {
 
         {/* Raw Event Feed */}
         <div className="md:col-span-2">
-          <Card className={`bg-card h-full min-h-[600px] flex flex-col transition-all duration-500 ${
-            isActive ? "border-accent shadow-[0_0_20px_rgba(192,232,249,0.1)]" : "border-white/5"
-          }`}>
-            <CardHeader className="border-b border-border/50 bg-black/10">
-              <CardTitle className="text-lg flex items-center justify-between">
+          <Card className={cn(
+            "bg-card flex flex-col transition-all duration-500",
+            "min-h-[600px]",
+            isActive && connected && effectiveMode === "real"
+              ? "border-accent/30 shadow-lg shadow-accent/5"
+              : "border-white/5",
+          )}>
+            <CardHeader className="border-b border-white/5 bg-black/10 flex-none">
+              <CardTitle className="text-sm font-semibold flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-accent" />
-                  Raw Event Feed
+                  <Terminal className="h-4 w-4 text-muted-foreground" />
+                  Event Console
                 </span>
                 <div className="flex items-center gap-2">
                   {modeBadge()}
                   {isActive && connected && effectiveMode !== "error" && (
-                    <span className="flex items-center gap-2 text-xs font-bold text-accent px-3 py-1 bg-accent/10 rounded-full border border-accent/20">
-                      <RefreshCw className="w-3 h-3 animate-spin" />
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-accent px-2 py-1 bg-accent/10 rounded-full border border-accent/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                       Listening
+                    </span>
+                  )}
+                  {events.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {events.length} events
                     </span>
                   )}
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 p-0 bg-black/40 font-mono text-sm">
+
+            <CardContent className="flex-1 p-0 font-mono text-xs bg-black/30">
               {isActive ? (
-                <ScrollArea className="h-full">
-                  <div className="p-4 space-y-2">
-                    {/* Connection status system message */}
+                <ScrollArea className="h-full" style={{ height: "100%", minHeight: "540px" }}>
+                  <div className="p-4 space-y-1.5">
+
+                    {/* System status line */}
                     {effectiveMode === "error" ? (
                       <motion.div
-                        initial={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="p-3 rounded bg-red-500/10 border border-red-500/30 text-red-400 space-y-1"
+                        className="p-3 rounded-lg bg-red-500/8 border border-red-500/20 text-red-400 space-y-1"
                       >
-                        <div className="flex items-center gap-2 font-bold">
-                          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-                          [{format(new Date(), "HH:mm:ss")}] TikTok connection failed
+                        <div className="flex items-center gap-2 font-bold text-xs">
+                          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span className="text-red-300/60">[{format(new Date(), "HH:mm:ss")}]</span>
+                          TikTok connection failed
                         </div>
                         {tiktokError && (
-                          <p className="text-xs text-red-300/80 pl-6 whitespace-pre-wrap">{tiktokError}</p>
+                          <p className="text-[10px] text-red-300/70 pl-5 whitespace-pre-wrap leading-relaxed">{tiktokError}</p>
                         )}
                       </motion.div>
                     ) : effectiveMode === "demo" ? (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400"
-                      >
-                        [{format(new Date(), "HH:mm:ss")}] System: Demo mode — simulated events flowing. Set TIKTOK_MODE=real on your server for live data.
-                      </motion.div>
+                      <div className="px-3 py-2 rounded-lg bg-blue-500/8 border border-blue-500/15 text-blue-400 text-[10px]">
+                        <span className="text-slate-500 mr-2">[{format(new Date(), "HH:mm:ss")}]</span>
+                        <span className="font-bold text-blue-400">[SYSTEM]</span>
+                        <span className="text-slate-400 ml-2">Demo mode active — simulated events flowing. Set TIKTOK_MODE=real for live data.</span>
+                      </div>
                     ) : effectiveMode === "real" ? (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                      >
-                        [{format(new Date(), "HH:mm:ss")}] System: Connected to TikTok LIVE stream{tiktokUsername ? ` @${tiktokUsername}` : ""}.
-                      </motion.div>
+                      <div className="px-3 py-2 rounded-lg bg-emerald-500/8 border border-emerald-500/15 text-emerald-400 text-[10px]">
+                        <span className="text-slate-500 mr-2">[{format(new Date(), "HH:mm:ss")}]</span>
+                        <span className="font-bold text-emerald-400">[SYSTEM]</span>
+                        <span className="text-slate-400 ml-2">Connected to TikTok LIVE{tiktokUsername ? ` · @${tiktokUsername}` : ""}. Receiving events.</span>
+                      </div>
                     ) : (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="p-2 rounded bg-accent/10 border border-accent/20 text-accent"
-                      >
-                        [{format(new Date(), "HH:mm:ss")}] System: Establishing connection...
-                      </motion.div>
+                      <div className="px-3 py-2 rounded-lg bg-accent/8 border border-accent/15 text-accent text-[10px]">
+                        <span className="text-slate-500 mr-2">[{format(new Date(), "HH:mm:ss")}]</span>
+                        <span className="font-bold text-accent">[SYSTEM]</span>
+                        <span className="text-slate-400 ml-2">Establishing connection…</span>
+                      </div>
                     )}
 
                     {/* Live events */}
                     <AnimatePresence initial={false}>
                       {events.map((event, idx) => {
-                        const content = JSON.stringify(event.data);
-                        let colorClass = "text-muted-foreground";
-                        if (event.type === "gift") colorClass = "text-amber-400";
-                        if (event.type === "like") colorClass = "text-pink-400";
-                        if (event.type === "comment") colorClass = "text-blue-400";
-                        if (event.type === "follow") colorClass = "text-green-400";
-                        if (event.type === "share") colorClass = "text-cyan-400";
-                        if (event.type === "viewerCount") colorClass = "text-purple-400";
-                        if (event.type === "ai_announcement") colorClass = "text-violet-400";
+                        const color = EVENT_COLORS[event.type] ?? "text-muted-foreground";
+                        const payload = JSON.stringify(event.data);
 
                         return (
                           <motion.div
                             key={`${event.timestamp}-${idx}`}
-                            initial={{ opacity: 0, x: -10 }}
+                            initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="p-2 rounded bg-white/5 border border-white/5 break-words"
+                            transition={{ duration: 0.15 }}
+                            className="group flex items-start gap-0 px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-colors break-all"
                           >
-                            <span className="text-slate-500 mr-2">
+                            <span className="text-slate-600 mr-2 flex-shrink-0 select-none">
                               [{format(new Date(event.timestamp), "HH:mm:ss")}]
                             </span>
-                            <span className={`font-bold mr-2 ${colorClass}`}>
+                            <span className={cn("font-bold mr-2 flex-shrink-0", color)}>
                               [{event.type.toUpperCase()}]
                             </span>
                             {event.username && (
-                              <span className="text-white font-bold mr-2">{event.username}:</span>
+                              <span className="text-slate-300 font-bold mr-2 flex-shrink-0">
+                                {event.username}:
+                              </span>
                             )}
-                            <span className="text-slate-300">{content}</span>
+                            <span className="text-slate-400 break-all">{payload}</span>
                           </motion.div>
                         );
                       })}
@@ -396,11 +420,13 @@ export function LiveStudio() {
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 text-center">
-                  <Video className="w-16 h-16 mb-4 opacity-10" />
-                  <p className="text-lg font-medium text-white mb-2">Broadcast is offline</p>
-                  <p className="text-sm max-w-sm">
-                    Start a session to see real-time events appear in this console.
+                <div className="flex flex-col items-center justify-center h-[540px] text-muted-foreground p-8 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-white/3 border border-white/5 flex items-center justify-center mb-4">
+                    <Activity className="w-7 h-7 opacity-20" />
+                  </div>
+                  <p className="text-sm font-medium text-white/60 mb-1">Console offline</p>
+                  <p className="text-xs text-muted-foreground/60 max-w-xs">
+                    Start a live session to stream real-time TikTok events into this console.
                   </p>
                 </div>
               )}

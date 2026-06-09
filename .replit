@@ -42,3 +42,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 LIVE_PROVIDER = "tiktools"
+TIKTOOL_API_KEY = "your_api_key"

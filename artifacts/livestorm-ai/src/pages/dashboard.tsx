@@ -225,8 +225,7 @@ export function Dashboard() {
         queryClient.invalidateQueries({ queryKey: getGetSessionsQueryKey() });
       },
       onError: () => {
-        toast({ title: "Reset Failed", description: "Could not reset session.", variant: "destructive" }),
-        0;
+        toast({ title: "Reset Failed", description: "Could not reset session.", variant: "destructive" });
       },
     });
   };
