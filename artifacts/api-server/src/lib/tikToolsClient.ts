@@ -16,10 +16,12 @@ import WebSocket from "ws";
 
 export interface TikToolsChatEvent {
   username: string;
+  userId: string;
   comment: string;
 }
 export interface TikToolsGiftEvent {
   username: string;
+  userId: string;
   giftName: string;
   coins: number;
   count: number;
@@ -27,11 +29,13 @@ export interface TikToolsGiftEvent {
 }
 export interface TikToolsLikeEvent {
   username: string;
+  userId: string;
   likeCount: number;
   total: number;
 }
 export interface TikToolsSocialEvent {
   username: string;
+  userId: string;
   action: "follow" | "share" | "join";
 }
 export interface TikToolsViewerCountEvent {
@@ -514,10 +518,16 @@ export class TikToolsClient extends EventEmitter {
       d.user_unique_id ??
       "unknown";
 
+    // Stable numeric TikTok user ID — present in all user-generated events
+    const userId: string = String(
+      d.user?.id ?? d.user?.userId ?? d.user?.user_id ?? ""
+    );
+
     switch (msg.event) {
       case "chat":
         this.emit("chat", {
           username,
+          userId,
           comment: String(d.comment ?? ""),
         } satisfies TikToolsChatEvent);
         break;
@@ -525,6 +535,7 @@ export class TikToolsClient extends EventEmitter {
       case "gift":
         this.emit("gift", {
           username,
+          userId,
           giftName: String(d.giftName ?? d.gift_name ?? "Gift"),
           coins: Number(d.diamondCount ?? d.diamond_count ?? 0),
           count: Number(d.repeatCount ?? d.repeat_count ?? 1),
@@ -535,21 +546,22 @@ export class TikToolsClient extends EventEmitter {
       case "like":
         this.emit("like", {
           username,
+          userId,
           likeCount: Number(d.likeCount ?? d.like_count ?? 1),
           total: Number(d.totalLikeCount ?? d.total_like_count ?? 0),
         } satisfies TikToolsLikeEvent);
         break;
 
       case "follow":
-        this.emit("social", { username, action: "follow" } satisfies TikToolsSocialEvent);
+        this.emit("social", { username, userId, action: "follow" } satisfies TikToolsSocialEvent);
         break;
 
       case "share":
-        this.emit("social", { username, action: "share" } satisfies TikToolsSocialEvent);
+        this.emit("social", { username, userId, action: "share" } satisfies TikToolsSocialEvent);
         break;
 
       case "member":
-        this.emit("social", { username, action: "join" } satisfies TikToolsSocialEvent);
+        this.emit("social", { username, userId, action: "join" } satisfies TikToolsSocialEvent);
         break;
 
       case "roomUserSeq": {

@@ -736,8 +736,16 @@ export async function processGamification(
   streamerId: number
 ) {
   try {
-    const tiktokViewerId = String(event.data.userId ?? event.data.uniqueId ?? "anonymous");
-    const viewerName = String(event.data.nickname ?? event.data.uniqueId ?? "Viewer");
+    // userId may come from event.data (injected by connector) or fall back to event.username
+    const rawId = event.data.userId ?? event.data.uniqueId ?? event.data.tiktokUserId;
+    const tiktokViewerId = rawId
+      ? String(rawId)
+      : event.username && event.username !== "unknown"
+        ? `uid_${event.username}`
+        : "anonymous";
+    const viewerName = String(
+      event.data.nickname ?? event.data.displayName ?? event.username ?? "Viewer"
+    );
     const roomId = `session:${event.sessionId}`;
 
     // Track as active viewer for lucky drops
