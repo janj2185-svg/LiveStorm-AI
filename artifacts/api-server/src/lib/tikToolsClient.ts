@@ -229,6 +229,14 @@ export class TikToolsClient extends EventEmitter {
       }
     }
 
+    // ── 1.5. Pre-flight room_info check ──────────────────────────────────────
+    // Query /webcast/room_info before opening the WebSocket so we can:
+    //   A) Log the exact roomId tik.tools will connect to
+    //   B) Detect "not found" early (wrong username / plan restriction) before
+    //      burning a precious WS session slot
+    // This call is advisory — we never block the WS attempt on failure (fail open).
+    await this._fetchRoomInfo(apiKey);
+
     // ── 2. Connect WebSocket ──────────────────────────────────────────────────
     this.rawEventCount = 0;
     const wsUrl = `${WS_BASE}?uniqueId=${encodeURIComponent(this.username)}&jwtKey=${encodeURIComponent(token)}`;
@@ -412,6 +420,34 @@ export class TikToolsClient extends EventEmitter {
         );
         this.emit("notLive", { username: this.username, message: msg });
         this._scheduleRetry(30_000, settle);
+      } else if (code === 4404) {
+        // tik.tools application close: creator room not found or not live.
+        // Reason text: "Creator is not currently live"
+        // This is tik.tools' authoritative signal after querying TikTok's API.
+        // Unlike a generic transient close, 4404 means tik.tools explicitly could
+        // not find an active room for this uniqueId.
+        //
+        // Causes:
+        //   1. Wrong TikTok username (most common)
+        //   2. tik.tools plan restriction on this creator/region
+        //   3. Creator ended LIVE between last check and now
+        //
+        // → Emit notLive so the UI shows an actionable error (not silent retry),
+        //   then retry in 30s in case the creator goes live again.
+        this.rateLimitBackoff = 60_000;
+        const notLiveMsg =
+          `tik.tools cannot find an active TikTok LIVE for @${this.username}. ` +
+          `If the creator is live, verify the TikTok username is correct and that ` +
+          `tik.tools supports this account (community plan may have creator restrictions). ` +
+          `Retrying automatically every 30 seconds.`;
+        console.warn(
+          `[TikTools:4404] code=4404 @${this.username} reason="${reason}" ` +
+          `connectedMs=${connectedMs} hadAnyMessage=${hadAnyMessage} ` +
+          `rawEventCount=${this.rawEventCount} — ` +
+          `tik.tools cannot resolve room; emitting notLive + retrying in 30s`,
+        );
+        this.emit("notLive", { username: this.username, message: notLiveMsg });
+        this._scheduleRetry(30_000, settle);
       } else if (!hadAnyMessage && connectedMs < 20_000) {
         // Quick close with zero messages before any data arrived.
         // This is NOT a reliable "not live" signal — tik.tools can close the WS
@@ -541,6 +577,54 @@ export class TikToolsClient extends EventEmitter {
       m.includes("not found") ||
       m.includes("no stream")
     );
+  }
+
+  /**
+   * Pre-flight room_info check — queries tik.tools REST API before opening the
+   * WebSocket to log the exact roomId and detect "not found" errors early.
+   *
+   * Never throws and never blocks the WS attempt — fail open on any error.
+   */
+  private async _fetchRoomInfo(apiKey: string): Promise<void> {
+    try {
+      const resp = await fetch(
+        `${API_BASE}/webcast/room_info?uniqueId=${encodeURIComponent(this.username)}&apiKey=${encodeURIComponent(apiKey)}`,
+        { signal: AbortSignal.timeout(8_000) },
+      );
+      const j = (await resp.json()) as any;
+
+      if (j?.status_code === -1 || j?.error) {
+        // tik.tools cannot resolve this creator to a room.
+        // This matches WS code=4404 "Creator is not currently live".
+        console.warn(
+          `[TikTools:room_info] @${this.username} → NOT FOUND ` +
+          `(status_code=${j?.status_code ?? "?"} error="${j?.error ?? j?.message ?? "unknown"}") — ` +
+          `tik.tools cannot resolve uniqueId to a room; WS will likely close 4404`,
+        );
+        return;
+      }
+
+      // tik.tools found the room — log the roomId and live status
+      const roomId: string = String(
+        j?.roomId ?? j?.room_id ?? j?.id ?? j?.data?.roomId ?? "unknown",
+      );
+      const isLive: boolean = Boolean(
+        j?.isLive ?? j?.is_live ?? j?.status === "live" ?? j?.data?.isLive ?? false,
+      );
+      const viewerCount: number = Number(
+        j?.viewerCount ?? j?.viewer_count ?? j?.data?.viewerCount ?? 0,
+      );
+      console.log(
+        `[TikTools:room_info] @${this.username} → roomId=${roomId} isLive=${isLive} viewerCount=${viewerCount} ` +
+        `| raw keys: ${Object.keys(j).join(",")}`,
+      );
+    } catch (err: any) {
+      // Network error or timeout — non-fatal, log and continue
+      console.warn(
+        `[TikTools:room_info] @${this.username} → fetch error: ${err?.message ?? String(err)} ` +
+        `(non-fatal — continuing to WS connect)`,
+      );
+    }
   }
 
   private _scheduleRetry(delay: number, settle: () => void): void {
