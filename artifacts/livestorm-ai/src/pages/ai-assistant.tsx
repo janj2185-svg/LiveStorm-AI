@@ -1594,7 +1594,7 @@ export function AiAssistant() {
                       <div className="grid grid-cols-2 gap-2.5">
                         {HUMAN_PRESENTER_KEYS.map((key) => {
                           const asset = BUILT_IN_AVATARS[key as keyof typeof BUILT_IN_AVATARS];
-                          const isSelected = (avatarConfig?.avatarKey ?? "ivan-host") === key;
+                          const isSelected = (avatarConfig?.avatarKey ?? "marcus") === key;
                           return (
                             <button
                               key={key}
@@ -1655,7 +1655,7 @@ export function AiAssistant() {
                         Outfit
                       </p>
                       {(() => {
-                        const asset = BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "ivan-host") as keyof typeof BUILT_IN_AVATARS];
+                        const asset = BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "marcus") as keyof typeof BUILT_IN_AVATARS] ?? BUILT_IN_AVATARS["marcus"];
                         return (
                           <div className="flex gap-1.5 flex-wrap">
                             {asset.outfits.map((outfit) => (
@@ -1754,8 +1754,8 @@ export function AiAssistant() {
                         </span>
                       </p>
                       <AvatarCanvas
-                        avatarKey={avatarConfig?.avatarKey ?? "ivan-host"}
-                        accentColor={avatarConfig?.accentColor ?? BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "ivan-host") as keyof typeof BUILT_IN_AVATARS]?.accentColor ?? "#2563eb"}
+                        avatarKey={avatarConfig?.avatarKey ?? "marcus"}
+                        accentColor={avatarConfig?.accentColor ?? BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "marcus") as keyof typeof BUILT_IN_AVATARS]?.accentColor ?? "#3b82f6"}
                         scale={avatarConfig?.scale ?? 1.0}
                         positionY={avatarConfig?.positionY ?? -0.8}
                         lightingPreset={avatarConfig?.lightingPreset ?? "studio"}

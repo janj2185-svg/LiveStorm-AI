@@ -11,73 +11,6 @@ interface AvatarThumbnailProps {
   selected?: boolean;
 }
 
-// ── Ivan Host — bald male, blue eyes, athletic build, dark suit ────────────────
-function IvanHostSilhouette({ c, skin, cloth }: { c: string; skin: string; cloth: string }) {
-  const eye = "#4a7ab5";
-  return (
-    <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Background glow */}
-      <ellipse cx="30" cy="40" rx="28" ry="32" fill={c} opacity="0.06" />
-      {/* Bald head — smooth dome */}
-      <ellipse cx="30" cy="21" rx="11" ry="12.5" fill={skin} />
-      {/* Scalp sheen highlights */}
-      <ellipse cx="26" cy="14" rx="3" ry="2" fill="white" opacity="0.07" />
-      <ellipse cx="32" cy="13" rx="2" ry="1.5" fill="white" opacity="0.05" />
-      {/* Forehead */}
-      <path d="M20 20 Q30 16 40 20" stroke={skin} strokeWidth="0.5" fill="none" opacity="0.3" />
-      {/* Eyebrows — strong, defined */}
-      <path d="M23.5 17 Q26.5 15.8 29 17" stroke="#3a2010" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      <path d="M31 17 Q33.5 15.8 36.5 17" stroke="#3a2010" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      {/* Eyes — blue iris */}
-      <ellipse cx="26" cy="20" rx="2.4" ry="2" fill="white" />
-      <ellipse cx="34" cy="20" rx="2.4" ry="2" fill="white" />
-      <ellipse cx="26" cy="20" rx="1.5" ry="1.5" fill={eye} />
-      <ellipse cx="34" cy="20" rx="1.5" ry="1.5" fill={eye} />
-      <ellipse cx="26" cy="20" rx="0.7" ry="0.7" fill="#050a18" />
-      <ellipse cx="34" cy="20" rx="0.7" ry="0.7" fill="#050a18" />
-      <circle cx="26.8" cy="19.2" r="0.45" fill="white" opacity="0.9" />
-      <circle cx="34.8" cy="19.2" r="0.45" fill="white" opacity="0.9" />
-      {/* Upper eyelid lines */}
-      <path d="M23.6 18.5 Q26 17.5 28.4 18.5" stroke="#1a1010" strokeWidth="0.5" fill="none" />
-      <path d="M31.6 18.5 Q34 17.5 36.4 18.5" stroke="#1a1010" strokeWidth="0.5" fill="none" />
-      {/* Nose — strong bridge */}
-      <path d="M30 21.5 L29.2 26 Q30 27 30.8 26 L30 21.5" fill={skin} opacity="0.35" />
-      <ellipse cx="29.2" cy="26.5" rx="0.8" ry="0.5" fill={skin} opacity="0.5" />
-      <ellipse cx="30.8" cy="26.5" rx="0.8" ry="0.5" fill={skin} opacity="0.5" />
-      {/* Lips — neutral, masculine */}
-      <path d="M27.5 29 Q30 30 32.5 29" stroke="#9a6050" strokeWidth="0.85" strokeLinecap="round" fill="none" />
-      <path d="M27.8 29 Q30 29.6 32.2 29" stroke="#b87060" strokeWidth="0.5" fill="none" opacity="0.5" />
-      {/* Ears */}
-      <ellipse cx="19" cy="21.5" rx="1.6" ry="2.2" fill={skin} opacity="0.9" />
-      <ellipse cx="41" cy="21.5" rx="1.6" ry="2.2" fill={skin} opacity="0.9" />
-      {/* Neck — athletic */}
-      <rect x="26.5" y="32" width="7" height="5.5" rx="2.5" fill={skin} opacity="0.9" />
-      {/* Chin definition */}
-      <ellipse cx="30" cy="32" rx="4.5" ry="1.5" fill={skin} opacity="0.4" />
-      {/* Suit jacket — dark navy */}
-      <path d="M15 38 Q19 35 26.5 36 L30 41 L33.5 36 Q41 35 45 38 L46 64 L14 64 Z" fill={cloth} opacity="0.95" />
-      {/* White dress shirt */}
-      <path d="M26.5 36 L30 41 L33.5 36 L32 38.5 L30 45 L28 38.5 Z" fill="white" opacity="0.82" />
-      {/* Tie / open collar — accent color */}
-      <path d="M29.5 40 L28.8 46 L30 48 L31.2 46 L30.5 40 Z" fill={c} opacity="0.9" />
-      {/* Lapels */}
-      <path d="M26.5 36 L21 41 L23 38.5" fill={cloth} opacity="0.7" stroke={cloth} strokeWidth="0.3" />
-      <path d="M33.5 36 L39 41 L37 38.5" fill={cloth} opacity="0.7" stroke={cloth} strokeWidth="0.3" />
-      {/* Arms — athletic width */}
-      <path d="M15 38 L9 56 Q11.5 58.5 14 56 L18 42" fill={cloth} opacity="0.9" />
-      <path d="M45 38 L51 56 Q48.5 58.5 46 56 L42 42" fill={cloth} opacity="0.9" />
-      {/* Hands */}
-      <ellipse cx="11.5" cy="57" rx="2.5" ry="1.6" fill={skin} />
-      <ellipse cx="48.5" cy="57" rx="2.5" ry="1.6" fill={skin} />
-      {/* Suit button detail */}
-      <circle cx="30" cy="51" r="0.6" fill="white" opacity="0.3" />
-      <circle cx="30" cy="54.5" r="0.6" fill="white" opacity="0.3" />
-      {/* Ground glow */}
-      <ellipse cx="30" cy="78" rx="16" ry="2.5" fill={c} opacity="0.25" />
-    </svg>
-  );
-}
-
 // ── Marcus — professional male, short dark hair, dark suit ────────────────────
 function MarcusSilhouette({ c, skin, hair, cloth }: { c: string; skin: string; hair: string; cloth: string }) {
   return (
@@ -146,6 +79,82 @@ function MarcusSilhouette({ c, skin, hair, cloth }: { c: string; skin: string; h
   );
 }
 
+// ── Kai — male streamer, spiky dark hair, gaming jacket, cyan accent ───────────
+function KaiSilhouette({ c, skin, hair, cloth }: { c: string; skin: string; hair: string; cloth: string }) {
+  return (
+    <svg viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Background glow — cyan */}
+      <ellipse cx="30" cy="40" rx="28" ry="32" fill={c} opacity="0.08" />
+      {/* Spiky hair base volume */}
+      <ellipse cx="30" cy="14" rx="11.5" ry="8" fill={hair} opacity="0.96" />
+      <rect x="18.5" y="12" width="23" height="7" rx="1" fill={hair} opacity="0.92" />
+      {/* Spiky tips */}
+      <path d="M21 12 L20 5.5 L23.5 10" fill={hair} opacity="0.92" />
+      <path d="M26.5 11 L26 4.5 L29.5 9.5" fill={hair} opacity="0.92" />
+      <path d="M33.5 11 L34 4.5 L30.5 9.5" fill={hair} opacity="0.88" />
+      <path d="M39 12 L40 5.5 L36.5 10" fill={hair} opacity="0.88" />
+      {/* Cyan highlight streak on one spike */}
+      <path d="M30.5 9.5 L31 4.5 L33.5 8" fill={c} opacity="0.45" />
+      {/* Hair sheen */}
+      <path d="M23 10 Q29 8 35 10" stroke="white" strokeWidth="0.4" fill="none" opacity="0.1" />
+      {/* Fade sides */}
+      <rect x="18.5" y="15" width="3.5" height="5" rx="1" fill={skin} opacity="0.45" />
+      <rect x="38" y="15" width="3.5" height="5" rx="1" fill={skin} opacity="0.45" />
+      {/* Head */}
+      <ellipse cx="30" cy="22" rx="10.5" ry="11" fill={skin} />
+      {/* Forehead */}
+      <ellipse cx="30" cy="16" rx="8" ry="2.8" fill={skin} opacity="0.5" />
+      {/* Eyebrows — slightly arched, strong */}
+      <path d="M23.5 17.5 Q26.5 16.2 29.5 17.5" stroke="#1a0a00" strokeWidth="0.95" strokeLinecap="round" fill="none" />
+      <path d="M30.5 17.5 Q33.5 16.2 36.5 17.5" stroke="#1a0a00" strokeWidth="0.95" strokeLinecap="round" fill="none" />
+      {/* Eyes — amber/brown */}
+      <ellipse cx="26" cy="20.5" rx="2.3" ry="1.9" fill="white" />
+      <ellipse cx="34" cy="20.5" rx="2.3" ry="1.9" fill="white" />
+      <ellipse cx="26" cy="20.5" rx="1.4" ry="1.4" fill="#8b6020" />
+      <ellipse cx="34" cy="20.5" rx="1.4" ry="1.4" fill="#8b6020" />
+      <ellipse cx="26" cy="20.5" rx="0.65" ry="0.65" fill="#0a0808" />
+      <ellipse cx="34" cy="20.5" rx="0.65" ry="0.65" fill="#0a0808" />
+      <circle cx="26.8" cy="19.7" r="0.42" fill="white" opacity="0.85" />
+      <circle cx="34.8" cy="19.7" r="0.42" fill="white" opacity="0.85" />
+      {/* Eyelids */}
+      <path d="M23.7 19.2 Q26 18.2 28.3 19.2" stroke="#1a0800" strokeWidth="0.5" fill="none" />
+      <path d="M31.7 19.2 Q34 18.2 36.3 19.2" stroke="#1a0800" strokeWidth="0.5" fill="none" />
+      {/* Nose */}
+      <path d="M30 22 L29.2 26.5 Q30 27.5 30.8 26.5 L30 22" fill={skin} opacity="0.35" />
+      {/* Mouth — slight confident grin */}
+      <path d="M27.8 29.2 Q30 30.5 32.2 29.2" stroke="#9a5845" strokeWidth="0.9" strokeLinecap="round" fill="none" />
+      {/* Jawline */}
+      <ellipse cx="30" cy="32" rx="5" ry="1.4" fill={skin} opacity="0.3" />
+      {/* Ears */}
+      <ellipse cx="19.2" cy="22" rx="1.5" ry="2.1" fill={skin} opacity="0.9" />
+      <ellipse cx="40.8" cy="22" rx="1.5" ry="2.1" fill={skin} opacity="0.9" />
+      {/* Neck */}
+      <rect x="27" y="32.5" width="6" height="5" rx="2.5" fill={skin} opacity="0.9" />
+      {/* Gaming jacket body */}
+      <path d="M16 38 Q20 35.5 27 36.5 L30 41 L33 36.5 Q40 35.5 44 38 L45 64 L15 64 Z" fill={cloth} opacity="0.95" />
+      {/* Racing stripe accents */}
+      <path d="M16.5 42 L17 58 L19.5 58 L19.5 42 Z" fill={c} opacity="0.38" />
+      <path d="M43.5 42 L43 58 L40.5 58 L40.5 42 Z" fill={c} opacity="0.38" />
+      {/* Stand collar */}
+      <path d="M27 36.5 Q30 38 33 36.5 L33 38 Q30 39.5 27 38 Z" fill={cloth} stroke={c} strokeWidth="0.5" opacity="0.8" />
+      {/* Chest logo — triangle icon */}
+      <path d="M28.5 43.5 L30 41.5 L31.5 43.5 L30 45.5 Z" fill={c} opacity="0.9" />
+      {/* Arms */}
+      <path d="M16 38 L10 56 Q12.5 58 15.5 56 L19 41" fill={cloth} opacity="0.9" />
+      <path d="M44 38 L50 56 Q47.5 58 44.5 56 L41 41" fill={cloth} opacity="0.9" />
+      <ellipse cx="12" cy="57" rx="2.4" ry="1.6" fill={skin} />
+      <ellipse cx="48" cy="57" rx="2.4" ry="1.6" fill={skin} />
+      {/* Trousers — dark with subtle accent stripe */}
+      <rect x="19.5" y="63" width="9" height="15" rx="3" fill="#0d1a2a" opacity="0.85" />
+      <rect x="31.5" y="63" width="9" height="15" rx="3" fill="#0d1a2a" opacity="0.85" />
+      <rect x="21" y="63" width="1.5" height="15" rx="0.75" fill={c} opacity="0.28" />
+      <rect x="37.5" y="63" width="1.5" height="15" rx="0.75" fill={c} opacity="0.28" />
+      {/* Ground glow */}
+      <ellipse cx="30" cy="78" rx="16" ry="2.5" fill={c} opacity="0.28" />
+    </svg>
+  );
+}
+
 // ── Aria — professional female, dark long hair, blazer ────────────────────────
 function AriaSilhouette({ c, skin, hair, cloth }: { c: string; skin: string; hair: string; cloth: string }) {
   return (
@@ -195,7 +204,7 @@ function AriaSilhouette({ c, skin, hair, cloth }: { c: string; skin: string; hai
       {/* Necklace */}
       <path d="M26 35 Q30 37 34 35" stroke={c} strokeWidth="0.5" fill="none" opacity="0.6" />
       <circle cx="30" cy="36.5" r="0.7" fill={c} opacity="0.8" />
-      {/* Blazer — neutral/champagne */}
+      {/* Blazer */}
       <path d="M18 36 Q22 33.5 27.5 34.5 L30 38.5 L32.5 34.5 Q38 33.5 42 36 L43 62 L17 62 Z" fill={cloth} opacity="0.92" />
       {/* Inner blouse */}
       <path d="M27.5 34.5 L30 38.5 L32.5 34.5 L31.5 36.8 Q30 41 28.5 36.8 Z" fill="white" opacity="0.78" />
@@ -292,11 +301,11 @@ function SofiaSilhouette({ c, skin, hair, cloth }: { c: string; skin: string; ha
   );
 }
 
-const STYLE_MAP: Record<string, "ivan-host" | "marcus" | "aria" | "sofia"> = {
-  "ivan-host": "ivan-host",
-  "marcus":    "marcus",
-  "aria":      "aria",
-  "sofia":     "sofia",
+const STYLE_MAP: Record<string, "marcus" | "kai" | "aria" | "sofia"> = {
+  "marcus": "marcus",
+  "kai":    "kai",
+  "aria":   "aria",
+  "sofia":  "sofia",
 };
 
 import { BUILT_IN_AVATARS } from "./avatarAssets";
@@ -312,9 +321,9 @@ export function AvatarThumbnail({
 }: AvatarThumbnailProps) {
   const style = STYLE_MAP[avatarKey] ?? "marcus";
   const asset = BUILT_IN_AVATARS[avatarKey as keyof typeof BUILT_IN_AVATARS];
-  const skin  = skinTone      ?? asset?.skinTone      ?? "#c8906a";
+  const skin  = skinTone      ?? asset?.skinTone      ?? "#c47050";
   const hair  = hairColor     ?? asset?.hairColor     ?? "#1a1008";
-  const cloth = clothingColor ?? asset?.clothingColor ?? "#1e3a5f";
+  const cloth = clothingColor ?? asset?.clothingColor ?? "#1a2a44";
   const c     = accentColor;
 
   return (
@@ -329,10 +338,10 @@ export function AvatarThumbnail({
         />
       )}
       <div style={{ width: size, height: Math.round(size * 1.33) }} className="relative">
-        {style === "ivan-host" && <IvanHostSilhouette c={c} skin={skin} cloth={cloth} />}
-        {style === "marcus"    && <MarcusSilhouette   c={c} skin={skin} hair={hair} cloth={cloth} />}
-        {style === "aria"      && <AriaSilhouette     c={c} skin={skin} hair={hair} cloth={cloth} />}
-        {style === "sofia"     && <SofiaSilhouette    c={c} skin={skin} hair={hair} cloth={cloth} />}
+        {style === "marcus" && <MarcusSilhouette c={c} skin={skin} hair={hair} cloth={cloth} />}
+        {style === "kai"    && <KaiSilhouette    c={c} skin={skin} hair={hair} cloth={cloth} />}
+        {style === "aria"   && <AriaSilhouette   c={c} skin={skin} hair={hair} cloth={cloth} />}
+        {style === "sofia"  && <SofiaSilhouette  c={c} skin={skin} hair={hair} cloth={cloth} />}
       </div>
     </div>
   );

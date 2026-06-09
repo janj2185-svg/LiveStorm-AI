@@ -56,24 +56,6 @@ interface PresenterDef {
 }
 
 const PRESENTER_DEFS: Record<string, PresenterDef> = {
-  "ivan-host": {
-    skinColor: "#c8906a", skinRoughness: 0.62,
-    hairColor: "#1a1a1a", hairSecondary: "#0a0a0a",
-    eyeIrisColor: "#4a7ab5",
-    clothColor: "#1e3a5f", clothSecondary: "#162d4a",
-    accentColor: "#2563eb",
-    headRx: 0.122, headRy: 0.145, headRz: 0.124,
-    jawNarrow: 0.76,
-    neckR: 0.068, neckH: 0.13,
-    shoulderW: 0.36,
-    torsoTopR: 0.165, torsoMidR: 0.152, torsobotR: 0.142, torsoH: 0.58,
-    hipW: 0.145,
-    isFemale: false,
-    hairStyle: "bald",
-    clothStyle: "suit",
-    eyebrowThickness: 1.1,
-    lipFullness: 0.65,
-  },
   "marcus": {
     skinColor: "#c47050", skinRoughness: 0.70,
     hairColor: "#1a1008", hairSecondary: "#2d1c0a",
@@ -91,6 +73,24 @@ const PRESENTER_DEFS: Record<string, PresenterDef> = {
     clothStyle: "suit",
     eyebrowThickness: 1.0,
     lipFullness: 0.65,
+  },
+  "kai": {
+    skinColor: "#d4a870", skinRoughness: 0.65,
+    hairColor: "#141414", hairSecondary: "#3a0a08",
+    eyeIrisColor: "#8b6020",
+    clothColor: "#0a1628", clothSecondary: "#060e1a",
+    accentColor: "#06b6d4",
+    headRx: 0.116, headRy: 0.138, headRz: 0.118,
+    jawNarrow: 0.75,
+    neckR: 0.060, neckH: 0.12,
+    shoulderW: 0.32,
+    torsoTopR: 0.155, torsoMidR: 0.140, torsobotR: 0.132, torsoH: 0.55,
+    hipW: 0.138,
+    isFemale: false,
+    hairStyle: "gaming",
+    clothStyle: "gaming-jacket",
+    eyebrowThickness: 0.95,
+    lipFullness: 0.68,
   },
   "aria": {
     skinColor: "#e8b896", skinRoughness: 0.58,
@@ -131,7 +131,7 @@ const PRESENTER_DEFS: Record<string, PresenterDef> = {
 };
 
 // Fallback for unknown keys
-const DEFAULT_DEF = PRESENTER_DEFS["ivan-host"];
+const DEFAULT_DEF = PRESENTER_DEFS["marcus"];
 
 // ── Geometry helpers ───────────────────────────────────────────────────────────
 

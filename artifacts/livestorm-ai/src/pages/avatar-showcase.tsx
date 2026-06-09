@@ -122,7 +122,7 @@ export function AvatarShowcase() {
           LiveStorm AI · Avatar System
         </p>
         <h1 className="text-2xl font-bold text-white mb-1">3D Avatar Showcase</h1>
-        <p className="text-sm text-white/40">4 Human Presenters (parametric 3D) · 2 VRM 1.0 · 1 Procedural</p>
+        <p className="text-sm text-white/40">4 Realistic Human Presenters · Parametric 3D · No file downloads</p>
         {!webgl && (
           <div className="mt-3 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 inline-block">
             <p className="text-xs text-yellow-400/80">
@@ -162,18 +162,6 @@ export function AvatarShowcase() {
         </div>
       </div>
 
-      {/* VRM / Legacy row */}
-      <div className="w-full max-w-4xl">
-        <p className="text-[10px] text-violet-400/60 font-mono uppercase tracking-widest mb-4 text-center">Anime / VRM Avatars</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
-          {AVATARS.filter((a) => a.vrmStatus !== "human-procedural").map((avatar) => (
-            <div key={avatar.key} className="relative">
-              <AvatarCard avatar={avatar} lighting={lighting} webgl={webgl} />
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Report table */}
       <div className="w-full max-w-4xl bg-white/[0.03] border border-white/10 rounded-2xl p-5">
         <h2 className="text-sm font-semibold text-white mb-4">Avatar System Report</h2>
@@ -190,16 +178,13 @@ export function AvatarShowcase() {
             </thead>
             <tbody className="text-white/70">
               {[
-                { name: "Marcus", key: "presenter-male", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
-                { name: "Aria",   key: "presenter-female", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
-                { name: "Kai",    key: "streamer-friendly", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
-                { name: "Zara",   key: "creator-gaming", format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
-                { name: "Storm",  key: "storm-default", format: "VRM 1.0", fmtColor: "text-violet-300", size: "10.4 MB", lipSync: "VRM expressions", fps: "55–60" },
-                { name: "Atlas",  key: "storm-serious", format: "VRM 1.0", fmtColor: "text-violet-300", size: "10.3 MB", lipSync: "VRM expressions", fps: "55–60" },
-                { name: "Mochi",  key: "storm-cute", format: "Procedural", fmtColor: "text-white/30", size: "—", lipSync: "Geometry morph", fps: "58–60" },
+                { name: "Marcus", role: "Male Host",       key: "marcus",  format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
+                { name: "Kai",    role: "Male Streamer",   key: "kai",     format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
+                { name: "Aria",   role: "Female Host",     key: "aria",    format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
+                { name: "Sofia",  role: "Female Streamer", key: "sofia",   format: "Human 3D", fmtColor: "text-emerald-400", size: "—", lipSync: "Web Audio", fps: "58–60" },
               ].map((row, i, arr) => (
                 <tr key={row.key} className={i < arr.length - 1 ? "border-b border-white/5" : ""}>
-                  <td className="py-2 pr-4 font-medium text-white/80">{row.name}</td>
+                  <td className="py-2 pr-4 font-medium text-white/80">{row.name} <span className="text-white/30 font-normal">· {(row as { role?: string }).role}</span></td>
                   <td className="py-2 pr-4"><span className={row.fmtColor}>{row.format}</span></td>
                   <td className="py-2 pr-4 font-mono text-white/40">{row.size}</td>
                   <td className="py-2 pr-4 text-white/40">{row.lipSync}</td>
@@ -223,7 +208,7 @@ export function AvatarShowcase() {
           ))}
         </div>
         <p className="text-[10px] text-white/25 mt-3">
-          Human 3D avatars use parametric Three.js BufferGeometry — no file downloads required. VRM models use WebGL2 compressed textures (~120–180 MB VRAM). RPM GLB avatars load on-demand from readyplayer.me.
+          All presenters use parametric Three.js BufferGeometry — no file downloads required. Runs at 55–60 FPS on desktop with full lip sync, facial expressions and TikTok reaction animations.
         </p>
       </div>
     </div>

@@ -1,14 +1,14 @@
 // ── Avatar Asset Registry ─────────────────────────────────────────────────────
 
 export type BuiltInAvatarKey =
-  | "ivan-host"
   | "marcus"
+  | "kai"
   | "aria"
   | "sofia";
 
 export type AvatarStyleClass =
-  | "realistic-bald-male"
   | "realistic-dark-male"
+  | "realistic-streamer-male"
   | "realistic-professional-female"
   | "realistic-streamer-female";
 
@@ -38,42 +38,16 @@ export interface AvatarAsset {
   vrmSource: string;
   personality: string;
   isPrimary: boolean;
-  presenterStyle: "bald-host" | "male-professional" | "female-professional" | "female-streamer";
+  presenterStyle: "male-professional" | "male-streamer" | "female-professional" | "female-streamer";
   outfits: OutfitOption[];
 }
 
 export const BUILT_IN_AVATARS: Record<BuiltInAvatarKey, AvatarAsset> = {
-  "ivan-host": {
-    key: "ivan-host",
-    name: "Ivan Host",
-    tagline: "Primary Host · Professional",
-    role: "Main Presenter",
-    gender: "Male",
-    ageRange: "35–45",
-    styleClass: "realistic-bald-male",
-    accentColor: "#2563eb",
-    skinTone: "#c8906a",
-    hairColor: "#1a1a1a",
-    clothingColor: "#1e3a5f",
-    eyeColor: "#4a7ab5",
-    vrmPath: null,
-    vrmStatus: "human-procedural",
-    vrmSource: "HumanPresenterAvatar — parametric human geometry",
-    personality: "Confident and authoritative — ideal for product launches, professional hosting and high-stakes streams",
-    isPrimary: true,
-    presenterStyle: "bald-host",
-    outfits: [
-      { id: "casual",   label: "Casual",       clothingColor: "#1e3a5f" },
-      { id: "business", label: "Business",     clothingColor: "#0f1f38" },
-      { id: "smart",    label: "Smart Casual", clothingColor: "#4a3728" },
-      { id: "black",    label: "All Black",    clothingColor: "#111111" },
-    ],
-  },
   "marcus": {
     key: "marcus",
     name: "Marcus",
-    tagline: "TV Host · Professional",
-    role: "News / TV Style",
+    tagline: "Male Host · Professional",
+    role: "Male Host",
     gender: "Male",
     ageRange: "30–40",
     styleClass: "realistic-dark-male",
@@ -86,7 +60,7 @@ export const BUILT_IN_AVATARS: Record<BuiltInAvatarKey, AvatarAsset> = {
     vrmStatus: "human-procedural",
     vrmSource: "HumanPresenterAvatar — parametric human geometry",
     personality: "Polished and charismatic — the go-to host for news-style content, product reviews and brand stories",
-    isPrimary: false,
+    isPrimary: true,
     presenterStyle: "male-professional",
     outfits: [
       { id: "suit",     label: "Suit",         clothingColor: "#1a2a44" },
@@ -95,10 +69,36 @@ export const BUILT_IN_AVATARS: Record<BuiltInAvatarKey, AvatarAsset> = {
       { id: "casual",   label: "Casual",       clothingColor: "#2d3a4a" },
     ],
   },
+  "kai": {
+    key: "kai",
+    name: "Kai",
+    tagline: "Male Streamer · Content Creator",
+    role: "Male Streamer",
+    gender: "Male",
+    ageRange: "22–32",
+    styleClass: "realistic-streamer-male",
+    accentColor: "#06b6d4",
+    skinTone: "#d4a870",
+    hairColor: "#141414",
+    clothingColor: "#0a1628",
+    eyeColor: "#8b6020",
+    vrmPath: null,
+    vrmStatus: "human-procedural",
+    vrmSource: "HumanPresenterAvatar — parametric human geometry",
+    personality: "High-energy and community-driven — perfect for gaming streams, hype events and interactive live drops",
+    isPrimary: false,
+    presenterStyle: "male-streamer",
+    outfits: [
+      { id: "gaming",   label: "Gaming",       clothingColor: "#0a1628" },
+      { id: "casual",   label: "Casual",       clothingColor: "#1a2a3a" },
+      { id: "hoodie",   label: "Hoodie",       clothingColor: "#1a1a2a" },
+      { id: "street",   label: "Street",       clothingColor: "#0d1a0d" },
+    ],
+  },
   "aria": {
     key: "aria",
     name: "Aria",
-    tagline: "Presenter · Professional",
+    tagline: "Female Host · Professional",
     role: "Female Host",
     gender: "Female",
     ageRange: "28–38",
@@ -124,7 +124,7 @@ export const BUILT_IN_AVATARS: Record<BuiltInAvatarKey, AvatarAsset> = {
   "sofia": {
     key: "sofia",
     name: "Sofia",
-    tagline: "Streamer · Content Creator",
+    tagline: "Female Streamer · Content Creator",
     role: "Female Streamer",
     gender: "Female",
     ageRange: "25–35",
@@ -152,8 +152,8 @@ export const BUILT_IN_AVATARS: Record<BuiltInAvatarKey, AvatarAsset> = {
 export const BUILT_IN_AVATAR_LIST = Object.values(BUILT_IN_AVATARS);
 
 export const HUMAN_PRESENTER_KEYS: BuiltInAvatarKey[] = [
-  "ivan-host",
   "marcus",
+  "kai",
   "aria",
   "sofia",
 ];

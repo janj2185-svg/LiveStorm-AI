@@ -9,29 +9,29 @@ const router = Router();
 
 export const BUILT_IN_AVATARS = [
   {
-    key: "ivan-host",
-    name: "Ivan Host",
-    tagline: "Primary Host · Professional",
-    description: "Confident and authoritative bald male presenter. Best for product launches, professional hosting and high-stakes streams.",
-    style: "Realistic",
-    accentColor: "#2563eb",
-    personalities: ["serious", "professional", "motivator"],
-    isPrimary: true,
-  },
-  {
     key: "marcus",
     name: "Marcus",
-    tagline: "TV Host · Professional",
+    tagline: "Male Host · Professional",
     description: "Polished and charismatic male presenter. Best for news-style content, product reviews and brand stories.",
     style: "Realistic",
     accentColor: "#3b82f6",
     personalities: ["professional", "friendly", "serious"],
+    isPrimary: true,
+  },
+  {
+    key: "kai",
+    name: "Kai",
+    tagline: "Male Streamer · Content Creator",
+    description: "High-energy male streamer. Best for gaming streams, hype events and interactive live drops.",
+    style: "Realistic",
+    accentColor: "#06b6d4",
+    personalities: ["funny", "hype", "friendly"],
     isPrimary: false,
   },
   {
     key: "aria",
     name: "Aria",
-    tagline: "Presenter · Professional",
+    tagline: "Female Host · Professional",
     description: "Elegant and trustworthy female presenter. Best for interviews, brand stories and professional lifestyle content.",
     style: "Realistic",
     accentColor: "#8b5cf6",
@@ -41,7 +41,7 @@ export const BUILT_IN_AVATARS = [
   {
     key: "sofia",
     name: "Sofia",
-    tagline: "Streamer · Content Creator",
+    tagline: "Female Streamer · Content Creator",
     description: "Creative and community-driven female streamer. Best for gaming streams, lifestyle vlogs and interactive shows.",
     style: "Realistic",
     accentColor: "#ec4899",
@@ -80,116 +80,101 @@ async function getOrCreateAvatarConfig(streamerId: number) {
   let config = await db.query.avatarConfigsTable.findFirst({
     where: eq(avatarConfigsTable.streamerId, streamerId),
   });
+
   if (!config) {
     [config] = await db
       .insert(avatarConfigsTable)
-      .values({ streamerId })
+      .values({
+        streamerId,
+        avatarKey: "marcus",
+        avatarEnabled: true,
+        accentColor: "#3b82f6",
+        animationState: "idle",
+      })
       .returning();
   }
-  return config!;
+
+  return config;
 }
 
-async function seedPresetsIfEmpty() {
-  const existing = await db.select({ id: avatarAnimationPresetsTable.id }).from(avatarAnimationPresetsTable).limit(1);
-  if (existing.length === 0) {
-    await db.insert(avatarAnimationPresetsTable).values(DEFAULT_PRESETS);
-  }
-}
+// ─── Routes ───────────────────────────────────────────────────────────────────
 
-// ─── GET /api/avatar/config ───────────────────────────────────────────────────
+// GET /api/avatar/presets — list built-in avatars
+router.get("/presets", (_req, res) => {
+  res.json(BUILT_IN_AVATARS);
+});
 
-router.get("/avatar/config", requireAuth, async (req: any, res: any) => {
+// GET /api/avatar/config — get streamer's avatar config
+router.get("/config", requireAuth, async (req, res) => {
   try {
-    const streamer = await getStreamer(req.clerkUserId);
-    if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
+    const streamer = await getStreamer(req.auth!.userId);
+    if (!streamer) return res.status(404).json({ error: "Streamer not found" });
+
     const config = await getOrCreateAvatarConfig(streamer.id);
-    res.json({ ...config, builtInAvatars: BUILT_IN_AVATARS });
-  } catch {
+    res.json(config);
+  } catch (err) {
     res.status(500).json({ error: "Failed to get avatar config" });
   }
 });
 
-// ─── PUT /api/avatar/config ───────────────────────────────────────────────────
-
-router.put("/avatar/config", requireAuth, async (req: any, res: any) => {
+// PUT /api/avatar/config — update streamer's avatar config
+router.put("/config", requireAuth, async (req, res) => {
   try {
-    const streamer = await getStreamer(req.clerkUserId);
-    if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
+    const streamer = await getStreamer(req.auth!.userId);
+    if (!streamer) return res.status(404).json({ error: "Streamer not found" });
+
+    const config = await getOrCreateAvatarConfig(streamer.id);
 
     const {
-      avatarEnabled, avatarKey, avatarUrl, avatarThumbnailUrl, renderer,
-      positionX, positionY, positionZ, rotationY, scale,
-      backgroundType, backgroundValue, lightingPreset, shadowEnabled,
-      lipSyncEnabled, lipSyncSensitivity, expressionIntensity,
-      blinkEnabled, blinkIntervalMs,
-      obsWidth, obsHeight, obsShowSpeechBubble, obsShowNameTag,
+      avatarKey,
+      avatarEnabled,
+      accentColor,
+      animationState,
+      lipSyncEnabled,
+      expressionsEnabled,
+      reactionsEnabled,
     } = req.body;
 
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
-    if (avatarEnabled !== undefined) updates.avatarEnabled = Boolean(avatarEnabled);
-    if (avatarKey !== undefined) updates.avatarKey = String(avatarKey);
-    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
-    if (avatarThumbnailUrl !== undefined) updates.avatarThumbnailUrl = avatarThumbnailUrl;
-    if (renderer !== undefined) updates.renderer = String(renderer);
-    if (positionX !== undefined) updates.positionX = Number(positionX);
-    if (positionY !== undefined) updates.positionY = Number(positionY);
-    if (positionZ !== undefined) updates.positionZ = Number(positionZ);
-    if (rotationY !== undefined) updates.rotationY = Number(rotationY);
-    if (scale !== undefined) updates.scale = Math.max(0.1, Math.min(3.0, Number(scale)));
-    if (backgroundType !== undefined) updates.backgroundType = String(backgroundType);
-    if (backgroundValue !== undefined) updates.backgroundValue = backgroundValue;
-    if (lightingPreset !== undefined) updates.lightingPreset = String(lightingPreset);
-    if (shadowEnabled !== undefined) updates.shadowEnabled = Boolean(shadowEnabled);
-    if (lipSyncEnabled !== undefined) updates.lipSyncEnabled = Boolean(lipSyncEnabled);
-    if (lipSyncSensitivity !== undefined) updates.lipSyncSensitivity = Number(lipSyncSensitivity);
-    if (expressionIntensity !== undefined) updates.expressionIntensity = Number(expressionIntensity);
-    if (blinkEnabled !== undefined) updates.blinkEnabled = Boolean(blinkEnabled);
-    if (blinkIntervalMs !== undefined) updates.blinkIntervalMs = Number(blinkIntervalMs);
-    if (obsWidth !== undefined) updates.obsWidth = Number(obsWidth);
-    if (obsHeight !== undefined) updates.obsHeight = Number(obsHeight);
-    if (obsShowSpeechBubble !== undefined) updates.obsShowSpeechBubble = Boolean(obsShowSpeechBubble);
-    if (obsShowNameTag !== undefined) updates.obsShowNameTag = Boolean(obsShowNameTag);
+    const [updated] = await db
+      .update(avatarConfigsTable)
+      .set({
+        ...(avatarKey !== undefined && { avatarKey }),
+        ...(avatarEnabled !== undefined && { avatarEnabled }),
+        ...(accentColor !== undefined && { accentColor }),
+        ...(animationState !== undefined && { animationState }),
+        ...(lipSyncEnabled !== undefined && { lipSyncEnabled }),
+        ...(expressionsEnabled !== undefined && { expressionsEnabled }),
+        ...(reactionsEnabled !== undefined && { reactionsEnabled }),
+      })
+      .where(eq(avatarConfigsTable.id, config.id))
+      .returning();
 
-    const existing = await db.query.avatarConfigsTable.findFirst({
-      where: eq(avatarConfigsTable.streamerId, streamer.id),
-    });
-
-    let result;
-    if (existing) {
-      [result] = await db
-        .update(avatarConfigsTable)
-        .set(updates)
-        .where(eq(avatarConfigsTable.streamerId, streamer.id))
-        .returning();
-    } else {
-      [result] = await db
-        .insert(avatarConfigsTable)
-        .values({ streamerId: streamer.id, ...updates })
-        .returning();
-    }
-
-    res.json(result);
-  } catch {
+    res.json(updated);
+  } catch (err) {
     res.status(500).json({ error: "Failed to update avatar config" });
   }
 });
 
-// ─── GET /api/avatar/presets ──────────────────────────────────────────────────
-
-router.get("/avatar/presets", requireAuth, async (req: any, res: any) => {
+// GET /api/avatar/animation-presets — list animation presets for the streamer
+router.get("/animation-presets", requireAuth, async (req, res) => {
   try {
-    await seedPresetsIfEmpty();
-    const presets = await db.select().from(avatarAnimationPresetsTable);
+    const streamer = await getStreamer(req.auth!.userId);
+    if (!streamer) return res.status(404).json({ error: "Streamer not found" });
+
+    let presets = await db.query.avatarAnimationPresetsTable.findMany({
+      where: eq(avatarAnimationPresetsTable.streamerId, streamer.id),
+    });
+
+    // Seed defaults if none exist
+    if (presets.length === 0) {
+      const seeds = DEFAULT_PRESETS.map((p) => ({ ...p, streamerId: streamer.id }));
+      presets = await db.insert(avatarAnimationPresetsTable).values(seeds).returning();
+    }
+
     res.json(presets);
-  } catch {
-    res.status(500).json({ error: "Failed to get avatar presets" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get animation presets" });
   }
-});
-
-// ─── GET /api/avatar/built-in ─────────────────────────────────────────────────
-
-router.get("/avatar/built-in", requireAuth, async (_req: any, res: any) => {
-  res.json(BUILT_IN_AVATARS);
 });
 
 export default router;
