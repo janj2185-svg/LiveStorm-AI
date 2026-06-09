@@ -45,9 +45,9 @@ if (Number.isNaN(port) || port <= 0) {
 const httpServer = createServer(app);
 initSocketServer(httpServer);
 
-// Initialize Stripe (non-fatal — gracefully skips if not connected)
-await initStripe();
-
+// Listen FIRST so the port opens immediately and healthchecks pass from the
+// first probe. All async initialisation (Stripe migrations, TikTok session
+// recovery) runs in the background after the port is open.
 httpServer.listen(port, (err?: Error) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
@@ -55,12 +55,17 @@ httpServer.listen(port, (err?: Error) => {
   }
   logger.info({ port }, "Server listening");
 
-  // 1. Clean up stale sessions (>24 h old) before recovering.
+  // Stripe (non-fatal — gracefully skips if not connected)
+  initStripe().catch((err) =>
+    logger.warn({ msg: err?.message }, "Stripe init error"),
+  );
+
+  // Clean up stale sessions (>24 h old) before recovering.
   cleanupStaleSessions().catch((err) =>
     logger.error({ err }, "Stale session cleanup failed"),
   );
 
-  // 2. Reconnect TikTok for any sessions that were live before this restart.
+  // Reconnect TikTok for any sessions that were live before this restart.
   // Must run after listen() so Socket.IO is fully initialised and getIO() returns the instance.
   const io = getIO();
   if (io) {
