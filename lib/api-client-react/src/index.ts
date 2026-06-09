@@ -111,6 +111,75 @@ export const useGetViewerProfile = <TData = ViewerProfile, TError = unknown>(
 };
 
 // ---------------------------------------------------------------------------
+// Moderation Rules hooks
+// ---------------------------------------------------------------------------
+
+export type ModerationRule = {
+  id: number;
+  streamerId: number;
+  ruleKey: string;
+  isActive: boolean;
+  updatedAt: string;
+};
+
+export const getModerationRules = async (
+  options?: RequestInit,
+): Promise<ModerationRule[]> => {
+  return customFetch<ModerationRule[]>("/api/moderation/rules", {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const useGetModerationRules = <TData = ModerationRule[], TError = unknown>(
+  options?: { query?: UseQueryOptions<ModerationRule[], TError, TData> },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryKey = options?.query?.queryKey ?? ["/api/moderation/rules"];
+  const queryOptions = {
+    queryKey,
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      getModerationRules({ signal }),
+    ...options?.query,
+  } as UseQueryOptions<ModerationRule[], TError, TData>;
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey };
+};
+
+export const updateModerationRule = async (
+  id: number,
+  body: { isActive: boolean },
+  options?: RequestInit,
+): Promise<ModerationRule> => {
+  return customFetch<ModerationRule>(`/api/moderation/rules/${id}`, {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+    body: JSON.stringify(body),
+  });
+};
+
+export const useUpdateModerationRule = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      ModerationRule,
+      TError,
+      { id: number; isActive: boolean },
+      TContext
+    >;
+  },
+): UseMutationResult<ModerationRule, TError, { id: number; isActive: boolean }, TContext> => {
+  const mutationFn: MutationFunction<ModerationRule, { id: number; isActive: boolean }> = ({
+    id,
+    isActive,
+  }) => updateModerationRule(id, { isActive });
+  return useMutation({
+    mutationKey: ["updateModerationRule"],
+    mutationFn,
+    ...options?.mutation,
+  });
+};
+
+// ---------------------------------------------------------------------------
 // Force stop session
 // ---------------------------------------------------------------------------
 

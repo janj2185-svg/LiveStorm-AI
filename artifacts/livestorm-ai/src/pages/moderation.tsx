@@ -1,29 +1,32 @@
-import { useState } from "react";
-import { useGetActiveSession, useGetSessions } from "@workspace/api-client-react";
+import { useGetActiveSession, useGetSessions, useGetModerationRules, useUpdateModerationRule } from "@workspace/api-client-react";
+import type { ModerationRule } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShieldAlert, ShieldCheck, AlertTriangle, Ban, Clock,
-  MessageSquare, Eye, Filter, RefreshCw, ChevronRight,
+  MessageSquare, Eye, Filter, ChevronRight,
   Info, Flame, Volume2, VolumeX, UserX, CheckCircle2,
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
-const RULES = [
-  { id: 1, name: "Hate Speech", icon: Ban,        severity: "high",   active: true,  description: "Block messages containing hate speech or slurs" },
-  { id: 2, name: "Spam",        icon: AlertTriangle, severity: "medium", active: true,  description: "Filter repeated or bot-like messages" },
-  { id: 3, name: "Profanity",   icon: Volume2,    severity: "medium", active: false, description: "Flag messages with excessive profanity" },
-  { id: 4, name: "Self-promo",  icon: Eye,        severity: "low",    active: true,  description: "Detect and suppress self-promotion links" },
-];
+const RULE_META: Record<string, { name: string; icon: React.ElementType; severity: string; description: string }> = {
+  hate_speech: { name: "Hate Speech", icon: Ban,          severity: "high",   description: "Block messages containing hate speech or slurs" },
+  spam:        { name: "Spam",        icon: AlertTriangle, severity: "medium", description: "Filter repeated or bot-like messages" },
+  profanity:   { name: "Profanity",   icon: Volume2,       severity: "medium", description: "Flag messages with excessive profanity" },
+  self_promo:  { name: "Self-promo",  icon: Eye,           severity: "low",    description: "Detect and suppress self-promotion links" },
+};
 
 const SEVERITY_CONFIG = {
   high:   { label: "High",   bg: "bg-red-500/15",    text: "text-red-400",    border: "border-red-500/20" },
   medium: { label: "Medium", bg: "bg-amber-500/15",  text: "text-amber-400",  border: "border-amber-500/20" },
   low:    { label: "Low",    bg: "bg-blue-500/15",   text: "text-blue-400",   border: "border-blue-500/20" },
 };
+
+const RULE_ORDER = ["hate_speech", "spam", "profanity", "self_promo"];
 
 function StatsRow({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
@@ -38,20 +41,48 @@ function StatsRow({ label, value, sub }: { label: string; value: string | number
 }
 
 export function Moderation() {
+  const queryClient = useQueryClient();
   const { data: activeData } = useGetActiveSession();
   const { data: sessions } = useGetSessions();
-  const [rules, setRules] = useState(RULES);
-  const [actionLog] = useState<{ user: string; action: string; time: string; reason: string }[]>([]);
+  const { data: rulesData, isLoading: rulesLoading } = useGetModerationRules();
+  const updateRule = useUpdateModerationRule({
+    mutation: {
+      onMutate: async ({ id, isActive }) => {
+        await queryClient.cancelQueries({ queryKey: ["/api/moderation/rules"] });
+        const prev = queryClient.getQueryData<ModerationRule[]>(["/api/moderation/rules"]);
+        queryClient.setQueryData<ModerationRule[]>(["/api/moderation/rules"], (old) =>
+          old?.map((r) => (r.id === id ? { ...r, isActive } : r)) ?? old
+        );
+        return { prev };
+      },
+      onError: (_err, _vars, ctx: any) => {
+        if (ctx?.prev) queryClient.setQueryData(["/api/moderation/rules"], ctx.prev);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/moderation/rules"] });
+      },
+    },
+  });
 
   const isActive = activeData?.active ?? false;
   const session = activeData?.session;
   const recentSessions = sessions?.slice(0, 5) ?? [];
 
-  function toggleRule(id: number) {
-    setRules(prev => prev.map(r => r.id === id ? { ...r, active: !r.active } : r));
-  }
+  const rules = RULE_ORDER
+    .map((key) => {
+      const backendRule = rulesData?.find((r) => r.ruleKey === key);
+      const meta = RULE_META[key];
+      return backendRule
+        ? { ...backendRule, ...meta }
+        : { id: -1, streamerId: -1, ruleKey: key, isActive: false, updatedAt: "", ...meta };
+    });
 
-  const activeRules = rules.filter(r => r.active).length;
+  const activeRulesCount = rules.filter((r) => r.isActive).length;
+
+  function handleToggle(rule: { id: number; isActive: boolean }) {
+    if (rule.id === -1) return;
+    updateRule.mutate({ id: rule.id, isActive: !rule.isActive });
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -90,10 +121,10 @@ export function Moderation() {
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Active Rules",   value: activeRules,                  icon: ShieldCheck, color: "text-green-400",  bg: "bg-green-500/10" },
-          { label: "Blocked Today",  value: 0,                            icon: Ban,         color: "text-red-400",    bg: "bg-red-500/10" },
-          { label: "Flagged Items",  value: 0,                            icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/10" },
-          { label: "Session Actions",value: isActive ? actionLog.length : 0, icon: Eye,      color: "text-blue-400",   bg: "bg-blue-500/10" },
+          { label: "Active Rules",    value: rulesLoading ? "—" : activeRulesCount, icon: ShieldCheck,  color: "text-green-400",  bg: "bg-green-500/10" },
+          { label: "Blocked Today",   value: 0,                                      icon: Ban,          color: "text-red-400",    bg: "bg-red-500/10" },
+          { label: "Flagged Items",   value: 0,                                      icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/10" },
+          { label: "Session Actions", value: 0,                                      icon: Eye,          color: "text-blue-400",   bg: "bg-blue-500/10" },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <Card key={label} className="bg-card border-white/5">
             <CardContent className="p-4">
@@ -118,7 +149,7 @@ export function Moderation() {
                   Auto-Moderation Rules
                 </CardTitle>
                 <Badge variant="outline" className="text-xs font-normal">
-                  {activeRules}/{rules.length} active
+                  {rulesLoading ? "…" : `${activeRulesCount}/${rules.length} active`}
                 </Badge>
               </div>
               <CardDescription className="text-xs">
@@ -126,44 +157,62 @@ export function Moderation() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-white/5">
-                {rules.map(rule => {
-                  const Icon = rule.icon;
-                  const sev = SEVERITY_CONFIG[rule.severity as keyof typeof SEVERITY_CONFIG];
-                  return (
-                    <div key={rule.id} className="flex items-center gap-4 px-4 py-3.5">
-                      <div className={cn("p-2 rounded-lg flex-shrink-0", rule.active ? sev.bg : "bg-white/5")}>
-                        <Icon className={cn("h-4 w-4", rule.active ? sev.text : "text-muted-foreground/40")} />
+              {rulesLoading ? (
+                <div className="divide-y divide-white/5">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+                      <Skeleton className="h-8 w-8 rounded-lg flex-shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-3.5 w-28" />
+                        <Skeleton className="h-3 w-48" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={cn("text-sm font-medium", rule.active ? "text-white" : "text-muted-foreground")}>
-                            {rule.name}
-                          </span>
-                          <span className={cn("text-[10px] border px-1.5 py-0.5 rounded-full font-medium", sev.bg, sev.text, sev.border)}>
-                            {sev.label}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{rule.description}</p>
-                      </div>
-                      <button
-                        onClick={() => toggleRule(rule.id)}
-                        className={cn(
-                          "w-10 h-6 rounded-full transition-all duration-200 flex-shrink-0 relative",
-                          rule.active ? "bg-primary" : "bg-white/10",
-                        )}
-                        role="switch"
-                        aria-checked={rule.active}
-                      >
-                        <span className={cn(
-                          "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200",
-                          rule.active ? "left-5" : "left-1",
-                        )} />
-                      </button>
+                      <Skeleton className="h-6 w-10 rounded-full flex-shrink-0" />
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="divide-y divide-white/5">
+                  {rules.map((rule) => {
+                    const Icon = rule.icon;
+                    const sev = SEVERITY_CONFIG[rule.severity as keyof typeof SEVERITY_CONFIG];
+                    const pending = updateRule.isPending && updateRule.variables?.id === rule.id;
+                    return (
+                      <div key={rule.ruleKey} className="flex items-center gap-4 px-4 py-3.5">
+                        <div className={cn("p-2 rounded-lg flex-shrink-0", rule.isActive ? sev.bg : "bg-white/5")}>
+                          <Icon className={cn("h-4 w-4", rule.isActive ? sev.text : "text-muted-foreground/40")} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={cn("text-sm font-medium", rule.isActive ? "text-white" : "text-muted-foreground")}>
+                              {rule.name}
+                            </span>
+                            <span className={cn("text-[10px] border px-1.5 py-0.5 rounded-full font-medium", sev.bg, sev.text, sev.border)}>
+                              {sev.label}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">{rule.description}</p>
+                        </div>
+                        <button
+                          onClick={() => handleToggle(rule)}
+                          disabled={pending || rule.id === -1}
+                          className={cn(
+                            "w-10 h-6 rounded-full transition-all duration-200 flex-shrink-0 relative",
+                            rule.isActive ? "bg-primary" : "bg-white/10",
+                            (pending || rule.id === -1) && "opacity-60 cursor-not-allowed",
+                          )}
+                          role="switch"
+                          aria-checked={rule.isActive}
+                        >
+                          <span className={cn(
+                            "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200",
+                            rule.isActive ? "left-5" : "left-1",
+                          )} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -176,26 +225,11 @@ export function Moderation() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              {actionLog.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-3">
-                  <CheckCircle2 className="h-8 w-8 opacity-30" />
-                  <p className="text-sm">No moderation actions taken</p>
-                  <p className="text-xs opacity-60">Actions will appear here during your stream</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {actionLog.map((a, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-white/5 border border-white/5">
-                      <UserX className="h-4 w-4 text-red-400 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-white">{a.user} — {a.action}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{a.reason}</p>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0">{a.time}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-3">
+                <CheckCircle2 className="h-8 w-8 opacity-30" />
+                <p className="text-sm">No moderation actions taken</p>
+                <p className="text-xs opacity-60">Actions will appear here during your stream</p>
+              </div>
             </CardContent>
           </Card>
         </div>
