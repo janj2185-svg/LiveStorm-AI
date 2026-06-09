@@ -38,6 +38,7 @@ export interface AvatarCanvasProps {
   animationState?: AnimationState;
   mouthOpenAmount?: number;
   expressionIntensity?: number;
+  backgroundGradient?: string;
 }
 
 type VRMState =
@@ -55,9 +56,6 @@ type GLBState =
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const AVATAR_STYLE_MAP: Record<string, AvatarStyle> = {
-  "storm-default": "anime",
-  "storm-serious": "realistic",
-  "storm-cute": "chibi",
 };
 
 function detectInitialQuality(): QualityTier {
@@ -635,6 +633,7 @@ export function AvatarCanvas({
   avatarKey, accentColor, scale, positionY, lightingPreset,
   avatarEnabled, avatarUrl, showFps = true, onStats, className,
   animationState = "idle", mouthOpenAmount = 0, expressionIntensity = 0.8,
+  backgroundGradient,
 }: AvatarCanvasProps) {
   const [stats, setStats] = useState<RendererStats>({
     geometries: 0, textures: 0, triangles: 0, drawCalls: 0, fps: 60, quality: "high",
@@ -683,12 +682,13 @@ export function AvatarCanvas({
 
   const animEmoji = ANIMATION_EMOJI[animationState] ?? "😐";
 
-  // Background per lighting preset
-  const bgStyle =
+  // Background per lighting preset (or custom scene override)
+  const bgStyle = backgroundGradient ?? (
     lightingPreset === "neon"      ? "linear-gradient(160deg, #0d0024 0%, #000010 100%)" :
     lightingPreset === "dramatic"  ? "linear-gradient(160deg, #1a0800 0%, #0a0000 100%)" :
     lightingPreset === "broadcast" ? "linear-gradient(160deg, #060b14 0%, #020508 100%)" :
-                                     "linear-gradient(160deg, #0a0014 0%, #020008 100%)";
+                                     "linear-gradient(160deg, #0a0014 0%, #020008 100%)"
+  );
 
   return (
     <div className={cn("relative rounded-2xl overflow-hidden", className)}>

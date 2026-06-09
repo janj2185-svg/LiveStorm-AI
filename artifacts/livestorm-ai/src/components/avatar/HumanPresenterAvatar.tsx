@@ -49,37 +49,55 @@ interface PresenterDef {
   torsoTopR: number; torsoMidR: number; torsobotR: number; torsoH: number;
   hipW: number;
   isFemale: boolean;
-  hairStyle: "pro-male" | "pro-female" | "streamer" | "gaming";
+  hairStyle: "bald" | "pro-male" | "pro-female" | "wavy-female" | "streamer" | "gaming";
   clothStyle: "suit" | "blazer" | "hoodie" | "gaming-jacket";
   eyebrowThickness: number;
   lipFullness: number;
 }
 
 const PRESENTER_DEFS: Record<string, PresenterDef> = {
-  "presenter-male": {
-    skinColor: "#d4956a", skinRoughness: 0.68,
-    hairColor: "#1a1008", hairSecondary: "#2d1c0a",
-    eyeIrisColor: "#3a5080",
+  "ivan-host": {
+    skinColor: "#c8906a", skinRoughness: 0.62,
+    hairColor: "#1a1a1a", hairSecondary: "#0a0a0a",
+    eyeIrisColor: "#4a7ab5",
     clothColor: "#1e3a5f", clothSecondary: "#162d4a",
     accentColor: "#2563eb",
+    headRx: 0.122, headRy: 0.145, headRz: 0.124,
+    jawNarrow: 0.76,
+    neckR: 0.068, neckH: 0.13,
+    shoulderW: 0.36,
+    torsoTopR: 0.165, torsoMidR: 0.152, torsobotR: 0.142, torsoH: 0.58,
+    hipW: 0.145,
+    isFemale: false,
+    hairStyle: "bald",
+    clothStyle: "suit",
+    eyebrowThickness: 1.1,
+    lipFullness: 0.65,
+  },
+  "marcus": {
+    skinColor: "#c47050", skinRoughness: 0.70,
+    hairColor: "#1a1008", hairSecondary: "#2d1c0a",
+    eyeIrisColor: "#3a4a60",
+    clothColor: "#1a2a44", clothSecondary: "#12203a",
+    accentColor: "#3b82f6",
     headRx: 0.118, headRy: 0.140, headRz: 0.120,
     jawNarrow: 0.74,
     neckR: 0.062, neckH: 0.12,
-    shoulderW: 0.32,
-    torsoTopR: 0.155, torsoMidR: 0.142, torsobotR: 0.135, torsoH: 0.55,
+    shoulderW: 0.33,
+    torsoTopR: 0.158, torsoMidR: 0.144, torsobotR: 0.136, torsoH: 0.56,
     hipW: 0.14,
     isFemale: false,
     hairStyle: "pro-male",
     clothStyle: "suit",
     eyebrowThickness: 1.0,
-    lipFullness: 0.7,
+    lipFullness: 0.65,
   },
-  "presenter-female": {
-    skinColor: "#f0c4a0", skinRoughness: 0.60,
+  "aria": {
+    skinColor: "#e8b896", skinRoughness: 0.58,
     hairColor: "#2d1810", hairSecondary: "#4a2818",
-    eyeIrisColor: "#5a3070",
-    clothColor: "#4c1d95", clothSecondary: "#3b1678",
-    accentColor: "#7c3aed",
+    eyeIrisColor: "#4a3060",
+    clothColor: "#1a1a2a", clothSecondary: "#141420",
+    accentColor: "#8b5cf6",
     headRx: 0.108, headRy: 0.132, headRz: 0.110,
     jawNarrow: 0.68,
     neckR: 0.052, neckH: 0.11,
@@ -92,46 +110,28 @@ const PRESENTER_DEFS: Record<string, PresenterDef> = {
     eyebrowThickness: 0.75,
     lipFullness: 1.0,
   },
-  "streamer-friendly": {
-    skinColor: "#e8b896", skinRoughness: 0.65,
-    hairColor: "#1c6b3a", hairSecondary: "#0d4a28",
-    eyeIrisColor: "#2d7a3a",
-    clothColor: "#064e3b", clothSecondary: "#053d2e",
-    accentColor: "#10b981",
-    headRx: 0.114, headRy: 0.136, headRz: 0.116,
-    jawNarrow: 0.70,
-    neckR: 0.058, neckH: 0.11,
-    shoulderW: 0.28,
-    torsoTopR: 0.142, torsoMidR: 0.130, torsobotR: 0.132, torsoH: 0.52,
-    hipW: 0.13,
-    isFemale: false,
-    hairStyle: "streamer",
+  "sofia": {
+    skinColor: "#e8c4a0", skinRoughness: 0.60,
+    hairColor: "#8b5530", hairSecondary: "#6a3a20",
+    eyeIrisColor: "#3a6030",
+    clothColor: "#1a1a1a", clothSecondary: "#141414",
+    accentColor: "#ec4899",
+    headRx: 0.110, headRy: 0.134, headRz: 0.112,
+    jawNarrow: 0.69,
+    neckR: 0.054, neckH: 0.11,
+    shoulderW: 0.27,
+    torsoTopR: 0.135, torsoMidR: 0.120, torsobotR: 0.130, torsoH: 0.51,
+    hipW: 0.132,
+    isFemale: true,
+    hairStyle: "wavy-female",
     clothStyle: "hoodie",
-    eyebrowThickness: 1.1,
-    lipFullness: 0.85,
-  },
-  "creator-gaming": {
-    skinColor: "#c8956a", skinRoughness: 0.62,
-    hairColor: "#7c2d12", hairSecondary: "#5a1f0a",
-    eyeIrisColor: "#8a3010",
-    clothColor: "#78350f", clothSecondary: "#5c2808",
-    accentColor: "#f59e0b",
-    headRx: 0.116, headRy: 0.138, headRz: 0.118,
-    jawNarrow: 0.72,
-    neckR: 0.060, neckH: 0.12,
-    shoulderW: 0.30,
-    torsoTopR: 0.148, torsoMidR: 0.136, torsobotR: 0.130, torsoH: 0.53,
-    hipW: 0.135,
-    isFemale: false,
-    hairStyle: "gaming",
-    clothStyle: "gaming-jacket",
-    eyebrowThickness: 1.2,
-    lipFullness: 0.80,
+    eyebrowThickness: 0.80,
+    lipFullness: 0.95,
   },
 };
 
-// Fallback for legacy/VRM keys
-const DEFAULT_DEF = PRESENTER_DEFS["presenter-male"];
+// Fallback for unknown keys
+const DEFAULT_DEF = PRESENTER_DEFS["ivan-host"];
 
 // ── Geometry helpers ───────────────────────────────────────────────────────────
 
@@ -291,6 +291,51 @@ function ProHairFemale({
       {/* Centre part */}
       <mesh position={[0, ry * 0.88, rz * 0.75]} rotation={[0.2, 0, 0]} material={mats.hair}>
         <boxGeometry args={[rx * 2.1, ry * 0.12, rz * 0.06]} />
+      </mesh>
+    </group>
+  );
+}
+
+function WavyFemaleHair({
+  d, mats, seg,
+}: { d: PresenterDef; mats: { hair: THREE.MeshStandardMaterial }; seg: number }) {
+  const ry = d.headRy;
+  const rz = d.headRz;
+  const rx = d.headRx;
+  return (
+    <group>
+      {/* Crown volume */}
+      <mesh position={[0, ry * 0.06, -rz * 0.08]} material={mats.hair}>
+        <sphereGeometry args={[rx * 1.09, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.48]} />
+      </mesh>
+      {/* Wavy side curtains with undulation */}
+      <mesh position={[-rx * 1.02, -ry * 0.45, -rz * 0.12]} rotation={[0.12, -0.08, 0.1]} material={mats.hair}>
+        <capsuleGeometry args={[rx * 0.20, ry * 1.2, 4, seg]} />
+      </mesh>
+      <mesh position={[rx * 1.02, -ry * 0.45, -rz * 0.12]} rotation={[0.12, 0.08, -0.1]} material={mats.hair}>
+        <capsuleGeometry args={[rx * 0.20, ry * 1.2, 4, seg]} />
+      </mesh>
+      {/* Wave bumps left side */}
+      <mesh position={[-rx * 1.08, -ry * 0.15, rz * 0.1]} rotation={[0.3, -0.2, 0.15]} material={mats.hair}>
+        <sphereGeometry args={[rx * 0.18, 6, 5]} />
+      </mesh>
+      <mesh position={[-rx * 1.06, -ry * 0.55, rz * 0.05]} rotation={[-0.2, -0.15, 0.1]} material={mats.hair}>
+        <sphereGeometry args={[rx * 0.18, 6, 5]} />
+      </mesh>
+      {/* Wave bumps right side */}
+      <mesh position={[rx * 1.08, -ry * 0.15, rz * 0.1]} rotation={[0.3, 0.2, -0.15]} material={mats.hair}>
+        <sphereGeometry args={[rx * 0.18, 6, 5]} />
+      </mesh>
+      <mesh position={[rx * 1.06, -ry * 0.55, rz * 0.05]} rotation={[-0.2, 0.15, -0.1]} material={mats.hair}>
+        <sphereGeometry args={[rx * 0.18, 6, 5]} />
+      </mesh>
+      {/* Back volume */}
+      <mesh position={[0, -ry * 0.5, -rz * 0.52]} material={mats.hair}>
+        <capsuleGeometry args={[rx * 0.58, ry * 0.85, 4, seg]} />
+      </mesh>
+      {/* Centre part line */}
+      <mesh position={[0, ry * 0.86, rz * 0.76]} rotation={[0.2, 0, 0]} material={mats.hair}>
+        <boxGeometry args={[rx * 1.9, ry * 0.1, rz * 0.05]} />
       </mesh>
     </group>
   );
@@ -925,8 +970,10 @@ export function HumanPresenterAvatar({
         })}
 
         {/* ── Hair ── */}
+        {d.hairStyle === "bald" && null}
         {d.hairStyle === "pro-male" && <ProHairMale d={d} mats={{ hair: hairMat }} seg={seg} />}
         {d.hairStyle === "pro-female" && <ProHairFemale d={d} mats={{ hair: hairMat }} seg={seg} />}
+        {d.hairStyle === "wavy-female" && <WavyFemaleHair d={d} mats={{ hair: hairMat }} seg={seg} />}
         {d.hairStyle === "streamer" && <StreamerHair d={d} mats={{ hair: hairMat, hairAlt: hairAltMat }} seg={seg} />}
         {d.hairStyle === "gaming" && <GamingHair d={d} mats={{ hair: hairMat, hairAlt: hairAltMat }} seg={seg} />}
 

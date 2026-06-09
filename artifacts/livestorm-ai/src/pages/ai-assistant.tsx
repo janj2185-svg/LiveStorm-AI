@@ -11,7 +11,7 @@ import {
 } from "@workspace/api-client-react";
 import { AvatarCanvas, VRMUploadButton, type RendererStats } from "@/components/avatar/AvatarCanvas";
 import { AvatarThumbnail } from "@/components/avatar/AvatarThumbnail";
-import { BUILT_IN_AVATARS, HUMAN_PRESENTER_KEYS, LEGACY_AVATAR_KEYS, isVRMBacked, isHumanPresenter, formatVRMSize } from "@/components/avatar/avatarAssets";
+import { BUILT_IN_AVATARS, HUMAN_PRESENTER_KEYS, isHumanPresenter, BACKGROUND_PRESETS, getBackgroundGradient } from "@/components/avatar/avatarAssets";
 import { AvatarAnimationMachine, type AnimationState, ANIMATION_LABELS, ANIMATION_EMOJI } from "@/components/avatar/avatarAnimationMachine";
 import { useLipSync } from "@/hooks/useLipSync";
 import { useAvatarReactions } from "@/hooks/useAvatarReactions";
@@ -37,6 +37,7 @@ import {
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
   Boxes, SlidersHorizontal, Monitor, Upload, Cpu,
+  Shirt, Tv2, Palette, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
@@ -464,6 +465,9 @@ export function AiAssistant() {
   const [rpmUrlInput, setRpmUrlInput] = useState("");
   const [rpmUrlError, setRpmUrlError] = useState<string | null>(null);
   const [rendererStats, setRendererStats] = useState<RendererStats | null>(null);
+  const [selectedOutfit, setSelectedOutfit] = useState<string>("casual");
+  const [selectedBackground, setSelectedBackground] = useState<string>("studio");
+  const [lightingIntensity, setLightingIntensity] = useState<number>(80);
 
   // ── Phase 4: Animation machine + lip sync ─────────────────────────────────
   const machineRef = useRef<AvatarAnimationMachine>(new AvatarAnimationMachine());
@@ -1547,11 +1551,12 @@ export function AiAssistant() {
           {/* ── AVATAR TAB ── */}
           {activeTab === "avatar" && (
             <Card className="bg-card border-white/5 flex flex-col flex-1 min-h-0">
+              {/* Header */}
               <div className="px-4 py-2.5 flex items-center justify-between flex-shrink-0 border-b border-white/5">
                 <div className="flex items-center gap-2">
-                  <Boxes className="h-3.5 w-3.5 text-violet-400" />
-                  <span className="text-sm font-medium">3D AI Co-Host</span>
-                  <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5">Phase 4</Badge>
+                  <Boxes className="h-3.5 w-3.5 text-blue-400" />
+                  <span className="text-sm font-bold text-white">AI CO-HOST</span>
+                  <span className="text-xs text-muted-foreground hidden sm:block">Realistic Presenters</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Enabled</span>
@@ -1559,9 +1564,15 @@ export function AiAssistant() {
                     checked={avatarConfig?.avatarEnabled ?? false}
                     onCheckedChange={(v) => saveAvatar({ avatarEnabled: v })}
                     disabled={avatarSaving || avatarLoading}
-                    className="data-[state=checked]:bg-violet-600"
+                    className="data-[state=checked]:bg-blue-600"
                   />
                 </div>
+              </div>
+              {/* Feature badges */}
+              <div className="flex flex-wrap gap-1.5 px-4 py-2 border-b border-white/5">
+                {["Realistic Humans", "Lip Sync Ready", "Expressions & Reactions", "TikTok LIVE Ready"].map((b) => (
+                  <Badge key={b} variant="outline" className="text-[9px] border-blue-500/30 text-blue-400 bg-blue-500/5">{b}</Badge>
+                ))}
               </div>
 
               <ScrollArea className="flex-1">
@@ -1574,444 +1585,410 @@ export function AiAssistant() {
                 ) : (
                   <div className="p-4 space-y-5">
 
-                    {/* ── Main layout: preview + settings ── */}
-                    <div className="flex flex-col lg:flex-row gap-5">
-
-                      {/* Avatar Preview */}
-                      <div className="flex flex-col items-center gap-3 flex-shrink-0">
-                        <p className="text-xs font-medium text-muted-foreground self-start lg:self-center">Preview</p>
-                        <AvatarCanvas
-                          avatarKey={avatarConfig?.avatarKey ?? "storm-default"}
-                          accentColor={selectedAvatar?.accentColor ?? "#8b5cf6"}
-                          scale={avatarConfig?.scale ?? 1.0}
-                          positionY={avatarConfig?.positionY ?? -0.8}
-                          lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
-                          avatarEnabled={avatarConfig?.avatarEnabled ?? false}
-                          avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl}
-                          showFps
-                          onStats={setRendererStats}
-                          animationState={animState}
-                          mouthOpenAmount={mouthOpen}
-                          expressionIntensity={expressionIntensity}
-                          className="w-[220px] h-[300px] flex-shrink-0 border border-violet-500/20"
-                        />
-                        {avatarSaving && (
-                          <div className="flex items-center gap-1.5 text-xs text-violet-400">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            Saving…
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Settings column */}
-                      <div className="flex-1 space-y-4 min-w-0">
-
-                        {/* Avatar selector — Human Presenters */}
-                        <div>
-                          <p className="text-xs font-semibold text-white mb-1.5 flex items-center gap-1.5">
-                            <Boxes className="h-3.5 w-3.5 text-violet-400" />
-                            Choose Avatar
-                          </p>
-
-                          {/* Human presenters row */}
-                          <p className="text-[10px] text-emerald-400/80 font-medium mb-1.5 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                            Human Presenters
-                          </p>
-                          <div className="grid grid-cols-4 gap-1.5 mb-3">
-                            {HUMAN_PRESENTER_KEYS.map((key) => {
-                              const assetInfo = BUILT_IN_AVATARS[key];
-                              const isSel = avatarConfig?.avatarKey === key && !rpmAvatarUrl;
-                              return (
-                                <button
-                                  key={key}
-                                  onClick={() => { setRpmAvatarUrl(null); setRpmUrlInput(""); saveAvatar({ avatarKey: key }); }}
-                                  disabled={avatarSaving}
-                                  className={cn(
-                                    "relative flex flex-col items-center gap-1 p-2 rounded-xl border transition-all text-center",
-                                    isSel
-                                      ? "border-emerald-500/60 bg-emerald-500/12 shadow-lg"
-                                      : "border-white/10 bg-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5",
-                                  )}
-                                >
-                                  <AvatarThumbnail
-                                    avatarKey={key}
-                                    accentColor={assetInfo.accentColor}
-                                    skinTone={assetInfo.skinTone}
-                                    hairColor={assetInfo.hairColor}
-                                    clothingColor={assetInfo.clothingColor}
-                                    size={46}
-                                    selected={isSel}
-                                  />
-                                  <div>
-                                    <p className="text-[11px] font-semibold text-white leading-none">{assetInfo.name}</p>
-                                    <p className="text-[9px] text-muted-foreground mt-0.5 leading-tight">{assetInfo.tagline.split(" · ")[1]}</p>
-                                  </div>
-                                  <div className="text-[7px] px-1 py-0.5 rounded font-mono bg-emerald-900/50 border border-emerald-500/25 text-emerald-400">
-                                    Human 3D
-                                  </div>
-                                  {isSel && (
-                                    <div className="absolute top-1 right-1">
-                                      <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                                    </div>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Legacy VRM / anime row */}
-                          <p className="text-[10px] text-violet-400/70 font-medium mb-1.5 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-violet-400/60 inline-block" />
-                            Anime / VRM
-                          </p>
-                          <div className="grid grid-cols-3 gap-1.5">
-                            {LEGACY_AVATAR_KEYS.map((key) => {
-                              const assetInfo = BUILT_IN_AVATARS[key];
-                              const isSel = avatarConfig?.avatarKey === key && !rpmAvatarUrl;
-                              const vrm = isVRMBacked(key);
-                              const human = isHumanPresenter(key);
-                              return (
-                                <button
-                                  key={key}
-                                  onClick={() => { setRpmAvatarUrl(null); setRpmUrlInput(""); saveAvatar({ avatarKey: key }); }}
-                                  disabled={avatarSaving}
-                                  className={cn(
-                                    "relative flex flex-col items-center gap-1 p-2 rounded-xl border transition-all text-center",
-                                    isSel
-                                      ? "border-violet-500/60 bg-violet-500/15 shadow-lg"
-                                      : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10",
-                                  )}
-                                >
-                                  <AvatarThumbnail
-                                    avatarKey={key}
-                                    accentColor={assetInfo.accentColor}
-                                    size={46}
-                                    selected={isSel}
-                                  />
-                                  <div>
-                                    <p className="text-[11px] font-semibold text-white leading-none">{assetInfo.name}</p>
-                                    <p className="text-[9px] text-muted-foreground mt-0.5">{assetInfo.tagline.split(" · ")[1]}</p>
-                                  </div>
-                                  <div className={cn(
-                                    "text-[7px] px-1 py-0.5 rounded font-mono",
-                                    vrm ? "bg-violet-900/60 border border-violet-500/30 text-violet-300"
-                                        : human ? "bg-emerald-900/50 border border-emerald-500/25 text-emerald-400"
-                                        : "bg-black/40 border border-white/10 text-white/30",
-                                  )}>
-                                    {vrm ? "VRM 1.0" : human ? "Human 3D" : "Procedural"}
-                                  </div>
-                                  {isSel && (
-                                    <div className="absolute top-1 right-1">
-                                      <CheckCircle2 className="h-3 w-3 text-violet-400" />
-                                    </div>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {selectedAvatar && !rpmAvatarUrl && (
-                            <p className="text-[11px] text-muted-foreground/60 mt-2 px-0.5 italic">
-                              {BUILT_IN_AVATARS[avatarConfig?.avatarKey as keyof typeof BUILT_IN_AVATARS]?.personality ?? selectedAvatar.description}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Ready Player Me — Track 2 */}
-                        <div>
-                          <p className="text-xs font-semibold text-white mb-1.5 flex items-center gap-1.5">
-                            <span className="text-blue-400">◈</span>
-                            Ready Player Me
-                            <span className="text-[9px] font-normal text-blue-400/70 ml-1">photorealistic</span>
-                            {rpmAvatarUrl && (
-                              <span className="text-[10px] font-normal text-blue-400 ml-auto">— active</span>
-                            )}
-                          </p>
-
-                          {rpmAvatarUrl ? (
-                            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/25">
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse flex-shrink-0" />
-                              <span className="text-[11px] text-blue-300 flex-1 truncate">{rpmAvatarUrl.replace("https://", "")}</span>
-                              <button
-                                onClick={() => { setRpmAvatarUrl(null); setRpmUrlInput(""); }}
-                                className="text-[10px] text-muted-foreground hover:text-white px-2 py-1 rounded border border-white/10 hover:border-white/20 transition-colors flex-shrink-0"
+                    {/* 2x2 Presenter Grid */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2.5 flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-blue-400" />
+                        Choose Presenter
+                      </p>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {HUMAN_PRESENTER_KEYS.map((key) => {
+                          const asset = BUILT_IN_AVATARS[key as keyof typeof BUILT_IN_AVATARS];
+                          const isSelected = (avatarConfig?.avatarKey ?? "ivan-host") === key;
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => saveAvatar({ avatarKey: key })}
+                              disabled={avatarSaving}
+                              className={cn(
+                                "relative rounded-xl overflow-hidden border-2 transition-all text-left",
+                                isSelected
+                                  ? "border-blue-500 shadow-lg shadow-blue-500/20"
+                                  : "border-white/10 hover:border-white/25",
+                              )}
+                            >
+                              <div
+                                className="relative h-[130px] flex items-center justify-center"
+                                style={{ background: `radial-gradient(circle at 50% 40%, ${asset.accentColor}28, #050c18)` }}
                               >
-                                Remove
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <div className="flex gap-2">
-                                <input
-                                  type="url"
-                                  placeholder="https://models.readyplayer.me/YOUR_ID.glb"
-                                  value={rpmUrlInput}
-                                  onChange={(e) => { setRpmUrlInput(e.target.value); setRpmUrlError(null); }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      const url = rpmUrlInput.trim();
-                                      if (!url.startsWith("https://") || !url.endsWith(".glb")) {
-                                        setRpmUrlError("Must be a .glb URL (e.g. models.readyplayer.me/…glb)");
-                                        return;
-                                      }
-                                      setRpmAvatarUrl(url);
-                                      setRpmUrlError(null);
-                                    }
-                                  }}
-                                  className="flex-1 min-w-0 px-2.5 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 focus:border-blue-500/50 focus:outline-none text-white placeholder:text-white/25"
+                                <AvatarThumbnail
+                                  avatarKey={key}
+                                  accentColor={asset.accentColor}
+                                  skinTone={asset.skinTone}
+                                  hairColor={asset.hairColor}
+                                  clothingColor={asset.clothingColor}
+                                  size={72}
+                                  selected={isSelected}
                                 />
-                                <button
-                                  onClick={() => {
-                                    const url = rpmUrlInput.trim();
-                                    if (!url.startsWith("https://") || !url.endsWith(".glb")) {
-                                      setRpmUrlError("Must be a .glb URL ending in .glb");
-                                      return;
-                                    }
-                                    setRpmAvatarUrl(url);
-                                    setRpmUrlError(null);
-                                  }}
-                                  className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-500/50 transition-colors flex-shrink-0"
-                                >
-                                  Load
-                                </button>
+                                {asset.isPrimary && (
+                                  <span className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wide">PRIMARY</span>
+                                )}
+                                {isSelected && (
+                                  <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    <span className="text-[9px] text-green-400 font-medium">Live Ready</span>
+                                  </div>
+                                )}
+                                {isSelected && <div className="absolute inset-0 ring-2 ring-inset ring-blue-500/40 rounded-xl" />}
                               </div>
-                              {rpmUrlError && (
-                                <p className="text-[10px] text-red-400">{rpmUrlError}</p>
-                              )}
-                              <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
-                                Create your avatar free at{" "}
-                                <a
-                                  href="https://readyplayer.me"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-400/80 hover:text-blue-300 underline"
-                                >
-                                  readyplayer.me
-                                </a>
-                                {" "}→ copy the .glb URL → paste above. Supports 52 ARKit morph targets for lip sync.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* VRM / GLB Upload */}
-                        <div>
-                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                            <Upload className="h-3.5 w-3.5 text-violet-400" />
-                            Custom File
-                            {uploadedVrmName && (
-                              <span className="text-[10px] font-normal text-violet-400 ml-1">— active</span>
-                            )}
-                          </p>
-                          <VRMUploadButton
-                            onUpload={(url, name) => { setRpmAvatarUrl(null); setUploadedVrmUrl(url); setUploadedVrmName(name); }}
-                            onClear={() => { setUploadedVrmUrl(null); setUploadedVrmName(null); }}
-                            uploadedName={uploadedVrmName}
-                          />
-                          <p className="text-[10px] text-muted-foreground/50 mt-1.5">
-                            Upload any VRoid Studio .vrm or .glb — overrides built-in for this session
-                          </p>
-                        </div>
-
-                        <Separator className="bg-white/5" />
-
-                        {/* Scene settings */}
-                        <div>
-                          <p className="text-xs font-semibold text-white mb-2.5 flex items-center gap-1.5">
-                            <SlidersHorizontal className="h-3.5 w-3.5 text-violet-400" />
-                            Scene Settings
-                          </p>
-                          <div className="space-y-3">
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-xs text-muted-foreground">Scale</Label>
-                                <span className="text-xs font-mono text-violet-300">{(avatarConfig?.scale ?? 1.0).toFixed(1)}×</span>
-                              </div>
-                              <input
-                                type="range" min="0.5" max="2.0" step="0.1"
-                                value={avatarConfig?.scale ?? 1.0}
-                                onChange={(e) => saveAvatar({ scale: parseFloat(e.target.value) })}
-                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-xs text-muted-foreground">Vertical Position</Label>
-                                <span className="text-xs font-mono text-violet-300">{(avatarConfig?.positionY ?? -0.8).toFixed(1)}</span>
-                              </div>
-                              <input
-                                type="range" min="-2.0" max="1.0" step="0.1"
-                                value={avatarConfig?.positionY ?? -0.8}
-                                onChange={(e) => saveAvatar({ positionY: parseFloat(e.target.value) })}
-                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs text-muted-foreground">Lighting</Label>
-                              <Select value={avatarConfig?.lightingPreset ?? "studio"} onValueChange={(v) => saveAvatar({ lightingPreset: v })}>
-                                <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="studio">🎥 Studio</SelectItem>
-                                  <SelectItem value="dramatic">🎭 Dramatic</SelectItem>
-                                  <SelectItem value="soft">☁️ Soft</SelectItem>
-                                  <SelectItem value="neon">🌆 Neon</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs text-muted-foreground">Background</Label>
-                              <Select value={avatarConfig?.backgroundType ?? "transparent"} onValueChange={(v) => saveAvatar({ backgroundType: v })}>
-                                <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="transparent">⬜ Transparent (OBS)</SelectItem>
-                                  <SelectItem value="color">🎨 Solid Color</SelectItem>
-                                  <SelectItem value="gradient">🌅 Gradient</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-
-                        <Separator className="bg-white/5" />
-
-                        {/* Reactions & Lip Sync (Phase 4) */}
-                        <div>
-                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                            <Zap className="h-3.5 w-3.5 text-violet-400" />
-                            Reactions & Lip Sync
-                            <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5 ml-1">Phase 4</Badge>
-                          </p>
-
-                          {/* Live state indicator */}
-                          <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-black/30 border border-white/5">
-                            <span className="text-xl leading-none">{ANIMATION_EMOJI[animState]}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-white">{ANIMATION_LABELS[animState]}</p>
-                              {lastReaction && (
-                                <p className="text-[10px] text-muted-foreground/60 truncate">{lastReaction}</p>
-                              )}
-                            </div>
-                            {isSpeaking && (
-                              <div className="flex items-center gap-1 text-[9px] text-violet-400 flex-shrink-0">
-                                <Mic className="h-2.5 w-2.5 animate-pulse" />
-                                <span>lip sync</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Test reaction buttons */}
-                          <div className="flex gap-1.5 flex-wrap mb-3">
-                            {(["gift_reaction", "follow_reaction", "victory", "excited", "happy"] as AnimationState[]).map((s) => (
-                              <button
-                                key={s}
-                                onClick={() => machineRef.current.push(s)}
-                                className="text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-violet-500/20 border border-white/10 hover:border-violet-500/40 text-muted-foreground hover:text-violet-300 transition-all"
-                              >
-                                {ANIMATION_EMOJI[s]} {ANIMATION_LABELS[s]}
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Sliders */}
-                          <div className="space-y-3">
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                  <Mic className="h-3 w-3" />
-                                  Lip Sync Sensitivity
-                                </Label>
-                                <span className="text-xs font-mono text-violet-300">{Math.round(lipSyncSensitivity * 100)}%</span>
-                              </div>
-                              <input
-                                type="range" min="0" max="1" step="0.05"
-                                value={lipSyncSensitivity}
-                                onChange={(e) => setLipSyncSensitivity(parseFloat(e.target.value))}
-                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                  <Zap className="h-3 w-3" />
-                                  Expression Intensity
-                                </Label>
-                                <span className="text-xs font-mono text-violet-300">{Math.round(expressionIntensity * 100)}%</span>
-                              </div>
-                              <input
-                                type="range" min="0" max="1" step="0.05"
-                                value={expressionIntensity}
-                                onChange={(e) => setExpressionIntensity(parseFloat(e.target.value))}
-                                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                                style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <Separator className="bg-white/5" />
-
-                        {/* Phase 4 status */}
-                        <div>
-                          <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                            <Cpu className="h-3.5 w-3.5 text-violet-400" />
-                            Phase 4 Status
-                          </p>
-                          <div className="space-y-1.5">
-                            {[
-                              { label: "Real-time 3D rendering", done: true, desc: "React Three Fiber + WebGL" },
-                              { label: "Real VRM 1.0 models", done: true, desc: "Seed-san + Constraint sample (10+ MB each)" },
-                              { label: "VRM upload support", done: true, desc: "Drop any VRoid Studio export" },
-                              { label: "FPS + memory monitoring", done: true, desc: "Live renderer.info stats" },
-                              { label: "TikTok event reactions", done: true, desc: "Gift → gift_reaction · Follow → follow_reaction · Like → happy · Share → excited" },
-                              { label: "Platform event reactions", done: true, desc: "Boss defeated → victory · Lucky Drop → excited · Achievement → happy" },
-                              { label: "Animation state machine", done: true, desc: "7 states, priority queue, auto-expire timers" },
-                              { label: "Animation priority system", done: true, desc: "victory(9) > gift(8) > follow(7) > excited(6) > happy(5) > talking(3) > idle(0)" },
-                              { label: "AI voice lip sync", done: true, desc: "Web Audio API AnalyserNode · simulated fallback for browser TTS" },
-                              { label: "Lip sync + expression controls", done: true, desc: "Sensitivity + intensity sliders · test buttons" },
-                            ].map((item) => (
-                              <div key={item.label} className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/5">
-                                <div className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5", item.done ? "bg-emerald-500/70" : "bg-violet-500/30")} />
-                                <div className="min-w-0 flex-1">
-                                  <p className={cn("text-xs font-medium", item.done ? "text-foreground/80" : "text-muted-foreground/50")}>{item.label}</p>
-                                  <p className="text-[10px] text-muted-foreground/40">{item.desc}</p>
+                              <div className="px-2.5 py-2" style={{ background: "rgba(5,10,20,0.95)" }}>
+                                <p className="font-semibold text-white text-[12px]">{asset.name}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{asset.role}</p>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <span className="text-[9px] text-muted-foreground/60">{asset.gender}</span>
+                                  <span className="text-muted-foreground/30">·</span>
+                                  <span className="text-[9px] text-muted-foreground/60">{asset.ageRange}</span>
                                 </div>
-                                {item.done && <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0 mt-0.5" />}
                               </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Memory + performance stats */}
-                        {rendererStats && (
-                          <div>
-                            <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                              <Monitor className="h-3.5 w-3.5 text-violet-400" />
-                              Renderer Stats
-                            </p>
-                            <div className="grid grid-cols-4 gap-1.5">
-                              {[
-                                { label: "FPS", val: rendererStats.fps, color: rendererStats.fps >= 50 ? "text-emerald-400" : rendererStats.fps >= 30 ? "text-yellow-400" : "text-red-400" },
-                                { label: "Geo", val: rendererStats.geometries, color: "text-violet-300" },
-                                { label: "Tex", val: rendererStats.textures, color: "text-violet-300" },
-                                { label: "Calls", val: rendererStats.drawCalls, color: "text-violet-300" },
-                              ].map(({ label, val, color }) => (
-                                <div key={label} className="text-center p-2 rounded-lg bg-white/5 border border-white/5">
-                                  <p className={cn("text-[12px] font-mono font-semibold", color)}>{val}</p>
-                                  <p className="text-[9px] text-muted-foreground/60 mt-0.5">{label}</p>
-                                </div>
-                              ))}
-                            </div>
-                            <p className="text-[10px] text-muted-foreground/40 mt-1.5">
-                              Triangles: {rendererStats.triangles.toLocaleString()} · Quality: {rendererStats.quality}
-                            </p>
-                          </div>
-                        )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
+
+                    <Separator className="bg-white/5" />
+
+                    {/* Outfit selector */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Shirt className="h-3.5 w-3.5 text-violet-400" />
+                        Outfit
+                      </p>
+                      {(() => {
+                        const asset = BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "ivan-host") as keyof typeof BUILT_IN_AVATARS];
+                        return (
+                          <div className="flex gap-1.5 flex-wrap">
+                            {asset.outfits.map((outfit) => (
+                              <button
+                                key={outfit.id}
+                                onClick={() => setSelectedOutfit(outfit.id)}
+                                className={cn(
+                                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-all",
+                                  selectedOutfit === outfit.id
+                                    ? "bg-violet-500/20 border-violet-500/50 text-violet-300"
+                                    : "bg-white/5 border-white/10 text-muted-foreground hover:border-white/20",
+                                )}
+                              >
+                                <span className="w-3 h-3 rounded-full flex-shrink-0 border border-white/20" style={{ background: outfit.clothingColor }} />
+                                {outfit.label}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Background selector */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Tv2 className="h-3.5 w-3.5 text-cyan-400" />
+                        Background Scene
+                      </p>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {BACKGROUND_PRESETS.map((bg) => (
+                          <button
+                            key={bg.id}
+                            onClick={() => setSelectedBackground(bg.id)}
+                            className={cn(
+                              "relative rounded-lg overflow-hidden border-2 transition-all h-12",
+                              selectedBackground === bg.id ? "border-blue-500" : "border-white/10 hover:border-white/25",
+                            )}
+                          >
+                            <div className="absolute inset-0" style={{ background: bg.gradient }} />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+                              <span className="text-sm leading-none">{bg.icon}</span>
+                              <span className="text-[8px] text-white/70 font-medium leading-none">{bg.label}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Color + Lighting */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Palette className="h-3.5 w-3.5 text-pink-400" />
+                        Accent Color
+                      </p>
+                      <div className="flex gap-1.5 flex-wrap mb-3">
+                        {["#2563eb", "#7c3aed", "#ec4899", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#f97316"].map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => saveAvatar({ accentColor: c })}
+                            className={cn(
+                              "w-6 h-6 rounded-full border-2 transition-all hover:scale-110",
+                              (avatarConfig?.accentColor ?? "#2563eb") === c ? "border-white" : "border-transparent",
+                            )}
+                            style={{ background: c }}
+                          />
+                        ))}
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                            <Sun className="h-3 w-3" />
+                            Lighting Intensity
+                          </Label>
+                          <span className="text-xs font-mono text-violet-300">{lightingIntensity}%</span>
+                        </div>
+                        <input
+                          type="range" min="0" max="100" step="5"
+                          value={lightingIntensity}
+                          onChange={(e) => setLightingIntensity(parseInt(e.target.value))}
+                          className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                          style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator className="bg-white/5" />
+
+                    {/* Live 3D Preview */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Monitor className="h-3.5 w-3.5 text-green-400" />
+                        Live Preview
+                        <span className="ml-auto flex items-center gap-1 bg-red-600/80 rounded px-1.5 py-0.5">
+                          <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+                          <span className="text-[9px] text-white font-bold">LIVE</span>
+                        </span>
+                      </p>
+                      <AvatarCanvas
+                        avatarKey={avatarConfig?.avatarKey ?? "ivan-host"}
+                        accentColor={avatarConfig?.accentColor ?? BUILT_IN_AVATARS[(avatarConfig?.avatarKey ?? "ivan-host") as keyof typeof BUILT_IN_AVATARS]?.accentColor ?? "#2563eb"}
+                        scale={avatarConfig?.scale ?? 1.0}
+                        positionY={avatarConfig?.positionY ?? -0.8}
+                        lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
+                        avatarEnabled={avatarConfig?.avatarEnabled ?? true}
+                        avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
+                        onStats={setRendererStats}
+                        showFps={false}
+                        animationState={animState}
+                        mouthOpenAmount={mouthOpen}
+                        expressionIntensity={expressionIntensity}
+                        backgroundGradient={getBackgroundGradient(selectedBackground)}
+                        className="w-full h-[220px] rounded-xl"
+                      />
+                      <div className="flex items-center justify-between mt-2 px-0.5">
+                        <span className="text-[10px] text-green-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                          TikTok LIVE Ready
+                        </span>
+                        {avatarSaving && (
+                          <span className="flex items-center gap-1 text-[10px] text-violet-400">
+                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                            Saving…
+                          </span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground/50">60fps · WebGL</span>
+                      </div>
+                    </div>
+
+                    <Separator className="bg-white/5" />
+
+                    {/* Custom File Upload (Advanced) */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Upload className="h-3.5 w-3.5 text-violet-400" />
+                        Custom VRM / GLB
+                        {uploadedVrmName && <span className="text-[10px] font-normal text-violet-400 ml-1">— active</span>}
+                      </p>
+                      <VRMUploadButton
+                        onUpload={(url, name) => { setRpmAvatarUrl(null); setUploadedVrmUrl(url); setUploadedVrmName(name); }}
+                        onClear={() => { setUploadedVrmUrl(null); setUploadedVrmName(null); }}
+                        uploadedName={uploadedVrmName}
+                      />
+                      <p className="text-[10px] text-muted-foreground/50 mt-1.5">
+                        Upload any VRoid Studio .vrm or .glb — overrides built-in for this session
+                      </p>
+                    </div>
+
+                    <Separator className="bg-white/5" />
+
+                    {/* Scene Settings */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2.5 flex items-center gap-1.5">
+                        <SlidersHorizontal className="h-3.5 w-3.5 text-violet-400" />
+                        Scene Settings
+                      </p>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <Label className="text-[10px] text-muted-foreground">Scale</Label>
+                            <span className="text-[10px] font-mono text-violet-300">{(avatarConfig?.scale ?? 1.0).toFixed(1)}×</span>
+                          </div>
+                          <input
+                            type="range" min="0.5" max="2.0" step="0.1"
+                            value={avatarConfig?.scale ?? 1.0}
+                            onChange={(e) => saveAvatar({ scale: parseFloat(e.target.value) })}
+                            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                            style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <Label className="text-[10px] text-muted-foreground">Position Y</Label>
+                            <span className="text-[10px] font-mono text-violet-300">{(avatarConfig?.positionY ?? -0.8).toFixed(1)}</span>
+                          </div>
+                          <input
+                            type="range" min="-2.0" max="1.0" step="0.1"
+                            value={avatarConfig?.positionY ?? -0.8}
+                            onChange={(e) => saveAvatar({ positionY: parseFloat(e.target.value) })}
+                            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                            style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">Lighting</Label>
+                          <Select value={avatarConfig?.lightingPreset ?? "studio"} onValueChange={(v) => saveAvatar({ lightingPreset: v })}>
+                            <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10 mt-1"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="studio">🎥 Studio</SelectItem>
+                              <SelectItem value="dramatic">🎭 Dramatic</SelectItem>
+                              <SelectItem value="soft">☁️ Soft</SelectItem>
+                              <SelectItem value="neon">🌆 Neon</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">BG Type</Label>
+                          <Select value={avatarConfig?.backgroundType ?? "transparent"} onValueChange={(v) => saveAvatar({ backgroundType: v })}>
+                            <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10 mt-1"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="transparent">⬜ Transparent</SelectItem>
+                              <SelectItem value="color">🎨 Solid</SelectItem>
+                              <SelectItem value="gradient">🌅 Gradient</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator className="bg-white/5" />
+
+                    {/* Reactions & Lip Sync */}
+                    <div>
+                      <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Zap className="h-3.5 w-3.5 text-violet-400" />
+                        Reactions & Lip Sync
+                        <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5 ml-1">Live</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-black/30 border border-white/5">
+                        <span className="text-xl leading-none">{ANIMATION_EMOJI[animState]}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-white">{ANIMATION_LABELS[animState]}</p>
+                          {lastReaction && <p className="text-[10px] text-muted-foreground/60 truncate">{lastReaction}</p>}
+                        </div>
+                        {isSpeaking && (
+                          <div className="flex items-center gap-1 text-[9px] text-violet-400 flex-shrink-0">
+                            <Mic className="h-2.5 w-2.5 animate-pulse" />
+                            <span>lip sync</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-1.5 flex-wrap mb-3">
+                        {(["gift_reaction", "follow_reaction", "victory", "excited", "happy"] as AnimationState[]).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => machineRef.current.push(s)}
+                            className="text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-violet-500/20 border border-white/10 hover:border-violet-500/40 text-muted-foreground hover:text-violet-300 transition-all"
+                          >
+                            {ANIMATION_EMOJI[s]} {ANIMATION_LABELS[s]}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <Mic className="h-3 w-3" />
+                              Lip Sync Sensitivity
+                            </Label>
+                            <span className="text-xs font-mono text-violet-300">{Math.round(lipSyncSensitivity * 100)}%</span>
+                          </div>
+                          <input
+                            type="range" min="0" max="1" step="0.05"
+                            value={lipSyncSensitivity}
+                            onChange={(e) => setLipSyncSensitivity(parseFloat(e.target.value))}
+                            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                            style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <Zap className="h-3 w-3" />
+                              Expression Intensity
+                            </Label>
+                            <span className="text-xs font-mono text-violet-300">{Math.round(expressionIntensity * 100)}%</span>
+                          </div>
+                          <input
+                            type="range" min="0" max="1" step="0.05"
+                            value={expressionIntensity}
+                            onChange={(e) => setExpressionIntensity(parseFloat(e.target.value))}
+                            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                            style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator className="bg-white/5" />
+
+                    {/* System Status */}
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                        <Cpu className="h-3.5 w-3.5 text-violet-400" />
+                        System Status
+                      </p>
+                      <div className="space-y-1.5">
+                        {[
+                          { label: "4 Realistic Presenters",        desc: "Ivan Host · Marcus · Aria · Sofia" },
+                          { label: "Real-time 3D rendering",         desc: "React Three Fiber + WebGL" },
+                          { label: "TikTok event reactions",         desc: "Gift · Follow · Like · Share" },
+                          { label: "Animation state machine",        desc: "7 states, priority queue" },
+                          { label: "AI voice lip sync",              desc: "Web Audio API AnalyserNode" },
+                          { label: "Outfit & background customiser", desc: "4 outfits · 4 backgrounds per presenter" },
+                        ].map((item) => (
+                          <div key={item.label} className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/5">
+                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 bg-emerald-500/70" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-medium text-foreground/80">{item.label}</p>
+                              <p className="text-[10px] text-muted-foreground/40">{item.desc}</p>
+                            </div>
+                            <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0 mt-0.5" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Renderer Stats */}
+                    {rendererStats && (
+                      <div>
+                        <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                          <Monitor className="h-3.5 w-3.5 text-violet-400" />
+                          Renderer Stats
+                        </p>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {[
+                            { label: "FPS", val: rendererStats.fps, color: rendererStats.fps >= 50 ? "text-emerald-400" : rendererStats.fps >= 30 ? "text-yellow-400" : "text-red-400" },
+                            { label: "Geo", val: rendererStats.geometries, color: "text-violet-300" },
+                            { label: "Tex", val: rendererStats.textures, color: "text-violet-300" },
+                            { label: "Calls", val: rendererStats.drawCalls, color: "text-violet-300" },
+                          ].map(({ label, val, color }) => (
+                            <div key={label} className="text-center p-2 rounded-lg bg-white/5 border border-white/5">
+                              <p className={cn("text-[12px] font-mono font-semibold", color)}>{val}</p>
+                              <p className="text-[9px] text-muted-foreground/60 mt-0.5">{label}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/40 mt-1.5">
+                          Triangles: {rendererStats.triangles.toLocaleString()} · Quality: {rendererStats.quality}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Animation presets library */}
                     {avatarPresets && avatarPresets.length > 0 && (
@@ -2040,7 +2017,7 @@ export function AiAssistant() {
                           </div>
                           {avatarPresets.length > 6 && (
                             <p className="text-[10px] text-muted-foreground/50 mt-2 text-center">
-                              +{avatarPresets.length - 6} more clips · assignable to events in Phase 2
+                              +{avatarPresets.length - 6} more clips · assignable to events
                             </p>
                           )}
                         </div>
