@@ -61,13 +61,13 @@ const API_BASE = `${BASE_URL}/api`;
 // Queue to prevent overlapping TTS playback
 let ttsQueue: Promise<void> = Promise.resolve();
 
-async function playOpenAiTts(text: string, voice: string, volume: number): Promise<void> {
+async function playOpenAiTts(text: string, voice: string, volume: number, speed = 1.0): Promise<void> {
   try {
     const res = await fetch(`${API_BASE}/ai/voice`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voice }),
+      body: JSON.stringify({ text, voice, speed }),
     });
 
     if (!res.ok) {
@@ -150,11 +150,15 @@ export function useLiveSession(
   const ttsModeRef = useRef<TtsMode>("off");
   const ttsVoiceRef = useRef<string>("nova");
   const ttsVolumeRef = useRef<number>(1.0);
+  const ttsSpeedRef = useRef<number>(1.0);
 
   const setTtsMode = useCallback((mode: TtsMode) => { ttsModeRef.current = mode; }, []);
   const setTtsVoice = useCallback((voice: string) => { ttsVoiceRef.current = voice; }, []);
   const setTtsVolume = useCallback((volume: number) => {
     ttsVolumeRef.current = Math.max(0, Math.min(1, volume));
+  }, []);
+  const setTtsSpeed = useCallback((speed: number) => {
+    ttsSpeedRef.current = Math.max(0.25, Math.min(4.0, speed));
   }, []);
 
   // Legacy compatibility
@@ -271,8 +275,8 @@ export function useLiveSession(
 
         const mode = ttsModeRef.current;
         if (mode === "openai") {
-          // Enqueue to prevent overlapping audio
-          enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current));
+          // Enqueue to prevent overlapping audio — pass speed so it matches the slider
+          enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current));
         } else if (mode === "browser") {
           playBrowserTts(payload.text);
         }
@@ -326,6 +330,7 @@ export function useLiveSession(
     setTtsMode,
     setTtsVoice,
     setTtsVolume,
+    setTtsSpeed,
     tiktokMode,
     tiktokError,
     tiktokUsername,

@@ -346,7 +346,7 @@ export function AiAssistant() {
   // Pass the HTTP-fetched mode as initialMode so the badge is correct immediately on refresh.
   const initialMode = (activeSessionRes as any)?.session?.mode ?? null;
   const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
-  const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume,
+  const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume, setTtsSpeed,
     tiktokMode, tiktokError: socketError, tiktokUsername,
   } = useLiveSession(activeSessionId, initialMode);
 
@@ -367,24 +367,42 @@ export function AiAssistant() {
   });
 
   // ── Local TTS state (synced to hook on load) ──────────────────────────────────
-  const [ttsMode, setTtsModeLocal] = useState<TtsMode>("off");
+  // Use localStorage to persist the TTS mode so "browser" isn't lost on reload.
+  const [ttsMode, setTtsModeLocal] = useState<TtsMode>(() => {
+    try {
+      return (localStorage.getItem("ttsMode") as TtsMode | null) ?? "off";
+    } catch {
+      return "off";
+    }
+  });
   const [ttsVoice, setTtsVoiceLocal] = useState("nova");
 
   useEffect(() => {
     if (config && !configLoading) {
-      const mode: TtsMode = config.voiceEnabled ? "openai" : "off";
+      // Restore from localStorage first; fall back to DB voiceEnabled flag
+      let mode: TtsMode;
+      try {
+        mode = (localStorage.getItem("ttsMode") as TtsMode | null) ?? (config.voiceEnabled ? "openai" : "off");
+      } catch {
+        mode = config.voiceEnabled ? "openai" : "off";
+      }
       setTtsModeLocal(mode);
       setTtsMode(mode);
       setTtsVoiceLocal(config.voiceName ?? "nova");
       setTtsVoice(config.voiceName ?? "nova");
       setTtsVolume(config.voiceVolume ?? 1.0);
+      setTtsSpeed(config.voiceSpeed ?? 1.0);
     }
-  }, [config?.voiceEnabled, config?.voiceName, config?.voiceVolume]);
+  }, [config?.voiceEnabled, config?.voiceName, config?.voiceVolume, config?.voiceSpeed]);
 
   const handleTtsModeChange = useCallback((mode: TtsMode) => {
     setTtsModeLocal(mode);
     setTtsMode(mode);
-    updateConfig.mutate({ voiceEnabled: mode === "openai" });
+    try { localStorage.setItem("ttsMode", mode); } catch {}
+    // Only update DB when actually toggling OpenAI voice on/off
+    if (mode === "openai") updateConfig.mutate({ voiceEnabled: true });
+    else if (mode === "off") updateConfig.mutate({ voiceEnabled: false });
+    // "browser" mode: leave voiceEnabled as-is in DB (no API cost)
   }, [setTtsMode]);
 
   const handleTtsVoiceChange = useCallback((voice: string) => {
@@ -606,10 +624,15 @@ export function AiAssistant() {
 
   const personaName = config?.personaName ?? "Storm";
 
-  // ── Settings sidebar sections (collapsible on mobile) ─────────────────────────
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["persona", "mode", "voice", "language", "autoreply"]),
-  );
+  // ── Settings sidebar sections (collapsible — fewer open by default on mobile) ──
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(() => {
+    // On narrow viewports, only expand the two most-used sections so the live
+    // feed is visible without scrolling. On wider screens open all main sections.
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    return isMobile
+      ? new Set(["persona", "mode"])
+      : new Set(["persona", "mode", "voice", "language", "autoreply"]);
+  });
   const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
   const [chatTranslateEnabled, setChatTranslateEnabled] = useState(false);
   const [chatTranslateLang, setChatTranslateLang] = useState("en");

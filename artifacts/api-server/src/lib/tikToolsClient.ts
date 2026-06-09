@@ -330,10 +330,13 @@ export class TikToolsClient extends EventEmitter {
         mapped,
       });
 
-      // Log EVERY event with full raw payload preview
-      console.log(
-        `[TikTools:raw] @${this.username} event="${msg.event ?? "(none)"}" mapped=${mapped} | ${dataPreview}`,
-      );
+      // Log event type + first 120 chars of payload (no full avatar URLs)
+      const shortPreview = dataPreview.slice(0, 120) + (dataPreview.length > 120 ? "…" : "");
+      if (msg.event !== "ping") {
+        console.log(
+          `[TikTools:raw] @${this.username} event="${msg.event ?? "(none)"}" mapped=${mapped} | ${shortPreview}`,
+        );
+      }
 
       if (msg.event !== "roomInfo") {
         this.rawEventCount++;

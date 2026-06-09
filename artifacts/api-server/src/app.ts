@@ -67,6 +67,11 @@ app.use(
   })),
 );
 
+// Healthcheck — no auth required, must respond before /api/router (which needs Clerk)
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 app.use("/api", router);
 
 export default app;
