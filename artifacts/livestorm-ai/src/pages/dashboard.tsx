@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,7 +22,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import {
   Users, Gift, Heart, UserPlus, MessageSquare, Zap, Activity,
   PlayCircle, Square, Clock, Share, Bot, ShieldAlert, RefreshCw,
@@ -468,11 +467,6 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* AI Quests */}
-          {isActive && activeSessionId && (
-            <AiQuestsWidget sessionId={activeSessionId} active={isActive} />
-          )}
-
           {/* AI Co-host */}
           {isActive && (
             <Card className={cn("bg-card border-white/5", isActive && "border-primary/20")}>
@@ -587,97 +581,3 @@ export function Dashboard() {
   );
 }
 
-// ── AI Quests Widget ─────────────────────────────────────────────────────────
-
-interface AiQuestData {
-  id: number;
-  questText: string;
-  metric: string;
-  target: number;
-  current: number;
-  xpReward: number;
-  completed: boolean;
-}
-
-function AiQuestsWidget({ sessionId, active }: { sessionId: number; active?: boolean }) {
-  const [quests, setQuests] = useState<AiQuestData[]>([]);
-  const [generating, setGenerating] = useState(false);
-  const { toast } = useToast();
-
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-  const loadQuests = useCallback(async () => {
-    try {
-      const res = await fetch(`${basePath}/api/quests/${sessionId}`, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setQuests(data.quests ?? []);
-      }
-    } catch {}
-  }, [sessionId, basePath]);
-
-  useEffect(() => { void loadQuests(); }, [loadQuests]);
-
-  const handleGenerate = async () => {
-    setGenerating(true);
-    try {
-      const res = await fetch(`${basePath}/api/quests/${sessionId}/generate`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        await loadQuests();
-        toast({ title: "Quests generated!" });
-      }
-    } catch {
-      toast({ title: "Failed to generate quests", variant: "destructive" });
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  return (
-    <Card className={cn("bg-card border-white/5", active && "border-primary/20")}>
-      <CardHeader className="pb-3 border-b border-border/50">
-        <CardTitle className="text-base font-semibold flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-400" />
-            AI Quests
-          </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleGenerate}
-            disabled={generating}
-            className="h-6 text-xs px-2 text-muted-foreground hover:text-white"
-          >
-            {generating ? "Generating…" : "Generate"}
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-3 space-y-2">
-        {quests.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            No quests yet. Generate some to engage your audience!
-          </p>
-        ) : (
-          quests.slice(0, 3).map((q) => (
-            <div key={q.id} className={cn("p-2.5 rounded-lg border space-y-1.5", q.completed ? "border-green-500/20 bg-green-500/5" : "border-white/5 bg-white/3")}>
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs text-white leading-snug">{q.questText}</p>
-                {q.completed && <span className="text-green-400 text-xs flex-shrink-0">✓</span>}
-              </div>
-              <div className="flex items-center gap-2">
-                <Progress value={Math.min(100, (q.current / q.target) * 100)} className="h-1 flex-1" />
-                <span className="text-[10px] text-muted-foreground tabular-nums flex-shrink-0">
-                  {q.current}/{q.target}
-                </span>
-              </div>
-              <p className="text-[10px] text-amber-400">+{q.xpReward} XP</p>
-            </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
-  );
-}

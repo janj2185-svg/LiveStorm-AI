@@ -21,6 +21,8 @@ import {
   Menu,
   X,
   MoreHorizontal,
+  Globe,
+  Plug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,8 +54,10 @@ const SECONDARY_NAV: NavItem[] = [
   { name: "Automation",  shortName: "Auto",    href: "/automation",  icon: Zap,      testId: "automation" },
   { name: "Overlays",    shortName: "OBS",     href: "/overlays",    icon: Layers,   testId: "overlays" },
   { name: "AI Content",  shortName: "Content", href: "/ai-content",  icon: Wand2,    testId: "ai-content" },
-  { name: "Kingdom",     shortName: "Kingdom", href: "/kingdom",     icon: Castle,   testId: "kingdom" },
-  { name: "Mini-Games",  shortName: "Games",   href: "/mini-games",  icon: Gamepad2, testId: "mini-games" },
+  { name: "Kingdom",     shortName: "Kingdom",   href: "/kingdom",    icon: Castle,   testId: "kingdom" },
+  { name: "Mini-Games",  shortName: "Games",     href: "/mini-games", icon: Gamepad2, testId: "mini-games" },
+  { name: "Universe",    shortName: "Universe",  href: "/universe",   icon: Globe,    testId: "universe" },
+  { name: "Platforms",   shortName: "Platforms", href: "/platforms",  icon: Plug,     testId: "platforms" },
 ];
 
 const BOTTOM_NAV_ITEMS = PRIMARY_NAV.slice(0, 4);
@@ -495,13 +499,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="border-t border-sidebar-border/50 pt-4 space-y-4">
                 <div>
                   <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-2">Language</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {(["en", "uk", "pl", "de"] as Language[]).map((code) => (
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {(Object.keys(FLAGS) as Language[]).map((code) => (
                       <button
                         key={code}
                         onClick={() => setLanguage(code)}
+                        title={code.toUpperCase()}
                         className={cn(
-                          "py-2.5 rounded-lg text-base border transition-all text-center min-h-[48px]",
+                          "py-2 rounded-lg text-sm border transition-all text-center min-h-[40px]",
                           language === code
                             ? "border-primary/50 bg-primary/15"
                             : "border-white/5 bg-white/5",
