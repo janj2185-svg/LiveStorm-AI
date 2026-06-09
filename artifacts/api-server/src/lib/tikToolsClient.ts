@@ -50,6 +50,31 @@ interface TikToolsRawEvent {
 const API_BASE = "https://api.tik.tools";
 const WS_BASE = "wss://api.tik.tools";
 
+// ── Module-level raw-event ring buffer (last 20 events for debugging) ─────────
+
+interface RawEventEntry {
+  ts: string;          // ISO timestamp
+  username: string;    // creator username
+  event: string;       // raw event name from tik.tools
+  dataPreview: string; // first 300 chars of JSON-stringified data
+  mapped: boolean;     // whether _handleEvent has a case for this event name
+}
+
+const KNOWN_EVENTS = new Set(["chat","gift","like","follow","share","member","roomInfo","ping"]);
+const RAW_EVENT_BUFFER: RawEventEntry[] = [];
+const RAW_BUFFER_MAX = 20;
+
+export function getRawEventBuffer(): RawEventEntry[] {
+  return RAW_EVENT_BUFFER.slice();
+}
+
+function pushToBuffer(entry: RawEventEntry): void {
+  RAW_EVENT_BUFFER.push(entry);
+  if (RAW_EVENT_BUFFER.length > RAW_BUFFER_MAX) {
+    RAW_EVENT_BUFFER.shift();
+  }
+}
+
 // ── TikToolsClient ────────────────────────────────────────────────────────────
 
 export class TikToolsClient extends EventEmitter {
@@ -60,6 +85,10 @@ export class TikToolsClient extends EventEmitter {
   private reconnectDelay = 15_000;
   private rawEventCount = 0;
   private options: TikToolsOptions;
+  /** Exponential backoff used exclusively for tik.tools 4429 rate-limit closes. */
+  private rateLimitBackoff = 60_000;
+  /** Cached JWT token to avoid fetching a new one on every reconnect. */
+  private cachedJwt: { token: string; expiresAt: number } | null = null;
 
   constructor(username: string, options: TikToolsOptions = {}) {
     super();
@@ -115,52 +144,77 @@ export class TikToolsClient extends EventEmitter {
       return;
     }
 
-    // ── 1. Obtain JWT from tik.tools ─────────────────────────────────────────
+    // ── 1. Obtain JWT from tik.tools (cached to avoid rate-limit burn) ───────
+    // JWT expires_after=3600s; we consider it stale 5 min before expiry so we
+    // never hand an almost-expired token to the WS handshake.
+    const JWT_STALE_MARGIN = 5 * 60 * 1000; // 5 min
     let token: string;
-    try {
-      const resp = await fetch(
-        `${API_BASE}/authentication/jwt?apiKey=${encodeURIComponent(apiKey)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            allowed_creators: [this.username],
-            expire_after: 3600,
-            max_websockets: 1,
-          }),
-        },
+    const now = Date.now();
+    if (this.cachedJwt && this.cachedJwt.expiresAt - JWT_STALE_MARGIN > now) {
+      token = this.cachedJwt.token;
+      console.log(
+        `[TikTools] Reusing cached JWT for @${this.username} ` +
+        `(expires in ${Math.round((this.cachedJwt.expiresAt - now) / 1000)}s)`,
       );
-      const j = (await resp.json()) as any;
+    } else {
+      try {
+        const resp = await fetch(
+          `${API_BASE}/authentication/jwt?apiKey=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              allowed_creators: [this.username],
+              expire_after: 3600,
+              max_websockets: 1,
+            }),
+          },
+        );
+        const j = (await resp.json()) as any;
 
-      if (!j?.data?.token) {
-        const errMsg: string =
-          j?.error ?? j?.message ?? `HTTP ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`;
-        console.warn(`[TikTools] JWT auth failed for @${this.username}: ${errMsg}`);
-        if (this._isNotLiveError(errMsg)) {
-          const msg =
-            `@${this.username} is not currently streaming on TikTok LIVE. ` +
-            `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
-          console.warn(
-            `[TikTools:notLive] PATH=jwt-not-live @${this.username} ` +
-            `wsState=no-ws rawEventCount=${this.rawEventCount} ` +
-            `hadAnyMessage=n/a(pre-ws) lastEvent=n/a jwtError="${errMsg}"`,
-          );
-          this.emit("notLive", { username: this.username, message: msg });
-          this._scheduleRetry(30_000, settle);
-          return;
+        if (!j?.data?.token) {
+          const errMsg: string =
+            j?.error ?? j?.message ?? `HTTP ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`;
+          console.warn(`[TikTools] JWT auth failed for @${this.username}: ${errMsg}`);
+          if (this._isNotLiveError(errMsg)) {
+            const msg =
+              `@${this.username} is not currently streaming on TikTok LIVE. ` +
+              `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
+            console.warn(
+              `[TikTools:notLive] PATH=jwt-not-live @${this.username} ` +
+              `wsState=no-ws rawEventCount=${this.rawEventCount} ` +
+              `hadAnyMessage=n/a(pre-ws) lastEvent=n/a jwtError="${errMsg}"`,
+            );
+            this.rateLimitBackoff = 60_000; // reset on normal not-live path
+            this.emit("notLive", { username: this.username, message: msg });
+            this._scheduleRetry(30_000, settle);
+            return;
+          }
+          // JWT rate-limit — back off using the same escalating window as WS 4429
+          if (errMsg.toLowerCase().includes("rate limit")) {
+            this.rateLimitBackoff = Math.min(this.rateLimitBackoff * 1.5, 300_000);
+            console.warn(
+              `[TikTools:rate-limit] JWT rate-limited @${this.username} — ` +
+              `backing off ${this.rateLimitBackoff / 1000}s`,
+            );
+            this._scheduleRetry(this.rateLimitBackoff, settle);
+            return;
+          }
+          throw new Error(errMsg);
         }
-        throw new Error(errMsg);
+        token = j.data.token as string;
+        // Cache JWT for 55 min (expire_after=3600, minus 5 min stale margin)
+        this.cachedJwt = { token, expiresAt: now + 55 * 60 * 1000 };
+        console.log(`[TikTools] JWT acquired for @${this.username} — opening WebSocket`);
+      } catch (err: any) {
+        console.error(`[TikTools] JWT fetch error for @${this.username}: ${err?.message}`);
+        if (!this.stopped) {
+          this.emit("wsError", err instanceof Error ? err : new Error(String(err)));
+          this._scheduleRetry(this.reconnectDelay, settle);
+          this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
+        }
+        return;
       }
-      token = j.data.token as string;
-      console.log(`[TikTools] JWT acquired for @${this.username} — opening WebSocket`);
-    } catch (err: any) {
-      console.error(`[TikTools] JWT fetch error for @${this.username}: ${err?.message}`);
-      if (!this.stopped) {
-        this.emit("wsError", err instanceof Error ? err : new Error(String(err)));
-        this._scheduleRetry(this.reconnectDelay, settle);
-        this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
-      }
-      return;
     }
 
     // ── 2. Connect WebSocket ──────────────────────────────────────────────────
@@ -212,19 +266,37 @@ export class TikToolsClient extends EventEmitter {
         silenceTimer = null;
       }
 
+      const raw = data.toString();
       let msg: TikToolsRawEvent;
       try {
-        msg = JSON.parse(data.toString()) as TikToolsRawEvent;
+        msg = JSON.parse(raw) as TikToolsRawEvent;
       } catch {
+        console.warn(`[TikTools] Non-JSON WS message @${this.username}: ${raw.slice(0, 200)}`);
         return;
       }
       lastEventType = msg.event ?? null;
+
+      // ── Ring buffer + full raw logging ────────────────────────────────────
+      const dataPreview = raw.slice(0, 300);
+      const mapped = KNOWN_EVENTS.has(msg.event ?? "");
+      pushToBuffer({
+        ts: new Date().toISOString(),
+        username: this.username,
+        event: msg.event ?? "(none)",
+        dataPreview,
+        mapped,
+      });
+
+      // Log EVERY event with full raw payload preview
+      console.log(
+        `[TikTools:raw] @${this.username} event="${msg.event ?? "(none)"}" mapped=${mapped} | ${dataPreview}`,
+      );
 
       if (msg.event !== "roomInfo") {
         this.rawEventCount++;
         if (this.rawEventCount === 1) {
           console.log(
-            `[Pipeline:1] [TikTools] FIRST packet from @${this.username} — event=${msg.event}`,
+            `[Pipeline:1] [TikTools] FIRST non-roomInfo packet from @${this.username} — event=${msg.event}`,
           );
         } else if (this.rawEventCount <= 10 || this.rawEventCount % 50 === 0) {
           console.log(
@@ -250,8 +322,23 @@ export class TikToolsClient extends EventEmitter {
       const reason = reasonBuf?.toString?.() ?? "";
       const connectedMs = connectedAt != null ? Date.now() - connectedAt : 0;
 
-      if (reason === "silence_timeout") {
+      if (code === 4429 || reason.toLowerCase().includes("rate limit")) {
+        // tik.tools sandbox rate-limit close.
+        // The free Sandbox plan allows 60 WS connections per hour (1/min).
+        // Rapid retries burn through the quota instantly. Back off for 90s so
+        // we stay within ~40 connections/hour, leaving headroom for normal usage.
+        this.rateLimitBackoff = Math.min(
+          (this.rateLimitBackoff ?? 60_000) * 1.5,
+          300_000, // max 5 min
+        );
+        console.warn(
+          `[TikTools:rate-limit] WS closed code=4429 @${this.username} ` +
+          `reason="${reason.slice(0, 120)}" — backing off ${this.rateLimitBackoff / 1000}s`,
+        );
+        this._scheduleRetry(this.rateLimitBackoff, settle);
+      } else if (reason === "silence_timeout") {
         // Our own watchdog fired → user is not streaming
+        this.rateLimitBackoff = 60_000; // reset rate-limit backoff on normal flow
         const msg =
           `@${this.username} is not currently streaming on TikTok LIVE. ` +
           `Start a TikTok LIVE from your phone — the app will connect automatically within 30 seconds.`;
@@ -270,15 +357,17 @@ export class TikToolsClient extends EventEmitter {
         // when the creator IS streaming. We already have two authoritative "not live"
         // paths: (1) JWT returns a not-live error, (2) 60s silence timer.
         // → Reconnect silently with a short backoff; do NOT emit notLive.
+        this.rateLimitBackoff = 60_000; // reset rate-limit backoff on normal flow
         console.warn(
           `[TikTools:quick-close] PATH=quick-close (silent retry) @${this.username} ` +
           `wsState=${ws.readyState} rawEventCount=${this.rawEventCount} ` +
           `hadAnyMessage=${hadAnyMessage} lastEvent=${lastEventType ?? "null"} ` +
-          `connectedMs=${connectedMs} code=${code} reason="${reason}" — reconnecting in 10s`,
+          `connectedMs=${connectedMs} code=${code} reason="${reason}" — reconnecting in 30s`,
         );
-        this._scheduleRetry(10_000, settle);
+        this._scheduleRetry(30_000, settle);
       } else {
         // Normal disconnect mid-stream → reconnect with backoff
+        this.rateLimitBackoff = 60_000; // reset rate-limit backoff on normal flow
         console.warn(
           `[TikTools] WS closed (code=${code} reason="${reason}" packets=${this.rawEventCount}) ` +
           `@${this.username} — reconnecting in ${this.reconnectDelay / 1000}s`,

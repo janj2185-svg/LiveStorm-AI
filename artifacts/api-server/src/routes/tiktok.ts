@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "./users";
 import { testTikTokConnection, isRealModeEnabled } from "../lib/tiktokConnector";
+import { getRawEventBuffer } from "../lib/tikToolsClient";
 
 const router = Router();
 
@@ -33,6 +34,21 @@ router.get("/tiktok/mode", async (_req: any, res: any) => {
     note: isRealModeEnabled
       ? "Server is configured for real TikTok LIVE connections."
       : "Server is in DEMO mode. Set TIKTOK_MODE=real on your VPS/Docker server to enable real TikTok.",
+  });
+});
+
+/**
+ * GET /api/tiktok/raw-events
+ * Returns the last 20 raw WebSocket messages received from tik.tools.
+ * Used for diagnosing event mapping / propagation issues.
+ * Requires auth to prevent public exposure.
+ */
+router.get("/tiktok/raw-events", requireAuth, (_req: any, res: any) => {
+  const buffer = getRawEventBuffer();
+  res.json({
+    count: buffer.length,
+    note: "Last 20 raw WS messages from tik.tools. 'mapped:false' means the event name has no handler.",
+    events: buffer,
   });
 });
 
