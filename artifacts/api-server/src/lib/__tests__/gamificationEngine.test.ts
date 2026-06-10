@@ -195,4 +195,15 @@ describe("processGamification", () => {
     const xpCalls = mockEmit.mock.calls.filter(([evt]: [string]) => evt === "xp:awarded");
     expect(xpCalls.length).toBe(0);
   });
+
+  it("leaderboard:update payload carries sessionId for session-scoped ranking", async () => {
+    await processGamification(mockIo, makeGiftEvent({ sessionId: 99 }), 5);
+
+    const lbCalls = mockEmit.mock.calls.filter(([evt]: [string]) => evt === "leaderboard:update");
+    expect(lbCalls.length).toBeGreaterThanOrEqual(1);
+    const [, payload] = lbCalls[0];
+    expect(payload.sessionId).toBe(99);
+    expect(payload.streamerId).toBe(5);
+    expect(payload.level).toBeGreaterThanOrEqual(1);
+  });
 });

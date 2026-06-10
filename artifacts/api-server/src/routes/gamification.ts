@@ -72,7 +72,7 @@ router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) 
     const rows = await query
       .groupBy(viewerXpEventsTable.tiktokViewerId)
       .orderBy(desc(sql`sum(${viewerXpEventsTable.xpAwarded})`))
-      .limit(50);
+      .limit(sessionId ? 10 : 50);
 
     const leaderboard = rows.map((r, i) => ({
       rank: i + 1,

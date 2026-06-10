@@ -421,6 +421,7 @@ export interface AiModerationLog {
 export type GetGamificationLeaderboardParams = {
   streamerId?: number;
   period?: 'daily' | 'weekly' | 'all-time';
+  sessionId?: number;
 };
 
 export interface LuckyDropRecord {

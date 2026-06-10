@@ -303,7 +303,9 @@ export function Gamification() {
   const [achFilter, setAchFilter] = useState<"all" | "unlocked" | "locked">("all");
 
   const { data: leaderboard, isLoading: loadingLb, refetch: refetchLeaderboard } = useGetGamificationLeaderboard(
-    streamerId ? { streamerId, period: lbPeriod } : undefined
+    streamerId
+      ? { streamerId, period: lbPeriod, ...(sessionId ? { sessionId } : {}) }
+      : undefined
   );
 
   const claimMutation = useClaimDailyReward();
