@@ -349,6 +349,69 @@ export function fastSpamCheck(comment: string): { flagged: boolean; reason: stri
   return { flagged: false, reason: "" };
 }
 
+export async function generateAnalyticsInsights(data: {
+  sessionData: Array<{
+    date: string;
+    duration_minutes: number | null;
+    peak_viewers: number;
+    gifts: number;
+    likes: number;
+    comments: number;
+    follows: number;
+    shares: number;
+  }>;
+  summaryStats: {
+    total_sessions_analyzed: number;
+    avg_peak_viewers: number;
+    total_gifts_earned: number;
+    avg_session_duration_minutes: number | null;
+    best_session_date: string | undefined;
+    best_session_peak_viewers: number | undefined;
+  };
+}): Promise<string[]> {
+  try {
+    const resp = await openai.chat.completions.create({
+      model: SMART_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `You are a TikTok LIVE growth expert and analytics coach. Analyze streaming performance data and provide specific, actionable recommendations. Be concise, data-driven, and constructive. Return only valid JSON.`,
+        },
+        {
+          role: "user",
+          content: `Analyze this TikTok LIVE streamer's recent performance and provide 3-5 actionable insights.
+
+Session data (most recent first):
+${JSON.stringify(data.sessionData, null, 2)}
+
+Summary:
+${JSON.stringify(data.summaryStats, null, 2)}
+
+Return JSON: {"insights": ["insight1", "insight2", "insight3"]}
+
+Rules:
+- Reference specific numbers from the data
+- Each insight must be actionable (what to do, not just what happened)
+- Keep each insight under 180 characters
+- Focus on patterns: best times, engagement drop-offs, gift conversion, audience retention`,
+        },
+      ],
+      max_tokens: 600,
+      temperature: 0.7,
+      response_format: { type: "json_object" },
+    });
+
+    const raw = JSON.parse(resp.choices[0]?.message?.content ?? "{}");
+    const insights: string[] = Array.isArray(raw.insights)
+      ? raw.insights.map(String).slice(0, 5)
+      : [];
+    return insights.length > 0 ? insights : ["Keep streaming consistently to generate personalized insights based on your data."];
+  } catch (err: any) {
+    console.error("[AI] generateAnalyticsInsights error:", err?.message);
+    return ["Keep streaming consistently to build enough data for personalized recommendations."];
+  }
+}
+
 export async function generateContent(params: {
   type: string;
   topic: string;

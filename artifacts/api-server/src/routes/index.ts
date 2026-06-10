@@ -20,6 +20,7 @@ import integrationsRouter from "./integrations";
 import moderationRouter from "./moderation";
 import avatarRouter from "./avatar";
 import devRouter from "./dev";
+import analyticsRouter from "./analytics";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use(avatarRouter);
 router.use(billingRouter);
 router.use(adminRouter);
 router.use(devRouter);
+router.use(analyticsRouter);
 
 export default router;
