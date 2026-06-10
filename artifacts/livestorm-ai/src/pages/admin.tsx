@@ -15,6 +15,7 @@ import {
   Shield,
   RefreshCw,
   Search,
+  KeyRound,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -54,7 +55,8 @@ export function Admin() {
 
   // Only render if admin
   if (!profile) return null;
-  if (profile.role !== "admin") {
+  const isOwner = profile.role === "owner";
+  if (profile.role !== "admin" && !isOwner) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center flex-col gap-4">
         <Shield className="h-16 w-16 text-red-500/50" />
@@ -70,7 +72,14 @@ export function Admin() {
       <div className="flex items-center gap-3">
         <Shield className="h-6 w-6 text-red-400" />
         <h1 className="text-2xl font-bold">Admin Panel</h1>
-        <Badge variant="outline" className="text-red-400 border-red-400/40">Admin</Badge>
+        {isOwner ? (
+          <Badge className="gap-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 font-bold">
+            <KeyRound className="h-3 w-3" />
+            Owner
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-red-400 border-red-400/40">Admin</Badge>
+        )}
       </div>
 
       {/* Tabs */}

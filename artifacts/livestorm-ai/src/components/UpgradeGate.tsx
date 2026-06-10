@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Lock, Sparkles, Crown, Star, Zap } from "lucide-react";
+import { Lock, Sparkles, Crown, Star, Zap, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGetMyProfile } from "@workspace/api-client-react";
@@ -48,11 +48,28 @@ interface UpgradeGateProps {
   compact?: boolean;
 }
 
+export function OwnerBadge({ className = "" }: { className?: string }) {
+  return (
+    <Badge
+      className={`gap-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 font-bold ${className}`}
+    >
+      <KeyRound className="h-3 w-3" />
+      Owner
+    </Badge>
+  );
+}
+
+export function useIsOwner(): boolean {
+  const { data: profile } = useGetMyProfile();
+  return profile?.role === "owner";
+}
+
 export function UpgradeGate({ plan, children, featureName, compact = false }: UpgradeGateProps) {
   const { data: profile } = useGetMyProfile();
   const userPlan = (profile?.plan as Plan) ?? "free";
+  const isOwner = profile?.role === "owner";
 
-  if (PLAN_LEVELS[userPlan] >= PLAN_LEVELS[plan]) {
+  if (isOwner || PLAN_LEVELS[userPlan] >= PLAN_LEVELS[plan]) {
     return <>{children}</>;
   }
 
@@ -97,14 +114,22 @@ export function UpgradeGate({ plan, children, featureName, compact = false }: Up
   );
 }
 
-export function usePlan(): { plan: Plan; level: number; is: (p: Plan) => boolean; atLeast: (p: Plan) => boolean } {
+export function usePlan(): {
+  plan: Plan;
+  level: number;
+  isOwner: boolean;
+  is: (p: Plan) => boolean;
+  atLeast: (p: Plan) => boolean;
+} {
   const { data: profile } = useGetMyProfile();
   const plan = (profile?.plan as Plan) ?? "free";
   const level = PLAN_LEVELS[plan];
+  const isOwner = profile?.role === "owner";
   return {
     plan,
     level,
+    isOwner,
     is: (p: Plan) => plan === p,
-    atLeast: (p: Plan) => level >= PLAN_LEVELS[p],
+    atLeast: (p: Plan) => isOwner || level >= PLAN_LEVELS[p],
   };
 }

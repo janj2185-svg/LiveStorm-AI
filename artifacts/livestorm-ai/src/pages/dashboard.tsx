@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import {
   Users, Gift, Heart, UserPlus, MessageSquare, Zap, Activity,
   PlayCircle, Square, Clock, Share, Bot, RefreshCw,
-  PlugZap, TrendingUp, Radio, Trophy as TrophyIcon,
+  PlugZap, TrendingUp, Radio, Trophy as TrophyIcon, KeyRound,
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -291,6 +291,12 @@ export function Dashboard() {
         }
         right={
           <div className="flex items-center gap-2">
+            {profile?.role === "owner" && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40">
+                <KeyRound className="h-3.5 w-3.5 text-amber-300" />
+                <span className="text-xs font-bold text-amber-200">Owner</span>
+              </div>
+            )}
             {isActive ? (
               <Button
                 variant="destructive"

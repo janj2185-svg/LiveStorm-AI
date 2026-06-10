@@ -10,3 +10,4 @@
 - [React icon className never](react-icon-classname-never.md) — `icon: React.ElementType` in arrays/maps causes `className` to resolve to `never` in JSX (React 19 + TS strict). Fix: `React.ComponentType<{className?: string}>` in all icon field types.
 - [Avatar animation presets global](avatar-animation-presets-global.md) — `avatar_animation_presets` table has no `streamerId` column; it is a global shared table. Route must query without WHERE and seed without streamerId.
 - [RPM and Avaturn iframe URLs](avatar-creator-urls.md) — both old URLs dead; RPM needs subdomain; Avaturn needs @avaturn/sdk + demo.avaturn.dev.
+- [Owner role system](owner-role.md) — OWNER_EMAIL constant in featureGate.ts; role=owner + plan=studio seeded in DB (id=7); getOrCreateUser() auto-promotes on login; requirePlan/requireAdmin both check isOwner() first.

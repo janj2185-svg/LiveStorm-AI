@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { getAuth } from "@clerk/express";
-import { db, usersTable, streamersTable, kingdomsTable } from "@workspace/db";
+import { db, usersTable, streamersTable, kingdomsTable, platformEventsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { OWNER_EMAIL } from "../middlewares/featureGate";
 
 const router = Router();
 
@@ -29,18 +30,46 @@ async function getOrCreateUser(clerkId: string, email?: string) {
   let user = await db.query.usersTable.findFirst({
     where: eq(usersTable.clerkId, clerkId),
   });
+
+  const resolvedEmail = email || `${clerkId}@unknown.com`;
+  const isOwnerAccount = resolvedEmail === OWNER_EMAIL;
+
   if (!user) {
     const [created] = await db
       .insert(usersTable)
       .values({
         clerkId,
-        email: email || `${clerkId}@unknown.com`,
-        role: "user",
-        plan: "free",
+        email: resolvedEmail,
+        role: isOwnerAccount ? "owner" : "user",
+        plan: isOwnerAccount ? "studio" : "free",
       })
       .returning();
     user = created;
+
+    if (isOwnerAccount) {
+      await db.insert(platformEventsTable).values({
+        userId: created.id,
+        eventType: "owner_access_granted",
+        description: `Owner account created for ${resolvedEmail} — permanent bypass of all plan restrictions granted.`,
+        metadata: JSON.stringify({ email: resolvedEmail, role: "owner", plan: "studio", bypass: true }),
+      }).catch(() => {});
+    }
+  } else if (isOwnerAccount && (user.role !== "owner" || user.plan !== "studio")) {
+    const [upgraded] = await db
+      .update(usersTable)
+      .set({ role: "owner", plan: "studio", updatedAt: new Date() })
+      .where(eq(usersTable.clerkId, clerkId))
+      .returning();
+    user = upgraded;
+
+    await db.insert(platformEventsTable).values({
+      userId: user.id,
+      eventType: "owner_access_granted",
+      description: `Owner account re-confirmed for ${resolvedEmail} — role set to owner, plan set to studio.`,
+      metadata: JSON.stringify({ email: resolvedEmail, role: "owner", plan: "studio", bypass: true }),
+    }).catch(() => {});
   }
+
   return user;
 }
 

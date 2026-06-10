@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Shield, CreditCard, Crown, Zap, Sparkles, Globe, Check, Settings as SettingsIcon } from "lucide-react";
+import { User, Shield, CreditCard, Crown, Zap, Sparkles, Globe, Check, Settings as SettingsIcon, KeyRound } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LANGUAGES, type Language } from "@/lib/i18n";
@@ -42,6 +42,7 @@ const PLAN_META: Record<string, { label: string; icon: any; color: string; desc:
   pro:     { label: "Pro",     icon: Sparkles, color: "text-purple-400", desc: "AI Voice, full XP, achievements, fan profiles." },
   creator: { label: "Creator", icon: Crown,    color: "text-amber-400", desc: "AI Translator, analytics, multiple TikTok accounts." },
   studio:  { label: "Studio",  icon: Crown,    color: "text-pink-400",  desc: "3D AI Host, voice clone, team accounts, API access." },
+  owner:   { label: "Owner",   icon: KeyRound, color: "text-amber-300", desc: "Permanent lifetime access to all current and future features." },
 };
 
 const AI_REPLY_LANGUAGES = [
@@ -200,7 +201,12 @@ export function Settings() {
         }
         subtitle={t("settings_desc")}
         right={
-          user?.plan && user.plan !== "free" ? (
+          user?.role === "owner" ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40">
+              <KeyRound className="h-4 w-4 text-amber-300" />
+              <span className="text-xs font-bold text-amber-200">Owner</span>
+            </div>
+          ) : user?.plan && user.plan !== "free" ? (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <Crown className="h-4 w-4 text-amber-400" />
               <span className="text-xs font-bold text-amber-300 capitalize">{user.plan}</span>
@@ -441,99 +447,138 @@ export function Settings() {
       {/* Billing Tab */}
       {tab === "billing" && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/15">
-                <CreditCard className="w-4 h-4 text-primary" />
-              </div>
-              <p className="font-semibold text-white text-sm">{t("billing_title")}</p>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="p-4 rounded-xl bg-background/50 border border-white/8 flex items-center gap-4">
-                <div className={`p-2.5 rounded-lg bg-white/5 ${planMeta.color}`}>
-                  <PlanIcon className="h-5 w-5" />
+          {user?.role === "owner" ? (
+            <div className="rounded-2xl overflow-hidden border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-orange-500/5">
+              <div className="px-6 py-4 border-b border-amber-500/20 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/15">
+                  <KeyRound className="w-4 h-4 text-amber-300" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold text-white capitalize">{planMeta.label} Plan</p>
-                    <Badge variant="outline" className="text-xs border-white/20">Active</Badge>
+                <p className="font-semibold text-amber-200 text-sm">Owner Account — Lifetime Access</p>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-4">
+                  <div className="p-2.5 rounded-lg bg-amber-500/20 text-amber-300">
+                    <KeyRound className="h-5 w-5" />
                   </div>
-                  <p className="text-sm text-muted-foreground">{planMeta.desc}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-amber-200">Owner</p>
+                      <Badge className="text-xs bg-amber-500/20 border-amber-500/40 text-amber-300 border">Permanent</Badge>
+                    </div>
+                    <p className="text-sm text-amber-300/70">No subscription required · No billing · No plan checks</p>
+                  </div>
                 </div>
-                {(user?.plan === "free" || !user?.plan) && (
-                  <Button asChild className="bg-primary hover:bg-primary/90 text-white">
-                    <Link to="/pricing">{t("billing_upgrade")}</Link>
-                  </Button>
-                )}
-              </div>
-
-              {user?.plan !== "free" && user?.plan && (
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={handleManageBilling}
-                    disabled={billingLoading === "portal"}
-                    className="border-white/10"
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    {billingLoading === "portal" ? t("loading") : t("billing_manage")}
-                  </Button>
-                  <Button asChild variant="ghost">
-                    <Link to="/pricing">{t("billing_compare")}</Link>
-                  </Button>
+                <div className="space-y-2 text-sm">
+                  <p className="text-amber-300 font-medium mb-3">Permanent access includes:</p>
+                  <p className="text-green-400">✓ All premium features (current & future)</p>
+                  <p className="text-green-400">✓ All enterprise features</p>
+                  <p className="text-green-400">✓ AI Voice & AI Avatars</p>
+                  <p className="text-green-400">✓ Real TikTok mode</p>
+                  <p className="text-green-400">✓ Unlimited automations</p>
+                  <p className="text-green-400">✓ Advanced Analytics</p>
+                  <p className="text-green-400">✓ 3D AI Host & Voice Clone</p>
+                  <p className="text-green-400">✓ All future premium features</p>
+                  <p className="text-green-400">✓ No usage limits</p>
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5">
-              <p className="text-sm font-semibold text-white">What's included in your plan</p>
-            </div>
-            <div className="p-6">
-              <div className="space-y-2 text-sm">
-                {(user?.plan === "free" || !user?.plan) && (
-                  <>
-                    <p className="text-green-400">✓ Basic AI Co-Host</p>
-                    <p className="text-green-400">✓ Basic Boss Battle</p>
-                    <p className="text-green-400">✓ Viewer leaderboard</p>
-                    <p className="text-muted-foreground line-through">✕ AI Voice (Pro+)</p>
-                    <p className="text-muted-foreground line-through">✕ Achievements & Lucky Drops (Pro+)</p>
-                    <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
-                  </>
-                )}
-                {user?.plan === "pro" && (
-                  <>
-                    <p className="text-green-400">✓ AI Voice (OpenAI TTS)</p>
-                    <p className="text-green-400">✓ Full XP System & Achievements</p>
-                    <p className="text-green-400">✓ Fan Profiles & Leaderboards</p>
-                    <p className="text-green-400">✓ 10 automations + OBS Sources</p>
-                    <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
-                    <p className="text-muted-foreground line-through">✕ Multiple TikTok accounts (Creator+)</p>
-                  </>
-                )}
-                {user?.plan === "creator" && (
-                  <>
-                    <p className="text-green-400">✓ Everything in Pro</p>
-                    <p className="text-green-400">✓ AI Translator (20 languages)</p>
-                    <p className="text-green-400">✓ Advanced Analytics</p>
-                    <p className="text-green-400">✓ Multiple TikTok accounts</p>
-                    <p className="text-green-400">✓ Unlimited automations</p>
-                    <p className="text-muted-foreground line-through">✕ 3D AI Host (Studio)</p>
-                  </>
-                )}
-                {user?.plan === "studio" && (
-                  <>
-                    <p className="text-green-400">✓ Everything in Creator</p>
-                    <p className="text-green-400">✓ 3D AI Host (Early Access)</p>
-                    <p className="text-green-400">✓ Voice Clone</p>
-                    <p className="text-green-400">✓ Team Accounts & API Access</p>
-                    <p className="text-green-400">✓ Dedicated support</p>
-                  </>
-                )}
               </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/15">
+                    <CreditCard className="w-4 h-4 text-primary" />
+                  </div>
+                  <p className="font-semibold text-white text-sm">{t("billing_title")}</p>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="p-4 rounded-xl bg-background/50 border border-white/8 flex items-center gap-4">
+                    <div className={`p-2.5 rounded-lg bg-white/5 ${planMeta.color}`}>
+                      <PlanIcon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-white capitalize">{planMeta.label} Plan</p>
+                        <Badge variant="outline" className="text-xs border-white/20">Active</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{planMeta.desc}</p>
+                    </div>
+                    {(user?.plan === "free" || !user?.plan) && (
+                      <Button asChild className="bg-primary hover:bg-primary/90 text-white">
+                        <Link to="/pricing">{t("billing_upgrade")}</Link>
+                      </Button>
+                    )}
+                  </div>
+
+                  {user?.plan !== "free" && user?.plan && (
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={handleManageBilling}
+                        disabled={billingLoading === "portal"}
+                        className="border-white/10"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        {billingLoading === "portal" ? t("loading") : t("billing_manage")}
+                      </Button>
+                      <Button asChild variant="ghost">
+                        <Link to="/pricing">{t("billing_compare")}</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/5">
+                  <p className="text-sm font-semibold text-white">What's included in your plan</p>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-2 text-sm">
+                    {(user?.plan === "free" || !user?.plan) && (
+                      <>
+                        <p className="text-green-400">✓ Basic AI Co-Host</p>
+                        <p className="text-green-400">✓ Basic Boss Battle</p>
+                        <p className="text-green-400">✓ Viewer leaderboard</p>
+                        <p className="text-muted-foreground line-through">✕ AI Voice (Pro+)</p>
+                        <p className="text-muted-foreground line-through">✕ Achievements & Lucky Drops (Pro+)</p>
+                        <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
+                      </>
+                    )}
+                    {user?.plan === "pro" && (
+                      <>
+                        <p className="text-green-400">✓ AI Voice (OpenAI TTS)</p>
+                        <p className="text-green-400">✓ Full XP System & Achievements</p>
+                        <p className="text-green-400">✓ Fan Profiles & Leaderboards</p>
+                        <p className="text-green-400">✓ 10 automations + OBS Sources</p>
+                        <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
+                        <p className="text-muted-foreground line-through">✕ Multiple TikTok accounts (Creator+)</p>
+                      </>
+                    )}
+                    {user?.plan === "creator" && (
+                      <>
+                        <p className="text-green-400">✓ Everything in Pro</p>
+                        <p className="text-green-400">✓ AI Translator (20 languages)</p>
+                        <p className="text-green-400">✓ Advanced Analytics</p>
+                        <p className="text-green-400">✓ Multiple TikTok accounts</p>
+                        <p className="text-green-400">✓ Unlimited automations</p>
+                        <p className="text-muted-foreground line-through">✕ 3D AI Host (Studio)</p>
+                      </>
+                    )}
+                    {user?.plan === "studio" && (
+                      <>
+                        <p className="text-green-400">✓ Everything in Creator</p>
+                        <p className="text-green-400">✓ 3D AI Host (Early Access)</p>
+                        <p className="text-green-400">✓ Voice Clone</p>
+                        <p className="text-green-400">✓ Team Accounts & API Access</p>
+                        <p className="text-green-400">✓ Dedicated support</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
