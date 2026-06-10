@@ -828,18 +828,6 @@ export function AiAssistant() {
               )}
             </div>
 
-            {/* Configure Avatar CTA */}
-            <div className="mt-4">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setAvatarSheetOpen(true)}
-                className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10 h-8 text-xs gap-2"
-              >
-                <Boxes className="h-3.5 w-3.5" />
-                {avatarConfig?.avatarEnabled ? "Configure Avatar" : "Set Up Avatar"}
-              </Button>
-            </div>
           </div>
 
           {/* ── Right: AI Avatar Stage — desktop + mobile ── */}
@@ -1403,14 +1391,6 @@ export function AiAssistant() {
                   </div>
                 )}
 
-                {/* Open avatar tab */}
-                <button
-                  onClick={() => setAvatarSheetOpen(true)}
-                  className="w-full text-xs text-violet-400 hover:text-violet-300 flex items-center justify-center gap-1.5 py-1.5 rounded-lg hover:bg-violet-500/10 transition-colors border border-violet-500/20"
-                >
-                  <Monitor className="h-3.5 w-3.5" />
-                  {avatarConfig?.avatarEnabled ? "Configure Avatar" : "Set Up Avatar"}
-                </button>
               </div>
             )}
           </SidebarSection>
