@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { type TranslationKey } from "@/lib/i18n";
+import { AnimatedBackground, type BgVariant } from "./AnimatedBackground";
 import {
   LayoutDashboard, Bot, Sword, Trophy, ShieldAlert, BarChart2,
   Settings as SettingsIcon, Video, Zap, Layers, Wand2, Castle,
@@ -45,6 +46,18 @@ const SECONDARY_NAV: NavItem[] = [
 
 const BOTTOM_NAV_ITEMS = PRIMARY_NAV.slice(0, 4);
 const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV];
+
+function routeVariant(path: string): BgVariant {
+  if (path.startsWith("/ai-assistant"))                              return "ai";
+  if (path.startsWith("/dashboard"))                                 return "dashboard";
+  if (path.startsWith("/gamification") || path.startsWith("/boss-battle")) return "gamification";
+  if (path.startsWith("/mini-games"))                                return "gaming";
+  if (path.startsWith("/universe") || path.startsWith("/kingdom"))  return "universe";
+  if (path.startsWith("/live-studio") || path.startsWith("/overlays") || path.startsWith("/automation")) return "studio";
+  if (path.startsWith("/ai-content"))                               return "content";
+  if (path.startsWith("/moderation"))                               return "moderation";
+  return "default";
+}
 
 function SidebarLink({
   item, location, expanded, onClick, t,
@@ -181,8 +194,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const sidebarWClass = tabletExpanded ? "w-60" : "w-16 lg:w-60";
   const mainMlClass  = tabletExpanded ? "md:ml-0" : "md:ml-16 lg:ml-60";
 
+  // Strip base path prefix before matching variant
+  const relPath = basePath && location.startsWith(basePath)
+    ? location.slice(basePath.length) || "/"
+    : location;
+  const bgVariant = routeVariant(relPath);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex">
+
+      {/* Animated AI background — sits behind all content */}
+      <AnimatedBackground variant={bgVariant} />
 
       {/* Tablet overlay backdrop */}
       {tabletExpanded && (
@@ -307,7 +329,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ─── MAIN CONTENT ─── */}
       <div className={cn(
-        "flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300",
+        "flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 relative z-[1]",
         mainMlClass,
       )}>
         {/* Mobile header */}
