@@ -695,17 +695,27 @@ export function AiAssistant() {
     <div className="space-y-4 max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between flex-shrink-0 flex-wrap gap-3">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Bot className="h-8 w-8 text-purple-400" />
-            AI Co-Host
-          </h2>
-          <p className="text-muted-foreground mt-0.5 text-sm">
-            Real-time chat replies, gift reactions, voice & moderation
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-5 flex-shrink-0"
+        style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.16), rgba(14,165,233,0.08))" }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at top right, rgba(124,58,237,0.14), transparent 60%)" }} />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-violet-500/15 border border-violet-500/20 shadow-lg shadow-violet-500/10 hidden sm:flex">
+              <Bot className="h-7 w-7 text-violet-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                AI{" "}
+                <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                  Co-Host
+                </span>
+              </h2>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                Real-time chat replies, gift reactions, voice & moderation
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
           {/* Live stats */}
           {isSessionActive && (
             <>
@@ -759,6 +769,7 @@ export function AiAssistant() {
             {personaName}
           </Badge>
         </div>
+      </div>
       </div>
 
       {/* ── Connection error banner ── */}
