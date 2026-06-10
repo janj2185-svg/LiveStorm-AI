@@ -17,6 +17,40 @@ async function getPersona(streamerId: number) {
   });
 }
 
+export async function emitAiAutomationAnnouncement(
+  io: SocketServer,
+  roomId: string,
+  streamerId: number,
+  event: { type: string; viewerName: string; amount?: number },
+  automationName: string,
+): Promise<string> {
+  try {
+    const config = await getPersona(streamerId);
+    const persona = config
+      ? { name: config.personaName, tone: config.tone }
+      : { name: "AI Co-host", tone: "friendly" };
+
+    const text = await generateAnnouncement({
+      type: event.type,
+      viewerName: event.viewerName,
+      amount: event.amount,
+      persona,
+    });
+
+    if (!text) {
+      console.warn(`[AI:automation] streamerId=${streamerId} automation="${automationName}" — empty text returned`);
+      return "";
+    }
+
+    console.log(`[AI:automation] streamerId=${streamerId} automation="${automationName}" → "${text.slice(0, 60)}"`);
+    io.to(roomId).emit("ai:announcement", { text, type: "automation", viewerName: event.viewerName, automationName });
+    await logAnnouncement(streamerId, text);
+    return text;
+  } catch {
+    return "";
+  }
+}
+
 export async function emitAiGiftAnnouncement(
   io: SocketServer,
   roomId: string,

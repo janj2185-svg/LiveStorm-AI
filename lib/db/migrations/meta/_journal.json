@@ -8,6 +8,13 @@
       "when": 1781110256354,
       "tag": "0000_third_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1749566400000,
+      "tag": "0001_automation_logs",
+      "breakpoints": true
     }
   ]
 }

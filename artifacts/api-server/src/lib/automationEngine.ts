@@ -1,9 +1,10 @@
 import type { Server as SocketServer } from "socket.io";
 import type { TikTokEvent } from "./tiktokSimulator";
 import { db } from "@workspace/db";
-import { automationsTable, automationLogsTable, streamersTable, aiPersonaConfigsTable } from "@workspace/db";
+import { automationsTable, automationLogsTable, streamersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { generateAnnouncement, generateVoice } from "./aiService";
+import { generateVoice } from "./aiService";
+import { emitAiAutomationAnnouncement } from "./aiAnnouncer";
 
 export interface AutomationFiredEvent {
   automationId: number;
@@ -109,35 +110,23 @@ async function executeAction(
 
   try {
     if (actionType === "ai_response" || actionType === "send_chat_reply") {
-      const config = await db.query.aiPersonaConfigsTable.findFirst({
-        where: eq(aiPersonaConfigsTable.streamerId, streamerId),
-      });
-      const persona = config
-        ? { name: config.personaName, tone: config.tone }
-        : { name: "AI Co-host", tone: "friendly" };
+      const amount =
+        event.type === "gift"
+          ? ((event.data.coins as number) ?? 0)
+          : event.type === "like"
+            ? ((event.data.likeCount as number) ?? 0)
+            : undefined;
 
-      const text = await generateAnnouncement({
-        type: actionPayload?.trim() || event.type,
-        viewerName,
-        amount:
-          event.type === "gift"
-            ? ((event.data.coins as number) ?? 0)
-            : event.type === "like"
-              ? ((event.data.likeCount as number) ?? 0)
-              : undefined,
-        persona,
-      });
+      const text = await emitAiAutomationAnnouncement(
+        io,
+        roomId,
+        streamerId,
+        { type: actionPayload?.trim() || event.type, viewerName, amount },
+        automation.name,
+      );
 
-      if (text) {
-        io.to(roomId).emit("ai:announcement", {
-          text,
-          type: "automation",
-          viewerName,
-          automationName: automation.name,
-        });
-        console.log(
-          `[Automation:ai_response] rule="${automation.name}" session=${event.sessionId} → "${text.slice(0, 60)}"`,
-        );
+      if (!text) {
+        return "error:empty_response";
       }
       return "success";
     }
