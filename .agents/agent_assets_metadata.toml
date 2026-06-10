@@ -113,3 +113,39 @@ id = "oBNzR8rs0TH5ab3sqy-g1"
 uri = "file://screenshots/mobile-boss-battle.jpg"
 type = "image"
 title = "Boss Battle — Mobile"
+
+[[outputs]]
+id = "uYNXr53e93uTBvQesGQi5"
+uri = "file://screenshots/phase2-hero-closeup.jpg"
+type = "image"
+title = "① AI Co-Host Hero + Storm title (close-up)"
+
+[[outputs]]
+id = "Xuc0O_XG4goSWAw9AnRru"
+uri = "file://screenshots/phase2-orb-closeup.jpg"
+type = "image"
+title = "② HolographicOrb close-up (mobile viewport)"
+
+[[outputs]]
+id = "Jpt-UM0F04hM_5z0-tDKl"
+uri = "file://screenshots/phase2-ai-cohost-desktop.jpg"
+type = "image"
+title = "③ AI Co-Host — Desktop full page"
+
+[[outputs]]
+id = "j1qzYLZDhRFpotLR_jyy0"
+uri = "file://screenshots/phase2-ai-cohost-mobile.jpg"
+type = "image"
+title = "④ AI Co-Host — Mobile full page"
+
+[[outputs]]
+id = "wfAFS-ILq--5S5CEBvlc4"
+uri = "file://screenshots/phase2-dashboard-desktop.jpg"
+type = "image"
+title = "⑤ Dashboard — Desktop full page"
+
+[[outputs]]
+id = "dxX5cqT5w_wAE3kCw-1DE"
+uri = "file://screenshots/phase2-dashboard-mobile.jpg"
+type = "image"
+title = "⑥ Dashboard — Mobile full page"
