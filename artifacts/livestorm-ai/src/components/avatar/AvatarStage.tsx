@@ -224,7 +224,7 @@ export function AvatarStage({
 
         <VoiceActivityBars active={isSpeaking} />
 
-        {onOpenSettings && (
+        {hasAvatar && onOpenSettings && (
           <button
             onClick={onOpenSettings}
             className="flex-shrink-0 p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/30 hover:text-white/70"

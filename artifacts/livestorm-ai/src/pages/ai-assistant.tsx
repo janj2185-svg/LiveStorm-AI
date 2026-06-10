@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useGetAvatarConfig,
@@ -682,7 +683,7 @@ export function AiAssistant() {
     // feed is visible without scrolling. On wider screens open all main sections.
     const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
     return isMobile
-      ? new Set(["persona", "mode", "autoreply", "announcements", "moderation"])
+      ? new Set(["mode", "autoreply", "announcements", "moderation"])
       : new Set(["persona", "mode", "voice", "language", "autoreply", "announcements", "moderation"]);
   });
   const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
@@ -711,7 +712,7 @@ export function AiAssistant() {
   };
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
+    <div className="space-y-2 max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
 
       {/* ── Premium Cinematic Hero ── */}
       <div
@@ -831,7 +832,7 @@ export function AiAssistant() {
           </div>
 
           {/* ── Right: AI Avatar Stage — desktop + mobile ── */}
-          <div className="flex items-stretch order-1 lg:order-2 px-3 pt-3 pb-0 lg:px-4 lg:py-4">
+          <div className="flex items-stretch order-1 lg:order-2 px-3 pt-3 pb-0 lg:px-4 lg:py-2">
             <AvatarStage
               avatarKey={avatarConfig?.avatarKey ?? "marcus"}
               accentColor={accentColor}
@@ -1257,95 +1258,37 @@ export function AiAssistant() {
             )}
           </SidebarSection>
 
-          {/* ── TikTok Connection ── */}
-          <SidebarSection isOpen={expandedSections.has("tiktok")} onToggle={() => toggleSection("tiktok")} title="TikTok Connection" icon={<Plug className="h-4 w-4 text-pink-400" />}>
-
-            {/* Current mode */}
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10">
+          {/* ── Session Status (read-only) ── */}
+          <Card className="bg-card border-white/5 flex-shrink-0">
+            <div className="px-4 py-3 flex items-center gap-3">
               {effectiveMode === "real" ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-emerald-300">Real TikTok LIVE</p>
-                    {tiktokUsername && <p className="text-[10px] text-muted-foreground">@{tiktokUsername}</p>}
-                  </div>
-                </>
+                <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
               ) : effectiveMode === "error" ? (
-                <>
-                  <WifiOff className="h-4 w-4 text-red-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-red-300">Connection failed</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{effectiveError}</p>
-                  </div>
-                </>
+                <WifiOff className="h-4 w-4 text-red-400 flex-shrink-0" />
               ) : (
-                <>
-                  <Server className="h-4 w-4 text-orange-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-orange-300">Demo simulator</p>
-                    <p className="text-[10px] text-muted-foreground">Fake events (set TIKTOK_MODE=real on VPS)</p>
-                  </div>
-                </>
+                <Server className="h-4 w-4 text-orange-400 flex-shrink-0" />
               )}
-            </div>
-
-            {/* Error detail */}
-            {effectiveMode === "error" && effectiveError && (
-              <div className="p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <p className="text-[11px] text-red-300 font-mono whitespace-pre-wrap break-words">{effectiveError}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold">
+                  {effectiveMode === "real" ? "Real TikTok LIVE" : effectiveMode === "error" ? "Connection failed" : "Demo mode"}
+                </p>
+                {effectiveMode === "real" && tiktokUsername && (
+                  <p className="text-[10px] text-muted-foreground truncate">@{tiktokUsername}</p>
+                )}
+                {effectiveMode === "error" && effectiveError && (
+                  <p className="text-[10px] text-red-400/70 truncate">{effectiveError}</p>
+                )}
+                {effectiveMode === "demo" && (
+                  <p className="text-[10px] text-muted-foreground">Simulated events</p>
+                )}
               </div>
-            )}
-
-            {/* Test connection */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Test a TikTok username</Label>
-              <div className="flex gap-1.5">
-                <Input
-                  placeholder="@username"
-                  value={testUsername}
-                  onChange={(e) => { setTestUsername(e.target.value); setTestResult(null); }}
-                  onKeyDown={(e) => e.key === "Enter" && handleTestConnection()}
-                  className="flex-1 h-8 text-xs bg-white/5 border-white/10"
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 px-2.5 border-white/10 hover:bg-white/10"
-                  onClick={handleTestConnection}
-                  disabled={isTesting || !testUsername.trim()}
-                >
-                  {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <TestTube2 className="h-3.5 w-3.5" />}
-                </Button>
-              </div>
-
-              {/* Test result */}
-              {testResult && (
-                <div className={cn(
-                  "p-2 rounded-lg border text-xs",
-                  testResult.ok
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
-                    : "bg-red-500/10 border-red-500/20 text-red-300",
-                )}>
-                  {testResult.ok ? (
-                    <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" />
-                      Connected! ({testResult.latencyMs}ms)
-                    </span>
-                  ) : (
-                    <span className="flex items-start gap-1.5">
-                      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-px" />
-                      <span className="font-mono whitespace-pre-wrap break-words">{testResult.error}</span>
-                    </span>
-                  )}
-                </div>
-              )}
+              <Link href="/dashboard">
+                <span className="text-[10px] text-muted-foreground/50 hover:text-violet-400 flex items-center gap-0.5 transition-colors whitespace-nowrap cursor-pointer">
+                  Manage <ChevronRight className="h-3 w-3" />
+                </span>
+              </Link>
             </div>
-
-            <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-              Set <code className="bg-white/10 rounded px-1">TIKTOK_MODE=real</code> on your VPS/Docker server
-              to connect to real TikTok LIVE. See <code className="bg-white/10 rounded px-1">DEPLOY.md</code> for setup.
-            </p>
-          </SidebarSection>
+          </Card>
 
           {/* ── 3D Avatar ── */}
           <SidebarSection
@@ -1401,7 +1344,7 @@ export function AiAssistant() {
         <div className="flex flex-col min-h-0">
 
           {/* Tab bar */}
-          <div className="flex gap-1 p-1 bg-white/5 rounded-lg mb-3 flex-shrink-0">
+          <div className="flex gap-1 p-1 bg-white/5 rounded-lg mb-2 flex-shrink-0">
             {[
               { key: "live", label: "Live Feed", icon: <Radio className="h-3.5 w-3.5" />, badge: feedEvents.length > 0 ? feedEvents.filter(e => e.type === "comment").length : null },
               { key: "chat", label: "AI Chat", icon: <Bot className="h-3.5 w-3.5" />, badge: null },
