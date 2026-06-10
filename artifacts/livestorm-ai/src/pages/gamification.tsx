@@ -7,7 +7,6 @@ import {
   useGetMyStreamer,
   useGetMyGamificationStats,
   useGetStreamerLeaderboard,
-  useGetActiveSession,
   useGetLuckyDropHistory,
   useTriggerLuckyDrop,
   useGetViewerProfile,
@@ -17,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useLiveSession } from "@/hooks/useLiveSession";
+import { useLiveSessionContext } from "@/contexts/LiveSessionContext";
 import {
   Trophy, Star, Medal, Zap, Gift, Heart, Shield, Sword, Target,
   TrendingUp, Users, MessageCircle, Map, Brain, Circle, Flame, Home,
@@ -289,8 +288,8 @@ export function Gamification() {
   const { data: streamer } = useGetMyStreamer();
   const streamerId = streamer?.id;
 
-  const { data: activeSession } = useGetActiveSession();
-  const sessionId = activeSession?.session?.id ?? null;
+  const { recentXpAwards, achievementUnlocks, luckyDrops, leaderboardVersion, activeSessionId } = useLiveSessionContext();
+  const sessionId = activeSessionId ?? null;
 
   const { data: myStats, isLoading: loadingMe } = useGetMyGamificationStats();
   const { data: achievements, isLoading: loadingAch } = useGetAchievements();
@@ -321,7 +320,6 @@ export function Gamification() {
   const seenAchievementsRef = useRef<Set<string>>(new Set());
   const seenDropsRef = useRef<Set<number>>(new Set());
 
-  const { recentXpAwards, achievementUnlocks, luckyDrops, leaderboardVersion } = useLiveSession(sessionId);
 
   useEffect(() => {
     if (leaderboardVersion > 0) refetchLeaderboard();

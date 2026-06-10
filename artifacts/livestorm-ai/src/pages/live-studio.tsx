@@ -1,10 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  useGetActiveSession,
-  getGetActiveSessionQueryKey,
-} from "@workspace/api-client-react";
-import { useLiveSession, type LiveEvent } from "@/hooks/useLiveSession";
+import { useLiveSessionContext, type LiveEvent } from "@/contexts/LiveSessionContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -431,17 +427,10 @@ function ConnectionBadge({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function LiveStudio() {
-  const { data: activeSessionRes } = useGetActiveSession({
-    query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 5000 },
-  });
-
-  const activeSessionId = activeSessionRes?.session?.id;
-  const sessionMode = (activeSessionRes?.session as any)?.mode ?? null;
-
-  const { events, stats, connected, tiktokMode, tiktokError, tiktokUsername } =
-    useLiveSession(activeSessionId, sessionMode);
-
-  const isActive = activeSessionRes?.active;
+  const {
+    events, stats, connected, tiktokMode, tiktokError, tiktokUsername,
+    isActive, sessionMode,
+  } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
 
   return (

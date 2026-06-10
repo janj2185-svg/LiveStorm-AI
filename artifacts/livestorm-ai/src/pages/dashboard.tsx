@@ -4,7 +4,6 @@ import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetMyProfile,
-  useGetActiveSession,
   useStartSession,
   useEndSession,
   useGetSessions,
@@ -14,7 +13,7 @@ import {
   getGetSessionsQueryKey,
   getGetMyProfileQueryKey,
 } from "@workspace/api-client-react";
-import { useLiveSession, type LiveEvent } from "@/hooks/useLiveSession";
+import { useLiveSessionContext, type LiveEvent } from "@/contexts/LiveSessionContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,17 +99,12 @@ export function Dashboard() {
   const connectTiktok = useConnectTiktok();
   const [tiktokInput, setTiktokInput] = useState("");
 
-  const { data: activeSessionRes, isLoading: isLoadingSession } = useGetActiveSession({
-    query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 5000 },
-  });
+  const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled,
+    activeSessionRes, isLoadingSession } = useLiveSessionContext();
   const { data: sessions } = useGetSessions();
   const startSession = useStartSession();
   const endSession = useEndSession();
   const forceStop = useForceStopSession();
-
-  const activeSessionId = activeSessionRes?.session?.id;
-  const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled } =
-    useLiveSession(activeSessionId);
   const [ttsOn, setTtsOn] = useState(false);
 
   const [duration, setDuration] = useState(0);

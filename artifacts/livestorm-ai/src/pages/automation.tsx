@@ -6,13 +6,11 @@ import {
   useCreateAutomation,
   useUpdateAutomation,
   useDeleteAutomation,
-  useGetActiveSession,
   useGetAutomationLogs,
   getGetAutomationsQueryKey,
-  getGetActiveSessionQueryKey,
   getGetAutomationLogsQueryKey,
 } from "@workspace/api-client-react";
-import { useLiveSession } from "@/hooks/useLiveSession";
+import { useLiveSessionContext } from "@/contexts/LiveSessionContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -57,8 +55,7 @@ export function Automation() {
   const updateAutomation = useUpdateAutomation();
   const deleteAutomation = useDeleteAutomation();
 
-  const { data: activeSessionRes } = useGetActiveSession({ query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 5000 } });
-  const { automationsFired, connected } = useLiveSession(activeSessionRes?.session?.id);
+  const { automationsFired, connected, isActive } = useLiveSessionContext();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: automationLogs, isLoading: logsLoading } = useGetAutomationLogs({
@@ -389,7 +386,7 @@ export function Automation() {
           <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 h-[600px] flex flex-col sticky top-6 overflow-hidden">
             <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
               <span className="font-semibold text-white text-sm">Live Executions</span>
-              {activeSessionRes?.active && connected && (
+              {isActive && connected && (
                 <span className="flex h-2 w-2 relative">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -397,7 +394,7 @@ export function Automation() {
               )}
             </div>
             <div className="flex-1 bg-black/20 overflow-hidden">
-              {!activeSessionRes?.active ? (
+              {!isActive ? (
                 <div className="h-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
                   <Activity className="h-8 w-8 mb-3 opacity-20" />
                   <p className="text-sm">Start a live session to see automations executing in real-time.</p>

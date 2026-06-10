@@ -5,8 +5,8 @@ import {
   useEndBossBattle,
   useGetBossAttacks,
   useGetMyStreamer,
-  useGetActiveSession,
 } from "@workspace/api-client-react";
+import { useLiveSessionContext } from "@/contexts/LiveSessionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,8 +52,7 @@ const attackTypeColor: Record<string, { text: string; bg: string }> = {
 export function BossBattle() {
   const { getToken } = useAuth();
   const { data: streamer } = useGetMyStreamer();
-  const { data: activeSessionData } = useGetActiveSession();
-  const sessionId = activeSessionData?.session?.id;
+  const { activeSessionId: sessionId } = useLiveSessionContext();
 
   const { data: activeBattle, refetch: refetchBattle } = useGetActiveBossBattle();
   const battle = activeBattle?.battle;

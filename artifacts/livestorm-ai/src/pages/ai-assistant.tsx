@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  useGetActiveSession,
-  getGetActiveSessionQueryKey,
   useGetAvatarConfig,
   useUpdateAvatarConfig,
   useGetAvatarPresets,
@@ -41,7 +39,7 @@ import {
   Shirt, Tv2, Palette, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
+import { useLiveSessionContext, type TtsMode, type LiveEvent } from "@/contexts/LiveSessionContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarStage } from "@/components/avatar/AvatarStage";
 
@@ -342,21 +340,13 @@ export function AiAssistant() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
-  // ── Session ──────────────────────────────────────────────────────────────────
-  const { data: activeSessionRes } = useGetActiveSession({
-    query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 15000 },
-  });
-  const activeSessionId = (activeSessionRes as any)?.session?.id ?? null;
-  const isSessionActive = (activeSessionRes as any)?.active ?? false;
-
-  // ── Live events (socket) ──────────────────────────────────────────────────────
-  // Pass the HTTP-fetched mode as initialMode so the badge is correct immediately on refresh.
-  const initialMode = (activeSessionRes as any)?.session?.mode ?? null;
-  const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
+  // ── Session + Live events (shared LiveSessionContext — single socket connection) ─
   const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume, setTtsSpeed,
     tiktokMode, tiktokError: socketError, tiktokUsername,
     aiAnnouncements, luckyDrops, achievementUnlocks,
-  } = useLiveSession(activeSessionId, initialMode);
+    activeSessionRes, isActive: isSessionActive, activeSessionId, sessionMode,
+  } = useLiveSessionContext();
+  const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
 
   // Effective values: prefer socket-live data, fall back to HTTP snapshot
   const effectiveMode = tiktokMode ?? (isSessionActive ? "demo" : null);
@@ -1483,7 +1473,7 @@ export function AiAssistant() {
                             event={event}
                             onReply={handleReply}
                             isReplying={replyingTo.has(event.timestamp)}
-                            sessionId={activeSessionId}
+                            sessionId={activeSessionId ?? null}
                           />
                           {chatTranslateEnabled && (
                             <div className="ml-10 flex items-start gap-2">

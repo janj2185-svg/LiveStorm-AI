@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LiveSessionProvider } from "@/contexts/LiveSessionContext";
 import { type TranslationKey } from "@/lib/i18n";
 import { AnimatedBackground, type BgVariant } from "./AnimatedBackground";
 import {
@@ -366,7 +367,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Page content — extra bottom padding on mobile for bottom nav */}
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-24 md:pb-6">
-          {children}
+          <LiveSessionProvider>
+            {children}
+          </LiveSessionProvider>
         </main>
       </div>
 
