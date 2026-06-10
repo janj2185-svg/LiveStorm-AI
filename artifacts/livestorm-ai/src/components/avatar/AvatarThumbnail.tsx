@@ -64,7 +64,7 @@ export function AvatarThumbnail({
           "relative overflow-hidden rounded-xl flex items-center justify-center",
           selected && "ring-2 ring-offset-1 ring-offset-black/40",
         )}
-        style={{ width: size, height, ringColor: accentColor }}
+        style={{ width: size, height, "--tw-ring-color": accentColor } as React.CSSProperties}
       >
         {rpmThumb ? (
           <img

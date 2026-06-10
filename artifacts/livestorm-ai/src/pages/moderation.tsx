@@ -13,7 +13,7 @@ import {
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
-const RULE_META: Record<string, { name: string; icon: React.ElementType; severity: string; description: string }> = {
+const RULE_META: Record<string, { name: string; icon: React.ComponentType<{ className?: string }>; severity: string; description: string }> = {
   hate_speech: { name: "Hate Speech", icon: Ban,          severity: "high",   description: "Block messages containing hate speech or slurs" },
   spam:        { name: "Spam",        icon: AlertTriangle, severity: "medium", description: "Filter repeated or bot-like messages" },
   profanity:   { name: "Profanity",   icon: Volume2,       severity: "medium", description: "Flag messages with excessive profanity" },

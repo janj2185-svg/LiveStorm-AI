@@ -6,3 +6,5 @@
 - [VRM Phase 3 Assets](vrm-phase3-assets.md) — curl fails for large GitHub raw binaries; use python urllib. VRM files nested as samples/<Name>/vrm/<Name>.vrm in vrm-c/vrm-specification.
 - [i18n 20-language setup](i18n-20-lang.md) — Language union uses "zh-TW" (hyphen OK in TS string literal); FLAGS Record<Language,string> in layout.tsx must cover all 20 codes; getLanguageDir() returns rtl for Arabic only; LanguageContext sets document.documentElement.dir + lang on every language change.
 - [Pricing plan type narrowing](pricing-type-narrowing.md) — handleUpgrade typed as typeof PLANS[0] narrows priceId to null; fix: (typeof PLANS)[number] + local cast `const basePriceId = plan.priceId as string`.
+- [React icon className never](react-icon-classname-never.md) — `icon: React.ElementType` in arrays/maps causes `className` to resolve to `never` in JSX (React 19 + TS strict). Fix: `React.ComponentType<{className?: string}>` in all icon field types.
+- [Avatar animation presets global](avatar-animation-presets-global.md) — `avatar_animation_presets` table has no `streamerId` column; it is a global shared table. Route must query without WHERE and seed without streamerId.

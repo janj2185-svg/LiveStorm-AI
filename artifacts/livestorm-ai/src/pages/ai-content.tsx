@@ -17,7 +17,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type ContentType = "ideas" | "titles" | "descriptions" | "hashtags" | "script";
 
-const CONTENT_TYPES: { id: ContentType; icon: React.ElementType; labelKey: string }[] = [
+const CONTENT_TYPES: { id: ContentType; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] = [
   { id: "ideas", icon: Lightbulb, labelKey: "ai_content_tab_ideas" },
   { id: "titles", icon: Type, labelKey: "ai_content_tab_titles" },
   { id: "descriptions", icon: FileText, labelKey: "ai_content_tab_descriptions" },

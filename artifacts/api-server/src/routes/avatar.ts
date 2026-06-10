@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
+import { getAuth } from "@clerk/express";
 import { db, avatarConfigsTable, avatarAnimationPresetsTable, streamersTable } from "@workspace/db";
 import { requireAuth, getOrCreateUser } from "./users";
 
@@ -105,20 +106,22 @@ router.get("/presets", (_req, res) => {
 // GET /api/avatar/config — get streamer's avatar config
 router.get("/config", requireAuth, async (req, res) => {
   try {
-    const streamer = await getStreamer(req.auth!.userId);
+    const { userId } = getAuth(req);
+    const streamer = await getStreamer(userId!);
     if (!streamer) return res.status(404).json({ error: "Streamer not found" });
 
     const config = await getOrCreateAvatarConfig(streamer.id);
-    res.json(config);
+    return res.json(config);
   } catch (err) {
-    res.status(500).json({ error: "Failed to get avatar config" });
+    return res.status(500).json({ error: "Failed to get avatar config" });
   }
 });
 
 // PUT /api/avatar/config — update streamer's avatar config
 router.put("/config", requireAuth, async (req, res) => {
   try {
-    const streamer = await getStreamer(req.auth!.userId);
+    const { userId } = getAuth(req);
+    const streamer = await getStreamer(userId!);
     if (!streamer) return res.status(404).json({ error: "Streamer not found" });
 
     const config = await getOrCreateAvatarConfig(streamer.id);
@@ -174,31 +177,26 @@ router.put("/config", requireAuth, async (req, res) => {
       .where(eq(avatarConfigsTable.id, config.id))
       .returning();
 
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
-    res.status(500).json({ error: "Failed to update avatar config" });
+    return res.status(500).json({ error: "Failed to update avatar config" });
   }
 });
 
-// GET /api/avatar/animation-presets — list animation presets for the streamer
-router.get("/animation-presets", requireAuth, async (req, res) => {
+// GET /api/avatar/animation-presets — list global animation presets
+router.get("/animation-presets", requireAuth, async (_req, res) => {
   try {
-    const streamer = await getStreamer(req.auth!.userId);
-    if (!streamer) return res.status(404).json({ error: "Streamer not found" });
-
-    let presets = await db.query.avatarAnimationPresetsTable.findMany({
-      where: eq(avatarAnimationPresetsTable.streamerId, streamer.id),
-    });
+    let presets = await db.query.avatarAnimationPresetsTable.findMany();
 
     // Seed defaults if none exist
     if (presets.length === 0) {
-      const seeds = DEFAULT_PRESETS.map((p) => ({ ...p, streamerId: streamer.id }));
+      const seeds = DEFAULT_PRESETS.map((p) => ({ ...p }));
       presets = await db.insert(avatarAnimationPresetsTable).values(seeds).returning();
     }
 
-    res.json(presets);
+    return res.json(presets);
   } catch (err) {
-    res.status(500).json({ error: "Failed to get animation presets" });
+    return res.status(500).json({ error: "Failed to get animation presets" });
   }
 });
 

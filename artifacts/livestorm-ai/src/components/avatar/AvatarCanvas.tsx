@@ -705,6 +705,7 @@ export function AvatarCanvas({
         gl={{ antialias: quality !== "low", alpha: true, powerPreference: quality === "low" ? "low-power" : "high-performance" }}
         shadows={quality === "high"}
         camera={{ position: [0, 1.2, 2.4], fov: 36 }}
+        onCreated={({ gl }) => { gl.shadowMap.type = THREE.PCFShadowMap; }}
         dpr={dpr}
         style={{ position: "relative" }}
       >

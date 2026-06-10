@@ -25,7 +25,7 @@ import {
   X, Sparkles, Crown, ChevronRight, Clock,
 } from "lucide-react";
 
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   trophy: Trophy, star: Star, medal: Medal, zap: Zap, gift: Gift,
   heart: Heart, shield: Shield, sword: Sword, target: Target,
   trending: TrendingUp, users: Users, chat: MessageCircle, map: Map,

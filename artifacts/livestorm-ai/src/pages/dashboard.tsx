@@ -46,7 +46,7 @@ function StatCard({
 }: {
   title: string;
   value: number;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   active?: boolean;
 }) {

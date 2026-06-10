@@ -673,6 +673,7 @@ export function AiAssistant() {
   const [chatTranslateLang, setChatTranslateLang] = useState("en");
   const [translatedComments, setTranslatedComments] = useState<Record<number, string | null>>({});
   const [translatingComments, setTranslatingComments] = useState<Set<number>>(new Set());
+  const [accentColor, setAccentColor] = useState("#3b82f6");
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -1699,10 +1700,10 @@ export function AiAssistant() {
                         {["#2563eb", "#7c3aed", "#ec4899", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#f97316"].map((c) => (
                           <button
                             key={c}
-                            onClick={() => saveAvatar({ accentColor: c })}
+                            onClick={() => setAccentColor(c)}
                             className={cn(
                               "w-6 h-6 rounded-full border-2 transition-all hover:scale-110",
-                              (avatarConfig?.accentColor ?? "#2563eb") === c ? "border-white" : "border-transparent",
+                              accentColor === c ? "border-white" : "border-transparent",
                             )}
                             style={{ background: c }}
                           />
@@ -1740,7 +1741,7 @@ export function AiAssistant() {
                       </p>
                       <AvatarCanvas
                         avatarKey={avatarConfig?.avatarKey ?? "marcus"}
-                        accentColor={avatarConfig?.accentColor ?? "#3b82f6"}
+                        accentColor={accentColor}
                         scale={avatarConfig?.scale ?? 1.0}
                         positionY={avatarConfig?.positionY ?? -0.8}
                         lightingPreset={avatarConfig?.lightingPreset ?? "studio"}

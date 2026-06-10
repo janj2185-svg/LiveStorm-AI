@@ -3,7 +3,7 @@
 import { useState, Component, type ReactNode } from "react";
 import { AvatarCanvas } from "@/components/avatar/AvatarCanvas";
 import { AvatarThumbnail } from "@/components/avatar/AvatarThumbnail";
-import { BUILT_IN_AVATAR_LIST, formatVRMSize } from "@/components/avatar/avatarAssets";
+import { BUILT_IN_AVATAR_LIST } from "@/components/avatar/avatarAssets";
 
 const AVATARS = BUILT_IN_AVATAR_LIST;
 
@@ -78,7 +78,7 @@ function AvatarCard({ avatar, lighting, webgl }: { avatar: typeof AVATARS[0]; li
 
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1.5">
-          <AvatarThumbnail avatarKey={avatar.key} accentColor={avatar.accentColor} skinTone={avatar.skinTone} hairColor={avatar.hairColor} clothingColor={avatar.clothingColor} size={36} />
+          <AvatarThumbnail avatarKey={avatar.key} accentColor={avatar.accentColor} size={36} />
           <div className="text-left">
             <p className="text-sm font-bold text-white leading-none">{avatar.name}</p>
             <p className="text-[11px] text-white/50 mt-0.5">{avatar.tagline}</p>
@@ -88,20 +88,16 @@ function AvatarCard({ avatar, lighting, webgl }: { avatar: typeof AVATARS[0]; li
         <div
           className="inline-block px-2.5 py-1 rounded-md text-[9px] font-mono"
           style={{
-            background: avatar.vrmStatus === "vrm" ? "rgba(109,40,217,0.3)" : avatar.vrmStatus === "human-procedural" ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)",
-            border: avatar.vrmStatus === "vrm" ? "1px solid rgba(139,92,246,0.4)" : avatar.vrmStatus === "human-procedural" ? "1px solid rgba(16,185,129,0.35)" : "1px solid rgba(255,255,255,0.1)",
-            color: avatar.vrmStatus === "vrm" ? "#c4b5fd" : avatar.vrmStatus === "human-procedural" ? "#6ee7b7" : "rgba(255,255,255,0.3)",
+            background: "rgba(16,185,129,0.15)",
+            border: "1px solid rgba(16,185,129,0.35)",
+            color: "#6ee7b7",
           }}
         >
-          {avatar.vrmStatus === "vrm"
-            ? `✓ VRM 1.0 · ${formatVRMSize(avatar.vrmSizeBytes)}`
-            : avatar.vrmStatus === "human-procedural"
-            ? "Human 3D · parametric geometry"
-            : "Procedural · chibi"}
+          Human 3D · parametric geometry
         </div>
 
         <p className="text-[9px] text-white/25 mt-1.5 max-w-[200px] mx-auto leading-relaxed">
-          {avatar.vrmSource}
+          {avatar.personality}
         </p>
       </div>
     </div>
@@ -154,7 +150,7 @@ export function AvatarShowcase() {
       <div className="w-full max-w-4xl">
         <p className="text-[10px] text-emerald-400/70 font-mono uppercase tracking-widest mb-4 text-center">Human Presenters · Parametric 3D</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {AVATARS.filter((a) => a.vrmStatus === "human-procedural").map((avatar) => (
+          {AVATARS.map((avatar) => (
             <div key={avatar.key} className="relative">
               <AvatarCard avatar={avatar} lighting={lighting} webgl={webgl} />
             </div>

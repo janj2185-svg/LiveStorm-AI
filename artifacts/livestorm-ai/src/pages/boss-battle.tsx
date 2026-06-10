@@ -138,7 +138,7 @@ export function BossBattle() {
     }
   }
 
-  const attackTypeIcon: Record<string, React.ElementType> = {
+  const attackTypeIcon: Record<string, React.ComponentType<{ className?: string }>> = {
     gift: Zap, like: Heart, comment: Shield, follow: Trophy, share: Flame,
   };
 

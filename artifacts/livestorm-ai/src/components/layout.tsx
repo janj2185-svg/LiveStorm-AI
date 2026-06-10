@@ -32,7 +32,7 @@ interface NavItem {
   name: string;
   shortName: string;
   href: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   testId: string;
   shortcut?: number;
 }
