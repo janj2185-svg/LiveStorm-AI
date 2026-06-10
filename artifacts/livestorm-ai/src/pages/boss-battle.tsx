@@ -268,7 +268,7 @@ export function BossBattle() {
                       const c = attackTypeColor[atk.attackType] ?? attackTypeColor.gift;
                       return (
                         <motion.div
-                          key={`${atk.timestamp}-${i}`}
+                          key={`${'timestamp' in atk ? atk.timestamp : i}-${i}`}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.2 }}

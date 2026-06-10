@@ -487,7 +487,7 @@ export function Dashboard() {
                           className="text-xs p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300"
                         >
                           <span className="font-bold text-red-400 mr-1">⚠️</span>
-                          {(f.data as any)?.text}
+                          {f.comment}
                         </motion.div>
                       ))}
                     </AnimatePresence>
