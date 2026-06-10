@@ -14,22 +14,24 @@ import {
   getGetMyProfileQueryKey,
 } from "@workspace/api-client-react";
 import { useLiveSessionContext, type LiveEvent } from "@/contexts/LiveSessionContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Users, Gift, Heart, UserPlus, MessageSquare, Zap, Activity,
-  PlayCircle, Square, Clock, Share, Bot, RefreshCw,
-  PlugZap, TrendingUp, Radio, Trophy as TrophyIcon, KeyRound,
+  PlayCircle, Square, Clock, Share, Bot, RefreshCw, Radio,
+  PlugZap, TrendingUp, Trophy as TrophyIcon,
+  KeyRound, Wifi, WifiOff, Eye, ChevronRight,
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { AnimatedCounter, PulsingDot, RankBadge, PageHero, StatWidget } from "@/components/ui/premium";
+import { AnimatedCounter, PulsingDot, RankBadge, GradientText } from "@/components/ui/premium";
+
+// ─── Event config ─────────────────────────────────────────────────────────────
 
 const EVENT_CONFIG: Record<string, { bg: string; text: string; border: string; icon: any; label: string }> = {
   gift:                 { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/20",  icon: Gift,          label: "Gift" },
@@ -73,9 +75,9 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
   return (
     <motion.div
       key={`${event.timestamp}-${idx}`}
-      initial={{ opacity: 0, y: -10, scale: 0.97 }}
+      initial={{ opacity: 0, y: -8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.2 }}
       className={cn(
         "flex items-start gap-3 p-3 rounded-xl border transition-colors",
         "bg-white/[0.02] hover:bg-white/[0.04]",
@@ -89,18 +91,207 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
         <p className="text-sm leading-snug">
           <span className="font-semibold text-foreground">{event.username || "System"}</span>
           {" "}
-          <span className="text-muted-foreground">{desc}</span>
+          <span className="text-muted-foreground/80">{desc}</span>
         </p>
-        <span className="text-[10px] text-muted-foreground/60 font-mono mt-0.5 block">
+        <span className="text-[10px] text-muted-foreground/50 font-mono mt-0.5 block">
           {format(new Date(event.timestamp), "HH:mm:ss")}
         </span>
       </div>
-      <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 border-0 font-medium flex-shrink-0", cfg.text, cfg.bg)}>
+      <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 border-0 font-semibold flex-shrink-0", cfg.text, cfg.bg)}>
         {cfg.label}
       </Badge>
     </motion.div>
   );
 }
+
+// ─── Premium Stat Card ────────────────────────────────────────────────────────
+
+function StatCard({
+  label, value, icon: Icon, iconBg, iconColor, accent, isActive, animate: doAnimate,
+}: {
+  label: string;
+  value: number;
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  accent: string;
+  isActive: boolean;
+  animate: boolean;
+}) {
+  return (
+    <div className={cn(
+      "relative rounded-2xl border overflow-hidden group",
+      "bg-gradient-to-br from-white/[0.04] to-white/[0.01]",
+      "transition-all duration-300",
+      isActive ? `${accent} shadow-[0_0_20px_rgba(0,0,0,0.3)]` : "border-white/[0.07]",
+    )}>
+      {/* Top accent line */}
+      {isActive && (
+        <div className={cn("absolute top-0 inset-x-0 h-[2px]", iconBg.replace("/15", "/60").replace("/10", "/50"))} />
+      )}
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className={cn("p-2 rounded-xl border", iconBg, accent.replace("border-", "border-"))}>
+            <Icon className={cn("h-[18px] w-[18px]", iconColor)} />
+          </div>
+          {isActive && value > 0 && (
+            <span className={cn("flex items-center gap-0.5 text-[10px] font-bold", iconColor)}>
+              <TrendingUp className="h-2.5 w-2.5" />
+              Live
+            </span>
+          )}
+        </div>
+        <div className="text-[26px] font-black text-white tabular-nums leading-none mb-1.5">
+          {doAnimate ? <AnimatedCounter target={value} /> : value.toLocaleString()}
+        </div>
+        <p className="text-xs text-muted-foreground/60 font-medium">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Command Strip ────────────────────────────────────────────────────────────
+
+function CommandStrip({
+  isActive, connected, username, duration, formatDuration,
+  onStart, onEnd, onReset, startPending, endPending, resetPending,
+  isOwner, eventCount,
+}: {
+  isActive: boolean;
+  connected: boolean;
+  username: string;
+  duration: number;
+  formatDuration: (s: number) => string;
+  onStart: () => void;
+  onEnd: () => void;
+  onReset: () => void;
+  startPending: boolean;
+  endPending: boolean;
+  resetPending: boolean;
+  isOwner: boolean;
+  eventCount: number;
+}) {
+  return (
+    <div className={cn(
+      "rounded-2xl border overflow-hidden",
+      isActive
+        ? "border-green-500/20 shadow-lg shadow-green-500/[0.07]"
+        : "border-violet-500/15 shadow-lg shadow-violet-500/[0.05]",
+    )}
+      style={{
+        background: isActive
+          ? "linear-gradient(135deg, rgba(34,197,94,0.09) 0%, rgba(16,185,129,0.04) 50%, rgba(6,182,212,0.03) 100%)"
+          : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(14,165,233,0.05) 100%)",
+      }}
+    >
+      <div className="px-5 py-4 flex items-center justify-between flex-wrap gap-4">
+
+        {/* Left: Status + Info */}
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-lg",
+            isActive
+              ? "bg-green-500/15 border-green-500/25 shadow-green-500/20"
+              : "bg-violet-500/10 border-violet-500/20 shadow-violet-500/10",
+          )}>
+            {isActive
+              ? <Radio className="h-6 w-6 text-green-400" />
+              : <PlugZap className="h-6 w-6 text-violet-400" />
+            }
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              {isActive ? (
+                <>
+                  <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
+                  <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>
+                    {connected ? "Live Now" : "Reconnecting…"}
+                  </span>
+                  <span className="text-xs text-muted-foreground/40 font-mono tabular-nums">
+                    {formatDuration(duration)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-slate-500 inline-block" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Offline</span>
+                </>
+              )}
+            </div>
+            <p className="font-bold text-white text-lg leading-tight">
+              {isActive ? (
+                <span>@{username}</span>
+              ) : (
+                <span>
+                  Ready to{" "}
+                  <GradientText from="from-violet-400" to="to-cyan-400">Go Live</GradientText>
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-muted-foreground/50 mt-0.5">
+              {isActive
+                ? `${eventCount} events captured`
+                : `@${username} · Start a session to begin`
+              }
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Controls */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {isOwner && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/15 border border-amber-500/35">
+              <KeyRound className="h-3.5 w-3.5 text-amber-300" />
+              <span className="text-xs font-bold text-amber-200">Owner</span>
+            </div>
+          )}
+          {connected ? (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400">
+              <Wifi className="h-3 w-3" /> Connected
+            </div>
+          ) : (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400">
+              <WifiOff className="h-3 w-3" /> Disconnected
+            </div>
+          )}
+          {isActive ? (
+            <Button
+              variant="destructive"
+              onClick={onEnd}
+              disabled={endPending}
+              className="font-bold gap-2 shadow-lg shadow-red-500/20 h-9"
+            >
+              <Square className="h-3.5 w-3.5" fill="currentColor" />
+              {endPending ? "Ending…" : "End Stream"}
+            </Button>
+          ) : (
+            <Button
+              onClick={onStart}
+              disabled={startPending}
+              className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-bold gap-2 px-5 shadow-lg shadow-violet-500/25 h-9"
+            >
+              <PlayCircle className="h-4 w-4" />
+              {startPending ? "Starting…" : "Go Live"}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onReset}
+            disabled={resetPending}
+            className="gap-1.5 text-xs text-muted-foreground/60 border-white/10 hover:border-red-500/30 hover:text-red-400 h-9"
+            title="Force-clears any stuck session."
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            {resetPending ? "…" : "Reset"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
   const { toast } = useToast();
@@ -199,30 +390,37 @@ export function Dashboard() {
     });
   };
 
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoadingSession) {
     return (
       <div className="space-y-5">
-        <Skeleton className="h-32 rounded-2xl bg-white/5" />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl bg-white/5" />)}
+        <Skeleton className="h-24 rounded-2xl bg-white/[0.04]" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[110px] rounded-2xl bg-white/[0.04]" />)}
         </div>
-        <Skeleton className="h-[440px] w-full rounded-2xl bg-white/5" />
+        <div className="grid grid-cols-2 gap-3">
+          {[...Array(2)].map((_, i) => <Skeleton key={i} className="h-[88px] rounded-2xl bg-white/[0.04]" />)}
+        </div>
+        <Skeleton className="h-[400px] w-full rounded-2xl bg-white/[0.04]" />
       </div>
     );
   }
 
+  // ── Setup screen (no TikTok username) ────────────────────────────────────
   if (!profile?.tiktokUsername) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 shadow-2xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/[0.07] to-cyan-500/[0.03] p-8 shadow-2xl shadow-violet-500/10"
+        >
           <div className="text-center mb-6">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-violet-500/20 to-cyan-500/20 border border-violet-500/20 flex items-center justify-center mb-4 shadow-lg shadow-violet-500/10">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-violet-500/25 to-cyan-500/20 border border-violet-500/25 flex items-center justify-center mb-4 shadow-lg shadow-violet-500/15">
               <PlugZap className="h-10 w-10 text-violet-400" />
             </div>
             <h2 className="text-2xl font-black text-white">Connect Your TikTok</h2>
-            <p className="text-muted-foreground mt-1.5 text-sm">
-              Enter your TikTok username to start capturing live events.
-            </p>
+            <p className="text-muted-foreground mt-1.5 text-sm">Enter your TikTok username to start capturing live events.</p>
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -254,189 +452,203 @@ export function Dashboard() {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   const isActive = activeSessionRes?.active;
+  const eventCount = events.filter((e) => e.type !== "viewerCount").length;
 
-  const statConfig = [
-    { title: "Viewers",  value: stats.viewerCount,   icon: <Zap className="h-5 w-5" />,           iconBg: "bg-green-500/15",  iconColor: "text-green-400",  glowColor: isActive ? "shadow-green-500/5" : undefined },
-    { title: "Coins",    value: stats.totalGifts,    icon: <Gift className="h-5 w-5" />,          iconBg: "bg-amber-500/15",  iconColor: "text-amber-400",  glowColor: isActive ? "shadow-amber-500/5" : undefined },
-    { title: "Likes",    value: stats.totalLikes,    icon: <Heart className="h-5 w-5" />,         iconBg: "bg-pink-500/15",   iconColor: "text-pink-400",   glowColor: isActive ? "shadow-pink-500/5" : undefined },
-    { title: "Follows",  value: stats.totalFollows,  icon: <UserPlus className="h-5 w-5" />,      iconBg: "bg-violet-500/15", iconColor: "text-violet-400", glowColor: isActive ? "shadow-violet-500/5" : undefined },
-    { title: "Comments", value: stats.totalComments, icon: <MessageSquare className="h-5 w-5" />, iconBg: "bg-blue-500/15",   iconColor: "text-blue-400",   glowColor: isActive ? "shadow-blue-500/5" : undefined },
-    { title: "Shares",   value: stats.totalShares,   icon: <Share className="h-5 w-5" />,         iconBg: "bg-cyan-500/15",   iconColor: "text-cyan-400",   glowColor: isActive ? "shadow-cyan-500/5" : undefined },
+  const primaryStats = [
+    { label: "Viewers",  value: stats.viewerCount,   icon: Eye,          iconBg: "bg-green-500/15",  iconColor: "text-green-400",  accent: "border-green-500/20" },
+    { label: "Likes",    value: stats.totalLikes,    icon: Heart,        iconBg: "bg-pink-500/15",   iconColor: "text-pink-400",   accent: "border-pink-500/20" },
+    { label: "Gifts",    value: stats.totalGifts,    icon: Gift,         iconBg: "bg-amber-500/15",  iconColor: "text-amber-400",  accent: "border-amber-500/20" },
+    { label: "Follows",  value: stats.totalFollows,  icon: UserPlus,     iconBg: "bg-violet-500/15", iconColor: "text-violet-400", accent: "border-violet-500/20" },
+  ];
+
+  const secondaryStats = [
+    { label: "Comments", value: stats.totalComments, icon: MessageSquare, iconBg: "bg-blue-500/15",   iconColor: "text-blue-400",   accent: "border-blue-500/20" },
+    { label: "Shares",   value: stats.totalShares,   icon: Share,         iconBg: "bg-cyan-500/15",   iconColor: "text-cyan-400",   accent: "border-cyan-500/20" },
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Hero */}
-      <PageHero
-        gradientFrom={isActive ? "rgba(34,197,94,0.14)" : "rgba(124,58,237,0.14)"}
-        gradientTo={isActive ? "rgba(16,185,129,0.06)" : "rgba(14,165,233,0.06)"}
-        eyebrow={
-          isActive ? (
-            <div className="flex items-center gap-2">
-              <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
-              <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>
-                {connected ? "Live Now" : "Reconnecting"}
-              </span>
-            </div>
-          ) : null
-        }
-        title={
-          isActive ? (
-            <span className="tabular-nums">{formatDuration(duration)}</span>
-          ) : (
-            <span>
-              Ready to{" "}
-              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Go Live</span>
-            </span>
-          )
-        }
-        subtitle={
-          isActive
-            ? `Streaming as @${profile.tiktokUsername} · ${events.filter(e => e.type !== "viewerCount").length} events captured`
-            : `Connected as @${profile.tiktokUsername} · ${sessions?.length ?? 0} sessions total`
-        }
-        right={
-          <div className="flex items-center gap-2">
-            {profile?.role === "owner" && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40">
-                <KeyRound className="h-3.5 w-3.5 text-amber-300" />
-                <span className="text-xs font-bold text-amber-200">Owner</span>
-              </div>
-            )}
-            {isActive ? (
-              <Button
-                variant="destructive"
-                onClick={handleEndSession}
-                disabled={endSession.isPending}
-                className="font-bold gap-2 shadow-lg shadow-red-500/20"
-              >
-                <Square className="h-4 w-4" fill="currentColor" />
-                {endSession.isPending ? "Ending…" : "End Stream"}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleStartSession}
-                disabled={startSession.isPending}
-                className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-bold gap-2 px-6 shadow-lg shadow-violet-500/25"
-              >
-                <PlayCircle className="h-4 w-4" />
-                {startSession.isPending ? "Starting…" : "Go Live"}
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleForceStop}
-              disabled={forceStop.isPending}
-              className="gap-1.5 text-xs text-muted-foreground border-white/10 hover:border-red-500/30 hover:text-red-400"
-              title="Force-clears any stuck session."
-            >
-              <RefreshCw className="h-3 w-3" />
-              {forceStop.isPending ? "…" : "Reset"}
-            </Button>
-          </div>
-        }
-      />
+    <div className="space-y-4">
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {statConfig.map((s, i) => (
+      {/* Command strip */}
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <CommandStrip
+          isActive={!!isActive}
+          connected={connected}
+          username={profile.tiktokUsername}
+          duration={duration}
+          formatDuration={formatDuration}
+          onStart={handleStartSession}
+          onEnd={handleEndSession}
+          onReset={handleForceStop}
+          startPending={startSession.isPending}
+          endPending={endSession.isPending}
+          resetPending={forceStop.isPending}
+          isOwner={profile?.role === "owner"}
+          eventCount={eventCount}
+        />
+      </motion.div>
+
+      {/* Primary stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {primaryStats.map((s, i) => (
           <motion.div
-            key={s.title}
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.35, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+            key={s.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
           >
-            <StatWidget
-              icon={s.icon}
-              label={s.title}
+            <StatCard
+              label={s.label}
               value={s.value}
+              icon={s.icon}
               iconBg={s.iconBg}
               iconColor={s.iconColor}
-              glowColor={s.glowColor}
-              animate={isActive}
+              accent={s.accent}
+              isActive={!!isActive}
+              animate={!!isActive}
             />
           </motion.div>
         ))}
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-        {/* Activity Feed */}
-        <div className={cn(
-          "col-span-1 lg:col-span-2 rounded-2xl border flex flex-col overflow-hidden",
-          isActive
-            ? "border-violet-500/20 bg-gradient-to-b from-violet-500/[0.04] to-transparent shadow-lg shadow-violet-500/5"
-            : "border-white/[0.06] bg-white/[0.02]",
-        )}>
-          <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className={cn(
-                "p-2 rounded-lg",
-                isActive ? "bg-violet-500/15" : "bg-white/[0.05]",
-              )}>
-                <Activity className={cn("h-4 w-4", isActive ? "text-violet-400" : "text-muted-foreground")} />
+      {/* Secondary stat cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {secondaryStats.map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.28 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className={cn(
+              "relative rounded-2xl border overflow-hidden",
+              "bg-gradient-to-br from-white/[0.03] to-white/[0.01] transition-all duration-300",
+              isActive ? s.accent : "border-white/[0.06]",
+            )}>
+              <div className="px-4 py-3.5 flex items-center gap-3">
+                <div className={cn("p-2 rounded-xl border", s.iconBg, s.accent.replace("border-", "border-"))}>
+                  <s.icon className={cn("h-4 w-4", s.iconColor)} />
+                </div>
+                <div>
+                  <div className="text-xl font-black text-white tabular-nums">
+                    {isActive ? <AnimatedCounter target={s.value} /> : s.value.toLocaleString()}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground/60">{s.label}</p>
+                </div>
               </div>
-              <span className="font-semibold text-white">Live Activity</span>
             </div>
-            <span className="text-xs text-muted-foreground tabular-nums bg-white/[0.04] px-2.5 py-1 rounded-full">
-              {events.filter(e => e.type !== "viewerCount").length} events
-            </span>
-          </div>
-          <div className="flex-1 h-[460px]">
-            {!isActive && events.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                  <Radio className="h-7 w-7 opacity-25" />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Activity Feed — 2/3 */}
+        <motion.div
+          className="col-span-1 lg:col-span-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+        >
+          <div className={cn(
+            "rounded-2xl border flex flex-col overflow-hidden h-full",
+            isActive
+              ? "border-violet-500/20 shadow-lg shadow-violet-500/[0.05]"
+              : "border-white/[0.06]",
+          )}
+            style={{
+              background: isActive
+                ? "linear-gradient(180deg, rgba(124,58,237,0.05) 0%, rgba(0,0,0,0) 100%)"
+                : "rgba(255,255,255,0.01)",
+            }}
+          >
+            <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={cn("p-2 rounded-xl", isActive ? "bg-violet-500/15" : "bg-white/[0.05]")}>
+                  <Activity className={cn("h-4 w-4", isActive ? "text-violet-400" : "text-muted-foreground")} />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium">Waiting for broadcast</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">Start a live session to see events here</p>
+                <div>
+                  <p className="font-semibold text-white text-sm">Live Activity</p>
+                  <p className="text-[10px] text-muted-foreground/50">{isActive ? "Real-time events" : "Session not started"}</p>
                 </div>
               </div>
-            ) : (
-              <ScrollArea className="h-full">
-                <div className="p-4 space-y-2">
-                  <AnimatePresence initial={false}>
-                    {events.map((event, idx) => (
-                      <EventRow key={`${event.timestamp}-${idx}`} event={event} idx={idx} />
-                    ))}
-                  </AnimatePresence>
+              <div className="flex items-center gap-2">
+                {isActive && (
+                  <div className="flex items-center gap-1.5">
+                    <PulsingDot color="bg-violet-400" size="h-1.5 w-1.5" />
+                    <span className="text-[10px] text-violet-400 font-semibold">Live</span>
+                  </div>
+                )}
+                <span className="text-xs text-muted-foreground/50 tabular-nums bg-white/[0.04] px-2.5 py-1 rounded-full">
+                  {eventCount} events
+                </span>
+              </div>
+            </div>
+            <div className="flex-1 min-h-[440px]">
+              {!isActive && events.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4 p-8">
+                  <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                    <Radio className="h-7 w-7 opacity-20" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold">Waiting for broadcast</p>
+                    <p className="text-xs text-muted-foreground/50 mt-1.5">Start a live session to see events here</p>
+                  </div>
                 </div>
-              </ScrollArea>
-            )}
+              ) : (
+                <ScrollArea className="h-full">
+                  <div className="p-4 space-y-2">
+                    <AnimatePresence initial={false}>
+                      {events.map((event, idx) => (
+                        <EventRow key={`${event.timestamp}-${idx}`} event={event} idx={idx} />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Right Column */}
-        <div className="space-y-4">
+        {/* Right column */}
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.22 }}
+        >
 
           {/* Top Supporters */}
           <div className={cn(
             "rounded-2xl border overflow-hidden",
-            isActive ? "border-amber-500/20 bg-gradient-to-b from-amber-500/[0.05] to-transparent" : "border-white/[0.06] bg-white/[0.02]",
-          )}>
-            <div className="px-4 py-3.5 border-b border-white/[0.06] flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-amber-500/15">
+            isActive ? "border-amber-500/20" : "border-white/[0.06]",
+          )}
+            style={{ background: isActive ? "linear-gradient(180deg, rgba(245,158,11,0.05) 0%, rgba(0,0,0,0) 100%)" : "rgba(255,255,255,0.01)" }}
+          >
+            <div className="px-4 py-3.5 border-b border-white/[0.06] flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/15">
                 <TrophyIcon className="h-4 w-4 text-amber-400" />
               </div>
-              <span className="font-semibold text-white text-sm">Top Supporters</span>
+              <div>
+                <p className="font-semibold text-white text-sm">Top Supporters</p>
+                <p className="text-[10px] text-muted-foreground/50">Gift leaderboard</p>
+              </div>
             </div>
-            <div className="h-[220px] overflow-y-auto">
+            <div className="h-[200px] overflow-y-auto">
               {stats.topSupporters.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
-                  <TrophyIcon className="h-8 w-8 opacity-15" />
-                  <p className="text-sm">No supporters yet</p>
+                  <TrophyIcon className="h-8 w-8 opacity-10" />
+                  <p className="text-xs">No supporters yet</p>
                 </div>
               ) : (
-                <div className="p-3 space-y-2">
+                <div className="p-3 space-y-1.5">
                   <AnimatePresence>
                     {stats.topSupporters.map((s, idx) => (
                       <motion.div
@@ -444,13 +656,12 @@ export function Dashboard() {
                         layout
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition-colors"
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.05] transition-colors"
                       >
                         <RankBadge rank={idx + 1} />
                         <span className="flex-1 text-sm font-semibold text-white truncate">{s.username}</span>
                         <div className="flex items-center gap-1 text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full shrink-0">
-                          <Gift className="h-2.5 w-2.5" />
-                          {s.coins}
+                          <Gift className="h-2.5 w-2.5" />{s.coins}
                         </div>
                       </motion.div>
                     ))}
@@ -460,18 +671,23 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* AI Co-host */}
+          {/* AI Co-Host panel (when live) */}
           {isActive && (
-            <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-b from-violet-500/[0.06] to-transparent overflow-hidden">
+            <div className="rounded-2xl border border-violet-500/20 overflow-hidden"
+              style={{ background: "linear-gradient(180deg, rgba(124,58,237,0.07) 0%, rgba(0,0,0,0) 100%)" }}
+            >
               <div className="px-4 py-3.5 border-b border-violet-500/15 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-violet-500/15">
+                  <div className="p-2 rounded-xl bg-violet-500/15">
                     <Bot className="h-4 w-4 text-violet-400" />
                   </div>
-                  <span className="font-semibold text-white text-sm">AI Co-Host</span>
+                  <div>
+                    <p className="font-semibold text-white text-sm">AI Co-Host</p>
+                    <p className="text-[10px] text-muted-foreground/50">Active announcements</p>
+                  </div>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-xs text-muted-foreground">🔊 TTS</span>
+                  <span className="text-xs text-muted-foreground/60">🔊 TTS</span>
                   <input
                     type="checkbox"
                     checked={ttsOn}
@@ -488,7 +704,7 @@ export function Dashboard() {
               </div>
               <div className="h-[170px] overflow-y-auto p-3 space-y-2">
                 {aiAnnouncements.length === 0 && flaggedComments.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                  <div className="h-full flex items-center justify-center text-xs text-muted-foreground/50">
                     AI announcements will appear here
                   </div>
                 ) : (
@@ -499,7 +715,7 @@ export function Dashboard() {
                           key={`ann-${a.timestamp}-${i}`}
                           initial={{ opacity: 0, y: -6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="text-xs p-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-200"
+                          className="text-xs p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-200"
                         >
                           <span className="font-bold text-violet-400 mr-1">
                             {a.type === "boss_defeated" ? "⚔️" : a.type === "level_up" ? "⬆️" : "🎁"}
@@ -514,7 +730,7 @@ export function Dashboard() {
                           key={`flag-${f.timestamp}-${i}`}
                           initial={{ opacity: 0, y: -6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="text-xs p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300"
+                          className="text-xs p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300"
                         >
                           <span className="font-bold text-red-400 mr-1">⚠️</span>
                           {f.comment}
@@ -527,43 +743,22 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* Quick links when not live */}
+          {/* Quick Launch (when offline) */}
           {!isActive && (
             <div className="rounded-2xl border border-white/[0.08] overflow-hidden"
-              style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.07) 0%, rgba(14,165,233,0.04) 100%)" }}
+              style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(14,165,233,0.03) 100%)" }}
             >
-              <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+              <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2.5">
                 <div className="p-1.5 rounded-lg bg-violet-500/10">
                   <Zap className="h-3.5 w-3.5 text-violet-400" />
                 </div>
-                <span className="text-xs font-bold text-white uppercase tracking-widest">Quick Launch</span>
+                <span className="text-xs font-bold text-white/80 uppercase tracking-widest">Quick Launch</span>
               </div>
               <div className="p-2 space-y-1">
                 {[
-                  {
-                    href: "/ai-assistant",
-                    emoji: "🤖",
-                    label: "AI Co-Host",
-                    desc: "Configure your AI persona",
-                    dot: "bg-violet-400",
-                    glow: "hover:border-violet-500/25 hover:bg-violet-500/[0.06]",
-                  },
-                  {
-                    href: "/boss-battle",
-                    emoji: "⚔️",
-                    label: "Boss Battle",
-                    desc: "Spawn a boss for viewers",
-                    dot: "bg-red-400",
-                    glow: "hover:border-red-500/25 hover:bg-red-500/[0.06]",
-                  },
-                  {
-                    href: "/mini-games",
-                    emoji: "🎮",
-                    label: "Mini-Games",
-                    desc: "Spin wheel, draws & more",
-                    dot: "bg-cyan-400",
-                    glow: "hover:border-cyan-500/25 hover:bg-cyan-500/[0.06]",
-                  },
+                  { href: "/ai-assistant",  emoji: "🤖", label: "AI Co-Host",   desc: "Configure your AI persona",   glow: "hover:border-violet-500/20 hover:bg-violet-500/[0.05]" },
+                  { href: "/games",         emoji: "🎮", label: "Games Hub",    desc: "Boss battles, XP & mini-games", glow: "hover:border-cyan-500/20 hover:bg-cyan-500/[0.05]" },
+                  { href: "/live-control",  emoji: "📡", label: "Live Control", desc: "TikTok connection & event feed", glow: "hover:border-green-500/20 hover:bg-green-500/[0.05]" },
                 ].map((link, i) => (
                   <motion.div
                     key={link.href}
@@ -576,14 +771,14 @@ export function Dashboard() {
                         "flex items-center gap-3 p-2.5 rounded-xl border border-transparent transition-all duration-200 cursor-pointer group",
                         link.glow,
                       )}>
-                        <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                        <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
                           {link.emoji}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">{link.label}</p>
-                          <p className="text-[11px] text-muted-foreground/60">{link.desc}</p>
+                          <p className="text-sm font-semibold text-white/90 group-hover:text-white">{link.label}</p>
+                          <p className="text-[11px] text-muted-foreground/55">{link.desc}</p>
                         </div>
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-violet-400 transition-colors" />
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/25 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
                       </div>
                     </Link>
                   </motion.div>
@@ -591,7 +786,35 @@ export function Dashboard() {
               </div>
             </div>
           )}
-        </div>
+
+          {/* Sessions history */}
+          {sessions && sessions.length > 0 && (
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] overflow-hidden">
+              <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-blue-500/10">
+                  <Clock className="h-3.5 w-3.5 text-blue-400" />
+                </div>
+                <span className="text-xs font-bold text-white/80">Recent Sessions</span>
+                <span className="ml-auto text-[10px] text-muted-foreground/40">{sessions.length} total</span>
+              </div>
+              <div className="p-2 space-y-1">
+                {sessions.slice(0, 3).map((s: any) => (
+                  <div key={s.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                    <div className="h-1.5 w-1.5 rounded-full bg-violet-500/60 flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground/70 flex-1">
+                      {formatDistanceToNow(new Date(s.startedAt), { addSuffix: true })}
+                    </span>
+                    {s.endedAt && (
+                      <span className="text-[10px] text-muted-foreground/40 font-mono">
+                        {Math.floor((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 60000)}m
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );

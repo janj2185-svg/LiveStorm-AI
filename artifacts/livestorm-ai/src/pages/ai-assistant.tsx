@@ -1418,7 +1418,7 @@ export function AiAssistant() {
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-blue-500/40 text-blue-300 bg-blue-500/20">
                   <span className="flex gap-0.5 items-center">
                     {[0, 150, 300].map((d) => (
-                      <span key={d} className="h-1 w-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                      <span key={d} className="h-1 w-1 rounded-full bg-blue-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
                     ))}
                   </span>
                   Thinking
@@ -1627,7 +1627,7 @@ export function AiAssistant() {
                       {msg.content === "..." ? (
                         <span className="flex gap-1 items-center h-4">
                           {[0, 150, 300].map((d) => (
-                            <span key={d} className="h-1 w-1 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                            <span key={d} className="h-1 w-1 rounded-full bg-purple-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
                           ))}
                         </span>
                       ) : msg.content}

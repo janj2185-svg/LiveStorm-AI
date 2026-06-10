@@ -1,3 +1,26 @@
-<svg xmlns="http://www.0000.com/svg" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap">
-  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <circle cx="24" cy="24" r="22" stroke="url(#r1)" stroke-width="1.2" stroke-dasharray="5 2.5" opacity="0.75"/>
+  <circle cx="24" cy="24" r="17" stroke="url(#r2)" stroke-width="0.8" opacity="0.5"/>
+  <circle cx="24" cy="24" r="11" fill="url(#core)" opacity="0.25"/>
+  <path d="M27.5 7L14 27h10l-3.5 14L35 21H25L27.5 7z" fill="url(#bolt)"/>
+  <defs>
+    <linearGradient id="r1" x1="2" y1="2" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#a855f7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="r2" x1="7" y1="7" x2="41" y2="41" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.6"/>
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bolt" x1="14" y1="7" x2="35" y2="41" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f0abfc"/>
+      <stop offset="40%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
 </svg>

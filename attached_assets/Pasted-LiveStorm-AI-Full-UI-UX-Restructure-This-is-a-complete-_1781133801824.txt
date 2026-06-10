@@ -1,0 +1,237 @@
+LiveStorm AI – Full UI/UX Restructure
+
+This is a complete UI/UX redesign task.
+
+IMPORTANT:
+Do NOT modify backend functionality, TikTok connection logic, WebSocket handling, event processing, authentication, AI logic, APIs or database structure.
+
+Only redesign the interface and navigation.
+
+====================================================
+NAVIGATION RESTRUCTURE
+====================================================
+
+Remove TikTok LIVE as a separate sidebar item.
+
+New sidebar structure:
+
+• Dashboard
+• AI Co-Host
+• Avatar Studio
+• Live Control
+• Analytics
+• Games
+• Settings
+
+Live Control should contain:
+
+• Overview
+• TikTok Connection
+• Event Feed
+• Moderation
+• Overlay Controls
+• Diagnostics
+
+Move all TikTok technical tools into Live Control.
+
+====================================================
+DASHBOARD REDESIGN
+====================================================
+
+Dashboard becomes the main control center.
+
+Display:
+
+• LIVE / OFFLINE Status
+• Connected Username
+• AI Status
+• Viewers
+• Likes
+• Gifts
+• Followers
+• Recent Activity
+• Stream Performance
+• Quick Connect / Disconnect
+
+Create premium statistics cards:
+
+• Viewers
+• Likes
+• Gifts
+• Followers
+
+Add:
+
+• Animated counters
+• Mini trend charts
+• Live updates
+• Better spacing
+• Glassmorphism cards
+• Professional SaaS appearance
+
+Dashboard should feel like a premium analytics platform.
+
+====================================================
+SIDEBAR IMPROVEMENTS
+====================================================
+
+Improve sidebar design:
+
+• More readable
+• Wider spacing
+• Better icons
+• Hover effects
+• Active item highlight
+• Collapse / Expand mode
+
+Collapsed:
+Icons only
+
+Expanded:
+Icons + labels
+
+====================================================
+AI CO-HOST PAGE
+====================================================
+
+Current avatar area needs redesign.
+
+Requirements:
+
+• Move avatar slightly to the right
+• Reduce avatar size by 15–20%
+• Do not let avatar overlap sidebar
+• Improve overall balance
+• Increase spacing between sections
+• No horizontal scrolling
+
+Keep:
+
+• LIVE badge
+• Connected badge
+• Status indicators
+
+====================================================
+LIVESTORM AI BRANDING
+====================================================
+
+Add branding above avatar.
+
+Structure:
+
+[ LiveStorm AI Logo ]
+
+⚡ LiveStorm AI
+
+Powering The Future Of Live Streaming
+
+Requirements:
+
+• Center aligned
+• Premium futuristic style
+• Blue / Purple glow
+• Compact height
+• Always visible
+
+====================================================
+TEMPORARY LOGO
+====================================================
+
+Generate a premium temporary LiveStorm AI logo:
+
+Style:
+
+• AI Core
+• Lightning / Storm symbol
+• Circular holographic ring
+• Futuristic SaaS branding
+• Blue/Purple gradient
+
+Logo should look suitable for a future commercial product.
+
+====================================================
+CREATOR PROFILE PANEL
+====================================================
+
+Add creator information block below branding.
+
+Show:
+
+• Profile picture
+• Username
+• Stream duration
+• Creator level
+
+Compact design.
+
+====================================================
+RIGHT SIDE PANEL REDESIGN
+====================================================
+
+Improve visual appearance of right side dashboard panels.
+
+Use:
+
+• Glassmorphism
+• Subtle neon accents
+• Modern card layout
+• Better spacing
+• Better typography
+
+Avoid excessive effects.
+
+====================================================
+STATISTICS SECTION
+====================================================
+
+Improve stats cards:
+
+• Viewers
+• Likes
+• Gifts
+• AI Replies
+
+Requirements:
+
+• Larger cards
+• Better hierarchy
+• Animated counters
+• Modern appearance
+
+====================================================
+VISUAL STYLE
+====================================================
+
+Target style:
+
+• Streamlabs quality
+• TikFinity quality
+• Modern SaaS platform
+• Creator economy platform
+• Futuristic but professional
+
+Use:
+
+• Glassmorphism
+• Subtle neon effects
+• Blue/Purple branding
+• Smooth animations
+• Premium typography
+
+Avoid:
+
+• Excessive glow
+• Overloaded UI
+• Heavy animations
+
+====================================================
+FINAL GOAL
+====================================================
+
+The platform should look like a professional commercial SaaS product that users would pay for.
+
+Dashboard = command center.
+AI Co-Host = hero feature.
+Live Control = technical streaming tools.
+
+Preserve all existing functionality while significantly improving the UI/UX.

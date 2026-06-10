@@ -13,6 +13,10 @@ import { Layout } from "@/components/layout";
 import { Home } from "@/pages/home";
 import { Dashboard } from "@/pages/dashboard";
 import { LiveStudio } from "@/pages/live-studio";
+import { LiveControl } from "@/pages/live-control";
+import { LiveControlDiagnostics } from "@/pages/live-control-diagnostics";
+import { AvatarStudio } from "@/pages/avatar-studio";
+import { Games } from "@/pages/games";
 import { Gamification } from "@/pages/gamification";
 import { Automation } from "@/pages/automation";
 import { Kingdom } from "@/pages/kingdom";
@@ -229,6 +233,18 @@ function AppRoutes() {
       </Route>
       <Route path="/live-studio">
         <ProtectedRoute><Layout><LiveStudio /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/live-control/diagnostics">
+        <ProtectedRoute><Layout><LiveControlDiagnostics /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/live-control">
+        <ProtectedRoute><Layout><LiveControl /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/avatar-studio">
+        <ProtectedRoute><Layout><AvatarStudio /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/games">
+        <ProtectedRoute><Layout><Games /></Layout></ProtectedRoute>
       </Route>
       <Route path="/gamification">
         <ProtectedRoute><Layout><Gamification /></Layout></ProtectedRoute>
