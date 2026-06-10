@@ -69,12 +69,26 @@ export const aiModerationLogsTable = pgTable("ai_moderation_logs", {
   flaggedAt: timestamp("flagged_at").notNull().defaultNow(),
 });
 
+export const aiGeneratedContentTable = pgTable("ai_generated_content", {
+  id: serial("id").primaryKey(),
+  streamerId: integer("streamer_id")
+    .notNull()
+    .references(() => streamersTable.id, { onDelete: "cascade" }),
+  contentType: text("content_type").notNull(),
+  prompt: text("prompt").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertAiPersonaConfigSchema = createInsertSchema(aiPersonaConfigsTable).omit({ id: true, updatedAt: true });
 export const insertAiMessageSchema = createInsertSchema(aiMessagesTable).omit({ id: true, createdAt: true });
 export const insertAiQuestSchema = createInsertSchema(aiQuestsTable).omit({ id: true, createdAt: true, completedAt: true });
 export const insertAiModerationLogSchema = createInsertSchema(aiModerationLogsTable).omit({ id: true, flaggedAt: true });
 
+export const insertAiGeneratedContentSchema = createInsertSchema(aiGeneratedContentTable).omit({ id: true, createdAt: true });
+
 export type AiPersonaConfig = typeof aiPersonaConfigsTable.$inferSelect;
 export type AiMessage = typeof aiMessagesTable.$inferSelect;
 export type AiQuest = typeof aiQuestsTable.$inferSelect;
 export type AiModerationLog = typeof aiModerationLogsTable.$inferSelect;
+export type AiGeneratedContent = typeof aiGeneratedContentTable.$inferSelect;

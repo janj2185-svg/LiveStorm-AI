@@ -6,6 +6,7 @@ import {
   aiMessagesTable,
   aiQuestsTable,
   aiModerationLogsTable,
+  aiGeneratedContentTable,
   sessionsTable,
 } from "@workspace/db";
 import { eq, desc, asc, and } from "drizzle-orm";
@@ -416,6 +417,82 @@ router.post("/ai/content", requireAuth, async (req: any, res: any) => {
     res.json(result);
   } catch {
     res.status(500).json({ error: "Failed to generate content" });
+  }
+});
+
+// ── POST /ai/content/save ──────────────────────────────────────────────────────
+router.post("/ai/content/save", requireAuth, async (req: any, res: any) => {
+  try {
+    const { streamer } = await getStreamer(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
+
+    const { contentType, prompt, content } = req.body;
+    const VALID_TYPES = ["ideas", "titles", "descriptions", "hashtags", "script"];
+    if (!VALID_TYPES.includes(contentType)) return res.status(400).json({ error: "Invalid contentType" });
+    if (!prompt?.trim()) return res.status(400).json({ error: "prompt is required" });
+    if (!content?.trim()) return res.status(400).json({ error: "content is required" });
+
+    const [saved] = await db
+      .insert(aiGeneratedContentTable)
+      .values({
+        streamerId: streamer.id,
+        contentType: String(contentType),
+        prompt: String(prompt).slice(0, 500),
+        content: String(content).slice(0, 20000),
+      })
+      .returning();
+
+    res.json(saved);
+  } catch {
+    res.status(500).json({ error: "Failed to save content" });
+  }
+});
+
+// ── GET /ai/content/history ────────────────────────────────────────────────────
+router.get("/ai/content/history", requireAuth, async (req: any, res: any) => {
+  try {
+    const { streamer } = await getStreamer(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
+
+    const { type } = req.query;
+    const VALID_TYPES = ["ideas", "titles", "descriptions", "hashtags", "script"];
+
+    const condition =
+      type && VALID_TYPES.includes(String(type))
+        ? and(eq(aiGeneratedContentTable.streamerId, streamer.id), eq(aiGeneratedContentTable.contentType, String(type)))
+        : eq(aiGeneratedContentTable.streamerId, streamer.id);
+
+    const items = await db
+      .select()
+      .from(aiGeneratedContentTable)
+      .where(condition)
+      .orderBy(desc(aiGeneratedContentTable.createdAt))
+      .limit(100);
+
+    res.json(items);
+  } catch {
+    res.status(500).json({ error: "Failed to fetch content history" });
+  }
+});
+
+// ── DELETE /ai/content/history/:id ────────────────────────────────────────────
+router.delete("/ai/content/history/:id", requireAuth, async (req: any, res: any) => {
+  try {
+    const { streamer } = await getStreamer(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
+
+    const itemId = parseInt(req.params.id, 10);
+    if (isNaN(itemId)) return res.status(400).json({ error: "Invalid id" });
+
+    const item = await db.query.aiGeneratedContentTable.findFirst({
+      where: and(eq(aiGeneratedContentTable.id, itemId), eq(aiGeneratedContentTable.streamerId, streamer.id)),
+    });
+    if (!item) return res.status(404).json({ error: "Not found" });
+
+    await db.delete(aiGeneratedContentTable).where(eq(aiGeneratedContentTable.id, itemId));
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: "Failed to delete content" });
   }
 });
 
