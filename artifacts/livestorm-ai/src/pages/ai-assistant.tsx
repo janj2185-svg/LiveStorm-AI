@@ -945,7 +945,6 @@ export function AiAssistant() {
   // ── Settings sidebar sections ─────────────────────────────────────────────
   // All collapsed by default (secondary tools, not primary focus)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
-  const [streamControlOpen, setStreamControlOpen] = useState(false);
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
@@ -996,143 +995,146 @@ export function AiAssistant() {
         {/* ═══════════════ LEFT: Settings (25%) ═══════════════ */}
         <div className="flex flex-col gap-2 overflow-y-auto min-h-0 pr-0.5 scrollbar-thin scrollbar-thumb-white/10">
 
-          {/* Status header */}
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] flex-shrink-0">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0">
-              AI
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate">{personaName}</p>
-              <p className="text-[10px] text-muted-foreground/60">AI Co-Host</p>
-            </div>
-            <div className={cn(
-              "w-2 h-2 rounded-full flex-shrink-0",
-              isSessionActive && connected ? "bg-green-400 animate-pulse"
-              : isSessionActive ? "bg-yellow-400 animate-pulse"
-              : "bg-white/20",
-            )} />
-          </div>
+          {/* ── Unified AI Control Panel ── */}
+          <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
 
-          {/* ── Mode Buttons ── */}
-          <div className="flex-shrink-0 p-1.5 bg-white/[0.04] rounded-xl border border-white/[0.07]">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 px-1 py-1">Mode</p>
-            <div className="grid grid-cols-3 gap-1">
-              <button
-                onClick={() => updateConfig.mutate({ operatingMode: "autopilot", tone: "professional" })}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-lg border text-[10px] font-semibold transition-all",
-                  config?.tone === "professional"
-                    ? "border-blue-500/50 bg-blue-500/15 text-blue-300"
-                    : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                )}
-              >
-                <Zap className="h-3.5 w-3.5" />
-                <span>Pro</span>
-              </button>
-              <button
-                onClick={() => updateConfig.mutate({ operatingMode: "semi-auto", tone: "friendly" })}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-lg border text-[10px] font-semibold transition-all",
-                  config?.tone === "friendly"
-                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
-                    : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                )}
-              >
-                <Bot className="h-3.5 w-3.5" />
-                <span>Assistant</span>
-              </button>
-              <button
-                onClick={() => handleTtsModeChange(ttsMode === "off" ? "browser" : "off")}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-lg border text-[10px] font-semibold transition-all",
-                  ttsMode !== "off"
-                    ? "border-purple-500/50 bg-purple-500/15 text-purple-300"
-                    : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                )}
-              >
-                {ttsMode !== "off"
-                  ? <Volume2 className="h-3.5 w-3.5" />
-                  : <VolumeX className="h-3.5 w-3.5" />}
-                <span>Voice</span>
-              </button>
+            {/* Header — AI persona */}
+            <div className="flex items-center gap-2.5 px-3 py-3 border-b border-white/[0.05]">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-lg shadow-purple-500/20">
+                AI
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white truncate">{personaName}</p>
+                <p className="text-[10px] text-muted-foreground/50">AI Co-Host</p>
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border",
+                isSessionActive && connected
+                  ? "border-green-500/30 bg-green-500/10 text-green-300"
+                  : isSessionActive
+                  ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-300"
+                  : "border-white/10 bg-white/5 text-white/30",
+              )}>
+                <span className={cn("w-1.5 h-1.5 rounded-full",
+                  isSessionActive && connected ? "bg-green-400 animate-pulse"
+                  : isSessionActive ? "bg-yellow-400 animate-pulse"
+                  : "bg-white/20",
+                )} />
+                {isSessionActive && connected ? "Online" : isSessionActive ? "Connecting" : "Offline"}
+              </div>
             </div>
-          </div>
 
-          {/* ── Stream Control ── */}
-          <Card className="bg-card border-white/5 flex-shrink-0">
-            <button
-              className="w-full flex items-center justify-between px-4 py-3 text-left"
-              onClick={() => setStreamControlOpen((v) => !v)}
-            >
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Radio className="h-4 w-4 text-red-400" />
-                Stream Control
-              </CardTitle>
-              <div className="flex items-center gap-2">
+            {/* Mode quick-select */}
+            <div className="px-3 pt-2.5 pb-3 border-b border-white/[0.05]">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Mode</p>
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  onClick={() => updateConfig.mutate({ operatingMode: "autopilot", tone: "professional" })}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-[10px] font-semibold transition-all",
+                    config?.tone === "professional"
+                      ? "border-blue-500/40 bg-blue-500/15 text-blue-300"
+                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                  )}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>Pro</span>
+                </button>
+                <button
+                  onClick={() => updateConfig.mutate({ operatingMode: "semi-auto", tone: "friendly" })}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-[10px] font-semibold transition-all",
+                    config?.tone === "friendly"
+                      ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
+                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                  )}
+                >
+                  <Bot className="h-3.5 w-3.5" />
+                  <span>Assistant</span>
+                </button>
+                <button
+                  onClick={() => handleTtsModeChange(ttsMode === "off" ? "browser" : "off")}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-[10px] font-semibold transition-all",
+                    ttsMode !== "off"
+                      ? "border-purple-500/40 bg-purple-500/15 text-purple-300"
+                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                  )}
+                >
+                  {ttsMode !== "off" ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+                  <span>Voice</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Stream control — always visible */}
+            <div className="px-3 py-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-1.5">
+                  <Radio className="h-3.5 w-3.5 text-red-400" />
+                  <span className="text-xs font-bold text-white/80">Stream Control</span>
+                </div>
                 {isSessionActive && (
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-1.5 py-0.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  <span className="flex items-center gap-1 text-[10px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
+                    <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
                     LIVE
                   </span>
                 )}
-                {streamControlOpen
-                  ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                  : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
               </div>
-            </button>
-            {streamControlOpen && (
-              <CardContent className="space-y-3 pb-4 pt-0">
-                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
-                  {effectiveMode === "real" ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
-                  ) : effectiveMode === "error" ? (
-                    <WifiOff className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
-                  ) : (
-                    <Server className="h-3.5 w-3.5 text-orange-400 flex-shrink-0" />
+
+              {/* Status row */}
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-3">
+                {effectiveMode === "real" ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                ) : effectiveMode === "error" ? (
+                  <WifiOff className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+                ) : (
+                  <Server className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium">
+                    {!isSessionActive ? "Ready to go live"
+                      : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
+                      : "Demo mode active"}
+                  </p>
+                  {isSessionActive && activeSessionId && (
+                    <p className="text-[10px] text-muted-foreground/50">Session #{activeSessionId}</p>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium">
-                      {!isSessionActive ? "Offline"
-                        : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
-                        : "Demo mode"}
-                    </p>
-                    {isSessionActive && activeSessionId && (
-                      <p className="text-[10px] text-muted-foreground/60">Session #{activeSessionId}</p>
-                    )}
-                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    size="sm"
-                    className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40"
-                    disabled={isSessionActive || startSession.isPending}
-                    onClick={() => startSession.mutate(undefined)}
-                  >
-                    {startSession.isPending
-                      ? <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Starting…</>
-                      : <><Play className="h-3 w-3 mr-1.5" />Go Live</>}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-40"
-                    disabled={!isSessionActive || endSession.isPending}
-                    onClick={() => endSession.mutate(undefined)}
-                  >
-                    {endSession.isPending
-                      ? <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Ending…</>
-                      : <><Square className="h-3 w-3 mr-1.5" />End Stream</>}
-                  </Button>
-                </div>
-                <p className="text-[10px] text-muted-foreground/40 text-center">
-                  TikTok account & advanced setup in{" "}
-                  <Link href="/dashboard">
-                    <span className="text-violet-400 hover:underline cursor-pointer">Dashboard</span>
-                  </Link>
-                </p>
-              </CardContent>
-            )}
-          </Card>
+              </div>
+
+              {/* Go Live / End Stream */}
+              {!isSessionActive ? (
+                <Button
+                  className="w-full h-9 text-sm font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20 disabled:opacity-40"
+                  disabled={startSession.isPending}
+                  onClick={() => startSession.mutate(undefined)}
+                >
+                  {startSession.isPending
+                    ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Starting…</>
+                    : <><Play className="h-3.5 w-3.5 mr-2" />Go Live</>}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full h-9 text-sm font-bold border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-40"
+                  disabled={endSession.isPending}
+                  onClick={() => endSession.mutate(undefined)}
+                >
+                  {endSession.isPending
+                    ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Ending…</>
+                    : <><Square className="h-3.5 w-3.5 mr-2" />End Stream</>}
+                </Button>
+              )}
+
+              <p className="text-[10px] text-muted-foreground/35 text-center mt-2">
+                Advanced setup in{" "}
+                <Link href="/dashboard">
+                  <span className="text-violet-400/70 hover:text-violet-400 transition-colors cursor-pointer">Dashboard</span>
+                </Link>
+              </p>
+            </div>
+          </div>
 
           {/* ── Settings sections — all collapsed by default ── */}
 
@@ -1361,10 +1363,20 @@ export function AiAssistant() {
         </div>
 
         {/* ═══════════════ CENTER: Avatar (40%) ═══════════════ */}
-        <div className="flex flex-col min-h-0 gap-2">
+        <div className="flex flex-col min-h-0 gap-2 pt-3">
 
-          {/* Avatar — fills most of the height */}
-          <div className="relative flex-1 min-h-[500px] rounded-2xl overflow-hidden bg-black/20">
+          {/* Branding — above avatar */}
+          <div className="flex flex-col items-center gap-1 flex-shrink-0 pb-1">
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="LiveStorm AI" className="h-8 w-8 drop-shadow-lg" />
+            <p className="text-sm font-black tracking-tight text-white">⚡ LiveStorm AI</p>
+            <p className="text-[10px] text-muted-foreground/45 font-medium">Powering The Future Of Live Streaming</p>
+          </div>
+
+          {/* Avatar — fills most of the height, with glow ring */}
+          <div
+            className="relative flex-1 min-h-[430px] rounded-2xl overflow-hidden bg-black/20"
+            style={{ boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 40px rgba(139,92,246,0.12), 0 0 80px rgba(99,102,241,0.07)' }}
+          >
             <AvatarStage
               avatarKey={avatarConfig?.avatarKey ?? "marcus"}
               accentColor={accentColor}
@@ -1460,17 +1472,17 @@ export function AiAssistant() {
           {/* Stats row — below avatar */}
           <div className="grid grid-cols-4 gap-2 flex-shrink-0">
             {[
-              { label: "Viewers", value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20" },
-              { label: "Gifts", value: stats.totalGifts, icon: Gift, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-              { label: "Follows", value: stats.totalFollows, icon: Users, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
-              { label: "Replies", value: aiAnnouncements?.length ?? 0, icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
-            ].map(({ label, value, icon: Icon, color, bg }) => (
-              <div key={label} className={cn("rounded-xl border p-2.5 flex flex-col items-center gap-1 transition-all duration-300", bg)}>
-                <Icon className={cn("h-3.5 w-3.5", color)} />
-                <span className={cn("text-base font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-muted-foreground/40")}>
+              { label: "Viewers", value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20", glow: "shadow-violet-500/10" },
+              { label: "Gifts", value: stats.totalGifts, icon: Gift, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", glow: "shadow-amber-500/10" },
+              { label: "Followers", value: stats.totalFollows, icon: Users, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20", glow: "shadow-green-500/10" },
+              { label: "Replies", value: aiAnnouncements?.length ?? 0, icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-purple-500/10" },
+            ].map(({ label, value, icon: Icon, color, bg, glow }) => (
+              <div key={label} className={cn("rounded-2xl border p-4 flex flex-col items-center gap-1.5 transition-all duration-300 shadow-lg", bg, glow)}>
+                <Icon className={cn("h-4 w-4", color)} />
+                <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-muted-foreground/30")}>
                   {isSessionActive ? value.toLocaleString() : "—"}
                 </span>
-                <span className="text-[9px] text-muted-foreground/60 font-medium">{label}</span>
+                <span className="text-[10px] text-muted-foreground/60 font-semibold">{label}</span>
               </div>
             ))}
           </div>
