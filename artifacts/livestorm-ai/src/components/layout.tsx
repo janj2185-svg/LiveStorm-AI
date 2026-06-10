@@ -358,10 +358,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <kbd className="border border-border rounded px-1">⌘7</kbd>
               <span className="font-sans ml-0.5">navigate</span>
             </div>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500/80 inline-block" />
-              {t("status_operational")}
-            </span>
           </div>
         </header>
 

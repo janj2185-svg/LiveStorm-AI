@@ -41,7 +41,7 @@ router.use(aiRouter);
 router.use(tiktokRouter);
 router.use(integrationsRouter);
 router.use(moderationRouter);
-router.use(avatarRouter);
+router.use("/avatar", avatarRouter);
 router.use(billingRouter);
 router.use(adminRouter);
 router.use(devRouter);
