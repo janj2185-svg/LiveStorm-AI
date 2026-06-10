@@ -5,7 +5,8 @@ import { useAuth } from "@clerk/react";
 export type ConnectionMode = "real" | "demo" | "error";
 
 export interface LiveEvent {
-  type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "ai_announcement";
+  type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "ai_announcement"
+      | "xp_awarded" | "achievement_unlocked" | "level_up";
   sessionId: number;
   username?: string;
   avatarUrl?: string;
@@ -334,14 +335,45 @@ export function useLiveSession(
 
       socket.on("xp:awarded", (payload: XpAwardedEvent) => {
         setRecentXpAwards((prev) => [payload, ...prev].slice(0, 30));
+        setEvents((prev) => [{
+          type: "xp_awarded" as const,
+          sessionId: sessionId!,
+          username: payload.viewerName,
+          data: {
+            xp: payload.xp,
+            coins: payload.coins,
+            level: payload.level,
+            totalXp: payload.totalXp,
+            eventType: payload.eventType,
+          },
+          timestamp: payload.timestamp,
+        }, ...prev].slice(0, 200));
       });
 
       socket.on("level:up", (payload: LevelUpEvent) => {
         setLevelUps((prev) => [payload, ...prev].slice(0, 20));
+        setEvents((prev) => [{
+          type: "level_up" as const,
+          sessionId: sessionId!,
+          username: payload.viewerName,
+          data: { newLevel: payload.newLevel },
+          timestamp: payload.timestamp,
+        }, ...prev].slice(0, 200));
       });
 
       socket.on("achievement:unlocked", (payload: AchievementUnlockEvent) => {
         setAchievementUnlocks((prev) => [payload, ...prev].slice(0, 20));
+        setEvents((prev) => [{
+          type: "achievement_unlocked" as const,
+          sessionId: sessionId!,
+          username: payload.viewerName,
+          data: {
+            achievementName: payload.achievement.name,
+            achievementKey: payload.achievement.key,
+            xpReward: payload.achievement.xpReward,
+          },
+          timestamp: payload.timestamp,
+        }, ...prev].slice(0, 200));
       });
 
       socket.on("lucky_drop:fired", (payload: LuckyDropEvent) => {

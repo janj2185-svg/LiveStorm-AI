@@ -20,7 +20,7 @@ import {
   Video, PlugZap, StopCircle, PlayCircle, Activity,
   AlertTriangle, Radio, Bot, RotateCcw, Wifi, WifiOff,
   MessageCircle, Gift, Heart, UserPlus, Eye, Gem,
-  ArrowDown, Share2, Sparkles,
+  ArrowDown, Share2, Sparkles, Zap, Trophy, TrendingUp,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -251,35 +251,44 @@ const FILTER_BUTTONS: { label: string; value: FilterType; color: string }[] = [
 ];
 
 const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  comment: MessageCircle,
-  gift: Gift,
-  like: Heart,
-  follow: UserPlus,
-  share: Share2,
-  viewerCount: Eye,
-  ai_announcement: Sparkles,
+  comment:             MessageCircle,
+  gift:                Gift,
+  like:                Heart,
+  follow:              UserPlus,
+  share:               Share2,
+  viewerCount:         Eye,
+  ai_announcement:     Sparkles,
+  xp_awarded:          Zap,
+  achievement_unlocked: Trophy,
+  level_up:            TrendingUp,
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  gift:            "text-amber-400 bg-amber-500/10 border-amber-500/20",
-  like:            "text-pink-400 bg-pink-500/10 border-pink-500/20",
-  comment:         "text-blue-400 bg-blue-500/10 border-blue-500/20",
-  follow:          "text-green-400 bg-green-500/10 border-green-500/20",
-  share:           "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-  viewerCount:     "text-violet-400 bg-violet-500/10 border-violet-500/20",
-  ai_announcement: "text-purple-300 bg-purple-500/10 border-purple-500/20",
+  gift:                "text-amber-400 bg-amber-500/10 border-amber-500/20",
+  like:                "text-pink-400 bg-pink-500/10 border-pink-500/20",
+  comment:             "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  follow:              "text-green-400 bg-green-500/10 border-green-500/20",
+  share:               "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+  viewerCount:         "text-violet-400 bg-violet-500/10 border-violet-500/20",
+  ai_announcement:     "text-purple-300 bg-purple-500/10 border-purple-500/20",
+  xp_awarded:          "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  achievement_unlocked: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+  level_up:            "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
 };
 
 function eventSummary(event: LiveEvent): string {
   switch (event.type) {
-    case "comment":     return (event.data.text as string) ?? "";
-    case "gift":        return `${event.data.giftName ?? "Gift"}${(event.data.count as number) > 1 ? ` ×${event.data.count}` : ""} — ${(event.data.coins as number) ?? 0} coins`;
-    case "like":        return `+${(event.data.likeCount as number) ?? 1} likes`;
-    case "follow":      return "followed";
-    case "share":       return "shared the stream";
-    case "viewerCount": return `${(event.data.count as number) ?? 0} viewers`;
-    case "ai_announcement": return (event.data.text as string) ?? "";
-    default:            return JSON.stringify(event.data).slice(0, 60);
+    case "comment":              return (event.data.text as string) ?? "";
+    case "gift":                 return `${event.data.giftName ?? "Gift"}${(event.data.count as number) > 1 ? ` ×${event.data.count}` : ""} — ${(event.data.coins as number) ?? 0} coins`;
+    case "like":                 return `+${(event.data.likeCount as number) ?? 1} likes`;
+    case "follow":               return "followed";
+    case "share":                return "shared the stream";
+    case "viewerCount":          return `${(event.data.count as number) ?? 0} viewers`;
+    case "ai_announcement":      return (event.data.text as string) ?? "";
+    case "xp_awarded":           return `+${event.data.xp} XP · Lv.${event.data.level} · ${event.data.eventType}`;
+    case "achievement_unlocked": return `🏆 ${(event.data.achievementName as string) ?? "Achievement"} (+${event.data.xpReward ?? 0} XP)`;
+    case "level_up":             return `reached Level ${event.data.newLevel}!`;
+    default:                     return JSON.stringify(event.data).slice(0, 60);
   }
 }
 
