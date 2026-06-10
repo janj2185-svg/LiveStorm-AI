@@ -11,6 +11,7 @@ import {
   Upload, Loader2, CheckCircle2, AlertCircle, Camera, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AvaturnSDK } from "@avaturn/sdk";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -41,6 +42,8 @@ function rpmThumbnailUrl(raw: string): string {
 }
 
 // ── Ready Player Me Tab ───────────────────────────────────────────────────────
+// Uses RPM Frame API v2: requires a subdomain.
+// "demo" is RPM's public demo subdomain — no registration needed.
 
 function ReadyPlayerMeTab({
   onSuccess,
@@ -51,8 +54,9 @@ function ReadyPlayerMeTab({
   const [phase, setPhase] = useState<"loading" | "ready" | "done">("loading");
   const capturedRef = useRef(false);
 
+  // RPM Frame API v2 — subdomain required; "demo" is the public RPM demo app.
   const RPM_URL =
-    "https://readyplayer.me/avatar?frameApi&clearCache&bodyType=fullbody&quality=high";
+    "https://demo.readyplayer.me/avatar?frameApi&clearCache&bodyType=fullbody";
 
   const handleSuccess = useCallback(
     (avatarUrl: string, thumbnailUrl: string) => {
@@ -142,13 +146,11 @@ function ReadyPlayerMeTab({
           ref={iframeRef}
           src={RPM_URL}
           className="w-full h-full border-0"
-          allow="camera *; microphone *"
+          allow="camera *; microphone *; clipboard-write"
           onLoad={() => {
-            if (phase === "loading") {
-              setTimeout(() => {
-                if (phase === "loading") setPhase("ready");
-              }, 2000);
-            }
+            setTimeout(() => {
+              setPhase((p) => (p === "loading" ? "ready" : p));
+            }, 2000);
           }}
         />
       </div>
@@ -157,13 +159,18 @@ function ReadyPlayerMeTab({
 }
 
 // ── Avaturn Tab ───────────────────────────────────────────────────────────────
+// Uses @avaturn/sdk (official) with the public "demo" subdomain.
+// The SDK handles the iframe + postMessage handshake internally.
 
 function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [phase, setPhase] = useState<"loading" | "ready" | "done">("loading");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sdkRef = useRef<AvaturnSDK | null>(null);
+  const [phase, setPhase] = useState<"loading" | "ready" | "done" | "error">("loading");
+  const [errorMsg, setErrorMsg] = useState("");
   const capturedRef = useRef(false);
 
-  const AVATURN_URL = "https://avaturn.me/sdk/";
+  // Public demo URL — no API key required.
+  const AVATURN_URL = "https://demo.avaturn.dev";
 
   const handleSuccess = useCallback(
     (url: string) => {
@@ -177,39 +184,32 @@ function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
 
   useEffect(() => {
     capturedRef.current = false;
-    function onMessage(e: MessageEvent) {
-      if (!e.data) return;
-      const data =
-        typeof e.data === "string"
-          ? (() => {
-              try {
-                return JSON.parse(e.data);
-              } catch {
-                return null;
-              }
-            })()
-          : e.data;
-      if (!data) return;
+    if (!containerRef.current) return;
 
-      if (
-        data.type === "avaturn:sdk:ready" ||
-        (data.source === "avaturn" && data.type === "ready")
-      ) {
+    const sdk = new AvaturnSDK();
+    sdkRef.current = sdk;
+
+    sdk.init(containerRef.current, { url: AVATURN_URL })
+      .then(() => {
         setPhase("ready");
-      }
+        sdk.on("export", (data) => {
+          if (data?.url) handleSuccess(data.url);
+        });
+        sdk.on("error", (err) => {
+          setErrorMsg(err?.message ?? "Avaturn error");
+          setPhase("error");
+        });
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : "Failed to load Avaturn";
+        setErrorMsg(msg);
+        setPhase("error");
+      });
 
-      const isExport =
-        data.type === "avaturn:avatar:export" ||
-        data.eventName === "export_avatar" ||
-        data.type === "export_avatar" ||
-        data.type === "avaturnComplete";
-      if (isExport) {
-        const url: string = data.data?.url ?? data.url ?? "";
-        if (url) handleSuccess(url);
-      }
-    }
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    return () => {
+      sdkRef.current?.destroy();
+      sdkRef.current = null;
+    };
   }, [handleSuccess]);
 
   return (
@@ -241,14 +241,18 @@ function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
             <p className="text-[11px] text-muted-foreground">Click Save to use this presenter</p>
           </div>
         )}
-        <iframe
-          ref={iframeRef}
-          src={AVATURN_URL}
-          className="w-full h-full border-0"
-          allow="camera *; microphone *"
-          onLoad={() => {
-            setTimeout(() => setPhase((p) => (p === "loading" ? "ready" : p)), 1500);
-          }}
+        {phase === "error" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070010] z-10 gap-3 px-6 text-center">
+            <AlertCircle className="h-10 w-10 text-red-400" />
+            <p className="text-sm text-white font-semibold">Failed to load Avaturn</p>
+            {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
+          </div>
+        )}
+        {/* SDK mounts iframe into this div */}
+        <div
+          ref={containerRef}
+          className="w-full h-full"
+          style={{ minHeight: 480 }}
         />
       </div>
     </div>

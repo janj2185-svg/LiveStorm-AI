@@ -8,3 +8,4 @@
 - [Pricing plan type narrowing](pricing-type-narrowing.md) — handleUpgrade typed as typeof PLANS[0] narrows priceId to null; fix: (typeof PLANS)[number] + local cast `const basePriceId = plan.priceId as string`.
 - [React icon className never](react-icon-classname-never.md) — `icon: React.ElementType` in arrays/maps causes `className` to resolve to `never` in JSX (React 19 + TS strict). Fix: `React.ComponentType<{className?: string}>` in all icon field types.
 - [Avatar animation presets global](avatar-animation-presets-global.md) — `avatar_animation_presets` table has no `streamerId` column; it is a global shared table. Route must query without WHERE and seed without streamerId.
+- [RPM and Avaturn iframe URLs](avatar-creator-urls.md) — both old URLs dead; RPM needs subdomain; Avaturn needs @avaturn/sdk + demo.avaturn.dev.
