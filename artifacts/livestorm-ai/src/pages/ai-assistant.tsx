@@ -848,7 +848,7 @@ export function AiAssistant() {
               personaName={personaName}
               onOpenSettings={() => setAvatarSheetOpen(true)}
               showDebug={showAvatarDebug}
-              className="w-full h-[260px] lg:h-full lg:min-h-[420px]"
+              className="w-full h-[260px] lg:h-full lg:min-h-[280px]"
             />
           </div>
 
