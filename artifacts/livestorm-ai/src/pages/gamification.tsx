@@ -302,7 +302,7 @@ export function Gamification() {
   const [lbTab, setLbTab] = useState<LbTab>("viewers");
   const [achFilter, setAchFilter] = useState<"all" | "unlocked" | "locked">("all");
 
-  const { data: leaderboard, isLoading: loadingLb } = useGetGamificationLeaderboard(
+  const { data: leaderboard, isLoading: loadingLb, refetch: refetchLeaderboard } = useGetGamificationLeaderboard(
     streamerId ? { streamerId, period: lbPeriod } : undefined
   );
 
@@ -319,7 +319,11 @@ export function Gamification() {
   const seenAchievementsRef = useRef<Set<string>>(new Set());
   const seenDropsRef = useRef<Set<number>>(new Set());
 
-  const { recentXpAwards, achievementUnlocks, luckyDrops } = useLiveSession(sessionId);
+  const { recentXpAwards, achievementUnlocks, luckyDrops, leaderboardVersion } = useLiveSession(sessionId);
+
+  useEffect(() => {
+    if (leaderboardVersion > 0) refetchLeaderboard();
+  }, [leaderboardVersion]);
 
   useEffect(() => {
     for (const unlock of achievementUnlocks) {

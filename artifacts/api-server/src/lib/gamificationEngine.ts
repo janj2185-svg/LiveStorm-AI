@@ -591,7 +591,12 @@ async function processBossBattle(
   } catch (_err) {}
 }
 
-async function processKingdomResources(streamerId: number, event: TikTokEvent) {
+async function processKingdomResources(
+  io: SocketServer,
+  roomId: string,
+  streamerId: number,
+  event: TikTokEvent
+) {
   try {
     const kingdom = await db.query.kingdomsTable.findFirst({
       where: eq(kingdomsTable.streamerId, streamerId),
@@ -631,6 +636,18 @@ async function processKingdomResources(streamerId: number, event: TikTokEvent) {
     });
     if (!updated) return;
 
+    // Emit real-time resource update to the session room
+    io.to(roomId).emit("kingdom:update", {
+      streamerId,
+      gold: updated.gold,
+      wood: updated.wood,
+      stone: updated.stone,
+      goldDelta,
+      woodDelta,
+      stoneDelta,
+      timestamp: Date.now(),
+    });
+
     for (const threshold of BUILDING_UNLOCK_THRESHOLDS) {
       if (updated.gold >= threshold.gold) {
         const existing = await db
@@ -647,6 +664,13 @@ async function processKingdomResources(streamerId: number, event: TikTokEvent) {
             streamerId,
             buildingType: threshold.type,
             level: 1,
+          });
+          // Emit building unlock event
+          io.to(roomId).emit("kingdom:building_unlocked", {
+            streamerId,
+            buildingType: threshold.type,
+            emoji: threshold.emoji,
+            timestamp: Date.now(),
           });
         }
       }
@@ -786,7 +810,7 @@ export async function processGamification(
       const newLevel = xpToLevel(totalXp);
       const prevLevel = xpToLevel(totalXp - xp);
 
-      io.to(roomId).emit("xp:awarded", {
+      const xpPayload = {
         viewerName,
         tiktokViewerId,
         xp,
@@ -794,6 +818,16 @@ export async function processGamification(
         totalXp,
         level: newLevel,
         eventType: event.type,
+        timestamp: Date.now(),
+      };
+      io.to(roomId).emit("xp:awarded", xpPayload);
+      io.to(roomId).emit("leaderboard:update", {
+        sessionId: event.sessionId,
+        streamerId,
+        viewerName,
+        tiktokViewerId,
+        totalXp,
+        level: newLevel,
         timestamp: Date.now(),
       });
 
@@ -817,7 +851,7 @@ export async function processGamification(
     }
 
     await processBossBattle(io, roomId, tiktokViewerId, viewerName, streamerId, event);
-    await processKingdomResources(streamerId, event);
+    await processKingdomResources(io, roomId, streamerId, event);
     await checkViewerAchievements(io, roomId, tiktokViewerId, viewerName, streamerId, event);
 
     // Lucky drop processing (non-blocking)

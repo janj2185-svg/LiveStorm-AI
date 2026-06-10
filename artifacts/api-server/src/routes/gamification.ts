@@ -43,6 +43,7 @@ function periodToDate(period: string | undefined): Date | null {
 router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) => {
   try {
     const streamerId = req.query.streamerId ? Number(req.query.streamerId) : null;
+    const sessionId  = req.query.sessionId  ? Number(req.query.sessionId)  : null;
     const period = req.query.period as string | undefined;
     const since = periodToDate(period);
 
@@ -61,6 +62,7 @@ router.get("/gamification/leaderboard", requireAuth, async (req: any, res: any) 
 
     const conditions: any[] = [];
     if (streamerId) conditions.push(eq(viewerXpEventsTable.streamerId, streamerId));
+    if (sessionId)  conditions.push(eq(viewerXpEventsTable.sessionId, sessionId));
     if (since) conditions.push(gte(viewerXpEventsTable.createdAt, since));
 
     const query = conditions.length > 0

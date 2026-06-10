@@ -2,16 +2,21 @@ import {
   useGetMyKingdom,
   useGetKingdoms,
   useUpgradeKingdomBuilding,
+  useGetActiveSession,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Castle, Pickaxe, Hammer, Coins, Globe, TrendingUp, Lock } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { PageHero, AnimatedCounter, GradientText, ProgressRing, RankBadge } from "@/components/ui/premium";
+import { io, type Socket } from "socket.io-client";
+import { useAuth } from "@clerk/react";
+
+const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
 const BUILDINGS_CATALOG = [
   { type: "Tavern",    emoji: "🍺", desc: "Welcomes viewers",  goldRequired: 100,  woodRequired: 50,   stoneRequired: 0,    accent: "amber"  },
@@ -36,11 +41,35 @@ const ACCENT_STYLES: Record<string, { border: string; bg: string; text: string; 
 };
 
 export function Kingdom() {
+  const { getToken } = useAuth();
   const { data: kingdom, isLoading, refetch } = useGetMyKingdom();
   const { data: allKingdoms } = useGetKingdoms();
+  const { data: activeSessionData } = useGetActiveSession();
+  const sessionId = activeSessionData?.session?.id;
   const upgradeMutation = useUpgradeKingdomBuilding();
   const { toast } = useToast();
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let socket: Socket;
+    getToken().then((token) => {
+      socket = io(window.location.origin, {
+        path: `${BASE_URL}/api/socket.io`,
+        transports: ["websocket", "polling"],
+        auth: { token },
+      });
+      socketRef.current = socket;
+      socket.on("connect", () => { socket.emit("session:join", sessionId); });
+      socket.on("kingdom:update", () => { refetch(); });
+      socket.on("kingdom:building_unlocked", (data: { buildingType: string; emoji: string }) => {
+        toast({ title: `${data.emoji} ${data.buildingType} Unlocked!`, description: "A new building is now available in your kingdom." });
+        refetch();
+      });
+    });
+    return () => { socketRef.current?.disconnect(); socketRef.current = null; };
+  }, [sessionId]);
 
   const gold  = kingdom?.gold  ?? 0;
   const wood  = kingdom?.wood  ?? 0;

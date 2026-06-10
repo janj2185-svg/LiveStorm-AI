@@ -94,6 +94,27 @@ export interface LuckyDropEvent {
   timestamp: number;
 }
 
+export interface KingdomUpdateEvent {
+  streamerId: number;
+  gold: number;
+  wood: number;
+  stone: number;
+  goldDelta: number;
+  woodDelta: number;
+  stoneDelta: number;
+  timestamp: number;
+}
+
+export interface LeaderboardUpdateEvent {
+  sessionId: number | null;
+  streamerId: number;
+  viewerName: string;
+  tiktokViewerId: string;
+  totalXp: number;
+  level: number;
+  timestamp: number;
+}
+
 export type TtsMode = "off" | "browser" | "openai";
 
 const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -186,6 +207,8 @@ export function useLiveSession(
   const [achievementUnlocks, setAchievementUnlocks] = useState<AchievementUnlockEvent[]>([]);
   const [luckyDrops, setLuckyDrops] = useState<LuckyDropEvent[]>([]);
   const [levelUps, setLevelUps] = useState<LevelUpEvent[]>([]);
+  const [kingdomUpdates, setKingdomUpdates] = useState<KingdomUpdateEvent[]>([]);
+  const [leaderboardVersion, setLeaderboardVersion] = useState(0);
 
   const [tiktokMode, setTiktokMode] = useState<ConnectionMode | null>(initialMode ?? null);
   const [tiktokError, setTiktokError] = useState<string | null>(null);
@@ -233,6 +256,8 @@ export function useLiveSession(
     setAchievementUnlocks([]);
     setLuckyDrops([]);
     setLevelUps([]);
+    setKingdomUpdates([]);
+    setLeaderboardVersion(0);
     setStats({
       viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0,
       totalComments: 0, totalShares: 0, topSupporters: [],
@@ -321,6 +346,14 @@ export function useLiveSession(
 
       socket.on("lucky_drop:fired", (payload: LuckyDropEvent) => {
         setLuckyDrops((prev) => [payload, ...prev].slice(0, 20));
+      });
+
+      socket.on("kingdom:update", (payload: KingdomUpdateEvent) => {
+        setKingdomUpdates((prev) => [payload, ...prev].slice(0, 20));
+      });
+
+      socket.on("leaderboard:update", (_payload: LeaderboardUpdateEvent) => {
+        setLeaderboardVersion((v) => v + 1);
       });
 
       socket.on("automation:fired", (event: AutomationFiredEvent) => {
@@ -434,6 +467,8 @@ export function useLiveSession(
     achievementUnlocks,
     luckyDrops,
     levelUps,
+    kingdomUpdates,
+    leaderboardVersion,
     connected,
     clearEvents,
     setTtsEnabled,
