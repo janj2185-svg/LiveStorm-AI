@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAuth } from "@clerk/express";
+import { getAuth, clerkClient } from "@clerk/express";
 import { db, usersTable, streamersTable, kingdomsTable, platformEventsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { OWNER_EMAIL } from "../middlewares/featureGate";
@@ -26,47 +26,93 @@ function requireAuth(req: any, res: any, next: any) {
   next();
 }
 
-async function getOrCreateUser(clerkId: string, email?: string) {
+async function fetchClerkEmail(clerkId: string): Promise<string | null> {
+  try {
+    const clerkUser = await clerkClient().users.getUser(clerkId);
+    return clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses?.[0]?.emailAddress ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getOrCreateUser(clerkId: string, hintEmail?: string) {
+  // Step 1: look up by Clerk ID (fast path — covers every subsequent login)
   let user = await db.query.usersTable.findFirst({
     where: eq(usersTable.clerkId, clerkId),
   });
+  if (user) {
+    // Self-heal: ensure owner is always owner
+    const isOwnerNow = user.email === OWNER_EMAIL;
+    if (isOwnerNow && (user.role !== "owner" || user.plan !== "studio")) {
+      const [upgraded] = await db
+        .update(usersTable)
+        .set({ role: "owner", plan: "studio", updatedAt: new Date() })
+        .where(eq(usersTable.clerkId, clerkId))
+        .returning();
+      user = upgraded;
+      await db.insert(platformEventsTable).values({
+        userId: user.id,
+        eventType: "owner_access_granted",
+        description: `Owner account re-confirmed — role set to owner, plan set to studio.`,
+        metadata: JSON.stringify({ role: "owner", plan: "studio", bypass: true }),
+      }).catch(() => {});
+    }
+    return user;
+  }
 
-  const resolvedEmail = email || `${clerkId}@unknown.com`;
+  // Step 2: clerkId not found — resolve real email (hint or Clerk API)
+  const resolvedEmail = hintEmail ?? await fetchClerkEmail(clerkId) ?? `${clerkId}@unknown.com`;
   const isOwnerAccount = resolvedEmail === OWNER_EMAIL;
 
-  if (!user) {
-    const [created] = await db
-      .insert(usersTable)
-      .values({
-        clerkId,
-        email: resolvedEmail,
-        role: isOwnerAccount ? "owner" : "user",
-        plan: isOwnerAccount ? "studio" : "free",
-      })
+  // Step 3: email-based fallback (handles placeholder → real Clerk ID migration)
+  const [existingByEmail] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, resolvedEmail));
+
+  if (existingByEmail) {
+    // Migrate: update placeholder clerkId to the real one, re-promote if owner
+    const updates: Record<string, unknown> = { clerkId, updatedAt: new Date() };
+    if (isOwnerAccount) {
+      updates.role = "owner";
+      updates.plan = "studio";
+    }
+    const [migrated] = await db
+      .update(usersTable)
+      .set(updates)
+      .where(eq(usersTable.email, resolvedEmail))
       .returning();
-    user = created;
+    user = migrated;
 
     if (isOwnerAccount) {
       await db.insert(platformEventsTable).values({
-        userId: created.id,
+        userId: user.id,
         eventType: "owner_access_granted",
-        description: `Owner account created for ${resolvedEmail} — permanent bypass of all plan restrictions granted.`,
-        metadata: JSON.stringify({ email: resolvedEmail, role: "owner", plan: "studio", bypass: true }),
+        description: `Owner account linked to real Clerk ID — placeholder replaced, permanent bypass active.`,
+        metadata: JSON.stringify({ role: "owner", plan: "studio", bypass: true, migrated: true }),
       }).catch(() => {});
     }
-  } else if (isOwnerAccount && (user.role !== "owner" || user.plan !== "studio")) {
-    const [upgraded] = await db
-      .update(usersTable)
-      .set({ role: "owner", plan: "studio", updatedAt: new Date() })
-      .where(eq(usersTable.clerkId, clerkId))
-      .returning();
-    user = upgraded;
+    return user;
+  }
 
+  // Step 4: truly new user — insert fresh row
+  const [created] = await db
+    .insert(usersTable)
+    .values({
+      clerkId,
+      email: resolvedEmail,
+      role: isOwnerAccount ? "owner" : "user",
+      plan: isOwnerAccount ? "studio" : "free",
+    })
+    .returning();
+  user = created;
+
+  if (isOwnerAccount) {
     await db.insert(platformEventsTable).values({
-      userId: user.id,
+      userId: created.id,
       eventType: "owner_access_granted",
-      description: `Owner account re-confirmed for ${resolvedEmail} — role set to owner, plan set to studio.`,
-      metadata: JSON.stringify({ email: resolvedEmail, role: "owner", plan: "studio", bypass: true }),
+      description: `Owner account created — permanent bypass of all plan restrictions granted.`,
+      metadata: JSON.stringify({ role: "owner", plan: "studio", bypass: true }),
     }).catch(() => {});
   }
 
@@ -83,6 +129,7 @@ function serializeUser(user: typeof usersTable.$inferSelect) {
     avatarUrl: user.avatarUrl,
     role: user.role,
     plan: user.plan,
+    isOwner: user.role === "owner",
     uiLanguage: user.uiLanguage ?? "en",
     createdAt: user.createdAt,
   };
