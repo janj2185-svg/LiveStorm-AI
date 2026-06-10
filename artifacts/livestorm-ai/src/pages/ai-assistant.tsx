@@ -37,8 +37,8 @@ import {
   Globe, Gift, Users, Heart, Share2, Loader2, Radio, Play,
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
-  Boxes, SlidersHorizontal, Monitor, Upload, Cpu,
-  Shirt, Tv2, Palette, Sun, Camera,
+  Boxes, SlidersHorizontal, Monitor, Cpu,
+  Shirt, Tv2, Palette, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
@@ -1642,28 +1642,10 @@ export function AiAssistant() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <p className="text-[11px] text-muted-foreground">No presenter set. Create a photorealistic avatar from a selfie, or upload a custom VRM.</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            {[
-                              { label: "Ready Player Me", icon: Camera, color: "blue", desc: "Selfie → avatar" },
-                              { label: "Avaturn", icon: Sparkles, color: "rose", desc: "Photo-realistic" },
-                              { label: "Upload VRM", icon: Upload, color: "violet", desc: "Custom model" },
-                            ].map(({ label, icon: Icon, color, desc }) => (
-                              <button
-                                key={label}
-                                onClick={() => setCreatorModalOpen(true)}
-                                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-white/10 hover:border-white/25 bg-white/[0.02] hover:bg-white/[0.04] transition-all text-center"
-                              >
-                                <Icon className={`h-4 w-4 text-${color}-400`} />
-                                <span className="text-[10px] font-medium text-white/70 leading-tight">{label}</span>
-                                <span className="text-[9px] text-muted-foreground/60">{desc}</span>
-                              </button>
-                            ))}
-                          </div>
+                          <p className="text-[11px] text-muted-foreground">No presenter set. Choose Ready Player Me, Avaturn, or upload a custom VRM.</p>
                           <Button
-                            variant="outline"
                             size="sm"
-                            className="w-full h-8 text-xs border-violet-500/30 text-violet-300 hover:bg-violet-500/10"
+                            className="w-full h-8 text-xs bg-violet-600 hover:bg-violet-500"
                             onClick={() => setCreatorModalOpen(true)}
                           >
                             <Sparkles className="h-3 w-3 mr-1.5" />
