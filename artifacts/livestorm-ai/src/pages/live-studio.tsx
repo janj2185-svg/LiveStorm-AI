@@ -31,7 +31,9 @@ import { PageHero, GradientText } from "@/components/ui/premium";
 // ── Comment feed ──────────────────────────────────────────────────────────────
 
 function CommentFeed({ events, isActive }: { events: LiveEvent[]; isActive: boolean }) {
-  const comments = events.filter((e) => e.type === "comment");
+  // useLiveSession prepends events ([newest, ...older]), so reverse to get oldest→newest
+  // for correct bottom-scroll: bottomRef sits below newest comment
+  const comments = [...events.filter((e) => e.type === "comment")].reverse();
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
