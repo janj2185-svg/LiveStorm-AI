@@ -514,7 +514,7 @@ export function AiAssistant() {
 
   const { mouthOpen, isSpeaking } = useLipSync({
     sensitivity: lipSyncSensitivity,
-    enabled: avatarConfig?.avatarEnabled ?? false,
+    enabled: (avatarConfig?.avatarEnabled ?? false) && (avatarConfig?.lipSyncEnabled ?? true),
   });
 
   const { lastReaction } = useAvatarReactions({
@@ -621,10 +621,23 @@ export function AiAssistant() {
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.volume = Math.max(0, Math.min(1, config.voiceVolume ?? 1.0));
-      audio.onended = () => { URL.revokeObjectURL(url); setIsVoicePreviewing(false); };
-      audio.onerror = () => { URL.revokeObjectURL(url); setIsVoicePreviewing(false); };
+
+      window.dispatchEvent(new CustomEvent("tts:audio", { detail: audio }));
+      window.dispatchEvent(new CustomEvent("tts:start"));
+
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        window.dispatchEvent(new CustomEvent("tts:end"));
+        setIsVoicePreviewing(false);
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        window.dispatchEvent(new CustomEvent("tts:end"));
+        setIsVoicePreviewing(false);
+      };
       await audio.play();
     } catch {
+      window.dispatchEvent(new CustomEvent("tts:end"));
       setIsVoicePreviewing(false);
     }
   };
@@ -682,11 +695,13 @@ export function AiAssistant() {
   const [translatingComments, setTranslatingComments] = useState<Set<number>>(new Set());
   const [accentColor, setAccentColor] = useState("#3b82f6");
 
-  // Sync accentColor and selectedBackground from DB once config loads
+  // Sync accentColor, selectedBackground, lipSyncSensitivity and expressionIntensity from DB once config loads
   useEffect(() => {
     if (!avatarConfig) return;
     if (avatarConfig.accentColor) setAccentColor(avatarConfig.accentColor);
     if (avatarConfig.backgroundValue) setSelectedBackground(avatarConfig.backgroundValue);
+    setLipSyncSensitivity(avatarConfig.lipSyncSensitivity ?? 0.75);
+    setExpressionIntensity(avatarConfig.expressionIntensity ?? 0.8);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarConfig?.id]);
 
@@ -1951,7 +1966,11 @@ export function AiAssistant() {
                           <input
                             type="range" min="0" max="1" step="0.05"
                             value={lipSyncSensitivity}
-                            onChange={(e) => setLipSyncSensitivity(parseFloat(e.target.value))}
+                            onChange={(e) => {
+                              const v = parseFloat(e.target.value);
+                              setLipSyncSensitivity(v);
+                              saveAvatar({ lipSyncSensitivity: v });
+                            }}
                             className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                             style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
                           />
@@ -1967,7 +1986,11 @@ export function AiAssistant() {
                           <input
                             type="range" min="0" max="1" step="0.05"
                             value={expressionIntensity}
-                            onChange={(e) => setExpressionIntensity(parseFloat(e.target.value))}
+                            onChange={(e) => {
+                              const v = parseFloat(e.target.value);
+                              setExpressionIntensity(v);
+                              saveAvatar({ expressionIntensity: v });
+                            }}
                             className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                             style={{ accentColor: "#8b5cf6", background: "rgba(255,255,255,0.1)" }}
                           />
