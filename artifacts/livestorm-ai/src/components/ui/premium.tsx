@@ -280,3 +280,208 @@ export function StatWidget({
     </div>
   );
 }
+
+// ─── HolographicOrb ───────────────────────────────────────────────────────────
+// Animated AI avatar orb used in the AI Co-Host hero section.
+export function HolographicOrb({
+  size = 200,
+  isActive = false,
+}: {
+  size?: number;
+  isActive?: boolean;
+}) {
+  const half = size / 2;
+
+  const rings = [
+    { sz: size * 0.92, color: "rgba(124,58,237,0.22)", bw: 1.5, dur: "14s",  cw: true,  dot: "#a78bfa", ds: 7 },
+    { sz: size * 0.76, color: "rgba(34,211,238,0.18)",  bw: 1,   dur: "9s",   cw: false, dot: "#22d3ee", ds: 5 },
+    { sz: size * 0.60, color: "rgba(244,114,182,0.15)", bw: 1,   dur: "5.5s", cw: true,  dot: "#f472b6", ds: 4 },
+  ];
+
+  const particles = [
+    { l: "12%", t: "9%",  d: 0,   c: "#a78bfa" },
+    { l: "79%", t: "13%", d: 0.7, c: "#22d3ee" },
+    { l: "5%",  t: "58%", d: 1.4, c: "#f472b6" },
+    { l: "87%", t: "63%", d: 0.3, c: "#a78bfa" },
+    { l: "21%", t: "84%", d: 1.8, c: "#22d3ee" },
+    { l: "71%", t: "82%", d: 0.9, c: "#fbbf24" },
+  ];
+
+  return (
+    <div className="relative select-none" style={{ width: size, height: size }}>
+      {/* Ambient glow halo */}
+      <div
+        className="absolute pointer-events-none rounded-full"
+        style={{
+          inset: "-18%",
+          background: isActive
+            ? "radial-gradient(circle, rgba(34,211,238,0.18) 0%, rgba(124,58,237,0.22) 40%, transparent 70%)"
+            : "radial-gradient(circle, rgba(124,58,237,0.20) 0%, rgba(14,165,233,0.08) 50%, transparent 70%)",
+          animation: "holo-pulse 4s ease-in-out infinite",
+        }}
+      />
+
+      {/* Orbital rings */}
+      {rings.map((ring, i) => (
+        <div
+          key={i}
+          className="absolute pointer-events-none rounded-full"
+          style={{
+            width: ring.sz,
+            height: ring.sz,
+            top: half - ring.sz / 2,
+            left: half - ring.sz / 2,
+            border: `${ring.bw}px solid ${ring.color}`,
+            animation: `${ring.cw ? "orbit-cw" : "orbit-ccw"} ${ring.dur} linear infinite`,
+          }}
+        >
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: ring.ds,
+              height: ring.ds,
+              top: -(ring.ds / 2),
+              left: "50%",
+              marginLeft: -(ring.ds / 2),
+              background: ring.dot,
+              boxShadow: `0 0 ${ring.ds * 2}px ${ring.dot}, 0 0 ${ring.ds}px ${ring.dot}`,
+            }}
+          />
+        </div>
+      ))}
+
+      {/* Core */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {/* Glow halo behind core */}
+        <div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: size * 0.58,
+            height: size * 0.58,
+            background: "radial-gradient(circle, rgba(124,58,237,0.42) 0%, transparent 70%)",
+            animation: "holo-pulse 3s ease-in-out infinite",
+          }}
+        />
+        {/* Core sphere */}
+        <div
+          className="relative rounded-full flex items-center justify-center overflow-hidden"
+          style={{
+            width: size * 0.42,
+            height: size * 0.42,
+            background: "radial-gradient(circle at 38% 32%, #c4b5fd 0%, #7c3aed 50%, #3b0764 100%)",
+            animation: "holo-glow 3s ease-in-out infinite",
+          }}
+        >
+          {/* Specular highlight */}
+          <div
+            className="absolute inset-0 pointer-events-none rounded-full"
+            style={{
+              background: "radial-gradient(circle at 33% 26%, rgba(255,255,255,0.28) 0%, transparent 52%)",
+            }}
+          />
+          {/* Scan line */}
+          <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
+            <div
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: 1,
+                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)",
+                animation: "scan-line 2.5s ease-in-out infinite",
+              }}
+            />
+          </div>
+          {/* Bot icon — inline SVG so no import needed */}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ width: size * 0.2, height: size * 0.2, opacity: 0.92, position: "relative", zIndex: 1 }}
+          >
+            <rect width="16" height="12" x="4" y="8" rx="2" />
+            <path d="M12 8V4H8" />
+            <path d="M2 14h2M20 14h2M15 13v2M9 13v2" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Floating data particles */}
+      {particles.map((p, i) => (
+        <div
+          key={i}
+          className="absolute pointer-events-none rounded-full"
+          style={{
+            width: 5,
+            height: 5,
+            left: p.l,
+            top: p.t,
+            background: p.c,
+            boxShadow: `0 0 8px ${p.c}, 0 0 3px ${p.c}`,
+            animation: "float-dot 3.5s ease-in-out infinite",
+            animationDelay: `${p.d}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── GlowBorder ──────────────────────────────────────────────────────────────
+// Wraps children in an animated gradient border when active=true.
+export function GlowBorder({
+  children,
+  className,
+  active = false,
+  color = "violet",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  active?: boolean;
+  color?: "violet" | "cyan" | "green" | "amber";
+}) {
+  const gradients: Record<string, string> = {
+    violet: "from-violet-500 via-purple-400 to-cyan-500",
+    cyan:   "from-cyan-400 via-blue-500 to-violet-500",
+    green:  "from-green-400 via-emerald-500 to-cyan-400",
+    amber:  "from-amber-400 via-orange-500 to-pink-500",
+  };
+
+  if (!active) {
+    return (
+      <div className={cn("rounded-2xl border border-white/[0.08]", className)}>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("relative rounded-2xl overflow-hidden p-px", className)}>
+      <div
+        className={cn(
+          "absolute inset-0 rounded-2xl bg-gradient-to-br opacity-80",
+          gradients[color] ?? gradients.violet,
+        )}
+        style={{ backgroundSize: "200% 200%", animation: "gradient-x 3s ease infinite" }}
+      />
+      <div className="relative rounded-[calc(1rem-1px)] bg-card overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── ShimmerLine ─────────────────────────────────────────────────────────────
+// A horizontal shimmer sweep — use as an overlay on loading / active items.
+export function ShimmerLine({ className }: { className?: string }) {
+  return (
+    <div className={cn("relative overflow-hidden rounded-full h-px bg-white/5", className)}>
+      <div
+        className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        style={{ animation: "shimmer-slide 2s ease-in-out infinite" }}
+      />
+    </div>
+  );
+}

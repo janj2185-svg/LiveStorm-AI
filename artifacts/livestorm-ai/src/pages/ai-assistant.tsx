@@ -43,6 +43,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { HolographicOrb } from "@/components/ui/premium";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const API_BASE = `${BASE}/api`;
@@ -694,82 +695,136 @@ export function AiAssistant() {
   return (
     <div className="space-y-4 max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
 
-      {/* ── Header ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] p-5 flex-shrink-0"
-        style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.16), rgba(14,165,233,0.08))" }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at top right, rgba(124,58,237,0.14), transparent 60%)" }} />
-        <div className="relative flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-violet-500/15 border border-violet-500/20 shadow-lg shadow-violet-500/10 hidden sm:flex">
-              <Bot className="h-7 w-7 text-violet-400" />
+      {/* ── Premium Cinematic Hero ── */}
+      <div
+        className="relative overflow-hidden rounded-2xl border border-white/[0.08] flex-shrink-0"
+        style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,22,200,0.12) 45%, rgba(14,165,233,0.09) 100%)" }}
+      >
+        {/* Background depth layers */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 18% 60%, rgba(124,58,237,0.20) 0%, transparent 58%)" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 85% 15%, rgba(14,165,233,0.14) 0%, transparent 48%)" }} />
+        {/* Subtle grid texture */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            opacity: 0.025,
+            backgroundImage: "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+          }}
+        />
+
+        <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_auto]">
+
+          {/* ── Left: info ── */}
+          <div className="p-5 md:p-7">
+
+            {/* Status eyebrow row */}
+            <div className="flex items-center gap-2 flex-wrap mb-4">
+              <div className={cn(
+                "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-full border transition-colors",
+                isSessionActive && connected
+                  ? "border-green-500/40 text-green-300 bg-green-500/10"
+                  : isSessionActive
+                  ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/10"
+                  : "border-violet-500/30 text-violet-400 bg-violet-500/8",
+              )}>
+                <div className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  isSessionActive && connected ? "bg-green-400 animate-pulse"
+                  : isSessionActive ? "bg-yellow-400 animate-pulse"
+                  : "bg-violet-400",
+                )} />
+                {isSessionActive && connected ? "AI Live" : isSessionActive ? "Connecting…" : "AI Co-Host"}
+              </div>
+              {isSessionActive && effectiveMode === "real" && (
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-500/10">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Real TikTok
+                  {tiktokUsername && <span className="text-emerald-400/60 ml-1">@{tiktokUsername}</span>}
+                </div>
+              )}
+              {isSessionActive && effectiveMode === "demo" && (
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full border border-orange-500/40 text-orange-300 bg-orange-500/10">
+                  <Server className="h-3 w-3" />
+                  Demo Mode
+                </div>
+              )}
+              {isSessionActive && effectiveMode === "error" && (
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full border border-red-500/40 text-red-300 bg-red-500/10 cursor-pointer" title={effectiveError ?? "Connection failed"}>
+                  <WifiOff className="h-3 w-3" />
+                  Connection Failed
+                </div>
+              )}
             </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
-                AI{" "}
-                <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                  Co-Host
-                </span>
-              </h2>
-              <p className="text-muted-foreground text-sm mt-0.5">
-                Real-time chat replies, gift reactions, voice & moderation
-              </p>
+
+            {/* Big title */}
+            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black tracking-tight leading-[1.03] text-white mb-1">
+              <span
+                className="bg-clip-text text-transparent"
+                style={{ backgroundImage: "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 40%, #22d3ee 100%)" }}
+              >
+                {personaName}
+              </span>
+            </h1>
+            <p className="text-base md:text-lg font-semibold text-white/60 mb-1 tracking-wide">AI Co-Host</p>
+            <p className="text-sm text-muted-foreground/70 max-w-[420px] mb-5 leading-relaxed">
+              Real-time chat replies, gift reactions, voice &amp; moderation — powered by your AI persona.
+            </p>
+
+            {/* Live stat chips — shown when session active */}
+            {isSessionActive && (
+              <div className="flex items-center gap-2 flex-wrap mb-5">
+                {([
+                  { label: "viewers", value: stats.viewerCount,         color: "text-violet-300", bg: "bg-violet-500/10 border-violet-500/20", icon: <Users className="h-3 w-3" /> },
+                  { label: "gifts",   value: stats.totalGifts,          color: "text-amber-300",  bg: "bg-amber-500/10 border-amber-500/20",  icon: <Gift className="h-3 w-3" /> },
+                  { label: "follows", value: stats.totalFollows,        color: "text-green-300",  bg: "bg-green-500/10 border-green-500/20",  icon: <Users className="h-3 w-3" /> },
+                  { label: "replies", value: aiAnnouncements?.length ?? 0, color: "text-cyan-300", bg: "bg-cyan-500/10 border-cyan-500/20",  icon: <MessageSquare className="h-3 w-3" /> },
+                ] as const).map((s) => (
+                  <div
+                    key={s.label}
+                    className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium", s.bg)}
+                  >
+                    <span className={cn("opacity-70", s.color)}>{s.icon}</span>
+                    <span className="text-white font-bold tabular-nums">{s.value}</span>
+                    <span className="opacity-50 text-white/70">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Persona + mode pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-purple-500/35 bg-purple-500/8 text-[11px] text-purple-300 font-medium">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                {TONE_OPTIONS.find(t => t.value === (config?.tone ?? "hype"))?.label ?? "Hype"}
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-[11px] text-muted-foreground font-medium">
+                {OPERATING_MODES.find(m => m.value === (config?.operatingMode ?? "assistant"))?.emoji ?? "💡"}
+                {" "}{OPERATING_MODES.find(m => m.value === (config?.operatingMode ?? "assistant"))?.label ?? "Assistant"}
+              </div>
+              {ttsMode !== "off" && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/8 text-[11px] text-blue-300 font-medium">
+                  <Mic className="h-3 w-3" />
+                  Voice On
+                </div>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-          {/* Live stats */}
-          {isSessionActive && (
-            <>
-              <StatBubble label="viewers" value={stats.viewerCount} icon={<Users className="h-3.5 w-3.5" />} />
-              <StatBubble label="gifts" value={stats.totalGifts} icon={<Gift className="h-3.5 w-3.5 text-amber-400" />} />
-              <StatBubble label="follows" value={stats.totalFollows} icon={<Users className="h-3.5 w-3.5 text-green-400" />} />
-            </>
-          )}
-          {/* Socket connection badge */}
-          <Badge
-            variant="outline"
-            className={cn(
-              "px-3 py-1.5 border",
-              isSessionActive && connected
-                ? "border-green-500/50 text-green-300 bg-green-500/10"
-                : isSessionActive
-                ? "border-yellow-500/50 text-yellow-300 bg-yellow-500/10"
-                : "border-white/10 text-muted-foreground",
-            )}
-          >
-            <div className={cn(
-              "h-2 w-2 rounded-full mr-2",
-              isSessionActive && connected ? "bg-green-400 animate-pulse" : isSessionActive ? "bg-yellow-400 animate-pulse" : "bg-gray-600",
-            )} />
-            {isSessionActive && connected ? "Live — connected" : isSessionActive ? "Connecting…" : "No active session"}
-          </Badge>
 
-          {/* TikTok mode badge */}
-          {isSessionActive && effectiveMode === "demo" && (
-            <Badge variant="outline" className="px-3 py-1.5 border border-orange-500/50 text-orange-300 bg-orange-500/10 gap-1.5">
-              <Server className="h-3 w-3" />
-              DEMO
-            </Badge>
-          )}
-          {isSessionActive && effectiveMode === "real" && (
-            <Badge variant="outline" className="px-3 py-1.5 border border-emerald-500/50 text-emerald-300 bg-emerald-500/10 gap-1.5">
-              <CheckCircle2 className="h-3 w-3" />
-              REAL TIKTOK
-              {tiktokUsername && <span className="text-emerald-400/70">@{tiktokUsername}</span>}
-            </Badge>
-          )}
-          {isSessionActive && effectiveMode === "error" && (
-            <Badge variant="outline" className="px-3 py-1.5 border border-red-500/50 text-red-300 bg-red-500/10 gap-1.5 cursor-pointer" title={effectiveError ?? "Connection failed"}>
-              <WifiOff className="h-3 w-3" />
-              CONNECTION FAILED
-            </Badge>
-          )}
-          {/* Persona badge */}
-          <Badge variant="outline" className="border-purple-500/50 text-purple-300 bg-purple-500/10 px-3 py-1.5">
-            <div className="h-2 w-2 rounded-full bg-purple-400 mr-2 animate-pulse" />
-            {personaName}
-          </Badge>
+          {/* ── Right: HolographicOrb — desktop only ── */}
+          <div className="hidden lg:flex items-center justify-center px-6 py-5">
+            <div className="relative">
+              <HolographicOrb size={220} isActive={isSessionActive && connected} />
+              {/* Label below orb */}
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <div className="px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/25 text-[9px] font-black text-violet-300 uppercase tracking-[0.18em]">
+                  {personaName}
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
-      </div>
       </div>
 
       {/* ── Connection error banner ── */}
