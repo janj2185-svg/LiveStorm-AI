@@ -33,7 +33,7 @@ router.get("/streamers/me", requireAuth, async (req: any, res: any) => {
   }
 });
 
-router.get("/streamers", async (_req: any, res: any) => {
+router.get("/streamers", requireAuth, async (_req: any, res: any) => {
   try {
     const streamers = await db
       .select({

@@ -303,8 +303,7 @@ export const AnimatedBackground = memo(function AnimatedBackground({
               Math.round(orb.opacity * 255).toString(16).padStart(2, "0")
             } 0%,transparent 70%)`,
             borderRadius: "50%",
-            animation: `${orb.anim} ${orb.dur}s ease-in-out infinite`,
-            animationDelay: `${-(orb.delay ?? 0)}s`,
+            animation: `${orb.anim} ${orb.dur}s ease-in-out ${-(orb.delay ?? 0)}s infinite`,
             willChange: "transform",
           }}
         />

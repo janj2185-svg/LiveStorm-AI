@@ -1,29 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  useGetMyProfile,
-  useConnectTiktok,
-  useStartSession,
-  useEndSession,
   useGetActiveSession,
-  useForceStopSession,
-  getGetMyProfileQueryKey,
-  getGetActiveSessionQueryKey
+  getGetActiveSessionQueryKey,
 } from "@workspace/api-client-react";
 import { useLiveSession, type LiveEvent } from "@/hooks/useLiveSession";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
-  Video, PlugZap, StopCircle, PlayCircle, Activity,
-  AlertTriangle, Radio, Bot, RotateCcw, Wifi, WifiOff,
+  Video, Activity,
+  AlertTriangle, Radio, Bot, Wifi, WifiOff,
   MessageCircle, Gift, Heart, UserPlus, Eye, Gem,
   ArrowDown, Share2, Sparkles, Zap, Trophy, TrendingUp,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { PageHero, GradientText } from "@/components/ui/premium";
@@ -441,88 +431,18 @@ function ConnectionBadge({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function LiveStudio() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const { data: user, isLoading: isUserLoading } = useGetMyProfile();
-  const connectTiktok = useConnectTiktok();
-
   const { data: activeSessionRes } = useGetActiveSession({
     query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 5000 },
   });
-  const startSession = useStartSession();
-  const endSession = useEndSession();
-  const forceStop = useForceStopSession();
 
   const activeSessionId = activeSessionRes?.session?.id;
   const sessionMode = (activeSessionRes?.session as any)?.mode ?? null;
 
-  const { events, stats, connected, clearEvents, tiktokMode, tiktokError, tiktokUsername } =
+  const { events, stats, connected, tiktokMode, tiktokError, tiktokUsername } =
     useLiveSession(activeSessionId, sessionMode);
 
-  const [tiktokUsernameInput, setTiktokUsernameInput] = useState("");
   const isActive = activeSessionRes?.active;
   const effectiveMode = tiktokMode ?? sessionMode;
-
-  const handleConnect = () => {
-    if (!tiktokUsernameInput.trim()) return;
-    connectTiktok.mutate(
-      { data: { tiktokUsername: tiktokUsernameInput } },
-      {
-        onSuccess: () => {
-          toast({ title: "Connected!", description: `TikTok username set to @${tiktokUsernameInput}` });
-          queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
-          setTiktokUsernameInput("");
-        },
-        onError: () => {
-          toast({ title: "Connection Failed", description: "Could not connect TikTok account.", variant: "destructive" });
-        },
-      },
-    );
-  };
-
-  const handleStartSession = () => {
-    if (!user?.tiktokUsername) {
-      toast({ title: "Action Required", description: "Connect a TikTok account first.", variant: "destructive" });
-      return;
-    }
-    clearEvents();
-    startSession.mutate(undefined, {
-      onSuccess: () => {
-        toast({ title: "Broadcast Started", description: "Now listening for TikTok events." });
-        queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
-      },
-      onError: (err: any) => {
-        toast({ title: "Failed to start", description: String(err), variant: "destructive" });
-      },
-    });
-  };
-
-  const handleEndSession = () => {
-    endSession.mutate(undefined, {
-      onSuccess: () => {
-        toast({ title: "Broadcast Ended" });
-        queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
-      },
-    });
-  };
-
-  const handleForceStop = () => {
-    forceStop.mutate(undefined, {
-      onSuccess: (data: any) => {
-        toast({
-          title: "Session Reset",
-          description: data.clearedSessionId
-            ? `Cleared session #${data.clearedSessionId}. Ready to start fresh.`
-            : "No active session — state cleared.",
-        });
-        queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
-      },
-      onError: () => {
-        toast({ title: "Reset Failed", description: "Could not reset session.", variant: "destructive" });
-      },
-    });
-  };
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto">
@@ -561,166 +481,86 @@ export function LiveStudio() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
 
-        {/* ── Left sidebar: controls ───────────────────────────────────────── */}
+        {/* ── Left sidebar: session status (read-only) ─────────────────── */}
         <div className="space-y-4">
-
-          {/* TikTok Account */}
-          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
-              <PlugZap className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-white">TikTok Account</span>
-            </div>
-            <div className="p-5">
-              {!isUserLoading && user?.tiktokUsername ? (
-                <div className="relative p-4 rounded-xl bg-primary/8 border border-primary/20 overflow-hidden text-center">
-                  <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
-                  <div className="relative">
-                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center mb-2">
-                      <span className="text-xl font-black text-primary">@</span>
-                    </div>
-                    <p className="font-bold text-white">@{user.tiktokUsername}</p>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-green-400 font-bold px-2 py-0.5 bg-green-500/10 rounded-full mt-1.5 border border-green-500/20">
-                      <span className="w-1 h-1 rounded-full bg-green-500" />
-                      Linked
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="tiktok-username" className="text-xs">TikTok Username</Label>
-                    <Input
-                      id="tiktok-username"
-                      placeholder="e.g. charlidamelio"
-                      value={tiktokUsernameInput}
-                      onChange={(e) => setTiktokUsernameInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-                      className="bg-background border-white/10 text-sm"
-                    />
-                  </div>
-                  <Button
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-sm"
-                    onClick={handleConnect}
-                    disabled={connectTiktok.isPending || !tiktokUsernameInput.trim()}
-                  >
-                    {connectTiktok.isPending ? "Connecting…" : "Connect Account"}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Broadcast Control */}
           <div className={cn(
             "rounded-2xl bg-white/[0.04] backdrop-blur-sm border overflow-hidden transition-all duration-300",
             isActive ? "border-primary/25 shadow-lg shadow-primary/8" : "border-white/8",
           )}>
             <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
               <Video className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-white">Broadcast</span>
+              <span className="text-sm font-semibold text-white">Session Status</span>
             </div>
-            <div className="p-5 space-y-4">
-              {/* Status rows */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground text-xs">Session</span>
-                  {isActive ? (
-                    <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
-                      </span>
-                      LIVE
-                    </span>
-                  ) : (
-                    <span className="text-xs font-semibold text-muted-foreground">OFFLINE</span>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">WebSocket</span>
-                  {connected ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-green-400">
-                      <Wifi className="h-3 w-3" />Connected
-                    </span>
-                  ) : isActive ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-amber-400 animate-pulse">
-                      <WifiOff className="h-3 w-3" />Reconnecting…
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <WifiOff className="h-3 w-3" />Idle
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">Mode</span>
-                  <span className="text-xs font-semibold">
-                    {effectiveMode === "real"  && <span className="text-emerald-400">Real LIVE</span>}
-                    {effectiveMode === "demo"  && <span className="text-blue-400">Demo</span>}
-                    {effectiveMode === "error" && <span className="text-red-400">Error</span>}
-                    {!effectiveMode            && <span className="text-muted-foreground">—</span>}
-                  </span>
-                </div>
-
-                {isActive && tiktokUsername && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-xs">Stream</span>
-                    <span className="text-xs font-mono text-white">@{tiktokUsername}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-white/5" />
-
-              {/* Actions */}
-              <div className="space-y-2">
+            <div className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs">Session</span>
                 {isActive ? (
-                  <Button
-                    variant="destructive"
-                    className="w-full font-bold gap-2 text-sm"
-                    onClick={handleEndSession}
-                    disabled={endSession.isPending}
-                  >
-                    <StopCircle className="w-4 h-4" />
-                    {endSession.isPending ? "Stopping…" : "Stop Broadcast"}
-                  </Button>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
+                    </span>
+                    LIVE
+                  </span>
                 ) : (
-                  <Button
-                    className="w-full bg-accent hover:bg-accent/90 text-white font-bold gap-2 text-sm"
-                    onClick={handleStartSession}
-                    disabled={startSession.isPending || !user?.tiktokUsername}
-                  >
-                    <PlayCircle className="w-4 h-4" />
-                    {startSession.isPending ? "Starting…" : "Start Live Session"}
-                  </Button>
+                  <span className="text-xs font-semibold text-muted-foreground">OFFLINE</span>
                 )}
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-1.5 text-xs text-muted-foreground border-white/10 hover:border-red-500/30 hover:text-red-400"
-                  onClick={handleForceStop}
-                  disabled={forceStop.isPending}
-                  title="Force-clears any stuck session. Use if Start is blocked."
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  {forceStop.isPending ? "Resetting…" : "Force Reset"}
-                </Button>
               </div>
 
-              <p className="text-[10px] text-muted-foreground/60 text-center leading-snug">
-                {isActive
-                  ? effectiveMode === "real"
-                    ? `Receiving real TikTok LIVE events.`
-                    : effectiveMode === "demo"
-                    ? "Demo mode: simulated events flowing."
-                    : effectiveMode === "error"
-                    ? "Connection error — check event feed."
-                    : "Waiting for TikTok connection…"
-                  : "Start a session to activate event capture, overlays, and automations."}
-              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs">WebSocket</span>
+                {connected ? (
+                  <span className="flex items-center gap-1 text-xs font-semibold text-green-400">
+                    <Wifi className="h-3 w-3" />Connected
+                  </span>
+                ) : isActive ? (
+                  <span className="flex items-center gap-1 text-xs font-semibold text-amber-400 animate-pulse">
+                    <WifiOff className="h-3 w-3" />Reconnecting…
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <WifiOff className="h-3 w-3" />Idle
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs">Mode</span>
+                <span className="text-xs font-semibold">
+                  {effectiveMode === "real"  && <span className="text-emerald-400">Real LIVE</span>}
+                  {effectiveMode === "demo"  && <span className="text-blue-400">Demo</span>}
+                  {effectiveMode === "error" && <span className="text-red-400">Error</span>}
+                  {!effectiveMode            && <span className="text-muted-foreground">—</span>}
+                </span>
+              </div>
+
+              {tiktokUsername && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">Stream</span>
+                  <span className="text-xs font-mono text-white">@{tiktokUsername}</span>
+                </div>
+              )}
+
+              <div className="border-t border-white/5 pt-3">
+                {isActive ? (
+                  <p className="text-[10px] text-muted-foreground/60 text-center leading-snug">
+                    {effectiveMode === "real"
+                      ? "Receiving real TikTok LIVE events."
+                      : effectiveMode === "demo"
+                      ? "Demo mode: simulated events flowing."
+                      : effectiveMode === "error"
+                      ? "Connection error — check event feed."
+                      : "Waiting for TikTok connection…"}
+                  </p>
+                ) : (
+                  <Link href="/dashboard">
+                    <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer group">
+                      <Radio className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <span className="text-xs font-semibold text-muted-foreground group-hover:text-primary transition-colors">Go Live from Dashboard</span>
+                    </div>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>

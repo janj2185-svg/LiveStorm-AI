@@ -340,9 +340,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <span className="font-bold text-base tracking-tight text-sidebar-foreground">LiveStorm AI</span>
           </div>
-          <span className="flex items-center gap-1.5 text-[11px] text-green-400/80">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
-            {t("analytics_live_now")}
+          <span className="text-[11px] text-muted-foreground/50 font-medium tracking-wide uppercase">
+            Creator Platform
           </span>
         </header>
 

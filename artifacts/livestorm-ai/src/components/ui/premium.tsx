@@ -420,8 +420,7 @@ export function HolographicOrb({
             top: p.t,
             background: p.c,
             boxShadow: `0 0 8px ${p.c}, 0 0 3px ${p.c}`,
-            animation: "float-dot 3.5s ease-in-out infinite",
-            animationDelay: `${p.d}s`,
+            animation: `float-dot 3.5s ease-in-out ${p.d}s infinite`,
           }}
         />
       ))}

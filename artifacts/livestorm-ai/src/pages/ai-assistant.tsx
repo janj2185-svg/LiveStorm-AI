@@ -1574,7 +1574,7 @@ export function AiAssistant() {
                         {msg.content === "..." ? (
                           <span className="flex gap-1 items-center h-5">
                             {[0, 150, 300].map((d) => (
-                              <span key={d} className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                              <span key={d} className="h-1.5 w-1.5 rounded-full bg-purple-400" style={{ animation: `bounce 1s infinite ${d}ms` }} />
                             ))}
                           </span>
                         ) : (

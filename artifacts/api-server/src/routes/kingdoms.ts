@@ -36,7 +36,7 @@ router.get("/kingdoms/me", requireAuth, async (req: any, res: any) => {
   }
 });
 
-router.get("/kingdoms", async (_req: any, res: any) => {
+router.get("/kingdoms", requireAuth, async (_req: any, res: any) => {
   try {
     const kingdoms = await db
       .select({

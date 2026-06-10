@@ -33,13 +33,16 @@ import { cn } from "@/lib/utils";
 import { AnimatedCounter, PulsingDot, RankBadge, PageHero, StatWidget } from "@/components/ui/premium";
 
 const EVENT_CONFIG: Record<string, { bg: string; text: string; border: string; icon: any; label: string }> = {
-  gift:            { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/20",  icon: Gift,          label: "Gift" },
-  comment:         { bg: "bg-blue-500/10",    text: "text-blue-400",    border: "border-blue-500/20",   icon: MessageSquare, label: "Chat" },
-  follow:          { bg: "bg-green-500/10",   text: "text-green-400",   border: "border-green-500/20",  icon: UserPlus,      label: "Follow" },
-  like:            { bg: "bg-pink-500/10",    text: "text-pink-400",    border: "border-pink-500/20",   icon: Heart,         label: "Like" },
-  share:           { bg: "bg-cyan-500/10",    text: "text-cyan-400",    border: "border-cyan-500/20",   icon: Share,         label: "Share" },
-  viewerCount:     { bg: "bg-violet-500/10",  text: "text-violet-400",  border: "border-violet-500/20", icon: Users,         label: "Viewers" },
-  ai_announcement: { bg: "bg-purple-600/15",  text: "text-purple-300",  border: "border-purple-500/20", icon: Bot,           label: "AI" },
+  gift:                 { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/20",  icon: Gift,          label: "Gift" },
+  comment:              { bg: "bg-blue-500/10",    text: "text-blue-400",    border: "border-blue-500/20",   icon: MessageSquare, label: "Chat" },
+  follow:               { bg: "bg-green-500/10",   text: "text-green-400",   border: "border-green-500/20",  icon: UserPlus,      label: "Follow" },
+  like:                 { bg: "bg-pink-500/10",    text: "text-pink-400",    border: "border-pink-500/20",   icon: Heart,         label: "Like" },
+  share:                { bg: "bg-cyan-500/10",    text: "text-cyan-400",    border: "border-cyan-500/20",   icon: Share,         label: "Share" },
+  viewerCount:          { bg: "bg-violet-500/10",  text: "text-violet-400",  border: "border-violet-500/20", icon: Users,         label: "Viewers" },
+  ai_announcement:      { bg: "bg-purple-600/15",  text: "text-purple-300",  border: "border-purple-500/20", icon: Bot,           label: "AI" },
+  xp_awarded:           { bg: "bg-yellow-500/10",  text: "text-yellow-400",  border: "border-yellow-500/20", icon: Zap,           label: "XP" },
+  achievement_unlocked: { bg: "bg-orange-500/10",  text: "text-orange-400",  border: "border-orange-500/20", icon: TrophyIcon,    label: "Achievement" },
+  level_up:             { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20",icon: TrendingUp,    label: "Level Up" },
 };
 
 function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
@@ -47,13 +50,16 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
   const Icon = cfg.icon;
 
   let desc = "interacted";
-  if (event.type === "gift")           desc = `sent ${event.data.giftName || "a gift"} · ${event.data.coins || 1} coins`;
-  if (event.type === "like")           desc = `liked the stream (${event.data.likeCount || 1}×)`;
-  if (event.type === "comment")        desc = `"${event.data.text || ""}"`;
-  if (event.type === "follow")         desc = "started following";
-  if (event.type === "share")          desc = "shared the LIVE";
-  if (event.type === "ai_announcement") desc = (event.data.text as string) || "";
-  if (event.type === "viewerCount")    return null;
+  if (event.type === "gift")                desc = `sent ${event.data.giftName || "a gift"} · ${event.data.coins || 1} coins`;
+  if (event.type === "like")                desc = `liked the stream (${event.data.likeCount || 1}×)`;
+  if (event.type === "comment")             desc = `"${event.data.text || ""}"`;
+  if (event.type === "follow")              desc = "started following";
+  if (event.type === "share")               desc = "shared the LIVE";
+  if (event.type === "ai_announcement")     desc = (event.data.text as string) || "";
+  if (event.type === "xp_awarded")          desc = `+${event.data.xp} XP · Lv.${event.data.level}`;
+  if (event.type === "achievement_unlocked") desc = `unlocked: ${event.data.achievementName || "Achievement"}`;
+  if (event.type === "level_up")            desc = `reached Level ${event.data.newLevel}!`;
+  if (event.type === "viewerCount")         return null;
 
   return (
     <motion.div

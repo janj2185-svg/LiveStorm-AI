@@ -474,7 +474,7 @@ export function Automation() {
                 </tr>
               </thead>
               <tbody>
-                {automationLogs.map((log) => {
+                {automationLogs.map((log: import("@workspace/api-client-react").AutomationLogEntry) => {
                   const isSuccess = log.result === "success" || log.result.startsWith("success");
                   return (
                     <tr key={log.id} className="border-b border-white/[0.03] hover:bg-white/[0.02]">

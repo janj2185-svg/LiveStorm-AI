@@ -116,11 +116,11 @@ function LuckyDropOverlay({ dropName, prizeDescription, xpReward, coinReward, wi
               {[...Array(20)].map((_, i) => (
                 <div
                   key={i}
-                  className="absolute w-1 h-1 bg-white rounded-full animate-[twinkle_1s_ease-in-out_infinite]"
+                  className="absolute w-1 h-1 bg-white rounded-full"
                   style={{
                     left: `${Math.random() * 100}%`,
                     top: `${Math.random() * 100}%`,
-                    animationDelay: `${Math.random() * 2}s`,
+                    animation: `twinkle 1s ease-in-out ${Math.random() * 2}s infinite`,
                   }}
                 />
               ))}
