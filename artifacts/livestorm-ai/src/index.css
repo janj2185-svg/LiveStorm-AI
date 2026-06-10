@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 @layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
@@ -61,55 +61,59 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ─── LIGHT THEME (default) ──────────────────────────────────────────────── */
 :root {
-  --background: 222 47% 11%;
-  --foreground: 214 32% 91%;
-  
-  --card: 217 33% 17%;
-  --card-foreground: 214 32% 91%;
-  --card-border: 217 33% 25%;
+  /* Main content area — light */
+  --background: 220 25% 97%;
+  --foreground: 222 47% 11%;
 
-  --popover: 222 47% 11%;
-  --popover-foreground: 214 32% 91%;
-  --popover-border: 217 33% 25%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 220 20% 90%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 220 20% 88%;
 
   --primary: 263 70% 57%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 217 33% 17%;
-  --secondary-foreground: 214 32% 91%;
+  --secondary: 220 20% 94%;
+  --secondary-foreground: 222 40% 20%;
 
-  --muted: 217 33% 20%;
-  --muted-foreground: 215 20.2% 65.1%;
+  --muted: 220 20% 93%;
+  --muted-foreground: 220 10% 48%;
 
-  --accent: 192 91% 43%;
+  --accent: 263 70% 57%;
   --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 217 33% 25%;
-  --input: 217 33% 20%;
+  --border: 220 20% 88%;
+  --input: 220 20% 95%;
   --ring: 263 70% 57%;
 
-  --sidebar: 225 40% 8%;
+  /* Sidebar — stays DARK for premium contrast */
+  --sidebar: 225 45% 8%;
   --sidebar-foreground: 214 32% 91%;
-  --sidebar-border: 217 33% 25%;
+  --sidebar-border: 217 33% 20%;
   --sidebar-primary: 263 70% 57%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent: 217 33% 15%;
   --sidebar-accent-foreground: 214 32% 91%;
   --sidebar-ring: 263 70% 57%;
 
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --app-font-sans: 'Inter', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
 }
 
+/* ─── DARK THEME (opt-in via .dark class) ───────────────────────────────── */
 .dark {
   --background: 222 47% 11%;
   --foreground: 214 32% 91%;
-  
+
   --card: 217 33% 17%;
   --card-foreground: 214 32% 91%;
   --card-border: 217 33% 25%;
@@ -147,11 +151,130 @@
   --sidebar-ring: 263 70% 57%;
 }
 
+/* ─── BASE ───────────────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    background-attachment: fixed;
   }
+}
+
+/* ─── GRADIENT AMBIENT BACKGROUND ───────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 5% 5%,  hsl(263 70% 75% / 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 95% 95%, hsl(192 91% 70% / 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 35% at 50% 50%, hsl(220 40% 98% / 0.60) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ─── GLASSMORPHISM UTILITIES ────────────────────────────────────────────── */
+@layer components {
+  .glass-card {
+    background: hsl(0 0% 100% / 0.72);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid hsl(var(--border));
+    box-shadow:
+      0 1px 3px rgb(0 0 0 / 0.04),
+      0 4px 12px rgb(0 0 0 / 0.04),
+      0 0 0 1px rgb(255 255 255 / 0.80) inset;
+  }
+
+  .glass-panel {
+    background: hsl(0 0% 100% / 0.55);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border: 1px solid hsl(var(--border) / 0.7);
+  }
+
+  .premium-shadow {
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.03),
+      0 4px 8px rgb(0 0 0 / 0.04),
+      0 12px 24px rgb(0 0 0 / 0.04),
+      0 0 0 1px rgb(255 255 255 / 0.8) inset;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.25), 0 0 40px hsl(var(--primary) / 0.10);
+  }
+}
+
+/* ─── LIGHT-MODE TEXT CORRECTIONS ───────────────────────────────────────── */
+/*
+ * Many components were built for a dark background and use text-white.
+ * In light mode we remap white text → foreground EXCEPT when the element
+ * itself (or its ancestor) has a coloured background where white is correct.
+ */
+main .text-white {
+  color: hsl(var(--foreground));
+}
+
+/* Restore white text on same-element coloured circles / badges / buttons */
+main .bg-purple-400.text-white, main .bg-purple-500.text-white, main .bg-purple-600.text-white,
+main .bg-blue-400.text-white,   main .bg-blue-500.text-white,   main .bg-blue-600.text-white,
+main .bg-green-400.text-white,  main .bg-green-500.text-white,
+main .bg-orange-400.text-white, main .bg-orange-500.text-white,
+main .bg-pink-400.text-white,   main .bg-pink-500.text-white,
+main .bg-teal-400.text-white,   main .bg-teal-500.text-white,
+main .bg-rose-400.text-white,   main .bg-rose-500.text-white,   main .bg-rose-600.text-white,
+main .bg-amber-400.text-white,  main .bg-amber-500.text-white,
+main .bg-red-400.text-white,    main .bg-red-500.text-white,
+main .bg-emerald-400.text-white,main .bg-emerald-500.text-white,
+main .bg-indigo-400.text-white, main .bg-indigo-500.text-white,
+main .bg-violet-400.text-white, main .bg-violet-500.text-white, main .bg-violet-600.text-white,
+main .bg-cyan-400.text-white,   main .bg-cyan-500.text-white,
+main .bg-fuchsia-400.text-white,main .bg-fuchsia-500.text-white,
+main .bg-slate-700.text-white,  main .bg-slate-800.text-white,  main .bg-slate-900.text-white,
+main .bg-gray-700.text-white,   main .bg-gray-800.text-white,   main .bg-gray-900.text-white,
+main .bg-black.text-white,
+main .bg-primary.text-white,
+main .bg-destructive.text-white,
+main .bg-accent.text-white {
+  color: hsl(0 0% 100%);
+}
+
+/* Restore white text for children inside coloured containers */
+main .bg-purple-500 .text-white,  main .bg-blue-500 .text-white,
+main .bg-green-500 .text-white,   main .bg-orange-500 .text-white,
+main .bg-pink-500 .text-white,    main .bg-rose-600 .text-white,
+main .bg-amber-500 .text-white,   main .bg-primary .text-white,
+main .bg-emerald-500 .text-white, main .bg-violet-600 .text-white,
+main .bg-teal-500 .text-white,    main .bg-red-500 .text-white {
+  color: hsl(0 0% 100%);
+}
+
+/* Remap dark-pattern semi-transparent overlays to light equivalents */
+main .bg-white\/\[0\.02\] { background-color: rgb(0 0 0 / 0.02) !important; }
+main .bg-white\/\[0\.03\] { background-color: rgb(0 0 0 / 0.02) !important; }
+main .bg-black\/30 { background-color: rgb(0 0 0 / 0.04) !important; }
+
+/* ─── RANGE INPUT STYLING ────────────────────────────────────────────────── */
+input[type="range"] {
+  @apply accent-primary;
+}
+
+/* ─── SCROLLBAR ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* ─── FOCUS RING ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }

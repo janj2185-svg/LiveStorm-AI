@@ -1,36 +1,21 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { type TranslationKey } from "@/lib/i18n";
 import {
-  LayoutDashboard,
-  Bot,
-  Sword,
-  Trophy,
-  ShieldAlert,
-  BarChart2,
-  Settings as SettingsIcon,
-  Video,
-  Zap,
-  Layers,
-  Wand2,
-  Castle,
-  Gamepad2,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X,
-  MoreHorizontal,
-  Globe,
-  Plug,
+  LayoutDashboard, Bot, Sword, Trophy, ShieldAlert, BarChart2,
+  Settings as SettingsIcon, Video, Zap, Layers, Wand2, Castle,
+  Gamepad2, LogOut, ChevronLeft, ChevronRight, Menu, X,
+  MoreHorizontal, Globe, Plug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
-  name: string;
-  shortName: string;
+  nameKey: TranslationKey;
+  shortNameKey: TranslationKey;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   testId: string;
@@ -38,38 +23,37 @@ interface NavItem {
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { name: "Dashboard",    shortName: "Home",     href: "/dashboard",    icon: LayoutDashboard, testId: "dashboard",    shortcut: 1 },
-  { name: "AI Co-Host",   shortName: "AI",       href: "/ai-assistant", icon: Bot,             testId: "ai-assistant", shortcut: 2 },
-  { name: "Boss Battle",  shortName: "Boss",     href: "/boss-battle",  icon: Sword,           testId: "boss-battle",  shortcut: 3 },
-  { name: "Gamification", shortName: "XP",       href: "/gamification", icon: Trophy,          testId: "gamification", shortcut: 4 },
-  { name: "Moderation",   shortName: "Mod",      href: "/moderation",   icon: ShieldAlert,     testId: "moderation",   shortcut: 5 },
-  { name: "Analytics",    shortName: "Stats",    href: "/analytics",    icon: BarChart2,       testId: "analytics",    shortcut: 6 },
-  { name: "Settings",     shortName: "Settings", href: "/settings",     icon: SettingsIcon,    testId: "settings",     shortcut: 7 },
+  { nameKey: "nav_dashboard",    shortNameKey: "nav_short_home",      href: "/dashboard",    icon: LayoutDashboard, testId: "dashboard",    shortcut: 1 },
+  { nameKey: "nav_ai_assistant", shortNameKey: "nav_short_ai",        href: "/ai-assistant", icon: Bot,             testId: "ai-assistant", shortcut: 2 },
+  { nameKey: "nav_boss_battle",  shortNameKey: "nav_short_boss",      href: "/boss-battle",  icon: Sword,           testId: "boss-battle",  shortcut: 3 },
+  { nameKey: "nav_gamification", shortNameKey: "nav_short_xp",        href: "/gamification", icon: Trophy,          testId: "gamification", shortcut: 4 },
+  { nameKey: "nav_moderation",   shortNameKey: "nav_short_mod",       href: "/moderation",   icon: ShieldAlert,     testId: "moderation",   shortcut: 5 },
+  { nameKey: "nav_analytics",    shortNameKey: "nav_short_stats",     href: "/analytics",    icon: BarChart2,       testId: "analytics",    shortcut: 6 },
+  { nameKey: "nav_settings",     shortNameKey: "nav_settings",        href: "/settings",     icon: SettingsIcon,    testId: "settings",     shortcut: 7 },
 ];
 
 const SECONDARY_NAV: NavItem[] = [
-  { name: "Live Studio", shortName: "Studio",  href: "/live-studio", icon: Video,    testId: "live-studio" },
-  { name: "Automation",  shortName: "Auto",    href: "/automation",  icon: Zap,      testId: "automation" },
-  { name: "Overlays",    shortName: "OBS",     href: "/overlays",    icon: Layers,   testId: "overlays" },
-  { name: "AI Content",  shortName: "Content", href: "/ai-content",  icon: Wand2,    testId: "ai-content" },
-  { name: "Kingdom",     shortName: "Kingdom",   href: "/kingdom",    icon: Castle,   testId: "kingdom" },
-  { name: "Mini-Games",  shortName: "Games",     href: "/mini-games", icon: Gamepad2, testId: "mini-games" },
-  { name: "Universe",    shortName: "Universe",  href: "/universe",   icon: Globe,    testId: "universe" },
-  { name: "Platforms",   shortName: "Platforms", href: "/platforms",  icon: Plug,     testId: "platforms" },
+  { nameKey: "nav_live_studio",  shortNameKey: "nav_short_studio",    href: "/live-studio", icon: Video,    testId: "live-studio" },
+  { nameKey: "nav_automation",   shortNameKey: "nav_short_auto",      href: "/automation",  icon: Zap,      testId: "automation" },
+  { nameKey: "nav_overlays",     shortNameKey: "nav_short_obs",       href: "/overlays",    icon: Layers,   testId: "overlays" },
+  { nameKey: "nav_ai_content",   shortNameKey: "nav_short_content",   href: "/ai-content",  icon: Wand2,    testId: "ai-content" },
+  { nameKey: "nav_kingdom",      shortNameKey: "nav_short_kingdom",   href: "/kingdom",     icon: Castle,   testId: "kingdom" },
+  { nameKey: "nav_mini_games",   shortNameKey: "nav_short_games",     href: "/mini-games",  icon: Gamepad2, testId: "mini-games" },
+  { nameKey: "nav_universe",     shortNameKey: "nav_short_universe",  href: "/universe",    icon: Globe,    testId: "universe" },
+  { nameKey: "nav_platforms",    shortNameKey: "nav_short_platforms", href: "/platforms",   icon: Plug,     testId: "platforms" },
 ];
 
 const BOTTOM_NAV_ITEMS = PRIMARY_NAV.slice(0, 4);
+const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
 function SidebarLink({
-  item,
-  location,
-  expanded,
-  onClick,
+  item, location, expanded, onClick, t,
 }: {
   item: NavItem;
   location: string;
   expanded: boolean;
   onClick?: () => void;
+  t: (key: TranslationKey) => string;
 }) {
   const isActive = location === item.href;
   const Icon = item.icon;
@@ -77,14 +61,14 @@ function SidebarLink({
     <Link href={item.href} className="block" onClick={onClick}>
       <div
         data-testid={`link-${item.testId}`}
-        title={item.name}
+        title={t(item.nameKey)}
         className={cn(
           "relative flex items-center gap-3 rounded-lg cursor-pointer group",
           "transition-all duration-150 min-h-[44px]",
           expanded ? "px-3" : "px-0 justify-center lg:justify-start lg:px-3",
           isActive
-            ? "bg-primary/15 text-white"
-            : "text-muted-foreground hover:text-white hover:bg-white/5",
+            ? "bg-primary/15 text-sidebar-foreground"
+            : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/5",
         )}
       >
         {isActive && (
@@ -96,17 +80,17 @@ function SidebarLink({
         <Icon className={cn(
           "flex-shrink-0 transition-colors",
           expanded ? "h-4 w-4" : "h-5 w-5 lg:h-4 lg:w-4",
-          isActive ? "text-primary" : "text-muted-foreground group-hover:text-white/70",
+          isActive ? "text-primary" : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70",
         )} />
         <span className={cn(
           "text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-200",
           expanded ? "opacity-100 max-w-[160px]" : "opacity-0 max-w-0 lg:opacity-100 lg:max-w-[160px]",
         )}>
-          {item.name}
+          {t(item.nameKey)}
         </span>
         {item.shortcut && !isActive && (
           <kbd className={cn(
-            "text-[9px] text-muted-foreground/30 border border-white/5 rounded px-1 font-mono flex-shrink-0",
+            "text-[9px] text-sidebar-foreground/20 border border-white/5 rounded px-1 font-mono flex-shrink-0",
             expanded ? "flex" : "hidden lg:flex",
           )}>
             ⌘{item.shortcut}
@@ -123,7 +107,13 @@ function SidebarLink({
   );
 }
 
-function BottomNavLink({ item, location }: { item: NavItem; location: string }) {
+function BottomNavLink({
+  item, location, t,
+}: {
+  item: NavItem;
+  location: string;
+  t: (key: TranslationKey) => string;
+}) {
   const isActive = location === item.href;
   const Icon = item.icon;
   return (
@@ -133,7 +123,7 @@ function BottomNavLink({ item, location }: { item: NavItem; location: string }) 
         className={cn(
           "flex flex-col items-center justify-center gap-1 h-full w-full relative",
           "transition-opacity active:opacity-60",
-          isActive ? "text-primary" : "text-muted-foreground",
+          isActive ? "text-primary" : "text-sidebar-foreground/50",
         )}
       >
         {isActive && (
@@ -142,7 +132,7 @@ function BottomNavLink({ item, location }: { item: NavItem; location: string }) 
           </span>
         )}
         <Icon className="h-5 w-5" />
-        <span className="text-[10px] font-medium leading-none">{item.shortName}</span>
+        <span className="text-[10px] font-medium leading-none">{t(item.shortNameKey)}</span>
       </div>
     </Link>
   );
@@ -153,9 +143,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { t } = useLanguage();
   const [tabletExpanded, setTabletExpanded] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  const currentNavItem = ALL_NAV.find(i => i.href === location);
 
   useEffect(() => {
     setTabletExpanded(false);
@@ -186,7 +179,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [moreOpen]);
 
   const sidebarWClass = tabletExpanded ? "w-60" : "w-16 lg:w-60";
-  const mainMlClass = tabletExpanded ? "md:ml-0" : "md:ml-16 lg:ml-60";
+  const mainMlClass  = tabletExpanded ? "md:ml-0" : "md:ml-16 lg:ml-60";
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -194,7 +187,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Tablet overlay backdrop */}
       {tabletExpanded && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm hidden md:block lg:hidden"
+          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm hidden md:block lg:hidden"
           onClick={() => setTabletExpanded(false)}
         />
       )}
@@ -218,8 +211,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             "overflow-hidden transition-all duration-200",
             tabletExpanded ? "opacity-100 w-auto" : "opacity-0 w-0 lg:opacity-100 lg:w-auto",
           )}>
-            <p className="font-bold text-sm tracking-tight text-white leading-none whitespace-nowrap">LiveStorm AI</p>
-            <p className="text-[10px] text-muted-foreground/70 mt-0.5 tracking-wider whitespace-nowrap">CREATOR PLATFORM</p>
+            <p className="font-bold text-sm tracking-tight text-sidebar-foreground leading-none whitespace-nowrap">LiveStorm AI</p>
+            <p className="text-[10px] text-sidebar-foreground/40 mt-0.5 tracking-wider whitespace-nowrap">CREATOR PLATFORM</p>
           </div>
         </div>
 
@@ -229,12 +222,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             onClick={() => setTabletExpanded(e => !e)}
             className={cn(
               "w-full flex items-center rounded-lg p-2 min-h-[40px] transition-colors",
-              "text-muted-foreground hover:text-white hover:bg-white/5",
+              "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/5",
               tabletExpanded ? "justify-start gap-2 px-3" : "justify-center",
             )}
           >
             {tabletExpanded
-              ? <><ChevronLeft className="h-4 w-4 flex-shrink-0" /><span className="text-xs font-medium">Collapse</span></>
+              ? <><ChevronLeft className="h-4 w-4 flex-shrink-0" /><span className="text-xs font-medium">{t("nav_collapse")}</span></>
               : <Menu className="h-4 w-4" />
             }
           </button>
@@ -249,6 +242,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               location={location}
               expanded={tabletExpanded}
               onClick={() => setTabletExpanded(false)}
+              t={t}
             />
           ))}
 
@@ -257,8 +251,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             "pt-4 transition-all duration-200 overflow-hidden",
             tabletExpanded ? "max-h-screen opacity-100" : "max-h-0 opacity-0 lg:max-h-screen lg:opacity-100",
           )}>
-            <p className="px-3 pb-2 text-[9px] font-semibold tracking-[0.12em] text-muted-foreground/40 uppercase select-none">
-              More Tools
+            <p className="px-3 pb-2 text-[9px] font-semibold tracking-[0.12em] text-sidebar-foreground/30 uppercase select-none">
+              {t("nav_more_tools")}
             </p>
             {SECONDARY_NAV.map(item => (
               <SidebarLink
@@ -267,6 +261,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 location={location}
                 expanded={true}
                 onClick={() => setTabletExpanded(false)}
+                t={t}
               />
             ))}
           </div>
@@ -275,12 +270,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* User area */}
         {user && (
           <div className="border-t border-sidebar-border/60">
-            {/* Profile row */}
             <div className={cn(
-              "flex items-center gap-2.5 rounded-lg bg-white/5 border border-white/5 m-2",
+              "flex items-center gap-2.5 rounded-lg bg-sidebar-accent border border-sidebar-border/50 m-2",
               tabletExpanded ? "p-2" : "p-1.5 justify-center lg:p-2",
             )}>
-              <Avatar className="h-8 w-8 border border-white/10 flex-shrink-0">
+              <Avatar className="h-8 w-8 border border-sidebar-border flex-shrink-0">
                 <AvatarImage src={user.imageUrl} />
                 <AvatarFallback className="text-xs bg-primary/20 text-primary">
                   {user.firstName?.charAt(0) ?? "U"}
@@ -290,19 +284,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 "flex-1 min-w-0 overflow-hidden transition-all duration-200",
                 tabletExpanded ? "opacity-100 max-w-[120px]" : "opacity-0 max-w-0 lg:opacity-100 lg:max-w-[120px]",
               )}>
-                <p className="text-xs font-semibold text-white truncate leading-none">{user.fullName || "Creator"}</p>
-                <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
+                <p className="text-xs font-semibold text-sidebar-foreground truncate leading-none">{user.fullName || "Creator"}</p>
+                <p className="text-[10px] text-sidebar-foreground/50 truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "h-7 w-7 text-muted-foreground hover:text-white hover:bg-red-500/10 flex-shrink-0",
+                  "h-7 w-7 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-red-500/10 flex-shrink-0",
                   tabletExpanded ? "flex" : "hidden lg:flex",
                 )}
                 onClick={() => signOut({ redirectUrl: basePath || "/" })}
                 data-testid="button-logout"
-                title="Sign out"
+                title={t("sign_out")}
               >
                 <LogOut className="h-3.5 w-3.5" />
               </Button>
@@ -317,34 +311,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
         mainMlClass,
       )}>
         {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-sidebar sticky top-0 z-30">
+        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-sidebar-border bg-sidebar sticky top-0 z-30">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30 flex-shrink-0">
               <img src={`${basePath}/logo.svg`} alt="LiveStorm AI" className="h-5 w-5" />
             </div>
-            <span className="font-bold text-base tracking-tight text-white">LiveStorm AI</span>
+            <span className="font-bold text-base tracking-tight text-sidebar-foreground">LiveStorm AI</span>
           </div>
           <span className="flex items-center gap-1.5 text-[11px] text-green-400/80">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
-            Live
+            {t("analytics_live_now")}
           </span>
         </header>
 
         {/* Desktop/tablet top bar */}
-        <header className="hidden md:flex items-center justify-between px-6 py-3.5 border-b border-border bg-card/30 backdrop-blur-sm sticky top-0 z-20">
-          <h1 className="text-sm font-semibold text-white capitalize tracking-wide">
-            {location.replace(/^\//, "").replace(/-/g, " ") || "Dashboard"}
+        <header className="hidden md:flex items-center justify-between px-6 py-3.5 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-20">
+          <h1 className="text-sm font-semibold text-foreground tracking-wide">
+            {currentNavItem ? t(currentNavItem.nameKey) : "Dashboard"}
           </h1>
           <div className="flex items-center gap-3">
             <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-muted-foreground/40 font-mono">
-              <kbd className="border border-white/8 rounded px-1">⌘1</kbd>
+              <kbd className="border border-border rounded px-1">⌘1</kbd>
               <span>–</span>
-              <kbd className="border border-white/8 rounded px-1">⌘7</kbd>
+              <kbd className="border border-border rounded px-1">⌘7</kbd>
               <span className="font-sans ml-0.5">navigate</span>
             </div>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500/80 inline-block" />
-              System operational
+              {t("status_operational")}
             </span>
           </div>
         </header>
@@ -362,17 +356,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="flex h-16">
           {BOTTOM_NAV_ITEMS.map(item => (
-            <BottomNavLink key={item.href} item={item} location={location} />
+            <BottomNavLink key={item.href} item={item} location={location} t={t} />
           ))}
 
           {/* More button */}
           <button
             onClick={() => setMoreOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-muted-foreground active:opacity-60 transition-opacity"
-            aria-label="More navigation"
+            className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-sidebar-foreground/50 active:opacity-60 transition-opacity"
+            aria-label={t("nav_navigation")}
           >
             <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[10px] font-medium leading-none">More</span>
+            <span className="text-[10px] font-medium leading-none">{t("nav_more")}</span>
           </button>
         </div>
       </nav>
@@ -395,10 +389,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="px-4 pb-8">
               {/* Header */}
               <div className="flex items-center justify-between py-3 mb-3 border-b border-sidebar-border/50">
-                <h3 className="text-sm font-semibold text-white">Navigation</h3>
+                <h3 className="text-sm font-semibold text-sidebar-foreground">{t("nav_navigation")}</h3>
                 <button
                   onClick={() => setMoreOpen(false)}
-                  className="p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 transition-colors"
+                  className="p-2 rounded-lg text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/5 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -406,7 +400,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
               {/* Primary items not in bottom nav: Moderation, Analytics, Settings */}
               <div className="mb-5">
-                <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-3">Main</p>
+                <p className="text-[9px] font-semibold text-sidebar-foreground/30 uppercase tracking-[0.12em] mb-3">{t("nav_section_main")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {PRIMARY_NAV.slice(4).map(item => {
                     const isActive = location === item.href;
@@ -419,12 +413,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         className={cn(
                           "flex flex-col items-center gap-2 p-4 rounded-xl border min-h-[80px] justify-center transition-all active:scale-95",
                           isActive
-                            ? "bg-primary/15 border-primary/30 text-white"
-                            : "bg-white/5 border-white/5 text-muted-foreground",
+                            ? "bg-primary/15 border-primary/30 text-sidebar-foreground"
+                            : "bg-white/5 border-white/5 text-sidebar-foreground/50",
                         )}
                       >
                         <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                        <span className="text-[11px] font-medium text-center leading-tight">{item.shortName}</span>
+                        <span className="text-[11px] font-medium text-center leading-tight">{t(item.shortNameKey)}</span>
                       </button>
                     );
                   })}
@@ -433,7 +427,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
               {/* Secondary tools */}
               <div className="mb-5">
-                <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-3">Tools</p>
+                <p className="text-[9px] font-semibold text-sidebar-foreground/30 uppercase tracking-[0.12em] mb-3">{t("nav_section_tools")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {SECONDARY_NAV.map(item => {
                     const isActive = location === item.href;
@@ -446,12 +440,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         className={cn(
                           "flex flex-col items-center gap-2 p-4 rounded-xl border min-h-[80px] justify-center transition-all active:scale-95",
                           isActive
-                            ? "bg-primary/15 border-primary/30 text-white"
-                            : "bg-white/5 border-white/5 text-muted-foreground",
+                            ? "bg-primary/15 border-primary/30 text-sidebar-foreground"
+                            : "bg-white/5 border-white/5 text-sidebar-foreground/50",
                         )}
                       >
                         <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                        <span className="text-[11px] font-medium text-center leading-tight">{item.shortName}</span>
+                        <span className="text-[11px] font-medium text-center leading-tight">{t(item.shortNameKey)}</span>
                       </button>
                     );
                   })}
@@ -461,23 +455,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {/* User */}
               <div className="border-t border-sidebar-border/50 pt-4">
                 {user && (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-                    <Avatar className="h-10 w-10 border border-white/10 flex-shrink-0">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent border border-sidebar-border/50">
+                    <Avatar className="h-10 w-10 border border-sidebar-border flex-shrink-0">
                       <AvatarImage src={user.imageUrl} />
                       <AvatarFallback className="text-sm bg-primary/20 text-primary">
                         {user.firstName?.charAt(0) ?? "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{user.fullName || "Creator"}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user.primaryEmailAddress?.emailAddress}</p>
+                      <p className="text-sm font-semibold text-sidebar-foreground truncate">{user.fullName || "Creator"}</p>
+                      <p className="text-xs text-sidebar-foreground/50 truncate">{user.primaryEmailAddress?.emailAddress}</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-10 w-10 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
+                      className="h-10 w-10 text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
                       onClick={() => { signOut({ redirectUrl: basePath || "/" }); setMoreOpen(false); }}
-                      title="Sign out"
+                      title={t("sign_out")}
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>

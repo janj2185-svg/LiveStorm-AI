@@ -74,7 +74,7 @@ function StatCard({
             <TrendingUp className="h-3 w-3 text-muted-foreground/50" />
           )}
         </div>
-        <p className="text-2xl font-bold text-white tabular-nums">
+        <p className="text-2xl font-bold text-foreground tabular-nums">
           {value.toLocaleString()}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">{title}</p>
@@ -114,7 +114,7 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm leading-snug">
-          <span className="font-semibold text-white">{event.username || "System"}</span>
+          <span className="font-semibold text-foreground">{event.username || "System"}</span>
           {" "}
           <span className="text-muted-foreground">{desc}</span>
         </p>
@@ -250,7 +250,7 @@ export function Dashboard() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/15 flex items-center justify-center mb-4 border border-primary/20">
               <PlugZap className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl text-white">Connect Your TikTok</CardTitle>
+            <CardTitle className="text-2xl text-foreground">Connect Your TikTok</CardTitle>
             <CardDescription className="text-muted-foreground mt-1">
               Enter your TikTok username to start capturing live events.
             </CardDescription>
@@ -299,7 +299,7 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-white tracking-tight">Dashboard</h2>
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h2>
             {isActive && (
               <Badge
                 variant="outline"

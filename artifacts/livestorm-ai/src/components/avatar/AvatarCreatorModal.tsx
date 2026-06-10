@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -429,12 +430,13 @@ function VRMUploadTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void })
 
 // ── Wizard step bar ───────────────────────────────────────────────────────────
 
-const WIZARD_STEPS = ["Open Editor", "Create Avatar", "Save"];
+const WIZARD_STEP_KEYS = ["avatar_step_open_editor", "avatar_step_create", "avatar_step_save"] as const;
 
 function WizardSteps({ step }: { step: number }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center mt-3">
-      {WIZARD_STEPS.map((label, i) => (
+      {WIZARD_STEP_KEYS.map((key, i) => (
         <div key={i} className="flex items-center flex-1 last:flex-none">
           <div className="flex flex-col items-center gap-1 flex-shrink-0">
             <div className={cn(
@@ -447,9 +449,9 @@ function WizardSteps({ step }: { step: number }) {
             </div>
             <span className={cn("text-[9px] font-medium whitespace-nowrap",
               step === i ? "text-rose-300" : step > i ? "text-emerald-400" : "text-white/25",
-            )}>{label}</span>
+            )}>{t(key)}</span>
           </div>
-          {i < WIZARD_STEPS.length - 1 && (
+          {i < WIZARD_STEP_KEYS.length - 1 && (
             <div className={cn("flex-1 h-px mx-2 mb-4 transition-all", step > i ? "bg-emerald-500/40" : "bg-white/10")} />
           )}
         </div>
@@ -526,6 +528,7 @@ export function AvatarCreatorModal({
   const [avaturnPhase, setAvaturnPhase] = useState<AvaturnPhase>("loading");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [advancedTab, setAdvancedTab] = useState<"vrm" | "rpm">("vrm");
+  const { t } = useLanguage();
 
   const wizardStep = avaturnPhase === "loading" ? 0 : avaturnPhase === "ready" ? 1 : avaturnPhase === "done" ? 2 : 0;
 
@@ -561,7 +564,7 @@ export function AvatarCreatorModal({
         <DialogHeader className="px-6 pt-5 pb-4 border-b border-white/5">
           <DialogTitle className="text-white font-bold text-base flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-violet-400" />
-            Create Your AI Presenter
+            {t("avatar_create_presenter")}
           </DialogTitle>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Photorealistic avatar · ARKit lip sync · TikTok reactions · Free Avaturn account required
@@ -605,14 +608,14 @@ export function AvatarCreatorModal({
                       className="flex-1 text-[11px] gap-1.5 data-[state=active]:bg-violet-600 data-[state=active]:text-white h-7"
                     >
                       <Upload className="h-3 w-3" />
-                      Upload VRM / GLB
+                      {t("avatar_upload_vrm_title")}
                     </TabsTrigger>
                     <TabsTrigger
                       value="rpm"
                       className="flex-1 text-[11px] gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white h-7"
                     >
                       <Camera className="h-3 w-3" />
-                      Ready Player Me
+                      {t("avatar_rpm_title")}
                     </TabsTrigger>
                   </TabsList>
 
@@ -634,15 +637,15 @@ export function AvatarCreatorModal({
             {pending ? (
               <span className="flex items-center gap-1 text-emerald-400/80">
                 <CheckCircle2 className="h-3 w-3" />
-                Avatar ready — click Save to apply
+                {t("avatar_saved")}
               </span>
             ) : (
-              "Follow the steps above to create your avatar"
+              t("avatar_step_open_editor")
             )}
           </p>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" className="text-xs h-7" onClick={handleClose}>
-              Cancel
+              {t("avatar_close")}
             </Button>
             <Button
               size="sm"
@@ -655,7 +658,7 @@ export function AvatarCreatorModal({
               disabled={!pending}
               onClick={handleSave}
             >
-              {pending ? "Save Avatar" : "Waiting…"}
+              {pending ? t("avatar_save_btn") : t("avatar_saving")}
             </Button>
           </div>
         </div>

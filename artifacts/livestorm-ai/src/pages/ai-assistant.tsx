@@ -697,7 +697,7 @@ export function AiAssistant() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between flex-shrink-0 flex-wrap gap-3">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Bot className="h-8 w-8 text-purple-400" />
             AI Co-Host
           </h2>
