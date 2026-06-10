@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@clerk/react";
 import { Link } from "wouter";
-import { CheckCircle2, Clock, Plug, ExternalLink, Zap, ChevronRight } from "lucide-react";
+import {
+  CheckCircle2, Clock, Plug, ExternalLink, Zap, ChevronRight,
+  Globe, Sparkles, Radio,
+} from "lucide-react";
+import { PageHero, GradientText } from "@/components/ui/premium";
+import { cn } from "@/lib/utils";
 
 interface IntegrationData {
   id: string;
@@ -41,9 +46,7 @@ const PLATFORM_LOGOS: Record<string, React.ReactNode> = {
       <path d="M16 4H8C5.8 4 4 5.8 4 8v8c0 2.2 1.8 4 4 4h8c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4zM9 16.5v-9l7.5 4.5L9 16.5z" />
     </svg>
   ),
-  internal: (
-    <Zap className="w-7 h-7" />
-  ),
+  internal: <Zap className="w-7 h-7" />,
 };
 
 const STAGE_LABELS: Record<number, string> = {
@@ -54,37 +57,38 @@ const STAGE_LABELS: Record<number, string> = {
 
 function PlatformCard({ integration }: { integration: IntegrationData }) {
   const isLive = integration.stage === "live";
-  const stageLabel = integration.roadmapStage
-    ? STAGE_LABELS[integration.roadmapStage]
-    : null;
+  const stageLabel = integration.roadmapStage ? STAGE_LABELS[integration.roadmapStage] : null;
 
   return (
-    <Card
-      className={`bg-card border-white/5 relative overflow-hidden transition-all duration-300 ${
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border transition-all duration-300",
         isLive
-          ? "hover:border-primary/30 hover:shadow-[0_0_20px_rgba(124,58,237,0.08)]"
-          : "opacity-75 hover:opacity-90"
-      }`}
+          ? "bg-white/[0.05] backdrop-blur-sm border-white/10 hover:border-primary/40 hover:shadow-[0_0_24px_rgba(124,58,237,0.12)]"
+          : "bg-white/[0.02] border-white/6 opacity-70 hover:opacity-85",
+      )}
     >
       {/* Color accent bar */}
-      <div
-        className="absolute top-0 left-0 right-0 h-0.5"
-        style={{ backgroundColor: integration.color }}
-      />
+      <div className="absolute top-0 left-0 right-0 h-0.5" style={{ backgroundColor: integration.color }} />
 
-      <CardHeader className="pb-3 pt-6">
+      <div className="pt-6 px-5 pb-0">
         <div className="flex items-start justify-between gap-3">
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${integration.color}20`, color: integration.color }}
+            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border"
+            style={{
+              backgroundColor: `${integration.color}18`,
+              color: integration.color,
+              borderColor: `${integration.color}30`,
+            }}
           >
             {PLATFORM_LOGOS[integration.id] ?? <Plug className="w-6 h-6" />}
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
             {isLive ? (
-              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
-                ● Live
+              <Badge className="bg-primary/20 text-primary border-primary/30 border text-xs gap-1 items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Live
               </Badge>
             ) : (
               <Badge variant="outline" className="border-white/10 text-muted-foreground text-xs">
@@ -93,9 +97,7 @@ function PlatformCard({ integration }: { integration: IntegrationData }) {
               </Badge>
             )}
             {stageLabel && (
-              <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">
-                {stageLabel}
-              </span>
+              <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">{stageLabel}</span>
             )}
           </div>
         </div>
@@ -104,15 +106,15 @@ function PlatformCard({ integration }: { integration: IntegrationData }) {
           <h3 className="font-bold text-white text-lg leading-tight">{integration.name}</h3>
           <p className="text-sm text-muted-foreground mt-0.5">{integration.tagline}</p>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-4">
+      <div className="px-5 pb-5 pt-3 space-y-4">
         <p className="text-sm text-muted-foreground leading-relaxed">{integration.description}</p>
 
         {isLive && (
           <div className="pt-1 space-y-3">
             {integration.connected ? (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-400" />
                   <div>
@@ -125,7 +127,7 @@ function PlatformCard({ integration }: { integration: IntegrationData }) {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                 <div className="flex items-center gap-2">
                   <Plug className="h-4 w-4 text-amber-400" />
                   <p className="text-xs text-amber-400 font-medium">Not connected</p>
@@ -160,16 +162,13 @@ function PlatformCard({ integration }: { integration: IntegrationData }) {
         )}
 
         {!isLive && !integration.docsUrl && (
-          <button
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground cursor-default"
-            disabled
-          >
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
             Planned for {stageLabel?.split("—")[1]?.trim() ?? "later"}
-          </button>
+          </span>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -210,99 +209,123 @@ export function Platforms() {
   const upcomingIntegrations = integrations.filter((i) => i.stage !== "live");
 
   return (
-    <div className="space-y-10 max-w-5xl">
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">Platforms</h2>
-        <p className="text-muted-foreground mt-2 max-w-xl">
-          Connect to external live streaming platforms or go live natively on LiveStorm.
-          TikTok LIVE is the first integration — more are on the roadmap.
-        </p>
-      </div>
+    <div className="space-y-6 max-w-5xl mx-auto">
+      <PageHero
+        gradientFrom="rgba(14,165,233,0.12)"
+        gradientTo="rgba(124,58,237,0.06)"
+        icon={
+          <div className="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
+            <Globe className="h-8 w-8 text-cyan-400" />
+          </div>
+        }
+        title={
+          <span>
+            Streaming{" "}
+            <GradientText from="from-cyan-400" to="to-violet-400">Platforms</GradientText>
+          </span>
+        }
+        subtitle="Connect to external live streaming platforms or go live natively. TikTok LIVE is active — more are on the roadmap."
+        right={
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20">
+            <Radio className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-bold text-primary">Stage 1 Active</span>
+          </div>
+        }
+      />
 
       {/* Roadmap stages */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { stage: 1, label: "Stage 1", subtitle: "TikTok LIVE + Creator Tools", status: "active" },
-          { stage: 2, label: "Stage 2", subtitle: "More Platforms + Social Layer", status: "upcoming" },
-          { stage: 3, label: "Stage 3", subtitle: "Native LiveStorm Streaming", status: "upcoming" },
+          { stage: 1, label: "Stage 1", subtitle: "TikTok LIVE + Creator Tools", status: "active" as const },
+          { stage: 2, label: "Stage 2", subtitle: "More Platforms + Social Layer", status: "upcoming" as const },
+          { stage: 3, label: "Stage 3", subtitle: "Native LiveStorm Streaming", status: "upcoming" as const },
         ].map(({ stage, label, subtitle, status }) => (
           <div
             key={stage}
-            className={`p-4 rounded-xl border ${
+            className={cn(
+              "p-4 rounded-2xl border transition-all",
               status === "active"
-                ? "border-primary/30 bg-primary/10"
-                : "border-white/5 bg-white/2"
-            }`}
+                ? "border-primary/30 bg-primary/10 shadow-[0_0_20px_rgba(124,58,237,0.08)]"
+                : "border-white/6 bg-white/[0.02]",
+            )}
           >
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1.5">
               <span
-                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  status === "active" ? "bg-primary text-white" : "bg-white/10 text-muted-foreground"
-                }`}
+                className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+                  status === "active" ? "bg-primary text-white" : "bg-white/10 text-muted-foreground",
+                )}
               >
                 {stage}
               </span>
-              <span className={`font-bold text-sm ${status === "active" ? "text-primary" : "text-muted-foreground"}`}>
+              <span className={cn("font-bold text-sm", status === "active" ? "text-primary" : "text-muted-foreground")}>
                 {label}
               </span>
               {status === "active" && (
-                <span className="text-[10px] bg-primary/20 text-primary border border-primary/30 rounded px-1.5 py-0.5 font-bold ml-auto">
+                <span className="ml-auto text-[10px] bg-primary/20 text-primary border border-primary/30 rounded-full px-2 py-0.5 font-bold flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
                   NOW
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-xs text-muted-foreground pl-8">{subtitle}</p>
           </div>
         ))}
       </div>
 
-      {/* Active integrations */}
+      {/* Integrations grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-56 rounded-xl bg-card border border-white/5 animate-pulse" />
+            <Skeleton key={i} className="h-56 w-full rounded-2xl bg-white/[0.04] border border-white/8" />
           ))}
         </div>
       ) : error ? (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          {error}
-        </div>
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
       ) : (
         <>
           {liveIntegrations.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Live Integrations
-              </h3>
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {liveIntegrations.map((i) => <PlatformCard key={i.id} integration={i} />)}
+                {liveIntegrations.map((i) => (
+                  <PlatformCard key={i.id} integration={i} />
+                ))}
               </div>
             </div>
           )}
 
           {upcomingIntegrations.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Upcoming Integrations
-              </h3>
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {upcomingIntegrations.map((i) => <PlatformCard key={i.id} integration={i} />)}
+                {upcomingIntegrations.map((i) => (
+                  <PlatformCard key={i.id} integration={i} />
+                ))}
               </div>
             </div>
           )}
         </>
       )}
 
-      {/* Coming soon notice */}
-      <div className="p-5 rounded-xl border border-white/5 bg-card flex items-center justify-between gap-4">
-        <div>
-          <p className="font-medium text-white text-sm">Want a specific platform sooner?</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Suggest it via the feedback button. Most-voted integrations get built first.
-          </p>
+      {/* Request CTA */}
+      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 p-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 rounded-xl bg-primary/15 flex-shrink-0">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-white text-sm">Want a specific platform sooner?</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Suggest it via the feedback button. Most-voted integrations get built first.
+            </p>
+          </div>
         </div>
-        <Button variant="outline" size="sm" className="border-white/10 shrink-0">
+        <Button variant="outline" size="sm" className="border-white/10 hover:border-primary/30 shrink-0">
           Request integration
         </Button>
       </div>

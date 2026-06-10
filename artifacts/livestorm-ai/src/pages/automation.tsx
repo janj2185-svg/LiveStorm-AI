@@ -11,7 +11,6 @@ import {
   getGetActiveSessionQueryKey
 } from "@workspace/api-client-react";
 import { useLiveSession } from "@/hooks/useLiveSession";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -23,33 +22,34 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Zap, Trash2, Plus, Settings2, ShieldAlert, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { PageHero, GradientText } from "@/components/ui/premium";
 
 const EVENT_TYPES = ["gift", "comment", "like", "follow", "share", "viewerCount"];
 const ACTION_TYPES = ["show_alert", "play_sound", "display_message", "send_chat_reply"];
 const NUMERIC_OPERATORS = [
   { value: "gte", label: ">= (Greater than or equal)" },
-  { value: "gt", label: "> (Greater than)" },
+  { value: "gt",  label: "> (Greater than)" },
   { value: "lte", label: "<= (Less than or equal)" },
-  { value: "eq", label: "= (Equal)" },
+  { value: "eq",  label: "= (Equal)" },
 ];
 const COMMENT_OPERATORS = [
-  { value: "any", label: "Any comment (always fires)" },
-  { value: "contains", label: "Contains keyword" },
-  { value: "exact", label: "Exact match" },
+  { value: "any",        label: "Any comment (always fires)" },
+  { value: "contains",   label: "Contains keyword" },
+  { value: "exact",      label: "Exact match" },
   { value: "startsWith", label: "Starts with" },
-  { value: "endsWith", label: "Ends with" },
-  { value: "regex", label: "Regex pattern" },
+  { value: "endsWith",   label: "Ends with" },
+  { value: "regex",      label: "Regex pattern" },
 ];
 
 export function Automation() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const { data: automations, isLoading } = useGetAutomations();
   const createAutomation = useCreateAutomation();
   const updateAutomation = useUpdateAutomation();
   const deleteAutomation = useDeleteAutomation();
-  
+
   const { data: activeSessionRes } = useGetActiveSession({ query: { queryKey: getGetActiveSessionQueryKey(), refetchInterval: 5000 } });
   const { automationsFired, connected } = useLiveSession(activeSessionRes?.session?.id);
 
@@ -82,7 +82,6 @@ export function Automation() {
       toast({ title: "Name is required", variant: "destructive" });
       return;
     }
-
     const includesCondition = needsNumericCondition || (isCommentEvent && formData.conditionOperator !== "any");
     const payload = {
       name: formData.name,
@@ -92,20 +91,12 @@ export function Automation() {
       conditionOperator: isCommentEvent ? formData.conditionOperator : (needsNumericCondition ? formData.conditionOperator : "any"),
       conditionValue: includesCondition ? formData.conditionValue : "",
     };
-
     createAutomation.mutate({ data: payload }, {
       onSuccess: () => {
         toast({ title: "Automation created" });
         setIsDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: getGetAutomationsQueryKey() });
-        setFormData({
-          name: "",
-          eventType: "gift",
-          conditionOperator: "gte",
-          conditionValue: "100",
-          actionType: "show_alert",
-          actionPayload: "Thanks for the VIP gift!"
-        });
+        setFormData({ name: "", eventType: "gift", conditionOperator: "gte", conditionValue: "100", actionType: "show_alert", actionPayload: "Thanks for the VIP gift!" });
       },
       onError: (err: any) => {
         toast({ title: "Failed to create", description: String(err), variant: "destructive" });
@@ -115,9 +106,7 @@ export function Automation() {
 
   const handleToggle = (id: number, isEnabled: boolean) => {
     updateAutomation.mutate({ id, data: { isEnabled } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetAutomationsQueryKey() });
-      }
+      onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetAutomationsQueryKey() }); }
     });
   };
 
@@ -134,166 +123,170 @@ export function Automation() {
   const recentlyFiredIds = new Set(automationsFired.slice(0, 5).map(e => e.automationId));
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+    <div className="space-y-5">
+      <PageHero
+        gradientFrom="rgba(124,58,237,0.14)"
+        gradientTo="rgba(6,182,212,0.06)"
+        icon={
+          <div className="p-3 rounded-2xl bg-primary/15 border border-primary/20 shadow-lg shadow-primary/10">
             <Zap className="h-8 w-8 text-primary" />
-            Automation Triggers
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Build rules to react to live events automatically.
-          </p>
-        </div>
+          </div>
+        }
+        title={
+          <span>
+            Automation{" "}
+            <GradientText from="from-violet-400" to="to-cyan-400">Triggers</GradientText>
+          </span>
+        }
+        subtitle="Build rules to react to live events automatically."
+        right={
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-primary hover:bg-primary/90 text-white font-bold">
+                <Plus className="h-4 w-4" />
+                New Trigger
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
+              <DialogHeader>
+                <DialogTitle>Create Automation Trigger</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Trigger Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    placeholder="e.g. VIP Gift Alert"
+                    className="bg-background border-white/10"
+                  />
+                </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 bg-primary hover:bg-primary/90 text-white font-bold">
-              <Plus className="h-4 w-4" />
-              New Trigger
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
-            <DialogHeader>
-              <DialogTitle>Create Automation Trigger</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Trigger Name</Label>
-                <Input 
-                  id="name" 
-                  value={formData.name} 
-                  onChange={e => setFormData({...formData, name: e.target.value})} 
-                  placeholder="e.g. VIP Gift Alert"
-                  className="bg-background border-white/10"
-                />
-              </div>
+                <div className="grid gap-2">
+                  <Label>When this event happens:</Label>
+                  <Select value={formData.eventType} onValueChange={handleEventTypeChange}>
+                    <SelectTrigger className="bg-background border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EVENT_TYPES.map(t => (
+                        <SelectItem key={t} value={t} className="capitalize">{t.replace("Count", " Count")}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="grid gap-2">
-                <Label>When this event happens:</Label>
-                <Select value={formData.eventType} onValueChange={handleEventTypeChange}>
-                  <SelectTrigger className="bg-background border-white/10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EVENT_TYPES.map(t => (
-                      <SelectItem key={t} value={t} className="capitalize">{t.replace("Count", " Count")}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {isCommentEvent && (
-                <div className="grid gap-4 bg-background/50 p-3 rounded-lg border border-white/5">
-                  <div className="grid gap-2">
-                    <Label>Comment Condition</Label>
-                    <Select
-                      value={formData.conditionOperator}
-                      onValueChange={v => setFormData({ ...formData, conditionOperator: v, conditionValue: v === "any" ? "" : formData.conditionValue })}
-                    >
-                      <SelectTrigger className="bg-background border-white/10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COMMENT_OPERATORS.map(o => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {formData.conditionOperator !== "any" && (
+                {isCommentEvent && (
+                  <div className="grid gap-4 bg-background/50 p-3 rounded-lg border border-white/5">
                     <div className="grid gap-2">
-                      <Label>Keyword / Pattern</Label>
+                      <Label>Comment Condition</Label>
+                      <Select
+                        value={formData.conditionOperator}
+                        onValueChange={v => setFormData({ ...formData, conditionOperator: v, conditionValue: v === "any" ? "" : formData.conditionValue })}
+                      >
+                        <SelectTrigger className="bg-background border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COMMENT_OPERATORS.map(o => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {formData.conditionOperator !== "any" && (
+                      <div className="grid gap-2">
+                        <Label>Keyword / Pattern</Label>
+                        <Input
+                          type="text"
+                          value={formData.conditionValue}
+                          onChange={e => setFormData({ ...formData, conditionValue: e.target.value })}
+                          placeholder={formData.conditionOperator === "regex" ? "e.g. ^hello|^hi" : "e.g. hello world"}
+                          className="bg-background border-white/10"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {needsNumericCondition && (
+                  <div className="grid grid-cols-2 gap-4 bg-background/50 p-3 rounded-lg border border-white/5">
+                    <div className="grid gap-2">
+                      <Label>Condition</Label>
+                      <Select value={formData.conditionOperator} onValueChange={v => setFormData({...formData, conditionOperator: v})}>
+                        <SelectTrigger className="bg-background border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {NUMERIC_OPERATORS.map(o => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Value</Label>
                       <Input
-                        type="text"
+                        type="number"
                         value={formData.conditionValue}
-                        onChange={e => setFormData({ ...formData, conditionValue: e.target.value })}
-                        placeholder={formData.conditionOperator === "regex" ? "e.g. ^hello|^hi" : "e.g. hello world"}
+                        onChange={e => setFormData({...formData, conditionValue: e.target.value})}
                         className="bg-background border-white/10"
                       />
                     </div>
-                  )}
-                </div>
-              )}
-
-              {needsNumericCondition && (
-                <div className="grid grid-cols-2 gap-4 bg-background/50 p-3 rounded-lg border border-white/5">
-                  <div className="grid gap-2">
-                    <Label>Condition</Label>
-                    <Select value={formData.conditionOperator} onValueChange={v => setFormData({...formData, conditionOperator: v})}>
-                      <SelectTrigger className="bg-background border-white/10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {NUMERIC_OPERATORS.map(o => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
-                  <div className="grid gap-2">
-                    <Label>Value</Label>
-                    <Input
-                      type="number"
-                      value={formData.conditionValue}
-                      onChange={e => setFormData({...formData, conditionValue: e.target.value})}
-                      className="bg-background border-white/10"
-                    />
-                  </div>
+                )}
+
+                <div className="grid gap-2 mt-2">
+                  <Label>Do this action:</Label>
+                  <Select value={formData.actionType} onValueChange={v => setFormData({...formData, actionType: v})}>
+                    <SelectTrigger className="bg-background border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACTION_TYPES.map(t => (
+                        <SelectItem key={t} value={t} className="capitalize">{t.replace(/_/g, " ")}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
 
-              <div className="grid gap-2 mt-2">
-                <Label>Do this action:</Label>
-                <Select value={formData.actionType} onValueChange={v => setFormData({...formData, actionType: v})}>
-                  <SelectTrigger className="bg-background border-white/10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACTION_TYPES.map(t => (
-                      <SelectItem key={t} value={t} className="capitalize">{t.replace(/_/g, " ")}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid gap-2">
+                  <Label>Action Payload (Text/Value)</Label>
+                  <Input
+                    value={formData.actionPayload}
+                    onChange={e => setFormData({...formData, actionPayload: e.target.value})}
+                    className="bg-background border-white/10"
+                    placeholder="e.g. text to display or sound to play"
+                  />
+                </div>
               </div>
-
-              <div className="grid gap-2">
-                <Label>Action Payload (Text/Value)</Label>
-                <Input 
-                  value={formData.actionPayload}
-                  onChange={e => setFormData({...formData, actionPayload: e.target.value})}
-                  className="bg-background border-white/10"
-                  placeholder="e.g. text to display or sound to play"
-                />
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-white/10">Cancel</Button>
+                <Button onClick={handleCreate} disabled={createAutomation.isPending} className="bg-primary hover:bg-primary/90">
+                  {createAutomation.isPending ? "Saving..." : "Save Trigger"}
+                </Button>
               </div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-white/10">Cancel</Button>
-              <Button onClick={handleCreate} disabled={createAutomation.isPending} className="bg-primary hover:bg-primary/90">
-                {createAutomation.isPending ? "Saving..." : "Save Trigger"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-xl bg-card border-white/5" />
+              <Skeleton key={i} className="h-32 w-full rounded-2xl bg-white/[0.04] border border-white/8" />
             ))
           ) : automations?.length === 0 ? (
-            <Card className="bg-card/50 border-dashed border-white/10">
-              <CardContent className="flex flex-col items-center justify-center p-12 text-muted-foreground">
-                <Settings2 className="h-12 w-12 mb-4 opacity-20" />
-                <h3 className="text-lg font-medium text-white mb-2">No Automations Yet</h3>
-                <p className="text-center max-w-sm mb-6">Create a trigger to automatically respond to gifts, likes, follows, and more during your stream.</p>
-                <Button onClick={() => setIsDialogOpen(true)} variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
-                  Create First Trigger
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-dashed border-white/10 p-12 flex flex-col items-center justify-center text-muted-foreground text-center">
+              <Settings2 className="h-12 w-12 mb-4 opacity-20" />
+              <h3 className="text-lg font-medium text-white mb-2">No Automations Yet</h3>
+              <p className="max-w-sm mb-6 text-sm">Create a trigger to automatically respond to gifts, likes, follows, and more during your stream.</p>
+              <Button onClick={() => setIsDialogOpen(true)} variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">
+                Create First Trigger
+              </Button>
+            </div>
           ) : (
             <div className="grid gap-4">
               <AnimatePresence>
@@ -305,41 +298,43 @@ export function Automation() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                   >
-                    <Card className={`relative overflow-hidden transition-all duration-300 ${recentlyFiredIds.has(auto.id) ? 'border-primary shadow-[0_0_20px_rgba(124,58,237,0.3)] bg-primary/5' : 'bg-card border-white/5 hover:border-white/20'}`}>
+                    <div className={`relative overflow-hidden rounded-2xl transition-all duration-300 border ${
+                      recentlyFiredIds.has(auto.id)
+                        ? "border-primary shadow-[0_0_20px_rgba(124,58,237,0.3)] bg-primary/5"
+                        : "bg-white/[0.04] backdrop-blur-sm border-white/8 hover:border-white/15"
+                    }`}>
                       {recentlyFiredIds.has(auto.id) && (
-                        <div className="absolute top-2 right-2 flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded animate-pulse">
+                        <div className="absolute top-3 right-3 flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg animate-pulse">
                           <Zap className="h-3 w-3" /> FIRED
                         </div>
                       )}
-                      <CardHeader className="pb-2 flex flex-row items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg text-white">{auto.name}</CardTitle>
-                          <CardDescription className="flex gap-2 items-center mt-1">
-                            <span className="capitalize text-accent font-medium px-2 py-0.5 bg-accent/10 rounded">
-                              {auto.eventType}
-                            </span>
-                            {auto.conditionOperator && (
-                              <span className="font-mono text-xs text-muted-foreground bg-black/40 px-2 py-0.5 rounded border border-white/5">
-                                {auto.conditionOperator} {auto.conditionValue}
+                      <div className="p-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-base font-bold text-white">{auto.name}</h3>
+                            <div className="flex gap-2 items-center mt-1.5">
+                              <span className="capitalize text-accent font-medium text-xs px-2 py-0.5 bg-accent/10 rounded-lg border border-accent/20">
+                                {auto.eventType}
                               </span>
-                            )}
-                          </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center space-x-2">
-                            <Switch 
-                              checked={auto.isEnabled} 
+                              {auto.conditionOperator && (
+                                <span className="font-mono text-xs text-muted-foreground bg-black/40 px-2 py-0.5 rounded-lg border border-white/5">
+                                  {auto.conditionOperator} {auto.conditionValue}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch
+                              checked={auto.isEnabled}
                               onCheckedChange={(c) => handleToggle(auto.id, c)}
                               disabled={updateAutomation.isPending}
                             />
+                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-red-400 hover:bg-red-400/10 h-8 w-8" onClick={() => handleDelete(auto.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-red-400 hover:bg-red-400/10" onClick={() => handleDelete(auto.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-3 p-3 bg-black/20 rounded-lg border border-white/5 mt-2">
+                        <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl border border-white/5">
                           <ShieldAlert className="h-4 w-4 text-purple-400" />
                           <div className="text-sm">
                             <span className="text-muted-foreground">Action: </span>
@@ -349,12 +344,12 @@ export function Automation() {
                             )}
                           </div>
                         </div>
-                      </CardContent>
-                      <CardFooter className="pt-0 text-xs text-muted-foreground justify-between">
-                        <span>Triggered {auto.triggerCount} times</span>
-                        <span>Created {format(new Date(auto.createdAt), 'MMM d, yyyy')}</span>
-                      </CardFooter>
-                    </Card>
+                        <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
+                          <span>Triggered {auto.triggerCount} times</span>
+                          <span>Created {format(new Date(auto.createdAt), "MMM d, yyyy")}</span>
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -362,21 +357,19 @@ export function Automation() {
           )}
         </div>
 
-        {/* Live Event Feed (Side Panel) */}
+        {/* Live Event Feed */}
         <div className="lg:col-span-1">
-          <Card className="bg-card border-white/5 h-[600px] flex flex-col sticky top-6">
-            <CardHeader className="pb-3 border-b border-white/5">
-              <CardTitle className="text-lg flex items-center justify-between">
-                Live Executions
-                {activeSessionRes?.active && connected && (
-                  <span className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 p-0 bg-black/20">
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 h-[600px] flex flex-col sticky top-6 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+              <span className="font-semibold text-white text-sm">Live Executions</span>
+              {activeSessionRes?.active && connected && (
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+              )}
+            </div>
+            <div className="flex-1 bg-black/20 overflow-hidden">
               {!activeSessionRes?.active ? (
                 <div className="h-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
                   <Activity className="h-8 w-8 mb-3 opacity-20" />
@@ -395,11 +388,11 @@ export function Automation() {
                           key={`${event.timestamp}-${idx}`}
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="p-3 rounded-lg border border-primary/20 bg-primary/10"
+                          className="p-3 rounded-xl border border-primary/20 bg-primary/10"
                         >
                           <div className="flex justify-between items-start mb-1">
                             <span className="font-bold text-sm text-primary">{event.automationName}</span>
-                            <span className="text-[10px] text-muted-foreground">{format(new Date(event.timestamp), 'HH:mm:ss')}</span>
+                            <span className="text-[10px] text-muted-foreground">{format(new Date(event.timestamp), "HH:mm:ss")}</span>
                           </div>
                           <p className="text-xs text-muted-foreground">
                             Action: <span className="text-white capitalize">{event.actionType.replace(/_/g, " ")}</span>
@@ -413,8 +406,8 @@ export function Automation() {
                   </div>
                 </ScrollArea>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

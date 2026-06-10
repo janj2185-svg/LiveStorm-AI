@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useGetMyProfile, useUpdateMyProfile, useConnectTiktok, getGetMyProfileQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -11,10 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Shield, CreditCard, Crown, Zap, Sparkles, Globe, Check } from "lucide-react";
+import { User, Shield, CreditCard, Crown, Zap, Sparkles, Globe, Check, Settings as SettingsIcon } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LANGUAGES, type Language } from "@/lib/i18n";
+import { PageHero, GradientText } from "@/components/ui/premium";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -45,27 +45,27 @@ const PLAN_META: Record<string, { label: string; icon: any; color: string; desc:
 };
 
 const AI_REPLY_LANGUAGES = [
-  { value: "auto",  label: "Auto-detect",          flag: "🌍" },
-  { value: "en",    label: "English",               flag: "🇬🇧" },
-  { value: "uk",    label: "Українська",            flag: "🇺🇦" },
-  { value: "pl",    label: "Polski",                flag: "🇵🇱" },
-  { value: "de",    label: "Deutsch",               flag: "🇩🇪" },
-  { value: "fr",    label: "Français",              flag: "🇫🇷" },
-  { value: "es",    label: "Español",               flag: "🇪🇸" },
-  { value: "it",    label: "Italiano",              flag: "🇮🇹" },
-  { value: "pt",    label: "Português",             flag: "🇧🇷" },
-  { value: "nl",    label: "Nederlands",            flag: "🇳🇱" },
-  { value: "tr",    label: "Türkçe",                flag: "🇹🇷" },
-  { value: "ru",    label: "Русский",               flag: "🇷🇺" },
-  { value: "ar",    label: "العربية",               flag: "🇸🇦" },
-  { value: "hi",    label: "हिन्दी",                flag: "🇮🇳" },
-  { value: "ja",    label: "日本語",                flag: "🇯🇵" },
-  { value: "ko",    label: "한국어",                flag: "🇰🇷" },
-  { value: "zh",    label: "简体中文",              flag: "🇨🇳" },
-  { value: "zh-TW", label: "繁體中文",              flag: "🇹🇼" },
-  { value: "id",    label: "Bahasa Indonesia",      flag: "🇮🇩" },
-  { value: "vi",    label: "Tiếng Việt",            flag: "🇻🇳" },
-  { value: "th",    label: "ภาษาไทย",              flag: "🇹🇭" },
+  { value: "auto",  label: "Auto-detect",     flag: "🌍" },
+  { value: "en",    label: "English",         flag: "🇬🇧" },
+  { value: "uk",    label: "Українська",      flag: "🇺🇦" },
+  { value: "pl",    label: "Polski",          flag: "🇵🇱" },
+  { value: "de",    label: "Deutsch",         flag: "🇩🇪" },
+  { value: "fr",    label: "Français",        flag: "🇫🇷" },
+  { value: "es",    label: "Español",         flag: "🇪🇸" },
+  { value: "it",    label: "Italiano",        flag: "🇮🇹" },
+  { value: "pt",    label: "Português",       flag: "🇧🇷" },
+  { value: "nl",    label: "Nederlands",      flag: "🇳🇱" },
+  { value: "tr",    label: "Türkçe",          flag: "🇹🇷" },
+  { value: "ru",    label: "Русский",         flag: "🇷🇺" },
+  { value: "ar",    label: "العربية",         flag: "🇸🇦" },
+  { value: "hi",    label: "हिन्दी",          flag: "🇮🇳" },
+  { value: "ja",    label: "日本語",          flag: "🇯🇵" },
+  { value: "ko",    label: "한국어",          flag: "🇰🇷" },
+  { value: "zh",    label: "简体中文",        flag: "🇨🇳" },
+  { value: "zh-TW", label: "繁體中文",        flag: "🇹🇼" },
+  { value: "id",    label: "Bahasa Indonesia", flag: "🇮🇩" },
+  { value: "vi",    label: "Tiếng Việt",      flag: "🇻🇳" },
+  { value: "th",    label: "ภาษาไทย",        flag: "🇹🇭" },
 ];
 
 type SettingsTab = "profile" | "billing" | "language";
@@ -177,28 +177,48 @@ export function Settings() {
   const PlanIcon = planMeta.icon;
 
   const TABS: { id: SettingsTab; label: string; icon?: React.ReactNode }[] = [
-    { id: "profile", label: t("settings_tab_profile") },
+    { id: "profile",  label: t("settings_tab_profile") },
     { id: "language", label: t("settings_tab_language"), icon: <Globe className="h-3.5 w-3.5" /> },
-    { id: "billing", label: t("settings_tab_billing"), icon: <CreditCard className="h-3.5 w-3.5" /> },
+    { id: "billing",  label: t("settings_tab_billing"),  icon: <CreditCard className="h-3.5 w-3.5" /> },
   ];
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">{t("settings_title")}</h2>
-        <p className="text-muted-foreground">{t("settings_desc")}</p>
-      </div>
+      <PageHero
+        gradientFrom="rgba(124,58,237,0.12)"
+        gradientTo="rgba(14,165,233,0.06)"
+        icon={
+          <div className="p-3 rounded-2xl bg-primary/15 border border-primary/20 shadow-lg shadow-primary/10">
+            <SettingsIcon className="h-8 w-8 text-primary" />
+          </div>
+        }
+        title={
+          <span>
+            Account{" "}
+            <GradientText from="from-violet-400" to="to-cyan-400">{t("settings_title")}</GradientText>
+          </span>
+        }
+        subtitle={t("settings_desc")}
+        right={
+          user?.plan && user.plan !== "free" ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <Crown className="h-4 w-4 text-amber-400" />
+              <span className="text-xs font-bold text-amber-300 capitalize">{user.plan}</span>
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border/50">
+      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/8 w-fit">
         {TABS.map((tb) => (
           <button
             key={tb.id}
             onClick={() => setTab(tb.id)}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
               tab === tb.id
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-primary/20 text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
             }`}
           >
             <span className="flex items-center gap-1.5">
@@ -211,16 +231,18 @@ export function Settings() {
 
       {/* Profile Tab */}
       {tab === "profile" && (
-        <>
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <User className="w-5 h-5 text-primary" />
-                {t("profile_title")}
-              </CardTitle>
-              <CardDescription>{t("profile_desc")}</CardDescription>
-            </CardHeader>
-            <CardContent>
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/15">
+                <User className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-white text-sm">{t("profile_title")}</p>
+                <p className="text-xs text-muted-foreground">{t("profile_desc")}</p>
+              </div>
+            </div>
+            <div className="p-6">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -246,24 +268,25 @@ export function Settings() {
                   </Button>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* TikTok Account */}
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <span className="text-primary font-black text-lg">@</span>
-                TikTok Account
-              </CardTitle>
-              <CardDescription>
-                Link your TikTok username so the app can connect to your LIVE stream.
-                Each user has their own independent session — changing your username only affects your account.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/15">
+                <span className="text-primary font-black text-sm">@</span>
+              </div>
+              <div>
+                <p className="font-semibold text-white text-sm">TikTok Account</p>
+                <p className="text-xs text-muted-foreground">
+                  Link your TikTok username to connect to your LIVE stream.
+                </p>
+              </div>
+            </div>
+            <div className="p-6">
               {user?.tiktokUsername && !tiktokEditing ? (
-                <div className="flex items-center justify-between p-4 rounded-lg bg-black/20 border border-primary/20">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-black/20 border border-primary/20">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                       <span className="text-primary font-black">@</span>
@@ -321,39 +344,40 @@ export function Settings() {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Shield className="w-5 h-5 text-accent" />
-                {t("security_title")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-accent/15">
+                <Shield className="w-4 h-4 text-accent" />
+              </div>
+              <p className="font-semibold text-white text-sm">{t("security_title")}</p>
+            </div>
+            <div className="p-6">
               <p className="text-sm text-muted-foreground">
                 {t("security_desc")}{" "}
                 <a href="/sign-in" className="text-primary hover:underline">{t("security_manage")}</a>
               </p>
-            </CardContent>
-          </Card>
-        </>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Language Tab */}
       {tab === "language" && (
         <div className="space-y-4">
-          {/* Interface Language */}
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Globe className="w-5 h-5 text-primary" />
-                {t("lang_title")}
-              </CardTitle>
-              <CardDescription>{t("lang_desc")}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/15">
+                <Globe className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-white text-sm">{t("lang_title")}</p>
+                <p className="text-xs text-muted-foreground">{t("lang_desc")}</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-6">
               <div className="space-y-3">
                 <Label className="text-sm font-medium text-foreground">{t("lang_select")}</Label>
                 <div className="grid grid-cols-2 gap-3 max-w-md">
@@ -361,10 +385,10 @@ export function Settings() {
                     <button
                       key={lang.code}
                       onClick={() => setLanguage(lang.code as Language)}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                         language === lang.code
                           ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-border/80 hover:bg-white/5 text-muted-foreground hover:text-foreground"
+                          : "border-white/8 hover:border-white/15 hover:bg-white/5 text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       <span className="text-2xl">{lang.flag}</span>
@@ -378,8 +402,7 @@ export function Settings() {
                 </div>
               </div>
 
-              {/* AI Reply Language */}
-              <div className="space-y-3 pt-2 border-t border-border/30">
+              <div className="space-y-3 pt-2 border-t border-white/8">
                 <div>
                   <Label className="text-sm font-medium text-foreground">{t("lang_ai_reply")}</Label>
                   <p className="text-xs text-muted-foreground mt-1">{t("lang_ai_reply_desc")}</p>
@@ -389,10 +412,10 @@ export function Settings() {
                     <button
                       key={lang.value}
                       onClick={() => setAiReplyLang(lang.value)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all text-left ${
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all text-left ${
                         aiReplyLang === lang.value
                           ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-border/80 hover:bg-white/5 text-muted-foreground hover:text-foreground"
+                          : "border-white/8 hover:border-white/15 hover:bg-white/5 text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       <span className="text-lg">{lang.flag}</span>
@@ -410,23 +433,23 @@ export function Settings() {
               >
                 {langSaving ? t("saving") : t("lang_save")}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Billing Tab */}
       {tab === "billing" && (
         <div className="space-y-4">
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-primary" />
-                {t("billing_title")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-background border border-border flex items-center gap-4">
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/15">
+                <CreditCard className="w-4 h-4 text-primary" />
+              </div>
+              <p className="font-semibold text-white text-sm">{t("billing_title")}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="p-4 rounded-xl bg-background/50 border border-white/8 flex items-center gap-4">
                 <div className={`p-2.5 rounded-lg bg-white/5 ${planMeta.color}`}>
                   <PlanIcon className="h-5 w-5" />
                 </div>
@@ -450,6 +473,7 @@ export function Settings() {
                     variant="outline"
                     onClick={handleManageBilling}
                     disabled={billingLoading === "portal"}
+                    className="border-white/10"
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
                     {billingLoading === "portal" ? t("loading") : t("billing_manage")}
@@ -459,14 +483,14 @@ export function Settings() {
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle className="text-sm text-muted-foreground font-medium">What's included in your plan</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/5">
+              <p className="text-sm font-semibold text-white">What's included in your plan</p>
+            </div>
+            <div className="p-6">
               <div className="space-y-2 text-sm">
                 {(user?.plan === "free" || !user?.plan) && (
                   <>
@@ -508,8 +532,8 @@ export function Settings() {
                   </>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </div>

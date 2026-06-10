@@ -106,10 +106,7 @@ export function Analytics() {
           </div>
         }
         title={
-          <span>
-            Stream{" "}
-            <GradientText from="from-emerald-400" to="to-cyan-400">{t("analytics_title")}</GradientText>
-          </span>
+          <GradientText from="from-emerald-400" to="to-cyan-400">{t("analytics_title")}</GradientText>
         }
         subtitle={t("analytics_desc")}
         right={

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, MonitorPlay, Loader2, RefreshCw, AlertCircle, Bell, Target, Trophy, Sword, Activity } from "lucide-react";
 import { useAuth } from "@clerk/react";
+import { PageHero, GradientText } from "@/components/ui/premium";
+import { cn } from "@/lib/utils";
 
 interface ObsTokenResponse {
   token: string;
@@ -84,16 +85,16 @@ const OVERLAYS = [
 
 const GOAL_TYPES = [
   { value: "followers", label: "Followers" },
-  { value: "likes", label: "Likes" },
-  { value: "comments", label: "Comments" },
-  { value: "gifts", label: "Gifts (coins)" },
-  { value: "viewers", label: "Peak Viewers" },
+  { value: "likes",     label: "Likes" },
+  { value: "comments",  label: "Comments" },
+  { value: "gifts",     label: "Gifts (coins)" },
+  { value: "viewers",   label: "Peak Viewers" },
 ];
 
 const ANIMATION_STYLES = [
   { value: "smooth", label: "Smooth (0.4s transitions)" },
   { value: "snappy", label: "Snappy (0.15s transitions)" },
-  { value: "none", label: "No animations" },
+  { value: "none",   label: "No animations" },
 ];
 
 function buildOverlayUrl(
@@ -184,80 +185,99 @@ export function Overlays() {
   const isExpired = tokenExpiry ? tokenExpiry.getTime() < Date.now() : false;
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">OBS Overlays</h2>
-        <p className="text-muted-foreground">Browser source URLs for your stream overlays. Add them to OBS as Browser Sources.</p>
+    <div className="space-y-5 max-w-6xl mx-auto">
+      <PageHero
+        gradientFrom="rgba(124,58,237,0.14)"
+        gradientTo="rgba(6,182,212,0.08)"
+        icon={
+          <div className="p-3 rounded-2xl bg-primary/15 border border-primary/20 shadow-lg shadow-primary/10">
+            <MonitorPlay className="h-8 w-8 text-primary" />
+          </div>
+        }
+        title={
+          <span>
+            OBS{" "}
+            <GradientText from="from-violet-400" to="to-cyan-400">Overlays</GradientText>
+          </span>
+        }
+        subtitle="Browser source URLs for your stream overlays. Add them to OBS as Browser Sources."
+        right={
+          loading ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Generating token…</span>
+            </div>
+          ) : obsData ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
+              <span className="w-2 h-2 rounded-full bg-green-400" />
+              <span className="text-xs font-bold text-green-300">Token active</span>
+            </div>
+          ) : error ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
+              <AlertCircle className="h-3.5 w-3.5 text-red-400" />
+              <span className="text-xs text-red-300">{error}</span>
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={fetchToken}>Retry</Button>
+            </div>
+          ) : null
+        }
+      />
+
+      {/* How-to banner */}
+      <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5 flex items-start gap-4">
+        <div className="p-2 rounded-xl bg-primary/15 flex-shrink-0">
+          <MonitorPlay className="w-5 h-5 text-primary" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-bold text-white mb-1.5 text-sm">How to use</h3>
+          <ol className="list-decimal list-inside text-muted-foreground space-y-0.5 text-xs">
+            <li>Select a widget below and configure it.</li>
+            <li>Copy the Browser Source URL.</li>
+            <li>In OBS → Add Source → Browser Source → paste the URL.</li>
+            <li>Set the recommended width &amp; height, enable "Transparent background".</li>
+          </ol>
+        </div>
+        {obsData && (
+          <div className="text-right shrink-0">
+            <div className="text-xs text-muted-foreground">
+              <div className="text-green-400 font-medium">✓ Token active</div>
+              <div className="mt-0.5">Expires {tokenExpiry?.toLocaleTimeString()}</div>
+              <Button size="sm" variant="ghost" className="mt-1 h-7 text-xs" onClick={fetchToken}>
+                <RefreshCw className="h-3 w-3 mr-1" /> Refresh
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <Card className="bg-primary/5 border-primary/20">
-        <CardContent className="p-5 flex items-start gap-4">
-          <MonitorPlay className="w-7 h-7 text-primary shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-bold text-white mb-1">How to use</h3>
-            <ol className="list-decimal list-inside text-muted-foreground space-y-0.5 text-sm">
-              <li>Select a widget below and configure it.</li>
-              <li>Copy the Browser Source URL.</li>
-              <li>In OBS → Add Source → Browser Source → paste the URL.</li>
-              <li>Set the recommended width & height, enable "Transparent background".</li>
-            </ol>
-          </div>
-          <div className="text-right shrink-0">
-            {loading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Generating token...
-              </div>
-            ) : error ? (
-              <div className="space-y-1">
-                <div className="flex items-center gap-1 text-sm text-red-400">
-                  <AlertCircle className="h-4 w-4" /> {error}
-                </div>
-                <Button size="sm" variant="outline" onClick={fetchToken}>
-                  <RefreshCw className="h-3 w-3 mr-1" /> Retry
-                </Button>
-              </div>
-            ) : obsData ? (
-              <div className="text-xs text-muted-foreground">
-                <div className="text-green-400 font-medium">✓ Token active</div>
-                <div className="mt-0.5">Expires {tokenExpiry?.toLocaleTimeString()}</div>
-                <Button size="sm" variant="ghost" className="mt-1 h-7 text-xs" onClick={fetchToken}>
-                  <RefreshCw className="h-3 w-3 mr-1" /> Refresh
-                </Button>
-              </div>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
-
       {isExpired && (
-        <Card className="bg-amber-950/20 border-amber-800/30">
-          <CardContent className="p-4 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
-            <span className="text-sm text-amber-300">Your overlay token has expired. Refresh to generate a new 24-hour token.</span>
-            <Button size="sm" variant="outline" className="ml-auto" onClick={fetchToken}>
-              <RefreshCw className="h-3 w-3 mr-1" /> Refresh Token
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-amber-950/20 border border-amber-800/30 p-4 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
+          <span className="text-sm text-amber-300">Your overlay token has expired. Refresh to generate a new 24-hour token.</span>
+          <Button size="sm" variant="outline" className="ml-auto" onClick={fetchToken}>
+            <RefreshCw className="h-3 w-3 mr-1" /> Refresh Token
+          </Button>
+        </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Widgets</h3>
+        {/* Widget list */}
+        <div className="lg:col-span-1 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-3">Widgets</p>
           {OVERLAYS.map((overlay) => {
             const Icon = overlay.icon;
             return (
               <button
                 key={overlay.id}
                 onClick={() => setActiveOverlay(overlay.id)}
-                className={`w-full text-left p-4 rounded-xl border transition-all ${
+                className={cn(
+                  "w-full text-left p-4 rounded-xl border transition-all",
                   activeOverlay === overlay.id
                     ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_rgba(124,58,237,0.15)]"
-                    : "bg-card border-white/5 hover:border-white/10 hover:bg-white/5"
-                }`}
+                    : "bg-white/[0.03] border-white/8 hover:border-white/15 hover:bg-white/[0.05]"
+                )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${overlay.color}22` }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${overlay.color}22` }}>
                     <Icon className="w-4 h-4" style={{ color: overlay.color }} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -270,20 +290,19 @@ export function Overlays() {
           })}
         </div>
 
-        <div className="lg:col-span-2 space-y-4">
+        {/* Configure + URLs */}
+        <div className="lg:col-span-2 space-y-5">
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Configure: {activeWidget.name}
-            </h3>
-            <Card className="bg-card border-white/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  {(() => { const Icon = activeWidget.icon; return <Icon className="w-5 h-5" style={{ color: activeWidget.color }} />; })()}
-                  {activeWidget.name}
-                </CardTitle>
-                <CardDescription>{activeWidget.desc}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            </p>
+            <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
+                {(() => { const Icon = activeWidget.icon; return <Icon className="w-4 h-4" style={{ color: activeWidget.color }} />; })()}
+                <span className="font-semibold text-white text-sm">{activeWidget.name}</span>
+                <span className="text-xs text-muted-foreground ml-1">— {activeWidget.desc}</span>
+              </div>
+              <div className="p-5 space-y-4">
                 {activeWidget.configurable.includes("accentColor") && (
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Accent Color</Label>
@@ -292,7 +311,7 @@ export function Overlays() {
                         type="color"
                         value={config.accentColor}
                         onChange={(e) => setConfig((c) => ({ ...c, accentColor: e.target.value }))}
-                        className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent"
+                        className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer bg-transparent"
                       />
                       <Input
                         value={config.accentColor}
@@ -321,9 +340,7 @@ export function Overlays() {
                     </Label>
                     <div className="flex items-center gap-3">
                       <Slider
-                        min={0.6}
-                        max={1.6}
-                        step={0.1}
+                        min={0.6} max={1.6} step={0.1}
                         value={[config.fontScale]}
                         onValueChange={([v]) => setConfig((c) => ({ ...c, fontScale: v }))}
                         className="py-1 flex-1"
@@ -372,9 +389,7 @@ export function Overlays() {
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Goal Target: {config.goalTarget.toLocaleString()}</Label>
                     <Slider
-                      min={10}
-                      max={10000}
-                      step={10}
+                      min={10} max={10000} step={10}
                       value={[config.goalTarget]}
                       onValueChange={([v]) => setConfig((c) => ({ ...c, goalTarget: v }))}
                       className="py-1"
@@ -394,7 +409,7 @@ export function Overlays() {
                   </div>
                 )}
 
-                <div className="pt-2 space-y-3">
+                <div className="pt-2 space-y-3 border-t border-white/5">
                   <div>
                     <Label className="text-sm text-muted-foreground mb-1.5 block">Browser Source URL</Label>
                     {obsData ? (
@@ -408,7 +423,7 @@ export function Overlays() {
                           size="icon"
                           variant="outline"
                           onClick={() => handleCopy(overlayUrl)}
-                          className="shrink-0 border-border hover:bg-white/5"
+                          className="shrink-0 border-white/10 hover:bg-white/5"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
@@ -421,25 +436,24 @@ export function Overlays() {
                       </div>
                     )}
                   </div>
-
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span className="bg-white/5 rounded px-2 py-1 font-mono">
+                    <span className="bg-white/5 rounded-lg px-2 py-1 font-mono border border-white/5">
                       {activeWidget.width} × {activeWidget.height}px
                     </span>
-                    <span className="bg-white/5 rounded px-2 py-1">✓ Transparent background</span>
-                    <span className="bg-white/5 rounded px-2 py-1">✓ Auto-updates via socket</span>
-                    <span className="bg-white/5 rounded px-2 py-1">✓ 10s leaderboard refresh</span>
+                    <span className="bg-white/5 rounded-lg px-2 py-1 border border-white/5">✓ Transparent background</span>
+                    <span className="bg-white/5 rounded-lg px-2 py-1 border border-white/5">✓ Auto-updates via socket</span>
+                    <span className="bg-white/5 rounded-lg px-2 py-1 border border-white/5">✓ 10s leaderboard refresh</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {obsData && (
             <div>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Live Preview</h3>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Live Preview</p>
               <div
-                className="rounded-xl border border-white/5 overflow-hidden bg-[repeating-conic-gradient(#ffffff08_0%_25%,transparent_0%_50%)] bg-[length:24px_24px]"
+                className="rounded-2xl border border-white/8 overflow-hidden bg-[repeating-conic-gradient(#ffffff08_0%_25%,transparent_0%_50%)] bg-[length:24px_24px]"
                 style={{ height: "280px", position: "relative" }}
               >
                 <iframe
@@ -456,7 +470,7 @@ export function Overlays() {
           )}
 
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">All Overlay URLs</h3>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">All Overlay URLs</p>
             <div className="space-y-2">
               {OVERLAYS.map((overlay) => {
                 const Icon = overlay.icon;
@@ -464,7 +478,7 @@ export function Overlays() {
                   ? buildOverlayUrl(baseUrl, overlay.path, obsData.streamerId, obsData.token, config, overlay.id)
                   : "";
                 return (
-                  <div key={overlay.id} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-white/5">
+                  <div key={overlay.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/8">
                     <Icon className="w-4 h-4 shrink-0" style={{ color: overlay.color }} />
                     <span className="text-sm font-medium text-white w-28 shrink-0">{overlay.name}</span>
                     <Input

@@ -11,7 +11,6 @@ import {
   getGetActiveSessionQueryKey
 } from "@workspace/api-client-react";
 import { useLiveSession } from "@/hooks/useLiveSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { PageHero, GradientText } from "@/components/ui/premium";
 
 const EVENT_COLORS: Record<string, string> = {
   gift:            "text-amber-400",
@@ -133,13 +133,38 @@ export function LiveStudio() {
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <Video className="h-6 w-6 text-accent" />
-          Live Studio
-        </h2>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your active broadcast and monitor real-time events.</p>
-      </div>
+      <PageHero
+        gradientFrom="rgba(14,165,233,0.14)"
+        gradientTo="rgba(124,58,237,0.08)"
+        icon={
+          <div className="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
+            <Video className="h-8 w-8 text-cyan-400" />
+          </div>
+        }
+        title={
+          <span>
+            Live{" "}
+            <GradientText from="from-cyan-400" to="to-violet-400">Studio</GradientText>
+          </span>
+        }
+        subtitle="Manage your active broadcast and monitor real-time events."
+        right={
+          isActive ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              <span className="text-xs font-bold text-emerald-300">LIVE</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+              <span className="w-2 h-2 rounded-full bg-slate-500" />
+              <span className="text-xs font-semibold text-muted-foreground">OFFLINE</span>
+            </div>
+          )
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
@@ -147,14 +172,12 @@ export function LiveStudio() {
         <div className="space-y-4">
 
           {/* TikTok Connection */}
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3 border-b border-white/5">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <PlugZap className="w-4 h-4 text-primary" />
-                TikTok Account
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
+              <PlugZap className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-white">TikTok Account</span>
+            </div>
+            <div className="p-5">
               {!isUserLoading && user?.tiktokUsername ? (
                 <div className="relative p-4 rounded-xl bg-primary/8 border border-primary/20 overflow-hidden text-center">
                   <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
@@ -191,22 +214,19 @@ export function LiveStudio() {
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Broadcast Control */}
-          <Card className={cn(
-            "bg-card border-white/5 transition-all duration-300",
-            isActive && "border-primary/20 shadow-md shadow-primary/5",
+          <div className={cn(
+            "rounded-2xl bg-white/[0.04] backdrop-blur-sm border overflow-hidden transition-all duration-300",
+            isActive ? "border-primary/25 shadow-lg shadow-primary/8" : "border-white/8",
           )}>
-            <CardHeader className="pb-3 border-b border-white/5">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Video className="w-4 h-4 text-accent" />
-                Broadcast Control
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-
+            <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
+              <Video className="w-4 h-4 text-accent" />
+              <span className="text-sm font-semibold text-white">Broadcast Control</span>
+            </div>
+            <div className="p-5 space-y-4">
               {/* Status rows */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-sm">
@@ -259,7 +279,6 @@ export function LiveStudio() {
                 )}
               </div>
 
-              {/* Divider */}
               <div className="border-t border-white/5" />
 
               {/* Actions */}
@@ -310,48 +329,45 @@ export function LiveStudio() {
                     : "Waiting for TikTok connection…"
                   : "Start a session to activate event capture, overlays, and automations."}
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Raw Event Feed */}
         <div className="md:col-span-2">
-          <Card className={cn(
-            "bg-card flex flex-col transition-all duration-500",
-            "min-h-[600px]",
+          <div className={cn(
+            "rounded-2xl bg-white/[0.04] backdrop-blur-sm flex flex-col transition-all duration-500",
+            "min-h-[600px] overflow-hidden",
             isActive && connected && effectiveMode === "real"
-              ? "border-accent/30 shadow-lg shadow-accent/5"
-              : "border-white/5",
+              ? "border border-accent/30 shadow-lg shadow-accent/8"
+              : "border border-white/8",
           )}>
-            <CardHeader className="border-b border-white/5 bg-black/10 flex-none">
-              <CardTitle className="text-sm font-semibold flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Terminal className="h-4 w-4 text-muted-foreground" />
-                  Event Console
-                </span>
-                <div className="flex items-center gap-2">
-                  {modeBadge()}
-                  {isActive && connected && effectiveMode !== "error" && (
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-accent px-2 py-1 bg-accent/10 rounded-full border border-accent/20">
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                      Listening
-                    </span>
-                  )}
-                  {events.length > 0 && (
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {events.length} events
-                    </span>
-                  )}
-                </div>
-              </CardTitle>
-            </CardHeader>
+            <div className="px-5 py-3.5 border-b border-white/5 bg-black/10 flex-none flex items-center justify-between">
+              <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                <Terminal className="h-4 w-4 text-muted-foreground" />
+                Event Console
+              </span>
+              <div className="flex items-center gap-2">
+                {modeBadge()}
+                {isActive && connected && effectiveMode !== "error" && (
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-accent px-2 py-1 bg-accent/10 rounded-full border border-accent/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    Listening
+                  </span>
+                )}
+                {events.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {events.length} events
+                  </span>
+                )}
+              </div>
+            </div>
 
-            <CardContent className="flex-1 p-0 font-mono text-xs bg-black/30">
+            <div className="flex-1 font-mono text-xs bg-black/30">
               {isActive ? (
                 <ScrollArea className="h-full" style={{ height: "100%", minHeight: "540px" }}>
                   <div className="p-4 space-y-1.5">
 
-                    {/* System status line */}
                     {effectiveMode === "error" ? (
                       <motion.div
                         initial={{ opacity: 0, x: -8 }}
@@ -371,7 +387,7 @@ export function LiveStudio() {
                       <div className="px-3 py-2 rounded-lg bg-blue-500/8 border border-blue-500/15 text-blue-400 text-[10px]">
                         <span className="text-slate-500 mr-2">[{format(new Date(), "HH:mm:ss")}]</span>
                         <span className="font-bold text-blue-400">[SYSTEM]</span>
-                        <span className="text-slate-400 ml-2">Demo mode active — simulated events flowing. Set TIKTOK_MODE=real for live data.</span>
+                        <span className="text-slate-400 ml-2">Demo mode active — simulated events flowing.</span>
                       </div>
                     ) : effectiveMode === "real" ? (
                       <div className="px-3 py-2 rounded-lg bg-emerald-500/8 border border-emerald-500/15 text-emerald-400 text-[10px]">
@@ -387,12 +403,10 @@ export function LiveStudio() {
                       </div>
                     )}
 
-                    {/* Live events */}
                     <AnimatePresence initial={false}>
                       {events.map((event, idx) => {
                         const color = EVENT_COLORS[event.type] ?? "text-muted-foreground";
                         const payload = JSON.stringify(event.data);
-
                         return (
                           <motion.div
                             key={`${event.timestamp}-${idx}`}
@@ -430,8 +444,8 @@ export function LiveStudio() {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
