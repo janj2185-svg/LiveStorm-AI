@@ -101,25 +101,25 @@ export function Moderation() {
         }
         subtitle="Protect your stream from harmful content automatically."
         right={
-          isActive ? (
-            <Badge className="bg-green-500/15 text-green-400 border-green-500/20 border gap-1.5 px-3 py-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
-              Moderation Active
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-muted-foreground border-white/10">
-              <Clock className="h-3 w-3" />
-              No Active Stream
-            </Badge>
-          )
-        }
-        actions={
-          <Link href="/ai-assistant">
-            <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:border-primary/30 text-xs">
-              AI Co-Host Settings
-              <ChevronRight className="h-3 w-3" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {isActive ? (
+              <Badge className="bg-green-500/15 text-green-400 border-green-500/20 border gap-1.5 px-3 py-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+                Moderation Active
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-muted-foreground border-white/10">
+                <Clock className="h-3 w-3" />
+                No Active Stream
+              </Badge>
+            )}
+            <Link href="/ai-assistant">
+              <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:border-primary/30 text-xs">
+                AI Co-Host Settings
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </Link>
+          </div>
         }
       />
 
