@@ -6,9 +6,11 @@ import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Upload, Loader2, CheckCircle2, AlertCircle, Camera, Sparkles,
+  ExternalLink, Settings2, ArrowRight, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvaturnSDK } from "@avaturn/sdk";
@@ -29,7 +31,23 @@ interface AvatarCreatorModalProps {
   onSave: (result: AvatarCreatorResult) => void;
 }
 
-// ── URL helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const RPM_SUBDOMAIN_KEY = "livestorm_rpm_subdomain";
+
+function getRpmSubdomain(): string {
+  try {
+    return localStorage.getItem(RPM_SUBDOMAIN_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function setRpmSubdomain(sub: string) {
+  try {
+    localStorage.setItem(RPM_SUBDOMAIN_KEY, sub.trim());
+  } catch {}
+}
 
 function normalizeRpmUrl(raw: string): string {
   const base = raw.split("?")[0];
@@ -42,8 +60,8 @@ function rpmThumbnailUrl(raw: string): string {
 }
 
 // ── Ready Player Me Tab ───────────────────────────────────────────────────────
-// Uses RPM Frame API v2: requires a subdomain.
-// "demo" is RPM's public demo subdomain — no registration needed.
+// Requires a registered partner subdomain from studio.readyplayer.me.
+// The subdomain is saved to localStorage so the user only needs to configure it once.
 
 function ReadyPlayerMeTab({
   onSuccess,
@@ -51,12 +69,17 @@ function ReadyPlayerMeTab({
   onSuccess: (avatarUrl: string, thumbnailUrl: string) => void;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [phase, setPhase] = useState<"loading" | "ready" | "done">("loading");
+  const [subdomain, setSubdomain] = useState(() => getRpmSubdomain());
+  const [inputValue, setInputValue] = useState(() => getRpmSubdomain());
+  const [phase, setPhase] = useState<"setup" | "loading" | "ready" | "done">(
+    () => (getRpmSubdomain() ? "loading" : "setup"),
+  );
+  const [inputError, setInputError] = useState("");
   const capturedRef = useRef(false);
 
-  // RPM Frame API v2 — subdomain required; "demo" is the public RPM demo app.
-  const RPM_URL =
-    "https://demo.readyplayer.me/avatar?frameApi&clearCache&bodyType=fullbody";
+  const rpmUrl = subdomain
+    ? `https://${subdomain}.readyplayer.me/avatar?frameApi&clearCache&bodyType=fullbody`
+    : null;
 
   const handleSuccess = useCallback(
     (avatarUrl: string, thumbnailUrl: string) => {
@@ -68,26 +91,41 @@ function ReadyPlayerMeTab({
     [onSuccess],
   );
 
-  useEffect(() => {
+  function handleSubdomainSubmit() {
+    const val = inputValue.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+    if (!val) {
+      setInputError("Enter a valid subdomain");
+      return;
+    }
+    setInputError("");
+    setRpmSubdomain(val);
+    setSubdomain(val);
     capturedRef.current = false;
+    setPhase("loading");
+  }
+
+  function handleReset() {
+    setRpmSubdomain("");
+    setSubdomain("");
+    setInputValue("");
+    setPhase("setup");
+    capturedRef.current = false;
+  }
+
+  useEffect(() => {
+    if (phase === "setup" || phase === "done") return;
+
     function onMessage(e: MessageEvent) {
       if (!e.data) return;
       const data =
         typeof e.data === "string"
           ? (() => {
-              try {
-                return JSON.parse(e.data);
-              } catch {
-                return null;
-              }
+              try { return JSON.parse(e.data); } catch { return null; }
             })()
           : e.data;
-      if (!data) return;
+      if (!data || data.source !== "readyplayerme") return;
 
-      if (
-        data.source === "readyplayerme" &&
-        data.eventName === "v1.frame.ready"
-      ) {
+      if (data.eventName === "v1.frame.ready") {
         setPhase("ready");
         iframeRef.current?.contentWindow?.postMessage(
           JSON.stringify({
@@ -99,35 +137,127 @@ function ReadyPlayerMeTab({
         );
       }
 
-      if (
-        data.source === "readyplayerme" &&
-        data.eventName === "v1.avatar.exported"
-      ) {
+      if (data.eventName === "v1.avatar.exported") {
         const rawUrl: string = data.data?.url ?? data.url ?? "";
         if (rawUrl) {
           handleSuccess(normalizeRpmUrl(rawUrl), rpmThumbnailUrl(rawUrl));
         }
       }
     }
+
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [handleSuccess]);
+  }, [phase, handleSuccess]);
+
+  if (phase === "setup") {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/30 text-[10px]">Photorealistic</Badge>
+          <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px]">ARKit Lip Sync</Badge>
+          <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/30 text-[10px]">Selfie → Avatar</Badge>
+        </div>
+
+        <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="text-[11px] text-blue-200/80 leading-relaxed">
+              Ready Player Me requires a free partner subdomain.
+              Register at <strong>studio.readyplayer.me</strong>, create an
+              application and copy your subdomain.
+            </div>
+          </div>
+          <a
+            href="https://studio.readyplayer.me"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[11px] text-blue-400 hover:text-blue-300 font-medium transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Get your free subdomain at studio.readyplayer.me
+          </a>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-white/70">
+            Your RPM Subdomain
+          </label>
+          <div className="flex gap-2">
+            <div className="flex-1 flex items-center bg-white/5 border border-white/10 rounded-lg overflow-hidden focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
+              <span className="text-[11px] text-white/30 pl-3 pr-0.5 whitespace-nowrap flex-shrink-0">
+                https://
+              </span>
+              <Input
+                className="border-0 bg-transparent h-9 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 px-1"
+                placeholder="your-subdomain"
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setInputError("");
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleSubdomainSubmit()}
+              />
+              <span className="text-[11px] text-white/30 pr-3 pl-0.5 whitespace-nowrap flex-shrink-0">
+                .readyplayer.me
+              </span>
+            </div>
+            <Button
+              size="sm"
+              className="h-9 px-4 bg-blue-600 hover:bg-blue-500 gap-1.5 flex-shrink-0"
+              onClick={handleSubdomainSubmit}
+              disabled={!inputValue.trim()}
+            >
+              Load <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          {inputError && (
+            <p className="text-xs text-red-400">{inputError}</p>
+          )}
+          <p className="text-[10px] text-muted-foreground/50">
+            This is saved locally and only needs to be set once.
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-white/[0.02] border border-white/5 p-3 space-y-2">
+          <p className="text-[10px] font-medium text-white/50">Quick setup steps</p>
+          {[
+            "Go to studio.readyplayer.me and sign up (free)",
+            'Click "Create Application" and give it any name',
+            "Copy your subdomain (e.g. my-stream-5f2a)",
+            "Paste it above and click Load",
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="w-4 h-4 rounded-full bg-white/8 text-[9px] text-white/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                {i + 1}
+              </span>
+              <p className="text-[10px] text-white/40">{step}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/30 text-[10px]">Photorealistic</Badge>
-        <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px]">ARKit Lip Sync</Badge>
-        <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/30 text-[10px]">Selfie → Avatar</Badge>
-        <Badge className="bg-violet-500/15 text-violet-300 border-violet-500/30 text-[10px]">Full Body</Badge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/30 text-[10px]">Photorealistic</Badge>
+          <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px]">ARKit Lip Sync</Badge>
+          <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/30 text-[10px]">Selfie → Avatar</Badge>
+        </div>
+        <button
+          onClick={handleReset}
+          className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors"
+        >
+          <Settings2 className="h-3 w-3" />
+          {subdomain}.readyplayer.me
+        </button>
       </div>
-      <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Create a photorealistic avatar from a selfie or customise one from scratch.
-        Full ARKit facial blend shapes for lip sync and expressions.
-      </p>
+
       <div
         className="relative rounded-xl overflow-hidden border border-white/10"
-        style={{ height: 480 }}
+        style={{ height: 460 }}
       >
         {phase === "loading" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070010] z-10 gap-3">
@@ -142,25 +272,28 @@ function ReadyPlayerMeTab({
             <p className="text-[11px] text-muted-foreground">Click Save to use this presenter</p>
           </div>
         )}
-        <iframe
-          ref={iframeRef}
-          src={RPM_URL}
-          className="w-full h-full border-0"
-          allow="camera *; microphone *; clipboard-write"
-          onLoad={() => {
-            setTimeout(() => {
-              setPhase((p) => (p === "loading" ? "ready" : p));
-            }, 2000);
-          }}
-        />
+        {rpmUrl && (
+          <iframe
+            key={rpmUrl}
+            ref={iframeRef}
+            src={rpmUrl}
+            className="w-full h-full border-0"
+            allow="camera *; microphone *; clipboard-write"
+            onLoad={() => {
+              setTimeout(() => {
+                setPhase((p) => (p === "loading" ? "ready" : p));
+              }, 2000);
+            }}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 // ── Avaturn Tab ───────────────────────────────────────────────────────────────
-// Uses @avaturn/sdk (official) with the public "demo" subdomain.
-// The SDK handles the iframe + postMessage handshake internally.
+// Uses @avaturn/sdk (official). Public demo: demo.avaturn.dev.
+// A free Avaturn account is required — sign-up is embedded in the iframe.
 
 function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -169,7 +302,6 @@ function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
   const [errorMsg, setErrorMsg] = useState("");
   const capturedRef = useRef(false);
 
-  // Public demo URL — no API key required.
   const AVATURN_URL = "https://demo.avaturn.dev";
 
   const handleSuccess = useCallback(
@@ -214,19 +346,43 @@ function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <Badge className="bg-rose-500/15 text-rose-300 border-rose-500/30 text-[10px]">Hyper-Realistic</Badge>
-        <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px]">Photo → Avatar</Badge>
-        <Badge className="bg-violet-500/15 text-violet-300 border-violet-500/30 text-[10px]">MetaHuman Quality</Badge>
-        <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/30 text-[10px]">Facial Blend Shapes</Badge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Badge className="bg-rose-500/15 text-rose-300 border-rose-500/30 text-[10px]">Hyper-Realistic</Badge>
+          <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px]">Photo → Avatar</Badge>
+          <Badge className="bg-violet-500/15 text-violet-300 border-violet-500/30 text-[10px]">MetaHuman Quality</Badge>
+        </div>
+        <a
+          href="https://avaturn.me"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors"
+        >
+          Free account required <ExternalLink className="h-3 w-3" />
+        </a>
       </div>
-      <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Upload a photo to generate a hyper-realistic avatar with real skin, hair, and eyes.
-        Exports as a standard GLB with full facial blend shapes.
-      </p>
+
+      {phase === "loading" && (
+        <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 flex items-center gap-2">
+          <Info className="h-3.5 w-3.5 text-rose-400 flex-shrink-0" />
+          <p className="text-[10px] text-rose-200/70 leading-relaxed">
+            A <strong>free Avaturn account</strong> is required. Sign up inside the editor below, then upload a photo and click <strong>Next</strong> to export your GLB avatar.
+          </p>
+        </div>
+      )}
+
+      {phase === "ready" && (
+        <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 flex items-center gap-2">
+          <Info className="h-3.5 w-3.5 text-rose-400 flex-shrink-0" />
+          <p className="text-[10px] text-rose-200/70 leading-relaxed">
+            Sign in (or sign up free) → upload your photo → customise → click <strong>Next</strong> to export.
+          </p>
+        </div>
+      )}
+
       <div
         className="relative rounded-xl overflow-hidden border border-white/10"
-        style={{ height: 480 }}
+        style={{ height: 440 }}
       >
         {phase === "loading" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070010] z-10 gap-3">
@@ -237,7 +393,7 @@ function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
         {phase === "done" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-10 gap-3">
             <CheckCircle2 className="h-12 w-12 text-emerald-400" />
-            <p className="text-white font-semibold">Avatar captured!</p>
+            <p className="text-white font-semibold">Avatar exported!</p>
             <p className="text-[11px] text-muted-foreground">Click Save to use this presenter</p>
           </div>
         )}
@@ -246,13 +402,20 @@ function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
             <AlertCircle className="h-10 w-10 text-red-400" />
             <p className="text-sm text-white font-semibold">Failed to load Avaturn</p>
             {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
+            <a
+              href={AVATURN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
+            >
+              Open Avaturn directly <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
         )}
-        {/* SDK mounts iframe into this div */}
         <div
           ref={containerRef}
           className="w-full h-full"
-          style={{ minHeight: 480 }}
+          style={{ minHeight: 440 }}
         />
       </div>
     </div>
@@ -266,9 +429,7 @@ function VRMUploadTab({
 }: {
   onSuccess: (avatarUrl: string) => void;
 }) {
-  const [phase, setPhase] = useState<"idle" | "uploading" | "done" | "error">(
-    "idle",
-  );
+  const [phase, setPhase] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [error, setError] = useState("");
   const [fileName, setFileName] = useState("");
   const [progress, setProgress] = useState(0);
@@ -304,10 +465,7 @@ function VRMUploadTab({
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", uploadURL);
-        xhr.setRequestHeader(
-          "Content-Type",
-          file.type || "model/gltf-binary",
-        );
+        xhr.setRequestHeader("Content-Type", file.type || "model/gltf-binary");
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable)
             setProgress(Math.round((e.loaded / e.total) * 100));
@@ -373,9 +531,7 @@ function VRMUploadTab({
             <>
               <Loader2 className="h-10 w-10 animate-spin text-violet-400" />
               <div className="text-center">
-                <p className="text-sm text-white font-medium">
-                  Uploading {fileName}…
-                </p>
+                <p className="text-sm text-white font-medium">Uploading {fileName}…</p>
                 <p className="text-xs text-muted-foreground mt-1">{progress}%</p>
               </div>
               <div className="w-48 h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -399,14 +555,10 @@ function VRMUploadTab({
                 {error ? (
                   <p className="text-xs text-red-400 mt-1">{error}</p>
                 ) : (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    or click to browse
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">or click to browse</p>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground/40">
-                Max 100 MB · .vrm · .glb
-              </p>
+              <p className="text-[10px] text-muted-foreground/40">Max 100 MB · .vrm · .glb</p>
             </>
           )}
         </label>
@@ -415,13 +567,7 @@ function VRMUploadTab({
       <div className="p-3 rounded-lg bg-white/[0.03] border border-white/5 space-y-1">
         <p className="text-[10px] font-medium text-white/60">Compatible sources</p>
         <div className="flex flex-wrap gap-1.5 mt-1">
-          {[
-            "VRoid Studio",
-            "VRoid Hub",
-            "Ready Player Me .glb",
-            "Mixamo",
-            "Custom Blender export",
-          ].map((s) => (
+          {["VRoid Studio", "VRoid Hub", "Ready Player Me .glb", "Mixamo", "Custom Blender export"].map((s) => (
             <span
               key={s}
               className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/8 text-white/40"

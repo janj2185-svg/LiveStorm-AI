@@ -649,13 +649,19 @@ export function AvatarCanvas({
   const mouthOpenRef = useRef(mouthOpenAmount);
   const expressionIntensityRef = useRef(expressionIntensity);
 
-  // avatarUrl could be a blob VRM, a blob GLB, or an RPM URL
-  // We detect RPM by checking the prefix; otherwise treat as VRM
+  // avatarUrl can be: built-in VRM path, custom VRM blob/file, RPM GLB URL,
+  // Avaturn CDN URL (any subdomain of avaturn.me or avaturn.dev), or a data: URI.
+  // Anything that is NOT a .vrm file or explicitly a VRM source goes through GLTFLoader.
   const isRpmUrl = typeof avatarUrl === "string" && (
     avatarUrl.startsWith("https://models.readyplayer.me") ||
     avatarUrl.startsWith("https://api.readyplayer.me") ||
-    avatarUrl.startsWith("https://api.avaturn.me") ||
-    avatarUrl.startsWith("https://avaturn.me") ||
+    // All Avaturn CDN variants (api.avaturn.me, demo.avaturn.dev, cdn.avaturn.me, etc.)
+    avatarUrl.includes("avaturn.me") ||
+    avatarUrl.includes("avaturn.dev") ||
+    // Base64-encoded GLB export (Avaturn dataURL fallback)
+    avatarUrl.startsWith("data:model/gltf") ||
+    avatarUrl.startsWith("data:application/octet-stream") ||
+    // Generic GLB file URL
     avatarUrl.endsWith(".glb")
   );
 
