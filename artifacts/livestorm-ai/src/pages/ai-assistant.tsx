@@ -1365,11 +1365,9 @@ export function AiAssistant() {
         {/* ═══════════════ CENTER: Avatar (40%) ═══════════════ */}
         <div className="flex flex-col min-h-0 gap-2 pt-3">
 
-          {/* Branding — above avatar */}
-          <div className="flex flex-col items-center gap-1 flex-shrink-0 pb-1">
-            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="LiveStorm AI" className="h-8 w-8 drop-shadow-lg" />
-            <p className="text-sm font-black tracking-tight text-white">⚡ LiveStorm AI</p>
-            <p className="text-[10px] text-muted-foreground/45 font-medium">Powering The Future Of Live Streaming</p>
+          {/* Branding — minimal logo mark only */}
+          <div className="flex items-center justify-center flex-shrink-0 pb-0.5">
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="LiveStorm AI" className="h-6 w-6 opacity-60" />
           </div>
 
           {/* Avatar — fills most of the height, with glow ring */}
