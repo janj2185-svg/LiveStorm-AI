@@ -467,15 +467,18 @@ router.get("/ai/content/history", requireAuth, async (req: any, res: any) => {
         ? and(eq(aiGeneratedContentTable.streamerId, streamer.id), eq(aiGeneratedContentTable.contentType, String(type)))
         : eq(aiGeneratedContentTable.streamerId, streamer.id);
 
-    const items = await db
+    const rows = await db
       .select()
       .from(aiGeneratedContentTable)
       .where(condition)
       .orderBy(desc(aiGeneratedContentTable.createdAt))
-      .limit(limit)
+      .limit(limit + 1)
       .offset(offset);
 
-    res.json({ items, limit, offset, hasMore: items.length === limit });
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+
+    res.json({ items, limit, offset, hasMore });
   } catch {
     res.status(500).json({ error: "Failed to fetch content history" });
   }
