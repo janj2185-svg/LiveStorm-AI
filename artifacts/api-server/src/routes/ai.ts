@@ -457,6 +457,11 @@ router.get("/ai/content/history", requireAuth, async (req: any, res: any) => {
     const { type } = req.query;
     const VALID_TYPES = ["ideas", "titles", "descriptions", "hashtags", "script"];
 
+    const rawLimit = parseInt(String(req.query.limit ?? "20"), 10);
+    const limit = isNaN(rawLimit) || rawLimit < 1 ? 20 : Math.min(rawLimit, 100);
+    const rawOffset = parseInt(String(req.query.offset ?? "0"), 10);
+    const offset = isNaN(rawOffset) || rawOffset < 0 ? 0 : rawOffset;
+
     const condition =
       type && VALID_TYPES.includes(String(type))
         ? and(eq(aiGeneratedContentTable.streamerId, streamer.id), eq(aiGeneratedContentTable.contentType, String(type)))
@@ -467,9 +472,10 @@ router.get("/ai/content/history", requireAuth, async (req: any, res: any) => {
       .from(aiGeneratedContentTable)
       .where(condition)
       .orderBy(desc(aiGeneratedContentTable.createdAt))
-      .limit(100);
+      .limit(limit)
+      .offset(offset);
 
-    res.json(items);
+    res.json({ items, limit, offset, hasMore: items.length === limit });
   } catch {
     res.status(500).json({ error: "Failed to fetch content history" });
   }

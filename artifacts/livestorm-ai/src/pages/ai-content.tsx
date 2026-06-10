@@ -29,6 +29,13 @@ interface SavedItem {
   createdAt: string;
 }
 
+interface HistoryPage {
+  items: SavedItem[];
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
 const CONTENT_TYPES: { id: ContentType; icon: React.ComponentType<{ className?: string }>; labelKey: string; color: string }[] = [
   { id: "ideas",        icon: Lightbulb,  labelKey: "ai_content_tab_ideas",        color: "text-amber-400" },
   { id: "titles",       icon: Type,       labelKey: "ai_content_tab_titles",       color: "text-cyan-400" },
@@ -63,6 +70,8 @@ const OUTPUT_LANGUAGES = [
   { value: "pl", label: "🇵🇱 Polish" },
   { value: "de", label: "🇩🇪 German" },
 ];
+
+const PAGE_SIZE = 20;
 
 // ── Inline copy button ────────────────────────────────────────────────────────
 function CopyButton({ text, className }: { text: string; className?: string }) {
@@ -158,9 +167,6 @@ function HistoryCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={cn("text-xs font-bold capitalize", ctInfo?.color ?? "text-primary")}>
-              {item.contentType}
-            </span>
             <span className="text-[10px] text-muted-foreground/50">
               {format(new Date(item.createdAt), "MMM d, yyyy · HH:mm")}
             </span>
@@ -210,6 +216,35 @@ function HistoryCard({
   );
 }
 
+// ── Grouped history section ───────────────────────────────────────────────────
+function HistoryGroup({
+  type,
+  items,
+  onDelete,
+}: {
+  type: ContentType;
+  items: SavedItem[];
+  onDelete: (id: number) => void;
+}) {
+  const ctInfo = CONTENT_TYPES.find((c) => c.id === type)!;
+  const Icon = ctInfo.icon;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2 px-1 pt-1">
+        <Icon className={cn("h-3.5 w-3.5", ctInfo.color)} />
+        <span className={cn("text-xs font-bold uppercase tracking-wider", ctInfo.color)}>
+          {type}
+        </span>
+        <span className="text-[10px] text-muted-foreground/40 ml-auto">{items.length}</span>
+      </div>
+      {items.map((item) => (
+        <HistoryCard key={item.id} item={item} onDelete={onDelete} />
+      ))}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export function AiContent() {
   const { getToken } = useAuth();
@@ -236,34 +271,37 @@ export function AiContent() {
   // History state
   const [history, setHistory] = useState<SavedItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyFilter, setHistoryFilter] = useState<ContentType | "all">("all");
+  const [historyOffset, setHistoryOffset] = useState(0);
+  const [historyHasMore, setHistoryHasMore] = useState(false);
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
 
-  const fetchHistory = useCallback(async () => {
-    setHistoryLoading(true);
+  const fetchHistory = useCallback(async (offset = 0, append = false) => {
+    if (offset === 0) setHistoryLoading(true);
+    else setHistoryLoadingMore(true);
     try {
       const token = await getToken();
-      const url = historyFilter === "all"
-        ? `${BASE}/api/ai/content/history`
-        : `${BASE}/api/ai/content/history?type=${historyFilter}`;
+      const url = `${BASE}/api/ai/content/history?limit=${PAGE_SIZE}&offset=${offset}`;
       const res = await fetch(url, {
         credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setHistory(Array.isArray(data) ? data : []);
+      const data: HistoryPage = await res.json();
+      setHistory((prev) => append ? [...prev, ...data.items] : data.items);
+      setHistoryOffset(offset + data.items.length);
+      setHistoryHasMore(data.hasMore);
     } catch {
       toast({ title: "Failed to load history", variant: "destructive" });
     } finally {
       setHistoryLoading(false);
+      setHistoryLoadingMore(false);
     }
-  }, [getToken, historyFilter, toast]);
+  }, [getToken, toast]);
 
+  // Load history on page mount
   useEffect(() => {
-    if (rightTab === "history") {
-      fetchHistory();
-    }
-  }, [rightTab, historyFilter, fetchHistory]);
+    fetchHistory(0, false);
+  }, [fetchHistory]);
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -336,9 +374,8 @@ export function AiContent() {
         body: JSON.stringify({ contentType, prompt, content }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const savedItem = await res.json();
+      const savedItem: SavedItem = await res.json();
       setSaved(true);
-      // Prepend to history cache so it appears instantly without refetch
       setHistory((prev) => [savedItem, ...prev]);
       toast({ title: "Saved!", description: "Added to your content history." });
     } catch {
@@ -350,9 +387,17 @@ export function AiContent() {
 
   const hasResults = results && (results.script || (results.items && results.items.length > 0));
 
-  const filteredHistory = historyFilter === "all"
-    ? history
-    : history.filter((h) => h.contentType === historyFilter);
+  // Group history by content type in canonical order
+  const groupedHistory = CONTENT_TYPES
+    .map((ct) => ({
+      type: ct.id,
+      items: history.filter((h) => h.contentType === ct.id),
+    }))
+    .filter((g) => g.items.length > 0);
+
+  const handleDeleteItem = (id: number) => {
+    setHistory((prev) => prev.filter((h) => h.id !== id));
+  };
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
@@ -512,7 +557,7 @@ export function AiContent() {
                 History
                 {history.length > 0 && (
                   <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full tabular-nums">
-                    {history.length}
+                    {history.length}{historyHasMore ? "+" : ""}
                   </span>
                 )}
               </button>
@@ -555,6 +600,16 @@ export function AiContent() {
                     )}
                   </button>
                 </div>
+              )}
+              {rightTab === "history" && (
+                <button
+                  onClick={() => fetchHistory(0, false)}
+                  disabled={historyLoading}
+                  className="ml-auto mr-4 text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <RefreshCw className={cn("h-3 w-3", historyLoading && "animate-spin")} />
+                  Refresh
+                </button>
               )}
             </div>
 
@@ -622,62 +677,50 @@ export function AiContent() {
 
             {/* ── History tab ────────────────────────────────────────────── */}
             {rightTab === "history" && (
-              <div className="flex flex-col flex-1 min-h-0">
-                {/* Filter bar */}
-                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/5 flex-none flex-wrap">
-                  {(["all", ...CONTENT_TYPES.map((c) => c.id)] as const).map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setHistoryFilter(f as any)}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
-                        historyFilter === f
-                          ? "bg-white/10 border-white/20 text-white"
-                          : "border-transparent text-muted-foreground/60 hover:text-muted-foreground hover:bg-white/5",
-                      )}
-                    >
-                      {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
-                    </button>
-                  ))}
-                  <button
-                    onClick={fetchHistory}
-                    disabled={historyLoading}
-                    className="ml-auto text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
-                  >
-                    <RefreshCw className={cn("h-3 w-3", historyLoading && "animate-spin")} />
-                    Refresh
-                  </button>
-                </div>
-
-                <ScrollArea className="flex-1" style={{ minHeight: 0 }}>
-                  <div className="p-4 space-y-2">
-                    {historyLoading ? (
-                      <div className="flex flex-col items-center justify-center py-16 gap-3">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary/60" />
-                        <p className="text-xs text-muted-foreground/60">Loading history…</p>
+              <ScrollArea className="flex-1" style={{ minHeight: 0 }}>
+                <div className="p-4 space-y-5">
+                  {historyLoading ? (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary/60" />
+                      <p className="text-xs text-muted-foreground/60">Loading history…</p>
+                    </div>
+                  ) : groupedHistory.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/8">
+                        <History className="h-6 w-6 text-muted-foreground/40" />
                       </div>
-                    ) : filteredHistory.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/8">
-                          <History className="h-6 w-6 text-muted-foreground/40" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground/60">No saved {historyFilter === "all" ? "content" : historyFilter} yet</p>
-                          <p className="text-xs text-muted-foreground/40 mt-1">Generate content and click Save to keep it here</p>
-                        </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground/60">No saved content yet</p>
+                        <p className="text-xs text-muted-foreground/40 mt-1">Generate content and click Save to keep it here</p>
                       </div>
-                    ) : (
-                      filteredHistory.map((item) => (
-                        <HistoryCard
-                          key={item.id}
-                          item={item}
-                          onDelete={(id) => setHistory((prev) => prev.filter((h) => h.id !== id))}
+                    </div>
+                  ) : (
+                    <>
+                      {groupedHistory.map(({ type, items }) => (
+                        <HistoryGroup
+                          key={type}
+                          type={type}
+                          items={items}
+                          onDelete={handleDeleteItem}
                         />
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
+                      ))}
+                      {historyHasMore && (
+                        <div className="pt-2 flex justify-center">
+                          <button
+                            onClick={() => fetchHistory(historyOffset, true)}
+                            disabled={historyLoadingMore}
+                            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+                          >
+                            {historyLoadingMore
+                              ? <><Loader2 className="h-3 w-3 animate-spin" />Loading…</>
+                              : "Load more"}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </ScrollArea>
             )}
           </div>
         </div>
