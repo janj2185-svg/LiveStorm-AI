@@ -449,7 +449,10 @@ export function AiAssistant() {
   }, [replyingTo, activeSessionId, config?.replyLanguage]);
 
   // ── Tabs ──────────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<"live" | "chat" | "moderation" | "avatar">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "chat" | "moderation" | "avatar">(() => {
+    const p = new URLSearchParams(window.location.search).get("tab");
+    return (p === "avatar" || p === "chat" || p === "moderation") ? p : "live";
+  });
 
   // ── Avatar config ─────────────────────────────────────────────────────────────
   const { data: avatarConfig, isLoading: avatarLoading } = useGetAvatarConfig();
