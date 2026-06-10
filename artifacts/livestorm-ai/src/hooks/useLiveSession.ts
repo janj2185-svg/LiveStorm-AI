@@ -259,6 +259,7 @@ export function useLiveSession(
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const supportersRef = useRef<Map<string, number>>(new Map());
+  const authRetryRef = useRef(false);
 
   const clearEvents = useCallback(() => {
     setEvents([]);
@@ -284,6 +285,7 @@ export function useLiveSession(
     let cancelled = false;
 
     const connect = async () => {
+      authRetryRef.current = false;
       const token = await getToken();
       if (cancelled || !token) return;
 
@@ -306,6 +308,14 @@ export function useLiveSession(
 
       socket.on("session:error", (err: { message: string }) => {
         console.error("[LiveSession] Socket auth error:", err.message);
+        if (err.message === "Invalid auth token" && !authRetryRef.current && !cancelled) {
+          authRetryRef.current = true;
+          console.log("[LiveSession] Token expired — refreshing and reconnecting…");
+          socket.removeAllListeners();
+          socket.disconnect();
+          socketRef.current = null;
+          setTimeout(() => { if (!cancelled) void connect(); }, 1500);
+        }
       });
 
       socket.on("tiktok:status", (payload: TikTokStatusEvent) => {
