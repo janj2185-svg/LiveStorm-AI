@@ -5,6 +5,8 @@ import {
   useGetAvatarConfig,
   useUpdateAvatarConfig,
   useGetAvatarPresets,
+  useStartSession,
+  useEndSession,
   type AvatarConfig,
   type BuiltInAvatar,
 } from "@workspace/api-client-react";
@@ -43,13 +45,16 @@ import {
   ChevronDown, ChevronRight, CornerDownRight, AlertCircle,
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
   Boxes, SlidersHorizontal, Monitor, Cpu,
-  Shirt, Tv2, Palette, Sun,
+  Shirt, Tv2, Palette, Sun, Square, Activity, Eye, ArrowDown,
+  TrendingUp, Trophy, MessageCircle, UserPlus, Gem,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/react";
 import { useLiveSessionContext, type TtsMode, type LiveEvent } from "@/contexts/LiveSessionContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarStage } from "@/components/avatar/AvatarStage";
+import { motion, AnimatePresence } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const API_BASE = `${BASE}/api`;
@@ -97,7 +102,6 @@ type ChatMessage = {
   createdAt: string;
 };
 
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TONE_OPTIONS = [
@@ -140,6 +144,32 @@ const OPERATING_MODES = [
   { value: "autopilot", label: "Autopilot", emoji: "🤖", desc: "AI fully manages all chat interactions" },
 ];
 
+const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  comment:              MessageCircle,
+  gift:                 Gift,
+  like:                 Heart,
+  follow:               UserPlus,
+  share:                Share2,
+  viewerCount:          Eye,
+  ai_announcement:      Sparkles,
+  xp_awarded:           Zap,
+  achievement_unlocked: Trophy,
+  level_up:             TrendingUp,
+};
+
+const EVENT_COLORS: Record<string, string> = {
+  gift:                "text-amber-400 bg-amber-500/10 border-amber-500/20",
+  like:                "text-pink-400 bg-pink-500/10 border-pink-500/20",
+  comment:             "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  follow:              "text-green-400 bg-green-500/10 border-green-500/20",
+  share:               "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+  viewerCount:         "text-violet-400 bg-violet-500/10 border-violet-500/20",
+  ai_announcement:     "text-purple-300 bg-purple-500/10 border-purple-500/20",
+  xp_awarded:          "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  achievement_unlocked: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+  level_up:            "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+};
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function TimeAgo({ ts }: { ts: number }) {
@@ -149,7 +179,7 @@ function TimeAgo({ ts }: { ts: number }) {
   return <span className="text-xs text-muted-foreground/50">{Math.floor(diff / 3600)}h ago</span>;
 }
 
-function Avatar({ username, size = "sm" }: { username?: string; size?: "sm" | "md" }) {
+function UserAvatar({ username, size = "sm" }: { username?: string; size?: "sm" | "md" }) {
   const colors = ["bg-purple-500", "bg-blue-500", "bg-green-500", "bg-orange-500", "bg-pink-500", "bg-teal-500"];
   const color = colors[(username?.charCodeAt(0) ?? 0) % colors.length];
   const dim = size === "sm" ? "h-7 w-7 text-xs" : "h-9 w-9 text-sm";
@@ -174,7 +204,7 @@ function CommentCard({
   const text = (event.data.text as string) ?? "";
   return (
     <div className="group flex gap-2.5 py-2 px-3 rounded-lg hover:bg-white/3 transition-colors">
-      <Avatar username={event.username} />
+      <UserAvatar username={event.username} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-xs font-semibold text-purple-300">@{event.username ?? "unknown"}</span>
@@ -268,9 +298,31 @@ function ShareCard({ event }: { event: LiveEvent }) {
   );
 }
 
+function AiAnnouncementCard({ event }: { event: LiveEvent }) {
+  const text = (event.data.text as string) ?? "";
+  const annType = (event.data.announcementType as string) ?? "";
+  const isReply = annType === "comment_reply";
+  const attrName = event.username;
+  return (
+    <div className="flex gap-2.5 py-2 px-3 rounded-lg bg-purple-500/8 border border-purple-500/15">
+      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 text-xs font-bold text-white">
+        AI
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-xs font-semibold text-purple-300">AI Co-host</span>
+          {isReply && attrName && (
+            <span className="text-xs text-muted-foreground/60">↳ @{attrName}</span>
+          )}
+          <TimeAgo ts={event.timestamp} />
+        </div>
+        <p className="text-sm text-foreground/90 leading-snug italic">"{text}"</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Sidebar section — must be defined OUTSIDE the main component ──────────────
-// Defining it inside causes React to treat it as a new type each render,
-// which unmounts/remounts children and triggers infinite update loops.
 function SidebarSection({
   isOpen,
   onToggle,
@@ -306,37 +358,326 @@ function SidebarSection({
   );
 }
 
-function AiAnnouncementCard({ event }: { event: LiveEvent }) {
-  const text = (event.data.text as string) ?? "";
-  const annType = (event.data.announcementType as string) ?? "";
-  const isReply = annType === "comment_reply";
-  const attrName = event.username;
-  return (
-    <div className="flex gap-2.5 py-2 px-3 rounded-lg bg-purple-500/8 border border-purple-500/15">
-      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 text-xs font-bold text-white">
-        AI
+// ── Unified Chat Feed (right panel) ──────────────────────────────────────────
+
+function UnifiedChatTab({
+  events,
+  onReply,
+  replyingTo,
+  sessionId,
+  isActive,
+}: {
+  events: LiveEvent[];
+  onReply: (event: LiveEvent) => void;
+  replyingTo: Set<number>;
+  sessionId: number | null;
+  isActive: boolean;
+}) {
+  const chatEvents = useMemo(
+    () => [...events.filter((e) => e.type !== "viewerCount")].reverse(),
+    [events],
+  );
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const paused = distFromBottom > 80;
+    isPausedRef.current = paused;
+    setIsPaused(paused);
+  }, []);
+
+  useEffect(() => {
+    if (isPausedRef.current) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatEvents.length]);
+
+  if (!isActive) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-6">
+        <Radio className="h-8 w-8 text-white/10 mb-3" />
+        <p className="text-xs text-muted-foreground/60">Start a session to see live chat</p>
+        <Link href="/dashboard">
+          <span className="text-[11px] text-violet-400 hover:underline cursor-pointer mt-2 inline-block">
+            Go to Dashboard →
+          </span>
+        </Link>
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-xs font-semibold text-purple-300">AI Co-host</span>
-          {isReply && attrName && (
-            <span className="text-xs text-muted-foreground/60">replying to @{attrName}</span>
-          )}
-          <TimeAgo ts={event.timestamp} />
+    );
+  }
+
+  if (chatEvents.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-6">
+        <MessageCircle className="h-8 w-8 text-white/10 mb-3 animate-pulse" />
+        <p className="text-xs text-muted-foreground/60">Waiting for chat messages…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-full">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="absolute inset-0 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10"
+      >
+        <div className="py-2 space-y-0.5">
+          <AnimatePresence initial={false}>
+            {chatEvents.map((event, idx) => {
+              const key = `${event.timestamp}-${idx}`;
+              if (event.type === "comment") return (
+                <motion.div key={key} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
+                  <CommentCard
+                    event={event}
+                    onReply={onReply}
+                    isReplying={replyingTo.has(event.timestamp)}
+                    sessionId={sessionId}
+                  />
+                </motion.div>
+              );
+              if (event.type === "ai_announcement") return (
+                <motion.div key={key} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
+                  <AiAnnouncementCard event={event} />
+                </motion.div>
+              );
+              if (event.type === "gift") return (
+                <motion.div key={key} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
+                  <GiftCard event={event} />
+                </motion.div>
+              );
+              if (event.type === "follow") return (
+                <motion.div key={key} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
+                  <FollowCard event={event} />
+                </motion.div>
+              );
+              if (event.type === "like") return (
+                <motion.div key={key} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
+                  <LikeCard event={event} />
+                </motion.div>
+              );
+              if (event.type === "share") return (
+                <motion.div key={key} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }}>
+                  <ShareCard event={event} />
+                </motion.div>
+              );
+              return null;
+            })}
+          </AnimatePresence>
+          <div ref={bottomRef} />
         </div>
-        <p className="text-sm text-foreground/90 leading-snug italic">"{text}"</p>
+      </div>
+      {isPaused && chatEvents.length > 0 && (
+        <button
+          onClick={() => { isPausedRef.current = false; setIsPaused(false); bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }}
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[10px] font-bold hover:bg-purple-500/30 transition-colors z-10"
+        >
+          <ArrowDown className="h-3 w-3" />
+          Jump to latest
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Events Tab ────────────────────────────────────────────────────────────────
+
+type FilterType = "all" | "comment" | "gift" | "follow" | "like" | "share" | "ai_announcement";
+const FILTER_BUTTONS: { label: string; value: FilterType }[] = [
+  { label: "All", value: "all" },
+  { label: "Chat", value: "comment" },
+  { label: "Gifts", value: "gift" },
+  { label: "Follows", value: "follow" },
+  { label: "AI", value: "ai_announcement" },
+];
+
+function eventSummary(event: LiveEvent): string {
+  switch (event.type) {
+    case "comment":              return (event.data.text as string) ?? "";
+    case "gift":                 return `${event.data.giftName ?? "Gift"}${(event.data.count as number) > 1 ? ` ×${event.data.count}` : ""} — ${(event.data.coins as number) ?? 0} coins`;
+    case "like":                 return `+${(event.data.likeCount as number) ?? 1} likes`;
+    case "follow":               return "followed";
+    case "share":                return "shared the stream";
+    case "viewerCount":          return `${(event.data.count as number) ?? 0} viewers`;
+    case "ai_announcement":      return (event.data.text as string) ?? "";
+    case "xp_awarded":           return `+${event.data.xp} XP · Lv.${event.data.level}`;
+    case "achievement_unlocked": return `🏆 ${(event.data.achievementName as string) ?? "Achievement"}`;
+    case "level_up":             return `reached Level ${event.data.newLevel}!`;
+    default:                     return JSON.stringify(event.data).slice(0, 60);
+  }
+}
+
+function EventsTab({ events, isActive }: { events: LiveEvent[]; isActive: boolean }) {
+  const [filter, setFilter] = useState<FilterType>("all");
+  const filtered = useMemo(
+    () => (filter === "all" ? events : events.filter((e) => e.type === filter)).filter((e) => e.type !== "viewerCount"),
+    [events, filter],
+  );
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="px-3 py-2 border-b border-white/5 flex flex-wrap gap-1 flex-shrink-0">
+        {FILTER_BUTTONS.map(({ label, value }) => (
+          <button
+            key={value}
+            onClick={() => setFilter(value)}
+            className={cn(
+              "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
+              filter === value
+                ? "bg-white/10 border-white/20 text-white"
+                : "border-transparent text-muted-foreground/60 hover:text-white hover:bg-white/5",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+        {!isActive ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-6">
+            <Activity className="h-7 w-7 text-white/10 mb-2" />
+            <p className="text-xs text-muted-foreground/60">Start a session to see events</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-6">
+            <Activity className="h-7 w-7 text-white/10 mb-2 animate-pulse" />
+            <p className="text-xs text-muted-foreground/60">No events yet…</p>
+          </div>
+        ) : (
+          <div className="p-2 space-y-1">
+            <AnimatePresence initial={false}>
+              {filtered.map((event, idx) => {
+                const colorClass = EVENT_COLORS[event.type] ?? "text-muted-foreground bg-white/5 border-white/10";
+                const Icon = EVENT_ICONS[event.type] ?? Activity;
+                return (
+                  <motion.div
+                    key={`${event.timestamp}-${idx}`}
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.12 }}
+                    className="flex items-start gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors"
+                  >
+                    <span className={cn("inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5", colorClass)}>
+                      <Icon className="h-2.5 w-2.5" />
+                      {event.type.replace("_", " ").toUpperCase()}
+                    </span>
+                    {event.username && (
+                      <span className="text-xs font-semibold text-white/70 flex-shrink-0 truncate max-w-[60px]">
+                        @{event.username}
+                      </span>
+                    )}
+                    <span className="text-[11px] text-slate-400 truncate flex-1 min-w-0">
+                      {eventSummary(event)}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function StatBubble({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
+// ── AI Activity Tab ───────────────────────────────────────────────────────────
+
+function AiActivityTab({
+  events,
+  ttsMode,
+  isActive,
+}: {
+  events: LiveEvent[];
+  ttsMode: TtsMode;
+  isActive: boolean;
+}) {
+  const aiEvents = useMemo(
+    () => events.filter((e) => e.type === "ai_announcement").slice(0, 40),
+    [events],
+  );
+
+  if (!isActive) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-6">
+        <Sparkles className="h-7 w-7 text-white/10 mb-2" />
+        <p className="text-xs text-muted-foreground/60">Start a session to see AI activity</p>
+      </div>
+    );
+  }
+
+  if (aiEvents.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-6">
+        <Sparkles className="h-7 w-7 text-purple-400/20 mb-2 animate-pulse" />
+        <p className="text-xs text-muted-foreground/60">Waiting for AI to respond…</p>
+        <p className="text-[10px] text-muted-foreground/40 mt-1">
+          AI replies appear here with full diagnostic info
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5">
-      <span className="text-muted-foreground">{icon}</span>
-      <div>
-        <div className="text-sm font-bold leading-none">{value}</div>
-        <div className="text-[10px] text-muted-foreground leading-none mt-0.5">{label}</div>
+    <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+      <div className="p-3 space-y-3">
+        {aiEvents.map((event, idx) => {
+          const text = (event.data.text as string) ?? "";
+          const annType = (event.data.announcementType as string) ?? "";
+          const isReply = annType === "comment_reply";
+          const giftName = (event.data.giftName as string) ?? null;
+          return (
+            <motion.div
+              key={`${event.timestamp}-${idx}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 space-y-2"
+            >
+              {/* Trigger */}
+              <div className="flex items-start gap-2">
+                <div className={cn(
+                  "text-[9px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5",
+                  isReply ? "text-blue-400 bg-blue-500/10 border-blue-500/20" : "text-amber-400 bg-amber-500/10 border-amber-500/20",
+                )}>
+                  {isReply ? "COMMENT" : annType.toUpperCase().replace("_", " ")}
+                </div>
+                {event.username && (
+                  <span className="text-xs font-semibold text-white/70 truncate">@{event.username}</span>
+                )}
+                <TimeAgo ts={event.timestamp} />
+              </div>
+
+              {/* AI reply */}
+              <div className="flex items-start gap-2 ml-1">
+                <CornerDownRight className="h-3 w-3 text-purple-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[10px] text-purple-400/70 font-semibold mb-0.5">AI replied</p>
+                  <p className="text-xs text-foreground/80 leading-relaxed italic">"{text}"</p>
+                </div>
+              </div>
+
+              {/* TTS status */}
+              <div className="flex items-center gap-1.5 ml-1">
+                <CornerDownRight className="h-3 w-3 text-muted-foreground/30 flex-shrink-0" />
+                {ttsMode === "off" ? (
+                  <span className="text-[10px] text-muted-foreground/40 flex items-center gap-1">
+                    <VolumeX className="h-2.5 w-2.5" />
+                    TTS off
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-emerald-400/70 flex items-center gap-1">
+                    <Volume2 className="h-2.5 w-2.5" />
+                    TTS {ttsMode === "openai" ? "OpenAI" : "Browser"} · played
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -349,7 +690,6 @@ export function AiAssistant() {
   const { t } = useLanguage();
   const { getToken } = useAuth();
 
-  // ── Authenticated fetch: adds Clerk Bearer token to every request ─────────────
   const authFetch = useCallback(
     async (path: string, options?: RequestInit) => {
       const token = await getToken();
@@ -364,19 +704,17 @@ export function AiAssistant() {
     [getToken],
   );
 
-  // ── Session + Live events (shared LiveSessionContext — single socket connection) ─
+  // ── Session + Live events ─────────────────────────────────────────────────
   const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume, setTtsSpeed,
     tiktokMode, tiktokError: socketError, tiktokUsername,
     aiAnnouncements, luckyDrops, achievementUnlocks,
     activeSessionRes, isActive: isSessionActive, activeSessionId, sessionMode,
   } = useLiveSessionContext();
   const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
-
-  // Effective values: prefer socket-live data, fall back to HTTP snapshot
   const effectiveMode = tiktokMode ?? (isSessionActive ? "demo" : null);
   const effectiveError = socketError ?? initialError;
 
-  // ── Config ───────────────────────────────────────────────────────────────────
+  // ── Config ────────────────────────────────────────────────────────────────
   const { data: config, isLoading: configLoading } = useQuery<PersonaConfig>({
     queryKey: ["ai-config"],
     queryFn: () => authFetch("/ai/config"),
@@ -388,26 +726,17 @@ export function AiAssistant() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ai-config"] }),
   });
 
-  // ── Local TTS state (synced to hook on load) ──────────────────────────────────
-  // Use localStorage to persist the TTS mode so "browser" isn't lost on reload.
+  // ── TTS local state ───────────────────────────────────────────────────────
   const [ttsMode, setTtsModeLocal] = useState<TtsMode>(() => {
-    try {
-      return (localStorage.getItem("ttsMode") as TtsMode | null) ?? "off";
-    } catch {
-      return "off";
-    }
+    try { return (localStorage.getItem("ttsMode") as TtsMode | null) ?? "off"; } catch { return "off"; }
   });
   const [ttsVoice, setTtsVoiceLocal] = useState("nova");
 
   useEffect(() => {
     if (config && !configLoading) {
-      // Restore from localStorage first; fall back to DB voiceEnabled flag
       let mode: TtsMode;
-      try {
-        mode = (localStorage.getItem("ttsMode") as TtsMode | null) ?? (config.voiceEnabled ? "openai" : "off");
-      } catch {
-        mode = config.voiceEnabled ? "openai" : "off";
-      }
+      try { mode = (localStorage.getItem("ttsMode") as TtsMode | null) ?? (config.voiceEnabled ? "openai" : "off"); }
+      catch { mode = config.voiceEnabled ? "openai" : "off"; }
       setTtsModeLocal(mode);
       setTtsMode(mode);
       setTtsVoiceLocal(config.voiceName ?? "nova");
@@ -421,10 +750,8 @@ export function AiAssistant() {
     setTtsModeLocal(mode);
     setTtsMode(mode);
     try { localStorage.setItem("ttsMode", mode); } catch {}
-    // Only update DB when actually toggling OpenAI voice on/off
     if (mode === "openai") updateConfig.mutate({ voiceEnabled: true });
     else if (mode === "off") updateConfig.mutate({ voiceEnabled: false });
-    // "browser" mode: leave voiceEnabled as-is in DB (no API cost)
   }, [setTtsMode]);
 
   const handleTtsVoiceChange = useCallback((voice: string) => {
@@ -433,7 +760,7 @@ export function AiAssistant() {
     updateConfig.mutate({ voiceName: voice });
   }, [setTtsVoice]);
 
-  // ── Reply state ───────────────────────────────────────────────────────────────
+  // ── Reply state ───────────────────────────────────────────────────────────
   const [replyingTo, setReplyingTo] = useState<Set<number>>(new Set());
 
   const handleReply = useCallback(async (event: LiveEvent) => {
@@ -450,28 +777,16 @@ export function AiAssistant() {
           language: config?.replyLanguage ?? "auto",
         }),
       });
-      // Reply comes back via socket as ai:announcement — no local storage needed
-    } catch {
-      // silent fail
-    } finally {
-      setReplyingTo((prev) => {
-        const next = new Set(prev);
-        next.delete(key);
-        return next;
-      });
+    } catch {}
+    finally {
+      setReplyingTo((prev) => { const next = new Set(prev); next.delete(key); return next; });
     }
   }, [replyingTo, activeSessionId, config?.replyLanguage, authFetch]);
 
-  // ── Tabs ──────────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<"live" | "chat" | "moderation">(() => {
-    const p = new URLSearchParams(window.location.search).get("tab");
-    return (p === "chat" || p === "moderation") ? p : "live";
-  });
-
-  // ── Debug mode — append ?avatarDebug=1 to URL to reveal the debug panel ──────
+  // ── Debug mode ────────────────────────────────────────────────────────────
   const showAvatarDebug = new URLSearchParams(window.location.search).get("avatarDebug") === "1";
 
-  // ── Avatar config ─────────────────────────────────────────────────────────────
+  // ── Avatar config ─────────────────────────────────────────────────────────
   const { data: avatarConfig, isLoading: avatarLoading } = useGetAvatarConfig();
   const { mutate: saveAvatar, isPending: avatarSaving } = useUpdateAvatarConfig({
     mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["avatarConfig"] }) },
@@ -480,12 +795,14 @@ export function AiAssistant() {
   const builtInAvatars: BuiltInAvatar[] = avatarConfig?.builtInAvatars ?? [];
   const selectedAvatar = builtInAvatars.find((a) => a.key === avatarConfig?.avatarKey) ?? builtInAvatars[0];
 
-  // ── Avatar upload (session-only, cleared on refresh) ─────────────────────────
   const [uploadedVrmUrl, setUploadedVrmUrl] = useState<string | null>(null);
   const [uploadedVrmName, setUploadedVrmName] = useState<string | null>(null);
   const [rpmAvatarUrl, setRpmAvatarUrl] = useState<string | null>(null);
   const [creatorModalOpen, setCreatorModalOpen] = useState(false);
   const [avatarSheetOpen, setAvatarSheetOpen] = useState(false);
+  const [rendererStats, setRendererStats] = useState<RendererStats | null>(null);
+  const [selectedBackground, setSelectedBackground] = useState<string>("studio");
+  const [lightingIntensity, setLightingIntensity] = useState<number>(80);
 
   const handleCreatorSave = useCallback((result: AvatarCreatorResult) => {
     setRpmAvatarUrl(null);
@@ -497,17 +814,13 @@ export function AiAssistant() {
       avatarThumbnailUrl: result.thumbnailUrl ?? undefined,
     });
   }, [saveAvatar]);
-  const [rendererStats, setRendererStats] = useState<RendererStats | null>(null);
-  const [selectedBackground, setSelectedBackground] = useState<string>("studio");
-  const [lightingIntensity, setLightingIntensity] = useState<number>(80);
 
-  // ── Phase 4: Animation machine + lip sync ─────────────────────────────────
+  // ── Animation machine + lip sync ─────────────────────────────────────────
   const machineRef = useRef<AvatarAnimationMachine>(new AvatarAnimationMachine());
   const [animState, setAnimState] = useState<AnimationState>("idle");
   const [lipSyncSensitivity, setLipSyncSensitivity] = useState(0.75);
   const [expressionIntensity, setExpressionIntensity] = useState(0.8);
 
-  // Subscribe to animation state changes + tick for expiry
   useEffect(() => {
     const machine = machineRef.current;
     const unsubscribe = machine.subscribe(setAnimState);
@@ -515,7 +828,6 @@ export function AiAssistant() {
     return () => { unsubscribe(); clearInterval(interval); };
   }, []);
 
-  // Wire TTS start/end to animation machine base state
   useEffect(() => {
     const handleStart = () => machineRef.current.setBase("talking");
     const handleEnd = () => machineRef.current.setBase("idle");
@@ -540,15 +852,13 @@ export function AiAssistant() {
     achievementUnlocks: achievementUnlocks ?? [],
   });
 
-  // ── AI private chat ───────────────────────────────────────────────────────────
+  // ── AI private chat ───────────────────────────────────────────────────────
   const [chatInput, setChatInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // NOTE: do NOT use `= []` default here — a new [] each render makes the effect
-  // dep change every render → setLocalMessages fires every render → infinite loop.
   const { data: chatMessages } = useQuery<ChatMessage[]>({
     queryKey: ["ai-messages"],
     queryFn: () => authFetch("/ai/messages"),
@@ -559,10 +869,7 @@ export function AiAssistant() {
 
   const clearMessages = useMutation({
     mutationFn: () => authFetch("/ai/messages", { method: "DELETE" }),
-    onSuccess: () => {
-      setLocalMessages([]);
-      queryClient.invalidateQueries({ queryKey: ["ai-messages"] });
-    },
+    onSuccess: () => { setLocalMessages([]); queryClient.invalidateQueries({ queryKey: ["ai-messages"] }); },
   });
 
   const handleChatSend = useCallback(async () => {
@@ -578,43 +885,18 @@ export function AiAssistant() {
     ]);
     try {
       const data = await authFetch("/ai/chat", { method: "POST", body: JSON.stringify({ message: msg }) });
-      setLocalMessages((prev) =>
-        prev.map((m) => m.id === tempId + 1 ? { ...m, content: data.reply } : m),
-      );
+      setLocalMessages((prev) => prev.map((m) => m.id === tempId + 1 ? { ...m, content: data.reply } : m));
       queryClient.invalidateQueries({ queryKey: ["ai-messages"] });
     } catch {
-      setLocalMessages((prev) =>
-        prev.map((m) => m.id === tempId + 1 ? { ...m, content: "Sorry, couldn't respond. Try again." } : m),
-      );
+      setLocalMessages((prev) => prev.map((m) => m.id === tempId + 1 ? { ...m, content: "Sorry, couldn't respond. Try again." } : m));
     } finally {
       setIsChatLoading(false);
       inputRef.current?.focus();
     }
   }, [chatInput, isChatLoading, queryClient, authFetch]);
 
-
-  // ── TikTok connection test UI ──────────────────────────────────────────────
-  const [testUsername, setTestUsername] = useState("");
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ ok: boolean; error?: string; latencyMs?: number } | null>(null);
-
-  const handleTestConnection = async () => {
-    if (!testUsername.trim()) return;
-    setIsTesting(true);
-    setTestResult(null);
-    try {
-      const res = await authFetch("/tiktok/test-connection", {
-        method: "POST",
-        body: JSON.stringify({ username: testUsername.trim() }),
-      });
-      setTestResult(res);
-    } catch (err: any) {
-      setTestResult({ ok: false, error: err?.message ?? "Request failed" });
-    } finally {
-      setIsTesting(false);
-    }
-  };
-
+  // ── Voice preview ─────────────────────────────────────────────────────────
+  const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
 
   const handleVoicePreview = async () => {
     if (!config || isVoicePreviewing) return;
@@ -625,35 +907,18 @@ export function AiAssistant() {
       const resp = await fetch(`${API_BASE}/ai/voice`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          text: previewText,
-          voice: config.voiceName ?? "nova",
-          speed: config.voiceSpeed ?? 1.0,
-        }),
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ text: previewText, voice: config.voiceName ?? "nova", speed: config.voiceSpeed ?? 1.0 }),
       });
       if (!resp.ok) throw new Error("Voice generation failed");
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.volume = Math.max(0, Math.min(1, config.voiceVolume ?? 1.0));
-
       window.dispatchEvent(new CustomEvent("tts:audio", { detail: audio }));
       window.dispatchEvent(new CustomEvent("tts:start"));
-
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        window.dispatchEvent(new CustomEvent("tts:end"));
-        setIsVoicePreviewing(false);
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        window.dispatchEvent(new CustomEvent("tts:end"));
-        setIsVoicePreviewing(false);
-      };
+      audio.onended = () => { URL.revokeObjectURL(url); window.dispatchEvent(new CustomEvent("tts:end")); setIsVoicePreviewing(false); };
+      audio.onerror = () => { URL.revokeObjectURL(url); window.dispatchEvent(new CustomEvent("tts:end")); setIsVoicePreviewing(false); };
       await audio.play();
     } catch {
       window.dispatchEvent(new CustomEvent("tts:end"));
@@ -661,56 +926,13 @@ export function AiAssistant() {
     }
   };
 
-  const handleTranslateComment = async (eventId: number, text: string) => {
-    if (translatingComments.has(eventId)) return;
-    setTranslatingComments((prev) => new Set(prev).add(eventId));
-    try {
-      const data = await authFetch("/ai/content", {
-        method: "POST",
-        body: JSON.stringify({
-          type: "script",
-          topic: `Translate exactly to ${chatTranslateLang}. Reply with only the translation, nothing else: "${text}"`,
-          language: chatTranslateLang,
-        }),
-      });
-      const translated = (data.script ?? data.content ?? "").trim() || text;
-      setTranslatedComments((prev) => ({ ...prev, [eventId]: translated }));
-    } catch {
-      setTranslatedComments((prev) => ({ ...prev, [eventId]: null }));
-    } finally {
-      setTranslatingComments((prev) => {
-        const next = new Set(prev);
-        next.delete(eventId);
-        return next;
-      });
-    }
-  };
-
-  // ── Filtered event feed ───────────────────────────────────────────────────────
-  const feedEvents = useMemo(
-    () => events.filter((e) => e.type !== "viewerCount").slice(0, 80),
-    [events],
-  );
-
-  const personaName = config?.personaName ?? "Storm";
-
-  // ── Settings sidebar sections (collapsible — fewer open by default on mobile) ──
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(() => {
-    // On narrow viewports, only expand the two most-used sections so the live
-    // feed is visible without scrolling. On wider screens open all main sections.
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    return isMobile
-      ? new Set(["mode", "autoreply", "announcements", "moderation"])
-      : new Set(["persona", "mode", "voice", "language", "autoreply", "announcements", "moderation"]);
-  });
-  const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
+  // ── Translation ───────────────────────────────────────────────────────────
   const [chatTranslateEnabled, setChatTranslateEnabled] = useState(false);
   const [chatTranslateLang, setChatTranslateLang] = useState("en");
   const [translatedComments, setTranslatedComments] = useState<Record<number, string | null>>({});
   const [translatingComments, setTranslatingComments] = useState<Set<number>>(new Set());
   const [accentColor, setAccentColor] = useState("#3b82f6");
 
-  // Sync accentColor, selectedBackground, lipSyncSensitivity and expressionIntensity from DB once config loads
   useEffect(() => {
     if (!avatarConfig) return;
     if (avatarConfig.accentColor) setAccentColor(avatarConfig.accentColor);
@@ -720,6 +942,11 @@ export function AiAssistant() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarConfig?.id]);
 
+  // ── Settings sidebar sections ─────────────────────────────────────────────
+  // All collapsed by default (secondary tools, not primary focus)
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [streamControlOpen, setStreamControlOpen] = useState(false);
+
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -728,177 +955,190 @@ export function AiAssistant() {
     });
   };
 
+  // ── Right panel tab ───────────────────────────────────────────────────────
+  const [rightTab, setRightTab] = useState<"chat" | "events" | "ai">("chat");
+
+  // ── Feed events ───────────────────────────────────────────────────────────
+  const feedEvents = useMemo(
+    () => events.filter((e) => e.type !== "viewerCount").slice(0, 80),
+    [events],
+  );
+
+  const personaName = config?.personaName ?? "Storm";
+
+  // ── Stream control ────────────────────────────────────────────────────────
+  const startSession = useStartSession();
+  const endSession = useEndSession();
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
-    <div className="space-y-2 max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
-
-      {/* ── Premium Cinematic Hero ── */}
-      <div
-        className="relative overflow-hidden rounded-2xl border border-white/[0.08] flex-shrink-0"
-        style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,22,200,0.12) 45%, rgba(14,165,233,0.09) 100%)" }}
-      >
-        {/* Background depth layers */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 18% 60%, rgba(124,58,237,0.20) 0%, transparent 58%)" }} />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 85% 15%, rgba(14,165,233,0.14) 0%, transparent 48%)" }} />
-        {/* Subtle grid texture */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            opacity: 0.025,
-            backgroundImage: "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-          }}
-        />
-
-        <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_320px]">
-
-          {/* ── Left: info ── */}
-          <div className="p-5 md:p-7 order-2 lg:order-1">
-
-            {/* Status eyebrow row */}
-            <div className="flex items-center gap-2 flex-wrap mb-4">
-              <div className={cn(
-                "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-full border transition-colors",
-                isSessionActive && connected
-                  ? "border-green-500/40 text-green-300 bg-green-500/10"
-                  : isSessionActive
-                  ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/10"
-                  : "border-violet-500/30 text-violet-400 bg-violet-500/8",
-              )}>
-                <div className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  isSessionActive && connected ? "bg-green-400 animate-pulse"
-                  : isSessionActive ? "bg-yellow-400 animate-pulse"
-                  : "bg-violet-400",
-                )} />
-                {isSessionActive && connected ? "AI Live" : isSessionActive ? "Connecting…" : "AI Co-Host"}
-              </div>
-              {isSessionActive && effectiveMode === "real" && (
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-500/10">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Real TikTok
-                  {tiktokUsername && <span className="text-emerald-400/60 ml-1">@{tiktokUsername}</span>}
-                </div>
-              )}
-              {isSessionActive && effectiveMode === "demo" && (
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full border border-orange-500/40 text-orange-300 bg-orange-500/10">
-                  <Server className="h-3 w-3" />
-                  Demo Mode
-                </div>
-              )}
-              {isSessionActive && effectiveMode === "error" && (
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full border border-red-500/40 text-red-300 bg-red-500/10 cursor-pointer" title={effectiveError ?? "Connection failed"}>
-                  <WifiOff className="h-3 w-3" />
-                  Connection Failed
-                </div>
-              )}
-            </div>
-
-            {/* Big title */}
-            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black tracking-tight leading-[1.03] text-white mb-1">
-              <span
-                className="bg-clip-text text-transparent"
-                style={{ backgroundImage: "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 40%, #22d3ee 100%)" }}
-              >
-                {personaName}
-              </span>
-            </h1>
-            <p className="text-base md:text-lg font-semibold text-white/60 mb-1 tracking-wide">AI Co-Host</p>
-            <p className="text-sm text-muted-foreground/70 max-w-[420px] mb-5 leading-relaxed">
-              Real-time chat replies, gift reactions, voice &amp; moderation — powered by your AI persona.
-            </p>
-
-            {/* Live stat chips — shown when session active */}
-            {isSessionActive && (
-              <div className="flex items-center gap-2 flex-wrap mb-5">
-                {([
-                  { label: "viewers", value: stats.viewerCount,         color: "text-violet-300", bg: "bg-violet-500/10 border-violet-500/20", icon: <Users className="h-3 w-3" /> },
-                  { label: "gifts",   value: stats.totalGifts,          color: "text-amber-300",  bg: "bg-amber-500/10 border-amber-500/20",  icon: <Gift className="h-3 w-3" /> },
-                  { label: "follows", value: stats.totalFollows,        color: "text-green-300",  bg: "bg-green-500/10 border-green-500/20",  icon: <Users className="h-3 w-3" /> },
-                  { label: "replies", value: aiAnnouncements?.length ?? 0, color: "text-cyan-300", bg: "bg-cyan-500/10 border-cyan-500/20",  icon: <MessageSquare className="h-3 w-3" /> },
-                ] as const).map((s) => (
-                  <div
-                    key={s.label}
-                    className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium", s.bg)}
-                  >
-                    <span className={cn("opacity-70", s.color)}>{s.icon}</span>
-                    <span className="text-white font-bold tabular-nums">{s.value}</span>
-                    <span className="opacity-50 text-white/70">{s.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Persona + mode pills */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-purple-500/35 bg-purple-500/8 text-[11px] text-purple-300 font-medium">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                {TONE_OPTIONS.find(t => t.value === (config?.tone ?? "hype"))?.label ?? "Hype"}
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-[11px] text-muted-foreground font-medium">
-                {OPERATING_MODES.find(m => m.value === (config?.operatingMode ?? "assistant"))?.emoji ?? "💡"}
-                {" "}{OPERATING_MODES.find(m => m.value === (config?.operatingMode ?? "assistant"))?.label ?? "Assistant"}
-              </div>
-              {ttsMode !== "off" && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/8 text-[11px] text-blue-300 font-medium">
-                  <Mic className="h-3 w-3" />
-                  Voice On
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* ── Right: AI Avatar Stage — desktop + mobile ── */}
-          <div className="flex items-stretch order-1 lg:order-2 px-3 pt-3 pb-0 lg:px-4 lg:py-2">
-            <AvatarStage
-              avatarKey={avatarConfig?.avatarKey ?? "marcus"}
-              accentColor={accentColor}
-              scale={avatarConfig?.scale ?? 1.0}
-              positionY={avatarConfig?.positionY ?? -0.8}
-              lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
-              avatarEnabled={avatarConfig?.avatarEnabled ?? true}
-              avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
-              animationState={animState}
-              mouthOpenAmount={mouthOpen}
-              expressionIntensity={expressionIntensity}
-              backgroundGradient={getBackgroundGradient(selectedBackground)}
-              isSpeaking={isSpeaking}
-              personaName={personaName}
-              onOpenSettings={() => setAvatarSheetOpen(true)}
-              showDebug={showAvatarDebug}
-              className="w-full h-[260px] lg:h-full lg:min-h-[280px]"
-            />
-          </div>
-
-        </div>
-      </div>
+    <div className="h-[calc(100vh-4.5rem)] flex flex-col gap-2 overflow-hidden">
 
       {/* ── Connection error banner ── */}
       {isSessionActive && effectiveMode === "error" && effectiveError && (
-        <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex-shrink-0">
-          <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-xl flex-shrink-0">
+          <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-red-300 mb-0.5">TikTok connection failed</p>
-            <p className="text-xs text-red-300/80 font-mono whitespace-pre-wrap break-words">{effectiveError}</p>
-            <p className="text-xs text-muted-foreground/70 mt-1.5">
-              See the TikTok Connection panel in the sidebar to test and diagnose, or check DEPLOY.md.
-            </p>
+            <span className="text-sm font-semibold text-red-300 mr-2">TikTok connection failed</span>
+            <span className="text-xs text-red-300/80 font-mono truncate">{effectiveError}</span>
           </div>
         </div>
       )}
 
-      {/* ── Body: sidebar + main ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] grid-rows-[auto_1fr] lg:grid-rows-1 gap-4 flex-1 min-h-0">
+      {/* ══════════════════════════════════════════════════════════════════════
+          3-COLUMN LAYOUT: Settings | Avatar | Chat
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="flex-1 min-h-0 grid grid-cols-[260px_1fr_360px] gap-3">
 
-        {/* ── LEFT: Settings sidebar ── */}
-        <div className="flex flex-col gap-3 overflow-y-auto pr-0.5 min-h-0 lg:max-h-none">
+        {/* ═══════════════ LEFT: Settings (25%) ═══════════════ */}
+        <div className="flex flex-col gap-2 overflow-y-auto min-h-0 pr-0.5 scrollbar-thin scrollbar-thumb-white/10">
 
-          {/* Persona */}
+          {/* Status header */}
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] flex-shrink-0">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0">
+              AI
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-white truncate">{personaName}</p>
+              <p className="text-[10px] text-muted-foreground/60">AI Co-Host</p>
+            </div>
+            <div className={cn(
+              "w-2 h-2 rounded-full flex-shrink-0",
+              isSessionActive && connected ? "bg-green-400 animate-pulse"
+              : isSessionActive ? "bg-yellow-400 animate-pulse"
+              : "bg-white/20",
+            )} />
+          </div>
+
+          {/* ── Mode Buttons ── */}
+          <div className="flex-shrink-0 p-1.5 bg-white/[0.04] rounded-xl border border-white/[0.07]">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 px-1 py-1">Mode</p>
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                onClick={() => updateConfig.mutate({ operatingMode: "autopilot", tone: "professional" })}
+                className={cn(
+                  "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-lg border text-[10px] font-semibold transition-all",
+                  config?.tone === "professional"
+                    ? "border-blue-500/50 bg-blue-500/15 text-blue-300"
+                    : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                )}
+              >
+                <Zap className="h-3.5 w-3.5" />
+                <span>Pro</span>
+              </button>
+              <button
+                onClick={() => updateConfig.mutate({ operatingMode: "semi-auto", tone: "friendly" })}
+                className={cn(
+                  "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-lg border text-[10px] font-semibold transition-all",
+                  config?.tone === "friendly"
+                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
+                    : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                )}
+              >
+                <Bot className="h-3.5 w-3.5" />
+                <span>Assistant</span>
+              </button>
+              <button
+                onClick={() => handleTtsModeChange(ttsMode === "off" ? "browser" : "off")}
+                className={cn(
+                  "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-lg border text-[10px] font-semibold transition-all",
+                  ttsMode !== "off"
+                    ? "border-purple-500/50 bg-purple-500/15 text-purple-300"
+                    : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                )}
+              >
+                {ttsMode !== "off"
+                  ? <Volume2 className="h-3.5 w-3.5" />
+                  : <VolumeX className="h-3.5 w-3.5" />}
+                <span>Voice</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ── Stream Control ── */}
+          <Card className="bg-card border-white/5 flex-shrink-0">
+            <button
+              className="w-full flex items-center justify-between px-4 py-3 text-left"
+              onClick={() => setStreamControlOpen((v) => !v)}
+            >
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Radio className="h-4 w-4 text-red-400" />
+                Stream Control
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                {isSessionActive && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-1.5 py-0.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                    LIVE
+                  </span>
+                )}
+                {streamControlOpen
+                  ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+              </div>
+            </button>
+            {streamControlOpen && (
+              <CardContent className="space-y-3 pb-4 pt-0">
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
+                  {effectiveMode === "real" ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                  ) : effectiveMode === "error" ? (
+                    <WifiOff className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+                  ) : (
+                    <Server className="h-3.5 w-3.5 text-orange-400 flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">
+                      {!isSessionActive ? "Offline"
+                        : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
+                        : "Demo mode"}
+                    </p>
+                    {isSessionActive && activeSessionId && (
+                      <p className="text-[10px] text-muted-foreground/60">Session #{activeSessionId}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40"
+                    disabled={isSessionActive || startSession.isPending}
+                    onClick={() => startSession.mutate(undefined)}
+                  >
+                    {startSession.isPending
+                      ? <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Starting…</>
+                      : <><Play className="h-3 w-3 mr-1.5" />Go Live</>}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-40"
+                    disabled={!isSessionActive || endSession.isPending}
+                    onClick={() => endSession.mutate(undefined)}
+                  >
+                    {endSession.isPending
+                      ? <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Ending…</>
+                      : <><Square className="h-3 w-3 mr-1.5" />End Stream</>}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/40 text-center">
+                  TikTok account & advanced setup in{" "}
+                  <Link href="/dashboard">
+                    <span className="text-violet-400 hover:underline cursor-pointer">Dashboard</span>
+                  </Link>
+                </p>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* ── Settings sections — all collapsed by default ── */}
+
           <SidebarSection isOpen={expandedSections.has("persona")} onToggle={() => toggleSection("persona")} title="Persona" icon={<Sparkles className="h-4 w-4 text-purple-400" />}>
             {configLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((i) => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}
-              </div>
+              <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}</div>
             ) : (
               <>
                 <div className="space-y-1.5">
@@ -917,9 +1157,7 @@ export function AiAssistant() {
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Tone</Label>
                   <Select value={config?.tone ?? "hype"} onValueChange={(v) => updateConfig.mutate({ tone: v })}>
-                    <SelectTrigger className="bg-background/50 border-white/10 h-8 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="bg-background/50 border-white/10 h-8 text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {TONE_OPTIONS.map((t) => (
                         <SelectItem key={t.value} value={t.value}>
@@ -954,31 +1192,6 @@ export function AiAssistant() {
             )}
           </SidebarSection>
 
-          {/* Operating Mode */}
-          <SidebarSection isOpen={expandedSections.has("mode")} onToggle={() => toggleSection("mode")} title="Operating Mode" icon={<Radio className="h-4 w-4 text-emerald-400" />}>
-            <div className="space-y-1.5">
-              {OPERATING_MODES.map((mode) => (
-                <button
-                  key={mode.value}
-                  onClick={() => updateConfig.mutate({ operatingMode: mode.value })}
-                  className={cn(
-                    "w-full flex items-start gap-2.5 p-2.5 rounded-lg border text-left transition-all",
-                    (config?.operatingMode ?? "assistant") === mode.value
-                      ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300"
-                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                  )}
-                >
-                  <span className="text-base mt-0.5 flex-shrink-0">{mode.emoji}</span>
-                  <div>
-                    <div className="text-xs font-semibold">{mode.label}</div>
-                    <div className="text-[10px] opacity-70 leading-relaxed mt-0.5">{mode.desc}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </SidebarSection>
-
-          {/* Voice Controls */}
           <SidebarSection isOpen={expandedSections.has("voice")} onToggle={() => toggleSection("voice")} title="Voice" icon={<Volume2 className="h-4 w-4 text-blue-400" />}>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">TTS Mode</Label>
@@ -989,9 +1202,7 @@ export function AiAssistant() {
                     onClick={() => handleTtsModeChange(mode)}
                     className={cn(
                       "text-xs py-1.5 px-1 rounded-md font-medium transition-all capitalize",
-                      ttsMode === mode
-                        ? "bg-blue-600 text-white shadow"
-                        : "text-muted-foreground hover:text-white hover:bg-white/5",
+                      ttsMode === mode ? "bg-blue-600 text-white shadow" : "text-muted-foreground hover:text-white hover:bg-white/5",
                     )}
                   >
                     {mode === "off" && <VolumeX className="h-3 w-3 mx-auto mb-0.5" />}
@@ -1001,13 +1212,6 @@ export function AiAssistant() {
                   </button>
                 ))}
               </div>
-              {ttsMode !== "off" && (
-                <p className="text-xs text-muted-foreground/70 pt-0.5">
-                  {ttsMode === "browser"
-                    ? "Uses your browser's built-in speech synthesis"
-                    : "Uses OpenAI TTS — high-quality AI voice"}
-                </p>
-              )}
             </div>
             {ttsMode === "openai" && (
               <div className="space-y-3">
@@ -1031,62 +1235,6 @@ export function AiAssistant() {
                     ))}
                   </div>
                 </div>
-                <div className="space-y-1.5 pt-1 border-t border-white/5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">Speed</Label>
-                    <span className="text-xs font-mono text-muted-foreground">
-                      {(config?.voiceSpeed ?? 1.0).toFixed(2)}x
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.25"
-                    max="2"
-                    step="0.05"
-                    key={config?.voiceSpeed}
-                    defaultValue={config?.voiceSpeed ?? 1.0}
-                    onMouseUp={(e) => updateConfig.mutate({ voiceSpeed: Number((e.target as HTMLInputElement).value) })}
-                    onTouchEnd={(e) => updateConfig.mutate({ voiceSpeed: Number((e.target as HTMLInputElement).value) })}
-                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  />
-                  <div className="flex justify-between text-[10px] text-muted-foreground/50">
-                    <span>0.25×</span>
-                    <span>1×</span>
-                    <span>2×</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">Volume</Label>
-                    <span className="text-xs font-mono text-muted-foreground">
-                      {Math.round((config?.voiceVolume ?? 1.0) * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    key={`vol-${config?.voiceVolume}`}
-                    defaultValue={config?.voiceVolume ?? 1.0}
-                    onMouseUp={(e) => {
-                      const v = Number((e.target as HTMLInputElement).value);
-                      setTtsVolume(v);
-                      updateConfig.mutate({ voiceVolume: v });
-                    }}
-                    onTouchEnd={(e) => {
-                      const v = Number((e.target as HTMLInputElement).value);
-                      setTtsVolume(v);
-                      updateConfig.mutate({ voiceVolume: v });
-                    }}
-                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  />
-                  <div className="flex justify-between text-[10px] text-muted-foreground/50">
-                    <span>0%</span>
-                    <span>50%</span>
-                    <span>100%</span>
-                  </div>
-                </div>
                 <Button
                   size="sm"
                   variant="outline"
@@ -1094,17 +1242,14 @@ export function AiAssistant() {
                   onClick={handleVoicePreview}
                   disabled={isVoicePreviewing}
                 >
-                  {isVoicePreviewing ? (
-                    <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Generating…</>
-                  ) : (
-                    <><Play className="h-3 w-3 mr-1.5" />Preview Voice</>
-                  )}
+                  {isVoicePreviewing
+                    ? <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Generating…</>
+                    : <><Play className="h-3 w-3 mr-1.5" />Preview Voice</>}
                 </Button>
               </div>
             )}
           </SidebarSection>
 
-          {/* Language */}
           <SidebarSection isOpen={expandedSections.has("language")} onToggle={() => toggleSection("language")} title="Reply Language" icon={<Globe className="h-4 w-4 text-teal-400" />}>
             <div className="grid grid-cols-1 gap-1">
               {LANGUAGE_OPTIONS.map((lang) => (
@@ -1123,56 +1268,8 @@ export function AiAssistant() {
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-              Auto-detect identifies the viewer's language and replies in the same language.
-            </p>
           </SidebarSection>
 
-          {/* Chat Translation */}
-          <SidebarSection
-            isOpen={expandedSections.has("translate")}
-            onToggle={() => toggleSection("translate")}
-            title={t("chat_translate_title")}
-            icon={<Globe className="h-4 w-4 text-teal-400" />}
-          >
-            <div className="flex items-center justify-between">
-              <Label className="text-sm text-muted-foreground">{t("chat_translate_enable")}</Label>
-              <Switch
-                checked={chatTranslateEnabled}
-                onCheckedChange={setChatTranslateEnabled}
-              />
-            </div>
-            {chatTranslateEnabled && (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t("chat_translate_lang")}</Label>
-                <div className="grid grid-cols-2 gap-1">
-                  {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
-                    <button
-                      key={lang.value}
-                      onClick={() => {
-                        setChatTranslateLang(lang.value);
-                        setTranslatedComments({});
-                      }}
-                      className={cn(
-                        "flex items-center gap-2 px-2.5 py-1.5 rounded-md border text-xs transition-all text-left",
-                        chatTranslateLang === lang.value
-                          ? "border-teal-500/50 bg-teal-500/10 text-teal-300"
-                          : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                      )}
-                    >
-                      <span>{lang.flag}</span>
-                      <span className="font-medium truncate">{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-                  {t("chat_translate_note")}
-                </p>
-              </div>
-            )}
-          </SidebarSection>
-
-          {/* Auto-Reply */}
           <SidebarSection isOpen={expandedSections.has("autoreply")} onToggle={() => toggleSection("autoreply")} title="Auto-Reply" icon={<MessageSquare className="h-4 w-4 text-orange-400" />}>
             <div className="flex items-center justify-between">
               <Label className="text-sm text-muted-foreground">Reply to comments</Label>
@@ -1195,9 +1292,7 @@ export function AiAssistant() {
                 </div>
                 {config?.spamProtectionEnabled && (
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">
-                      Cooldown per viewer (seconds)
-                    </Label>
+                    <Label className="text-xs text-muted-foreground">Cooldown per viewer (sec)</Label>
                     <Input
                       key={config?.spamCooldownSeconds}
                       type="number"
@@ -1207,20 +1302,15 @@ export function AiAssistant() {
                       className="bg-background/50 border-white/10 h-8 text-sm"
                       onBlur={(e) => {
                         const val = Math.max(5, Math.min(300, Number(e.target.value)));
-                        if (val !== config?.spamCooldownSeconds)
-                          updateConfig.mutate({ spamCooldownSeconds: val });
+                        if (val !== config?.spamCooldownSeconds) updateConfig.mutate({ spamCooldownSeconds: val });
                       }}
                     />
-                    <p className="text-[11px] text-muted-foreground/60">
-                      AI won't reply to the same viewer more than once per {config?.spamCooldownSeconds ?? 30}s
-                    </p>
                   </div>
                 )}
               </div>
             )}
           </SidebarSection>
 
-          {/* Announcements */}
           <SidebarSection isOpen={expandedSections.has("announcements")} onToggle={() => toggleSection("announcements")} title="Announcements" icon={<Zap className="h-4 w-4 text-yellow-400" />}>
             {([
               { key: "announceGifts", label: "Gift alerts", icon: "🎁" },
@@ -1254,367 +1344,303 @@ export function AiAssistant() {
             </div>
           </SidebarSection>
 
-          {/* Moderation */}
-          <SidebarSection isOpen={expandedSections.has("moderation")} onToggle={() => toggleSection("moderation")} title="Moderation" icon={<Shield className="h-4 w-4 text-blue-400" />}>
-            <div className="flex items-center justify-between">
-              <Label className="text-sm text-muted-foreground">Auto-flag harmful comments</Label>
-              <Switch
-                checked={config?.moderationEnabled ?? false}
-                onCheckedChange={(v) => updateConfig.mutate({ moderationEnabled: v })}
-              />
-            </div>
-            {config?.moderationEnabled && (
-              <p className="text-xs text-muted-foreground p-2 bg-blue-500/10 rounded-md border border-blue-500/20">
-                ✓ Comments are being scanned for hate speech, harassment and spam
-              </p>
-            )}
-            {flaggedComments.length > 0 && (
-              <Badge variant="outline" className="border-red-500/30 text-red-400 text-xs">
-                {flaggedComments.length} flagged this session
-              </Badge>
-            )}
-          </SidebarSection>
-
-          {/* ── Session Status (read-only) ── */}
+          {/* 3D Avatar settings shortcut */}
           <Card className="bg-card border-white/5 flex-shrink-0">
-            <div className="px-4 py-3 flex items-center gap-3">
-              {effectiveMode === "real" ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-              ) : effectiveMode === "error" ? (
-                <WifiOff className="h-4 w-4 text-red-400 flex-shrink-0" />
-              ) : (
-                <Server className="h-4 w-4 text-orange-400 flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold">
-                  {effectiveMode === "real" ? "Real TikTok LIVE" : effectiveMode === "error" ? "Connection failed" : "Demo mode"}
-                </p>
-                {effectiveMode === "real" && tiktokUsername && (
-                  <p className="text-[10px] text-muted-foreground truncate">@{tiktokUsername}</p>
-                )}
-                {effectiveMode === "error" && effectiveError && (
-                  <p className="text-[10px] text-red-400/70 truncate">{effectiveError}</p>
-                )}
-                {effectiveMode === "demo" && (
-                  <p className="text-[10px] text-muted-foreground">Simulated events</p>
-                )}
-              </div>
-              <Link href="/dashboard">
-                <span className="text-[10px] text-muted-foreground/50 hover:text-violet-400 flex items-center gap-0.5 transition-colors whitespace-nowrap cursor-pointer">
-                  Manage <ChevronRight className="h-3 w-3" />
-                </span>
-              </Link>
-            </div>
+            <button
+              className="w-full flex items-center justify-between px-4 py-3 text-left"
+              onClick={() => setAvatarSheetOpen(true)}
+            >
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Boxes className="h-4 w-4 text-violet-400" />
+                Avatar Settings
+              </CardTitle>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
           </Card>
-
-          {/* ── 3D Avatar ── */}
-          <SidebarSection
-            isOpen={expandedSections.has("avatar")}
-            onToggle={() => toggleSection("avatar")}
-            title="3D Avatar"
-            icon={<Boxes className="h-4 w-4 text-violet-400" />}
-          >
-            {avatarLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((i) => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Enable toggle */}
-                <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-white/5 border border-white/10">
-                  <div className="flex items-center gap-2">
-                    <Boxes className="h-3.5 w-3.5 text-violet-400" />
-                    <div>
-                      <p className="text-xs font-medium text-white">3D Co-Host</p>
-                      <p className="text-[10px] text-muted-foreground leading-tight">Show avatar on stream</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={avatarConfig?.avatarEnabled ?? false}
-                    onCheckedChange={(v) => saveAvatar({ avatarEnabled: v })}
-                    disabled={avatarSaving}
-                    className="data-[state=checked]:bg-violet-600 flex-shrink-0"
-                  />
-                </div>
-
-                {/* Selected avatar */}
-                {avatarConfig?.avatarEnabled && selectedAvatar && (
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
-                    <div
-                      className="w-6 h-6 rounded-full flex-shrink-0"
-                      style={{ background: `radial-gradient(circle at 35% 35%, ${selectedAvatar.accentColor}cc, ${selectedAvatar.accentColor}55)` }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-violet-200 truncate">{selectedAvatar.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{selectedAvatar.style}</p>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            )}
-          </SidebarSection>
 
         </div>
 
-        {/* ── RIGHT: Tab content ── */}
+        {/* ═══════════════ CENTER: Avatar (40%) ═══════════════ */}
+        <div className="flex flex-col min-h-0 gap-2">
+
+          {/* Avatar — fills most of the height */}
+          <div className="relative flex-1 min-h-[500px] rounded-2xl overflow-hidden bg-black/20">
+            <AvatarStage
+              avatarKey={avatarConfig?.avatarKey ?? "marcus"}
+              accentColor={accentColor}
+              scale={avatarConfig?.scale ?? 1.0}
+              positionY={avatarConfig?.positionY ?? -0.8}
+              lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
+              avatarEnabled={avatarConfig?.avatarEnabled ?? true}
+              avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
+              animationState={animState}
+              mouthOpenAmount={mouthOpen}
+              expressionIntensity={expressionIntensity}
+              backgroundGradient={getBackgroundGradient(selectedBackground)}
+              isSpeaking={isSpeaking}
+              personaName={personaName}
+              onOpenSettings={() => setAvatarSheetOpen(true)}
+              showDebug={showAvatarDebug}
+              className="w-full h-full"
+            />
+
+            {/* Top-left: status indicators */}
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+              {/* Connection */}
+              <div className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm",
+                isSessionActive && connected
+                  ? "border-green-500/40 text-green-300 bg-green-500/20"
+                  : isSessionActive
+                  ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/20 animate-pulse"
+                  : "border-white/15 text-white/50 bg-black/30",
+              )}>
+                <span className={cn("w-1.5 h-1.5 rounded-full",
+                  isSessionActive && connected ? "bg-green-400 animate-pulse"
+                  : isSessionActive ? "bg-yellow-400"
+                  : "bg-white/30",
+                )} />
+                {isSessionActive && connected ? "Connected"
+                  : isSessionActive ? "Connecting…"
+                  : "Offline"}
+              </div>
+
+              {/* Speaking indicator */}
+              {isSpeaking && (
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-purple-500/40 text-purple-300 bg-purple-500/20">
+                  <Mic className="h-3 w-3 animate-pulse" />
+                  Speaking
+                </div>
+              )}
+
+              {/* Thinking indicator — when last event was comment and no reply yet */}
+              {animState === "thinking" && (
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-blue-500/40 text-blue-300 bg-blue-500/20">
+                  <span className="flex gap-0.5 items-center">
+                    {[0, 150, 300].map((d) => (
+                      <span key={d} className="h-1 w-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                    ))}
+                  </span>
+                  Thinking
+                </div>
+              )}
+            </div>
+
+            {/* Top-right: LIVE badge */}
+            <div className="absolute top-3 right-3">
+              {isSessionActive ? (
+                <div className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black border backdrop-blur-sm",
+                  effectiveMode === "real"
+                    ? "border-red-500/50 text-red-300 bg-red-600/30"
+                    : "border-orange-500/40 text-orange-300 bg-orange-500/20",
+                )}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                  {effectiveMode === "real" ? "LIVE" : "DEMO"}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Bottom-left: persona name + animation state */}
+            <div className="absolute bottom-3 left-3">
+              <div className="px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-white/10">
+                <p className="text-xs font-bold text-white">{personaName}</p>
+                <p className="text-[10px] text-white/50 capitalize">{ANIMATION_LABELS[animState]}</p>
+              </div>
+            </div>
+
+            {/* Bottom-right: TikTok username */}
+            {effectiveMode === "real" && tiktokUsername && (
+              <div className="absolute bottom-3 right-3 px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-emerald-500/25">
+                <p className="text-[10px] font-semibold text-emerald-300">@{tiktokUsername}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Stats row — below avatar */}
+          <div className="grid grid-cols-4 gap-2 flex-shrink-0">
+            {[
+              { label: "Viewers", value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20" },
+              { label: "Gifts", value: stats.totalGifts, icon: Gift, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+              { label: "Follows", value: stats.totalFollows, icon: Users, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
+              { label: "Replies", value: aiAnnouncements?.length ?? 0, icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+            ].map(({ label, value, icon: Icon, color, bg }) => (
+              <div key={label} className={cn("rounded-xl border p-2.5 flex flex-col items-center gap-1 transition-all duration-300", bg)}>
+                <Icon className={cn("h-3.5 w-3.5", color)} />
+                <span className={cn("text-base font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-muted-foreground/40")}>
+                  {isSessionActive ? value.toLocaleString() : "—"}
+                </span>
+                <span className="text-[9px] text-muted-foreground/60 font-medium">{label}</span>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+        {/* ═══════════════ RIGHT: Unified Chat (35%) ═══════════════ */}
         <div className="flex flex-col min-h-0">
 
           {/* Tab bar */}
-          <div className="flex gap-1 p-1 bg-white/5 rounded-lg mb-2 flex-shrink-0">
+          <div className="flex gap-1 p-1 bg-white/5 rounded-xl mb-2 flex-shrink-0">
             {[
-              { key: "live", label: "Live Feed", icon: <Radio className="h-3.5 w-3.5" />, badge: feedEvents.length > 0 ? feedEvents.filter(e => e.type === "comment").length : null },
-              { key: "chat", label: "AI Chat", icon: <Bot className="h-3.5 w-3.5" />, badge: null },
-              { key: "moderation", label: "Flagged", icon: <Shield className="h-3.5 w-3.5" />, badge: flaggedComments.length > 0 ? flaggedComments.length : null },
+              { key: "chat" as const, label: "Chat", icon: <MessageCircle className="h-3.5 w-3.5" />, badge: isSessionActive ? feedEvents.filter((e) => e.type === "comment").length : null },
+              { key: "events" as const, label: "Events", icon: <Activity className="h-3.5 w-3.5" />, badge: null },
+              { key: "ai" as const, label: "AI Activity", icon: <Sparkles className="h-3.5 w-3.5" />, badge: isSessionActive && (aiAnnouncements?.length ?? 0) > 0 ? aiAnnouncements?.length : null },
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                onClick={() => setRightTab(tab.key)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-2 py-2 rounded-md transition-all relative",
-                  activeTab === tab.key
+                  "flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-2 py-2 rounded-lg transition-all relative",
+                  rightTab === tab.key
                     ? "bg-purple-600 text-white shadow"
                     : "text-muted-foreground hover:text-white hover:bg-white/5",
                 )}
               >
                 {tab.icon}
                 <span className="hidden sm:inline">{tab.label}</span>
-                {tab.badge !== null && tab.badge! > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-[10px] font-bold flex items-center justify-center text-white">
-                    {tab.badge! > 9 ? "9+" : tab.badge}
+                {tab.badge !== null && (tab.badge ?? 0) > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-[9px] font-bold flex items-center justify-center text-white">
+                    {(tab.badge ?? 0) > 9 ? "9+" : tab.badge}
                   </span>
                 )}
               </button>
             ))}
           </div>
 
-          {/* ── LIVE FEED TAB ── */}
-          {activeTab === "live" && (
-            <Card className="bg-card border-white/5 flex flex-col flex-1 min-h-0">
-              <div className="px-4 py-2.5 flex items-center justify-between flex-shrink-0 border-b border-white/5">
-                <div className="flex items-center gap-2">
-                  <Radio className="h-3.5 w-3.5 text-purple-400" />
-                  <span className="text-sm font-medium">Live Chat & Events</span>
-                  <span className="text-xs text-muted-foreground">
-                    {feedEvents.length > 0 ? `${feedEvents.length} events` : "Waiting for events…"}
+          {/* Tab content — fills remaining height */}
+          <div className="flex-1 min-h-0 rounded-xl bg-white/[0.03] border border-white/[0.06] overflow-hidden">
+
+            {/* ── CHAT TAB ── */}
+            {rightTab === "chat" && (
+              <div className="h-full flex flex-col">
+                <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-3.5 w-3.5 text-purple-400" />
+                    <span className="text-sm font-medium">Live Chat</span>
+                    {feedEvents.length > 0 && (
+                      <span className="text-xs text-muted-foreground/50">{feedEvents.filter((e) => e.type === "comment").length} comments</span>
+                    )}
+                  </div>
+                  {isSessionActive && effectiveMode === "real" && (
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Real TikTok
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 min-h-0">
+                  <UnifiedChatTab
+                    events={feedEvents}
+                    onReply={handleReply}
+                    replyingTo={replyingTo}
+                    sessionId={activeSessionId ?? null}
+                    isActive={isSessionActive}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ── EVENTS TAB ── */}
+            {rightTab === "events" && (
+              <div className="h-full flex flex-col">
+                <div className="px-4 py-2.5 border-b border-white/5 flex-shrink-0">
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    <Activity className="h-3.5 w-3.5 text-cyan-400" />
+                    Event Log
                   </span>
                 </div>
-                {!isSessionActive && (
-                  <Badge variant="outline" className="border-yellow-500/30 text-yellow-400 text-xs">
-                    Start a session to see live events
-                  </Badge>
-                )}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <EventsTab events={feedEvents} isActive={isSessionActive} />
+                </div>
               </div>
+            )}
 
-              <ScrollArea className="flex-1">
-                <div className="py-2 space-y-0.5">
-                  {feedEvents.length === 0 && (
-                    <div className="text-center py-16">
-                      <Radio className="h-10 w-10 text-purple-400/20 mx-auto mb-3" />
-                      <p className="text-muted-foreground text-sm">
-                        {isSessionActive ? "Waiting for viewers to interact…" : "No active session"}
-                      </p>
-                      {isSessionActive && (
-                        <p className="text-muted-foreground/50 text-xs mt-1">
-                          Demo events will start flowing shortly
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {feedEvents.map((event, feedIdx) => {
-                    const evtKey = `${event.timestamp}-${feedIdx}`;
-                    if (event.type === "comment") {
-                      const evtId = event.timestamp;
-                      const translated = translatedComments[evtId];
-                      const isTranslating = translatingComments.has(evtId);
-                      return (
-                        <div key={evtKey} className="space-y-1">
-                          <CommentCard
-                            event={event}
-                            onReply={handleReply}
-                            isReplying={replyingTo.has(event.timestamp)}
-                            sessionId={activeSessionId ?? null}
-                          />
-                          {chatTranslateEnabled && (
-                            <div className="ml-10 flex items-start gap-2">
-                              {translated ? (
-                                <p className="text-xs text-teal-300 bg-teal-500/10 border border-teal-500/20 rounded px-2 py-1 flex-1">
-                                  🌐 {translated}
-                                </p>
-                              ) : (
-                                <button
-                                  onClick={() => handleTranslateComment(evtId, (event.data.text as string) ?? "")}
-                                  disabled={isTranslating}
-                                  className="text-[11px] text-teal-400/60 hover:text-teal-300 flex items-center gap-1 transition-colors disabled:opacity-40"
-                                >
-                                  {isTranslating ? t("chat_translate_translating") : "🌐 Translate"}
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    if (event.type === "gift") return <GiftCard key={evtKey} event={event} />;
-                    if (event.type === "follow") return <FollowCard key={evtKey} event={event} />;
-                    if (event.type === "like") return <LikeCard key={evtKey} event={event} />;
-                    if (event.type === "share") return <ShareCard key={evtKey} event={event} />;
-                    if (event.type === "ai_announcement") return <AiAnnouncementCard key={evtKey} event={event} />;
-                    return null;
-                  })}
+            {/* ── AI ACTIVITY TAB ── */}
+            {rightTab === "ai" && (
+              <div className="h-full flex flex-col">
+                <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                    AI Responses
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {ttsMode !== "off" && (
+                      <span className="text-[10px] text-blue-400 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
+                        <Volume2 className="h-2.5 w-2.5" />
+                        Voice on
+                      </span>
+                    )}
+                    {config?.autoReplyEnabled && (
+                      <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
+                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        Auto-reply
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </ScrollArea>
-            </Card>
-          )}
-
-          {/* ── AI CHAT TAB ── */}
-          {activeTab === "chat" && (
-            <Card className="bg-card border-white/5 flex flex-col flex-1 min-h-0">
-              <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 border-b border-white/5">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" />
-                  <span className="text-sm font-medium">{personaName}</span>
-                  <span className="text-xs text-muted-foreground">— your stream strategist</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
-                  onClick={() => clearMessages.mutate()}
-                  title="Clear conversation"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-
-              <ScrollArea className="flex-1 px-4">
-                <div className="py-4 space-y-4">
-                  {localMessages.length === 0 && (
-                    <div className="text-center py-10">
-                      <Bot className="h-10 w-10 text-purple-400/30 mx-auto mb-3" />
-                      <p className="text-muted-foreground text-sm">Hey! I'm {personaName}, your AI co-host.</p>
-                      <p className="text-muted-foreground/60 text-xs mt-1">
-                        Ask me about stream strategy, event ideas, or how to boost engagement.
-                      </p>
-                      <div className="flex flex-wrap gap-2 justify-center mt-4">
-                        {["How do I get more gifts?", "Give me a hype event idea", "Tips for growing viewers", "What quests should I run?"].map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => setChatInput(p)}
-                            className="text-xs px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors"
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {localMessages.map((msg) => (
-                    <div key={msg.id} className={cn("flex gap-3", msg.role === "user" ? "flex-row-reverse" : "flex-row")}>
-                      <div className={cn(
-                        "flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold",
-                        msg.role === "user" ? "bg-purple-600" : "bg-gradient-to-br from-purple-500 to-pink-500",
-                      )}>
-                        {msg.role === "user" ? "U" : "AI"}
-                      </div>
-                      <div className={cn(
-                        "max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                        msg.role === "user" ? "bg-purple-600 text-white rounded-tr-sm" : "bg-white/5 text-foreground rounded-tl-sm",
-                      )}>
-                        {msg.content === "..." ? (
-                          <span className="flex gap-1 items-center h-5">
-                            {[0, 150, 300].map((d) => (
-                              <span key={d} className="h-1.5 w-1.5 rounded-full bg-purple-400" style={{ animation: `bounce 1s infinite ${d}ms` }} />
-                            ))}
-                          </span>
-                        ) : (
-                          <p className="whitespace-pre-wrap">{msg.content}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-
-              <Separator className="bg-white/5" />
-              <div className="p-3 flex-shrink-0">
-                <div className="flex gap-2">
-                  <Input
-                    ref={inputRef}
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
-                    placeholder={`Ask ${personaName} anything…`}
-                    className="bg-background/50 border-white/10 flex-1"
-                    disabled={isChatLoading}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <AiActivityTab
+                    events={feedEvents}
+                    ttsMode={ttsMode}
+                    isActive={isSessionActive}
                   />
-                  <Button
-                    onClick={handleChatSend}
-                    disabled={isChatLoading || !chatInput.trim()}
-                    className="bg-purple-600 hover:bg-purple-700"
-                    size="sm"
-                  >
-                    {isChatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  </Button>
                 </div>
               </div>
-            </Card>
-          )}
+            )}
 
-          {/* ── MODERATION TAB ── */}
-          {activeTab === "moderation" && (
-            <Card className="bg-card border-white/5 flex flex-col flex-1 min-h-0">
-              <div className="px-4 py-2.5 flex-shrink-0 border-b border-white/5 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Flagged Comments</p>
-                  <p className="text-xs text-muted-foreground">Real-time AI moderation log</p>
-                </div>
-                {flaggedComments.length > 0 && (
-                  <Badge variant="outline" className="border-red-500/30 text-red-400">
-                    {flaggedComments.length} flagged
-                  </Badge>
-                )}
-              </div>
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-3">
-                  {!config?.moderationEnabled && (
-                    <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4 flex items-start gap-3">
-                      <AlertCircle className="h-4 w-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-yellow-300 font-medium">Moderation is disabled</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Enable it in the sidebar to auto-flag harmful comments.</p>
-                      </div>
-                    </div>
-                  )}
-                  {flaggedComments.length === 0 && config?.moderationEnabled && (
-                    <div className="text-center py-10">
-                      <Shield className="h-8 w-8 text-blue-400/30 mx-auto mb-2" />
-                      <p className="text-muted-foreground text-sm">No flagged comments yet</p>
-                    </div>
-                  )}
-                  {flaggedComments.map((item) => (
-                    <div key={item.timestamp} className="rounded-lg border border-red-500/20 bg-red-500/5 p-3 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-red-300">@{item.viewerName}</span>
-                        <span className="text-[11px] text-muted-foreground">
-                          {new Date(item.timestamp).toLocaleTimeString()}
+          </div>
+
+          {/* AI Strategy chat — compact input below */}
+          <div className="flex-shrink-0 mt-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <p className="text-[10px] text-muted-foreground/40 mb-1.5 flex items-center gap-1">
+              <Bot className="h-3 w-3" />
+              Ask {personaName} for stream advice
+            </p>
+            <div className="flex gap-2">
+              <Input
+                ref={inputRef}
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
+                placeholder={`Ask ${personaName}…`}
+                className="bg-background/50 border-white/10 flex-1 h-8 text-xs"
+                disabled={isChatLoading}
+              />
+              <Button
+                onClick={handleChatSend}
+                disabled={isChatLoading || !chatInput.trim()}
+                className="bg-purple-600 hover:bg-purple-700 h-8 w-8 p-0"
+                size="sm"
+              >
+                {isChatLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+            {localMessages.length > 0 && (
+              <div className="mt-2 max-h-[120px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 space-y-1.5">
+                {localMessages.slice(-4).map((msg) => (
+                  <div key={msg.id} className={cn("flex gap-2 text-xs", msg.role === "user" ? "justify-end" : "justify-start")}>
+                    <div className={cn(
+                      "max-w-[85%] rounded-xl px-2.5 py-1.5 text-xs leading-relaxed",
+                      msg.role === "user" ? "bg-purple-600 text-white" : "bg-white/5 text-foreground",
+                    )}>
+                      {msg.content === "..." ? (
+                        <span className="flex gap-1 items-center h-4">
+                          {[0, 150, 300].map((d) => (
+                            <span key={d} className="h-1 w-1 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                          ))}
                         </span>
-                      </div>
-                      <p className="text-sm text-foreground/80 bg-black/20 rounded px-2.5 py-1.5">"{item.comment}"</p>
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant="outline" className="border-red-500/30 text-red-400 text-[10px]">
-                          {item.reason}
-                        </Badge>
-                      </div>
+                      ) : msg.content}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </Card>
-          )}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
 
         </div>
+
       </div>
 
       {/* ── Avatar Configuration Sheet ── */}
@@ -1627,7 +1653,6 @@ export function AiAssistant() {
             </SheetTitle>
           </SheetHeader>
 
-          {/* Enable toggle */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 flex-shrink-0">
             <div>
               <p className="text-sm font-medium">3D Co-Host</p>
@@ -1641,7 +1666,6 @@ export function AiAssistant() {
             />
           </div>
 
-          {/* Feature badges */}
           <div className="flex flex-wrap gap-1.5 px-5 py-2.5 border-b border-white/5 flex-shrink-0">
             {["RPM · Avaturn · VRM", "ARKit Lip Sync", "Expressions · Reactions", "TikTok LIVE Ready"].map((b) => (
               <Badge key={b} variant="outline" className="text-[9px] border-blue-500/30 text-blue-400 bg-blue-500/5">{b}</Badge>
@@ -1650,13 +1674,10 @@ export function AiAssistant() {
 
           <ScrollArea className="flex-1">
             {avatarLoading ? (
-              <div className="p-6 space-y-4">
-                {[1, 2, 3].map((i) => <div key={i} className="h-20 bg-white/5 rounded-xl animate-pulse" />)}
-              </div>
+              <div className="p-6 space-y-4">{[1, 2, 3].map((i) => <div key={i} className="h-20 bg-white/5 rounded-xl animate-pulse" />)}</div>
             ) : (
               <div className="p-5 space-y-5">
 
-                {/* Your AI Presenter */}
                 <div>
                   <div className="text-xs font-semibold text-white mb-2.5 flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5 text-violet-400" />
@@ -1706,7 +1727,6 @@ export function AiAssistant() {
                   )}
                 </div>
 
-                {/* Background Scene */}
                 <div>
                   <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
                     <Tv2 className="h-3.5 w-3.5 text-cyan-400" />
@@ -1732,7 +1752,6 @@ export function AiAssistant() {
                   </div>
                 </div>
 
-                {/* Accent Color & Lighting */}
                 <div>
                   <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
                     <Palette className="h-3.5 w-3.5 text-pink-400" />
@@ -1768,7 +1787,6 @@ export function AiAssistant() {
 
                 <Separator className="bg-white/5" />
 
-                {/* Live 3D Preview */}
                 <div>
                   <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
                     <Monitor className="h-3.5 w-3.5 text-green-400" />
@@ -1794,24 +1812,10 @@ export function AiAssistant() {
                     backgroundGradient={getBackgroundGradient(selectedBackground)}
                     className="w-full h-[220px] rounded-xl"
                   />
-                  <div className="flex items-center justify-between mt-2 px-0.5">
-                    <span className="text-[10px] text-green-400 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                      TikTok LIVE Ready
-                    </span>
-                    {avatarSaving && (
-                      <span className="flex items-center gap-1 text-[10px] text-violet-400">
-                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                        Saving…
-                      </span>
-                    )}
-                    <span className="text-[10px] text-muted-foreground/50">60fps · WebGL</span>
-                  </div>
                 </div>
 
                 <Separator className="bg-white/5" />
 
-                {/* Scene Settings */}
                 <div>
                   <div className="text-xs font-semibold text-white mb-2.5 flex items-center gap-1.5">
                     <SlidersHorizontal className="h-3.5 w-3.5 text-violet-400" />
@@ -1874,7 +1878,6 @@ export function AiAssistant() {
 
                 <Separator className="bg-white/5" />
 
-                {/* Reactions & Lip Sync */}
                 <div>
                   <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
                     <Zap className="h-3.5 w-3.5 text-violet-400" />
@@ -1941,91 +1944,27 @@ export function AiAssistant() {
                   </div>
                 </div>
 
-                <Separator className="bg-white/5" />
-
-                {/* System Status */}
-                <div>
-                  <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                    <Cpu className="h-3.5 w-3.5 text-violet-400" />
-                    System Status
-                  </div>
-                  <div className="space-y-1.5">
-                    {[
-                      { label: "RPM · Avaturn · VRM avatars",    desc: "Photorealistic GLB & VRM 1.0 support" },
-                      { label: "Real-time 3D rendering",         desc: "React Three Fiber + WebGL" },
-                      { label: "TikTok event reactions",         desc: "Gift · Follow · Like · Share" },
-                      { label: "Animation state machine",        desc: "10 states · surprised · thinking · listening" },
-                      { label: "AI voice lip sync",              desc: "Web Audio API AnalyserNode" },
-                      { label: "Background customiser",          desc: "4 scene presets + custom colour" },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.03] border border-white/5">
-                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 bg-emerald-500/70" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-foreground/80">{item.label}</p>
-                          <p className="text-[10px] text-muted-foreground/40">{item.desc}</p>
-                        </div>
-                        <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0 mt-0.5" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Renderer Stats */}
                 {rendererStats && (
-                  <div>
-                    <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                      <Monitor className="h-3.5 w-3.5 text-violet-400" />
-                      Renderer Stats
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[
-                        { label: "FPS", val: rendererStats.fps, color: rendererStats.fps >= 50 ? "text-emerald-400" : rendererStats.fps >= 30 ? "text-yellow-400" : "text-red-400" },
-                        { label: "Geo", val: rendererStats.geometries, color: "text-violet-300" },
-                        { label: "Tex", val: rendererStats.textures, color: "text-violet-300" },
-                        { label: "Calls", val: rendererStats.drawCalls, color: "text-violet-300" },
-                      ].map(({ label, val, color }) => (
-                        <div key={label} className="text-center p-2 rounded-lg bg-white/5 border border-white/5">
-                          <p className={cn("text-[12px] font-mono font-semibold", color)}>{val}</p>
-                          <p className="text-[9px] text-muted-foreground/60 mt-0.5">{label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground/40 mt-1.5">
-                      Triangles: {rendererStats.triangles.toLocaleString()} · Quality: {rendererStats.quality}
-                    </p>
-                  </div>
-                )}
-
-                {/* Animation presets library */}
-                {avatarPresets && avatarPresets.length > 0 && (
                   <>
                     <Separator className="bg-white/5" />
                     <div>
                       <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
-                        <Star className="h-3.5 w-3.5 text-violet-400" />
-                        Animation Library
-                        <Badge variant="outline" className="text-[10px] border-white/10 text-muted-foreground ml-1">
-                          {avatarPresets.length} clips
-                        </Badge>
+                        <Cpu className="h-3.5 w-3.5 text-violet-400" />
+                        Renderer Stats
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {avatarPresets.slice(0, 6).map((preset) => (
-                          <div key={preset.id} className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5">
-                            <div className="w-6 h-6 rounded-md bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-                              <Play className="h-2.5 w-2.5 text-violet-400" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-medium text-foreground/80 truncate">{preset.name}</p>
-                              <p className="text-[10px] text-muted-foreground capitalize">{preset.category}</p>
-                            </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { label: "FPS", val: rendererStats.fps, color: rendererStats.fps >= 50 ? "text-emerald-400" : rendererStats.fps >= 30 ? "text-yellow-400" : "text-red-400" },
+                          { label: "Geo", val: rendererStats.geometries, color: "text-violet-300" },
+                          { label: "Tex", val: rendererStats.textures, color: "text-violet-300" },
+                          { label: "Calls", val: rendererStats.drawCalls, color: "text-violet-300" },
+                        ].map(({ label, val, color }) => (
+                          <div key={label} className="text-center p-2 rounded-lg bg-white/5 border border-white/5">
+                            <p className={cn("text-[12px] font-mono font-semibold", color)}>{val}</p>
+                            <p className="text-[9px] text-muted-foreground/60 mt-0.5">{label}</p>
                           </div>
                         ))}
                       </div>
-                      {avatarPresets.length > 6 && (
-                        <p className="text-[10px] text-muted-foreground/50 mt-2 text-center">
-                          +{avatarPresets.length - 6} more clips · assignable to events
-                        </p>
-                      )}
                     </div>
                   </>
                 )}
