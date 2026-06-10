@@ -1,8 +1,115 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "EpnyIbUXbrlg-fhUvbP3Y"
 uri = "file://artifacts/livestorm-ai/public/hero-dashboard.png"
 type = "image"
 title = "Cyberpunk streaming mission control"
+
+[[outputs]]
+id = "rQq6SBMxLh4UMtFxW18dE"
+uri = "file://screenshots/desktop-dashboard.jpg"
+type = "image"
+title = "Dashboard — Desktop"
+
+[[outputs]]
+id = "HKvpHOQELP3ikmj7qe-AP"
+uri = "file://screenshots/mobile-dashboard.jpg"
+type = "image"
+title = "Dashboard — Mobile"
+
+[[outputs]]
+id = "YhcYNJAzhfRR4pXuUlzI4"
+uri = "file://screenshots/desktop-ai-cohost.jpg"
+type = "image"
+title = "AI Co-Host — Desktop"
+
+[[outputs]]
+id = "BNFfmAC0GzZukhRE3xJPu"
+uri = "file://screenshots/mobile-ai-cohost.jpg"
+type = "image"
+title = "AI Co-Host — Mobile"
+
+[[outputs]]
+id = "ERBF_m-b7Ov5XkudGlAtn"
+uri = "file://screenshots/desktop-live-studio.jpg"
+type = "image"
+title = "Live Studio — Desktop"
+
+[[outputs]]
+id = "zwmV77y6tuudPauZwYJad"
+uri = "file://screenshots/mobile-live-studio.jpg"
+type = "image"
+title = "Live Studio — Mobile"
+
+[[outputs]]
+id = "QhsMu_qcWNgYXD6F8V7Lj"
+uri = "file://screenshots/desktop-settings.jpg"
+type = "image"
+title = "Settings — Desktop"
+
+[[outputs]]
+id = "Arlosai0Tavs5iS71xRhP"
+uri = "file://screenshots/mobile-settings.jpg"
+type = "image"
+title = "Settings — Mobile"
+
+[[outputs]]
+id = "Q3RuOOzytY56amhixxdpc"
+uri = "file://screenshots/desktop-analytics.jpg"
+type = "image"
+title = "Analytics — Desktop"
+
+[[outputs]]
+id = "7HVLvzruDOMY_MaREnYUi"
+uri = "file://screenshots/mobile-analytics.jpg"
+type = "image"
+title = "Analytics — Mobile"
+
+[[outputs]]
+id = "srxbCS1nXS214pyAYCb_H"
+uri = "file://screenshots/desktop-gamification.jpg"
+type = "image"
+title = "Gamification — Desktop"
+
+[[outputs]]
+id = "UHyDYK18uHQ3ScLkgcZpD"
+uri = "file://screenshots/mobile-gamification.jpg"
+type = "image"
+title = "Gamification — Mobile"
+
+[[outputs]]
+id = "zSbxCKHSJ57Fg2Ggn_ku_"
+uri = "file://screenshots/desktop-kingdom.jpg"
+type = "image"
+title = "Kingdom — Desktop"
+
+[[outputs]]
+id = "qPiNyxuS1H7ckEmU4NOXW"
+uri = "file://screenshots/mobile-kingdom.jpg"
+type = "image"
+title = "Kingdom — Mobile"
+
+[[outputs]]
+id = "PbD9o4mBfrvFaS3Fj1QU2"
+uri = "file://screenshots/desktop-universe.jpg"
+type = "image"
+title = "Universe — Desktop"
+
+[[outputs]]
+id = "1uJak2U3BgLzzDB1iY5qY"
+uri = "file://screenshots/mobile-universe.jpg"
+type = "image"
+title = "Universe — Mobile"
+
+[[outputs]]
+id = "HXRDPseFRnDufrgZ-xoEM"
+uri = "file://screenshots/desktop-boss-battle.jpg"
+type = "image"
+title = "Boss Battle — Desktop"
+
+[[outputs]]
+id = "oBNzR8rs0TH5ab3sqy-g1"
+uri = "file://screenshots/mobile-boss-battle.jpg"
+type = "image"
+title = "Boss Battle — Mobile"
