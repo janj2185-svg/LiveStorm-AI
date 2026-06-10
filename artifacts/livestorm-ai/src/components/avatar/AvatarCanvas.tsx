@@ -13,7 +13,8 @@ import { ANIMATION_EMOJI } from "./avatarAnimationMachine";
 // ── WebGL availability check (runs once, synchronously) ───────────────────────
 // Detects before mounting the Canvas so Three.js never throws into the global
 // error handler (which @replit/vite-plugin-runtime-error-modal intercepts).
-function checkWebGL(): boolean {
+// Exported so callers (AvatarStage debug panel, tests) can read the same value.
+export function checkWebGL(): boolean {
   if (typeof document === "undefined") return false;
   try {
     const c = document.createElement("canvas");
@@ -45,13 +46,16 @@ function WebGLFallback({ className }: { className?: string }) {
 
 // ── WebGL Error Boundary (second line of defence) ─────────────────────────────
 interface EBState { hasError: boolean }
-class WebGLErrorBoundary extends Component<{ children: ReactNode; className?: string }, EBState> {
-  constructor(props: { children: ReactNode; className?: string }) {
+class WebGLErrorBoundary extends Component<
+  { children: ReactNode; className?: string; onError?: (msg: string) => void },
+  EBState
+> {
+  constructor(props: { children: ReactNode; className?: string; onError?: (msg: string) => void }) {
     super(props);
     this.state = { hasError: false };
   }
   static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch() { /* swallow */ }
+  componentDidCatch(error: Error) { this.props.onError?.(error.message); }
   render() {
     if (this.state.hasError) {
       return <WebGLFallback className={this.props.className} />;
@@ -83,6 +87,7 @@ export interface AvatarCanvasProps {
   avatarUrl?: string | null;
   showFps?: boolean;
   onStats?: (stats: RendererStats) => void;
+  onError?: (msg: string) => void;
   className?: string;
   animationState?: AnimationState;
   mouthOpenAmount?: number;
@@ -752,7 +757,7 @@ function ProceduralUpdater({
 
 export function AvatarCanvas({
   avatarKey, accentColor, scale, positionY, lightingPreset,
-  avatarEnabled, avatarUrl, showFps = true, onStats, className,
+  avatarEnabled, avatarUrl, showFps = true, onStats, onError, className,
   animationState = "idle", mouthOpenAmount = 0, expressionIntensity = 0.8,
   backgroundGradient,
 }: AvatarCanvasProps) {
@@ -831,7 +836,7 @@ export function AvatarCanvas({
     <div className={cn("relative rounded-2xl overflow-hidden", className)}>
       <div className="absolute inset-0 rounded-2xl" style={{ background: bgStyle }} />
 
-      <WebGLErrorBoundary className="absolute inset-0">
+      <WebGLErrorBoundary className="absolute inset-0" onError={onError}>
         <Canvas
           gl={{ antialias: quality !== "low", alpha: true, powerPreference: quality === "low" ? "low-power" : "high-performance" }}
           shadows={quality === "high"}

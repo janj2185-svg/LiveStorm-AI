@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Settings2, Bot } from "lucide-react";
+import { Mic, Settings2, Bot, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AvatarCanvas } from "./AvatarCanvas";
+import { AvatarCanvas, checkWebGL } from "./AvatarCanvas";
 import type { AnimationState } from "./avatarAnimationMachine";
 import { ANIMATION_EMOJI, ANIMATION_LABELS } from "./avatarAnimationMachine";
 
@@ -20,6 +21,7 @@ export interface AvatarStageProps {
   isSpeaking?: boolean;
   personaName?: string;
   onOpenSettings?: () => void;
+  showDebug?: boolean;
   className?: string;
 }
 
@@ -58,6 +60,80 @@ function VoiceActivityBars({ active }: { active: boolean }) {
   );
 }
 
+// ── Renderer type label ────────────────────────────────────────────────────────
+function detectRendererLabel(avatarUrl?: string | null): string {
+  if (!avatarUrl) return "built-in VRM";
+  if (avatarUrl.startsWith("https://models.readyplayer.me") || avatarUrl.startsWith("https://api.readyplayer.me")) return "Ready Player Me";
+  if (avatarUrl.includes("avaturn.me") || avatarUrl.includes("avaturn.dev")) return "Avaturn";
+  if (avatarUrl.startsWith("data:model/gltf") || avatarUrl.startsWith("data:application/octet-stream")) return "GLB (data URI)";
+  if (avatarUrl.endsWith(".glb")) return "GLB file";
+  if (avatarUrl.endsWith(".vrm")) return "VRM (custom)";
+  if (avatarUrl.startsWith("blob:")) return "VRM/GLB (blob)";
+  return "unknown";
+}
+
+// ── Debug panel ───────────────────────────────────────────────────────────────
+interface DebugPanelProps {
+  avatarUrl?: string | null;
+  isSpeaking: boolean;
+  animationState: AnimationState;
+  mouthOpenAmount: number;
+  lastError: string | null;
+}
+
+function AvatarDebugPanel({
+  avatarUrl, isSpeaking, animationState, mouthOpenAmount, lastError,
+}: DebugPanelProps) {
+  const [collapsed, setCollapsed] = useState(false);
+  const webGL = checkWebGL();
+  const renderer = detectRendererLabel(avatarUrl);
+  const shortUrl = avatarUrl
+    ? (avatarUrl.length > 55 ? avatarUrl.slice(0, 52) + "…" : avatarUrl)
+    : "none";
+
+  return (
+    <div className="absolute top-2 left-2 right-2 z-40 pointer-events-auto">
+      <div className="bg-black/85 border border-cyan-500/40 rounded-lg overflow-hidden backdrop-blur-md text-[10px] font-mono shadow-xl">
+        {/* Header */}
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+        >
+          <span className="font-bold tracking-wider uppercase">Avatar Debug</span>
+          {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+        </button>
+
+        {!collapsed && (
+          <div className="px-2.5 pb-2 space-y-[3px] border-t border-cyan-500/20">
+            <Row label="WebGL" value={webGL ? "✅ SUPPORTED" : "❌ NOT AVAILABLE"} valueClass={webGL ? "text-green-400" : "text-red-400"} />
+            <Row label="Renderer" value={renderer} valueClass="text-violet-300" />
+            <Row label="Avatar URL" value={shortUrl} valueClass={avatarUrl ? "text-cyan-300" : "text-muted-foreground"} />
+            <Row label="Anim State" value={`${ANIMATION_EMOJI[animationState] ?? "?"} ${animationState}`} valueClass="text-yellow-300" />
+            <Row label="Mouth Open" value={mouthOpenAmount.toFixed(3)} valueClass="text-orange-300" />
+            <Row label="Voice Active" value={isSpeaking ? "🎙 YES" : "no"} valueClass={isSpeaking ? "text-green-400" : "text-muted-foreground"} />
+            <Row
+              label="Last Error"
+              value={lastError ?? "—"}
+              valueClass={lastError ? "text-red-400" : "text-muted-foreground/40"}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value, valueClass }: { label: string; value: string; valueClass: string }) {
+  return (
+    <div className="flex items-start gap-1.5 leading-relaxed">
+      <span className="text-muted-foreground/60 flex-shrink-0 w-[72px]">{label}:</span>
+      <span className={cn("break-all", valueClass)}>{value}</span>
+    </div>
+  );
+}
+
+// ── Main export ───────────────────────────────────────────────────────────────
+
 export function AvatarStage({
   avatarKey,
   accentColor,
@@ -73,8 +149,11 @@ export function AvatarStage({
   isSpeaking = false,
   personaName,
   onOpenSettings,
+  showDebug = false,
   className,
 }: AvatarStageProps) {
+  const [lastError, setLastError] = useState<string | null>(null);
+
   const isReacting =
     animationState !== "idle" &&
     animationState !== "talking" &&
@@ -119,6 +198,7 @@ export function AvatarStage({
         expressionIntensity={expressionIntensity}
         backgroundGradient={backgroundGradient}
         showFps={false}
+        onError={(msg) => setLastError(msg)}
         className="w-full h-full rounded-2xl"
       />
 
@@ -155,9 +235,9 @@ export function AvatarStage({
         )}
       </div>
 
-      {/* Speaking badge (top-left) */}
+      {/* Speaking badge (top-left) — only when debug is off, else debug takes that space */}
       <AnimatePresence>
-        {isSpeaking && (
+        {isSpeaking && !showDebug && (
           <motion.div
             initial={{ opacity: 0, x: -6, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -199,6 +279,17 @@ export function AvatarStage({
             Set up your AI avatar
           </button>
         </div>
+      )}
+
+      {/* Debug panel (toggled via ?avatarDebug=1 URL param) */}
+      {showDebug && (
+        <AvatarDebugPanel
+          avatarUrl={avatarUrl}
+          isSpeaking={isSpeaking}
+          animationState={animationState}
+          mouthOpenAmount={mouthOpenAmount}
+          lastError={lastError}
+        />
       )}
     </div>
   );

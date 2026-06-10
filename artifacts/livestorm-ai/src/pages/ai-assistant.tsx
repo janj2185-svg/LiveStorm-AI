@@ -454,6 +454,9 @@ export function AiAssistant() {
     return (p === "avatar" || p === "chat" || p === "moderation") ? p : "live";
   });
 
+  // ── Debug mode — append ?avatarDebug=1 to URL to reveal the debug panel ──────
+  const showAvatarDebug = new URLSearchParams(window.location.search).get("avatarDebug") === "1";
+
   // ── Avatar config ─────────────────────────────────────────────────────────────
   const { data: avatarConfig, isLoading: avatarLoading } = useGetAvatarConfig();
   const { mutate: saveAvatar, isPending: avatarSaving } = useUpdateAvatarConfig({
@@ -831,6 +834,7 @@ export function AiAssistant() {
               isSpeaking={isSpeaking}
               personaName={personaName}
               onOpenSettings={() => setActiveTab("avatar")}
+              showDebug={showAvatarDebug}
               className="w-full h-[260px] lg:h-full lg:min-h-[420px]"
             />
           </div>
