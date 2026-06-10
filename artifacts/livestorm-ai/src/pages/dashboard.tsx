@@ -42,6 +42,11 @@ const EVENT_CONFIG: Record<string, { bg: string; text: string; border: string; i
   xp_awarded:           { bg: "bg-yellow-500/10",  text: "text-yellow-400",  border: "border-yellow-500/20", icon: Zap,           label: "XP" },
   achievement_unlocked: { bg: "bg-orange-500/10",  text: "text-orange-400",  border: "border-orange-500/20", icon: TrophyIcon,    label: "Achievement" },
   level_up:             { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20",icon: TrendingUp,    label: "Level Up" },
+  lucky_drop:           { bg: "bg-yellow-500/10",  text: "text-yellow-300",  border: "border-yellow-500/20", icon: Gift,          label: "Lucky Drop" },
+  boss_reward:          { bg: "bg-red-500/10",     text: "text-red-400",     border: "border-red-500/20",    icon: TrophyIcon,    label: "Boss Reward" },
+  quiz_win:             { bg: "bg-sky-500/10",     text: "text-sky-400",     border: "border-sky-500/20",    icon: Zap,           label: "Quiz Win" },
+  treasure_hunt_win:    { bg: "bg-amber-600/10",   text: "text-amber-300",   border: "border-amber-600/20",  icon: TrophyIcon,    label: "Treasure" },
+  kingdom_upgrade:      { bg: "bg-violet-500/10",  text: "text-violet-400",  border: "border-violet-500/20", icon: TrendingUp,    label: "Kingdom" },
 };
 
 function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
@@ -58,6 +63,11 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
   if (event.type === "xp_awarded")          desc = `+${event.data.xp} XP · Lv.${event.data.level}`;
   if (event.type === "achievement_unlocked") desc = `unlocked: ${event.data.achievementName || "Achievement"}`;
   if (event.type === "level_up")            desc = `reached Level ${event.data.newLevel}!`;
+  if (event.type === "lucky_drop")          desc = `won a lucky drop: ${event.data.prize || "prize"}`;
+  if (event.type === "boss_reward")         desc = `earned boss reward: +${event.data.xp || 0} XP`;
+  if (event.type === "quiz_win")            desc = `answered correctly and won!`;
+  if (event.type === "treasure_hunt_win")   desc = `found the treasure!`;
+  if (event.type === "kingdom_upgrade")     desc = `upgraded ${event.data.building || "building"} to Lv.${event.data.level || 1}`;
   if (event.type === "viewerCount")         return null;
 
   return (

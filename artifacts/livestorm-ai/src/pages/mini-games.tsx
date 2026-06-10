@@ -64,9 +64,8 @@ function SpinWheelSvg({ spinning, winner }: { spinning: boolean; winner?: string
       <svg
         width="330"
         height="330"
-        className={spinning ? "animate-spin" : ""}
         style={{
-          animationDuration: spinning ? "600ms" : "0ms",
+          animation: spinning ? "spin 600ms linear infinite" : "none",
           filter: "drop-shadow(0 0 20px rgba(124,58,237,0.3))",
         }}
       >

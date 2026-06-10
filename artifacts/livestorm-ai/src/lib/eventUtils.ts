@@ -33,6 +33,11 @@ export const EVENT_DISPLAY: Record<string, EventDisplayConfig> = {
   xp_awarded:           { bg: "bg-yellow-500/10",  text: "text-yellow-400",  border: "border-yellow-500/20", label: "XP",          iconName: "Zap"           },
   achievement_unlocked: { bg: "bg-orange-500/10",  text: "text-orange-400",  border: "border-orange-500/20", label: "Achievement", iconName: "Trophy"        },
   level_up:             { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20",label: "Level Up",    iconName: "TrendingUp"    },
+  lucky_drop:           { bg: "bg-yellow-500/10",  text: "text-yellow-300",  border: "border-yellow-500/20", label: "Lucky Drop",  iconName: "Gift"          },
+  boss_reward:          { bg: "bg-red-500/10",     text: "text-red-400",     border: "border-red-500/20",    label: "Boss Reward", iconName: "Trophy"        },
+  quiz_win:             { bg: "bg-sky-500/10",     text: "text-sky-400",     border: "border-sky-500/20",    label: "Quiz Win",    iconName: "Zap"           },
+  treasure_hunt_win:    { bg: "bg-amber-600/10",   text: "text-amber-300",   border: "border-amber-600/20",  label: "Treasure",    iconName: "Trophy"        },
+  kingdom_upgrade:      { bg: "bg-violet-500/10",  text: "text-violet-400",  border: "border-violet-500/20", label: "Kingdom",     iconName: "TrendingUp"    },
 };
 
 export function getEventDisplay(eventType: string): EventDisplayConfig {
@@ -63,6 +68,16 @@ export function formatEventDesc(event: LiveEvent): string | null {
       return `unlocked: ${event.data.achievementName || "Achievement"}`;
     case "level_up":
       return `reached Level ${event.data.newLevel}!`;
+    case "lucky_drop":
+      return `won a lucky drop: ${event.data.prize || "prize"}`;
+    case "boss_reward":
+      return `earned boss reward: +${event.data.xp || 0} XP`;
+    case "quiz_win":
+      return "answered correctly and won!";
+    case "treasure_hunt_win":
+      return "found the treasure!";
+    case "kingdom_upgrade":
+      return `upgraded ${event.data.building || "building"} to Lv.${event.data.level || 1}`;
     case "viewerCount":
       return null;
     default:

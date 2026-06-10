@@ -33,7 +33,7 @@ function WebGLFallback({ className }: { className?: string }) {
           <div className="w-16 h-16 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
             <Bot className="h-8 w-8 text-violet-400/60" />
           </div>
-          <div className="absolute inset-0 rounded-full animate-ping bg-violet-500/10" style={{ animationDuration: "2.5s" }} />
+          <div className="absolute inset-0 rounded-full bg-violet-500/10" style={{ animation: "ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite" }} />
         </div>
         <div>
           <p className="text-sm font-semibold text-white/70">3D Avatar</p>

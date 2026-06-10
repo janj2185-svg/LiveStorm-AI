@@ -6,7 +6,8 @@ export type ConnectionMode = "real" | "demo" | "error";
 
 export interface LiveEvent {
   type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "ai_announcement"
-      | "xp_awarded" | "achievement_unlocked" | "level_up";
+      | "xp_awarded" | "achievement_unlocked" | "level_up"
+      | "lucky_drop" | "boss_reward" | "quiz_win" | "treasure_hunt_win" | "kingdom_upgrade";
   sessionId: number;
   username?: string;
   avatarUrl?: string;

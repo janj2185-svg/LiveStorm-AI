@@ -93,6 +93,10 @@ export class TikToolsClient extends EventEmitter {
   private rateLimitBackoff = 60_000;
   /** Cached JWT token to avoid fetching a new one on every reconnect. */
   private cachedJwt: { token: string; expiresAt: number } | null = null;
+  /** roomId received from the roomInfo WS event — used to reconnect by roomId if available. */
+  private cachedRoomId: string | null = null;
+  /** Count of MAPPED viewer events (chat/gift/like/member/follow/share) in the current connection. */
+  private mappedEventCount = 0;
 
   constructor(username: string, options: TikToolsOptions = {}) {
     super();
@@ -260,13 +264,21 @@ export class TikToolsClient extends EventEmitter {
 
     // ── 2. Connect WebSocket ──────────────────────────────────────────────────
     this.rawEventCount = 0;
-    const wsUrl = `${WS_BASE}?uniqueId=${encodeURIComponent(this.username)}&jwtKey=${encodeURIComponent(token)}`;
-    // Q6 — log exact WS URL with jwtKey masked (first 12 chars + "...")
+    this.mappedEventCount = 0;
+    // tik.tools requires uniqueId — roomId alone returns 4400 "Missing uniqueId parameter".
+    // We also pass roomId as an optional hint so tik.tools can bypass its own username lookup
+    // and connect directly to the known room (avoids REST 404 inconsistency).
+    const wsUrl = this.cachedRoomId
+      ? `${WS_BASE}?uniqueId=${encodeURIComponent(this.username)}&roomId=${encodeURIComponent(this.cachedRoomId)}&jwtKey=${encodeURIComponent(token)}`
+      : `${WS_BASE}?uniqueId=${encodeURIComponent(this.username)}&jwtKey=${encodeURIComponent(token)}`;
+    // Log exact WS URL with jwtKey masked (first 12 chars + "...")
     const maskedUrl = wsUrl.replace(
       /jwtKey=[^&]*/,
       `jwtKey=${token.slice(0, 12)}...[masked]`,
     );
-    console.log(`[TikTools:ws-url] @${this.username} connecting to: ${maskedUrl}`);
+    console.log(
+      `[TikTools:ws-url] @${this.username} connecting${this.cachedRoomId ? ` with roomId hint ${this.cachedRoomId}` : ""}: ${maskedUrl}`,
+    );
     let ws: WebSocket;
     try {
       ws = new WebSocket(wsUrl);
@@ -280,6 +292,10 @@ export class TikToolsClient extends EventEmitter {
 
     let connectedAt: number | null = null;
     let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+    // Watchdog: if connected for 3 min but zero MAPPED events (chat/gift/like/member) arrive,
+    // the connection is alive but delivering no viewer data (only pings + system init events).
+    // Force a reconnect so tik.tools re-establishes its event pipeline.
+    let mappedEventsTimer: ReturnType<typeof setTimeout> | null = null;
     // True once ANY message arrives (including roomInfo). roomInfo proves the room is live —
     // a subsequent quick WS close is a server-side rotation, NOT a "not live" signal.
     let hadAnyMessage = false;
@@ -303,6 +319,21 @@ export class TikToolsClient extends EventEmitter {
           ws.close(1000, "silence_timeout");
         }
       }, 60_000);
+
+      // Mapped-events watchdog: if we receive packets (pings, system events) but zero
+      // MAPPED viewer events (chat/gift/like/member/follow/share) for 3 minutes, the
+      // tik.tools pipeline is connected but not delivering live data. Force reconnect
+      // so tik.tools re-establishes its event subscription for this room.
+      mappedEventsTimer = setTimeout(() => {
+        if (this.mappedEventCount === 0 && !this.stopped) {
+          console.warn(
+            `[TikTools:no-events] @${this.username} — 3 min connected, 0 viewer events received. ` +
+            `rawEventCount=${this.rawEventCount} cachedRoomId=${this.cachedRoomId ?? "none"} — ` +
+            `forcing reconnect to re-establish tik.tools event pipeline.`,
+          );
+          ws.close(1000, "no_mapped_events");
+        }
+      }, 3 * 60_000);
     });
 
     ws.on("message", (data: Buffer | string) => {
@@ -355,6 +386,14 @@ export class TikToolsClient extends EventEmitter {
         }
       }
 
+      // Track mapped viewer events so the watchdog can detect a stale pipeline
+      if (mapped && msg.event !== "roomInfo" && msg.event !== "ping" && msg.event !== "roomUserSeq") {
+        this.mappedEventCount++;
+        if (this.mappedEventCount === 1) {
+          console.log(`[TikTools:first-viewer-event] @${this.username} — FIRST viewer event: ${msg.event}`);
+        }
+      }
+
       this._handleEvent(msg);
     });
 
@@ -362,6 +401,10 @@ export class TikToolsClient extends EventEmitter {
       if (silenceTimer) {
         clearTimeout(silenceTimer);
         silenceTimer = null;
+      }
+      if (mappedEventsTimer) {
+        clearTimeout(mappedEventsTimer);
+        mappedEventsTimer = null;
       }
       this.ws = null;
       this.emit("disconnected", code);
@@ -430,6 +473,14 @@ export class TikToolsClient extends EventEmitter {
           );
           this._scheduleRetry(this.rateLimitBackoff, settle);
         }
+      } else if (reason === "no_mapped_events") {
+        // Watchdog triggered: 3 min connected but zero viewer events. Reconnect.
+        // Use a shorter delay so we re-subscribe quickly while the stream is still live.
+        console.warn(
+          `[TikTools:no-events] WS closed after 3 min with no viewer events @${this.username} ` +
+          `rawEventCount=${this.rawEventCount} — reconnecting in 15s`,
+        );
+        this._scheduleRetry(15_000, settle);
       } else if (reason === "silence_timeout") {
         // Our own watchdog fired → user is not streaming
         this.rateLimitBackoff = 60_000; // reset rate-limit backoff on normal flow
@@ -585,8 +636,15 @@ export class TikToolsClient extends EventEmitter {
         if (count > 0) {
           this.emit("viewerCount", { count } satisfies TikToolsViewerCountEvent);
         }
+        // Cache the roomId from the WS-level roomInfo event. On the next reconnect
+        // we'll connect via ?roomId=... which bypasses tik.tools' REST username lookup.
+        const wsRoomId: string | undefined = roomMsg.roomId ?? roomMsg.room_id;
+        if (wsRoomId && wsRoomId !== "unknown") {
+          this.cachedRoomId = wsRoomId;
+        }
         console.log(
-          `[TikTools] roomInfo @${this.username} roomId=${roomMsg.roomId ?? "?"} viewerCount=${count}`,
+          `[TikTools] roomInfo @${this.username} roomId=${roomMsg.roomId ?? "?"} viewerCount=${count}` +
+          (wsRoomId ? ` (cached for roomId-based reconnect)` : ""),
         );
         break;
       }
@@ -612,16 +670,24 @@ export class TikToolsClient extends EventEmitter {
   }
 
   /**
-   * Pre-flight room_info check — queries tik.tools REST API before opening the
-   * WebSocket to log the exact roomId and detect "not found" errors early.
+   * Pre-flight room check — queries tik.tools POST /webcast/room_id before opening
+   * the WebSocket to log room state (alive, cached) and cache the roomId for reconnects.
+   *
+   * NOTE: GET /webcast/room_info (the old endpoint) always returns 404 for active rooms.
+   * The correct endpoint is POST /webcast/room_id with { unique_id: username }.
    *
    * Never throws and never blocks the WS attempt — fail open on any error.
    */
   private async _fetchRoomInfo(apiKey: string): Promise<void> {
-    const url = `${API_BASE}/webcast/room_info?uniqueId=${encodeURIComponent(this.username)}&apiKey=${encodeURIComponent(apiKey)}`;
-    console.log(`[TikTools:room_info] @${this.username} → GET /webcast/room_info uniqueId="${this.username}"`);
+    const url = `${API_BASE}/webcast/room_id?apiKey=${encodeURIComponent(apiKey)}`;
+    console.log(`[TikTools:room_info] @${this.username} → POST /webcast/room_id unique_id="${this.username}"`);
     try {
-      const resp = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unique_id: this.username }),
+        signal: AbortSignal.timeout(8_000),
+      });
       const rawText = await resp.text();
       let j: any;
       try { j = JSON.parse(rawText); } catch { j = null; }
@@ -631,33 +697,39 @@ export class TikToolsClient extends EventEmitter {
         `[TikTools:room_info] @${this.username} → HTTP ${resp.status} body=${rawText.slice(0, 500)}`,
       );
 
-      if (!j || j?.status_code === -1 || j?.error) {
+      if (!j || j?.status_code !== 0 || !j?.data) {
         // tik.tools cannot resolve this creator to a room at this moment.
-        // Meaning: creator is not live OR username not found OR plan restriction.
-        // The WS will confirm with code=4404 if this is persistent.
         console.warn(
           `[TikTools:room_info] @${this.username} → NOT FOUND ` +
-          `(HTTP ${resp.status} status_code=${j?.status_code ?? "?"} error="${j?.error ?? "n/a"}") — ` +
-          `WS will likely close 4404 if creator is not live`,
+          `(HTTP ${resp.status} status_code=${j?.status_code ?? "?"} error="${j?.error ?? j?.message ?? "n/a"}") — ` +
+          `WS will still attempt connection (fail open)`,
         );
         return;
       }
 
-      // tik.tools found an active room — log every field
-      const roomId: string = String(
-        j?.roomId ?? j?.room_id ?? j?.id ?? j?.data?.roomId ?? "unknown",
-      );
-      const isLive: boolean = Boolean(
-        j?.isLive ?? j?.is_live ?? (j?.status === "live" || j?.data?.isLive || false),
-      );
-      const viewerCount: number = Number(
-        j?.viewerCount ?? j?.viewer_count ?? j?.data?.viewerCount ?? 0,
-      );
+      const data = j.data;
+      const roomId: string = String(data.room_id ?? data.roomId ?? "unknown");
+      const alive: boolean = Boolean(data.alive ?? false);
+      const cached: boolean = Boolean(data.cached ?? false);
+
       console.log(
         `[TikTools:room_info] @${this.username} → FOUND ` +
-        `roomId=${roomId} isLive=${isLive} viewerCount=${viewerCount} ` +
-        `rawKeys=[${Object.keys(j).join(",")}]`,
+        `roomId=${roomId} alive=${alive} cached=${cached}`,
       );
+
+      // Cache roomId for roomId-based reconnects (bypasses username lookup on retry)
+      if (roomId && roomId !== "unknown" && !this.cachedRoomId) {
+        this.cachedRoomId = roomId;
+        console.log(`[TikTools:room_info] @${this.username} → cached roomId=${roomId} for reconnect`);
+      }
+
+      if (!alive) {
+        console.warn(
+          `[TikTools:room_info] @${this.username} → alive=false — ` +
+          `tik.tools pipeline not yet active for this room. ` +
+          `WS will connect; viewer events may flow once the pipeline activates.`,
+        );
+      }
     } catch (err: any) {
       // Network error or timeout — non-fatal
       console.warn(
