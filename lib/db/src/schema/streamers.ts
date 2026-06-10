@@ -13,6 +13,7 @@ export const streamersTable = pgTable("streamers", {
   totalLikesReceived: integer("total_likes_received").notNull().default(0),
   totalFollowersGained: integer("total_followers_gained").notNull().default(0),
   totalComments: integer("total_comments").notNull().default(0),
+  obsToken: text("obs_token"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

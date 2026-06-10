@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,19 +10,24 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Shield, CreditCard, Crown, Zap, Sparkles, Globe, Check, Settings as SettingsIcon, KeyRound } from "lucide-react";
+import { User, Shield, CreditCard, Crown, Zap, Sparkles, Globe, Check, Settings as SettingsIcon, KeyRound, Monitor, Copy, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LANGUAGES, type Language } from "@/lib/i18n";
 import { PageHero, GradientText } from "@/components/ui/premium";
+import { useAuth } from "@clerk/react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-async function apiFetch(path: string, options?: RequestInit) {
+async function apiFetch(path: string, options?: RequestInit, token?: string) {
   const resp = await fetch(`${BASE}/api${path}`, {
     ...options,
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options?.headers ?? {}),
+    },
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -37,7 +42,7 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-const PLAN_META: Record<string, { label: string; icon: any; color: string; desc: string }> = {
+const PLAN_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string; desc: string }> = {
   free:    { label: "Free",    icon: Zap,      color: "text-slate-400", desc: "Basic streaming and gamification features." },
   pro:     { label: "Pro",     icon: Sparkles, color: "text-purple-400", desc: "AI Voice, full XP, achievements, fan profiles." },
   creator: { label: "Creator", icon: Crown,    color: "text-amber-400", desc: "AI Translator, analytics, multiple TikTok accounts." },
@@ -69,7 +74,232 @@ const AI_REPLY_LANGUAGES = [
   { value: "th",    label: "ภาษาไทย",        flag: "🇹🇭" },
 ];
 
-type SettingsTab = "profile" | "billing" | "language";
+type SettingsTab = "profile" | "billing" | "language" | "obs";
+
+interface ObsOverlay {
+  key: string;
+  name: string;
+  description: string;
+  width: number;
+  height: number;
+  url: string;
+}
+
+const OVERLAY_ICONS: Record<string, string> = {
+  alerts: "🔔",
+  goals: "🎯",
+  "boss-battle": "⚔️",
+  leaderboard: "🏆",
+  "activity-feed": "📜",
+};
+
+function ObsTab({ authToken }: { authToken: string | null }) {
+  const { toast } = useToast();
+  const [overlays, setOverlays] = useState<ObsOverlay[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [confirmRegen, setConfirmRegen] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const loadUrls = useCallback(async () => {
+    if (!authToken) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch("/obs/urls", undefined, authToken);
+      setOverlays(data.overlays ?? []);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [authToken]);
+
+  useEffect(() => {
+    loadUrls();
+  }, [loadUrls]);
+
+  const handleCopy = async (url: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {
+      toast({ title: "Copy failed", description: "Please copy the URL manually.", variant: "destructive" });
+    }
+  };
+
+  const handleRegenerate = async () => {
+    if (!authToken) return;
+    setRegenerating(true);
+    try {
+      await apiFetch("/obs/token", { method: "POST" }, authToken);
+      await loadUrls();
+      setConfirmRegen(false);
+      toast({ title: "Token regenerated", description: "All overlay URLs have been updated. Update your OBS browser sources." });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="h-20 rounded-xl bg-white/[0.04] animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl bg-white/[0.04] border border-white/8 p-6 text-center space-y-3">
+        <AlertTriangle className="h-8 w-8 text-amber-400 mx-auto" />
+        <p className="text-sm text-muted-foreground">{error}</p>
+        <Button variant="outline" size="sm" onClick={loadUrls} className="border-white/10">
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Setup guide */}
+      <div className="rounded-2xl bg-blue-500/5 border border-blue-500/20 p-5 space-y-2">
+        <div className="flex items-center gap-2 mb-3">
+          <Monitor className="h-4 w-4 text-blue-400" />
+          <p className="text-sm font-semibold text-blue-300">How to add overlays to OBS</p>
+        </div>
+        <ol className="space-y-1.5 text-sm text-muted-foreground list-decimal list-inside">
+          <li>In OBS Studio, click <span className="text-foreground font-medium">+</span> in the Sources panel and choose <span className="text-foreground font-medium">Browser</span></li>
+          <li>Paste the URL below into the URL field and set the width &amp; height shown</li>
+          <li>Check <span className="text-foreground font-medium">Shutdown source when not visible</span> for best performance</li>
+          <li>Position the browser source over your stream scene</li>
+        </ol>
+      </div>
+
+      {/* Overlay list */}
+      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/15">
+            <Monitor className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-white text-sm">Browser Source URLs</p>
+            <p className="text-xs text-muted-foreground">Copy any URL into OBS as a Browser Source</p>
+          </div>
+        </div>
+        <div className="divide-y divide-white/5">
+          {overlays.map((overlay) => (
+            <div key={overlay.key} className="px-6 py-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl mt-0.5 select-none">{OVERLAY_ICONS[overlay.key] ?? "📺"}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="font-semibold text-white text-sm">{overlay.name}</p>
+                    <span className="text-xs text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full">
+                      {overlay.width} × {overlay.height}px
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{overlay.description}</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs bg-black/30 border border-white/8 rounded-lg px-3 py-2 text-slate-300 truncate font-mono">
+                      {overlay.url}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 border-white/10 gap-1.5 h-8 px-3"
+                      onClick={() => handleCopy(overlay.url, overlay.key)}
+                    >
+                      {copiedKey === overlay.key ? (
+                        <>
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" />
+                          <span className="text-xs">Copy</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Token management */}
+      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-red-500/10">
+            <KeyRound className="w-4 h-4 text-red-400" />
+          </div>
+          <div>
+            <p className="font-semibold text-white text-sm">Security</p>
+            <p className="text-xs text-muted-foreground">Regenerate your token if your overlay URLs were leaked</p>
+          </div>
+        </div>
+        <div className="p-6">
+          {!confirmRegen ? (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Regenerating your token immediately invalidates all existing overlay URLs. You will need to update every Browser Source in OBS with the new URLs.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 shrink-0 ml-4"
+                onClick={() => setConfirmRegen(true)}
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                Regenerate Token
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+                <p className="text-sm text-red-300">All current OBS URLs will stop working. Are you sure?</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setConfirmRegen(false)}
+                  disabled={regenerating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                >
+                  {regenerating ? (
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  {regenerating ? "Regenerating…" : "Yes, regenerate"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Settings() {
   const { data: user, isLoading } = useGetMyProfile();
@@ -78,6 +308,7 @@ export function Settings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { language, setLanguage, t } = useLanguage();
+  const { getToken } = useAuth();
   const [tab, setTab] = useState<SettingsTab>("profile");
   const [billingLoading, setBillingLoading] = useState<string | null>(null);
   const [aiReplyLang, setAiReplyLang] = useState("auto");
@@ -85,11 +316,17 @@ export function Settings() {
   const [persona, setPersona] = useState<any>(null);
   const [tiktokEditing, setTiktokEditing] = useState(false);
   const [tiktokInput, setTiktokInput] = useState("");
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    getToken().then((t) => setAuthToken(t)).catch(() => {});
+  }, [getToken]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("tab") === "billing") setTab("billing");
     if (params.get("tab") === "language") setTab("language");
+    if (params.get("tab") === "obs") setTab("obs");
     if (params.get("success") === "1") {
       toast({ title: "Subscription activated!", description: "Your plan has been upgraded." });
       queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
@@ -98,12 +335,12 @@ export function Settings() {
 
   useEffect(() => {
     if (tab === "language") {
-      apiFetch("/ai/config").then((cfg) => {
+      apiFetch("/ai/config", undefined, authToken ?? undefined).then((cfg) => {
         setPersona(cfg);
         setAiReplyLang(cfg.replyLanguage ?? "auto");
       }).catch(() => {});
     }
-  }, [tab]);
+  }, [tab, authToken]);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -130,7 +367,7 @@ export function Settings() {
   const handleManageBilling = async () => {
     setBillingLoading("portal");
     try {
-      const { url } = await apiFetch("/billing/portal", { method: "POST" });
+      const { url } = await apiFetch("/billing/portal", { method: "POST" }, authToken ?? undefined);
       if (url) window.location.href = url;
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -143,8 +380,8 @@ export function Settings() {
     setLangSaving(true);
     try {
       await Promise.all([
-        apiFetch("/users/me", { method: "PATCH", body: JSON.stringify({ uiLanguage: language }) }),
-        persona && apiFetch("/ai/config", { method: "PUT", body: JSON.stringify({ replyLanguage: aiReplyLang }) }),
+        apiFetch("/users/me", { method: "PATCH", body: JSON.stringify({ uiLanguage: language }) }, authToken ?? undefined),
+        persona && apiFetch("/ai/config", { method: "PUT", body: JSON.stringify({ replyLanguage: aiReplyLang }) }, authToken ?? undefined),
       ]);
       toast({ title: t("success"), description: t("lang_saved") });
       queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
@@ -181,6 +418,7 @@ export function Settings() {
     { id: "profile",  label: t("settings_tab_profile") },
     { id: "language", label: t("settings_tab_language"), icon: <Globe className="h-3.5 w-3.5" /> },
     { id: "billing",  label: t("settings_tab_billing"),  icon: <CreditCard className="h-3.5 w-3.5" /> },
+    { id: "obs",      label: "OBS Overlays",             icon: <Monitor className="h-3.5 w-3.5" /> },
   ];
 
   return (
@@ -216,7 +454,7 @@ export function Settings() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/8 w-fit">
+      <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/8 w-fit">
         {TABS.map((tb) => (
           <button
             key={tb.id}
@@ -581,6 +819,9 @@ export function Settings() {
           )}
         </div>
       )}
+
+      {/* OBS Overlays Tab */}
+      {tab === "obs" && <ObsTab authToken={authToken} />}
     </div>
   );
 }

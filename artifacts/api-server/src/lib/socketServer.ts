@@ -13,7 +13,6 @@ import { eq, sql } from "drizzle-orm";
 import { processAutomations } from "./automationEngine";
 import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
-import { verifyObsToken } from "../routes/obs";
 import { moderateComment, generateCommentReply, generateAnnouncement, fastSpamCheck } from "./aiService";
 import {
   emitAiGiftAnnouncement,
@@ -403,19 +402,22 @@ export function initSocketServer(httpServer: HttpServer) {
             return;
           }
 
-          const verified = verifyObsToken(tokenToVerify);
-          if (!verified || verified.streamerId !== Number(data?.streamerId)) {
+          const targetStreamerId = Number(data?.streamerId);
+          const streamer = await db.query.streamersTable.findFirst({
+            where: eq(streamersTable.id, targetStreamerId),
+          });
+          if (!streamer || !streamer.obsToken || streamer.obsToken !== tokenToVerify) {
             socket.emit("obs:error", { message: "Invalid or expired overlay token" });
             return;
           }
 
-          socket.data.obsStreamerId = verified.streamerId;
+          socket.data.obsStreamerId = targetStreamerId;
 
           if (data?.sessionId) {
             const session = await db.query.sessionsTable.findFirst({
               where: eq(sessionsTable.id, Number(data.sessionId)),
             });
-            if (session && session.streamerId === verified.streamerId && !session.endedAt) {
+            if (session && session.streamerId === targetStreamerId && !session.endedAt) {
               socket.join(`session:${session.id}`);
               socket.emit("obs:subscribed", { sessionId: session.id });
               return;
