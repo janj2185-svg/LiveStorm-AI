@@ -13,7 +13,12 @@ import {
   luckyDropsTable,
 } from "@workspace/db";
 import { eq, and, sql, count, desc, gte } from "drizzle-orm";
-import { emitAiLevelUpAnnouncement, emitAiBossDefeatedAnnouncement } from "./aiAnnouncer";
+import {
+  emitAiLevelUpAnnouncement,
+  emitAiBossDefeatedAnnouncement,
+  emitAiLuckyDropAnnouncement,
+  emitAiAchievementAnnouncement,
+} from "./aiAnnouncer";
 
 const XP_TABLE: Record<string, number> = {
   gift: 10,
@@ -214,6 +219,9 @@ async function processLuckyDrop(
       triggerType: isLargeGift ? "gift" : "auto",
       timestamp: Date.now(),
     });
+
+    // AI announcement for the lucky drop winner
+    void emitAiLuckyDropAnnouncement(io, roomId, streamerId, winner.viewerName, tier.name, tier.xp);
   } catch (err) {
     console.error("[LuckyDrop] Error:", err);
   }
@@ -276,6 +284,7 @@ export async function triggerManualLuckyDrop(
       timestamp: Date.now(),
     });
 
+    void emitAiLuckyDropAnnouncement(io, roomId, streamerId, winner.viewerName, tier.name, tier.xp);
     console.log(`[LuckyDrop:manual] streamerId=${streamerId} winner=${winner.viewerName} drop="${tier.name}"`);
     return { ok: true, winnerName: winner.viewerName, dropName: tier.name };
   } catch (err) {
@@ -396,6 +405,8 @@ async function checkAndUnlockAchievement(
         },
         timestamp: Date.now(),
       });
+      // AI announcement for the achievement unlock
+      void emitAiAchievementAnnouncement(io, roomId, streamerId, viewerName, achievement.name);
     }
   } catch (_err) {}
 }

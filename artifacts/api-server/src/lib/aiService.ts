@@ -74,6 +74,14 @@ export async function generateAnnouncement(event: {
     prompt = `The boss "${event.bossName}" has been defeated by the viewers! Announce it (max 60 chars).`;
   } else if (event.type === "quest_complete") {
     prompt = `A live quest was just completed! Hype the viewers (max 60 chars).`;
+  } else if (event.type === "share") {
+    prompt = `${event.viewerName} just shared the stream with their followers! Give them a hype shoutout (max 60 chars).`;
+  } else if (event.type === "like_milestone") {
+    prompt = `The stream just hit ${event.amount} total likes! React to this milestone with energy (max 60 chars).`;
+  } else if (event.type === "lucky_drop") {
+    prompt = `Lucky Drop! ${event.viewerName} just won "${event.bossName ?? "a prize"}"! Make it feel like a jackpot moment (max 60 chars).`;
+  } else if (event.type === "achievement") {
+    prompt = `${event.viewerName} just unlocked the "${event.bossName ?? "achievement"}" achievement live! Celebrate it (max 60 chars).`;
   } else {
     prompt = `Something exciting just happened on stream! Make a short hype announcement (max 60 chars).`;
   }

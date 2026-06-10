@@ -15,7 +15,11 @@ import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
 import { verifyObsToken } from "../routes/obs";
 import { moderateComment, generateCommentReply, generateAnnouncement, fastSpamCheck } from "./aiService";
-import { emitAiGiftAnnouncement } from "./aiAnnouncer";
+import {
+  emitAiGiftAnnouncement,
+  emitAiShareAnnouncement,
+  emitAiLikeMilestoneAnnouncement,
+} from "./aiAnnouncer";
 
 let io: SocketServer | null = null;
 
@@ -56,10 +60,26 @@ export async function getSocketDiagnostics(): Promise<Record<string, unknown>> {
 // ─── Anti-spam: per-session per-viewer last-reply timestamp ───────────────────
 const autoReplySpamMap = new Map<string, number>();
 
+// ─── Per-announcement-type cooldowns: "sessionId:eventType" → last-fired ts ──
+// Cooldowns: share=45s, follow=60s, gift=30s, like_milestone=120s
+const announcementCooldowns = new Map<string, number>();
+const ANNOUNCEMENT_COOLDOWN_MS: Record<string, number> = {
+  share: 45_000,
+  follow: 60_000,
+  gift: 30_000,
+  like_milestone: 120_000,
+};
+
+// ─── Per-session cumulative like totals (for milestone detection) ──────────
+const sessionLikeTotals = new Map<number, number>();
+
 setInterval(() => {
   const cutoff = Date.now() - 10 * 60 * 1000;
   for (const [key, ts] of autoReplySpamMap) {
     if (ts < cutoff) autoReplySpamMap.delete(key);
+  }
+  for (const [key, ts] of announcementCooldowns) {
+    if (ts < cutoff) announcementCooldowns.delete(key);
   }
 }, 5 * 60 * 1000);
 
@@ -125,17 +145,51 @@ async function processAiAnnouncements(
     };
     const replyLanguage = config.replyLanguage ?? "auto";
 
+    // Helper: returns true if cooldown has passed; records timestamp if it has
+    function checkAndSetCooldown(type: string): boolean {
+      const key = `${event.sessionId}:${type}`;
+      const cooldownMs = ANNOUNCEMENT_COOLDOWN_MS[type] ?? 30_000;
+      const last = announcementCooldowns.get(key) ?? 0;
+      if (Date.now() - last < cooldownMs) {
+        console.log(`[AI:cooldown] session=${event.sessionId} type=${type} skipped (${Date.now() - last}ms < ${cooldownMs}ms)`);
+        return false;
+      }
+      announcementCooldowns.set(key, Date.now());
+      return true;
+    }
+
     // ── Gift announcements ─────────────────────────────────────────────────────
     if (event.type === "gift" && config.announceGifts) {
       const coins = (event.data.coins as number) ?? 0;
-      if (coins >= config.announceGiftThreshold) {
+      if (coins >= config.announceGiftThreshold && checkAndSetCooldown("gift")) {
         console.log(`[AI:gift] session=${event.sessionId} viewer=${viewerName} coins=${coins} threshold=${config.announceGiftThreshold} → announcing`);
         void emitAiGiftAnnouncement(io, roomId, streamerId, viewerName, coins);
       }
     }
 
+    // ── Share announcements ────────────────────────────────────────────────────
+    if (event.type === "share" && config.announceGifts && checkAndSetCooldown("share")) {
+      console.log(`[AI:share] session=${event.sessionId} viewer=${viewerName} → announcing share`);
+      void emitAiShareAnnouncement(io, roomId, streamerId, viewerName);
+    }
+
+    // ── Like milestone announcements (every 100 cumulative likes) ─────────────
+    if (event.type === "like" && config.announceGifts) {
+      const likeCount = (event.data.likeCount as number) ?? 1;
+      const prev = sessionLikeTotals.get(event.sessionId) ?? 0;
+      const next = prev + likeCount;
+      sessionLikeTotals.set(event.sessionId, next);
+      const prevMilestone = Math.floor(prev / 100);
+      const nextMilestone = Math.floor(next / 100);
+      if (nextMilestone > prevMilestone && checkAndSetCooldown("like_milestone")) {
+        const milestone = nextMilestone * 100;
+        console.log(`[AI:like_milestone] session=${event.sessionId} totalLikes=${next} → announcing ${milestone} milestone`);
+        void emitAiLikeMilestoneAnnouncement(io, roomId, streamerId, milestone);
+      }
+    }
+
     // ── Follow announcements (uses announceLevelUp flag as "announce follows") ──
-    if (event.type === "follow" && config.announceLevelUp) {
+    if (event.type === "follow" && config.announceLevelUp && checkAndSetCooldown("follow")) {
       console.log(`[AI:follow] session=${event.sessionId} viewer=${viewerName} → generating follow announcement`);
       try {
         const reply = await generateCommentReply(

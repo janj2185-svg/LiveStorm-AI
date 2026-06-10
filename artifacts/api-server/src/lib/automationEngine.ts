@@ -99,27 +99,46 @@ export async function processAutomations(
         automation.conditionValue
       );
 
-      if (fired) {
-        await db
-          .update(automationsTable)
-          .set({
-            triggerCount: automation.triggerCount + 1,
-            updatedAt: new Date(),
-          })
-          .where(eq(automationsTable.id, automation.id));
+      if (!fired) continue;
 
-        const firedEvent: AutomationFiredEvent = {
-          automationId: automation.id,
-          automationName: automation.name,
-          actionType: automation.actionType,
-          actionPayload: automation.actionPayload,
-          triggerEvent: event,
-          timestamp: Date.now(),
-        };
+      await db
+        .update(automationsTable)
+        .set({
+          triggerCount: automation.triggerCount + 1,
+          updatedAt: new Date(),
+        })
+        .where(eq(automationsTable.id, automation.id));
 
+      const firedEvent: AutomationFiredEvent = {
+        automationId: automation.id,
+        automationName: automation.name,
+        actionType: automation.actionType,
+        actionPayload: automation.actionPayload,
+        triggerEvent: event,
+        timestamp: Date.now(),
+      };
+
+      console.log(
+        `[Automation:match] session=${event.sessionId} eventType=${event.type} ` +
+        `rule="${automation.name}"(id=${automation.id}) ` +
+        `trigger=${automation.eventType}/${automation.conditionOperator}/${automation.conditionValue || "*"} ` +
+        `→ action=${automation.actionType} payload="${(automation.actionPayload ?? "").slice(0, 60)}"`,
+      );
+
+      try {
         io.to(roomId).emit("automation:fired", firedEvent);
+        console.log(
+          `[Automation:exec] session=${event.sessionId} rule="${automation.name}"(id=${automation.id}) ` +
+          `→ emitted automation:fired to room ${roomId} | triggerCount=${automation.triggerCount + 1}`,
+        );
+      } catch (emitErr: any) {
+        console.error(
+          `[Automation:exec:error] session=${event.sessionId} rule="${automation.name}"(id=${automation.id}) ` +
+          `emit failed: ${emitErr?.message}`,
+        );
       }
     }
-  } catch (_err) {
+  } catch (err: any) {
+    console.error(`[Automation:error] session=${event.sessionId} type=${event.type}: ${err?.message}`);
   }
 }
