@@ -1,13 +1,64 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Component, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
 import type { VRM } from "@pixiv/three-vrm";
-import { Boxes, Upload } from "lucide-react";
+import { Boxes, Upload, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAvatarVRMPath } from "./avatarAssets";
 import type { AnimationState } from "./avatarAnimationMachine";
 import { ANIMATION_EMOJI } from "./avatarAnimationMachine";
+
+// ── WebGL availability check (runs once, synchronously) ───────────────────────
+// Detects before mounting the Canvas so Three.js never throws into the global
+// error handler (which @replit/vite-plugin-runtime-error-modal intercepts).
+function checkWebGL(): boolean {
+  if (typeof document === "undefined") return false;
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
+// ── WebGL-unavailable 2D placeholder ──────────────────────────────────────────
+function WebGLFallback({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center bg-gradient-to-b from-violet-950/40 to-black/60 rounded-2xl border border-violet-500/20", className)}>
+      <div className="flex flex-col items-center gap-3 text-center px-6">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+            <Bot className="h-8 w-8 text-violet-400/60" />
+          </div>
+          <div className="absolute inset-0 rounded-full animate-ping bg-violet-500/10" style={{ animationDuration: "2.5s" }} />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-white/70">3D Avatar</p>
+          <p className="text-[11px] text-muted-foreground/50 mt-0.5">Ready to render in-browser</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── WebGL Error Boundary (second line of defence) ─────────────────────────────
+interface EBState { hasError: boolean }
+class WebGLErrorBoundary extends Component<{ children: ReactNode; className?: string }, EBState> {
+  constructor(props: { children: ReactNode; className?: string }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch() { /* swallow */ }
+  render() {
+    if (this.state.hasError) {
+      return <WebGLFallback className={this.props.className} />;
+    }
+    return this.props.children;
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -210,6 +261,7 @@ function VRMAvatarView({
   const rightArmZRef = useRef(-0.30);
   const leftArmXRef = useRef(0);
   const rightArmXRef = useRef(0);
+  const neckZRef = useRef(0);
 
   useEffect(() => {
     if (!tinted.current) {
@@ -236,6 +288,9 @@ function VRMAvatarView({
       case "gift_reaction":   tLeftZ = 0.18; tRightZ = -0.18; tLeftX = -0.5; tRightX = -0.5; bounceFreq = 0.9; bounceAmp = 0.014; break;
       case "follow_reaction": tLeftZ = -0.55; tRightZ = 0.55; bounceFreq = 1.8; bounceAmp = 0.028; break;
       case "victory":   tLeftZ = -1.1;  tRightZ = 1.1;   bounceFreq = 2.5;  bounceAmp = 0.042; break;
+      case "surprised": tLeftZ = 0.08;  tRightZ = -0.08;  bounceFreq = 0.5;  bounceAmp = 0.006; break;
+      case "thinking":  tLeftZ = 0.22;  tRightZ = -0.72;  bounceFreq = 0.45; bounceAmp = 0.005; break;
+      case "listening": tLeftZ = 0.26;  tRightZ = -0.26;  bounceFreq = 0.90; bounceAmp = 0.011; break;
     }
 
     leftArmZRef.current  += (tLeftZ  - leftArmZRef.current)  * lf;
@@ -249,12 +304,22 @@ function VRMAvatarView({
       hips.rotation.y = Math.sin(t * 0.32) * 0.06;
     }
 
+    // Breathing — subtle chest/spine rise
+    const spine = vrm.humanoid?.getNormalizedBoneNode("spine");
+    if (spine) {
+      const breathAmp = anim === "excited" ? 0.018 : anim === "surprised" ? 0.014 : 0.008;
+      spine.rotation.x = Math.sin(t * 0.24) * breathAmp;
+    }
+
     const neck = vrm.humanoid?.getNormalizedBoneNode("neck");
     if (neck) {
       neck.rotation.y = Math.sin(t * 0.68) * 0.12;
-      const nodAmp  = anim === "talking" ? 0.065 : 0.04;
-      const nodFreq = anim === "talking" ? 2.8   : 0.48;
-      neck.rotation.x = Math.sin(t * nodFreq) * nodAmp;
+      const nodAmp  = anim === "talking" ? 0.065 : anim === "listening" ? 0.055 : 0.04;
+      const nodFreq = anim === "talking" ? 2.8   : anim === "listening" ? 1.8   : 0.48;
+      neck.rotation.x = Math.sin(t * nodFreq) * nodAmp + (anim === "listening" ? 0.04 : 0);
+      const tNeckZ = anim === "thinking" ? 0.10 + Math.sin(t * 0.12) * 0.04 : 0;
+      neckZRef.current += (tNeckZ - neckZRef.current) * lf;
+      neck.rotation.z = neckZRef.current;
     }
 
     const leftArm  = vrm.humanoid?.getNormalizedBoneNode("leftUpperArm");
@@ -271,13 +336,32 @@ function VRMAvatarView({
     vrm.expressionManager?.setValue("blinkLeft",  blinkVal);
     vrm.expressionManager?.setValue("blinkRight", blinkVal);
 
+    // Eye look-around — slow organic saccades
+    const eyeLookX = Math.sin(t * 0.37) * 0.4 + Math.sin(t * 1.1) * 0.15;
+    const eyeLookY = Math.sin(t * 0.29) * 0.25 + Math.sin(t * 0.83) * 0.1;
+    vrm.expressionManager?.setValue("lookLeft",  Math.max(0, -eyeLookX));
+    vrm.expressionManager?.setValue("lookRight", Math.max(0,  eyeLookX));
+    vrm.expressionManager?.setValue("lookDown",  Math.max(0, -eyeLookY));
+    vrm.expressionManager?.setValue("lookUp",    Math.max(0,  eyeLookY));
+
     // Expressions
-    const aa = (anim === "talking" || anim === "victory") ? mouthOpen * intensity : 0;
-    const happy     = anim === "happy"   ? 0.7 * intensity : anim === "follow_reaction" ? 0.9 * intensity : anim === "victory" ? 1.0 * intensity : anim === "excited" ? 0.45 * intensity : 0;
-    const surprised = anim === "excited" ? 0.85 * intensity : anim === "gift_reaction" ? 1.0 * intensity : anim === "victory" ? 0.45 * intensity : 0;
+    const aa =
+      (anim === "talking" || anim === "victory") ? mouthOpen * intensity :
+      anim === "surprised" ? 0.38 * intensity : 0;
+    const happy =
+      anim === "happy"           ? 0.7  * intensity :
+      anim === "follow_reaction" ? 0.9  * intensity :
+      anim === "victory"         ? 1.0  * intensity :
+      anim === "excited"         ? 0.45 * intensity :
+      anim === "listening"       ? 0.2  * intensity : 0;
+    const surprisedExpr =
+      anim === "surprised"      ? 1.0  * intensity :
+      anim === "excited"        ? 0.85 * intensity :
+      anim === "gift_reaction"  ? 1.0  * intensity :
+      anim === "victory"        ? 0.45 * intensity : 0;
     vrm.expressionManager?.setValue("aa",        aa);
     vrm.expressionManager?.setValue("happy",     happy);
-    vrm.expressionManager?.setValue("surprised", surprised);
+    vrm.expressionManager?.setValue("surprised", surprisedExpr);
 
     vrm.update(delta);
   });
@@ -317,6 +401,7 @@ function RPMAvatarView({
 
   const leftArmZRef = useRef(0.30);
   const rightArmZRef = useRef(-0.30);
+  const neckZRef = useRef(0);
   const blinkTimer = useRef(0);
   const nextBlink = useRef(2.8 + Math.random() * 2.4);
   const blinkPhaseRef = useRef(0);
@@ -358,14 +443,32 @@ function RPMAvatarView({
     const lf = 1 - Math.pow(0.001, delta);
     const { hips, neck, leftUpperArm, rightUpperArm } = bonesRef.current;
 
-    // Body sway
+    // Body sway + breathing
     if (hips) {
       hips.rotation.y = Math.sin(t * 0.32) * 0.06;
       hips.position.y = Math.sin(t * 0.38) * 0.008;
     }
+    // Breathing — spine
+    const spineB = bonesRef.current as { spine?: THREE.Bone; hips?: THREE.Bone; neck?: THREE.Bone; head?: THREE.Bone; leftUpperArm?: THREE.Bone; rightUpperArm?: THREE.Bone };
+    if (!spineB.spine) {
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Bone && obj.name.toLowerCase().includes("spine") && !obj.name.toLowerCase().includes("2") && !obj.name.toLowerCase().includes("3")) {
+          (bonesRef.current as Record<string, THREE.Bone>).spine = obj;
+        }
+      });
+    }
+    if (spineB.spine) {
+      const breathAmp = anim === "excited" ? 0.018 : anim === "surprised" ? 0.014 : 0.008;
+      spineB.spine.rotation.x = Math.sin(t * 0.24) * breathAmp;
+    }
     if (neck) {
       neck.rotation.y = Math.sin(t * 0.68) * 0.10;
-      neck.rotation.x = Math.sin(t * 0.28) * 0.03;
+      const nodAmp  = anim === "listening" ? 0.05 : 0.03;
+      const nodFreq = anim === "listening" ? 1.8  : 0.28;
+      neck.rotation.x = Math.sin(t * nodFreq) * nodAmp + (anim === "listening" ? 0.04 : 0);
+      const tNeckZ = anim === "thinking" ? 0.10 + Math.sin(t * 0.12) * 0.04 : 0;
+      neckZRef.current += (tNeckZ - neckZRef.current) * lf;
+      neck.rotation.z = neckZRef.current;
     }
 
     // Arm poses
@@ -375,6 +478,9 @@ function RPMAvatarView({
       case "excited":         tLZ = 0.06;  tRZ = -0.06;  break;
       case "follow_reaction": tLZ = -0.55; tRZ = 0.55;   break;
       case "victory":         tLZ = -1.1;  tRZ = 1.1;    break;
+      case "surprised":       tLZ = 0.08;  tRZ = -0.08;  break;
+      case "thinking":        tLZ = 0.22;  tRZ = -0.72;  break;
+      case "listening":       tLZ = 0.26;  tRZ = -0.26;  break;
     }
     leftArmZRef.current  += (tLZ - leftArmZRef.current)  * lf;
     rightArmZRef.current += (tRZ - rightArmZRef.current) * lf;
@@ -399,15 +505,24 @@ function RPMAvatarView({
     }
 
     // Lip sync (ARKit visemes)
-    const aa = (anim === "talking" || anim === "victory") ? mouthOpen * intensity : 0;
+    const aa =
+      (anim === "talking" || anim === "victory") ? mouthOpen * intensity :
+      anim === "surprised" ? 0.38 * intensity : 0;
     setMorph("mouthOpen",  aa * 0.85);
     setMorph("jawOpen",    aa * 0.55);
     setMorph("viseme_aa",  aa * 0.9);
     setMorph("viseme_PP",  Math.max(0, aa - 0.4) * intensity * 0.5);
 
     // Expressions
-    const happyV     = anim === "happy" ? 0.7 * intensity : anim === "victory" ? 1.0 * intensity : anim === "excited" ? 0.4 * intensity : 0;
-    const surprisedV = anim === "excited" ? 0.85 * intensity : anim === "gift_reaction" ? 1.0 * intensity : 0;
+    const happyV =
+      anim === "happy"     ? 0.7  * intensity :
+      anim === "victory"   ? 1.0  * intensity :
+      anim === "excited"   ? 0.4  * intensity :
+      anim === "listening" ? 0.2  * intensity : 0;
+    const surprisedV =
+      anim === "surprised"     ? 1.0  * intensity :
+      anim === "excited"       ? 0.85 * intensity :
+      anim === "gift_reaction" ? 1.0  * intensity : 0;
     setMorph("mouthSmile",       happyV * 0.8);
     setMorph("mouthSmileLeft",   happyV);
     setMorph("mouthSmileRight",  happyV);
@@ -676,6 +791,11 @@ export function AvatarCanvas({
     onStats?.(s);
   }, [onStats]);
 
+  // Check WebGL before mounting Canvas — Three.js throws synchronously when
+  // no GPU is available, which bypasses React error boundaries and hits the
+  // global error handler (Vite dev overlay). Early-exit with a 2D fallback.
+  const [webGLAvailable] = useState(checkWebGL);
+
   if (!avatarEnabled) {
     return (
       <div className={cn("flex flex-col items-center justify-center bg-black/20 rounded-2xl border border-white/5", className)}>
@@ -684,6 +804,10 @@ export function AvatarCanvas({
         <p className="text-[10px] text-muted-foreground/25 mt-0.5">Enable via the toggle above</p>
       </div>
     );
+  }
+
+  if (!webGLAvailable) {
+    return <WebGLFallback className={className} />;
   }
 
   const dpr: [number, number] = quality === "low" ? [1, 1] : quality === "medium" ? [1, 1.5] : [1, 2];
@@ -707,38 +831,40 @@ export function AvatarCanvas({
     <div className={cn("relative rounded-2xl overflow-hidden", className)}>
       <div className="absolute inset-0 rounded-2xl" style={{ background: bgStyle }} />
 
-      <Canvas
-        gl={{ antialias: quality !== "low", alpha: true, powerPreference: quality === "low" ? "low-power" : "high-performance" }}
-        shadows={quality === "high"}
-        camera={{ position: [0, 1.2, 2.4], fov: 36 }}
-        onCreated={({ gl }) => { gl.shadowMap.type = THREE.PCFShadowMap; }}
-        dpr={dpr}
-        style={{ position: "relative" }}
-      >
-        <ProceduralUpdater
-          mouthOpenAmount={mouthOpenAmount}
-          expressionIntensity={expressionIntensity}
-          mouthOpenRef={mouthOpenRef}
-          expressionIntensityRef={expressionIntensityRef}
-        />
-        <Suspense fallback={<CanvasLoader />}>
-          <AvatarScene
-            avatarKey={avatarKey}
-            accentColor={accentColor}
-            scale={scale}
-            positionY={positionY}
-            lightingPreset={lightingPreset}
-            effectiveVrmUrl={effectiveVrmUrl}
-            rpmUrl={rpmUrl}
-            quality={quality}
-            onStats={handleStats}
-            onQualityDecline={() => setQuality((q) => (q === "high" ? "medium" : "low"))}
-            animationState={animationState}
+      <WebGLErrorBoundary className="absolute inset-0">
+        <Canvas
+          gl={{ antialias: quality !== "low", alpha: true, powerPreference: quality === "low" ? "low-power" : "high-performance" }}
+          shadows={quality === "high"}
+          camera={{ position: [0, 1.2, 2.4], fov: 36 }}
+          onCreated={({ gl }) => { gl.shadowMap.type = THREE.PCFShadowMap; }}
+          dpr={dpr}
+          style={{ position: "relative" }}
+        >
+          <ProceduralUpdater
+            mouthOpenAmount={mouthOpenAmount}
+            expressionIntensity={expressionIntensity}
             mouthOpenRef={mouthOpenRef}
             expressionIntensityRef={expressionIntensityRef}
           />
-        </Suspense>
-      </Canvas>
+          <Suspense fallback={<CanvasLoader />}>
+            <AvatarScene
+              avatarKey={avatarKey}
+              accentColor={accentColor}
+              scale={scale}
+              positionY={positionY}
+              lightingPreset={lightingPreset}
+              effectiveVrmUrl={effectiveVrmUrl}
+              rpmUrl={rpmUrl}
+              quality={quality}
+              onStats={handleStats}
+              onQualityDecline={() => setQuality((q) => (q === "high" ? "medium" : "low"))}
+              animationState={animationState}
+              mouthOpenRef={mouthOpenRef}
+              expressionIntensityRef={expressionIntensityRef}
+            />
+          </Suspense>
+        </Canvas>
+      </WebGLErrorBoundary>
 
       {/* FPS + quality */}
       {showFps && (

@@ -43,7 +43,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useLiveSession, type TtsMode, type LiveEvent } from "@/hooks/useLiveSession";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { HolographicOrb } from "@/components/ui/premium";
+import { AvatarStage } from "@/components/avatar/AvatarStage";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const API_BASE = `${BASE}/api`;
@@ -713,10 +713,10 @@ export function AiAssistant() {
           }}
         />
 
-        <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_auto]">
+        <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_320px]">
 
           {/* ── Left: info ── */}
-          <div className="p-5 md:p-7">
+          <div className="p-5 md:p-7 order-2 lg:order-1">
 
             {/* Status eyebrow row */}
             <div className="flex items-center gap-2 flex-wrap mb-4">
@@ -811,17 +811,25 @@ export function AiAssistant() {
             </div>
           </div>
 
-          {/* ── Right: HolographicOrb — desktop only ── */}
-          <div className="hidden lg:flex items-center justify-center px-6 py-5">
-            <div className="relative">
-              <HolographicOrb size={220} isActive={isSessionActive && connected} />
-              {/* Label below orb */}
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <div className="px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/25 text-[9px] font-black text-violet-300 uppercase tracking-[0.18em]">
-                  {personaName}
-                </div>
-              </div>
-            </div>
+          {/* ── Right: AI Avatar Stage — desktop + mobile ── */}
+          <div className="flex items-stretch order-1 lg:order-2 px-3 pt-3 pb-0 lg:px-4 lg:py-4">
+            <AvatarStage
+              avatarKey={avatarConfig?.avatarKey ?? "marcus"}
+              accentColor={accentColor}
+              scale={avatarConfig?.scale ?? 1.0}
+              positionY={avatarConfig?.positionY ?? -0.8}
+              lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
+              avatarEnabled={avatarConfig?.avatarEnabled ?? true}
+              avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
+              animationState={animState}
+              mouthOpenAmount={mouthOpen}
+              expressionIntensity={expressionIntensity}
+              backgroundGradient={getBackgroundGradient(selectedBackground)}
+              isSpeaking={isSpeaking}
+              personaName={personaName}
+              onOpenSettings={() => setActiveTab("avatar")}
+              className="w-full h-[260px] lg:h-full lg:min-h-[420px]"
+            />
           </div>
 
         </div>
@@ -1914,7 +1922,7 @@ export function AiAssistant() {
                         )}
                       </div>
                       <div className="flex gap-1.5 flex-wrap mb-3">
-                        {(["gift_reaction", "follow_reaction", "victory", "excited", "happy"] as AnimationState[]).map((s) => (
+                        {(["gift_reaction", "follow_reaction", "victory", "excited", "happy", "surprised", "thinking", "listening"] as AnimationState[]).map((s) => (
                           <button
                             key={s}
                             onClick={() => machineRef.current.push(s)}
@@ -1973,7 +1981,7 @@ export function AiAssistant() {
                           { label: "RPM · Avaturn · VRM avatars",    desc: "Photorealistic GLB & VRM 1.0 support" },
                           { label: "Real-time 3D rendering",         desc: "React Three Fiber + WebGL" },
                           { label: "TikTok event reactions",         desc: "Gift · Follow · Like · Share" },
-                          { label: "Animation state machine",        desc: "7 states, priority queue" },
+                          { label: "Animation state machine",        desc: "10 states · surprised · thinking · listening" },
                           { label: "AI voice lip sync",              desc: "Web Audio API AnalyserNode" },
                           { label: "Background customiser",          desc: "4 scene presets + custom colour" },
                         ].map((item) => (

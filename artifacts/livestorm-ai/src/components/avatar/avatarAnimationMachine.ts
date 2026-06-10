@@ -1,17 +1,23 @@
 export type AnimationState =
   | "idle"
+  | "listening"
+  | "thinking"
   | "talking"
   | "happy"
   | "excited"
+  | "surprised"
   | "gift_reaction"
   | "follow_reaction"
   | "victory";
 
 export const ANIMATION_PRIORITY: Record<AnimationState, number> = {
   idle: 0,
+  listening: 1,
+  thinking: 2,
   talking: 3,
   happy: 5,
   excited: 6,
+  surprised: 7,
   follow_reaction: 7,
   gift_reaction: 8,
   victory: 9,
@@ -19,9 +25,12 @@ export const ANIMATION_PRIORITY: Record<AnimationState, number> = {
 
 const DEFAULT_DURATION_MS: Record<AnimationState, number> = {
   idle: 0,
+  listening: 0,
+  thinking: 0,
   talking: 0,
   happy: 2500,
   excited: 3200,
+  surprised: 2800,
   gift_reaction: 3800,
   follow_reaction: 3200,
   victory: 5000,
@@ -29,9 +38,12 @@ const DEFAULT_DURATION_MS: Record<AnimationState, number> = {
 
 export const ANIMATION_LABELS: Record<AnimationState, string> = {
   idle: "Idle",
+  listening: "Listening",
+  thinking: "Thinking",
   talking: "Talking",
   happy: "Happy",
   excited: "Excited",
+  surprised: "Surprised",
   gift_reaction: "Gift!",
   follow_reaction: "Follow!",
   victory: "Victory!",
@@ -39,9 +51,12 @@ export const ANIMATION_LABELS: Record<AnimationState, string> = {
 
 export const ANIMATION_EMOJI: Record<AnimationState, string> = {
   idle: "😐",
+  listening: "👂",
+  thinking: "🤔",
   talking: "🗣️",
   happy: "😊",
   excited: "🤩",
+  surprised: "😲",
   gift_reaction: "🎁",
   follow_reaction: "💜",
   victory: "🏆",
