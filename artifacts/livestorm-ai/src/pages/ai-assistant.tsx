@@ -870,7 +870,7 @@ export function AiAssistant() {
       )}
 
       {/* ── Body: sidebar + main ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] grid-rows-[auto_1fr] lg:grid-rows-1 gap-4 flex-1 min-h-0">
 
         {/* ── LEFT: Settings sidebar ── */}
         <div className="flex flex-col gap-3 overflow-y-auto pr-0.5 min-h-0 lg:max-h-none">
