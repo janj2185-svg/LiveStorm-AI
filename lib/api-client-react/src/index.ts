@@ -296,6 +296,45 @@ export const useGetAvatarPresets = <TData = AvatarAnimationPreset[], TError = un
 };
 
 // ---------------------------------------------------------------------------
+// Automation Logs hook
+// ---------------------------------------------------------------------------
+
+export type AutomationLogEntry = {
+  id: number;
+  automationId: number;
+  automationName: string;
+  sessionId: number | null;
+  triggeredAt: string;
+  eventType: string;
+  actionType: string;
+  result: string;
+};
+
+export const getAutomationLogs = async (
+  options?: RequestInit,
+): Promise<AutomationLogEntry[]> => {
+  return customFetch<AutomationLogEntry[]>("/api/automations/logs", {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAutomationLogsQueryKey = () => ["/api/automations/logs"] as const;
+
+export const useGetAutomationLogs = <TData = AutomationLogEntry[], TError = unknown>(
+  options?: { query?: UseQueryOptions<AutomationLogEntry[], TError, TData> },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryKey = options?.query?.queryKey ?? getGetAutomationLogsQueryKey();
+  const queryOptions = {
+    queryKey,
+    queryFn: ({ signal }: { signal?: AbortSignal }) => getAutomationLogs({ signal }),
+    ...options?.query,
+  } as UseQueryOptions<AutomationLogEntry[], TError, TData>;
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey };
+};
+
+// ---------------------------------------------------------------------------
 // Force stop session
 // ---------------------------------------------------------------------------
 

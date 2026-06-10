@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, automationsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, automationsTable, automationLogsTable, streamersTable } from "@workspace/db";
+import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, getOrCreateUser } from "./users";
 
 const router = Router();
@@ -88,6 +88,37 @@ router.delete("/automations/:id", requireAuth, async (req: any, res: any) => {
       .where(and(eq(automationsTable.id, id), eq(automationsTable.userId, user.id)));
 
     res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/automations/logs", requireAuth, async (req: any, res: any) => {
+  try {
+    const user = await getOrCreateUser(req.clerkUserId);
+    const streamer = await db.query.streamersTable.findFirst({
+      where: eq(streamersTable.userId, user.id),
+    });
+    if (!streamer) return res.json([]);
+
+    const logs = await db
+      .select({
+        id: automationLogsTable.id,
+        automationId: automationLogsTable.automationId,
+        automationName: automationsTable.name,
+        sessionId: automationLogsTable.sessionId,
+        triggeredAt: automationLogsTable.triggeredAt,
+        eventType: automationLogsTable.eventType,
+        actionType: automationLogsTable.actionType,
+        result: automationLogsTable.result,
+      })
+      .from(automationLogsTable)
+      .innerJoin(automationsTable, eq(automationLogsTable.automationId, automationsTable.id))
+      .where(eq(automationLogsTable.streamerId, streamer.id))
+      .orderBy(desc(automationLogsTable.triggeredAt))
+      .limit(50);
+
+    res.json(logs);
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
   }

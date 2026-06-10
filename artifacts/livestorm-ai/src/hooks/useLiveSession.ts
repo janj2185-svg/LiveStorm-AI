@@ -327,6 +327,43 @@ export function useLiveSession(
         setAutomationsFired((prev) => [event, ...prev].slice(0, 50));
       });
 
+      socket.on("tts:play", (payload: { audioBase64: string; mimeType: string; text: string }) => {
+        try {
+          const binary = atob(payload.audioBase64);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          const blob = new Blob([bytes], { type: payload.mimeType ?? "audio/mpeg" });
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.volume = Math.max(0, Math.min(1, ttsVolumeRef.current));
+          window.dispatchEvent(new CustomEvent("tts:audio", { detail: audio }));
+          window.dispatchEvent(new CustomEvent("tts:start"));
+          enqueueTts(() => new Promise<void>((resolve) => {
+            audio.onended = () => { URL.revokeObjectURL(url); window.dispatchEvent(new CustomEvent("tts:end")); resolve(); };
+            audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+            audio.play().catch(() => resolve());
+          }));
+        } catch (err) {
+          console.warn("[tts:play] Failed to play automation audio:", err);
+        }
+      });
+
+      socket.on("system:message", (payload: { text: string; automationName: string; timestamp: number }) => {
+        const ts = payload.timestamp ?? Date.now();
+        setEvents((prev) =>
+          [
+            {
+              type: "ai_announcement" as const,
+              sessionId: sessionId!,
+              username: payload.automationName ?? "Automation",
+              data: { text: payload.text, announcementType: "system_message" },
+              timestamp: ts,
+            },
+            ...prev,
+          ].slice(0, 200),
+        );
+      });
+
       socket.on("ai:announcement", (payload: Omit<AiAnnouncementEvent, "timestamp">) => {
         const ts = Date.now();
         setAiAnnouncements((prev) => [{ ...payload, timestamp: ts }, ...prev].slice(0, 30));

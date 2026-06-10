@@ -1,8 +1,9 @@
 import type { Server as SocketServer } from "socket.io";
 import type { TikTokEvent } from "./tiktokSimulator";
 import { db } from "@workspace/db";
-import { automationsTable } from "@workspace/db";
+import { automationsTable, automationLogsTable, streamersTable, aiPersonaConfigsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { generateAnnouncement, generateVoice } from "./aiService";
 
 export interface AutomationFiredEvent {
   automationId: number;
@@ -74,11 +75,129 @@ function evaluateCondition(
   }
 }
 
+async function writeLog(
+  automationId: number,
+  streamerId: number,
+  sessionId: number,
+  eventType: string,
+  actionType: string,
+  result: string,
+): Promise<void> {
+  try {
+    await db.insert(automationLogsTable).values({
+      automationId,
+      streamerId,
+      sessionId,
+      eventType,
+      actionType,
+      result,
+    });
+  } catch (err: any) {
+    console.error(`[Automation:log] Failed to write log: ${err?.message}`);
+  }
+}
+
+async function executeAction(
+  io: SocketServer,
+  roomId: string,
+  streamerId: number,
+  automation: typeof automationsTable.$inferSelect,
+  event: TikTokEvent,
+): Promise<string> {
+  const { actionType, actionPayload } = automation;
+  const viewerName = event.username ?? "a viewer";
+
+  try {
+    if (actionType === "ai_response" || actionType === "send_chat_reply") {
+      const config = await db.query.aiPersonaConfigsTable.findFirst({
+        where: eq(aiPersonaConfigsTable.streamerId, streamerId),
+      });
+      const persona = config
+        ? { name: config.personaName, tone: config.tone }
+        : { name: "AI Co-host", tone: "friendly" };
+
+      const text = await generateAnnouncement({
+        type: actionPayload?.trim() || event.type,
+        viewerName,
+        amount:
+          event.type === "gift"
+            ? ((event.data.coins as number) ?? 0)
+            : event.type === "like"
+              ? ((event.data.likeCount as number) ?? 0)
+              : undefined,
+        persona,
+      });
+
+      if (text) {
+        io.to(roomId).emit("ai:announcement", {
+          text,
+          type: "automation",
+          viewerName,
+          automationName: automation.name,
+        });
+        console.log(
+          `[Automation:ai_response] rule="${automation.name}" session=${event.sessionId} → "${text.slice(0, 60)}"`,
+        );
+      }
+      return "success";
+    }
+
+    if (actionType === "tts" || actionType === "play_sound") {
+      const textToSpeak = actionPayload?.trim() || `${viewerName} triggered the stream!`;
+      const audioBuffer = await generateVoice(textToSpeak);
+      if (audioBuffer) {
+        const audioBase64 = audioBuffer.toString("base64");
+        io.to(roomId).emit("tts:play", { audioBase64, mimeType: "audio/mpeg", text: textToSpeak });
+        console.log(
+          `[Automation:tts] rule="${automation.name}" session=${event.sessionId} bytes=${audioBuffer.length}`,
+        );
+      } else {
+        console.warn(`[Automation:tts] rule="${automation.name}" — voice generation returned null`);
+        return "error:voice_generation_failed";
+      }
+      return "success";
+    }
+
+    if (
+      actionType === "custom_message" ||
+      actionType === "display_message" ||
+      actionType === "show_alert"
+    ) {
+      const message = actionPayload?.trim() || "Something happened on stream!";
+      io.to(roomId).emit("system:message", {
+        text: message,
+        automationName: automation.name,
+        timestamp: Date.now(),
+      });
+      console.log(
+        `[Automation:custom_message] rule="${automation.name}" session=${event.sessionId} → "${message.slice(0, 60)}"`,
+      );
+      return "success";
+    }
+
+    if (actionType === "webhook") {
+      console.log(
+        `[Automation:webhook] rule="${automation.name}" session=${event.sessionId} — webhook stub`,
+      );
+      return "success:webhook_stub";
+    }
+
+    console.warn(`[Automation:exec] Unknown actionType="${actionType}" rule="${automation.name}"`);
+    return `error:unknown_action_${actionType}`;
+  } catch (err: any) {
+    console.error(
+      `[Automation:exec:error] rule="${automation.name}" actionType=${actionType}: ${err?.message}`,
+    );
+    return `error:${err?.message ?? "unknown"}`;
+  }
+}
+
 export async function processAutomations(
   io: SocketServer,
   roomId: string,
   userId: number,
-  event: TikTokEvent
+  event: TikTokEvent,
+  streamerId?: number,
 ) {
   try {
     const automations = await db
@@ -90,6 +209,18 @@ export async function processAutomations(
           eq(automationsTable.isEnabled, true)
         )
       );
+
+    let resolvedStreamerId = streamerId;
+    if (!resolvedStreamerId) {
+      try {
+        const streamer = await db.query.streamersTable.findFirst({
+          where: eq(streamersTable.userId, userId),
+        });
+        resolvedStreamerId = streamer?.id;
+      } catch {
+        // proceed without streamerId — ai_response/tts will gracefully degrade
+      }
+    }
 
     for (const automation of automations) {
       const fired = evaluateCondition(
@@ -125,16 +256,31 @@ export async function processAutomations(
         `→ action=${automation.actionType} payload="${(automation.actionPayload ?? "").slice(0, 60)}"`,
       );
 
-      try {
-        io.to(roomId).emit("automation:fired", firedEvent);
-        console.log(
-          `[Automation:exec] session=${event.sessionId} rule="${automation.name}"(id=${automation.id}) ` +
-          `→ emitted automation:fired to room ${roomId} | triggerCount=${automation.triggerCount + 1}`,
+      io.to(roomId).emit("automation:fired", firedEvent);
+
+      let result = "success";
+      if (resolvedStreamerId) {
+        result = await executeAction(io, roomId, resolvedStreamerId, automation, event);
+      } else {
+        console.warn(
+          `[Automation:exec] rule="${automation.name}" — streamerId not resolved; skipping action`,
         );
-      } catch (emitErr: any) {
-        console.error(
-          `[Automation:exec:error] session=${event.sessionId} rule="${automation.name}"(id=${automation.id}) ` +
-          `emit failed: ${emitErr?.message}`,
+        result = "error:streamer_not_found";
+      }
+
+      console.log(
+        `[Automation:exec] session=${event.sessionId} rule="${automation.name}"(id=${automation.id}) ` +
+        `→ action=${automation.actionType} result=${result} triggerCount=${automation.triggerCount + 1}`,
+      );
+
+      if (resolvedStreamerId) {
+        await writeLog(
+          automation.id,
+          resolvedStreamerId,
+          event.sessionId,
+          event.type,
+          automation.actionType,
+          result,
         );
       }
     }

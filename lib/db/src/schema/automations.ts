@@ -2,6 +2,8 @@ import { pgTable, serial, text, integer, boolean, timestamp } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { streamersTable } from "./streamers";
+import { sessionsTable } from "./streamers";
 
 export const automationsTable = pgTable("automations", {
   id: serial("id").primaryKey(),
@@ -18,6 +20,17 @@ export const automationsTable = pgTable("automations", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const automationLogsTable = pgTable("automation_logs", {
+  id: serial("id").primaryKey(),
+  automationId: integer("automation_id").notNull().references(() => automationsTable.id, { onDelete: "cascade" }),
+  streamerId: integer("streamer_id").notNull().references(() => streamersTable.id, { onDelete: "cascade" }),
+  sessionId: integer("session_id").references(() => sessionsTable.id, { onDelete: "set null" }),
+  triggeredAt: timestamp("triggered_at").notNull().defaultNow(),
+  eventType: text("event_type").notNull(),
+  actionType: text("action_type").notNull(),
+  result: text("result").notNull().default("success"),
+});
+
 export const insertAutomationSchema = createInsertSchema(automationsTable).omit({
   id: true,
   triggerCount: true,
@@ -26,3 +39,4 @@ export const insertAutomationSchema = createInsertSchema(automationsTable).omit(
 });
 export type InsertAutomation = z.infer<typeof insertAutomationSchema>;
 export type Automation = typeof automationsTable.$inferSelect;
+export type AutomationLog = typeof automationLogsTable.$inferSelect;

@@ -467,16 +467,21 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   );
   io.to(roomId).emit("live:event", event);
 
-  await processAutomations(io, roomId, userId, event);
-
   let streamerId: number | null = null;
   try {
-    const sessionForGamification = await db.query.sessionsTable.findFirst({
+    const sessionRecord = await db.query.sessionsTable.findFirst({
       where: eq(sessionsTable.id, event.sessionId),
     });
-    if (sessionForGamification) {
-      streamerId = sessionForGamification.streamerId;
-      await processGamification(io, event, sessionForGamification.streamerId);
+    if (sessionRecord) {
+      streamerId = sessionRecord.streamerId;
+    }
+  } catch (_err) {}
+
+  await processAutomations(io, roomId, userId, event, streamerId ?? undefined);
+
+  try {
+    if (streamerId) {
+      await processGamification(io, event, streamerId);
     }
   } catch (_err) {}
 

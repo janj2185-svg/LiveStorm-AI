@@ -7,8 +7,10 @@ import {
   useUpdateAutomation,
   useDeleteAutomation,
   useGetActiveSession,
+  useGetAutomationLogs,
   getGetAutomationsQueryKey,
-  getGetActiveSessionQueryKey
+  getGetActiveSessionQueryKey,
+  getGetAutomationLogsQueryKey,
 } from "@workspace/api-client-react";
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { Button } from "@/components/ui/button";
@@ -19,13 +21,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Zap, Trash2, Plus, Settings2, ShieldAlert, Activity } from "lucide-react";
+import { Zap, Trash2, Plus, Settings2, ShieldAlert, Activity, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { PageHero, GradientText } from "@/components/ui/premium";
 
 const EVENT_TYPES = ["gift", "comment", "like", "follow", "share", "viewerCount"];
-const ACTION_TYPES = ["show_alert", "play_sound", "display_message", "send_chat_reply"];
+const ACTION_TYPES = [
+  { value: "ai_response",    label: "AI Response",    description: "AI generates an announcement" },
+  { value: "tts",            label: "TTS Announcement", description: "Speak text via AI voice" },
+  { value: "custom_message", label: "Custom Message", description: "Broadcast text to the feed" },
+  { value: "webhook",        label: "Webhook",         description: "Call an external URL (coming soon)" },
+];
 const NUMERIC_OPERATORS = [
   { value: "gte", label: ">= (Greater than or equal)" },
   { value: "gt",  label: "> (Greater than)" },
@@ -54,13 +61,17 @@ export function Automation() {
   const { automationsFired, connected } = useLiveSession(activeSessionRes?.session?.id);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { data: automationLogs, isLoading: logsLoading } = useGetAutomationLogs({
+    query: { queryKey: getGetAutomationLogsQueryKey(), refetchInterval: 10000 },
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     eventType: "gift",
     conditionOperator: "gte",
     conditionValue: "100",
-    actionType: "show_alert",
-    actionPayload: "Thanks for the VIP gift!",
+    actionType: "ai_response",
+    actionPayload: "",
   });
 
   const handleEventTypeChange = (v: string) => {
@@ -96,7 +107,8 @@ export function Automation() {
         toast({ title: "Automation created" });
         setIsDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: getGetAutomationsQueryKey() });
-        setFormData({ name: "", eventType: "gift", conditionOperator: "gte", conditionValue: "100", actionType: "show_alert", actionPayload: "Thanks for the VIP gift!" });
+        setFormData({ name: "", eventType: "gift", conditionOperator: "gte", conditionValue: "100", actionType: "ai_response", actionPayload: "" });
+        queryClient.invalidateQueries({ queryKey: getGetAutomationLogsQueryKey() });
       },
       onError: (err: any) => {
         toast({ title: "Failed to create", description: String(err), variant: "destructive" });
@@ -245,21 +257,36 @@ export function Automation() {
                     </SelectTrigger>
                     <SelectContent>
                       {ACTION_TYPES.map(t => (
-                        <SelectItem key={t} value={t} className="capitalize">{t.replace(/_/g, " ")}</SelectItem>
+                        <SelectItem key={t.value} value={t.value}>
+                          <div>
+                            <span className="font-medium">{t.label}</span>
+                            <span className="ml-2 text-xs text-muted-foreground">{t.description}</span>
+                          </div>
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label>Action Payload (Text/Value)</Label>
-                  <Input
-                    value={formData.actionPayload}
-                    onChange={e => setFormData({...formData, actionPayload: e.target.value})}
-                    className="bg-background border-white/10"
-                    placeholder="e.g. text to display or sound to play"
-                  />
-                </div>
+                {formData.actionType !== "webhook" && (
+                  <div className="grid gap-2">
+                    <Label>
+                      {formData.actionType === "ai_response" ? "Custom AI prompt context (optional)" :
+                       formData.actionType === "tts" ? "Text to speak" :
+                       "Message text"}
+                    </Label>
+                    <Input
+                      value={formData.actionPayload}
+                      onChange={e => setFormData({...formData, actionPayload: e.target.value})}
+                      className="bg-background border-white/10"
+                      placeholder={
+                        formData.actionType === "ai_response" ? "Leave empty to use event context" :
+                        formData.actionType === "tts" ? "e.g. Thanks for the gift!" :
+                        "e.g. Welcome to the stream!"
+                      }
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-white/10">Cancel</Button>
@@ -409,6 +436,84 @@ export function Automation() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Automation Log Panel */}
+      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="font-semibold text-white text-sm">Automation Log</span>
+            {automationLogs && automationLogs.length > 0 && (
+              <span className="text-xs text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full">
+                last {automationLogs.length}
+              </span>
+            )}
+          </div>
+        </div>
+        {logsLoading ? (
+          <div className="p-4 space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-xl bg-white/[0.04]" />
+            ))}
+          </div>
+        ) : !automationLogs || automationLogs.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            No automation history yet. Triggers will be logged here once they fire.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/5 text-muted-foreground">
+                  <th className="text-left px-4 py-2 font-medium">Time</th>
+                  <th className="text-left px-4 py-2 font-medium">Rule</th>
+                  <th className="text-left px-4 py-2 font-medium">Event</th>
+                  <th className="text-left px-4 py-2 font-medium">Action</th>
+                  <th className="text-left px-4 py-2 font-medium">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {automationLogs.map((log) => {
+                  const isSuccess = log.result === "success" || log.result.startsWith("success");
+                  return (
+                    <tr key={log.id} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
+                      <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(log.triggeredAt), { addSuffix: true })}
+                      </td>
+                      <td className="px-4 py-2.5 font-medium text-white max-w-[180px] truncate">
+                        {log.automationName}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="capitalize px-2 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20 text-[11px]">
+                          {log.eventType}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="capitalize text-purple-300 text-[11px]">
+                          {log.actionType.replace(/_/g, " ")}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {isSuccess ? (
+                          <span className="flex items-center gap-1 text-emerald-400">
+                            <CheckCircle2 className="h-3 w-3" />
+                            ok
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-red-400" title={log.result}>
+                            <XCircle className="h-3 w-3" />
+                            {log.result.replace("error:", "").slice(0, 30)}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
