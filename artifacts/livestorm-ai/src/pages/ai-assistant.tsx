@@ -46,6 +46,7 @@ import {
   Shirt, Tv2, Palette, Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@clerk/react";
 import { useLiveSessionContext, type TtsMode, type LiveEvent } from "@/contexts/LiveSessionContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarStage } from "@/components/avatar/AvatarStage";
@@ -346,6 +347,22 @@ function StatBubble({ label, value, icon }: { label: string; value: number | str
 export function AiAssistant() {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const { getToken } = useAuth();
+
+  // ── Authenticated fetch: adds Clerk Bearer token to every request ─────────────
+  const authFetch = useCallback(
+    async (path: string, options?: RequestInit) => {
+      const token = await getToken();
+      return apiFetch(path, {
+        ...options,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(options?.headers ?? {}),
+        },
+      });
+    },
+    [getToken],
+  );
 
   // ── Session + Live events (shared LiveSessionContext — single socket connection) ─
   const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume, setTtsSpeed,
@@ -362,12 +379,12 @@ export function AiAssistant() {
   // ── Config ───────────────────────────────────────────────────────────────────
   const { data: config, isLoading: configLoading } = useQuery<PersonaConfig>({
     queryKey: ["ai-config"],
-    queryFn: () => apiFetch("/ai/config"),
+    queryFn: () => authFetch("/ai/config"),
   });
 
   const updateConfig = useMutation({
     mutationFn: (updates: Partial<PersonaConfig>) =>
-      apiFetch("/ai/config", { method: "PUT", body: JSON.stringify(updates) }),
+      authFetch("/ai/config", { method: "PUT", body: JSON.stringify(updates) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ai-config"] }),
   });
 
@@ -424,7 +441,7 @@ export function AiAssistant() {
     if (replyingTo.has(key)) return;
     setReplyingTo((prev) => new Set([...prev, key]));
     try {
-      await apiFetch("/ai/reply-to-comment", {
+      await authFetch("/ai/reply-to-comment", {
         method: "POST",
         body: JSON.stringify({
           comment: event.data.text ?? "",
@@ -443,7 +460,7 @@ export function AiAssistant() {
         return next;
       });
     }
-  }, [replyingTo, activeSessionId, config?.replyLanguage]);
+  }, [replyingTo, activeSessionId, config?.replyLanguage, authFetch]);
 
   // ── Tabs ──────────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<"live" | "chat" | "moderation">(() => {
@@ -534,14 +551,14 @@ export function AiAssistant() {
   // dep change every render → setLocalMessages fires every render → infinite loop.
   const { data: chatMessages } = useQuery<ChatMessage[]>({
     queryKey: ["ai-messages"],
-    queryFn: () => apiFetch("/ai/messages"),
+    queryFn: () => authFetch("/ai/messages"),
     retry: false,
   });
   useEffect(() => setLocalMessages(chatMessages ?? []), [chatMessages]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [localMessages]);
 
   const clearMessages = useMutation({
-    mutationFn: () => apiFetch("/ai/messages", { method: "DELETE" }),
+    mutationFn: () => authFetch("/ai/messages", { method: "DELETE" }),
     onSuccess: () => {
       setLocalMessages([]);
       queryClient.invalidateQueries({ queryKey: ["ai-messages"] });
@@ -560,7 +577,7 @@ export function AiAssistant() {
       { id: tempId + 1, role: "assistant", content: "...", createdAt: new Date().toISOString() },
     ]);
     try {
-      const data = await apiFetch("/ai/chat", { method: "POST", body: JSON.stringify({ message: msg }) });
+      const data = await authFetch("/ai/chat", { method: "POST", body: JSON.stringify({ message: msg }) });
       setLocalMessages((prev) =>
         prev.map((m) => m.id === tempId + 1 ? { ...m, content: data.reply } : m),
       );
@@ -573,7 +590,7 @@ export function AiAssistant() {
       setIsChatLoading(false);
       inputRef.current?.focus();
     }
-  }, [chatInput, isChatLoading, queryClient]);
+  }, [chatInput, isChatLoading, queryClient, authFetch]);
 
 
   // ── TikTok connection test UI ──────────────────────────────────────────────
@@ -586,7 +603,7 @@ export function AiAssistant() {
     setIsTesting(true);
     setTestResult(null);
     try {
-      const res = await apiFetch("/tiktok/test-connection", {
+      const res = await authFetch("/tiktok/test-connection", {
         method: "POST",
         body: JSON.stringify({ username: testUsername.trim() }),
       });
@@ -603,11 +620,15 @@ export function AiAssistant() {
     if (!config || isVoicePreviewing) return;
     setIsVoicePreviewing(true);
     try {
+      const token = await getToken();
       const previewText = `Hey! I'm ${config.personaName}, your AI co-host. Let's make this stream absolutely amazing!`;
       const resp = await fetch(`${API_BASE}/ai/voice`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           text: previewText,
           voice: config.voiceName ?? "nova",
@@ -644,18 +665,14 @@ export function AiAssistant() {
     if (translatingComments.has(eventId)) return;
     setTranslatingComments((prev) => new Set(prev).add(eventId));
     try {
-      const resp = await fetch(`${API_BASE}/ai/content`, {
+      const data = await authFetch("/ai/content", {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "script",
           topic: `Translate exactly to ${chatTranslateLang}. Reply with only the translation, nothing else: "${text}"`,
           language: chatTranslateLang,
         }),
       });
-      if (!resp.ok) throw new Error("Translation failed");
-      const data = await resp.json();
       const translated = (data.script ?? data.content ?? "").trim() || text;
       setTranslatedComments((prev) => ({ ...prev, [eventId]: translated }));
     } catch {
@@ -1404,13 +1421,14 @@ export function AiAssistant() {
                       )}
                     </div>
                   )}
-                  {feedEvents.map((event) => {
+                  {feedEvents.map((event, feedIdx) => {
+                    const evtKey = `${event.timestamp}-${feedIdx}`;
                     if (event.type === "comment") {
                       const evtId = event.timestamp;
                       const translated = translatedComments[evtId];
                       const isTranslating = translatingComments.has(evtId);
                       return (
-                        <div key={event.timestamp} className="space-y-1">
+                        <div key={evtKey} className="space-y-1">
                           <CommentCard
                             event={event}
                             onReply={handleReply}
@@ -1437,11 +1455,11 @@ export function AiAssistant() {
                         </div>
                       );
                     }
-                    if (event.type === "gift") return <GiftCard key={event.timestamp} event={event} />;
-                    if (event.type === "follow") return <FollowCard key={event.timestamp} event={event} />;
-                    if (event.type === "like") return <LikeCard key={event.timestamp} event={event} />;
-                    if (event.type === "share") return <ShareCard key={event.timestamp} event={event} />;
-                    if (event.type === "ai_announcement") return <AiAnnouncementCard key={event.timestamp} event={event} />;
+                    if (event.type === "gift") return <GiftCard key={evtKey} event={event} />;
+                    if (event.type === "follow") return <FollowCard key={evtKey} event={event} />;
+                    if (event.type === "like") return <LikeCard key={evtKey} event={event} />;
+                    if (event.type === "share") return <ShareCard key={evtKey} event={event} />;
+                    if (event.type === "ai_announcement") return <AiAnnouncementCard key={evtKey} event={event} />;
                     return null;
                   })}
                 </div>

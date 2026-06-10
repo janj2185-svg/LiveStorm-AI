@@ -109,13 +109,15 @@ export function Dashboard() {
   const connectTiktok = useConnectTiktok();
   const [tiktokInput, setTiktokInput] = useState("");
 
-  const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsEnabled,
+  const { events, stats, aiAnnouncements, flaggedComments, connected, clearEvents, setTtsMode,
     activeSessionRes, isLoadingSession } = useLiveSessionContext();
   const { data: sessions } = useGetSessions();
   const startSession = useStartSession();
   const endSession = useEndSession();
   const forceStop = useForceStopSession();
-  const [ttsOn, setTtsOn] = useState(false);
+  const [ttsOn, setTtsOn] = useState(() => {
+    try { return (localStorage.getItem("ttsMode") ?? "off") !== "off"; } catch { return false; }
+  });
 
   const [duration, setDuration] = useState(0);
   useEffect(() => {
@@ -473,7 +475,13 @@ export function Dashboard() {
                   <input
                     type="checkbox"
                     checked={ttsOn}
-                    onChange={(e) => { setTtsOn(e.target.checked); setTtsEnabled(e.target.checked); }}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      const mode = on ? "browser" : "off" as const;
+                      setTtsOn(on);
+                      setTtsMode(mode);
+                      try { localStorage.setItem("ttsMode", mode); } catch {}
+                    }}
                     className="w-4 h-4 accent-violet-500 cursor-pointer"
                   />
                 </label>

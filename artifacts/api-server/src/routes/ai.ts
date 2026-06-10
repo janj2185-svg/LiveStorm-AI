@@ -9,7 +9,7 @@ import {
   aiGeneratedContentTable,
   sessionsTable,
 } from "@workspace/db";
-import { eq, desc, asc, and } from "drizzle-orm";
+import { eq, desc, asc, and, isNull } from "drizzle-orm";
 import { requireAuth, getOrCreateUser } from "./users";
 import {
   chatWithAssistant,
@@ -393,6 +393,38 @@ router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
   } catch (err: any) {
     console.error("[AI] /ai/voice error:", err?.message);
     res.status(500).json({ error: "Failed to generate voice" });
+  }
+});
+
+// ── POST /ai/test-announce ─────────────────────────────────────────────────────
+// Emits a test ai:announcement to the active session so the TTS pipeline can be
+// verified without waiting for a real viewer comment.
+router.post("/ai/test-announce", requireAuth, async (req: any, res: any) => {
+  try {
+    const { streamer } = await getStreamer(req.clerkUserId);
+    if (!streamer) return res.status(404).json({ error: "Streamer profile not found" });
+
+    const activeSession = await db.query.sessionsTable.findFirst({
+      where: and(eq(sessionsTable.streamerId, streamer.id), isNull(sessionsTable.endedAt)),
+    });
+    if (!activeSession) return res.status(404).json({ error: "No active session" });
+
+    const io = getIO();
+    if (!io) return res.status(503).json({ error: "Socket server not ready" });
+
+    const text = req.body?.text?.trim() || "Hey! This is a test voice announcement from your AI Co-Host. If you can hear this, TTS is working!";
+    const roomId = `session:${activeSession.id}`;
+    io.to(roomId).emit("ai:announcement", {
+      text,
+      type: "test",
+      viewerName: "System",
+    });
+
+    console.log(`[AI:test-announce] session=${activeSession.id} room=${roomId} text="${text.slice(0, 60)}"`);
+    res.json({ ok: true, sessionId: activeSession.id, text });
+  } catch (err: any) {
+    console.error("[AI] /ai/test-announce error:", err?.message);
+    res.status(500).json({ error: "Failed to send test announcement" });
   }
 });
 

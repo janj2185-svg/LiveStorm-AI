@@ -222,10 +222,21 @@ export function useLiveSession(
     }
   }, [initialMode]);
 
-  const ttsModeRef = useRef<TtsMode>("off");
-  const ttsVoiceRef = useRef<string>("nova");
-  const ttsVolumeRef = useRef<number>(1.0);
-  const ttsSpeedRef = useRef<number>(1.0);
+  const ttsModeRef = useRef<TtsMode>(
+    (() => {
+      try { return (localStorage.getItem("ttsMode") as TtsMode | null) ?? "off"; }
+      catch { return "off"; }
+    })()
+  );
+  const ttsVoiceRef = useRef<string>(
+    (() => { try { return localStorage.getItem("ttsVoice") ?? "nova"; } catch { return "nova"; } })()
+  );
+  const ttsVolumeRef = useRef<number>(
+    (() => { try { return Number(localStorage.getItem("ttsVolume") ?? "1.0") || 1.0; } catch { return 1.0; } })()
+  );
+  const ttsSpeedRef = useRef<number>(
+    (() => { try { return Number(localStorage.getItem("ttsSpeed") ?? "1.0") || 1.0; } catch { return 1.0; } })()
+  );
 
   const setTtsMode = useCallback((mode: TtsMode) => { ttsModeRef.current = mode; }, []);
   const setTtsVoice = useCallback((voice: string) => { ttsVoiceRef.current = voice; }, []);
@@ -447,10 +458,15 @@ export function useLiveSession(
         );
 
         const mode = ttsModeRef.current;
+        console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | text="${payload.text.slice(0, 60)}"`);
         if (mode === "openai") {
+          console.log(`[TTS] → enqueuing OpenAI TTS | voice=${ttsVoiceRef.current} | speed=${ttsSpeedRef.current}`);
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current));
         } else if (mode === "browser") {
+          console.log(`[TTS] → calling Browser Speech API`);
           playBrowserTts(payload.text);
+        } else {
+          console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Co-Host settings or Dashboard toggle.`);
         }
       });
 
