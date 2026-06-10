@@ -208,6 +208,7 @@ export type AvatarConfig = {
   scale: number;
   backgroundType: string;
   backgroundValue: string | null;
+  accentColor: string | null;
   lightingPreset: string;
   shadowEnabled: boolean;
   lipSyncEnabled: boolean;

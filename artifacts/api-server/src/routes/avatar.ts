@@ -147,6 +147,7 @@ router.put("/config", requireAuth, async (req, res) => {
       expressionIntensity,
       blinkEnabled,
       shadowEnabled,
+      accentColor,
     } = req.body;
 
     const [updated] = await db
@@ -172,6 +173,7 @@ router.put("/config", requireAuth, async (req, res) => {
         ...(expressionIntensity !== undefined && { expressionIntensity }),
         ...(blinkEnabled !== undefined && { blinkEnabled }),
         ...(shadowEnabled !== undefined && { shadowEnabled }),
+        ...(accentColor !== undefined && { accentColor }),
         updatedAt: new Date(),
       })
       .where(eq(avatarConfigsTable.id, config.id))

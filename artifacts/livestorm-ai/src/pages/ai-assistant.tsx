@@ -674,6 +674,15 @@ export function AiAssistant() {
   const [translatedComments, setTranslatedComments] = useState<Record<number, string | null>>({});
   const [translatingComments, setTranslatingComments] = useState<Set<number>>(new Set());
   const [accentColor, setAccentColor] = useState("#3b82f6");
+
+  // Sync accentColor and selectedBackground from DB once config loads
+  useEffect(() => {
+    if (!avatarConfig) return;
+    if (avatarConfig.accentColor) setAccentColor(avatarConfig.accentColor);
+    if (avatarConfig.backgroundValue) setSelectedBackground(avatarConfig.backgroundValue);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avatarConfig?.id]);
+
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -1607,7 +1616,7 @@ export function AiAssistant() {
                           <div className="flex items-center gap-3 p-3">
                             <AvatarThumbnail
                               avatarKey={avatarConfig.avatarKey ?? ""}
-                              accentColor="#3b82f6"
+                              accentColor={accentColor}
                               avatarUrl={avatarConfig.avatarUrl}
                               renderer={avatarConfig.renderer ?? "rpm"}
                               size={56}
@@ -1674,7 +1683,7 @@ export function AiAssistant() {
                         {BACKGROUND_PRESETS.map((bg) => (
                           <button
                             key={bg.id}
-                            onClick={() => setSelectedBackground(bg.id)}
+                            onClick={() => { setSelectedBackground(bg.id); saveAvatar({ backgroundValue: bg.id }); }}
                             className={cn(
                               "relative rounded-lg overflow-hidden border-2 transition-all h-12",
                               selectedBackground === bg.id ? "border-blue-500" : "border-white/10 hover:border-white/25",
@@ -1700,7 +1709,7 @@ export function AiAssistant() {
                         {["#2563eb", "#7c3aed", "#ec4899", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#f97316"].map((c) => (
                           <button
                             key={c}
-                            onClick={() => setAccentColor(c)}
+                            onClick={() => { setAccentColor(c); saveAvatar({ accentColor: c }); }}
                             className={cn(
                               "w-6 h-6 rounded-full border-2 transition-all hover:scale-110",
                               accentColor === c ? "border-white" : "border-transparent",

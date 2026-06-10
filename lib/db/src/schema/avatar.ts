@@ -24,6 +24,7 @@ export const avatarConfigsTable = pgTable("avatar_configs", {
 
   backgroundType: text("background_type").notNull().default("transparent"),
   backgroundValue: text("background_value"),
+  accentColor: text("accent_color").default("#3b82f6"),
   lightingPreset: text("lighting_preset").notNull().default("studio"),
   shadowEnabled: boolean("shadow_enabled").notNull().default(true),
 
