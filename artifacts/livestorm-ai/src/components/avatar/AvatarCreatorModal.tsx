@@ -68,6 +68,10 @@ function ReadyPlayerMeTab({
 }: {
   onSuccess: (avatarUrl: string, thumbnailUrl: string) => void;
 }) {
+  // Ref-callback: always-current without triggering effect re-runs
+  const onSuccessRef = useRef(onSuccess);
+  onSuccessRef.current = onSuccess;
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [subdomain, setSubdomain] = useState(() => getRpmSubdomain());
   const [inputValue, setInputValue] = useState(() => getRpmSubdomain());
@@ -80,16 +84,6 @@ function ReadyPlayerMeTab({
   const rpmUrl = subdomain
     ? `https://${subdomain}.readyplayer.me/avatar?frameApi&clearCache&bodyType=fullbody`
     : null;
-
-  const handleSuccess = useCallback(
-    (avatarUrl: string, thumbnailUrl: string) => {
-      if (capturedRef.current) return;
-      capturedRef.current = true;
-      setPhase("done");
-      onSuccess(avatarUrl, thumbnailUrl);
-    },
-    [onSuccess],
-  );
 
   function handleSubdomainSubmit() {
     const val = inputValue.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -112,6 +106,8 @@ function ReadyPlayerMeTab({
     capturedRef.current = false;
   }
 
+  // Only re-registers the listener when phase changes — NOT when the callback changes.
+  // The ref keeps the callback always-current without causing effect re-runs.
   useEffect(() => {
     if (phase === "setup" || phase === "done") return;
 
@@ -139,15 +135,17 @@ function ReadyPlayerMeTab({
 
       if (data.eventName === "v1.avatar.exported") {
         const rawUrl: string = data.data?.url ?? data.url ?? "";
-        if (rawUrl) {
-          handleSuccess(normalizeRpmUrl(rawUrl), rpmThumbnailUrl(rawUrl));
+        if (rawUrl && !capturedRef.current) {
+          capturedRef.current = true;
+          setPhase("done");
+          onSuccessRef.current(normalizeRpmUrl(rawUrl), rpmThumbnailUrl(rawUrl));
         }
       }
     }
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [phase, handleSuccess]);
+  }, [phase]); // dep: only phase — callback comes from ref, never causes re-runs
 
   if (phase === "setup") {
     return (
@@ -294,55 +292,66 @@ function ReadyPlayerMeTab({
 // ── Avaturn Tab ───────────────────────────────────────────────────────────────
 // Uses @avaturn/sdk (official). Public demo: demo.avaturn.dev.
 // A free Avaturn account is required — sign-up is embedded in the iframe.
+//
+// IMPORTANT: useEffect has EMPTY [] deps so the SDK is created exactly once
+// on mount and destroyed exactly once on unmount. The ref-callback pattern
+// (onSuccessRef) keeps the callback always-current without triggering re-runs.
 
 function AvaturnTab({ onSuccess }: { onSuccess: (avatarUrl: string) => void }) {
+  // Ref-callback: tracks the latest onSuccess without triggering effect re-runs
+  const onSuccessRef = useRef(onSuccess);
+  onSuccessRef.current = onSuccess;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const sdkRef = useRef<AvaturnSDK | null>(null);
   const [phase, setPhase] = useState<"loading" | "ready" | "done" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  const capturedRef = useRef(false);
+  const exportCaptured = useRef(false);
 
   const AVATURN_URL = "https://demo.avaturn.dev";
 
-  const handleSuccess = useCallback(
-    (url: string) => {
-      if (capturedRef.current) return;
-      capturedRef.current = true;
-      setPhase("done");
-      onSuccess(url);
-    },
-    [onSuccess],
-  );
-
   useEffect(() => {
-    capturedRef.current = false;
-    if (!containerRef.current) return;
+    // Runs ONCE on mount — SDK is never destroyed/recreated during the session.
+    const container = containerRef.current;
+    if (!container) return;
 
+    console.log("[Avaturn] SDK init — mount");
+    exportCaptured.current = false;
     const sdk = new AvaturnSDK();
     sdkRef.current = sdk;
 
-    sdk.init(containerRef.current, { url: AVATURN_URL })
+    sdk.init(container, { url: AVATURN_URL })
       .then(() => {
         setPhase("ready");
+
         sdk.on("export", (data) => {
-          if (data?.url) handleSuccess(data.url);
+          if (!data?.url || exportCaptured.current) return;
+          exportCaptured.current = true;
+          console.log("[Avaturn] export received:", data.url.slice(0, 80));
+          setPhase("done");
+          onSuccessRef.current(data.url); // always-current via ref
         });
+
         sdk.on("error", (err) => {
+          console.error("[Avaturn] SDK error:", err);
           setErrorMsg(err?.message ?? "Avaturn error");
           setPhase("error");
         });
       })
       .catch((err: unknown) => {
+        console.error("[Avaturn] init failed:", err);
         const msg = err instanceof Error ? err.message : "Failed to load Avaturn";
         setErrorMsg(msg);
         setPhase("error");
       });
 
     return () => {
-      sdkRef.current?.destroy();
+      // Only called when the component unmounts (tab switch or modal close)
+      console.log("[Avaturn] SDK destroy — unmount");
+      sdk.destroy();
       sdkRef.current = null;
     };
-  }, [handleSuccess]);
+  }, []); // ← EMPTY: init once, destroy once — never driven by callback identity
 
   return (
     <div className="flex flex-col gap-3">
@@ -591,15 +600,18 @@ export function AvatarCreatorModal({
   const [activeTab, setActiveTab] = useState<"rpm" | "avaturn" | "vrm">("rpm");
   const [pending, setPending] = useState<AvatarCreatorResult | null>(null);
 
-  function handleRPMSuccess(avatarUrl: string, thumbnailUrl: string) {
+  // Stable references — these must not change identity on every render.
+  // Without useCallback, every parent re-render creates a new function reference
+  // which propagates to child tab components and triggers their effects/callbacks.
+  const handleRPMSuccess = useCallback((avatarUrl: string, thumbnailUrl: string) => {
     setPending({ avatarUrl, renderer: "rpm", thumbnailUrl });
-  }
-  function handleAvaturnSuccess(avatarUrl: string) {
+  }, []);
+  const handleAvaturnSuccess = useCallback((avatarUrl: string) => {
     setPending({ avatarUrl, renderer: "avaturn" });
-  }
-  function handleVRMSuccess(avatarUrl: string) {
+  }, []);
+  const handleVRMSuccess = useCallback((avatarUrl: string) => {
     setPending({ avatarUrl, renderer: "vrm" });
-  }
+  }, []);
 
   function handleSave() {
     if (!pending) return;

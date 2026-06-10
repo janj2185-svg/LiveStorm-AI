@@ -1,3 +1,4 @@
+- [Avaturn SDK flicker fix](avaturn-sdk-flicker.md) — SDK destroy loop caused by useEffect([handleSuccess]) + inline parent callback; fix = ref-callback pattern + empty [] deps.
 - [TikTok im_enter_room diagnosis](tiktok-im-enter-room.md) — `code=1000, reason=payload_handler_im_enter_room` + 0 packets = user offline (not rate limit); Eulerstream plan limits; fixes applied.
 - [Eulerstream proxy cursor zero](eulerstream-cursor-zero.md) — cursor="0" from fetchWebcastURL = proxy cannot auth to TikTok; 0 bytes delivered regardless of room activity; plan upgrade required.
 - [tik.tools provider](tiktools-provider.md) — demo key `your_api_key` is real (HTTP 200 JWT, WS opens, roomInfo received); but shared FIFO queue evicts in ~5s (code 4429). Personal free key needed for production. LIVE_PROVIDER=tiktools + TIKTOOL_API_KEY wires TikToolsClient; factory in tiktokConnector.ts.
