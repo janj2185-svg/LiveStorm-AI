@@ -704,11 +704,11 @@ export function AiAssistant() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col gap-3">
+    <div className="space-y-4 max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
 
       {/* ── Premium Cinematic Hero ── */}
       <div
-        className="relative overflow-hidden rounded-2xl border border-white/[0.08] flex-[2] min-h-0"
+        className="relative overflow-hidden rounded-2xl border border-white/[0.08] flex-shrink-0"
         style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,22,200,0.12) 45%, rgba(14,165,233,0.09) 100%)" }}
       >
         {/* Background depth layers */}
@@ -724,13 +724,13 @@ export function AiAssistant() {
           }}
         />
 
-        <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_260px] h-full">
+        <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_320px]">
 
           {/* ── Left: info ── */}
-          <div className="px-5 py-3 md:px-6 md:py-3 order-2 lg:order-1 flex flex-col justify-center min-h-0">
+          <div className="p-5 md:p-7 order-2 lg:order-1">
 
             {/* Status eyebrow row */}
-            <div className="flex items-center gap-1.5 flex-wrap mb-2">
+            <div className="flex items-center gap-2 flex-wrap mb-4">
               <div className={cn(
                 "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-full border transition-colors",
                 isSessionActive && connected
@@ -769,7 +769,7 @@ export function AiAssistant() {
             </div>
 
             {/* Big title */}
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-tight text-white mb-0.5">
+            <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black tracking-tight leading-[1.03] text-white mb-1">
               <span
                 className="bg-clip-text text-transparent"
                 style={{ backgroundImage: "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 40%, #22d3ee 100%)" }}
@@ -777,14 +777,14 @@ export function AiAssistant() {
                 {personaName}
               </span>
             </h1>
-            <p className="text-sm font-medium text-white/50 mb-0.5 tracking-wide">AI Co-Host</p>
-            <p className="text-xs text-muted-foreground/60 max-w-[400px] mb-2 leading-snug hidden sm:block">
-              Real-time chat replies, gift reactions, voice &amp; moderation.
+            <p className="text-base md:text-lg font-semibold text-white/60 mb-1 tracking-wide">AI Co-Host</p>
+            <p className="text-sm text-muted-foreground/70 max-w-[420px] mb-5 leading-relaxed">
+              Real-time chat replies, gift reactions, voice &amp; moderation — powered by your AI persona.
             </p>
 
             {/* Live stat chips — shown when session active */}
             {isSessionActive && (
-              <div className="flex items-center gap-1.5 flex-wrap mb-2">
+              <div className="flex items-center gap-2 flex-wrap mb-5">
                 {([
                   { label: "viewers", value: stats.viewerCount,         color: "text-violet-300", bg: "bg-violet-500/10 border-violet-500/20", icon: <Users className="h-3 w-3" /> },
                   { label: "gifts",   value: stats.totalGifts,          color: "text-amber-300",  bg: "bg-amber-500/10 border-amber-500/20",  icon: <Gift className="h-3 w-3" /> },
@@ -823,7 +823,7 @@ export function AiAssistant() {
           </div>
 
           {/* ── Right: AI Avatar Stage — desktop + mobile ── */}
-          <div className="flex items-stretch order-1 lg:order-2 px-2 pt-2 pb-0 lg:px-3 lg:py-3">
+          <div className="flex items-stretch order-1 lg:order-2 px-3 pt-3 pb-0 lg:px-4 lg:py-4">
             <AvatarStage
               avatarKey={avatarConfig?.avatarKey ?? "marcus"}
               accentColor={accentColor}
@@ -840,7 +840,7 @@ export function AiAssistant() {
               personaName={personaName}
               onOpenSettings={() => setActiveTab("avatar")}
               showDebug={showAvatarDebug}
-              className="w-full h-[140px] lg:h-full"
+              className="w-full h-[260px] lg:h-full lg:min-h-[420px]"
             />
           </div>
 
@@ -862,7 +862,7 @@ export function AiAssistant() {
       )}
 
       {/* ── Body: sidebar + main ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-3 flex-[3] min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
 
         {/* ── LEFT: Settings sidebar ── */}
         <div className="flex flex-col gap-3 overflow-y-auto pr-0.5 min-h-0 lg:max-h-none">
