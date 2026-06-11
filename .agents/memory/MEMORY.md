@@ -19,3 +19,4 @@
 - [AI auto-reply gating](ai-autoreply-gate.md) — auto_reply_enabled=false in ai_persona_configs silently skips ALL comment replies. operatingMode="assistant" sets it false; operatingMode="autopilot" sets it true. Check DB when AI stops responding to comments.
 - [lib/db project references rebuild](db-project-references.md) — after schema changes, run `npx tsc --build lib/db` or dist/ stays stale; pnpm build script doesn't exist.
 - [Orchestrator wiring requirements](orchestrator-wiring.md) — two missing wires (initOrchestrator + orchestratorEnqueue) caused all events to silently drop; both now wired in socketServer.ts.
+- [Dual pipeline removal](dual-pipeline-removal.md) — DISABLE_OLD_PIPELINE=true disables processAiAnnouncements; unique logic (gift threshold, like milestones, per-type cooldowns, fastSpamCheck, per-viewer cooldown) migrated into orchestrator enqueueEvent pre-filters.

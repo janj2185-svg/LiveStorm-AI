@@ -11,10 +11,19 @@ import { getMemoryContext, upsertViewerProfile } from "./memoryAgent";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
 import { isBattleActive, generateBattleReply } from "./battleAgent";
-import { generateVoice } from "../lib/aiService";
+import { generateVoice, fastSpamCheck } from "../lib/aiService";
 
 const MAX_QUEUE_SIZE = 50;
 const MAX_GENERAL_ITEM_AGE_MS = 15_000;
+
+// ─── Announcement cooldowns (migrated from old processAiAnnouncements) ────────
+// These mirror the old pipeline exactly so no behaviour is lost after migration.
+const ANNOUNCEMENT_COOLDOWN_MS: Record<string, number> = {
+  gift:           30_000,
+  share:          45_000,
+  follow:         60_000,
+  like_milestone: 120_000,
+};
 
 // Priority-aware TTS cooldowns — high-value events respond faster
 const TTS_COOLDOWN_MS: Record<number, number> = {
@@ -60,6 +69,10 @@ interface OrchestratorState {
   processing: boolean;
   enabledAgents: Set<string>;
   conversationHistory: Map<number, Array<{ viewer: string; comment: string; reply: string; ts: number }>>;
+  // Migrated from old processAiAnnouncements pipeline:
+  sessionLikeTotals: Map<number, number>;       // cumulative likes per session for milestone detection
+  announcementCooldowns: Map<string, number>;   // "sessionId:eventType" → last-fired timestamp
+  perViewerReplyCooldown: Map<string, number>;  // "sessionId:viewerName" → last-reply timestamp
 }
 
 const state: OrchestratorState = {
@@ -68,6 +81,9 @@ const state: OrchestratorState = {
   processing: false,
   enabledAgents: new Set(["host", "chat", "memory", "personality", "voice", "moderation", "strategy", "learning", "battle"]),
   conversationHistory: new Map(),
+  sessionLikeTotals: new Map(),
+  announcementCooldowns: new Map(),
+  perViewerReplyCooldown: new Map(),
 };
 
 let ioRef: SocketServer | null = null;
@@ -107,10 +123,165 @@ function cleanQueue(): void {
   if (state.queue.length < before) {
     console.log(`[Queue:Trim] ${before} → ${state.queue.length} items`);
   }
+
+  // Clean up migrated-pipeline Maps (entries older than 10 min)
+  const cutoff = now - 10 * 60 * 1_000;
+  for (const [key, ts] of state.announcementCooldowns) {
+    if (ts < cutoff) state.announcementCooldowns.delete(key);
+  }
+  for (const [key, ts] of state.perViewerReplyCooldown) {
+    if (ts < cutoff) state.perViewerReplyCooldown.delete(key);
+  }
 }
 
 export async function enqueueEvent(event: TikTokEvent, streamerId: number): Promise<void> {
   if (!ioRef) return;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PRE-FILTERS: logic migrated from old processAiAnnouncements pipeline.
+  // These run BEFORE the priority queue so only valid events reach the Orchestrator.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── 1. Like events: only enqueue at 100-like milestones ────────────────────
+  if (event.type === "like") {
+    const likeCount = (event.data.likeCount as number) ?? 1;
+    const prev = state.sessionLikeTotals.get(event.sessionId) ?? 0;
+    const next = prev + likeCount;
+    state.sessionLikeTotals.set(event.sessionId, next);
+    trackStreamEvent(event.sessionId, event.type, likeCount);
+
+    const prevMilestone = Math.floor(prev / 100);
+    const nextMilestone = Math.floor(next / 100);
+    if (nextMilestone <= prevMilestone) {
+      // No milestone crossed — track the like but don't generate AI response
+      return;
+    }
+    const milestoneKey = `${event.sessionId}:like_milestone`;
+    const lastMs = state.announcementCooldowns.get(milestoneKey) ?? 0;
+    if (Date.now() - lastMs < ANNOUNCEMENT_COOLDOWN_MS.like_milestone) {
+      console.log(`[NEW-PIPELINE] like_milestone cooldown skip | session=${event.sessionId} total=${next}`);
+      return;
+    }
+    state.announcementCooldowns.set(milestoneKey, Date.now());
+    const milestone = nextMilestone * 100;
+    console.log(`[NEW-PIPELINE] ⭐ like_milestone=${milestone} | session=${event.sessionId} totalLikes=${next}`);
+    // Enrich event so hostAgent can craft a milestone-specific reply
+    event = { ...event, data: { ...event.data, milestone } };
+  }
+
+  // ── 2. Gift events: threshold check + per-session cooldown ─────────────────
+  if (event.type === "gift") {
+    const coins = (event.data.coins as number) ?? 0;
+    let giftConfig: typeof import("@workspace/db")["aiPersonaConfigsTable"]["$inferSelect"] | undefined;
+    try {
+      giftConfig = await db.query.aiPersonaConfigsTable.findFirst({
+        where: eq(aiPersonaConfigsTable.streamerId, streamerId),
+      }) ?? undefined;
+    } catch { /* non-fatal */ }
+
+    if (giftConfig && !giftConfig.announceGifts) {
+      console.log(`[NEW-PIPELINE] gift suppressed (announceGifts=false) | coins=${coins} | session=${event.sessionId}`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
+    const threshold = giftConfig?.announceGiftThreshold ?? 0;
+    if (coins < threshold) {
+      console.log(`[NEW-PIPELINE] gift below threshold | coins=${coins} < threshold=${threshold} | session=${event.sessionId}`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
+    const giftKey = `${event.sessionId}:gift`;
+    const lastGift = state.announcementCooldowns.get(giftKey) ?? 0;
+    if (Date.now() - lastGift < ANNOUNCEMENT_COOLDOWN_MS.gift) {
+      console.log(`[NEW-PIPELINE] gift cooldown | session=${event.sessionId} coins=${coins}`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
+    state.announcementCooldowns.set(giftKey, Date.now());
+    console.log(`[NEW-PIPELINE] 🎁 gift passed threshold | coins=${coins} threshold=${threshold} | session=${event.sessionId}`);
+  }
+
+  // ── 3. Share events: per-session cooldown ──────────────────────────────────
+  if (event.type === "share") {
+    const shareKey = `${event.sessionId}:share`;
+    const lastShare = state.announcementCooldowns.get(shareKey) ?? 0;
+    if (Date.now() - lastShare < ANNOUNCEMENT_COOLDOWN_MS.share) {
+      console.log(`[NEW-PIPELINE] share cooldown | session=${event.sessionId}`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
+    state.announcementCooldowns.set(shareKey, Date.now());
+    console.log(`[NEW-PIPELINE] 📢 share passed cooldown | session=${event.sessionId} viewer=${event.username}`);
+  }
+
+  // ── 4. Follow events: announceLevelUp flag + per-session cooldown ───────────
+  if (event.type === "follow") {
+    let followConfig: typeof import("@workspace/db")["aiPersonaConfigsTable"]["$inferSelect"] | undefined;
+    try {
+      followConfig = await db.query.aiPersonaConfigsTable.findFirst({
+        where: eq(aiPersonaConfigsTable.streamerId, streamerId),
+      }) ?? undefined;
+    } catch { /* non-fatal */ }
+
+    if (followConfig && !followConfig.announceLevelUp) {
+      console.log(`[NEW-PIPELINE] follow suppressed (announceLevelUp=false) | session=${event.sessionId}`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
+    const followKey = `${event.sessionId}:follow`;
+    const lastFollow = state.announcementCooldowns.get(followKey) ?? 0;
+    if (Date.now() - lastFollow < ANNOUNCEMENT_COOLDOWN_MS.follow) {
+      console.log(`[NEW-PIPELINE] follow cooldown | session=${event.sessionId}`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
+    state.announcementCooldowns.set(followKey, Date.now());
+    console.log(`[NEW-PIPELINE] 👤 follow passed cooldown | session=${event.sessionId} viewer=${event.username}`);
+  }
+
+  // ── 5. Comment events: fast spam check + per-viewer reply cooldown ──────────
+  if (event.type === "comment") {
+    const comment = ((event.data.text as string) ?? "").trim();
+    if (comment.length <= 2) return;
+
+    // Fast local spam check — instant, no API call (mirrors old pipeline step 0)
+    const spamResult = fastSpamCheck(comment);
+    if (spamResult.flagged) {
+      console.log(
+        `[NEW-PIPELINE] 🚫 spam-blocked (fast check) | viewer=${event.username} reason="${spamResult.reason}" | session=${event.sessionId}`,
+      );
+      ioRef.to(`session:${event.sessionId}`).emit("moderation:flagged", {
+        viewerName: event.username,
+        comment,
+        reason: spamResult.reason,
+        pipeline: "orchestrator",
+      });
+      return;
+    }
+
+    // Per-viewer reply cooldown (mirrors old pipeline autoReplySpamMap logic)
+    let commentConfig: typeof import("@workspace/db")["aiPersonaConfigsTable"]["$inferSelect"] | undefined;
+    try {
+      commentConfig = await db.query.aiPersonaConfigsTable.findFirst({
+        where: eq(aiPersonaConfigsTable.streamerId, streamerId),
+      }) ?? undefined;
+    } catch { /* non-fatal */ }
+
+    if (commentConfig?.spamProtectionEnabled) {
+      const cooldownMs = Math.max(5_000, (commentConfig.spamCooldownSeconds ?? 30) * 1_000);
+      const viewerKey = `${event.sessionId}:${event.username ?? "anon"}`;
+      const lastReply = state.perViewerReplyCooldown.get(viewerKey) ?? 0;
+      const elapsed = Date.now() - lastReply;
+      if (elapsed < cooldownMs) {
+        console.log(
+          `[NEW-PIPELINE] per-viewer cooldown | viewer=${event.username} elapsed=${Math.round(elapsed / 1_000)}s < ${Math.round(cooldownMs / 1_000)}s | session=${event.sessionId}`,
+        );
+        return;
+      }
+    }
+  }
+
+  // ── End pre-filters: all checks passed → classify and enqueue ──────────────
 
   const classification = await classifyEvent(event, streamerId);
 
@@ -339,6 +510,9 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
 
   const roomId = `session:${sessionId}`;
 
+  console.log(
+    `[NEW-PIPELINE] 📢 ai:announcement | type=${event.type} | viewer=${event.username ?? "anon"} | session=${sessionId} | text="${hostResult.text.slice(0, 80)}"`,
+  );
   io.to(roomId).emit("ai:announcement", {
     text: hostResult.text,
     type: event.type,
@@ -346,6 +520,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     emotion: hostResult.emotion,
     agentType: "host",
     personality: personality.modeKey,
+    pipeline: "orchestrator",  // proof: every announcement from the new pipeline carries this field
   });
 
   io.to(roomId).emit("agent:task", {
@@ -372,6 +547,11 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     const comment = (event.data.text as string) ?? "";
     const updated = [...history, { viewer: event.username ?? "Unknown", comment, reply: hostResult.text, ts: Date.now() }];
     state.conversationHistory.set(sessionId, updated.slice(-10));
+
+    // Record per-viewer reply timestamp so the pre-filter can enforce cooldowns
+    const viewerKey = `${sessionId}:${event.username ?? "anon"}`;
+    state.perViewerReplyCooldown.set(viewerKey, Date.now());
+    console.log(`[NEW-PIPELINE] 🕐 per-viewer cooldown set | viewer=${event.username} | session=${sessionId}`);
   }
 
   // ── Strategy Agent: score response (engagement-weighted, not hardcoded 5.0) ──

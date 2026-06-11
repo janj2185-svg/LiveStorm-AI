@@ -26,6 +26,16 @@ import { initOrchestrator, enqueueEvent as orchestratorEnqueue } from "../agents
 
 let io: SocketServer | null = null;
 
+// ─── Feature flag: set DISABLE_OLD_PIPELINE=true to route all AI through the ──
+// Orchestrator only.  When false (default) both pipelines run simultaneously.
+// Set to true once unique logic has been migrated and orchestrator is verified.
+const DISABLE_OLD_PIPELINE = process.env.DISABLE_OLD_PIPELINE === "true";
+if (DISABLE_OLD_PIPELINE) {
+  console.log("[Pipeline] ✅ DISABLE_OLD_PIPELINE=true — OLD pipeline disabled. Orchestrator is the single AI brain.");
+} else {
+  console.log("[Pipeline] ⚠️  DISABLE_OLD_PIPELINE not set — DUAL pipeline ACTIVE. Both processAiAnnouncements + Orchestrator will fire.");
+}
+
 // ─── Per-session recent-events ring buffer (last 100 events, in-memory) ───────
 const RECENT_EVENTS_MAX = 100;
 const recentEventsStore = new Map<number, TikTokEvent[]>();
@@ -593,8 +603,20 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   } catch (_err) {}
 
   if (streamerId) {
-    void processAiAnnouncements(io, event, streamerId);
+    if (!DISABLE_OLD_PIPELINE) {
+      console.log(
+        `[OLD-PIPELINE] processAiAnnouncements ACTIVE | type=${event.type} | session=${event.sessionId} | streamer=${streamerId}`,
+      );
+      void processAiAnnouncements(io, event, streamerId);
+    } else {
+      console.log(
+        `[OLD-PIPELINE] DISABLED (DISABLE_OLD_PIPELINE=true) | type=${event.type} | session=${event.sessionId}`,
+      );
+    }
     void processTranslation(io, event, streamerId);
+    console.log(
+      `[NEW-PIPELINE] orchestratorEnqueue | type=${event.type} | session=${event.sessionId} | streamer=${streamerId}`,
+    );
     void orchestratorEnqueue(event, streamerId);
   }
 
