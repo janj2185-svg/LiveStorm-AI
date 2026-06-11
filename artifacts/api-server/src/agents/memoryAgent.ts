@@ -1,8 +1,30 @@
 import { db, aiMemoriesTable, agentViewerProfilesTable as viewerProfilesTable } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, lt, lte } from "drizzle-orm";
 
 const memoryCache = new Map<number, { memories: string[]; ts: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
+
+export async function pruneOldMemories(streamerId: number): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // 14 days
+    const result = await db
+      .delete(aiMemoriesTable)
+      .where(
+        and(
+          eq(aiMemoriesTable.streamerId, streamerId),
+          lte(aiMemoriesTable.importance, 2),
+          lt(aiMemoriesTable.lastAccessed, cutoff),
+        ),
+      );
+    const count = (result as unknown as { rowCount?: number })?.rowCount ?? 0;
+    if (count > 0) {
+      console.log(`[MemoryAgent] 🧹 pruned ${count} stale low-importance memories for streamer=${streamerId}`);
+      memoryCache.delete(streamerId);
+    }
+  } catch (err) {
+    console.error("[MemoryAgent] prune error:", (err as Error)?.message);
+  }
+}
 
 export async function storeMemory(opts: {
   streamerId: number;
@@ -74,6 +96,19 @@ export async function getMemoryContext(streamerId: number, viewerName?: string):
     for (const m of streamMem) lines.push(`[Stream] ${m.key}: ${m.value}`);
 
     if (viewerName) {
+      // VIP status from viewer profile
+      try {
+        const profile = await db.query.agentViewerProfilesTable.findFirst({
+          where: and(
+            eq(viewerProfilesTable.streamerId, streamerId),
+            eq(viewerProfilesTable.viewerName, viewerName),
+          ),
+        });
+        if (profile && profile.vipLevel !== "none") {
+          lines.push(`[Viewer:${viewerName}] vip_status: ${viewerName} is a ${profile.vipLevel} viewer (${profile.totalGifts} gifts, ${profile.totalComments} comments). Treat them with extra respect.`);
+        }
+      } catch {}
+
       const viewerMem = await db.query.aiMemoriesTable.findMany({
         where: and(
           eq(aiMemoriesTable.streamerId, streamerId),
@@ -136,6 +171,11 @@ export async function upsertViewerProfile(opts: {
           tiktokViewerId: opts.tiktokViewerId,
           importance: 4,
         });
+      }
+
+      // Occasionally prune stale low-importance memories (1% chance per update)
+      if (Math.random() < 0.01) {
+        void pruneOldMemories(opts.streamerId);
       }
     } else {
       await db.insert(viewerProfilesTable).values({

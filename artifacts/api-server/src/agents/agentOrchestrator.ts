@@ -13,8 +13,34 @@ import { runLearningAgent } from "./learningAgent";
 import { isBattleActive, generateBattleReply } from "./battleAgent";
 import { generateVoice } from "../lib/aiService";
 
-const GLOBAL_TTS_COOLDOWN_MS = 8_000;
 const MAX_QUEUE_SIZE = 50;
+const MAX_GENERAL_ITEM_AGE_MS = 15_000;
+
+// Priority-aware TTS cooldowns — high-value events respond faster
+const TTS_COOLDOWN_MS: Record<number, number> = {
+  1: 2_000,   // gift — react immediately
+  2: 3_000,   // follow / share
+  3: 2_000,   // battle
+  4: 5_000,   // direct question
+  5: 6_000,   // vip viewer
+  6: 8_000,   // general chat
+};
+
+function ttsCooldown(priority: number): number {
+  return TTS_COOLDOWN_MS[priority] ?? 8_000;
+}
+
+// Engagement scores by priority / event type for the learning system
+function computeBaseScore(priority: number, eventType: string): number {
+  if (eventType === "gift")   return 8.5;
+  if (eventType === "follow") return 7.5;
+  if (eventType === "share")  return 7.0;
+  switch (priority) {
+    case 4: return 7.0;  // direct question answered
+    case 5: return 6.5;  // vip viewer
+    default: return 5.0; // general
+  }
+}
 
 interface QueueItem {
   priority: number;
@@ -24,6 +50,8 @@ interface QueueItem {
   agentType: string;
   priorityReason: string;
   enqueuedAt: number;
+  groupKey?: string;
+  batchCount?: number;
 }
 
 interface OrchestratorState {
@@ -38,7 +66,7 @@ const state: OrchestratorState = {
   queue: [],
   lastTtsTime: 0,
   processing: false,
-  enabledAgents: new Set(["host", "chat", "memory", "personality", "voice", "moderation", "strategy", "learning"]),
+  enabledAgents: new Set(["host", "chat", "memory", "personality", "voice", "moderation", "strategy", "learning", "battle"]),
   conversationHistory: new Map(),
 };
 
@@ -53,10 +81,31 @@ export function initOrchestrator(io: SocketServer): void {
 
 function cleanQueue(): void {
   const now = Date.now();
-  const MAX_AGE = 30_000;
-  state.queue = state.queue.filter((item) => now - item.enqueuedAt < MAX_AGE);
-  if (state.queue.length > MAX_QUEUE_SIZE) {
-    state.queue = state.queue.slice(0, MAX_QUEUE_SIZE);
+  const before = state.queue.length;
+
+  // Drop stale general-chat items early when queue is busy
+  if (state.queue.length > 20) {
+    state.queue = state.queue.filter((item) => {
+      const age = now - item.enqueuedAt;
+      if (item.priority >= 6 && age > MAX_GENERAL_ITEM_AGE_MS) {
+        console.log(`[Queue:Drop] stale general | viewer=${item.event.username} age=${Math.round(age / 1000)}s`);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  // Always drop anything older than 30s
+  state.queue = state.queue.filter((item) => now - item.enqueuedAt < 30_000);
+
+  // Hard cap at 40
+  if (state.queue.length > 40) {
+    const dropped = state.queue.splice(40);
+    console.log(`[Queue:Drop] hard cap — removed ${dropped.length} excess items`);
+  }
+
+  if (state.queue.length < before) {
+    console.log(`[Queue:Trim] ${before} → ${state.queue.length} items`);
   }
 }
 
@@ -64,6 +113,19 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
   if (!ioRef) return;
 
   const classification = await classifyEvent(event, streamerId);
+
+  // Deduplicate general chat: merge similar messages already sitting in queue
+  if (classification.priority === PRIORITY_LEVELS.GENERAL && classification.groupKey) {
+    const existing = state.queue.find(
+      (q) => q.sessionId === event.sessionId && q.groupKey === classification.groupKey,
+    );
+    if (existing) {
+      existing.batchCount = (existing.batchCount ?? 1) + 1;
+      console.log(`[Chat:Batch] 📦 merged @${event.username ?? "?"} → group="${classification.groupKey}" (${existing.batchCount} viewers)`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
+  }
 
   const item: QueueItem = {
     priority: classification.priority,
@@ -73,6 +135,8 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     agentType: classification.agentType,
     priorityReason: classification.reason,
     enqueuedAt: Date.now(),
+    groupKey: classification.groupKey,
+    batchCount: 1,
   };
 
   state.queue.push(item);
@@ -108,9 +172,11 @@ async function processQueue(): Promise<void> {
   if (state.processing || state.queue.length === 0 || !ioRef) return;
 
   const now = Date.now();
+  const nextItem = state.queue[0]!;
+  const cooldown = ttsCooldown(nextItem.priority);
   const timeSinceLastTts = now - state.lastTtsTime;
 
-  if (timeSinceLastTts < GLOBAL_TTS_COOLDOWN_MS) return;
+  if (timeSinceLastTts < cooldown) return;
 
   const item = state.queue.shift();
   if (!item) return;
@@ -216,17 +282,44 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     });
     if (battleResult.shouldSpeak && battleResult.suggestedReply) {
       console.log(`[Agent:Battle] ⚔️ battle reply: "${battleResult.suggestedReply.slice(0, 80)}"`);
+      state.lastTtsTime = Date.now();
       io.to(`session:${sessionId}`).emit("agent:battle:reply", {
         suggestedReply: battleResult.suggestedReply,
         opponentStatement: commentText,
         context: battleResult.context,
       });
+      // Route battle reply through the same TTS voice pipeline
+      if (config.voiceEnabled && state.enabledAgents.has("voice")) {
+        void (async () => {
+          try {
+            const audioBuffer = await generateVoice(
+              battleResult.suggestedReply!,
+              voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
+              voice.speed ?? 1,
+            );
+            if (audioBuffer) {
+              io.to(`session:${sessionId}`).emit("tts:audio", { audio: audioBuffer, text: battleResult.suggestedReply });
+              console.log(`[Agent:Battle] 🔊 TTS battle comeback delivered`);
+            }
+          } catch (e) {
+            console.error("[Agent:Battle] TTS error:", (e as Error)?.message);
+          }
+        })();
+      }
+      void scoreResponse({ sessionId, streamerId, agentType: "battle", triggerEvent: "comment", aiResponse: battleResult.suggestedReply, score: 8.0 });
+      void logTask({ sessionId, streamerId, agentType: "battle", eventType: "comment", priority: item.priority, input: { opponent: commentText.slice(0, 100) }, output: { reply: battleResult.suggestedReply.slice(0, 100) } });
+      return; // battle reply takes over — skip standard host agent
     }
   }
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
+  // When multiple viewers sent the same message, give the AI crowd context
+  const eventForHost = (item.batchCount && item.batchCount > 1 && event.type === "comment")
+    ? { ...event, data: { ...event.data, text: `[${item.batchCount} viewers are saying:] ${(event.data.text as string) ?? ""}` } }
+    : event;
+
   const hostResult = await runHostAgent({
-    event,
+    event: eventForHost,
     streamerId,
     personaName: config.personaName,
     personality,
@@ -281,13 +374,14 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     state.conversationHistory.set(sessionId, updated.slice(-10));
   }
 
-  // ── Strategy Agent: score response ──────────────────────────────────────────
+  // ── Strategy Agent: score response (engagement-weighted, not hardcoded 5.0) ──
   void scoreResponse({
     sessionId,
     streamerId,
     agentType: "host",
     triggerEvent: event.type,
     aiResponse: hostResult.text,
+    score: computeBaseScore(item.priority, event.type),
   });
 
   // ── Voice Agent: synthesize TTS ──────────────────────────────────────────────

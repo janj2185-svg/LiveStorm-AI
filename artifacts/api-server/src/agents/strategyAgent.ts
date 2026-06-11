@@ -114,6 +114,7 @@ export async function scoreResponse(opts: {
   agentType: string;
   triggerEvent: string;
   aiResponse: string;
+  score?: number;
   engagementDelta?: number;
 }): Promise<void> {
   await db.insert(aiResponseScoresTable).values({
@@ -122,9 +123,11 @@ export async function scoreResponse(opts: {
     agentType: opts.agentType,
     triggerEvent: opts.triggerEvent,
     aiResponse: opts.aiResponse,
-    score: 5.0,
+    score: opts.score ?? 5.0,
     engagementDelta: opts.engagementDelta ?? 0,
-  }).catch(() => {});
+  }).catch((err: unknown) => {
+    console.error("[StrategyAgent] scoreResponse DB error:", (err as Error)?.message);
+  });
 }
 
 export async function getRecentScores(streamerId: number, sessionId?: number) {

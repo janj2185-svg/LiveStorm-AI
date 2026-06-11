@@ -11,6 +11,8 @@ import {
   isRealModeEnabled,
   type ConnectionMode,
 } from "../lib/tiktokConnector";
+import { triggerLearningAgent } from "../agents/agentOrchestrator";
+import { clearSessionMetrics } from "../agents/strategyAgent";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 async function clearStreamerLiveFlag(streamerId: number) {
@@ -162,6 +164,12 @@ router.post("/sessions/force-stop", requireAuth, async (req: any, res: any) => {
       io.to(`session:${openSession.id}`).emit("session:ended", { sessionId: openSession.id });
     }
 
+    if (openSession) {
+      clearSessionMetrics(openSession.id);
+      void triggerLearningAgent(openSession.id, streamer.id);
+      console.log(`[Session] Force-stop: learning agent queued for session ${openSession.id}`);
+    }
+
     console.log(
       `[Session] Force-stop complete — streamer ${streamer.id}, cleared session ${openSession?.id ?? "none"}`,
     );
@@ -206,6 +214,10 @@ router.post("/sessions/end", requireAuth, async (req: any, res: any) => {
     if (io) {
       io.to(`session:${activeSession.id}`).emit("session:ended", { sessionId: activeSession.id });
     }
+
+    clearSessionMetrics(activeSession.id);
+    void triggerLearningAgent(activeSession.id, streamer.id);
+    console.log(`[Session] End: learning agent queued for session ${activeSession.id}`);
 
     res.json({
       id: ended.id,

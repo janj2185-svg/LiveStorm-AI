@@ -1,7 +1,24 @@
 import OpenAI from "openai";
-import { db, aiLearningReportsTable, aiResponseScoresTable } from "@workspace/db";
+import { db, aiLearningReportsTable, aiResponseScoresTable, aiPersonaConfigsTable } from "@workspace/db";
 import { eq, and, avg, count } from "drizzle-orm";
 import { storeMemory } from "./memoryAgent";
+
+const PERSONALITY_KEYWORDS: Record<string, string[]> = {
+  savage:       ["more aggressive", "sharper", "edgier", "bolder", "savage", "ruthless wit"],
+  funny:        ["more humor", "funnier", "comedic", "jokes", "playful", "witty"],
+  motivational: ["more energetic", "motivational", "uplifting", "inspiring", "hype"],
+  professional: ["more professional", "authoritative", "concise", "analytical"],
+  flirty:       ["more charming", "flirty", "playful banter", "charismatic"],
+  friendly:     ["warmer", "friendlier", "welcoming", "inclusive", "friendly"],
+};
+
+function detectPersonalityAdjustment(text: string): string | null {
+  const lower = text.toLowerCase();
+  for (const [mode, keywords] of Object.entries(PERSONALITY_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) return mode;
+  }
+  return null;
+}
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
@@ -107,7 +124,21 @@ Return JSON: {"recommendations": "...", "personalityAdjustments": "..."}`,
     importance: 3,
   });
 
-  console.log(`[LearningAgent] Report generated for session ${opts.sessionId}: ${scores.length} responses, avg ${avgScore.toFixed(2)}`);
+  // Auto-apply personality adjustment if learning report strongly suggests a mode change
+  const suggestedMode = detectPersonalityAdjustment(personalityAdjustments);
+  if (suggestedMode) {
+    try {
+      await db
+        .update(aiPersonaConfigsTable)
+        .set({ personalityType: suggestedMode })
+        .where(eq(aiPersonaConfigsTable.streamerId, opts.streamerId));
+      console.log(`[LearningAgent] ✅ auto-applied personality adjustment → mode="${suggestedMode}" for streamer=${opts.streamerId}`);
+    } catch (err) {
+      console.error("[LearningAgent] personality auto-apply error:", (err as Error)?.message);
+    }
+  }
+
+  console.log(`[LearningAgent] Report generated for session ${opts.sessionId}: ${scores.length} responses, avg ${avgScore.toFixed(2)}${suggestedMode ? ` | auto-adjusted personality → ${suggestedMode}` : ""}`);
 
   return {
     sessionId: opts.sessionId,

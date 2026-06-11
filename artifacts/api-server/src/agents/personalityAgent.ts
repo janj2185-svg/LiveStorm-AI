@@ -120,11 +120,23 @@ export async function setActivePersonality(streamerId: number, modeKey: string):
   }
 }
 
+const PERSONALITY_RULES: Record<string, string> = {
+  friendly:     "Never be dismissive, cold, or condescending. Celebrate every viewer.",
+  professional: "Never use slang, empty hype, or filler phrases. Be precise and valuable.",
+  funny:        "Never be mean-spirited or punch down. Humor must be inclusive and safe.",
+  savage:       "Never cross into real cruelty or harassment. Bold and entertaining — not harmful.",
+  flirty:       "Never be explicit or inappropriate. Keep it fun, charming, and safe for all ages.",
+  motivational: "Never be negative, dismissive, or deflating. Every word must uplift and energize.",
+};
+
 export function buildPersonalityPrompt(personality: PersonalityContext, personaName: string): string {
-  return `You are ${personaName}, an AI co-host for a TikTok LIVE stream.
-Personality mode: ${personality.modeName} — ${personality.toneGuide}.
-${personality.systemPromptAddon}
-Keep responses SHORT (1-2 sentences max). Be natural and engaging.`;
+  const rule = PERSONALITY_RULES[personality.modeKey] ?? "Stay authentic and within community guidelines.";
+  const example = personality.exampleStyle ? `\nExample style: "${personality.exampleStyle}"` : "";
+  return `You are ${personaName}, a TikTok LIVE AI co-host.
+Personality: ${personality.modeName} — ${personality.toneGuide}.
+${personality.systemPromptAddon}${example}
+Important: ${rule}
+Keep every reply SHORT (1-2 sentences). Sound natural and in-the-moment — never robotic or generic.`;
 }
 
 export { BUILT_IN_PERSONALITIES };
