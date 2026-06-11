@@ -117,7 +117,7 @@ export interface LeaderboardUpdateEvent {
   timestamp: number;
 }
 
-export type TtsMode = "off" | "browser" | "openai";
+export type TtsMode = "off" | "openai";
 
 // ── Emotion Engine types (mirrored from backend emotionEngine.ts) ──────────────
 
@@ -333,12 +333,9 @@ function detectTtsLang(text: string, defaultLang?: string): string {
 
 // ── Text normalization: strip/convert emojis before TTS ──────────────────────
 //
-// Browser SpeechSynthesis reads emoji names literally ("smiling face", "fire emoji").
-// This layer converts them to natural speech equivalents before ANY TTS engine sees
-// the text — browser OR OpenAI.
-//
-// Emoji emotion classification also drives rate/pitch in playBrowserTts so the
-// delivery matches the emotional content without naming the emoji.
+// OpenAI TTS reads emoji names literally ("smiling face", "fire emoji").
+// This layer converts them to natural speech equivalents before OpenAI sees
+// the text. Emoji emotion classification also drives rate/pitch adjustments.
 
 type EmojiEmotion = "laugh" | "excited" | "sad" | "angry" | "warm" | "neutral";
 
@@ -423,14 +420,19 @@ function normalizeTtsText(rawText: string, ttsLang?: string): NormalizeResult {
   return { text, emojiEmotion, hasEmojis };
 }
 
-// ── Browser TTS is permanently disabled ───────────────────────────────────────
-// Only OpenAI TTS is allowed to speak. speechSynthesis.speak() is never called.
-// Keeping detectTtsLang + normalizeTtsText for pipeline logging and OpenAI input.
+// ── BROWSER TTS HARD BLOCK ────────────────────────────────────────────────────
+// speechSynthesis.speak() is NEVER called. Only OpenAI TTS is allowed.
+// Any code path that reaches speechSynthesis logs [BROWSER_TTS_BLOCKED] and stops.
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  console.warn("[BROWSER_TTS_BLOCKED] speechSynthesis.cancel() on module load — browser TTS permanently disabled");
+  window.speechSynthesis.cancel();
+}
 
 // ── Stop all speech immediately and flush the queue ───────────────────────────
 function stopAllSpeechNow(): void {
-  // 1. Cancel any lingering browser speech (safety no-op — browser TTS is disabled)
+  // Hard block: cancel any browser speech that may have leaked in
   if (typeof window !== "undefined" && window.speechSynthesis) {
+    console.warn("[BROWSER_TTS_BLOCKED] stopAllSpeechNow — cancelling any browser speech");
     window.speechSynthesis.cancel();
   }
   // 2. Stop any playing OpenAI audio element
@@ -498,7 +500,16 @@ export function useLiveSession(
 
   const ttsModeRef = useRef<TtsMode>(
     (() => {
-      try { return (localStorage.getItem("ttsMode") as TtsMode | null) ?? "off"; }
+      try {
+        const saved = localStorage.getItem("ttsMode");
+        // Clamp any legacy "browser" value to "off" — browser TTS is permanently removed
+        if (saved === "browser") {
+          console.warn("[BROWSER_TTS_BLOCKED] localStorage had ttsMode=browser — clamping to off");
+          try { localStorage.setItem("ttsMode", "off"); } catch {}
+          return "off";
+        }
+        return (saved as TtsMode | null) ?? "off";
+      }
       catch { return "off"; }
     })()
   );
@@ -516,12 +527,18 @@ export function useLiveSession(
   // `ttsModeRef` is a ref (non-reactive) for perf; these state mirrors let the
   // UI display the current engine, OpenAI status, and last spoken language.
   const [ttsModeLive, setTtsModeLive] = useState<TtsMode>(
-    (() => { try { return (localStorage.getItem("ttsMode") as TtsMode | null) ?? "off"; } catch { return "off"; } })()
+    (() => {
+      try {
+        const saved = localStorage.getItem("ttsMode");
+        if (saved === "browser") return "off"; // clamp legacy value
+        return (saved as TtsMode | null) ?? "off";
+      } catch { return "off"; }
+    })()
   );
   const [openaiTtsOk,     setOpenaiTtsOk]     = useState<boolean | null>(null);
   const [openaiTtsErr,    setOpenaiTtsErr]     = useState<string | null>(null);
   const [lastSpokenLang,  setLastSpokenLang]   = useState<string | null>(null);
-  const [lastSpokenEngine,setLastSpokenEngine] = useState<"openai" | "browser" | null>(null);
+  const [lastSpokenEngine,setLastSpokenEngine] = useState<"openai" | null>(null);
 
   const setTtsMode = useCallback((mode: TtsMode) => {
     ttsModeRef.current = mode;
@@ -549,14 +566,14 @@ export function useLiveSession(
     setIsAudioUnlocked(true);
   }, []);
 
-  // Legacy compatibility
+  // Legacy compatibility — maps true→openai, false→off (never browser)
   const setTtsEnabled = useCallback((enabled: boolean) => {
-    ttsModeRef.current = enabled ? "browser" : "off";
+    ttsModeRef.current = enabled ? "openai" : "off";
   }, []);
 
   // ── TTS diagnostic event listeners ─────────────────────────────────────────
-  // Listen for custom events dispatched by playOpenAiTts and playBrowserTts so
-  // React state stays in sync with what the module-level TTS functions report.
+  // Listen for custom events dispatched by playOpenAiTts so React state stays
+  // in sync with what the module-level TTS function reports.
   useEffect(() => {
     const handleOk = () => {
       setOpenaiTtsOk(true);
@@ -571,8 +588,8 @@ export function useLiveSession(
     const handleLang = (e: Event) => {
       const detail = (e as CustomEvent<{ lang?: string; engine?: string }>).detail;
       if (detail?.lang) setLastSpokenLang(detail.lang);
-      if (detail?.engine === "openai" || detail?.engine === "browser") {
-        setLastSpokenEngine(detail.engine as "openai" | "browser");
+      if (detail?.engine === "openai") {
+        setLastSpokenEngine("openai");
       }
     };
     window.addEventListener("tts:openai:ok",  handleOk);
@@ -862,12 +879,16 @@ export function useLiveSession(
           console.log(`[TTS] → OpenAI TTS | voice=${ttsVoiceRef.current} | lang=${detectedLang} | speed=${ttsSpeedRef.current}`);
           window.dispatchEvent(new CustomEvent("tts:lang", { detail: { lang: detectedLang, engine: "openai" } }));
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current, getToken), payload.text);
-        } else if (mode === "browser") {
-          // Browser TTS is permanently disabled — speechSynthesis.speak() is never called.
-          console.warn(`[TTS] ⛔ Browser TTS is DISABLED. Storm stays silent. Switch to "OpenAI TTS" in AI Settings → Voice.`);
-          window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: 'Browser TTS disabled — switch to OpenAI TTS in AI Settings → Voice' } }));
         } else {
-          console.log(`[TTS] mode=off — speech skipped`);
+          // HARD BLOCK: any mode that is not "openai" is treated as "off"
+          if (mode !== "off") {
+            console.warn(`[BROWSER_TTS_BLOCKED] ttsMode="${mode}" is not "openai" — speech blocked.`);
+            if (typeof window !== "undefined" && window.speechSynthesis) {
+              window.speechSynthesis.cancel();
+            }
+          } else {
+            console.log(`[TTS] mode=off — speech skipped`);
+          }
         }
       });
 

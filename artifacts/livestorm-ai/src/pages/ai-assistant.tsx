@@ -1271,7 +1271,7 @@ export function AiAssistant() {
               <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
                 <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Mode</p>
                 <p className="text-xs font-bold text-white">
-                  {ttsMode === "openai" ? "OpenAI" : ttsMode === "browser" ? "Browser" : "Off"}
+                  {ttsMode === "openai" ? "OpenAI" : "Off"}
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">

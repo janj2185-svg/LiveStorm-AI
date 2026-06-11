@@ -735,10 +735,9 @@ export function LiveStudio() {
                 <span className={cn(
                   "text-[11px] font-semibold px-2.5 py-0.5 rounded-full border",
                   ttsModeLive === "openai"  && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                  ttsModeLive === "browser" && "bg-amber-500/10 text-amber-400 border-amber-500/30",
                   ttsModeLive === "off"     && "bg-white/5 text-muted-foreground border-white/10",
                 )}>
-                  {ttsModeLive === "openai" ? "OpenAI TTS" : ttsModeLive === "browser" ? "Browser TTS" : "Off"}
+                  {ttsModeLive === "openai" ? "OpenAI TTS" : "Off"}
                 </span>
               </div>
 
@@ -798,24 +797,14 @@ export function LiveStudio() {
                       <span className={cn(
                         "ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full border",
                         lastSpokenEngine === "openai"  && "bg-blue-500/10 text-blue-400 border-blue-500/20",
-                        lastSpokenEngine === "browser" && "bg-amber-500/10 text-amber-400 border-amber-500/20",
                       )}>
-                        {lastSpokenEngine === "openai" ? "AI" : "Browser"}
+                        {"AI"}
                       </span>
                     )}
                   </span>
                 </div>
               )}
 
-              {/* ── Browser TTS disabled warning ───────────────────────── */}
-              {ttsModeLive === "browser" && (
-                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-red-500/5 border border-red-500/20">
-                  <AlertTriangle className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-red-300/90 leading-snug">
-                    Browser TTS is <strong>disabled</strong>. Storm will stay silent until you switch to <strong>OpenAI TTS</strong> in <em>AI Settings → Voice</em>.
-                  </p>
-                </div>
-              )}
               {ttsModeLive === "off" && (
                 <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/8">
                   <VolumeX className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />

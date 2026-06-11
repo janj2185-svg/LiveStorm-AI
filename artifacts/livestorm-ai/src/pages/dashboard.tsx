@@ -706,7 +706,7 @@ export function Dashboard() {
                     checked={ttsOn}
                     onChange={(e) => {
                       const on = e.target.checked;
-                      const mode = on ? "browser" : "off" as const;
+                      const mode = on ? "openai" : "off" as const;
                       setTtsOn(on);
                       setTtsMode(mode);
                       try { localStorage.setItem("ttsMode", mode); } catch {}
