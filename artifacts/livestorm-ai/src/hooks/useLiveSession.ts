@@ -181,10 +181,20 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
   }
 }
 
+function detectTtsLang(text: string): string {
+  if (/[іїєІЇЄґҐ]/.test(text)) return "uk-UA";
+  if (/виграв|виграш|щасли|привіт|вітаємо|дякую|будь ласка|зараз|будемо|рівень|переможе/i.test(text)) return "uk-UA";
+  if (/[а-яА-Я]/.test(text)) return "ru-RU";
+  if (/[ąęóśźżćłńÄĘÓŚŹŻĆŁŃ]/i.test(text)) return "pl-PL";
+  if (/[äöüÄÖÜß]/.test(text)) return "de-DE";
+  return "en-US";
+}
+
 function playBrowserTts(text: string): void {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = detectTtsLang(text);
   utt.rate = 1.1;
   utt.pitch = 1.05;
   utt.onstart = () => window.dispatchEvent(new CustomEvent("tts:start"));
@@ -473,7 +483,8 @@ export function useLiveSession(
           console.log(`[TTS] → enqueuing OpenAI TTS | voice=${ttsVoiceRef.current} | speed=${ttsSpeedRef.current}`);
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current));
         } else if (mode === "browser") {
-          console.log(`[TTS] → calling Browser Speech API`);
+          const detectedLang = detectTtsLang(payload.text);
+          console.log(`[TTS] → calling Browser Speech API | lang=${detectedLang}`);
           playBrowserTts(payload.text);
         } else {
           console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Co-Host settings or Dashboard toggle.`);
