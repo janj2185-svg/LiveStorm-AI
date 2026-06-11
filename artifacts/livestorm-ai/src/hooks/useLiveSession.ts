@@ -252,23 +252,30 @@ function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
 
+  // Never use a Polish voice unless the requested language is Polish.
+  // On Windows, Microsoft Adam/Paulina (pl-PL) sit first in the voice list and
+  // the OS will play them in parallel if the utterance lang doesn't match the
+  // explicitly set voice — causing the audible "overlap" the user hears.
+  const isPolishRequest = lang.startsWith("pl");
+  const eligible = isPolishRequest ? voices : voices.filter(v => !v.lang.startsWith("pl"));
+
   // 1. Exact match
-  const exact = voices.find(v => v.lang === lang);
+  const exact = eligible.find(v => v.lang === lang);
   if (exact) return exact;
 
   // 2. Same language code (e.g., "uk" matches "uk-UA")
   const langCode = lang.split("-")[0];
-  const partial = voices.find(v => v.lang.startsWith(langCode));
+  const partial = eligible.find(v => v.lang.startsWith(langCode));
   if (partial) return partial;
 
   // 3. Configured fallback chain
   const chain = TTS_LANG_FALLBACKS[lang] ?? [];
   for (const fb of chain) {
-    const fallback = voices.find(v => v.lang === fb || v.lang.startsWith(fb));
+    const fallback = eligible.find(v => v.lang === fb || v.lang.startsWith(fb));
     if (fallback) return fallback;
   }
 
-  return null; // browser will use its default
+  return null;
 }
 
 function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
@@ -302,6 +309,11 @@ function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string; 
     const selectedVoice = selectBrowserVoice(detectedLang);
     if (selectedVoice) {
       utt.voice = selectedVoice;
+      // IMPORTANT: set utt.lang to match the actual voice, not the detected language.
+      // If we leave utt.lang="uk-UA" but voice="Google русский" (ru-RU), Windows
+      // Speech Engine treats it as a lang mismatch and plays the system default
+      // (Microsoft Adam Polish) in parallel — causing the audible overlap.
+      utt.lang = selectedVoice.lang;
       if (selectedVoice.lang !== detectedLang) {
         console.warn(`[TTS:Browser] ⚠ no ${detectedLang} voice — using "${selectedVoice.name}" (${selectedVoice.lang}) as fallback`);
       }
