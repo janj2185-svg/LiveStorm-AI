@@ -1,39 +1,11 @@
 import OpenAI from "openai";
 import { db, aiResponseScoresTable, aiLearningReportsTable } from "@workspace/db";
-import { eq, and, avg, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
 });
-
-export async function scoreReply(
-  sessionId: number,
-  streamerId: number,
-  aiResponse: string,
-  triggerEvent: string,
-  agentType: string,
-  initialScore = 5.0,
-): Promise<number> {
-  try {
-    const [row] = await db
-      .insert(aiResponseScoresTable)
-      .values({
-        sessionId,
-        streamerId,
-        agentType,
-        triggerEvent,
-        aiResponse,
-        score: initialScore,
-        engagementDelta: 0,
-      })
-      .returning();
-    return row?.id ?? -1;
-  } catch (err: any) {
-    console.warn("[LearningAgent] scoreReply error:", err?.message);
-    return -1;
-  }
-}
 
 export async function updateEngagementDelta(
   scoreId: number,
