@@ -28,3 +28,4 @@
 - [hostAgent realism principles](hostagent-realism.md) — user prompts must describe situations (not instruct emotions); personality×emotion matrix carries the HOW; max_tokens varies by event; silence_filler type added to TikTokEvent union for ambient verbal fillers.
 - [Orchestrator conv-history all events](orchestrator-conv-history.md) — conversationHistory must log all event types (gift/follow/share) not just comments; non-comment context line format: `[gift: user sent X (N coins)]`.
 - [Strategy suggestion feedback loop](strategy-suggestion-feedback.md) — lastStrategySuggestion cached in OrchestratorState; injected as optional 5-min hint into behaviorCtx; cleared in clearSessionHistory.
+- [Browser TTS pause bug & queue deadlock](browser-tts-pause-bug.md) — Chrome pauses speechSynthesis on tab switch → speak() silently no-ops → ttsQueue deadlocks. Fix: resume() + 12s timeout in playBrowserTts + queue reset in enqueueTts.

@@ -230,19 +230,56 @@ function detectTtsLang(text: string): string {
 
 function playBrowserTts(text: string): Promise<void> {
   return new Promise((resolve) => {
-    if (!("speechSynthesis" in window)) { resolve(); return; }
+    const synth = window.speechSynthesis;
+    if (!synth) { resolve(); return; }
+
+    // Chrome bug: speech synthesis pauses when the tab loses focus.
+    // Must call resume() before speak() or the utterance queues silently.
+    if (synth.paused) {
+      console.log("[TTS:Browser] ⚠ synthesis paused — resuming");
+      synth.resume();
+    }
+
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = detectTtsLang(text);
     utt.rate = 1.1;
     utt.pitch = 1.05;
-    utt.onstart = () => window.dispatchEvent(new CustomEvent("tts:start"));
-    utt.onend = () => { window.dispatchEvent(new CustomEvent("tts:end")); resolve(); };
-    utt.onerror = () => resolve();
-    window.speechSynthesis.speak(utt);
+
+    // Safety timeout: if onend never fires (Chrome pause/autoplay bug),
+    // advance the queue after 12s instead of deadlocking forever.
+    const timeout = setTimeout(() => {
+      console.warn(`[TTS:Browser] ⏰ timeout — queue forced-advance | lang=${utt.lang}`);
+      resolve();
+    }, 12_000);
+
+    utt.onstart = () => {
+      console.log(`[TTS:Browser] ▶ playing | lang=${utt.lang} | chars=${text.length}`);
+      window.dispatchEvent(new CustomEvent("tts:start"));
+    };
+    utt.onend = () => {
+      clearTimeout(timeout);
+      console.log("[TTS:Browser] ✓ done");
+      window.dispatchEvent(new CustomEvent("tts:end"));
+      resolve();
+    };
+    utt.onerror = (e) => {
+      clearTimeout(timeout);
+      console.warn(`[TTS:Browser] ✗ error: ${(e as SpeechSynthesisErrorEvent).error}`);
+      resolve();
+    };
+
+    synth.speak(utt);
   });
 }
 
 function enqueueTts(fn: () => Promise<void>): void {
+  // If synthesis is paused (Chrome tab-switch bug), the queue may be deadlocked.
+  // Reset it so the next item plays immediately rather than waiting forever.
+  if (typeof window !== "undefined" && window.speechSynthesis?.paused) {
+    window.speechSynthesis.resume();
+    ttsQueue = Promise.resolve();
+    console.log("[TTS:Browser] 🔄 queue reset — synthesis was paused");
+  }
   ttsQueue = ttsQueue.then(fn).catch(() => {});
 }
 
