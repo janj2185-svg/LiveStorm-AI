@@ -212,6 +212,7 @@ export function useLiveSession(
 ) {
   const { getToken } = useAuth();
   const [events, setEvents] = useState<LiveEvent[]>([]);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
   const [automationsFired, setAutomationsFired] = useState<AutomationFiredEvent[]>([]);
   const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
@@ -280,6 +281,7 @@ export function useLiveSession(
     setAchievementUnlocks([]);
     setLuckyDrops([]);
     setLevelUps([]);
+    setTranslations({});
     setKingdomUpdates([]);
     setLeaderboardVersion(0);
     setStats({
@@ -491,6 +493,10 @@ export function useLiveSession(
         }
       });
 
+      socket.on("live:translation", (payload: { msgId: string; sessionId: number; translatedText: string; targetLang: string }) => {
+        setTranslations((prev) => ({ ...prev, [payload.msgId]: payload.translatedText }));
+      });
+
       socket.on("moderation:flagged", (payload: Omit<ModerationFlaggedEvent, "timestamp">) => {
         const flaggedAt = Date.now();
         setFlaggedComments((prev) =>
@@ -529,6 +535,7 @@ export function useLiveSession(
 
   return {
     events,
+    translations,
     stats,
     automationsFired,
     aiAnnouncements,

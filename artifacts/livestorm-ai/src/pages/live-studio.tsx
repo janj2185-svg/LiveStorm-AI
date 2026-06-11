@@ -16,7 +16,7 @@ import { PageHero, GradientText } from "@/components/ui/premium";
 
 // ── Comment feed ──────────────────────────────────────────────────────────────
 
-function CommentFeed({ events, isActive }: { events: LiveEvent[]; isActive: boolean }) {
+function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; isActive: boolean; translations: Record<string, string> }) {
   // useLiveSession prepends events ([newest, ...older]), so reverse to get oldest→newest
   // for correct bottom-scroll: bottomRef sits below newest comment
   const comments = [...events.filter((e) => e.type === "comment")].reverse();
@@ -105,6 +105,15 @@ function CommentFeed({ events, isActive }: { events: LiveEvent[]; isActive: bool
                       <p className="text-xs text-white/80 leading-relaxed mt-0.5 break-words">
                         {(e.data.text as string) ?? ""}
                       </p>
+                      {(() => {
+                        const msgId = String(e.data.msgId ?? e.timestamp);
+                        const translation = translations[msgId];
+                        return translation ? (
+                          <p className="text-[11px] text-yellow-200/65 leading-relaxed mt-1 pt-1 border-t border-white/[0.06] break-words">
+                            🇺🇦 {translation}
+                          </p>
+                        ) : null;
+                      })()}
                     </div>
                   </motion.div>
                 ))}
@@ -428,7 +437,7 @@ function ConnectionBadge({
 
 export function LiveStudio() {
   const {
-    events, stats, connected, tiktokMode, tiktokError, tiktokUsername,
+    events, translations, stats, connected, tiktokMode, tiktokError, tiktokUsername,
     isActive, sessionMode,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
@@ -579,7 +588,7 @@ export function LiveStudio() {
           {/* Comment + Gift feeds side by side */}
           <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-4">
             <div className="h-[320px] flex flex-col min-h-0">
-              <CommentFeed events={events} isActive={!!isActive} />
+              <CommentFeed events={events} isActive={!!isActive} translations={translations} />
             </div>
             <GiftFeed events={events} totalCoins={stats.totalGifts} isActive={!!isActive} />
           </div>

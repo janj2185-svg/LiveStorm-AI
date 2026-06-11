@@ -13,7 +13,7 @@ import { eq, sql } from "drizzle-orm";
 import { processAutomations } from "./automationEngine";
 import { processGamification, seedAchievements } from "./gamificationEngine";
 import type { TikTokEvent } from "./tiktokSimulator";
-import { moderateComment, generateCommentReply, generateAnnouncement, fastSpamCheck } from "./aiService";
+import { moderateComment, generateCommentReply, generateAnnouncement, fastSpamCheck, translateComment } from "./aiService";
 import {
   emitAiGiftAnnouncement,
   emitAiShareAnnouncement,
@@ -368,6 +368,68 @@ async function processAiAnnouncements(
   }
 }
 
+// ── Chat Translation Pipeline ─────────────────────────────────────────────────
+// Priority score: higher = translate first (used when chat volume is high)
+function getTranslationPriority(event: TikTokEvent): number {
+  const text = String(event.data.text ?? "");
+  if (/\?/.test(text)) return 8;                                          // direct question
+  if (/\bai\b|бот|bot|assistant|@/i.test(text)) return 7;               // AI/streamer mention
+  if (/gift|дяк|дякую|спасиб|thank/i.test(text)) return 6;             // gift-related
+  return 5;                                                              // standard comment
+}
+
+// Simple in-flight throttle: skip if already translating > 5 comments in session
+const sessionTranslatingCount = new Map<number, number>();
+
+async function processTranslation(
+  io: SocketServer,
+  event: TikTokEvent,
+  streamerId: number,
+): Promise<void> {
+  if (event.type !== "comment") return;
+  const text = String(event.data.text ?? "").trim();
+  if (!text || text.length < 3) return;
+
+  try {
+    const config = await db.query.aiPersonaConfigsTable.findFirst({
+      where: eq(aiPersonaConfigsTable.streamerId, streamerId),
+    });
+    if (!config?.translateChat) return;
+
+    const priority = getTranslationPriority(event);
+
+    // Under high load: only translate priority ≥ 6 if already 5+ in-flight for this session
+    const inFlight = sessionTranslatingCount.get(event.sessionId) ?? 0;
+    if (inFlight >= 5 && priority < 6) {
+      console.log(`[AI:translate] session=${event.sessionId} HIGH_LOAD — low-priority skipped (in-flight=${inFlight})`);
+      return;
+    }
+
+    const targetLang = config.translateTargetLang ?? "uk";
+    const roomId = `session:${event.sessionId}`;
+    const msgId = String(event.data.msgId ?? event.timestamp);
+
+    sessionTranslatingCount.set(event.sessionId, inFlight + 1);
+    try {
+      const translatedText = await translateComment(text, targetLang);
+      if (translatedText) {
+        io.to(roomId).emit("live:translation", {
+          msgId,
+          sessionId: event.sessionId,
+          translatedText,
+          targetLang,
+        });
+      }
+    } finally {
+      const remaining = (sessionTranslatingCount.get(event.sessionId) ?? 1) - 1;
+      if (remaining <= 0) sessionTranslatingCount.delete(event.sessionId);
+      else sessionTranslatingCount.set(event.sessionId, remaining);
+    }
+  } catch (err: any) {
+    console.error(`[AI:translate] session=${event.sessionId} error:`, err?.message);
+  }
+}
+
 export function initSocketServer(httpServer: HttpServer) {
   io = new SocketServer(httpServer, {
     cors: { origin: true, credentials: true },
@@ -529,6 +591,7 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
 
   if (streamerId) {
     void processAiAnnouncements(io, event, streamerId);
+    void processTranslation(io, event, streamerId);
   }
 
   try {

@@ -93,6 +93,8 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
       voiceSpeed,
       voiceVolume,
       voiceEmotion,
+      translateChat,
+      translateTargetLang,
     } = req.body;
 
     const existing = await db.query.aiPersonaConfigsTable.findFirst({
@@ -142,6 +144,10 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     }
     if (voiceEmotion !== undefined && VALID_EMOTIONS.includes(voiceEmotion)) {
       updates.voiceEmotion = voiceEmotion;
+    }
+    if (translateChat !== undefined) updates.translateChat = Boolean(translateChat);
+    if (translateTargetLang !== undefined && typeof translateTargetLang === "string") {
+      updates.translateTargetLang = String(translateTargetLang).slice(0, 10);
     }
 
     let result;

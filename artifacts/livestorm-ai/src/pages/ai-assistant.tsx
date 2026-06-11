@@ -46,7 +46,7 @@ import {
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
   Boxes, SlidersHorizontal, Monitor, Cpu,
   Shirt, Tv2, Palette, Sun, Square, Activity, Eye, ArrowDown,
-  TrendingUp, Trophy, MessageCircle, UserPlus, Gem,
+  TrendingUp, Trophy, MessageCircle, UserPlus, Gem, Languages,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/react";
@@ -94,6 +94,8 @@ type PersonaConfig = {
   voiceSpeed: number;
   voiceVolume: number;
   voiceEmotion: string;
+  translateChat: boolean;
+  translateTargetLang: string;
 };
 
 type ChatMessage = {
@@ -927,11 +929,6 @@ export function AiAssistant() {
     }
   };
 
-  // ── Translation ───────────────────────────────────────────────────────────
-  const [chatTranslateEnabled, setChatTranslateEnabled] = useState(false);
-  const [chatTranslateLang, setChatTranslateLang] = useState("en");
-  const [translatedComments, setTranslatedComments] = useState<Record<number, string | null>>({});
-  const [translatingComments, setTranslatingComments] = useState<Set<number>>(new Set());
   const [accentColor, setAccentColor] = useState("#3b82f6");
 
   useEffect(() => {
@@ -1293,6 +1290,44 @@ export function AiAssistant() {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+          </SidebarSection>
+
+          <SidebarSection isOpen={expandedSections.has("translation")} onToggle={() => toggleSection("translation")} title="Chat Translation" icon={<Languages className="h-4 w-4 text-yellow-400" />}>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <Label className="text-sm text-muted-foreground">Translate Live Chat</Label>
+                <span className="text-[10px] text-muted-foreground/50">Show Ukrainian under each message</span>
+              </div>
+              <Switch
+                checked={config?.translateChat ?? false}
+                onCheckedChange={(v) => updateConfig.mutate({ translateChat: v })}
+              />
+            </div>
+            {config?.translateChat && (
+              <div className="mt-2 pt-2 border-t border-white/5 space-y-2">
+                <p className="text-xs text-muted-foreground">Translate into:</p>
+                <div className="grid grid-cols-1 gap-1">
+                  {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
+                    <button
+                      key={lang.value}
+                      onClick={() => updateConfig.mutate({ translateTargetLang: lang.value })}
+                      className={cn(
+                        "flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm transition-all text-left",
+                        (config?.translateTargetLang ?? "uk") === lang.value
+                          ? "border-yellow-500/50 bg-yellow-500/10 text-yellow-300"
+                          : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                      )}
+                    >
+                      <span className="text-base">{lang.flag}</span>
+                      <span className="text-xs font-medium">{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground/50 pt-1">
+                  Non-Ukrainian messages show 🇺🇦 translation in the live chat feed. Already-Ukrainian messages are skipped. Repeated messages use cached translations.
+                </p>
               </div>
             )}
           </SidebarSection>

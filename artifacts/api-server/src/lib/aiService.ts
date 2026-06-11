@@ -340,6 +340,77 @@ export async function generateVoice(
   }
 }
 
+// ── Chat Translation ───────────────────────────────────────────────────────────
+const TRANSLATION_CACHE_MAX = 2000;
+const translationCache = new Map<string, string>();
+const SKIP_SENTINEL = "\0SKIP";
+
+function translationCacheStore(key: string, value: string): void {
+  if (translationCache.size >= TRANSLATION_CACHE_MAX) {
+    const firstKey = translationCache.keys().next().value;
+    if (firstKey !== undefined) translationCache.delete(firstKey);
+  }
+  translationCache.set(key, value);
+}
+
+const TRANSLATE_TARGET_NAMES: Record<string, string> = {
+  uk: "Ukrainian", en: "English", pl: "Polish", de: "German",
+  ru: "Russian", fr: "French", es: "Spanish", it: "Italian",
+  pt: "Portuguese", nl: "Dutch", tr: "Turkish", ar: "Arabic",
+  ja: "Japanese", ko: "Korean", zh: "Chinese",
+};
+
+/**
+ * Translate a viewer comment to the target language.
+ * Returns null if the text is already in the target language, or on failure.
+ * Uses an in-memory LRU cache so repeated identical messages are free.
+ */
+export async function translateComment(text: string, targetLang: string): Promise<string | null> {
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.length < 2) return null;
+
+  const cacheKey = `${trimmed}\0${targetLang}`;
+  if (translationCache.has(cacheKey)) {
+    const cached = translationCache.get(cacheKey)!;
+    return cached === SKIP_SENTINEL ? null : cached;
+  }
+
+  const targetName = TRANSLATE_TARGET_NAMES[targetLang] ?? targetLang;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: FAST_MODEL,
+      messages: [
+        {
+          role: "system",
+          content:
+            `You are a translator. Detect the language of the message.\n` +
+            `If it is already ${targetName}, respond with exactly: SKIP\n` +
+            `Otherwise translate it to ${targetName}.\n` +
+            `Return ONLY the translated text — no explanations, no quotes, no notes.`,
+        },
+        { role: "user", content: trimmed },
+      ],
+      max_tokens: 300,
+      temperature: 0.1,
+    });
+
+    const result = response.choices[0]?.message?.content?.trim() ?? null;
+
+    if (!result || result === "SKIP") {
+      translationCacheStore(cacheKey, SKIP_SENTINEL);
+      return null;
+    }
+
+    translationCacheStore(cacheKey, result);
+    console.log(`[AI:translate] "${trimmed.slice(0, 40)}" → ${targetLang}: "${result.slice(0, 60)}"`);
+    return result;
+  } catch (err: any) {
+    console.error("[AI:translate] error:", err?.message);
+    return null;
+  }
+}
+
 /**
  * Fast local spam/pattern check — runs in <1ms, no API call.
  * Catches obvious junk before spending an AI moderation call.
