@@ -1,4 +1,4 @@
-import { db, chatPriorityQueueTable, viewerProfilesTable } from "@workspace/db";
+import { db, chatPriorityQueueTable, agentViewerProfilesTable as viewerProfilesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import type { TikTokEvent } from "../lib/tiktokSimulator";
 
@@ -83,7 +83,7 @@ export async function classifyEvent(
 
     let isVip = false;
     try {
-      const profile = await db.query.viewerProfilesTable.findFirst({
+      const profile = await db.query.agentViewerProfilesTable.findFirst({
         where: and(
           eq(viewerProfilesTable.streamerId, streamerId),
           eq(viewerProfilesTable.tiktokViewerId, viewerId),

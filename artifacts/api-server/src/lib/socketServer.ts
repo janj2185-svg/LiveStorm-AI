@@ -19,6 +19,9 @@ import {
   emitAiShareAnnouncement,
   emitAiLikeMilestoneAnnouncement,
 } from "./aiAnnouncer";
+import { upsertViewerProfile, getViewerContext } from "./agents/memoryAgent";
+import { scorePriority, enqueueComment, markReplied } from "./agents/priorityAgent";
+import { scoreReply } from "./agents/learningAgent";
 
 let io: SocketServer | null = null;
 
@@ -141,8 +144,12 @@ async function processAiAnnouncements(
       name: config.personaName,
       tone: config.tone,
       personalityType: config.personalityType ?? undefined,
+      customPersonality: config.customPersonality ?? undefined,
     };
     const replyLanguage = config.replyLanguage ?? "auto";
+
+    // ── Memory Agent: update viewer profile on every event ─────────────────
+    void upsertViewerProfile(streamerId, event);
 
     // Helper: returns true if cooldown has passed; records timestamp if it has
     function checkAndSetCooldown(type: string): boolean {
@@ -273,43 +280,72 @@ async function processAiAnnouncements(
         const sinceLastReply = Date.now() - lastReply;
 
         if (sinceLastReply >= cooldownMs) {
+          // ── Priority Agent: score this comment before replying ────────────
+          const viewerId = (event.data?.userId as string) ?? viewerName;
+          const viewerCtx = await getViewerContext(streamerId, viewerName, viewerId);
+          const priority = scorePriority(event, viewerCtx);
+          enqueueComment(event.sessionId, viewerName, comment, priority);
+
           console.log(
             `[AI:reply] session=${event.sessionId} viewer=${viewerName} ` +
-            `cooldown OK (${sinceLastReply}ms >= ${cooldownMs}ms) — generating reply…`,
+            `priority=${priority.score} reason="${priority.reason}" shouldReply=${priority.shouldReply} ` +
+            `cooldown OK (${sinceLastReply}ms >= ${cooldownMs}ms)`,
           );
-          try {
-            autoReplySpamMap.set(spamKey, Date.now());
 
-            // Build conversation context from session history (last 5 exchanges)
-            const history = sessionAiContext.get(event.sessionId) ?? [];
-            const conversationContext = history.length > 0
-              ? history.slice(-5).map((h) => `@${h.viewer}: "${h.comment}" → AI: "${h.reply}"`).join("\n")
-              : undefined;
+          if (!priority.shouldReply && priority.score < 4) {
+            console.log(`[AI:priority] session=${event.sessionId} viewer=${viewerName} — LOW PRIORITY (${priority.score}) skipping reply`);
+          } else {
+            try {
+              autoReplySpamMap.set(spamKey, Date.now());
 
-            const reply = await generateCommentReply(
-              comment,
-              viewerName,
-              persona,
-              replyLanguage,
-              conversationContext,
-            );
+              // Build conversation context from session history (last 5 exchanges)
+              const history = sessionAiContext.get(event.sessionId) ?? [];
+              const conversationContext = history.length > 0
+                ? history.slice(-5).map((h) => `@${h.viewer}: "${h.comment}" → AI: "${h.reply}"`).join("\n")
+                : undefined;
 
-            if (reply) {
-              // Store in session conversation context (max 10 entries)
-              const updatedHistory = [...history, { viewer: viewerName, comment, reply, ts: Date.now() }];
-              sessionAiContext.set(event.sessionId, updatedHistory.slice(-10));
+              const combinedContext = [conversationContext, viewerCtx.contextSummary || undefined]
+                .filter(Boolean).join("\n") || undefined;
 
-              console.log(`[AI:reply] session=${event.sessionId} viewer=${viewerName} → "${reply.slice(0, 70)}"`);
-              io.to(roomId).emit("ai:announcement", {
-                text: reply,
-                type: "comment_reply",
+              const reply = await generateCommentReply(
+                comment,
                 viewerName,
-              });
-            } else {
-              console.warn(`[AI:reply] session=${event.sessionId} viewer=${viewerName} — empty reply returned`);
+                persona,
+                replyLanguage,
+                combinedContext,
+              );
+
+              if (reply) {
+                // Store in session conversation context (max 10 entries)
+                const updatedHistory = [...history, { viewer: viewerName, comment, reply, ts: Date.now() }];
+                sessionAiContext.set(event.sessionId, updatedHistory.slice(-10));
+
+                markReplied(event.sessionId, viewerName);
+
+                // ── Learning Agent: score this reply for post-stream analysis ──
+                void scoreReply(
+                  event.sessionId,
+                  streamerId,
+                  reply,
+                  `comment:${comment.slice(0, 60)}`,
+                  "comment_reply",
+                  5.0 + (priority.score - 5) * 0.2,
+                );
+
+                console.log(`[AI:reply] session=${event.sessionId} viewer=${viewerName} priority=${priority.score} → "${reply.slice(0, 70)}"`);
+                io.to(roomId).emit("ai:announcement", {
+                  text: reply,
+                  type: "comment_reply",
+                  viewerName,
+                  priorityScore: priority.score,
+                  viewerVipLevel: viewerCtx.profile?.vipLevel ?? "none",
+                });
+              } else {
+                console.warn(`[AI:reply] session=${event.sessionId} viewer=${viewerName} — empty reply returned`);
+              }
+            } catch (err: any) {
+              console.error(`[AI:reply] session=${event.sessionId} error:`, err?.message);
             }
-          } catch (err: any) {
-            console.error(`[AI:reply] session=${event.sessionId} error:`, err?.message);
           }
         } else {
           console.log(

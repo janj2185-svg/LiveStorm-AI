@@ -75,15 +75,15 @@ export async function getActivePersonality(streamerId: number): Promise<Personal
     const fallbackKey = config?.personalityType ?? "friendly";
     const builtin = BUILT_IN_PERSONALITIES[fallbackKey] ?? BUILT_IN_PERSONALITIES.friendly!;
     return {
+      ...builtin,
       modeKey: fallbackKey,
       modeName: fallbackKey.charAt(0).toUpperCase() + fallbackKey.slice(1),
-      ...builtin,
     };
   } catch {
     return {
+      ...BUILT_IN_PERSONALITIES.friendly!,
       modeKey: "friendly",
       modeName: "Friendly",
-      ...BUILT_IN_PERSONALITIES.friendly!,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { db, aiMemoriesTable, viewerProfilesTable } from "@workspace/db";
+import { db, aiMemoriesTable, agentViewerProfilesTable as viewerProfilesTable } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 
 const memoryCache = new Map<number, { memories: string[]; ts: number }>();
@@ -100,7 +100,7 @@ export async function upsertViewerProfile(opts: {
   coins?: number;
 }): Promise<void> {
   try {
-    const existing = await db.query.viewerProfilesTable.findFirst({
+    const existing = await db.query.agentViewerProfilesTable.findFirst({
       where: and(
         eq(viewerProfilesTable.streamerId, opts.streamerId),
         eq(viewerProfilesTable.tiktokViewerId, opts.tiktokViewerId),
@@ -124,7 +124,7 @@ export async function upsertViewerProfile(opts: {
       else if (totalComments >= 20) vipLevel = "regular";
       updates.vipLevel = vipLevel;
 
-      await db.update(viewerProfilesTable).set(updates as Parameters<typeof db.update>[0]).where(eq(viewerProfilesTable.id, existing.id));
+      await db.update(viewerProfilesTable).set(updates as any).where(eq(viewerProfilesTable.id, existing.id));
 
       if (totalGifts >= 3 && existing.vipLevel === "none") {
         await storeMemory({

@@ -238,7 +238,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
 
   if (config.voiceEnabled && state.enabledAgents.has("voice")) {
     try {
-      const audioBuffer = await generateVoice(hostResult.text, voice.voiceKey, voice.speed);
+      const audioBuffer = await generateVoice(hostResult.text, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", voice.speed);
       if (audioBuffer) {
         io.to(roomId).emit("tts:audio", { audio: audioBuffer, text: hostResult.text });
       }

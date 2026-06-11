@@ -46,7 +46,7 @@ export const aiMemoriesTable = pgTable("ai_memories", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const viewerProfilesTable = pgTable("viewer_profiles", {
+export const agentViewerProfilesTable = pgTable("agent_viewer_profiles", {
   id: serial("id").primaryKey(),
   streamerId: integer("streamer_id")
     .notNull()
@@ -153,7 +153,7 @@ export const chatPriorityQueueTable = pgTable("chat_priority_queue", {
 export type AiAgent = typeof aiAgentsTable.$inferSelect;
 export type AiAgentTask = typeof aiAgentTasksTable.$inferSelect;
 export type AiMemory = typeof aiMemoriesTable.$inferSelect;
-export type ViewerProfile = typeof viewerProfilesTable.$inferSelect;
+export type AgentViewerProfile = typeof agentViewerProfilesTable.$inferSelect;
 export type AiResponseScore = typeof aiResponseScoresTable.$inferSelect;
 export type AiLearningReport = typeof aiLearningReportsTable.$inferSelect;
 export type AiVoiceProfile = typeof aiVoiceProfilesTable.$inferSelect;

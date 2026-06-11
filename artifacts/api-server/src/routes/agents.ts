@@ -39,7 +39,7 @@ import {
   addBattleTranscript,
 } from "../agents/battleAgent";
 import { getActivePersonality as getPersonality } from "../agents/personalityAgent";
-import { db as dbInstance, chatPriorityQueueTable, aiPersonalityModesTable, viewerProfilesTable } from "@workspace/db";
+import { db as dbInstance, chatPriorityQueueTable, aiPersonalityModesTable, agentViewerProfilesTable as viewerProfilesTable } from "@workspace/db";
 import { desc, and } from "drizzle-orm";
 
 const router = Router();
@@ -52,7 +52,7 @@ async function getStreamerId(userId: number): Promise<number | null> {
 }
 
 router.get("/agents", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -72,7 +72,7 @@ router.get("/agents", requireAuth, async (req, res) => {
 });
 
 router.put("/agents/:agentType", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -89,7 +89,7 @@ router.put("/agents/:agentType", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/tasks", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -100,7 +100,7 @@ router.get("/agents/tasks", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/memories", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -111,7 +111,7 @@ router.get("/agents/memories", requireAuth, async (req, res) => {
 });
 
 router.post("/agents/memories", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -129,7 +129,7 @@ router.post("/agents/memories", requireAuth, async (req, res) => {
 });
 
 router.delete("/agents/memories/:id", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -142,7 +142,7 @@ router.delete("/agents/memories/:id", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/learning-reports", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -152,7 +152,7 @@ router.get("/agents/learning-reports", requireAuth, async (req, res) => {
 });
 
 router.post("/agents/learning-reports/generate", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -165,7 +165,7 @@ router.post("/agents/learning-reports/generate", requireAuth, async (req, res) =
 });
 
 router.get("/agents/personality", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -188,7 +188,7 @@ router.get("/agents/personality", requireAuth, async (req, res) => {
 });
 
 router.put("/agents/personality", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -201,7 +201,7 @@ router.put("/agents/personality", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/voices", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -214,7 +214,7 @@ router.get("/agents/voices", requireAuth, async (req, res) => {
 });
 
 router.put("/agents/voices", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -227,7 +227,7 @@ router.put("/agents/voices", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/chat-priority", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -246,12 +246,12 @@ router.get("/agents/chat-priority", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/viewer-profiles", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
 
-  const profiles = await dbInstance.query.viewerProfilesTable.findMany({
+  const profiles = await dbInstance.query.agentViewerProfilesTable.findMany({
     where: eq(viewerProfilesTable.streamerId, streamerId),
     orderBy: [desc(viewerProfilesTable.lastSeen)],
     limit: 100,
@@ -260,7 +260,7 @@ router.get("/agents/viewer-profiles", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/battle/status", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -270,7 +270,7 @@ router.get("/agents/battle/status", requireAuth, async (req, res) => {
 });
 
 router.post("/agents/battle/activate", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const { sessionId, active } = req.body as { sessionId: number; active: boolean };
   setBattleMode(Number(sessionId), Boolean(active));
@@ -278,7 +278,7 @@ router.post("/agents/battle/activate", requireAuth, async (req, res) => {
 });
 
 router.post("/agents/battle/reply", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -298,7 +298,7 @@ router.post("/agents/battle/reply", requireAuth, async (req, res) => {
 });
 
 router.get("/agents/battle/transcripts", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
@@ -309,7 +309,7 @@ router.get("/agents/battle/transcripts", requireAuth, async (req, res) => {
 });
 
 router.post("/agents/battle/transcript", requireAuth, async (req, res) => {
-  const user = await getOrCreateUser(req);
+  const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const streamerId = await getStreamerId(user.id);
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
