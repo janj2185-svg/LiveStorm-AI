@@ -35,6 +35,7 @@ export async function emitAiAutomationAnnouncement(
       viewerName: event.viewerName,
       amount: event.amount,
       persona,
+      language: config?.defaultLanguage ?? "uk",
     });
 
     if (!text) {

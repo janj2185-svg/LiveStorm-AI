@@ -196,14 +196,15 @@ async function processAiAnnouncements(
     }
 
     // ── Follow announcements (uses announceLevelUp flag as "announce follows") ──
+    // Follow = AI announcement → always use streamer's primary language (defaultLanguage), not auto-detect
     if (event.type === "follow" && config.announceLevelUp && checkAndSetCooldown("follow")) {
-      console.log(`[AI:follow] session=${event.sessionId} viewer=${viewerName} → generating follow announcement`);
+      console.log(`[AI:follow] session=${event.sessionId} viewer=${viewerName} → generating follow announcement (lang=${defaultLanguage})`);
       try {
         const reply = await generateCommentReply(
           "just followed the stream!",
           viewerName,
           persona,
-          replyLanguage,
+          defaultLanguage,
         );
         if (reply) {
           console.log(`[AI:follow] session=${event.sessionId} viewer=${viewerName} reply="${reply.slice(0, 60)}"`);

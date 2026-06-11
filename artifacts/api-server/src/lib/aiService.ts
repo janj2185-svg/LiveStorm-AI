@@ -119,7 +119,7 @@ export async function generateCommentReply(
   persona: { name: string; tone: string; personalityType?: string },
   language: string = "auto",
   conversationContext?: string,
-  defaultLanguage: string = "en",
+  defaultLanguage: string = "uk",
 ): Promise<string> {
   const toneGuide = getToneGuide(persona.tone);
   const personalityGuide = persona.personalityType ? getPersonalityGuide(persona.personalityType) : "";

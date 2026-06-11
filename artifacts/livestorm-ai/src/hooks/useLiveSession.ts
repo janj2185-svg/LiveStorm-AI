@@ -182,11 +182,20 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
 }
 
 function detectTtsLang(text: string): string {
+  // Ukrainian-specific letters (not in Russian) — strongest signal
   if (/[іїєІЇЄґҐ]/.test(text)) return "uk-UA";
-  if (/виграв|виграш|щасли|привіт|вітаємо|дякую|будь ласка|зараз|будемо|рівень|переможе/i.test(text)) return "uk-UA";
+  // Ukrainian words/phrases without unique letters (common in announcements)
+  if (/виграв|виграш|щасли|привіт|вітаємо|дякую|будь ласка|зараз|будемо|рівень|переможе|молодець|неймовірно|чудово|стрим|глядач|підписник|подарунок|лайк|перемог/i.test(text)) return "uk-UA";
+  // Cyrillic without Ukrainian-specific letters → Russian
   if (/[а-яА-Я]/.test(text)) return "ru-RU";
-  if (/[ąęóśźżćłńÄĘÓŚŹŻĆŁŃ]/i.test(text)) return "pl-PL";
+  // Polish diacritics
+  if (/[ąęóśźżćłńĄĘÓŚŹŻĆŁŃ]/.test(text)) return "pl-PL";
+  // German diacritics / eszett
   if (/[äöüÄÖÜß]/.test(text)) return "de-DE";
+  // French diacritics
+  if (/[àâæçéèêëîïôœùûüÿÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ]/.test(text)) return "fr-FR";
+  // Spanish diacritics
+  if (/[áéíóúüñ¡¿ÁÉÍÓÚÜÑ]/.test(text)) return "es-ES";
   return "en-US";
 }
 
