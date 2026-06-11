@@ -124,18 +124,29 @@ Return JSON: {"recommendations": "...", "personalityAdjustments": "..."}`,
     importance: 3,
   });
 
-  // Auto-apply personality adjustment if learning report strongly suggests a mode change
+  // Auto-apply personality adjustment only when there's sufficient evidence:
+  // - minimum 10 responses in the session (avoids drift from tiny samples)
+  // - average score below 6.5 (AI is underperforming — adjustment is warranted)
   const suggestedMode = detectPersonalityAdjustment(personalityAdjustments);
-  if (suggestedMode) {
+  const enoughData    = scores.length >= 10;
+  const underperforming = avgScore < 6.5;
+
+  if (suggestedMode && enoughData && underperforming) {
     try {
       await db
         .update(aiPersonaConfigsTable)
         .set({ personalityType: suggestedMode })
         .where(eq(aiPersonaConfigsTable.streamerId, opts.streamerId));
-      console.log(`[LearningAgent] ✅ auto-applied personality adjustment → mode="${suggestedMode}" for streamer=${opts.streamerId}`);
+      console.log(
+        `[LearningAgent] ✅ auto-applied personality → mode="${suggestedMode}" | responses=${scores.length} avgScore=${avgScore.toFixed(2)} streamer=${opts.streamerId}`,
+      );
     } catch (err) {
       console.error("[LearningAgent] personality auto-apply error:", (err as Error)?.message);
     }
+  } else if (suggestedMode) {
+    console.log(
+      `[LearningAgent] ⏭ personality adjustment "${suggestedMode}" skipped — insufficient evidence (responses=${scores.length}/${enoughData ? "✓" : "✗"} avgScore=${avgScore.toFixed(2)}/${underperforming ? "✓" : "✗"})`,
+    );
   }
 
   console.log(`[LearningAgent] Report generated for session ${opts.sessionId}: ${scores.length} responses, avg ${avgScore.toFixed(2)}${suggestedMode ? ` | auto-adjusted personality → ${suggestedMode}` : ""}`);

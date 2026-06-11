@@ -47,7 +47,8 @@ export type EmotionalTrigger =
   | "new_viewer"
   | "first_timer"
   | "many_comments"   // burst threshold crossed
-  | "silence"         // 2+ min with no activity
+  | "silence"         // 2+ min with no activity → curious
+  | "silence_deep"    // 4+ min → frustrated/restless
   | "battle_start"
   | "battle_win"
   | "battle_losing";
@@ -73,7 +74,8 @@ const TRIGGER_EFFECTS: Record<EmotionalTrigger, TriggerEffect> = {
   new_viewer:      { primary: "curious",      primaryIntensity: 5,  halfLifeMs: 30_000,  label: "new viewer appeared" },
   first_timer:     { primary: "curious",      primaryIntensity: 6,  secondary: "happy",       secondaryIntensity: 4, halfLifeMs: 20_000,  label: "first-time commenter" },
   many_comments:   { primary: "excited",      primaryIntensity: 7,  secondary: "playful",     secondaryIntensity: 5, halfLifeMs: 90_000,  label: "comment burst" },
-  silence:         { primary: "curious",      primaryIntensity: 3,  halfLifeMs: 999_999, label: "quiet moment" },
+  silence:         { primary: "curious",      primaryIntensity: 4,  halfLifeMs: 999_999, label: "quiet moment" },
+  silence_deep:    { primary: "frustrated",   primaryIntensity: 5,  secondary: "curious",     secondaryIntensity: 3, halfLifeMs: 999_999, label: "getting restless" },
   battle_start:    { primary: "competitive",  primaryIntensity: 9,  halfLifeMs: 999_999, label: "battle started" },
   battle_win:      { primary: "confident",    primaryIntensity: 9,  secondary: "excited",     secondaryIntensity: 7, halfLifeMs: 300_000, label: "battle won" },
   battle_losing:   { primary: "competitive",  primaryIntensity: 10, halfLifeMs: 999_999, label: "fighting back" },
@@ -86,15 +88,16 @@ const BASELINE: Pick<EmotionalState, "primary" | "intensity" | "secondary" | "se
   secondaryIntensity: 0,
 };
 
-const DECAY_RATE_PER_TICK = 0.8;  // intensity points lost every 30s decay tick
+const DECAY_RATE_PER_TICK = 0.8;
 
 const emotionStates = new Map<number, EmotionalState>();
 const lastEventTime  = new Map<number, number>(); // sessionId → timestamp of last event
 const commentBursts  = new Map<number, { count: number; windowStart: number }>();
 
-const BURST_WINDOW_MS  = 60_000;
-const BURST_THRESHOLD  = 10;
-const SILENCE_THRESHOLD_MS = 120_000; // 2 minutes
+const BURST_WINDOW_MS       = 60_000;
+const BURST_THRESHOLD       = 10;
+const SILENCE_THRESHOLD_MS  = 120_000; // 2 minutes → curious
+const SILENCE_FRUSTRATED_MS = 240_000; // 4 minutes → frustrated
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -164,36 +167,81 @@ export function trackCommentBurst(sessionId: number): EmotionalTrigger | null {
   return null;
 }
 
+/**
+ * Check all tracked sessions for silence thresholds.
+ * Returns sessions whose state changed — orchestrator uses these to emit socket events.
+ * Call every 15s from a setInterval.
+ */
+export function checkSilentSessions(): Array<{ sessionId: number; state: EmotionalState }> {
+  const now     = Date.now();
+  const changed: Array<{ sessionId: number; state: EmotionalState }> = [];
+
+  for (const [sessionId, lastEvt] of lastEventTime) {
+    const silenceMs    = now - lastEvt;
+    const currentState = emotionStates.get(sessionId) ?? createDefault(sessionId);
+
+    // Skip sessions already in an active battle — silence detection doesn't override battle
+    if (currentState.primary === "competitive" && currentState.intensity >= 8) continue;
+
+    if (silenceMs > SILENCE_FRUSTRATED_MS && currentState.primary !== "frustrated") {
+      // Deep silence (4+ min) → restless / frustrated
+      const newState: EmotionalState = {
+        ...currentState,
+        primary:            "frustrated",
+        intensity:          Math.min(6, 3 + Math.floor((silenceMs - SILENCE_FRUSTRATED_MS) / 60_000)),
+        secondary:          "curious",
+        secondaryIntensity: 3,
+        lastUpdatedAt:      now,
+        lastTrigger:        "getting restless",
+        history: [
+          { emotion: "frustrated", intensity: 5, trigger: "getting restless", ts: now },
+          ...currentState.history,
+        ].slice(0, 10),
+      };
+      emotionStates.set(sessionId, newState);
+      changed.push({ sessionId, state: newState });
+
+    } else if (
+      silenceMs > SILENCE_THRESHOLD_MS &&
+      silenceMs <= SILENCE_FRUSTRATED_MS &&
+      currentState.primary !== "curious" &&
+      currentState.primary !== "frustrated"
+    ) {
+      // Initial silence (2–4 min) → curious
+      const newState: EmotionalState = {
+        ...currentState,
+        primary:            "curious",
+        intensity:          4,
+        secondary:          null,
+        secondaryIntensity: 0,
+        lastUpdatedAt:      now,
+        lastTrigger:        "quiet moment",
+        history: [
+          { emotion: "curious", intensity: 4, trigger: "quiet moment", ts: now },
+          ...currentState.history,
+        ].slice(0, 10),
+      };
+      emotionStates.set(sessionId, newState);
+      changed.push({ sessionId, state: newState });
+    }
+  }
+
+  return changed;
+}
+
 /** Decay all active sessions toward baseline. Call every 30s from a setInterval. */
 export function decayAllEmotions(): void {
   const now = Date.now();
 
   for (const [sessionId, state] of emotionStates) {
-    // Silence detection
-    const lastEvt = lastEventTime.get(sessionId) ?? now;
-    if (now - lastEvt > SILENCE_THRESHOLD_MS && state.primary !== "curious") {
-      const silentState: EmotionalState = {
-        ...state,
-        primary:           "curious",
-        intensity:         3,
-        secondary:         null,
-        secondaryIntensity: 0,
-        lastUpdatedAt:     now,
-        lastTrigger:       "quiet moment",
-      };
-      emotionStates.set(sessionId, silentState);
-      continue;
-    }
-
     let { primary, intensity, secondary, secondaryIntensity } = state;
 
     // Decay secondary faster
     secondaryIntensity = Math.max(0, secondaryIntensity - DECAY_RATE_PER_TICK * 1.5);
     if (secondaryIntensity <= 0) secondary = null;
 
-    // Don't decay persistent states (battle)
-    if (primary === "competitive" || primary === "confident") {
-      // Decay slowly — these fade naturally only after >5 min
+    // Don't decay persistent states (battle, deep silence)
+    if (primary === "competitive" || primary === "frustrated") {
       const ageSecs = (now - state.lastUpdatedAt) / 1000;
       if (ageSecs < 300) {
         emotionStates.set(sessionId, { ...state, secondary, secondaryIntensity });
@@ -228,30 +276,75 @@ export function clearEmotionalState(sessionId: number): void {
   commentBursts.delete(sessionId);
 }
 
-// ── Prompt / Voice helpers ────────────────────────────────────────────────────
+// ── Prompt helpers ────────────────────────────────────────────────────────────
+
+// Emotion-specific delivery direction injected into AI system prompt.
+// These are DELIVERY instructions — how the voice and phrasing should feel.
+const EMOTION_DELIVERY: Record<EmotionType, { voice: string; delivery: string }> = {
+  happy:       {
+    voice:    "warm, bright, lifted",
+    delivery: "lighter sentences, positive spin on everything, natural smile in the words",
+  },
+  excited:     {
+    voice:    "fast, punchy, building",
+    delivery: "shorter bursts, escalating energy through the sentence, momentum at the end",
+  },
+  confident:   {
+    voice:    "measured, assured, declarative",
+    delivery: "no hedging, no filler, statements not questions, endings that land",
+  },
+  curious:     {
+    voice:    "open, wondering, inviting",
+    delivery: "questions woven in naturally, slight trailing off, space for them to fill",
+  },
+  playful:     {
+    voice:    "light, teasing, unpredictable",
+    delivery: "subvert expectations mid-sentence, surprise the listener, playful rhythm",
+  },
+  competitive: {
+    voice:    "sharp, clipped, zero-waste",
+    delivery: "no padding, every word has weight, sentences that close like fists",
+  },
+  grateful:    {
+    voice:    "warm, sincere, slightly slowed",
+    delivery: "linger on the moment, let appreciation breathe, never rush a thank-you",
+  },
+  frustrated:  {
+    voice:    "edgier, restless, shorter",
+    delivery: "less patience in phrasing, direct challenges, energy that demands a response",
+  },
+  surprised:   {
+    voice:    "sharp open then expanding",
+    delivery: "start with the raw reaction, then let it open and process outward",
+  },
+};
 
 /**
  * Returns a text block injected into the AI system prompt.
- * Tells the AI what to FEEL without using the word "emotion".
+ * Focuses on DELIVERY and voice quality — complements the personality×emotion matrix.
  */
 export function getEmotionPromptContext(state: EmotionalState): string {
-  if (state.intensity < 4) return ""; // baseline — no special injection
+  if (state.intensity < 3) return "";
 
   const intensityLabel =
-    state.intensity >= 9 ? "very intense" :
+    state.intensity >= 9 ? "peak" :
     state.intensity >= 7 ? "strong" :
     state.intensity >= 5 ? "moderate" : "mild";
 
+  const delivery = EMOTION_DELIVERY[state.primary];
+
   const lines = [
-    `[Inner State] You are feeling ${state.primary.toUpperCase()} right now — ${intensityLabel} (${state.intensity}/10).`,
-    `Triggered by: ${state.lastTrigger}.`,
+    `[Voice & Delivery] Inner state: ${intensityLabel} ${state.primary.toUpperCase()} (${state.intensity}/10) — triggered by "${state.lastTrigger}".`,
+    `Voice quality: ${delivery.voice}.`,
+    `Delivery: ${delivery.delivery}.`,
   ];
 
   if (state.secondary && state.secondaryIntensity >= 3) {
-    lines.push(`Also feeling: ${state.secondary} (${state.secondaryIntensity}/10).`);
+    const secDelivery = EMOTION_DELIVERY[state.secondary];
+    lines.push(`Undercurrent of ${state.secondary} (${state.secondaryIntensity}/10): ${secDelivery.delivery}.`);
   }
 
-  lines.push(`Let this shape your energy, word choice, and sentence length naturally. Never state the emotion explicitly.`);
+  lines.push(`Do NOT name the feeling. Perform it — let it live in the rhythm, word choice, and energy of every sentence.`);
 
   return lines.join("\n");
 }
@@ -262,19 +355,18 @@ export function getEmotionPromptContext(state: EmotionalState): string {
  */
 export function getVoiceSpeedModifier(state: EmotionalState): number {
   const baseModifiers: Record<EmotionType, number> = {
-    excited:     0.15,
-    surprised:   0.20,
-    competitive: 0.12,
+    excited:     0.18,
+    surprised:   0.22,
+    competitive: 0.15,
     confident:   0.05,
-    playful:     0.05,
-    happy:       0.00,
-    curious:     0.00,
-    grateful:   -0.05,
-    frustrated: -0.05,
+    playful:     0.08,
+    happy:       0.03,
+    curious:    -0.03,
+    grateful:   -0.08,
+    frustrated:  0.10,  // restless → faster, more clipped
   };
 
   const base = baseModifiers[state.primary] ?? 0;
-  // Scale by intensity: intensity 10 = full modifier, intensity 1 = 10%
   return base * (state.intensity / 10);
 }
 
@@ -288,7 +380,7 @@ export const EMOTION_META: Record<EmotionType, { emoji: string; label: string; c
   playful:     { emoji: "😄", label: "Playful",     color: "#ec4899", bgClass: "bg-pink-500/15 border-pink-500/25" },
   competitive: { emoji: "⚔️", label: "Competitive", color: "#ef4444", bgClass: "bg-red-500/15 border-red-500/25" },
   grateful:    { emoji: "🙏", label: "Grateful",    color: "#f59e0b", bgClass: "bg-amber-500/15 border-amber-500/25" },
-  frustrated:  { emoji: "😤", label: "Frustrated",  color: "#84cc16", bgClass: "bg-lime-500/15 border-lime-500/25" },
+  frustrated:  { emoji: "😤", label: "Restless",    color: "#84cc16", bgClass: "bg-lime-500/15 border-lime-500/25" },
   surprised:   { emoji: "😲", label: "Surprised",   color: "#a855f7", bgClass: "bg-purple-500/15 border-purple-500/25" },
 };
 

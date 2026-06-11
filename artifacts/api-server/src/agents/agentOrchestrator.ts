@@ -17,6 +17,7 @@ import {
   getEmotionalState,
   getVoiceSpeedModifier,
   decayAllEmotions,
+  checkSilentSessions,
   clearEmotionalState,
   trackCommentBurst,
   recordActivity,
@@ -104,6 +105,22 @@ export function initOrchestrator(io: SocketServer): void {
   setInterval(processQueue, 200);
   setInterval(cleanQueue, 30_000);
   setInterval(decayAllEmotions, 30_000);
+
+  // Silence detection: check every 15s, emit emotion:state when a session goes quiet
+  setInterval(() => {
+    if (!ioRef) return;
+    const silenced = checkSilentSessions();
+    for (const { sessionId, state } of silenced) {
+      ioRef.to(`session:${sessionId}`).emit("emotion:state", {
+        ...state,
+        ...EMOTION_META[state.primary],
+      });
+      console.log(
+        `[Agent:Emotion] ${EMOTION_META[state.primary].emoji} silence detected → ${state.primary} intensity=${state.intensity}/10 | session=${sessionId}`,
+      );
+    }
+  }, 15_000);
+
   console.log("[Orchestrator] Multi-Agent Core initialized");
 }
 
@@ -592,14 +609,19 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
         opponentStatement: commentText,
         context: battleResult.context,
       });
-      // Route battle reply through the same TTS voice pipeline
+      // Route battle reply through the same TTS voice pipeline with emotion speed modifier
       if (config.voiceEnabled && state.enabledAgents.has("voice")) {
         void (async () => {
           try {
+            const battleSpeedBoost = getVoiceSpeedModifier(emotionState);
+            const battleSpeed      = Math.min(1.8, Math.max(0.5, (voice.speed ?? 1.0) + battleSpeedBoost));
+            if (Math.abs(battleSpeedBoost) > 0.01) {
+              console.log(`[Agent:Battle] 🎙️ speed adjusted | base=${voice.speed} boost=+${battleSpeedBoost.toFixed(2)} → ${battleSpeed.toFixed(2)}`);
+            }
             const audioBuffer = await generateVoice(
               battleResult.suggestedReply!,
               voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
-              voice.speed ?? 1,
+              battleSpeed,
             );
             if (audioBuffer) {
               io.to(`session:${sessionId}`).emit("tts:audio", { audio: audioBuffer, text: battleResult.suggestedReply });
