@@ -9,6 +9,7 @@ import { getActivePersonality } from "./personalityAgent";
 import { getActiveVoice } from "./voiceAgent";
 import { getMemoryContext, upsertViewerProfile } from "./memoryAgent";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
+import type { StrategySuggestion } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
 import { isBattleActive, generateBattleReply } from "./battleAgent";
 import { generateVoice, fastSpamCheck } from "../lib/aiService";
@@ -110,6 +111,7 @@ interface OrchestratorState {
   announcementCooldowns: Map<string, number>;   // "sessionId:eventType" → last-fired timestamp
   perViewerReplyCooldown: Map<string, number>;  // "sessionId:viewerName" → last-reply timestamp
   sessionToStreamer: Map<number, number>;        // sessionId → streamerId (used by silence filler)
+  lastStrategySuggestion: Map<number, { suggestion: StrategySuggestion; ts: number }>; // injected as optional hint into behaviorCtx
 }
 
 const state: OrchestratorState = {
@@ -122,6 +124,7 @@ const state: OrchestratorState = {
   announcementCooldowns: new Map(),
   perViewerReplyCooldown: new Map(),
   sessionToStreamer: new Map(),
+  lastStrategySuggestion: new Map(),
 };
 
 let ioRef: SocketServer | null = null;
@@ -232,6 +235,8 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     };
     state.queue.push(fillerItem);
     state.queue.sort((a, b) => a.priority - b.priority || a.enqueuedAt - b.enqueuedAt);
+    // Reset the activity clock so the silence detector doesn't re-fire next tick
+    recordActivity(event.sessionId);
     return;
   }
 
@@ -762,7 +767,12 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const commentDepthHint   = commentText2.length > 60
     ? "This viewer wrote something personal and detailed — match their depth and specificity in your reply."
     : "";
-  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint].filter(Boolean).join("\n");
+  // Strategy hint: inject the most recent coach suggestion as an optional nudge (valid for 5 min)
+  const stratEntry = state.lastStrategySuggestion.get(sessionId);
+  const strategyHint = stratEntry && Date.now() - stratEntry.ts < 5 * 60_000
+    ? `💡 Optional strategy hint (use when it fits naturally — not forced): ${stratEntry.suggestion.suggestion}`
+    : "";
+  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
   // When multiple viewers sent the same message, give the AI crowd context in
@@ -847,11 +857,25 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     output: { text: hostResult.text, emotion: hostResult.emotion },
   });
 
-  if (event.type === "comment") {
-    const comment = (event.data.text as string) ?? "";
-    const updated = [...history, { viewer: event.username ?? "Unknown", comment, reply: hostResult.text, ts: Date.now() }];
+  // Append ALL event types to conversation history so the next reply has full context.
+  // A gift arriving mid-conversation, or a follow from someone who was just chatting,
+  // should appear in the thread — "Stream was just talking about:" uses this.
+  {
+    const contextLine =
+      event.type === "comment"
+        ? (event.data.text as string) ?? ""
+        : event.type === "gift"
+        ? `[gift: ${event.username} sent ${(event.data.giftName as string) ?? "a gift"} (${(event.data.coins as number) ?? 0} coins)]`
+        : event.type === "follow"
+        ? `[follow: ${event.username} just followed]`
+        : event.type === "share"
+        ? `[share: ${event.username} shared the stream]`
+        : `[${event.type}: ${event.username ?? "anon"}]`;
+    const updated = [...history, { viewer: event.username ?? "Unknown", comment: contextLine, reply: hostResult.text, ts: Date.now() }];
     state.conversationHistory.set(sessionId, updated.slice(-10));
+  }
 
+  if (event.type === "comment") {
     // Record per-viewer reply timestamp so the pre-filter can enforce cooldowns
     const viewerKey = `${sessionId}:${event.username ?? "anon"}`;
     state.perViewerReplyCooldown.set(viewerKey, Date.now());
@@ -895,7 +919,9 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   if (state.enabledAgents.has("strategy") && await shouldGenerateSuggestion(sessionId)) {
     const suggestion = await generateStrategySuggestion({ sessionId, streamerId, personaName: config.personaName });
     if (suggestion) {
-      console.log(`[Agent:Strategy] 📊 strategy suggestion generated`);
+      console.log(`[Agent:Strategy] 📊 strategy suggestion generated: "${suggestion.suggestion.slice(0, 60)}" (${suggestion.priority})`);
+      // Cache so the NEXT hostAgent call can use it as an optional nudge
+      state.lastStrategySuggestion.set(sessionId, { suggestion, ts: Date.now() });
       io.to(roomId).emit("agent:strategy:suggest", suggestion);
     }
   }
@@ -980,6 +1006,8 @@ export async function getRecentTasks(streamerId: number, sessionId?: number, lim
 
 export function clearSessionHistory(sessionId: number): void {
   state.conversationHistory.delete(sessionId);
+  state.sessionToStreamer.delete(sessionId);
+  state.lastStrategySuggestion.delete(sessionId);
   clearEmotionalState(sessionId);
   clearBehaviorState(sessionId);
   clearMoodState(sessionId);
