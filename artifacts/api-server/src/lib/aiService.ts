@@ -5,6 +5,18 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
 });
 
+// TTS-only client: uses direct api.openai.com (Replit proxy does NOT support POST /audio/speech)
+const ttsOpenai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
+
+if (!process.env.OPENAI_API_KEY) {
+  console.error(
+    "[TTS] ❌ OPENAI_API_KEY is not set. Voice generation will fail. " +
+    "Add your OpenAI API key as the OPENAI_API_KEY secret."
+  );
+}
+
 const FAST_MODEL = "gpt-4o-mini";
 const SMART_MODEL = "gpt-4o";
 
