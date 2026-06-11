@@ -155,7 +155,14 @@ const API_BASE = `${BASE_URL}/api`;
 let ttsQueue: Promise<void> = Promise.resolve();
 let ttsQueueDepth = 0;
 
-async function playOpenAiTts(text: string, voice: string, volume: number, speed = 1.0): Promise<void> {
+async function playOpenAiTts(rawText: string, voice: string, volume: number, speed = 1.0): Promise<void> {
+  // Normalize FIRST — OpenAI TTS may also read some emoji names
+  const { text, hasEmojis, emojiEmotion } = normalizeTtsText(rawText);
+  if (!text.trim()) return;
+  if (hasEmojis) {
+    console.log(`[TTS:Normalize:OpenAI] raw="${rawText.slice(0,60)}" → normalized="${text.slice(0,60)}" | emojiEmotion=${emojiEmotion}`);
+  }
+
   try {
     const res = await fetch(`${API_BASE}/ai/voice`, {
       method: "POST",
@@ -169,7 +176,7 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
       const msg = body?.error ?? `HTTP ${res.status}`;
       console.warn(`[TTS] OpenAI TTS error: ${msg} — falling back to browser TTS`);
       window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
-      await playBrowserTts(text);
+      await playBrowserTts(rawText);
       return;
     }
 
@@ -178,7 +185,6 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
     const audio = new Audio(url);
     audio.volume = Math.max(0, Math.min(1, volume));
 
-    // Dispatch tts:audio so useLipSync can tap in via Web Audio API
     window.dispatchEvent(new CustomEvent("tts:audio", { detail: audio }));
     window.dispatchEvent(new CustomEvent("tts:start"));
 
@@ -190,7 +196,7 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
       };
       audio.onerror = () => {
         URL.revokeObjectURL(url);
-        playBrowserTts(text);
+        playBrowserTts(rawText);
         resolve();
       };
 
@@ -198,7 +204,7 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
       if (playPromise !== undefined) {
         playPromise.catch(() => {
           URL.revokeObjectURL(url);
-          playBrowserTts(text);
+          playBrowserTts(rawText);
           resolve();
         });
       }
@@ -207,7 +213,7 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
     const msg = (err as Error)?.message ?? String(err);
     console.warn("[TTS] OpenAI TTS playback error:", msg, "— falling back to browser TTS");
     window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
-    await playBrowserTts(text);
+    await playBrowserTts(rawText);
   }
 }
 
@@ -237,10 +243,144 @@ function detectTtsLang(text: string, defaultLang?: string): string {
   return "en-US";
 }
 
+// ── Text normalization: strip/convert emojis before TTS ──────────────────────
+//
+// Browser SpeechSynthesis reads emoji names literally ("smiling face", "fire emoji").
+// This layer converts them to natural speech equivalents before ANY TTS engine sees
+// the text — browser OR OpenAI.
+//
+// Emoji emotion classification also drives rate/pitch in playBrowserTts so the
+// delivery matches the emotional content without naming the emoji.
+
+type EmojiEmotion = "laugh" | "excited" | "sad" | "angry" | "warm" | "neutral";
+
+interface NormalizeResult {
+  text: string;
+  emojiEmotion: EmojiEmotion;
+  hasEmojis: boolean;
+}
+
+function normalizeTtsText(rawText: string, ttsLang?: string): NormalizeResult {
+  const isUkRu = !ttsLang || ttsLang.startsWith("uk") || ttsLang.startsWith("ru");
+  const isPl   = ttsLang?.startsWith("pl");
+
+  // ── Detect dominant emoji emotion BEFORE stripping ───────────────────────
+  const hasLaugh   = /[\u{1F602}\u{1F923}\u{1F639}\u{1F601}\u{1F603}\u{1F604}\u{1F600}]/u.test(rawText);
+  const hasExcited = /[\u{1F525}\u{1F4A5}\u{26A1}\u{1F31F}\u{2728}\u{1F389}\u{1F38A}]/u.test(rawText);
+  const hasSad     = /[\u{1F622}\u{1F62D}\u{1F97A}\u{1F614}\u{1F615}]/u.test(rawText);
+  const hasAngry   = /[\u{1F621}\u{1F620}\u{1F92C}]/u.test(rawText);
+  const hasWarm    = /[\u{2764}\u{1F495}\u{1F496}\u{1F970}\u{1F60D}]/u.test(rawText);
+
+  let emojiEmotion: EmojiEmotion = "neutral";
+  if (hasLaugh)        emojiEmotion = "laugh";
+  else if (hasExcited) emojiEmotion = "excited";
+  else if (hasSad)     emojiEmotion = "sad";
+  else if (hasAngry)   emojiEmotion = "angry";
+  else if (hasWarm)    emojiEmotion = "warm";
+
+  const hasEmojis = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(rawText);
+
+  let text = rawText;
+
+  // ── Step 1: Laugh emojis → natural laugh sound ───────────────────────────
+  // Ukrainian: "ха-ха-ха", Polish/English: "ha ha ha"
+  const laughSound = isUkRu ? "ха-ха-ха!" : isPl ? "ha ha ha!" : "ha ha ha!";
+  text = text.replace(/[\u{1F602}\u{1F923}\u{1F639}]+/gu, laughSound);
+
+  // Happy-face emojis (non-laugh) → remove; warmth lives in voice pacing
+  text = text.replace(/[\u{1F604}\u{1F603}\u{1F600}\u{1F601}\u{263A}]+/gu, "");
+
+  // ── Step 2: Excited emojis → emphasis punctuation or remove ─────────────
+  // Inline 🔥💥⚡ → "!" to keep the energy without naming them
+  text = text.replace(/[\u{1F525}\u{1F4A5}\u{26A1}]+/gu, "!");
+  // Party/celebration → remove (energy in voice)
+  text = text.replace(/[\u{1F389}\u{1F38A}\u{1F381}\u{1F3C6}\u{1F451}\u{1F31F}\u{2728}\u{1F4AB}]+/gu, "");
+
+  // ── Step 3: Sad emojis → pause marker ────────────────────────────────────
+  text = text.replace(/[\u{1F622}\u{1F62D}\u{1F97A}]+/gu, "...");
+  text = text.replace(/[\u{1F614}\u{1F615}\u{1F641}]+/gu, "");
+
+  // ── Step 4: Angry emojis → remove (conveyed by voice energy) ────────────
+  text = text.replace(/[\u{1F621}\u{1F620}\u{1F92C}]+/gu, "");
+
+  // ── Step 5: Love/warm emojis → remove ───────────────────────────────────
+  text = text.replace(/[\u{2764}\u{1F495}\u{1F496}\u{1F497}\u{1F498}\u{1F49E}\u{1F493}\u{1F970}\u{1F60D}]+/gu, "");
+  text = text.replace(/\uFE0F/g, ""); // strip variation selector-16 (e.g. ❤️ → ❤)
+
+  // ── Step 6: Catch-all — any remaining emoji in standard Unicode ranges ───
+  text = text.replace(/[\u{1F000}-\u{1F9FF}]/gu, "");
+  text = text.replace(/[\u{1FA00}-\u{1FAFF}]/gu, "");
+  text = text.replace(/[\u{2600}-\u{26FF}]/gu,   "");
+  text = text.replace(/[\u{2700}-\u{27BF}]/gu,   "");
+  text = text.replace(/[\uFE00-\uFEFF]/g, ""); // variation selectors
+
+  // ── Step 7: General text cleanup ─────────────────────────────────────────
+  text = text.replace(/https?:\/\/\S+/g, "");             // URLs
+  text = text.replace(/\*{1,3}([^*\n]+)\*{1,3}/g, "$1"); // markdown bold/italic
+  text = text.replace(/_([^_\n]+)_/g, "$1");
+  text = text.replace(/!{3,}/g,  "!");  // !!! → !
+  text = text.replace(/\?{3,}/g, "??"); // ??? → ??
+  text = text.replace(/\.{4,}/g, "..."); // .... → ...
+  text = text.replace(/\s{2,}/g, " ").trim();
+
+  // ── Step 8: Fallback for emoji-only input ────────────────────────────────
+  if (!text.trim() && hasEmojis) {
+    if      (emojiEmotion === "laugh")   text = isUkRu ? "ха-ха-ха" : "ha ha ha";
+    else if (emojiEmotion === "excited") text = isUkRu ? "Ого!"     : "Wow!";
+    else if (emojiEmotion === "sad")     text = "...";
+    else if (emojiEmotion === "warm")    text = isUkRu ? "дякую"    : "thank you";
+    else                                 text = "";
+  }
+
+  return { text, emojiEmotion, hasEmojis };
+}
+
+// ── Voice audit: comprehensive diagnostic log ─────────────────────────────────
+// Logs every available browser voice, which one is selected for a given lang,
+// and what normalization would produce for example inputs.
+export function logVoiceAudit(streamerLang = "uk"): void {
+  const voices = window.speechSynthesis?.getVoices() ?? [];
+  const langs  = ["uk-UA", "ru-RU", "pl-PL", "en-US", "de-DE"];
+
+  console.group("[TTS:VoiceAudit] ──────────────────────────────────");
+  console.log(`Available browser voices (${voices.length}):`);
+  voices.forEach(v => console.log(`  ${v.lang.padEnd(10)} ${v.name}${v.default ? " ← DEFAULT" : ""}`));
+
+  console.log("\nOpenAI voices (when voiceKey = openai):");
+  ["alloy","echo","fable","onyx","nova","shimmer"].forEach(v =>
+    console.log(`  ${v} — multilingual, best for long-form Ukrainian text`)
+  );
+
+  console.log("\nVoice selection per language:");
+  langs.forEach(l => {
+    const selected = selectBrowserVoice(l);
+    const status   = selected?.lang === l ? "✅ exact match" : selected ? `⚠ fallback: ${selected.lang}` : "❌ none — browser default";
+    console.log(`  ${l.padEnd(8)} → ${selected?.name ?? "(none)"} [${status}]`);
+  });
+
+  const examples = [
+    `Привіт 😄`,
+    `😂 Це найкращий жарт`,
+    `Нічого собі! 🔥`,
+    `Дякую за подарунок ❤️`,
+    `😢 Як шкода`,
+  ];
+  console.log("\nNormalization examples:");
+  examples.forEach(raw => {
+    const detLang = detectTtsLang(raw, streamerLang);
+    const { text, emojiEmotion } = normalizeTtsText(raw, detLang);
+    console.log(`  raw:        "${raw}"`);
+    console.log(`  normalized: "${text}"  [emojiEmotion=${emojiEmotion}]`);
+    console.log(`  lang:       ${detLang}`);
+    console.log("");
+  });
+  console.groupEnd();
+}
+
 // Map TTS lang codes → Slavic/close-family fallback chains
 // When exact voice not found, try these in order before giving up
 const TTS_LANG_FALLBACKS: Record<string, string[]> = {
-  "uk-UA": ["uk", "ru-RU", "ru"],     // Ukrainian → Russian (closer than Polish)
+  "uk-UA": ["uk", "ru-RU", "ru"],     // Ukrainian → Russian (closest available in most browsers)
   "ru-RU": ["ru"],
   "pl-PL": ["pl"],
   "de-DE": ["de"],
@@ -280,7 +420,7 @@ function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
   return eligible[0] ?? null;
 }
 
-function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
+function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
     if (!synth) { resolve(); return; }
@@ -292,32 +432,87 @@ function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string; 
       synth.resume();
     }
 
-    const detectedLang = detectTtsLang(text, opts?.defaultLang);
+    const detectedLang = detectTtsLang(rawText, opts?.defaultLang);
+
+    // ── Normalization pipeline ─────────────────────────────────────────────
+    // Converts emojis to natural speech equivalents BEFORE SpeechSynthesis sees
+    // the text. Without this, browsers read names like "smiling face" / "fire emoji".
+    const { text, emojiEmotion, hasEmojis } = normalizeTtsText(rawText, detectedLang);
+
+    if (!text.trim()) { resolve(); return; } // nothing to speak after stripping
+
+    if (hasEmojis) {
+      console.log(`[TTS:Normalize] raw="${rawText.slice(0,70)}" → "${text.slice(0,70)}" | emojiEmotion=${emojiEmotion}`);
+    }
+
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = detectedLang;
 
-    // Emotion-aware delivery: excited/hype → faster + higher pitch; calm → slower
-    const baseRate = opts?.rate ?? 1.05;
-    const emotion  = opts?.emotion ?? "neutral";
-    const emotionRateBoost =
-      emotion === "excited" || emotion === "hype" ? +0.08 :
-      emotion === "grateful"                       ? +0.03 :
-      emotion === "funny"                          ? +0.05 : 0;
-    utt.rate  = Math.min(1.6, Math.max(0.7, baseRate + emotionRateBoost));
-    utt.pitch = (emotion === "excited" || emotion === "hype") ? 1.1 : 1.0;
+    // ── Emotion-aware delivery ─────────────────────────────────────────────
+    // Two signals: declared `emotion` from the AI (happy/excited/grateful…)
+    // and `emojiEmotion` extracted from emojis in the text.
+    // Emoji emotion takes priority when it's not neutral.
+    const baseRate       = opts?.rate ?? 1.05;
+    const declaredEmotion = opts?.emotion ?? "neutral";
+    const effectiveEmotion: string = emojiEmotion !== "neutral" ? emojiEmotion : declaredEmotion;
 
-    // Voice selection — explicitly pick the best available voice for this language
-    // and log which one was chosen (or if fallback was needed)
+    // Rate modifiers — how fast to speak
+    const rateBoost: Record<string, number> = {
+      laugh:     +0.12, // laugh rhythm — slightly quicker, more natural
+      excited:   +0.10,
+      hype:      +0.12,
+      funny:     +0.08,
+      happy:     +0.06,
+      playful:   +0.08,
+      confident: +0.05,
+      grateful:  +0.03,
+      warm:      -0.02, // slightly slower, warmer feel
+      curious:   0,
+      sad:       -0.14, // slower, heavier delivery
+      frustrated:-0.05,
+      angry:     +0.05, // forceful but not rushed
+      neutral:   0,
+    };
+
+    // Pitch modifiers — higher = brighter/lighter, lower = deeper/heavier
+    const pitchBoost: Record<string, number> = {
+      laugh:     +0.18,
+      excited:   +0.14,
+      hype:      +0.14,
+      funny:     +0.10,
+      happy:     +0.08,
+      playful:   +0.12,
+      confident: +0.04,
+      grateful:  +0.06,
+      warm:      +0.06,
+      curious:   +0.04,
+      sad:       -0.18,
+      frustrated:-0.08,
+      angry:     -0.12,
+      neutral:   0,
+    };
+
+    const dr = rateBoost[effectiveEmotion]  ?? rateBoost[declaredEmotion]  ?? 0;
+    const dp = pitchBoost[effectiveEmotion] ?? pitchBoost[declaredEmotion] ?? 0;
+
+    utt.rate  = Math.min(1.6, Math.max(0.7, baseRate + dr));
+    utt.pitch = Math.min(2.0, Math.max(0.3, 1.0 + dp));
+
+    // ── Voice selection ────────────────────────────────────────────────────
+    // Prefer uk-UA; if unavailable fall back through chain defined in
+    // TTS_LANG_FALLBACKS (currently: uk → ru-RU → ru).
+    // IMPORTANT: set utt.lang to match the actual voice, not the detected lang.
+    // Mismatching lang vs voice on Windows causes the system default (Microsoft
+    // Adam Polish) to play in parallel — audible double-voice overlap.
     const selectedVoice = selectBrowserVoice(detectedLang);
     if (selectedVoice) {
       utt.voice = selectedVoice;
-      // IMPORTANT: set utt.lang to match the actual voice, not the detected language.
-      // If we leave utt.lang="uk-UA" but voice="Google русский" (ru-RU), Windows
-      // Speech Engine treats it as a lang mismatch and plays the system default
-      // (Microsoft Adam Polish) in parallel — causing the audible overlap.
-      utt.lang = selectedVoice.lang;
+      utt.lang  = selectedVoice.lang;
       if (selectedVoice.lang !== detectedLang) {
-        console.warn(`[TTS:Browser] ⚠ no ${detectedLang} voice — using "${selectedVoice.name}" (${selectedVoice.lang}) as fallback`);
+        console.warn(
+          `[TTS:Browser] ⚠ no ${detectedLang} voice — using "${selectedVoice.name}" (${selectedVoice.lang}) as fallback` +
+          (detectedLang === "uk-UA" ? " | install a uk-UA voice for native Ukrainian pronunciation" : "")
+        );
       }
     } else {
       console.warn(`[TTS:Browser] ⚠ no voice found for ${detectedLang} — browser default will be used`);
@@ -332,7 +527,11 @@ function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string; 
 
     utt.onstart = () => {
       const voiceName = utt.voice?.name ?? "browser-default";
-      console.log(`[TTS:Browser] ▶ playing | lang=${utt.lang} | voice="${voiceName}" | emotion=${emotion} | rate=${utt.rate.toFixed(2)} | chars=${text.length}`);
+      console.log(
+        `[TTS:Browser] ▶ | lang=${utt.lang} | voice="${voiceName}"` +
+        ` | eff-emotion=${effectiveEmotion} | rate=${utt.rate.toFixed(2)} | pitch=${utt.pitch.toFixed(2)}` +
+        ` | chars=${text.length}`
+      );
       window.dispatchEvent(new CustomEvent("tts:start"));
     };
     utt.onend = () => {
@@ -654,25 +853,38 @@ export function useLiveSession(
           ].slice(0, 200),
         );
 
-        const mode = ttsModeRef.current;
-        console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | emotion=${(payload as Record<string,unknown>).emotion ?? "?"} | text="${payload.text.slice(0, 60)}"`);
+        const mode          = ttsModeRef.current;
+        const emotion       = ((payload as Record<string,unknown>).emotion       as string | undefined) ?? "neutral";
+        const streamerLang  = ((payload as Record<string,unknown>).streamerLang  as string | undefined) ?? "uk";
+        const detectedLang  = detectTtsLang(payload.text, streamerLang);
+
+        // ── Normalization preview log (always shown, not just when TTS is on) ──
+        // This lets you see raw→normalized pipeline even in mode=off.
+        const previewNorm = normalizeTtsText(payload.text, detectedLang);
+        if (previewNorm.hasEmojis) {
+          console.log(
+            `[TTS:Pipeline] raw:        "${payload.text.slice(0, 80)}"` +
+            `\n[TTS:Pipeline] normalized: "${previewNorm.text.slice(0, 80)}"` +
+            `  [emojiEmotion=${previewNorm.emojiEmotion}]` +
+            `\n[TTS:Pipeline] lang=${detectedLang} | emotion=${emotion}`
+          );
+        }
+
+        console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | emotion=${emotion} | emojiEmotion=${previewNorm.emojiEmotion} | text="${payload.text.slice(0, 60)}"`);
+
         if (mode === "openai") {
-          console.log(`[TTS] → enqueuing OpenAI TTS | voice=${ttsVoiceRef.current} | speed=${ttsSpeedRef.current}`);
+          console.log(`[TTS] → OpenAI TTS | voice=${ttsVoiceRef.current} | speed=${ttsSpeedRef.current}`);
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current), payload.text);
         } else if (mode === "browser") {
-          // Log available voices once so we know what the browser has
-          const voices = window.speechSynthesis?.getVoices() ?? [];
-          if (voices.length > 0) {
-            const voiceList = voices.map(v => `${v.lang}:${v.name}`).join(" | ");
-            console.log(`[TTS:Browser] available voices (${voices.length}): ${voiceList}`);
-          }
-          const emotion = ((payload as Record<string,unknown>).emotion as string | undefined) ?? "neutral";
-          const streamerLang = ((payload as Record<string,unknown>).streamerLang as string | undefined) ?? "uk";
-          const detectedLang = detectTtsLang(payload.text, streamerLang);
-          console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang} | streamLang=${streamerLang} | emotion=${emotion} | rate=${ttsSpeedRef.current}`);
+          const selectedVoice = selectBrowserVoice(detectedLang);
+          console.log(
+            `[TTS] → Browser | lang=${detectedLang} | streamLang=${streamerLang}` +
+            ` | voice="${selectedVoice?.name ?? "none"}" (${selectedVoice?.lang ?? "?"})` +
+            ` | emotion=${emotion} | rate=${ttsSpeedRef.current}`
+          );
           enqueueTts(() => playBrowserTts(payload.text, { rate: ttsSpeedRef.current, emotion, defaultLang: streamerLang }), payload.text);
         } else {
-          console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Assistant settings or Dashboard toggle.`);
+          console.log(`[TTS] mode=off — speech skipped`);
         }
       });
 
