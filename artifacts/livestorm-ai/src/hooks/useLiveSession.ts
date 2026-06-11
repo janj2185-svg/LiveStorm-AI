@@ -932,6 +932,19 @@ export function useLiveSession(
     };
   }, [sessionId, getToken]);
 
+  // ── Streamer microphone → backend co-host pipeline ────────────────────────
+  // Emits a `streamer:speech` event via the existing socket connection.
+  // The backend socket handler validates auth + session and enqueues at P3.
+  const sendStreamerSpeech = useCallback((text: string, lang: string) => {
+    const socket = socketRef.current;
+    if (!socket || !sessionId) {
+      console.warn("[CoHostMic] sendStreamerSpeech: no socket or session");
+      return;
+    }
+    console.log(`[CoHostMic] → streamer:speech | lang=${lang} | "${text.slice(0, 60)}"`);
+    socket.emit("streamer:speech", { text, lang, sessionId });
+  }, [sessionId]);
+
   return {
     events,
     translations,
@@ -956,5 +969,6 @@ export function useLiveSession(
     tiktokMode,
     tiktokError,
     tiktokUsername,
+    sendStreamerSpeech,
   };
 }

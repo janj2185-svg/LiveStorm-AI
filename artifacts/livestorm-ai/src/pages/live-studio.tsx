@@ -15,6 +15,7 @@ import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { PageHero, GradientText } from "@/components/ui/premium";
+import { CoHostPanel } from "@/components/CoHostPanel";
 
 // ── Comment feed ──────────────────────────────────────────────────────────────
 
@@ -581,6 +582,7 @@ export function LiveStudio() {
   const {
     events, translations, stats, connected, tiktokMode, tiktokError, tiktokUsername,
     isActive, sessionMode, emotionState,
+    aiAnnouncements, sendStreamerSpeech, activeSessionId,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
 
@@ -706,6 +708,14 @@ export function LiveStudio() {
 
           {/* ── Emotion Widget ─────────────────────────────────────────── */}
           <EmotionWidget emotionState={emotionState ?? null} isActive={!!isActive} />
+
+          {/* ── Co-Host Mic ────────────────────────────────────────────── */}
+          <CoHostPanel
+            sendStreamerSpeech={sendStreamerSpeech}
+            sessionId={activeSessionId}
+            isSessionActive={!!isActive}
+            aiAnnouncements={aiAnnouncements}
+          />
         </div>
 
         {/* ── Right panel: feeds ───────────────────────────────────────────── */}

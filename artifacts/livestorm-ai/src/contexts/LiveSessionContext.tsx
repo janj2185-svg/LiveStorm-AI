@@ -45,6 +45,10 @@ export type {
   TtsMode,
 } from "@/hooks/useLiveSession";
 
+// sendStreamerSpeech is part of useLiveSession's return and is already exposed
+// via the spread in LiveSessionProvider below — this comment ensures it's visible
+// to callers via useLiveSessionContext().
+
 type LiveSessionContextValue = ReturnType<typeof useLiveSession> & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeSessionRes: any;
