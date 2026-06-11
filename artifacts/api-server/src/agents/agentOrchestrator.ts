@@ -19,11 +19,25 @@ import {
   decayAllEmotions,
   checkSilentSessions,
   clearEmotionalState,
-  trackCommentBurst,
   recordActivity,
   giftTierTrigger,
   EMOTION_META,
 } from "./emotionEngine";
+import {
+  recordSessionStart,
+  clearBehaviorState,
+  detectHumor,
+  detectQuestionComplexity,
+  recordGiftVelocity,
+  getGiftVelocityAmplification,
+  recordCommentForBurst,
+  recordBattleAftermath,
+  getBattleAftermathContext,
+  getStreamFatiguePromptContext,
+  getBehaviorPromptContext,
+  injectParalinguistics,
+  getStreamFatigue,
+} from "./behaviorEngine";
 
 const MAX_QUEUE_SIZE = 50;
 const MAX_GENERAL_ITEM_AGE_MS = 15_000;
@@ -231,8 +245,18 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     }
     state.announcementCooldowns.set(giftKey, Date.now());
     console.log(`[NEW-PIPELINE] 🎁 gift passed threshold | coins=${coins} threshold=${threshold} | session=${event.sessionId}`);
-    // Emotion trigger — scale with gift size
-    const giftEmotion = applyEmotionalTrigger(event.sessionId, giftTierTrigger(coins));
+    // Emotion trigger — amplified by gift velocity (rapid gifts chain into bigger reactions)
+    recordGiftVelocity(event.sessionId);
+    const velocity    = getGiftVelocityAmplification(event.sessionId);
+    const baseTrigger = giftTierTrigger(coins);
+    const amplifiedTrigger =
+      velocity === "storm" ? "gift_whale" as const :
+      velocity === "wave"  ? (baseTrigger === "gift_micro" ? "gift_standard" as const : baseTrigger === "gift_standard" ? "gift_big" as const : baseTrigger) :
+      baseTrigger;
+    if (velocity !== "none") {
+      console.log(`[Agent:Emotion] 🌊 gift ${velocity} → ${baseTrigger} → ${amplifiedTrigger}`);
+    }
+    const giftEmotion = applyEmotionalTrigger(event.sessionId, amplifiedTrigger);
     console.log(`[Agent:Emotion] ${EMOTION_META[giftEmotion.primary].emoji} ${giftEmotion.primary} intensity=${giftEmotion.intensity}/10 ← gift ${coins} coins`);
     ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...giftEmotion, ...EMOTION_META[giftEmotion.primary] });
   }
@@ -323,15 +347,16 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
 
   // ── End pre-filters: all checks passed → classify and enqueue ──────────────
 
-  // Track comment burst and record activity for silence detection
+  // Graduated comment burst + record activity for silence detection
   if (event.type === "comment") {
-    const burstTrigger = trackCommentBurst(event.sessionId);
-    if (burstTrigger) {
-      const burstEmotion = applyEmotionalTrigger(event.sessionId, burstTrigger);
-      console.log(`[Agent:Emotion] ${EMOTION_META[burstEmotion.primary].emoji} comment burst → ${burstEmotion.primary} intensity=${burstEmotion.intensity}/10`);
+    const burst = recordCommentForBurst(event.sessionId);
+    if (burst.trigger) {
+      const burstEmotion = applyEmotionalTrigger(event.sessionId, burst.trigger);
+      console.log(`[Agent:Emotion] ${EMOTION_META[burstEmotion.primary].emoji} ${burst.burstLabel} (${burst.count30s}/30s) → ${burstEmotion.primary} intensity=${burstEmotion.intensity}/10`);
       ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...burstEmotion, ...EMOTION_META[burstEmotion.primary] });
     }
   }
+  recordSessionStart(event.sessionId);
   recordActivity(event.sessionId);
 
   const classification = await classifyEvent(event, streamerId);
@@ -634,9 +659,19 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       }
       void scoreResponse({ sessionId, streamerId, agentType: "battle", triggerEvent: "comment", aiResponse: battleResult.suggestedReply, score: 8.0 });
       void logTask({ sessionId, streamerId, agentType: "battle", eventType: "comment", priority: item.priority, input: { opponent: commentText.slice(0, 100) }, output: { reply: battleResult.suggestedReply.slice(0, 100) } });
+      recordBattleAftermath(sessionId, "win");
       return; // battle reply takes over — skip standard host agent
     }
   }
+
+  // ── Behavior Engine: build behavioral context for this event ────────────────
+  const commentText2 = event.type === "comment" ? ((event.data.text as string) ?? "") : "";
+  const humor             = detectHumor(commentText2);
+  const questionComplexity = detectQuestionComplexity(commentText2);
+  const fatigueCtx        = getStreamFatiguePromptContext(sessionId);
+  const aftermathCtx      = getBattleAftermathContext(sessionId);
+  const behaviorHints     = getBehaviorPromptContext({ humor, questionComplexity });
+  const behaviorCtx = [fatigueCtx, aftermathCtx, behaviorHints].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
   // When multiple viewers sent the same message, give the AI crowd context
@@ -653,6 +688,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     replyLanguage: config.replyLanguage ?? "auto",
     conversationHistory,
     emotionState,
+    behaviorCtx: behaviorCtx || undefined,
   });
 
   if (!hostResult?.text) {
@@ -660,17 +696,29 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     return;
   }
 
-  console.log(`[Agent:Host] 🎙️ reply="${hostResult.text.slice(0, 100)}" | emotion=${hostResult.emotion} | personality=${personality.modeKey}`);
+  // ── Behavior Engine: inject paralinguistic texture into spoken text ──────────
+  const spokenText = injectParalinguistics(hostResult.text, {
+    emotionState,
+    personalityKey: personality.modeKey,
+    humor,
+    questionComplexity,
+    streamFatigue: getStreamFatigue(sessionId),
+  });
+  if (spokenText !== hostResult.text) {
+    console.log(`[Agent:Behavior] 🎭 paralinguistic | "${spokenText.slice(0, 80)}"`);
+  }
+
+  console.log(`[Agent:Host] 🎙️ reply="${spokenText.slice(0, 100)}" | emotion=${hostResult.emotion} | personality=${personality.modeKey}`);
 
   state.lastTtsTime = Date.now();
 
   const roomId = `session:${sessionId}`;
 
   console.log(
-    `[NEW-PIPELINE] 📢 ai:announcement | type=${event.type} | viewer=${event.username ?? "anon"} | session=${sessionId} | text="${hostResult.text.slice(0, 80)}"`,
+    `[NEW-PIPELINE] 📢 ai:announcement | type=${event.type} | viewer=${event.username ?? "anon"} | session=${sessionId} | text="${spokenText.slice(0, 80)}"`,
   );
   io.to(roomId).emit("ai:announcement", {
-    text: hostResult.text,
+    text: spokenText,
     type: event.type,
     viewerName: event.username,
     emotion: hostResult.emotion,
@@ -682,7 +730,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   io.to(roomId).emit("agent:task", {
     agentType: "host",
     action: "spoke",
-    text: hostResult.text,
+    text: spokenText,
     emotion: hostResult.emotion,
     trigger: event.type,
     viewerName: event.username,
@@ -728,11 +776,11 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       if (Math.abs(emotionSpeedBoost) > 0.01) {
         console.log(`[Agent:Voice] 🎙️ speed adjusted by emotion | base=${voice.speed} boost=${emotionSpeedBoost.toFixed(2)} → ${adjustedSpeed.toFixed(2)}`);
       }
-      console.log(`[Agent:Voice] 🎙️ synthesizing TTS | voiceKey=${voice.voiceKey} speed=${adjustedSpeed.toFixed(2)} | text="${hostResult.text.slice(0, 50)}..."`);
-      const audioBuffer = await generateVoice(hostResult.text, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", adjustedSpeed);
+      console.log(`[Agent:Voice] 🎙️ synthesizing TTS | voiceKey=${voice.voiceKey} speed=${adjustedSpeed.toFixed(2)} | text="${spokenText.slice(0, 50)}..."`);
+      const audioBuffer = await generateVoice(spokenText, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", adjustedSpeed);
       if (audioBuffer) {
         console.log(`[Agent:Voice] ✓ TTS audio generated | ${audioBuffer.byteLength ?? 0} bytes`);
-        io.to(roomId).emit("tts:audio", { audio: audioBuffer, text: hostResult.text });
+        io.to(roomId).emit("tts:audio", { audio: audioBuffer, text: spokenText });
       }
     } catch (err: unknown) {
       console.error("[Agent:Voice] ✗ TTS error:", (err as Error)?.message);
@@ -829,6 +877,7 @@ export async function getRecentTasks(streamerId: number, sessionId?: number, lim
 export function clearSessionHistory(sessionId: number): void {
   state.conversationHistory.delete(sessionId);
   clearEmotionalState(sessionId);
+  clearBehaviorState(sessionId);
 }
 
 export const AGENT_TYPES = ["host", "chat", "battle", "memory", "personality", "voice", "strategy", "moderation", "learning"] as const;

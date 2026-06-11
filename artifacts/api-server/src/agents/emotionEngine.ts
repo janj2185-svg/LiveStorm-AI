@@ -46,7 +46,9 @@ export type EmotionalTrigger =
   | "vip_comment"
   | "new_viewer"
   | "first_timer"
-  | "many_comments"   // burst threshold crossed
+  | "many_comments"    // burst threshold crossed (8–12/30s)
+  | "burst_building"  // chat warming up (3–7/30s)
+  | "burst_peak"      // chat absolutely wild (13+/30s)
   | "silence"         // 2+ min with no activity → curious
   | "silence_deep"    // 4+ min → frustrated/restless
   | "battle_start"
@@ -73,7 +75,9 @@ const TRIGGER_EFFECTS: Record<EmotionalTrigger, TriggerEffect> = {
   vip_comment:     { primary: "happy",        primaryIntensity: 7,  halfLifeMs: 30_000,  label: "VIP viewer commented" },
   new_viewer:      { primary: "curious",      primaryIntensity: 5,  halfLifeMs: 30_000,  label: "new viewer appeared" },
   first_timer:     { primary: "curious",      primaryIntensity: 6,  secondary: "happy",       secondaryIntensity: 4, halfLifeMs: 20_000,  label: "first-time commenter" },
-  many_comments:   { primary: "excited",      primaryIntensity: 7,  secondary: "playful",     secondaryIntensity: 5, halfLifeMs: 90_000,  label: "comment burst" },
+  burst_building:  { primary: "playful",      primaryIntensity: 5,  halfLifeMs: 45_000,  label: "chat warming up" },
+  many_comments:   { primary: "excited",      primaryIntensity: 7,  secondary: "playful",     secondaryIntensity: 5, halfLifeMs: 90_000,  label: "chat buzzing" },
+  burst_peak:      { primary: "excited",      primaryIntensity: 9,  secondary: "playful",     secondaryIntensity: 6, halfLifeMs: 120_000, label: "chat absolutely wild" },
   silence:         { primary: "curious",      primaryIntensity: 4,  halfLifeMs: 999_999, label: "quiet moment" },
   silence_deep:    { primary: "frustrated",   primaryIntensity: 5,  secondary: "curious",     secondaryIntensity: 3, halfLifeMs: 999_999, label: "getting restless" },
   battle_start:    { primary: "competitive",  primaryIntensity: 9,  halfLifeMs: 999_999, label: "battle started" },

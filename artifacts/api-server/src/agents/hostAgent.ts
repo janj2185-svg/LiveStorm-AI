@@ -25,8 +25,10 @@ export async function runHostAgent(opts: {
   replyLanguage: string;
   conversationHistory?: string;
   emotionState?: EmotionalState;
+  /** Behavioral context: fatigue arc, battle aftermath, humor/complexity hints */
+  behaviorCtx?: string;
 }): Promise<HostAgentResult | null> {
-  const { event, personaName, personality, memoryContext, replyLanguage, conversationHistory, emotionState } = opts;
+  const { event, personaName, personality, memoryContext, replyLanguage, conversationHistory, emotionState, behaviorCtx } = opts;
   const viewerName = event.username ?? "someone";
 
   let userPrompt = "";
@@ -87,6 +89,7 @@ export async function runHostAgent(opts: {
   const fullSystem = [
     systemPrompt,
     emotionSection,
+    behaviorCtx || "",
     memorySection,
     langInstruction,
   ].filter(Boolean).join("\n");
