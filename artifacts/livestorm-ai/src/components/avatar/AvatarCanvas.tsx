@@ -93,6 +93,8 @@ export interface AvatarCanvasProps {
   mouthOpenAmount?: number;
   expressionIntensity?: number;
   backgroundGradient?: string;
+  enableZoom?: boolean;
+  enableRotate?: boolean;
 }
 
 type VRMState =
@@ -678,6 +680,7 @@ function AvatarScene({
   avatarKey, accentColor, scale, positionY, lightingPreset,
   effectiveVrmUrl, rpmUrl, quality, onStats, onQualityDecline,
   animationState, mouthOpenRef, expressionIntensityRef,
+  enableZoom, enableRotate,
 }: {
   avatarKey: string; accentColor: string; scale: number; positionY: number;
   lightingPreset: string; effectiveVrmUrl: string | null | undefined;
@@ -685,6 +688,7 @@ function AvatarScene({
   onStats: (s: RendererStats) => void; onQualityDecline: () => void;
   animationState: AnimationState; mouthOpenRef: React.MutableRefObject<number>;
   expressionIntensityRef: React.MutableRefObject<number>;
+  enableZoom?: boolean; enableRotate?: boolean;
 }) {
   const vrmState = useVRMLoader(rpmUrl ? null : effectiveVrmUrl);
   const glbState = useGLBLoader(rpmUrl ?? null);
@@ -727,10 +731,12 @@ function AvatarScene({
 
       <OrbitControls
         enablePan={false}
-        enableZoom={false}
+        enableZoom={enableZoom ?? false}
+        enableRotate={enableRotate ?? true}
         minPolarAngle={Math.PI / 5}
         maxPolarAngle={Math.PI / 1.75}
         rotateSpeed={0.65}
+        zoomSpeed={0.6}
         makeDefault
       />
     </>
@@ -759,7 +765,7 @@ export function AvatarCanvas({
   avatarKey, accentColor, scale, positionY, lightingPreset,
   avatarEnabled, avatarUrl, showFps = true, onStats, onError, className,
   animationState = "idle", mouthOpenAmount = 0, expressionIntensity = 0.8,
-  backgroundGradient,
+  backgroundGradient, enableZoom, enableRotate,
 }: AvatarCanvasProps) {
   const [stats, setStats] = useState<RendererStats>({
     geometries: 0, textures: 0, triangles: 0, drawCalls: 0, fps: 60, quality: "high",
@@ -866,6 +872,8 @@ export function AvatarCanvas({
               animationState={animationState}
               mouthOpenRef={mouthOpenRef}
               expressionIntensityRef={expressionIntensityRef}
+              enableZoom={enableZoom}
+              enableRotate={enableRotate}
             />
           </Suspense>
         </Canvas>

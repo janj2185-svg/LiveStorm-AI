@@ -23,6 +23,8 @@ export interface AvatarStageProps {
   onOpenSettings?: () => void;
   showDebug?: boolean;
   className?: string;
+  enableZoom?: boolean;
+  enableRotate?: boolean;
 }
 
 const BAR_BASES = [0.40, 0.70, 1.00, 0.85, 0.60, 0.90, 0.50];
@@ -151,6 +153,8 @@ export function AvatarStage({
   onOpenSettings,
   showDebug = false,
   className,
+  enableZoom,
+  enableRotate,
 }: AvatarStageProps) {
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -200,6 +204,8 @@ export function AvatarStage({
         showFps={false}
         onError={(msg) => setLastError(msg)}
         className="w-full h-full rounded-2xl"
+        enableZoom={enableZoom}
+        enableRotate={enableRotate}
       />
 
       {/* Bottom gradient scrim */}
