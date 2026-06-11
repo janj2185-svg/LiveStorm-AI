@@ -539,14 +539,21 @@ export class TikToolsClient extends EventEmitter {
         );
         this._scheduleRetry(30_000, settle);
       } else {
-        // Normal disconnect mid-stream → reconnect with backoff
-        this.rateLimitBackoff = 60_000; // reset rate-limit backoff on normal flow
+        // Normal disconnect mid-stream → reconnect
+        // code=1006 after receiving packets = tik.tools post-buffer close (normal behaviour).
+        // Use a short 3s delay so real live events are not missed during the dead window.
+        // Only grow the delay when we get repeated failures with no packets.
+        this.rateLimitBackoff = 60_000;
+        const hadPackets = this.rawEventCount > 0;
+        const delay = hadPackets ? 3_000 : this.reconnectDelay;
         console.warn(
           `[TikTools] WS closed (code=${code} reason="${reason}" packets=${this.rawEventCount}) ` +
-          `@${this.username} — reconnecting in ${this.reconnectDelay / 1000}s`,
+          `@${this.username} — reconnecting in ${delay / 1000}s`,
         );
-        this._scheduleRetry(this.reconnectDelay, settle);
-        this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
+        this._scheduleRetry(delay, settle);
+        if (!hadPackets) {
+          this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60_000);
+        }
       }
     });
 

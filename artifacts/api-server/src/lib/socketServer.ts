@@ -17,6 +17,31 @@ import { initOrchestrator, enqueueEvent as orchestratorEnqueue } from "../agents
 
 let io: SocketServer | null = null;
 
+// ─── Per-session msgId deduplication ──────────────────────────────────────────
+// tik.tools replays the same buffered events on every reconnect (same msgIds).
+// We track seen msgIds per session for 10 minutes to prevent duplicate feed entries.
+const DEDUP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+interface DedupEntry { ts: number }
+const seenMsgIds = new Map<number, Map<string, DedupEntry>>();
+
+function isDuplicate(sessionId: number, msgId: string): boolean {
+  const now = Date.now();
+  let sessionMap = seenMsgIds.get(sessionId);
+  if (!sessionMap) {
+    sessionMap = new Map();
+    seenMsgIds.set(sessionId, sessionMap);
+  }
+  // Prune expired entries (keep memory bounded)
+  if (sessionMap.size > 5000) {
+    for (const [id, entry] of sessionMap) {
+      if (now - entry.ts > DEDUP_TTL_MS) sessionMap.delete(id);
+    }
+  }
+  if (sessionMap.has(msgId)) return true;
+  sessionMap.set(msgId, { ts: now });
+  return false;
+}
+
 // ─── Per-session recent-events ring buffer (last 100 events, in-memory) ───────
 const RECENT_EVENTS_MAX = 100;
 const recentEventsStore = new Map<number, TikTokEvent[]>();
@@ -299,6 +324,17 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   if (!io) {
     console.error(`[Pipeline:4] ingestLiveEvent called but io=null — Socket.IO not initialised`);
     return;
+  }
+
+  // ── Dedup: tik.tools replays the same buffered events on every reconnect ──
+  // Skip events whose msgId we have already processed in the last 10 minutes.
+  const rawMsgId = (event.data as Record<string, unknown>)?.msgId;
+  if (rawMsgId != null) {
+    const msgIdStr = String(rawMsgId);
+    if (isDuplicate(event.sessionId, msgIdStr)) {
+      console.log(`[Pipeline:DEDUP] session=${event.sessionId} msgId=${msgIdStr} type=${event.type} — skipped (replay)`);
+      return;
+    }
   }
 
   const roomId = `session:${event.sessionId}`;
