@@ -51,8 +51,11 @@ export async function runHostAgent(opts: {
   conversationHistory?: string;
   emotionState?: EmotionalState;
   behaviorCtx?: string;
+  recentReplies?: string[];
+  personaGender?: string;
+  forceAlternative?: boolean;
 }): Promise<HostAgentResult | null> {
-  const { event, personaName, personality, memoryContext, replyLanguage, defaultLanguage, conversationHistory, emotionState, behaviorCtx } = opts;
+  const { event, personaName, personality, memoryContext, replyLanguage, defaultLanguage, conversationHistory, emotionState, behaviorCtx, recentReplies, personaGender, forceAlternative } = opts;
   const viewerName = event.username ?? "someone";
 
   let userPrompt = "";
@@ -195,6 +198,42 @@ As their co-host, react naturally. You can: pick up their thought and continue i
   const emotionSection = emotionState ? getEmotionPromptContext(emotionState) : "";
   const memorySection  = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
 
+  // ── Gender-aware self-reference instruction ──────────────────────────────────
+  let genderSection = "";
+  if (personaGender === "male") {
+    genderSection = `PERSONA GENDER — ${personaName} is MALE. Use masculine grammatical forms when referring to yourself in Slavic languages.
+Ukrainian: "Я радий", "Я готовий", "Я подумав", "Я сказав би", "Я впевнений"
+Polish: "Jestem gotowy", "Powiedziałbym", "Jestem pewny", "Cieszę się"
+Russian: "Я рад", "Я готов", "Я сказал бы", "Я уверен"
+In English/other languages — use he/him framing naturally if relevant.`;
+  } else if (personaGender === "female") {
+    genderSection = `PERSONA GENDER — ${personaName} is FEMALE. Use feminine grammatical forms when referring to yourself in Slavic languages.
+Ukrainian: "Я рада", "Я готова", "Я подумала", "Я сказала б", "Я впевнена"
+Polish: "Jestem gotowa", "Powiedziałabym", "Jestem pewna", "Cieszę się"
+Russian: "Я рада", "Я готова", "Я сказала бы", "Я уверена"
+In English/other languages — use she/her framing naturally if relevant.`;
+  }
+
+  // ── Anti-repetition instruction ───────────────────────────────────────────────
+  let antiRepeatSection = "";
+  if (recentReplies && recentReplies.length > 0) {
+    const forbiddenOpeners = recentReplies
+      .map((r) => r.trim().split(/\s+/).slice(0, 3).join(" "))
+      .filter(Boolean);
+    const uniqueOpeners = [...new Set(forbiddenOpeners)];
+    antiRepeatSection = `ANTI-REPETITION (mandatory):
+• Do NOT start with any of these openers: ${uniqueOpeners.map((o) => `"${o}"`).join(", ")}
+• Do NOT reuse the same sentence structure or reaction pattern as recent replies
+• Recent replies to avoid repeating: ${recentReplies.slice(-3).map((r) => `"${r.slice(0, 45)}"`).join(" | ")}
+• Change your energy, angle, or approach completely — vary between: asking a question, short reaction, playful tease, sharp observation, warm comment, unexpected aside`;
+  }
+  if (forceAlternative) {
+    antiRepeatSection = `REGENERATION — your previous reply was rejected for repetition. MANDATORY requirements:
+• Start with a completely different first word than anything you used recently
+• Use a totally different sentence structure (e.g. if last was exclamation, now use a question or statement)
+• ${antiRepeatSection}`;
+  }
+
   // ── Language instruction — event-type-aware language contract ───────────────
   //
   // The stream has a PRIMARY LANGUAGE (streamer's language = defaultLanguage).
@@ -251,10 +290,12 @@ Always reply in ${streamerLangName}. This is the stream's primary language.
   // ── Prompt assembly — emotion section LAST before variety for maximum LLM attention ──
   const fullSystem = [
     systemPrompt,
+    genderSection,
     behaviorCtx || "",
     memorySection,
     langInstruction,
-    emotionSection,    // near the end = highest attention weight from the model
+    emotionSection,       // near the end = highest attention weight from the model
+    antiRepeatSection,    // right before variety = freshness enforced at last moment
     varietyInstruction,
   ].filter(Boolean).join("\n");
 

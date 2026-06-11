@@ -95,6 +95,7 @@ type PersonaConfig = {
   voiceSpeed: number;
   voiceVolume: number;
   voiceEmotion: string;
+  personaGender: string;
   translateChat: boolean;
   translateTargetLang: string;
 };
@@ -115,14 +116,33 @@ const TONE_OPTIONS = [
   { value: "savage", label: "😈 Savage", desc: "Bold and witty" },
 ];
 
-const VOICE_OPTIONS = [
-  { value: "nova", label: "Nova", desc: "Warm & natural" },
-  { value: "alloy", label: "Alloy", desc: "Neutral & balanced" },
-  { value: "echo", label: "Echo", desc: "Clear & direct" },
-  { value: "fable", label: "Fable", desc: "British accent" },
-  { value: "onyx", label: "Onyx", desc: "Deep & authoritative" },
-  { value: "shimmer", label: "Shimmer", desc: "Light & expressive" },
+type VoiceGender = "male" | "female" | "neutral";
+
+const VOICE_PROFILES: { value: string; label: string; desc: string; gender: VoiceGender; emoji: string }[] = [
+  // Male
+  { value: "calm_male",         label: "Calm Male Host",      desc: "Deep & composed",         gender: "male",    emoji: "🎙️" },
+  { value: "deep_male",         label: "Deep Broadcaster",    desc: "Powerful & authoritative", gender: "male",    emoji: "📻" },
+  { value: "energetic_male",    label: "Energetic Streamer",  desc: "Fast-paced & direct",      gender: "male",    emoji: "⚡" },
+  { value: "funny_male",        label: "Funny Commentator",   desc: "Expressive & playful",     gender: "male",    emoji: "😂" },
+  // Female
+  { value: "warm_female",       label: "Warm Female Host",    desc: "Natural & inviting",       gender: "female",  emoji: "🌸" },
+  { value: "confident_female",  label: "Confident Streamer",  desc: "Bold & expressive",        gender: "female",  emoji: "💪" },
+  { value: "soft_female",       label: "Soft Assistant",      desc: "Gentle & clear",           gender: "female",  emoji: "🌙" },
+  { value: "energetic_female",  label: "Energetic Creator",   desc: "Upbeat & vibrant",         gender: "female",  emoji: "✨" },
+  // Other
+  { value: "playful",           label: "Playful & Youthful",  desc: "Light & bouncy",           gender: "neutral", emoji: "🎈" },
+  { value: "robot",             label: "Robot Voice",         desc: "Flat & synthetic",         gender: "neutral", emoji: "🤖" },
+  { value: "news",              label: "News Presenter",      desc: "Formal & clear",           gender: "neutral", emoji: "📰" },
+  { value: "caster",            label: "Gaming Caster",       desc: "Fast & energetic",         gender: "neutral", emoji: "🎮" },
 ];
+
+const GENDER_OPTIONS: { value: VoiceGender; label: string; emoji: string }[] = [
+  { value: "male",    label: "Male",    emoji: "♂" },
+  { value: "female",  label: "Female",  emoji: "♀" },
+  { value: "neutral", label: "Neutral", emoji: "◎" },
+];
+
+const VOICE_OPTIONS = VOICE_PROFILES;
 
 const LANGUAGE_OPTIONS = [
   { value: "auto", label: "Auto-detect", flag: "🌍" },
@@ -937,7 +957,7 @@ export function AiAssistant() {
   }, [chatInput, isChatLoading, queryClient, authFetch]);
 
   // ── Voice preview ─────────────────────────────────────────────────────────
-  const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
+  const [isVoicePreviewing, setIsVoicePreviewing] = useState<string | false>(false);
 
   // ── Voice Status panel state ───────────────────────────────────────────────
   const [ttsPlaybackState, setTtsPlaybackState] = useState<"idle" | "queued" | "speaking" | "finished" | "error">("idle");
@@ -946,17 +966,18 @@ export function AiAssistant() {
   const [lastTtsError, setLastTtsError] = useState<string | null>(null);
   const [usingBrowserFallback, setUsingBrowserFallback] = useState(false);
 
-  const handleVoicePreview = async () => {
+  const handleVoicePreview = async (previewVoice?: string) => {
     if (!config || isVoicePreviewing) return;
-    setIsVoicePreviewing(true);
+    const voiceKey = previewVoice ?? config.voiceName ?? "nova";
+    setIsVoicePreviewing(voiceKey);
     try {
       const token = await getToken();
-      const previewText = `Hey! I'm ${config.personaName}, your AI assistant. Let's make this stream absolutely amazing!`;
+      const previewText = `Hey! I'm ${config.personaName}, your AI co-host. Let's make this stream amazing!`;
       const resp = await fetch(`${API_BASE}/ai/voice`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ text: previewText, voice: config.voiceName ?? "nova", speed: config.voiceSpeed ?? 1.0 }),
+        body: JSON.stringify({ text: previewText, voice: voiceKey, speed: config.voiceSpeed ?? 1.0 }),
       });
       if (!resp.ok) throw new Error("Voice generation failed");
       const blob = await resp.blob();
@@ -1412,37 +1433,82 @@ export function AiAssistant() {
             </div>
             {ttsMode === "openai" && (
               <div className="space-y-3">
+                {/* Persona Gender */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Voice</Label>
-                  <div className="grid grid-cols-2 gap-1">
-                    {VOICE_OPTIONS.map((v) => (
+                  <Label className="text-xs text-muted-foreground">Persona Gender</Label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {GENDER_OPTIONS.map((g) => (
                       <button
-                        key={v.value}
-                        onClick={() => handleTtsVoiceChange(v.value)}
+                        key={g.value}
+                        onClick={() => updateConfig.mutate({ personaGender: g.value })}
                         className={cn(
-                          "text-left px-2.5 py-1.5 rounded-md border text-xs transition-all",
-                          ttsVoice === v.value
-                            ? "border-blue-500/50 bg-blue-500/10 text-blue-300"
-                            : "border-white/5 bg-white/3 text-muted-foreground hover:border-white/10 hover:text-white",
+                          "text-xs py-1.5 px-1 rounded-md border font-medium transition-all text-center",
+                          (config?.personaGender ?? "neutral") === g.value
+                            ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
+                            : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
                         )}
                       >
-                        <div className="font-medium">{v.label}</div>
-                        <div className="text-[10px] opacity-70">{v.desc}</div>
+                        <span className="mr-1">{g.emoji}</span>{g.label}
                       </button>
                     ))}
                   </div>
+                  <p className="text-[10px] text-muted-foreground/60">Affects Slavic grammar (Ukrainian/Polish/Russian)</p>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-500/10 h-7 text-xs"
-                  onClick={handleVoicePreview}
-                  disabled={isVoicePreviewing}
-                >
-                  {isVoicePreviewing
-                    ? <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" />Generating…</>
-                    : <><Play className="h-3 w-3 mr-1.5" />Preview Voice</>}
-                </Button>
+                {/* Voice Profiles */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Voice Profile</Label>
+                  <div className="space-y-1">
+                    {(["male", "female", "neutral"] as VoiceGender[]).map((group) => {
+                      const profiles = VOICE_PROFILES.filter((p) => p.gender === group);
+                      const groupLabel = group === "male" ? "♂ Male" : group === "female" ? "♀ Female" : "◎ Other";
+                      return (
+                        <div key={group}>
+                          <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-0.5 pl-0.5">{groupLabel}</p>
+                          <div className="grid grid-cols-2 gap-1">
+                            {profiles.map((v) => {
+                              const isSelected = ttsVoice === v.value;
+                              const isPreviewing = isVoicePreviewing === v.value;
+                              return (
+                                <div
+                                  key={v.value}
+                                  className={cn(
+                                    "rounded-md border text-xs transition-all overflow-hidden",
+                                    isSelected
+                                      ? "border-blue-500/50 bg-blue-500/10"
+                                      : "border-white/5 bg-white/3 hover:border-white/10",
+                                  )}
+                                >
+                                  <button
+                                    onClick={() => handleTtsVoiceChange(v.value)}
+                                    className="w-full text-left px-2 pt-1.5 pb-1"
+                                  >
+                                    <div className={cn("font-medium leading-tight", isSelected ? "text-blue-300" : "text-white/80")}>
+                                      {v.emoji} {v.label}
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground/60 leading-tight">{v.desc}</div>
+                                  </button>
+                                  <button
+                                    onClick={() => handleVoicePreview(v.value)}
+                                    disabled={!!isVoicePreviewing}
+                                    className={cn(
+                                      "w-full flex items-center justify-center gap-1 py-1 text-[10px] border-t transition-all",
+                                      isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/50 hover:text-white/60",
+                                      !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
+                                    )}
+                                  >
+                                    {isPreviewing
+                                      ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</>
+                                      : <><Play className="h-2.5 w-2.5" />Preview</>}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
           </SidebarSection>

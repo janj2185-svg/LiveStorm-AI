@@ -23,8 +23,15 @@ import { getIO } from "../lib/socketServer";
 
 const router = Router();
 
-const VALID_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
+const VALID_VOICES = [
+  "alloy", "echo", "fable", "onyx", "nova", "shimmer",
+  "calm_male", "deep_male", "energetic_male", "funny_male",
+  "warm_female", "confident_female", "soft_female", "energetic_female",
+  "playful", "robot", "news", "caster",
+] as const;
 type VoiceOption = (typeof VALID_VOICES)[number];
+
+const VALID_GENDERS = ["male", "female", "neutral"] as const;
 
 const VALID_LANGUAGES = ["auto", "en", "uk", "pl", "de", "ru"] as const;
 type LangOption = (typeof VALID_LANGUAGES)[number];
@@ -93,6 +100,7 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
       voiceSpeed,
       voiceVolume,
       voiceEmotion,
+      personaGender,
       translateChat,
       translateTargetLang,
     } = req.body;
@@ -144,6 +152,9 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     }
     if (voiceEmotion !== undefined && VALID_EMOTIONS.includes(voiceEmotion)) {
       updates.voiceEmotion = voiceEmotion;
+    }
+    if (personaGender !== undefined && VALID_GENDERS.includes(personaGender)) {
+      updates.personaGender = personaGender;
     }
     if (translateChat !== undefined) updates.translateChat = Boolean(translateChat);
     if (translateTargetLang !== undefined && typeof translateTargetLang === "string") {

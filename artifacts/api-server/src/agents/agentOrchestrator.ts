@@ -115,6 +115,9 @@ interface OrchestratorState {
   sessionToStreamer: Map<number, number>;        // sessionId → streamerId (used by silence filler)
   lastStrategySuggestion: Map<number, { suggestion: StrategySuggestion; ts: number }>; // injected as optional hint into behaviorCtx
   streamerSpeechHistory: Map<number, Array<{ text: string; ts: number }>>; // what the streamer said recently (mic input)
+  // Anti-repetition system:
+  recentReplies: Map<number, string[]>;         // last 20 AI replies per session
+  recentOpeners: Map<number, string[]>;         // last 5 reply openers per session (first 3 words)
 }
 
 const state: OrchestratorState = {
@@ -129,7 +132,24 @@ const state: OrchestratorState = {
   sessionToStreamer: new Map(),
   lastStrategySuggestion: new Map(),
   streamerSpeechHistory: new Map(),
+  recentReplies: new Map(),
+  recentOpeners: new Map(),
 };
+
+// ── Anti-repetition helpers ────────────────────────────────────────────────────
+function extractOpener(text: string): string {
+  return text.trim().split(/\s+/).slice(0, 3).join(" ").toLowerCase().replace(/[^a-zа-яіїєґёa-z\s]/gi, "").trim();
+}
+
+function isOpenerRepeated(newOpener: string, recentOpeners: string[]): boolean {
+  if (!newOpener || newOpener.length < 3) return false;
+  const firstWord = newOpener.split(/\s+/)[0] ?? "";
+  if (firstWord.length < 3) return false;
+  return recentOpeners.some((op) => {
+    const opFirst = op.split(/\s+/)[0] ?? "";
+    return opFirst === firstWord;
+  });
+}
 
 let ioRef: SocketServer | null = null;
 
@@ -890,23 +910,62 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     ? { ...event, data: { ...event.data, text: `${crowdPrefix}"${originalText}"` } }
     : event;
 
-  const hostResult = await runHostAgent({
+  const sessionRecentReplies  = state.recentReplies.get(sessionId)  ?? [];
+  const sessionRecentOpeners  = state.recentOpeners.get(sessionId)  ?? [];
+
+  let hostResult = await runHostAgent({
     event: eventForHost,
     streamerId,
-    personaName: config.personaName,
+    personaName:     config.personaName,
     personality,
-    memoryContext: memoryCtx,
+    memoryContext:   memoryCtx,
     replyLanguage:   config.replyLanguage   ?? "auto",
     defaultLanguage: config.defaultLanguage ?? "uk",
     conversationHistory,
     emotionState,
-    behaviorCtx: behaviorCtx || undefined,
+    behaviorCtx:     behaviorCtx || undefined,
+    recentReplies:   sessionRecentReplies.slice(-5),
+    personaGender:   (config as any).personaGender ?? "neutral",
   });
 
   if (!hostResult?.text) {
     console.log(`[Agent:Host] ✗ no reply generated for event=${event.type} viewer=${event.username}`);
     return;
   }
+
+  // ── Anti-repetition: check opener + regenerate once if needed ────────────────
+  const newOpener = extractOpener(hostResult.text);
+  if (isOpenerRepeated(newOpener, sessionRecentOpeners)) {
+    console.log(`[Anti-Repeat] 🔄 opener="${newOpener.slice(0, 30)}" matches recent history — regenerating once...`);
+    const regenResult = await runHostAgent({
+      event: eventForHost,
+      streamerId,
+      personaName:     config.personaName,
+      personality,
+      memoryContext:   memoryCtx,
+      replyLanguage:   config.replyLanguage   ?? "auto",
+      defaultLanguage: config.defaultLanguage ?? "uk",
+      conversationHistory,
+      emotionState,
+      behaviorCtx:     behaviorCtx || undefined,
+      recentReplies:   sessionRecentReplies.slice(-5),
+      personaGender:   (config as any).personaGender ?? "neutral",
+      forceAlternative: true,
+    });
+    if (regenResult?.text) {
+      const regenOpener = extractOpener(regenResult.text);
+      console.log(`[Anti-Repeat] ✅ alternative generated | opener="${regenOpener.slice(0, 30)}" | text="${regenResult.text.slice(0, 60)}"`);
+      hostResult = regenResult;
+    }
+  } else {
+    console.log(`[Anti-Repeat] ✓ opener="${newOpener.slice(0, 30)}" is fresh`);
+  }
+
+  // Track this reply for future anti-repetition
+  const finalOpener = extractOpener(hostResult.text);
+  state.recentOpeners.set(sessionId, [...sessionRecentOpeners, finalOpener].slice(-5));
+  state.recentReplies.set(sessionId, [...sessionRecentReplies, hostResult.text].slice(-20));
+  console.log(`[Anti-Repeat] 📝 tracked | recentReplies=${state.recentReplies.get(sessionId)!.length}/20 | recentOpeners=${state.recentOpeners.get(sessionId)!.length}/5`);
 
   // ── Behavior Engine: inject paralinguistic texture into spoken text ──────────
   const spokenText = injectParalinguistics(hostResult.text, {
@@ -1119,6 +1178,8 @@ export function clearSessionHistory(sessionId: number): void {
   state.conversationHistory.delete(sessionId);
   state.sessionToStreamer.delete(sessionId);
   state.lastStrategySuggestion.delete(sessionId);
+  state.recentReplies.delete(sessionId);
+  state.recentOpeners.delete(sessionId);
   clearEmotionalState(sessionId);
   clearBehaviorState(sessionId);
   clearMoodState(sessionId);

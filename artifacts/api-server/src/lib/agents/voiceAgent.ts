@@ -2,6 +2,7 @@ import { db, aiVoiceProfilesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 
 export type OpenAIVoice = "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer";
+export type VoiceGender = "male" | "female" | "neutral";
 
 export interface VoiceProfile {
   voice: OpenAIVoice;
@@ -9,39 +10,92 @@ export interface VoiceProfile {
   volume: number;
   label: string;
   description: string;
+  gender: VoiceGender;
 }
 
 // Named voice profiles that map to OpenAI voices
+// 12 curated profiles + 6 direct OpenAI pass-throughs
 const NAMED_PROFILES: Record<string, VoiceProfile> = {
-  female:      { voice: "nova",    speed: 1.0,  volume: 1.0, label: "Female",      description: "Warm natural female voice" },
-  male:        { voice: "onyx",    speed: 1.0,  volume: 1.0, label: "Male",        description: "Deep authoritative male voice" },
-  young:       { voice: "shimmer", speed: 1.1,  volume: 1.0, label: "Young",       description: "Light expressive youthful voice" },
-  broadcaster: { voice: "fable",   speed: 0.95, volume: 1.0, label: "Broadcaster", description: "British accent broadcaster voice" },
-  gamer:       { voice: "echo",    speed: 1.05, volume: 1.0, label: "Gamer",       description: "Clear direct gamer voice" },
-  robot:       { voice: "alloy",   speed: 0.9,  volume: 1.0, label: "Robot",       description: "Neutral balanced robotic voice" },
-  // Direct OpenAI voice name pass-throughs
-  nova:        { voice: "nova",    speed: 1.0,  volume: 1.0, label: "Nova",        description: "Warm & natural" },
-  alloy:       { voice: "alloy",   speed: 1.0,  volume: 1.0, label: "Alloy",       description: "Neutral & balanced" },
-  echo:        { voice: "echo",    speed: 1.0,  volume: 1.0, label: "Echo",        description: "Clear & direct" },
-  fable:       { voice: "fable",   speed: 1.0,  volume: 1.0, label: "Fable",       description: "British accent" },
-  onyx:        { voice: "onyx",    speed: 1.0,  volume: 1.0, label: "Onyx",        description: "Deep & authoritative" },
-  shimmer:     { voice: "shimmer", speed: 1.0,  volume: 1.0, label: "Shimmer",     description: "Light & expressive" },
+  // ── Male voices ────────────────────────────────────────────────────────────
+  calm_male: {
+    voice: "onyx", speed: 0.9, volume: 1.0,
+    label: "Calm Male Host", description: "Deep & composed", gender: "male",
+  },
+  deep_male: {
+    voice: "onyx", speed: 0.85, volume: 1.0,
+    label: "Deep Broadcaster", description: "Powerful & authoritative", gender: "male",
+  },
+  energetic_male: {
+    voice: "echo", speed: 1.1, volume: 1.0,
+    label: "Energetic Streamer", description: "Fast-paced & direct", gender: "male",
+  },
+  funny_male: {
+    voice: "fable", speed: 1.05, volume: 1.0,
+    label: "Funny Commentator", description: "Expressive & playful", gender: "male",
+  },
+  // ── Female voices ──────────────────────────────────────────────────────────
+  warm_female: {
+    voice: "nova", speed: 0.95, volume: 1.0,
+    label: "Warm Female Host", description: "Natural & inviting", gender: "female",
+  },
+  confident_female: {
+    voice: "shimmer", speed: 1.0, volume: 1.0,
+    label: "Confident Streamer", description: "Bold & expressive", gender: "female",
+  },
+  soft_female: {
+    voice: "nova", speed: 0.85, volume: 1.0,
+    label: "Soft Assistant", description: "Gentle & clear", gender: "female",
+  },
+  energetic_female: {
+    voice: "shimmer", speed: 1.1, volume: 1.0,
+    label: "Energetic Creator", description: "Upbeat & vibrant", gender: "female",
+  },
+  // ── Other ──────────────────────────────────────────────────────────────────
+  playful: {
+    voice: "shimmer", speed: 1.2, volume: 1.0,
+    label: "Playful & Youthful", description: "Light & bouncy", gender: "neutral",
+  },
+  robot: {
+    voice: "alloy", speed: 0.8, volume: 1.0,
+    label: "Robot Voice", description: "Flat & synthetic", gender: "neutral",
+  },
+  news: {
+    voice: "fable", speed: 0.9, volume: 1.0,
+    label: "News Presenter", description: "Formal & clear", gender: "neutral",
+  },
+  caster: {
+    voice: "echo", speed: 1.15, volume: 1.0,
+    label: "Gaming Caster", description: "Fast & energetic", gender: "neutral",
+  },
+  // ── Direct OpenAI voice pass-throughs ─────────────────────────────────────
+  nova:    { voice: "nova",    speed: 1.0, volume: 1.0, label: "Nova",    description: "Warm & natural",        gender: "female"  },
+  alloy:   { voice: "alloy",   speed: 1.0, volume: 1.0, label: "Alloy",   description: "Neutral & balanced",    gender: "neutral" },
+  echo:    { voice: "echo",    speed: 1.0, volume: 1.0, label: "Echo",    description: "Clear & direct",        gender: "neutral" },
+  fable:   { voice: "fable",   speed: 1.0, volume: 1.0, label: "Fable",   description: "British accent",        gender: "neutral" },
+  onyx:    { voice: "onyx",    speed: 1.0, volume: 1.0, label: "Onyx",    description: "Deep & authoritative",  gender: "male"    },
+  shimmer: { voice: "shimmer", speed: 1.0, volume: 1.0, label: "Shimmer", description: "Light & expressive",    gender: "female"  },
+  // Legacy aliases
+  female:      { voice: "nova",    speed: 1.0,  volume: 1.0, label: "Female",      description: "Warm natural female voice",       gender: "female"  },
+  male:        { voice: "onyx",    speed: 1.0,  volume: 1.0, label: "Male",        description: "Deep authoritative male voice",   gender: "male"    },
+  young:       { voice: "shimmer", speed: 1.1,  volume: 1.0, label: "Young",       description: "Light expressive youthful voice", gender: "neutral" },
+  broadcaster: { voice: "fable",   speed: 0.95, volume: 1.0, label: "Broadcaster", description: "British accent broadcaster",      gender: "neutral" },
+  gamer:       { voice: "echo",    speed: 1.05, volume: 1.0, label: "Gamer",       description: "Clear direct gamer voice",        gender: "neutral" },
 };
 
 // Auto-select voice based on tone/personality
 function autoSelectVoice(tone: string, personalityType?: string): OpenAIVoice {
   const key = `${tone}:${personalityType ?? ""}`;
   const map: Record<string, OpenAIVoice> = {
-    "hype:battle":       "echo",
-    "hype:funny":        "shimmer",
-    "hype:":             "nova",
-    "savage:":           "onyx",
-    "savage:troll":      "onyx",
-    "professional:":     "fable",
+    "hype:battle":          "echo",
+    "hype:funny":           "shimmer",
+    "hype:":                "nova",
+    "savage:":              "onyx",
+    "savage:troll":         "onyx",
+    "professional:":        "fable",
     "professional:serious": "fable",
-    "friendly:":         "nova",
-    "friendly:flirty":   "shimmer",
-    "friendly:motivator": "nova",
+    "friendly:":            "nova",
+    "friendly:flirty":      "shimmer",
+    "friendly:motivator":   "nova",
   };
   return map[key] ?? map[`${tone}:`] ?? "nova";
 }
@@ -56,7 +110,7 @@ export async function resolveVoiceProfile(
       where: and(eq(aiVoiceProfilesTable.streamerId, streamerId), eq(aiVoiceProfilesTable.isDefault, true)),
     });
     if (dbProfile) {
-      const base = NAMED_PROFILES[dbProfile.voiceKey] ?? NAMED_PROFILES.female;
+      const base = NAMED_PROFILES[dbProfile.voiceKey] ?? NAMED_PROFILES.female!;
       return {
         ...base,
         voice: (NAMED_PROFILES[dbProfile.voiceKey]?.voice ?? "nova") as OpenAIVoice,
@@ -86,6 +140,7 @@ export async function resolveVoiceProfile(
     volume: config.voiceVolume ?? 1.0,
     label: "Auto",
     description: "Auto-selected voice",
+    gender: "neutral",
   };
 }
 

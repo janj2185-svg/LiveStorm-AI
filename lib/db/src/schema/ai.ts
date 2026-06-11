@@ -29,6 +29,7 @@ export const aiPersonaConfigsTable = pgTable("ai_persona_configs", {
   voiceSpeed: real("voice_speed").notNull().default(1.0),
   voiceVolume: real("voice_volume").notNull().default(1.0),
   voiceEmotion: text("voice_emotion").notNull().default("neutral"),
+  personaGender: text("persona_gender").notNull().default("neutral"),
   translateChat: boolean("translate_chat").notNull().default(false),
   translateTargetLang: text("translate_target_lang").notNull().default("uk"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
