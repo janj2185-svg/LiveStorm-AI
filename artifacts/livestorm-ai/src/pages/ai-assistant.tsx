@@ -1036,7 +1036,7 @@ export function AiAssistant() {
                   )}
                 >
                   <Zap className="h-3.5 w-3.5" />
-                  <span>Pro</span>
+                  <span>{t("ai_mode_pro")}</span>
                 </button>
                 <button
                   onClick={() => updateConfig.mutate({ operatingMode: "semi-auto", tone: "friendly" })}
@@ -1048,7 +1048,7 @@ export function AiAssistant() {
                   )}
                 >
                   <Bot className="h-3.5 w-3.5" />
-                  <span>Assistant</span>
+                  <span>{t("ai_mode_assistant")}</span>
                 </button>
                 <button
                   onClick={() => handleTtsModeChange(ttsMode === "off" ? "browser" : "off")}

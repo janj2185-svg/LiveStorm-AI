@@ -9,83 +9,85 @@ import { useLiveSessionContext } from "@/contexts/LiveSessionContext";
 import { useGetMyProfile } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { PulsingDot } from "@/components/ui/premium";
-
-const SUB_PAGES = [
-  {
-    label: "Overview",
-    desc: "Live session status and stream monitor",
-    href: "/live-control",
-    icon: Radio,
-    color: "violet",
-    iconBg: "bg-violet-500/15",
-    iconColor: "text-violet-400",
-    border: "border-violet-500/20",
-    active: true,
-  },
-  {
-    label: "TikTok Connection",
-    desc: "Manage your TikTok account link",
-    href: "/platforms",
-    icon: Plug,
-    color: "cyan",
-    iconBg: "bg-cyan-500/15",
-    iconColor: "text-cyan-400",
-    border: "border-cyan-500/20",
-  },
-  {
-    label: "Event Feed",
-    desc: "Real-time comment and gift monitoring",
-    href: "/live-studio",
-    icon: Activity,
-    color: "blue",
-    iconBg: "bg-blue-500/15",
-    iconColor: "text-blue-400",
-    border: "border-blue-500/20",
-  },
-  {
-    label: "Moderation",
-    desc: "Flagged comments and auto-mod rules",
-    href: "/moderation",
-    icon: ShieldAlert,
-    color: "orange",
-    iconBg: "bg-orange-500/15",
-    iconColor: "text-orange-400",
-    border: "border-orange-500/20",
-  },
-  {
-    label: "Overlay Controls",
-    desc: "OBS alerts, goals and leaderboard overlays",
-    href: "/overlays",
-    icon: Layers,
-    color: "indigo",
-    iconBg: "bg-indigo-500/15",
-    iconColor: "text-indigo-400",
-    border: "border-indigo-500/20",
-  },
-  {
-    label: "Diagnostics",
-    desc: "Connection health and technical details",
-    href: "/live-control/diagnostics",
-    icon: Cpu,
-    color: "slate",
-    iconBg: "bg-slate-500/15",
-    iconColor: "text-slate-400",
-    border: "border-slate-500/20",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function LiveControl() {
   const { connected, stats, activeSessionRes } = useLiveSessionContext();
   const { data: profile } = useGetMyProfile();
+  const { t } = useLanguage();
   const isActive = activeSessionRes?.active;
 
+  const SUB_PAGES = [
+    {
+      label: t("nav_lc_overview"),
+      desc: t("lc_overview_desc"),
+      href: "/live-control",
+      icon: Radio,
+      color: "violet",
+      iconBg: "bg-violet-500/15",
+      iconColor: "text-violet-400",
+      border: "border-violet-500/20",
+      active: true,
+    },
+    {
+      label: t("nav_lc_connection"),
+      desc: t("lc_connection_desc"),
+      href: "/platforms",
+      icon: Plug,
+      color: "cyan",
+      iconBg: "bg-cyan-500/15",
+      iconColor: "text-cyan-400",
+      border: "border-cyan-500/20",
+    },
+    {
+      label: t("nav_lc_events"),
+      desc: t("lc_events_desc"),
+      href: "/live-studio",
+      icon: Activity,
+      color: "blue",
+      iconBg: "bg-blue-500/15",
+      iconColor: "text-blue-400",
+      border: "border-blue-500/20",
+    },
+    {
+      label: t("nav_lc_moderation"),
+      desc: t("lc_moderation_desc"),
+      href: "/moderation",
+      icon: ShieldAlert,
+      color: "orange",
+      iconBg: "bg-orange-500/15",
+      iconColor: "text-orange-400",
+      border: "border-orange-500/20",
+    },
+    {
+      label: t("nav_lc_overlays"),
+      desc: t("lc_overlays_desc"),
+      href: "/overlays",
+      icon: Layers,
+      color: "indigo",
+      iconBg: "bg-indigo-500/15",
+      iconColor: "text-indigo-400",
+      border: "border-indigo-500/20",
+    },
+    {
+      label: t("nav_lc_diagnostics"),
+      desc: t("lc_diagnostics_desc"),
+      href: "/live-control/diagnostics",
+      icon: Cpu,
+      color: "slate",
+      iconBg: "bg-slate-500/15",
+      iconColor: "text-slate-400",
+      border: "border-slate-500/20",
+    },
+  ];
+
   const quickStats = [
-    { label: "Viewers",  value: stats.viewerCount,   icon: Eye,          color: "text-green-400" },
-    { label: "Comments", value: stats.totalComments, icon: MessageSquare, color: "text-blue-400" },
-    { label: "Gifts",    value: stats.totalGifts,    icon: Gift,          color: "text-amber-400" },
-    { label: "Follows",  value: stats.totalFollows,  icon: UserPlus,      color: "text-violet-400" },
-    { label: "Likes",    value: stats.totalLikes,    icon: Heart,         color: "text-pink-400" },
-    { label: "XP",       value: 0,                   icon: Zap,           color: "text-yellow-400" },
+    { label: t("dash_viewers"),      value: stats.viewerCount,   icon: Eye,          color: "text-green-400" },
+    { label: t("dash_stat_comments"),value: stats.totalComments, icon: MessageSquare, color: "text-blue-400" },
+    { label: t("dash_gifts"),        value: stats.totalGifts,    icon: Gift,          color: "text-amber-400" },
+    { label: t("dash_followers"),    value: stats.totalFollows,  icon: UserPlus,      color: "text-violet-400" },
+    { label: t("dash_likes"),        value: stats.totalLikes,    icon: Heart,         color: "text-pink-400" },
+    { label: t("event_xp"),          value: 0,                   icon: Zap,           color: "text-yellow-400" },
   ];
 
   return (
@@ -119,17 +121,17 @@ export function LiveControl() {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 {isActive
-                  ? <><PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} /><span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>{connected ? "LIVE NOW" : "Reconnecting…"}</span></>
-                  : <><span className="h-2 w-2 rounded-full bg-slate-500 inline-block" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">OFFLINE</span></>
+                  ? <><PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} /><span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>{connected ? t("lc_live_now") : t("dash_status_reconnecting")}</span></>
+                  : <><span className="h-2 w-2 rounded-full bg-slate-500 inline-block" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("lc_offline")}</span></>
                 }
               </div>
               <p className="font-bold text-white">
-                {isActive ? `Streaming as @${profile?.tiktokUsername}` : "Ready to stream"}
+                {isActive ? `${t("lc_streaming_as")} @${profile?.tiktokUsername}` : t("lc_ready_to_stream")}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {profile?.tiktokUsername
-                  ? `TikTok: @${profile.tiktokUsername} · ${isActive ? "session active" : "session inactive"}`
-                  : "No TikTok account linked"
+                  ? `TikTok: @${profile.tiktokUsername} · ${isActive ? t("lc_session_active") : t("lc_session_inactive")}`
+                  : t("lc_no_tiktok")
                 }
               </p>
             </div>
@@ -137,14 +139,14 @@ export function LiveControl() {
 
           <div className="flex items-center gap-2.5">
             {connected
-              ? <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400"><Wifi className="h-3.5 w-3.5" /> Connected</div>
-              : <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400"><WifiOff className="h-3.5 w-3.5" /> Disconnected</div>
+              ? <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400"><Wifi className="h-3.5 w-3.5" /> {t("lc_connected")}</div>
+              : <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400"><WifiOff className="h-3.5 w-3.5" /> {t("lc_disconnected")}</div>
             }
             {!isActive && (
               <Link href="/dashboard">
                 <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold cursor-pointer transition-colors">
                   <PlayCircle className="h-4 w-4" />
-                  Go Live
+                  {t("lc_go_live")}
                 </div>
               </Link>
             )}
@@ -172,7 +174,7 @@ export function LiveControl() {
 
       {/* Sub-pages Grid */}
       <div>
-        <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-3">Live Control Sections</p>
+        <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-3">{t("lc_sections_title")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {SUB_PAGES.map((page, i) => {
             const Icon = page.icon;

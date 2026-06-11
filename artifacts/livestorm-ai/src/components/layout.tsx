@@ -442,7 +442,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             t={t}
           />
 
-          <SectionLabel label="Platform" collapsed={tabletExpanded ? false : isCollapsed} />
+          <SectionLabel label={t("nav_section_platform")} collapsed={tabletExpanded ? false : isCollapsed} />
 
           {/* Bottom nav items */}
           {BOTTOM_NAV.map((item) => (

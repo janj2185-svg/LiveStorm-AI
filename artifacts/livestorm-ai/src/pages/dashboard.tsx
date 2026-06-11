@@ -30,6 +30,7 @@ import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { AnimatedCounter, PulsingDot, RankBadge, GradientText } from "@/components/ui/premium";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -52,8 +53,18 @@ const EVENT_CONFIG: Record<string, { bg: string; text: string; border: string; i
 };
 
 function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
+  const { t } = useLanguage();
   const cfg = EVENT_CONFIG[event.type] ?? EVENT_CONFIG.comment;
   const Icon = cfg.icon;
+  const eventLabel: Record<string, string> = {
+    gift: t("event_gift"), comment: t("event_chat"), follow: t("event_follow"),
+    like: t("event_like"), share: t("event_share"), viewerCount: t("event_viewers"),
+    ai_announcement: t("event_ai"), xp_awarded: t("event_xp"),
+    achievement_unlocked: t("event_achievement"), level_up: t("event_level_up"),
+    lucky_drop: t("event_lucky_drop"), boss_reward: t("event_boss_reward"),
+    quiz_win: t("event_quiz_win"), treasure_hunt_win: t("event_treasure"),
+    kingdom_upgrade: t("event_kingdom"),
+  };
 
   let desc = "interacted";
   if (event.type === "gift")                desc = `sent ${event.data.giftName || "a gift"} · ${event.data.coins || 1} coins`;
@@ -98,7 +109,7 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
         </span>
       </div>
       <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 border-0 font-semibold flex-shrink-0", cfg.text, cfg.bg)}>
-        {cfg.label}
+        {eventLabel[event.type] ?? cfg.label}
       </Badge>
     </motion.div>
   );
@@ -118,6 +129,7 @@ function StatCard({
   isActive: boolean;
   animate: boolean;
 }) {
+  const { t } = useLanguage();
   return (
     <div className={cn(
       "relative rounded-2xl border overflow-hidden group",
@@ -137,7 +149,7 @@ function StatCard({
           {isActive && value > 0 && (
             <span className={cn("flex items-center gap-0.5 text-[10px] font-bold", iconColor)}>
               <TrendingUp className="h-2.5 w-2.5" />
-              Live
+              {t("dash_live_badge")}
             </span>
           )}
         </div>
@@ -171,6 +183,7 @@ function CommandStrip({
   isOwner: boolean;
   eventCount: number;
 }) {
+  const { t } = useLanguage();
   return (
     <div className={cn(
       "rounded-2xl border overflow-hidden",

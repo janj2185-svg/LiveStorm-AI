@@ -8,6 +8,7 @@ import { runModerationAgent } from "./moderationAgent";
 import { getActivePersonality } from "./personalityAgent";
 import { getActiveVoice } from "./voiceAgent";
 import { getMemoryContext, upsertViewerProfile } from "./memoryAgent";
+import { getViewerContext } from "../lib/agents/memoryAgent";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
 import type { StrategySuggestion } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
@@ -659,12 +660,21 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const voice = await getActiveVoice(streamerId, personality.modeKey);
   console.log(`[Agent:Voice] 🎵 voiceKey=${voice.voiceKey} | speed=${voice.speed} | desc="${voice.description}"`);
 
-  // ── Memory Agent: load context ───────────────────────────────────────────────
-  const memoryCtx = state.enabledAgents.has("memory")
-    ? await getMemoryContext(streamerId, event.username ?? undefined)
-    : "";
+  // ── Memory Agent: load context (merged from both memory agents) ─────────────
+  const [rawMemoryCtx, viewerCtx] = await Promise.all([
+    state.enabledAgents.has("memory")
+      ? getMemoryContext(streamerId, event.username ?? undefined)
+      : Promise.resolve(""),
+    state.enabledAgents.has("memory") && event.username
+      ? getViewerContext(streamerId, event.username, (event.data.uniqueId as string) ?? event.username)
+          .catch(() => ({ profile: null, memories: [], contextSummary: "" }))
+      : Promise.resolve({ profile: null, memories: [], contextSummary: "" }),
+  ]);
+
+  // Merge: viewer profile summary (from lib agent) prepended to free-form memories
+  const memoryCtx = [viewerCtx.contextSummary, rawMemoryCtx].filter(Boolean).join("\n");
   if (memoryCtx) {
-    console.log(`[Agent:Memory] 🧠 context loaded | ${memoryCtx.length} chars | viewer=${event.username}`);
+    console.log(`[Agent:Memory] 🧠 context loaded | ${memoryCtx.length} chars (profile=${viewerCtx.contextSummary.length} + mem=${rawMemoryCtx.length}) | viewer=${event.username}`);
   } else {
     console.log(`[Agent:Memory] 🧠 no prior context for viewer=${event.username}`);
   }
