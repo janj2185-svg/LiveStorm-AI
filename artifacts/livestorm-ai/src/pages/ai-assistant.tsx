@@ -51,6 +51,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/react";
 import { useLiveSessionContext, type TtsMode, type LiveEvent } from "@/contexts/LiveSessionContext";
+import { CoHostPanel } from "@/components/CoHostPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarStage } from "@/components/avatar/AvatarStage";
 import { motion, AnimatePresence } from "framer-motion";
@@ -712,6 +713,9 @@ export function AiAssistant() {
     tiktokMode, tiktokError: socketError, tiktokUsername,
     aiAnnouncements, luckyDrops, achievementUnlocks,
     activeSessionRes, isActive: isSessionActive, activeSessionId, sessionMode,
+    sendStreamerSpeech, ttsModeLive, activeVoiceName,
+    isAudioUnlocked, unlockAudio, openaiTtsOk,
+    lastMicEmit, lastMicBackendAck,
   } = useLiveSessionContext();
   const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
   const effectiveMode = tiktokMode ?? (isSessionActive ? "demo" : null);
@@ -1282,6 +1286,23 @@ export function AiAssistant() {
                 <p className="text-[10px] text-amber-300/90 leading-tight">{lastTtsError}</p>
               </div>
             )}
+          </div>
+
+          {/* ── Co-Host Voice Panel ── */}
+          <div className="flex-shrink-0">
+            <CoHostPanel
+              sendStreamerSpeech={sendStreamerSpeech}
+              sessionId={activeSessionId}
+              isSessionActive={!!isSessionActive}
+              aiAnnouncements={aiAnnouncements ?? []}
+              ttsModeLive={ttsModeLive ?? "off"}
+              activeVoiceName={activeVoiceName ?? null}
+              isAudioUnlocked={isAudioUnlocked ?? false}
+              unlockAudio={unlockAudio ?? (() => {})}
+              openaiTtsOk={openaiTtsOk ?? null}
+              lastMicEmit={lastMicEmit ?? null}
+              lastMicBackendAck={lastMicBackendAck ?? null}
+            />
           </div>
 
           {/* ── Settings sections — all collapsed by default ── */}
