@@ -712,15 +712,6 @@ export function LiveStudio() {
           {/* ── Emotion Widget ─────────────────────────────────────────── */}
           <EmotionWidget emotionState={emotionState ?? null} isActive={!!isActive} />
 
-          {/* ── Co-Host Mic ────────────────────────────────────────────── */}
-          <CoHostPanel
-            sendStreamerSpeech={sendStreamerSpeech}
-            sessionId={activeSessionId}
-            isSessionActive={!!isActive}
-            aiAnnouncements={aiAnnouncements}
-            ttsModeLive={ttsModeLive}
-          />
-
           {/* ── Voice Control ──────────────────────────────────────────── */}
           <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
             <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
@@ -856,7 +847,7 @@ export function LiveStudio() {
           </div>
         </div>
 
-        {/* ── Right panel: feeds ───────────────────────────────────────────── */}
+        {/* ── Right panel: Co-Host + feeds ─────────────────────────────────── */}
         <div className="space-y-4 min-w-0">
 
           {/* Connection status + stats */}
@@ -875,12 +866,25 @@ export function LiveStudio() {
             )}
           </div>
 
-          {/* Stats bar */}
           <StatsBar stats={stats} isActive={!!isActive} />
 
+          {/* ── Co-Host Voice Panel ── always visible, primary interaction ── */}
+          <CoHostPanel
+            sendStreamerSpeech={sendStreamerSpeech}
+            sessionId={activeSessionId}
+            isSessionActive={!!isActive}
+            aiAnnouncements={aiAnnouncements}
+            ttsModeLive={ttsModeLive}
+            activeVoiceName={activeVoiceName ?? null}
+            isAudioUnlocked={isAudioUnlocked}
+            unlockAudio={unlockAudio}
+            openaiTtsOk={openaiTtsOk}
+          />
+
+          {/* ── Live Chat ─────────────────────────────────────────────────── */}
           {/* Comment + Gift feeds side by side */}
           <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-4">
-            <div className="h-[320px] flex flex-col min-h-0">
+            <div className="h-[300px] flex flex-col min-h-0">
               <CommentFeed events={events} isActive={!!isActive} translations={translations} />
             </div>
             <GiftFeed events={events} totalCoins={stats.totalGifts} isActive={!!isActive} />
