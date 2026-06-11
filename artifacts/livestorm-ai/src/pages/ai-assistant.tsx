@@ -86,6 +86,7 @@ type PersonaConfig = {
   moderationEnabled: boolean;
   autoReplyEnabled: boolean;
   replyLanguage: string;
+  defaultLanguage: string;
   spamProtectionEnabled: boolean;
   spamCooldownSeconds: number;
   voiceEnabled: boolean;
@@ -1270,6 +1271,30 @@ export function AiAssistant() {
                 </button>
               ))}
             </div>
+            {config?.replyLanguage === "auto" && (
+              <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  When language is uncertain, reply in:
+                </p>
+                <div className="grid grid-cols-1 gap-1">
+                  {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
+                    <button
+                      key={lang.value}
+                      onClick={() => updateConfig.mutate({ defaultLanguage: lang.value })}
+                      className={cn(
+                        "flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm transition-all text-left",
+                        (config?.defaultLanguage ?? "uk") === lang.value
+                          ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
+                          : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                      )}
+                    >
+                      <span className="text-base">{lang.flag}</span>
+                      <span className="text-xs font-medium">{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </SidebarSection>
 
           <SidebarSection isOpen={expandedSections.has("autoreply")} onToggle={() => toggleSection("autoreply")} title="Auto-Reply" icon={<MessageSquare className="h-4 w-4 text-orange-400" />}>

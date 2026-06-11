@@ -21,6 +21,7 @@ export const aiPersonaConfigsTable = pgTable("ai_persona_configs", {
   moderationEnabled: boolean("moderation_enabled").notNull().default(false),
   autoReplyEnabled: boolean("auto_reply_enabled").notNull().default(false),
   replyLanguage: text("reply_language").notNull().default("auto"),
+  defaultLanguage: text("default_language").notNull().default("uk"),
   spamProtectionEnabled: boolean("spam_protection_enabled").notNull().default(true),
   spamCooldownSeconds: integer("spam_cooldown_seconds").notNull().default(30),
   voiceEnabled: boolean("voice_enabled").notNull().default(false),

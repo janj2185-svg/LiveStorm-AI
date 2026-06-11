@@ -147,6 +147,7 @@ async function processAiAnnouncements(
       customPersonality: config.customPersonality ?? undefined,
     };
     const replyLanguage = config.replyLanguage ?? "auto";
+    const defaultLanguage = config.defaultLanguage ?? "uk";
 
     // ── Memory Agent: update viewer profile on every event ─────────────────
     void upsertViewerProfile(streamerId, event);
@@ -307,12 +308,17 @@ async function processAiAnnouncements(
               const combinedContext = [conversationContext, viewerCtx.contextSummary || undefined]
                 .filter(Boolean).join("\n") || undefined;
 
+              console.log(
+                `[AI:lang:select] session=${event.sessionId} viewer=${viewerName} ` +
+                `comment="${comment.slice(0, 40)}" replyLang=${replyLanguage} defaultLang=${defaultLanguage}`,
+              );
               const reply = await generateCommentReply(
                 comment,
                 viewerName,
                 persona,
                 replyLanguage,
                 combinedContext,
+                defaultLanguage,
               );
 
               if (reply) {
@@ -332,7 +338,7 @@ async function processAiAnnouncements(
                   5.0 + (priority.score - 5) * 0.2,
                 );
 
-                console.log(`[AI:reply] session=${event.sessionId} viewer=${viewerName} priority=${priority.score} → "${reply.slice(0, 70)}"`);
+                console.log(`[AI:reply:text] session=${event.sessionId} viewer=${viewerName} lang=${replyLanguage} → "${reply.slice(0, 70)}"`);
                 io.to(roomId).emit("ai:announcement", {
                   text: reply,
                   type: "comment_reply",

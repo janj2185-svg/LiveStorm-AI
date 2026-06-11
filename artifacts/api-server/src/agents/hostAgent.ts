@@ -74,7 +74,7 @@ export async function runHostAgent(opts: {
   const systemPrompt = buildPersonalityPrompt(personality, personaName);
   const memorySection = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
   const langInstruction = replyLanguage === "auto"
-    ? "Respond in the same language the viewer used, or English if unclear."
+    ? "Respond in the SAME language the viewer used. Detect it carefully. Only fall back to Ukrainian if the language is completely unclear."
     : `Always respond in ${replyLanguage}.`;
 
   try {

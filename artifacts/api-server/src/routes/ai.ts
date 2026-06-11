@@ -85,6 +85,7 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
       moderationEnabled,
       autoReplyEnabled,
       replyLanguage,
+      defaultLanguage,
       spamProtectionEnabled,
       spamCooldownSeconds,
       voiceEnabled,
@@ -121,6 +122,9 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     if (autoReplyEnabled !== undefined) updates.autoReplyEnabled = Boolean(autoReplyEnabled);
     if (replyLanguage !== undefined && VALID_LANGUAGES.includes(replyLanguage)) {
       updates.replyLanguage = replyLanguage as LangOption;
+    }
+    if (defaultLanguage !== undefined && VALID_LANGUAGES.includes(defaultLanguage) && defaultLanguage !== "auto") {
+      updates.defaultLanguage = defaultLanguage as LangOption;
     }
     if (spamProtectionEnabled !== undefined) updates.spamProtectionEnabled = Boolean(spamProtectionEnabled);
     if (spamCooldownSeconds !== undefined) {

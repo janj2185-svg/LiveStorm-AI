@@ -66,6 +66,7 @@ export async function emitAiGiftAnnouncement(
       viewerName,
       amount: coins,
       persona: { name: config.personaName, tone: config.tone },
+      language: config.defaultLanguage ?? "uk",
     });
     if (text) {
       console.log(`[AI:announcer] gift | streamerId=${streamerId} viewer=${viewerName} coins=${coins} → "${text.slice(0, 60)}"`);
@@ -92,6 +93,7 @@ export async function emitAiLevelUpAnnouncement(
       viewerName,
       amount: newLevel,
       persona: { name: config.personaName, tone: config.tone },
+      language: config.defaultLanguage ?? "uk",
     });
     if (text) {
       console.log(`[AI:announcer] level_up | streamerId=${streamerId} viewer=${viewerName} lvl=${newLevel} → "${text.slice(0, 60)}"`);
@@ -118,6 +120,7 @@ export async function emitAiBossDefeatedAnnouncement(
       viewerName: killedBy,
       bossName,
       persona: { name: config.personaName, tone: config.tone },
+      language: config.defaultLanguage ?? "uk",
     });
     if (text) {
       console.log(`[AI:announcer] boss_kill | streamerId=${streamerId} boss="${bossName}" killedBy=${killedBy} → "${text.slice(0, 60)}"`);
@@ -142,6 +145,7 @@ export async function emitAiShareAnnouncement(
       type: "share",
       viewerName,
       persona: { name: config.personaName, tone: config.tone },
+      language: config.defaultLanguage ?? "uk",
     });
     if (text) {
       console.log(`[AI:announcer] share | streamerId=${streamerId} viewer=${viewerName} → "${text.slice(0, 60)}"`);
@@ -166,6 +170,7 @@ export async function emitAiLikeMilestoneAnnouncement(
       type: "like_milestone",
       amount: totalLikes,
       persona: { name: config.personaName, tone: config.tone },
+      language: config.defaultLanguage ?? "uk",
     });
     if (text) {
       console.log(`[AI:announcer] like_milestone | streamerId=${streamerId} totalLikes=${totalLikes} → "${text.slice(0, 60)}"`);
@@ -194,6 +199,7 @@ export async function emitAiLuckyDropAnnouncement(
       bossName: dropName,
       amount: xpReward,
       persona: { name: config.personaName, tone: config.tone },
+      language: config.defaultLanguage ?? "uk",
     });
     if (text) {
       console.log(`[AI:announcer] lucky_drop | streamerId=${streamerId} winner=${winnerName} drop="${dropName}" → "${text.slice(0, 60)}"`);
@@ -220,6 +226,7 @@ export async function emitAiAchievementAnnouncement(
       viewerName,
       bossName: achievementName,
       persona: { name: config.personaName, tone: config.tone },
+      language: config.defaultLanguage ?? "uk",
     });
     if (text) {
       console.log(`[AI:announcer] achievement | streamerId=${streamerId} viewer=${viewerName} achievement="${achievementName}" → "${text.slice(0, 60)}"`);

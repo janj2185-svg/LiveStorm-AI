@@ -62,8 +62,12 @@ export async function generateAnnouncement(event: {
   amount?: number;
   bossName?: string;
   persona: { name: string; tone: string };
+  language?: string;
 }): Promise<string> {
   const toneGuide = getToneGuide(event.persona.tone);
+  const langInstruction = event.language && event.language !== "auto"
+    ? (LANG_INSTRUCTIONS[event.language] ?? "")
+    : "";
 
   let prompt = "";
   if (event.type === "gift") {
@@ -86,14 +90,17 @@ export async function generateAnnouncement(event: {
     prompt = `Something exciting just happened on stream! Make a short hype announcement (max 60 chars).`;
   }
 
+  const systemContent = [
+    `You are ${event.persona.name}, a TikTok LIVE co-host AI. Style: ${toneGuide}.`,
+    langInstruction,
+    "Always respond with ONLY the announcement text, no quotes, no explanation.",
+  ].filter(Boolean).join(" ");
+
   try {
     const resp = await openai.chat.completions.create({
       model: FAST_MODEL,
       messages: [
-        {
-          role: "system",
-          content: `You are ${event.persona.name}, a TikTok LIVE co-host AI. Style: ${toneGuide}. Always respond with ONLY the announcement text, no quotes, no explanation.`,
-        },
+        { role: "system", content: systemContent },
         { role: "user", content: prompt },
       ],
       max_tokens: 80,
@@ -112,10 +119,24 @@ export async function generateCommentReply(
   persona: { name: string; tone: string; personalityType?: string },
   language: string = "auto",
   conversationContext?: string,
+  defaultLanguage: string = "en",
 ): Promise<string> {
   const toneGuide = getToneGuide(persona.tone);
   const personalityGuide = persona.personalityType ? getPersonalityGuide(persona.personalityType) : "";
-  const langInstruction = LANG_INSTRUCTIONS[language] ?? LANG_INSTRUCTIONS.auto;
+
+  let langInstruction: string;
+  if (language === "auto") {
+    const fallbackLang = LANG_INSTRUCTIONS[defaultLanguage] ?? LANG_INSTRUCTIONS.en;
+    const fallbackName = {
+      uk: "Ukrainian", en: "English", pl: "Polish", de: "German",
+      ru: "Russian", fr: "French", es: "Spanish", it: "Italian",
+    }[defaultLanguage] ?? "English";
+    langInstruction = `Detect the language of the viewer's message and respond in the SAME language they used. Match exactly: Ukrainian→Ukrainian, Polish→Polish, German→German, French→French, Spanish→Spanish, Italian→Italian, Portuguese→Portuguese, Dutch→Dutch, Turkish→Turkish, Russian→Russian, Arabic→Arabic, Hindi→Hindi, Japanese→Japanese, Korean→Korean, Chinese→Chinese. If detection is uncertain or the comment is too short to detect reliably, use ${fallbackName} (the streamer's default language). NEVER default to English unless the comment is clearly in English.`;
+    console.log(`[AI:lang] comment="${comment.slice(0, 40)}" mode=auto defaultLang=${defaultLanguage}(${fallbackName})`);
+  } else {
+    langInstruction = LANG_INSTRUCTIONS[language] ?? LANG_INSTRUCTIONS.en;
+    console.log(`[AI:lang] comment="${comment.slice(0, 40)}" mode=fixed lang=${language}`);
+  }
 
   const systemLines = [
     `You are ${persona.name}, a TikTok LIVE co-host AI with a ${toneGuide} personality.`,
