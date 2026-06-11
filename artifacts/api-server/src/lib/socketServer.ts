@@ -240,33 +240,50 @@ export function initSocketServer(httpServer: HttpServer) {
     });
 
     // ── Streamer microphone input → co-host orchestrator ────────────────────────
-    socket.on("streamer:speech", async (data: { text: string; lang: string; sessionId: number }) => {
-      try {
-        const sid = Number(data?.sessionId);
-        const text = (data?.text ?? "").trim();
-        if (!sid || !text) return;
-        if (!socket.data.userId) {
-          console.warn(`[Mic] streamer:speech rejected — no auth | socketId=${socket.id}`);
-          return;
-        }
-        const session = await db.query.sessionsTable.findFirst({
-          where: eq(sessionsTable.id, sid),
-        });
-        if (!session || session.endedAt) return;
-        const event = {
-          type:      "streamer_speech" as const,
-          sessionId: sid,
-          username:  "streamer",
-          source:    "microphone",
-          data:      { text, lang: data?.lang ?? "uk" },
-          timestamp: Date.now(),
+    socket.on(
+      "streamer:speech",
+      async (
+        data: { text: string; lang: string; sessionId: number },
+        callback?: (ack: { ok: boolean; ts: number; reason?: string }) => void,
+      ) => {
+        const ack = (ok: boolean, reason?: string) => {
+          if (typeof callback === "function") callback({ ok, ts: Date.now(), reason });
         };
-        console.log(`[Mic] 🎙️ streamer speech | session=${sid} | lang=${data?.lang} | "${text.slice(0, 60)}"`);
-        void orchestratorEnqueue(event, session.streamerId);
-      } catch (err) {
-        console.error("[Mic] streamer:speech error:", (err as Error)?.message);
-      }
-    });
+        try {
+          const sid  = Number(data?.sessionId);
+          const text = (data?.text ?? "").trim();
+          console.log(`[Mic:10] streamer:speech received | socketId=${socket.id} | userId=${socket.data.userId ?? "NONE"} | sessionId=${sid} | lang=${data?.lang} | textLen=${text.length}`);
+          if (!sid || !text) { ack(false, "missing-sid-or-text"); return; }
+          if (!socket.data.userId) {
+            console.warn(`[Mic:10] ✗ REJECTED — no auth (socket.data.userId missing) | socketId=${socket.id}`);
+            ack(false, "no-auth");
+            return;
+          }
+          const session = await db.query.sessionsTable.findFirst({
+            where: eq(sessionsTable.id, sid),
+          });
+          if (!session || session.endedAt) {
+            console.warn(`[Mic:10] ✗ REJECTED — session not found or ended | sid=${sid}`);
+            ack(false, "session-not-found");
+            return;
+          }
+          const event = {
+            type:      "streamer_speech" as const,
+            sessionId: sid,
+            username:  "streamer",
+            source:    "microphone",
+            data:      { text, lang: data?.lang ?? "uk" },
+            timestamp: Date.now(),
+          };
+          console.log(`[Mic:10] ✅ enqueuing | session=${sid} | streamer=${session.streamerId} | lang=${data?.lang} | "${text.slice(0, 60)}"`);
+          void orchestratorEnqueue(event, session.streamerId);
+          ack(true);
+        } catch (err) {
+          console.error("[Mic:10] ✗ error:", (err as Error)?.message);
+          ack(false, (err as Error)?.message);
+        }
+      },
+    );
 
     socket.on("disconnect", () => {});
   });

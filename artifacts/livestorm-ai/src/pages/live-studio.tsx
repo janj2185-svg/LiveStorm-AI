@@ -582,7 +582,7 @@ export function LiveStudio() {
   const {
     events, translations, stats, connected, tiktokMode, tiktokError, tiktokUsername,
     isActive, sessionMode, emotionState,
-    aiAnnouncements, sendStreamerSpeech, activeSessionId,
+    aiAnnouncements, sendStreamerSpeech, activeSessionId, lastMicEmit, lastMicBackendAck,
     stopAllSpeech, clearSpeechQueue, activeVoiceName, ttsQueueLen,
     ttsModeLive, openaiTtsOk, openaiTtsErr, lastSpokenLang, lastSpokenEngine,
     isAudioUnlocked, unlockAudio,
@@ -879,6 +879,8 @@ export function LiveStudio() {
             isAudioUnlocked={isAudioUnlocked}
             unlockAudio={unlockAudio}
             openaiTtsOk={openaiTtsOk}
+            lastMicEmit={lastMicEmit}
+            lastMicBackendAck={lastMicBackendAck}
           />
 
           {/* ── Live Chat ─────────────────────────────────────────────────── */}

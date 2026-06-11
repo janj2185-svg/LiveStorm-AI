@@ -3,13 +3,14 @@
  *
  * Lives at the TOP of the right column in Live Studio, directly above chat.
  * Shows 4 clear state badges (Mic Connected / Listening / Thinking / Speaking)
- * plus audio meter, last transcript, last Storm reply, TTS health, and controls.
+ * plus audio meter, last transcript, last Storm reply, TTS health, controls,
+ * and a live 10-step diagnostic panel to debug the full mic → backend chain.
  */
 
 import { useEffect, useRef, useState } from "react";
 import {
   Mic, MicOff, Bot, X, AlertTriangle, CheckCircle2,
-  Volume2, VolumeX, Zap, Brain, Radio, Loader2,
+  Volume2, Zap, Brain, Radio, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStreamerMic } from "@/hooks/useStreamerMic";
@@ -26,6 +27,8 @@ export interface CoHostPanelProps {
   isAudioUnlocked?: boolean;
   unlockAudio?: () => void;
   openaiTtsOk?: boolean | null;
+  lastMicEmit?: { text: string; lang: string; ts: number } | null;
+  lastMicBackendAck?: { ok: boolean; ts: number } | null;
 }
 
 const LANG_OPTIONS = [
@@ -49,8 +52,12 @@ export function CoHostPanel({
   isAudioUnlocked,
   unlockAudio,
   openaiTtsOk,
+  lastMicEmit,
+  lastMicBackendAck,
 }: CoHostPanelProps) {
   const [lastStormReply, setLastStormReply] = useState<{ text: string; ts: number } | null>(null);
+  const [diagOpen, setDiagOpen] = useState(true);
+  const [emitCount, setEmitCount] = useState(0);
 
   const mic = useStreamerMic({
     sendStreamerSpeech,
@@ -58,6 +65,15 @@ export function CoHostPanel({
     isSessionActive,
     defaultLang,
   });
+
+  // Track emit count
+  const prevEmitTs = useRef<number | null>(null);
+  useEffect(() => {
+    if (lastMicEmit && lastMicEmit.ts !== prevEmitTs.current) {
+      prevEmitTs.current = lastMicEmit.ts;
+      setEmitCount(c => c + 1);
+    }
+  }, [lastMicEmit]);
 
   // Watch aiAnnouncements for Storm's replies to streamer speech
   const prevLen = useRef(0);
@@ -77,7 +93,6 @@ export function CoHostPanel({
     }
   }, [aiAnnouncements, mic]);
 
-  // ── Derived state ─────────────────────────────────────────────────────────
   const isMicConnected = mic.browserSupported && mic.isEnabled && mic.audioMeterReady;
   const isListening    = mic.status === "listening" || mic.status === "speech_detected";
   const isThinking     = mic.status === "processing" || mic.status === "waiting";
@@ -142,38 +157,10 @@ export function CoHostPanel({
 
         {/* ── Row 2: 4 State badges ────────────────────────────────────────── */}
         <div className="grid grid-cols-4 gap-2">
-          <StateBadge
-            icon={Mic}
-            label="Mic Connected"
-            active={isMicConnected}
-            pending={mic.isEnabled && !mic.audioMeterReady}
-            color="emerald"
-            inactiveHint={mic.isEnabled ? "requesting…" : "off"}
-          />
-          <StateBadge
-            icon={Radio}
-            label="Listening"
-            active={isListening}
-            pulse={isListening}
-            color="cyan"
-            inactiveHint="—"
-          />
-          <StateBadge
-            icon={Brain}
-            label="Thinking"
-            active={isThinking}
-            pulse={isThinking}
-            color="violet"
-            inactiveHint="—"
-          />
-          <StateBadge
-            icon={Volume2}
-            label="Speaking"
-            active={isSpeaking}
-            pulse={isSpeaking}
-            color="blue"
-            inactiveHint="—"
-          />
+          <StateBadge icon={Mic}    label="Mic Connected" active={isMicConnected} pending={mic.isEnabled && !mic.audioMeterReady} color="emerald" inactiveHint={mic.isEnabled ? "requesting…" : "off"} />
+          <StateBadge icon={Radio}  label="Listening"     active={isListening}  pulse={isListening}  color="cyan"   inactiveHint="—" />
+          <StateBadge icon={Brain}  label="Thinking"      active={isThinking}   pulse={isThinking}   color="violet" inactiveHint="—" />
+          <StateBadge icon={Volume2} label="Speaking"     active={isSpeaking}   pulse={isSpeaking}   color="blue"   inactiveHint="—" />
         </div>
 
         {/* ── Row 3: Audio meter + Start/Stop button ───────────────────────── */}
@@ -201,7 +188,6 @@ export function CoHostPanel({
                   : <><Mic className="h-3.5 w-3.5" />Start</>}
               </button>
             ) : (
-              /* Push-to-Talk */
               <button
                 onMouseDown={mic.isEnabled ? mic.pushToTalkStart : undefined}
                 onMouseUp={mic.isEnabled ? mic.pushToTalkEnd : undefined}
@@ -233,20 +219,15 @@ export function CoHostPanel({
 
         {/* ── Row 4: Last transcript + Storm reply ─────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {/* You said */}
           <div className={cn(
             "rounded-xl px-3 py-2 border min-h-[44px] flex flex-col justify-center gap-0.5 transition-all",
-            lastYouText
-              ? "bg-violet-500/8 border-violet-500/20"
-              : "bg-white/[0.02] border-white/6",
+            lastYouText ? "bg-violet-500/8 border-violet-500/20" : "bg-white/[0.02] border-white/6",
           )}>
             <span className="text-[9px] font-semibold uppercase tracking-widest text-violet-400/60">
               {lastYouLabel ?? "You"}
             </span>
             {lastYouText ? (
-              <p className="text-xs text-violet-100 leading-snug line-clamp-2">
-                {lastYouText}
-              </p>
+              <p className="text-xs text-violet-100 leading-snug line-clamp-2">{lastYouText}</p>
             ) : (
               <p className="text-[10px] text-muted-foreground/40 italic">
                 {mic.isEnabled ? "Listening for speech…" : "Start listening to talk"}
@@ -254,20 +235,15 @@ export function CoHostPanel({
             )}
           </div>
 
-          {/* Storm replied */}
           <div className={cn(
             "rounded-xl px-3 py-2 border min-h-[44px] flex flex-col justify-center gap-0.5 transition-all",
-            lastStormReply
-              ? "bg-cyan-500/8 border-cyan-500/20"
-              : "bg-white/[0.02] border-white/6",
+            lastStormReply ? "bg-cyan-500/8 border-cyan-500/20" : "bg-white/[0.02] border-white/6",
           )}>
             <span className="text-[9px] font-semibold uppercase tracking-widest text-cyan-400/60 flex items-center gap-1">
               <Bot className="h-2.5 w-2.5" />Storm
             </span>
             {lastStormReply ? (
-              <p className="text-xs text-cyan-100 leading-snug line-clamp-2">
-                {lastStormReply.text}
-              </p>
+              <p className="text-xs text-cyan-100 leading-snug line-clamp-2">{lastStormReply.text}</p>
             ) : (
               <p className="text-[10px] text-muted-foreground/40 italic">
                 {isThinking ? "Generating reply…" : "Waiting for reply…"}
@@ -278,7 +254,6 @@ export function CoHostPanel({
 
         {/* ── Row 5: TTS health bar ─────────────────────────────────────────── */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* TTS engine badge */}
           <span className={cn(
             "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
             ttsModeLive === "openai"
@@ -288,9 +263,8 @@ export function CoHostPanel({
             {ttsModeLive === "openai" ? "OpenAI TTS" : ttsModeLive === "off" ? "TTS Off" : "TTS: Browser"}
           </span>
 
-          {/* OpenAI health */}
           {ttsModeLive === "openai" && (
-            openaiTtsOk === true  ? (
+            openaiTtsOk === true ? (
               <span className="flex items-center gap-1 text-[10px] text-emerald-400">
                 <CheckCircle2 className="h-3 w-3" />✓ Working
               </span>
@@ -303,7 +277,6 @@ export function CoHostPanel({
             )
           )}
 
-          {/* Autoplay unlock */}
           {ttsModeLive === "openai" && !isAudioUnlocked && unlockAudio && (
             <button
               onClick={unlockAudio}
@@ -318,7 +291,6 @@ export function CoHostPanel({
             </span>
           )}
 
-          {/* TTS off warning */}
           {!ttsOk && mic.isEnabled && (
             <span className="text-[10px] text-amber-400/80 flex items-center gap-1">
               <AlertTriangle className="h-3 w-3" />
@@ -345,12 +317,119 @@ export function CoHostPanel({
             <span className="text-[10px] text-muted-foreground/70">Start a session from the Dashboard to enable co-host voice.</span>
           </div>
         )}
+
+        {/* ── 🔬 Live Diagnostics ────────────────────────────────────────────── */}
+        <div className="rounded-xl border border-white/8 bg-black/20 overflow-hidden">
+          <button
+            onClick={() => setDiagOpen(o => !o)}
+            className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
+          >
+            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
+              🔬 Mic Diagnostics
+            </span>
+            {diagOpen
+              ? <ChevronUp className="h-3 w-3 text-muted-foreground/40" />
+              : <ChevronDown className="h-3 w-3 text-muted-foreground/40" />}
+          </button>
+
+          {diagOpen && (
+            <div className="px-3 pb-3 space-y-1">
+              <DiagRow n={1}  label="Mic permission"
+                ok={mic.micPermission === "granted"}
+                warn={mic.micPermission === "unknown"}
+                value={mic.micPermission}
+              />
+              <DiagRow n={2}  label="Mic connected (AudioContext)"
+                ok={mic.audioMeterReady}
+                value={mic.audioMeterReady ? "YES" : mic.isEnabled ? "requesting…" : "NO"}
+              />
+              <DiagRow n={3}  label="SpeechRecognition API"
+                ok={mic.browserSupported}
+                value={mic.browserSupported ? "Chrome/Edge ✓" : "NOT SUPPORTED"}
+              />
+              <DiagRow n={4}  label="Session active + sessionId"
+                ok={activeSession}
+                value={activeSession ? `YES (id=${sessionId})` : `isSessionActive=${isSessionActive} | sessionId=${sessionId ?? "undefined"}`}
+              />
+              <DiagRow n={5}  label="Start button clicked / Enabled"
+                ok={mic.isEnabled}
+                value={mic.isEnabled ? "YES" : "NO — click Start button above"}
+              />
+              <DiagRow n={6}  label="SR started (onstart fired)"
+                ok={mic.speechRecogActive}
+                value={mic.speechRecogActive ? "YES — LISTENING" : `NO | status=${mic.status}`}
+              />
+              <DiagRow n={7}  label="Interim transcript"
+                ok={!!mic.interimTranscript}
+                neutral={!mic.isEnabled}
+                value={mic.interimTranscript ? `"${mic.interimTranscript.slice(0, 60)}"` : "—"}
+              />
+              <DiagRow n={8}  label="Final transcript (accumulated)"
+                ok={!!mic.lastFinalTranscript || !!mic.lastSentText}
+                neutral={!mic.isEnabled}
+                value={mic.lastSentText ? `"${mic.lastSentText.slice(0, 60)}"` : mic.lastFinalTranscript ? `acc: "${mic.lastFinalTranscript.slice(0, 60)}"` : "—"}
+              />
+              <DiagRow n={9}  label="streamer:speech emitted"
+                ok={emitCount > 0}
+                neutral={!mic.isEnabled}
+                value={emitCount > 0
+                  ? `YES — ${emitCount}× | lang=${lastMicEmit?.lang ?? "?"} | "${(lastMicEmit?.text ?? "").slice(0, 40)}"`
+                  : "NO — not sent yet"}
+              />
+              <DiagRow n={10} label="Backend ACK received"
+                ok={lastMicBackendAck?.ok === true}
+                warn={lastMicBackendAck?.ok === false}
+                neutral={!lastMicBackendAck}
+                value={lastMicBackendAck
+                  ? lastMicBackendAck.ok ? `✅ OK at ${new Date(lastMicBackendAck.ts).toLocaleTimeString()}` : "❌ REJECTED"
+                  : "—"}
+              />
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
 
 // ── Sub-components ───────────────────────────────────────────────────────────
+
+interface DiagRowProps {
+  n: number;
+  label: string;
+  ok: boolean;
+  warn?: boolean;
+  neutral?: boolean;
+  value: string;
+}
+
+function DiagRow({ n, label, ok, warn, neutral, value }: DiagRowProps) {
+  const dot = neutral || (!ok && !warn)
+    ? "bg-white/20"
+    : ok
+      ? "bg-emerald-400"
+      : warn
+        ? "bg-amber-400"
+        : "bg-red-400";
+  const textColor = neutral || (!ok && !warn)
+    ? "text-muted-foreground/50"
+    : ok
+      ? "text-emerald-300"
+      : warn
+        ? "text-amber-300"
+        : "text-red-300";
+  return (
+    <div className="flex items-start gap-2 py-0.5">
+      <span className="text-[9px] font-mono text-muted-foreground/30 w-4 shrink-0 text-right pt-0.5">{n}</span>
+      <span className={cn("mt-1.5 h-1.5 w-1.5 rounded-full shrink-0", dot)} />
+      <div className="flex-1 min-w-0">
+        <span className="text-[10px] text-muted-foreground/60">{label}: </span>
+        <span className={cn("text-[10px] font-mono break-all", textColor)}>{value}</span>
+      </div>
+    </div>
+  );
+}
 
 interface StateBadgeProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -374,11 +453,8 @@ function StateBadge({ icon: Icon, label, active, pending, pulse, color }: StateB
   return (
     <div className={cn(
       "flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-xl border transition-all duration-300",
-      active
-        ? cn(c.bg, c.border)
-        : "bg-white/[0.02] border-white/8",
+      active ? cn(c.bg, c.border) : "bg-white/[0.02] border-white/8",
     )}>
-      {/* Icon + dot indicator */}
       <div className="relative">
         <Icon className={cn("h-4 w-4 transition-colors", active ? c.text : "text-white/20")} />
         {(active || pending) && (
@@ -389,7 +465,6 @@ function StateBadge({ icon: Icon, label, active, pending, pulse, color }: StateB
           )} />
         )}
       </div>
-      {/* Label — always visible */}
       <span className={cn(
         "text-[9px] font-semibold text-center leading-tight",
         active ? c.text : "text-white/30",

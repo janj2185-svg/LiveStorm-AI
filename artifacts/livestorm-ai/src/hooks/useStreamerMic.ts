@@ -1,30 +1,30 @@
 /**
  * useStreamerMic — Streamer microphone → Storm AI co-host
  *
- * Uses the Web Speech API (SpeechRecognition) to capture the streamer's voice,
- * accumulates spoken text with silence detection, then emits `streamer:speech`
- * via the existing socket connection to the backend orchestrator (P3 priority).
- *
- * Modes:
- *   continuous   — auto-restarts after every result; listens until disabled
- *   push_to_talk — only records while pushToTalkStart() is held
- *
- * Status flow:
- *   idle → listening → speech_detected → waiting (1.5s silence) → processing
- *   processing resets to listening after Storm replies
+ * Numbered diagnostic logs at every step of the pipeline:
+ *   [Mic:1]  Mic permission query
+ *   [Mic:2]  SpeechRecognition API check
+ *   [Mic:3]  enable() called
+ *   [Mic:4]  buildAndStart()
+ *   [Mic:5]  SR onstart fired
+ *   [Mic:6]  SR onresult — interim/final text
+ *   [Mic:7]  silence timer → flushAccumulated
+ *   [Mic:8]  sendRef.current(text, lang) called
  */
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
 export type MicMode   = "continuous" | "push_to_talk";
 export type MicStatus =
-  | "not_supported"   // SpeechRecognition not available in this browser
-  | "idle"            // mic off or session inactive
-  | "listening"       // microphone open, waiting for speech
-  | "speech_detected" // interim results flowing in
-  | "waiting"         // final result received, silence timer running (1.5s)
-  | "processing"      // sent to backend, waiting for Storm's reply
-  | "error";          // SpeechRecognition error
+  | "not_supported"
+  | "idle"
+  | "listening"
+  | "speech_detected"
+  | "waiting"
+  | "processing"
+  | "error";
+
+export type MicPermission = "unknown" | "granted" | "denied";
 
 export interface TranscriptEntry {
   id: string;
@@ -34,7 +34,6 @@ export interface TranscriptEntry {
   lang?: string;
 }
 
-// Minimal types for cross-browser SpeechRecognition (avoids TS2304 on SpeechRecognition global)
 interface SrAlternative { readonly transcript: string; readonly confidence: number; }
 interface SrResult     { readonly isFinal: boolean; readonly length: number; [i: number]: SrAlternative; }
 interface SrResultList { readonly length: number; [i: number]: SrResult; }
@@ -81,8 +80,10 @@ export interface UseStreamerMicReturn {
   transcripts: TranscriptEntry[];
   error: string | null;
   browserSupported: boolean;
-  audioLevel: number;       // 0–100 live audio level from AnalyserNode
-  audioMeterReady: boolean; // getUserMedia succeeded
+  audioLevel: number;
+  audioMeterReady: boolean;
+  micPermission: MicPermission;
+  speechRecogActive: boolean;
   lang: string;
   setMode: (mode: MicMode) => void;
   setLang: (lang: string) => void;
@@ -117,6 +118,8 @@ export function useStreamerMic({
   const [lang,                setLangState]           = useState(defaultLang);
   const [audioLevel,          setAudioLevel]          = useState(0);
   const [audioMeterReady,     setAudioMeterReady]     = useState(false);
+  const [micPermission,       setMicPermission]       = useState<MicPermission>("unknown");
+  const [speechRecogActive,   setSpeechRecogActive]   = useState(false);
 
   const recognitionRef   = useRef<SpeechRecognitionLike | null>(null);
   const accumulatorRef   = useRef<string>("");
@@ -126,13 +129,11 @@ export function useStreamerMic({
   const pttActiveRef     = useRef(false);
   const langRef          = useRef(defaultLang);
 
-  // Audio level meter refs
   const audioContextRef  = useRef<AudioContext | null>(null);
   const analyserRef      = useRef<AnalyserNode | null>(null);
   const audioStreamRef   = useRef<MediaStream | null>(null);
   const levelTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Keep stable refs to latest prop values (avoids stale closures in callbacks)
   const sendRef     = useRef(sendStreamerSpeech);
   const sessionRef  = useRef(sessionId);
   useEffect(() => { sendRef.current    = sendStreamerSpeech; }, [sendStreamerSpeech]);
@@ -142,11 +143,33 @@ export function useStreamerMic({
   const browserSupported = typeof window !== "undefined" &&
     !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
+  // ── [Mic:1] Check microphone permission ────────────────────────────────────
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    navigator.permissions?.query?.({ name: "microphone" as PermissionName })
+      .then(result => {
+        const p = result.state === "granted" ? "granted" : result.state === "denied" ? "denied" : "unknown";
+        setMicPermission(p);
+        console.log(`[Mic:1] Permission query result: ${result.state} → ${p}`);
+        result.onchange = () => {
+          const p2 = result.state === "granted" ? "granted" : result.state === "denied" ? "denied" : "unknown";
+          setMicPermission(p2);
+          console.log(`[Mic:1] Permission changed: ${result.state} → ${p2}`);
+        };
+      })
+      .catch(() => {
+        console.warn("[Mic:1] navigator.permissions.query not supported — permission unknown");
+      });
+  }, []);
+
   // ── Audio level meter via getUserMedia + AnalyserNode ─────────────────────
   const startAudioMeter = useCallback(async () => {
-    if (audioContextRef.current) return; // already running
+    if (audioContextRef.current) return;
     try {
+      console.log("[Mic:2b] getUserMedia requesting mic permission...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      setMicPermission("granted");
+      console.log("[Mic:2b] ✅ getUserMedia granted — AudioContext starting");
       audioStreamRef.current = stream;
       const ctx = new AudioContext();
       audioContextRef.current = ctx;
@@ -162,12 +185,11 @@ export function useStreamerMic({
         analyserRef.current.getByteFrequencyData(buf);
         const sum = buf.reduce((a, b) => a + b, 0);
         const avg = sum / buf.length;
-        // Scale: raw avg ~0-128; clamp to 0-100
         setAudioLevel(Math.min(100, Math.round(avg * 100 / 64)));
       }, 80);
-    } catch {
-      // Permission denied or no mic — fail silently, level stays 0
-      console.warn("[CoHostMic] Audio meter: getUserMedia denied or unavailable");
+    } catch (e) {
+      setMicPermission("denied");
+      console.warn("[Mic:2b] ❌ getUserMedia DENIED or error:", (e as Error)?.message);
     }
   }, []);
 
@@ -184,22 +206,27 @@ export function useStreamerMic({
 
   // ── Detect language from transcript text ───────────────────────────────────
   const detectLang = useCallback((text: string): string => {
-    if (/[іїєІЇЄґҐ]/.test(text))       return "uk";
+    if (/[іїєІЇЄґҐ]/.test(text))           return "uk";
     if (/[ąęóśźżćłńĄĘÓŚŹŻĆŁŃ]/.test(text)) return "pl";
-    if (/[а-яА-Я]/.test(text))           return langRef.current.split("-")[0];
+    if (/[а-яА-Я]/.test(text))              return langRef.current.split("-")[0];
     return langRef.current.split("-")[0];
   }, []);
 
   // ── Send accumulated text to backend ──────────────────────────────────────
   const flushAccumulated = useCallback(() => {
     const text = accumulatorRef.current.trim();
-    if (text.length < MIN_CHARS) { accumulatorRef.current = ""; return; }
+    console.log(`[Mic:7] flushAccumulated | text="${text.slice(0, 70)}" | len=${text.length} | minChars=${MIN_CHARS}`);
+    if (text.length < MIN_CHARS) {
+      console.warn(`[Mic:7] ✗ text too short (${text.length} < ${MIN_CHARS}) — not sending`);
+      accumulatorRef.current = "";
+      return;
+    }
     if (!sendRef.current || !sessionRef.current) {
-      console.warn("[CoHostMic] Cannot send — no socket or session");
+      console.warn(`[Mic:8] ✗ BLOCKED — sendRef=${sendRef.current ? "ok" : "NULL"} | sessionRef=${sessionRef.current ?? "NULL"}`);
       return;
     }
     const shortLang = detectLang(text);
-    console.log(`[CoHostMic] 🎙️ flush | "${text.slice(0, 70)}" | lang=${shortLang}`);
+    console.log(`[Mic:8] ✅ calling sendStreamerSpeech | lang=${shortLang} | "${text.slice(0, 70)}"`);
     sendRef.current(text, shortLang);
     const now = Date.now();
     setLastSentText(text);
@@ -219,7 +246,11 @@ export function useStreamerMic({
 
   // ── Build a fresh SpeechRecognition instance ───────────────────────────────
   const buildAndStart = useCallback(() => {
-    if (!browserSupported) return;
+    console.log(`[Mic:4] buildAndStart() | browserSupported=${browserSupported} | lang=${langRef.current}`);
+    if (!browserSupported) {
+      console.warn("[Mic:4] ✗ SpeechRecognition not supported in this browser");
+      return;
+    }
     if (recognitionRef.current) {
       try { recognitionRef.current.abort(); } catch { /* ignore */ }
       recognitionRef.current = null;
@@ -232,9 +263,11 @@ export function useStreamerMic({
     rec.maxAlternatives = 1;
     rec.lang            = langRef.current;
     recognitionRef.current = rec;
+    console.log(`[Mic:4] ✅ SpeechRecognition instance created | lang=${rec.lang} | continuous=true | interimResults=true`);
 
     rec.onstart = () => {
-      console.log(`[CoHostMic] ▶ listening | lang=${langRef.current}`);
+      console.log(`[Mic:5] ✅ SR onstart fired — NOW LISTENING | lang=${langRef.current}`);
+      setSpeechRecogActive(true);
       setStatus("listening");
       setError(null);
     };
@@ -247,6 +280,9 @@ export function useStreamerMic({
         if (r.isFinal) newFinal += r[0].transcript;
         else            interim  += r[0].transcript;
       }
+      if (newFinal || interim) {
+        console.log(`[Mic:6] onresult | isFinal=${!!newFinal} | interim="${interim.slice(0,60)}" | final="${newFinal.slice(0,60)}"`);
+      }
 
       if (newFinal) {
         accumulatorRef.current += (accumulatorRef.current ? " " : "") + newFinal.trim();
@@ -255,6 +291,7 @@ export function useStreamerMic({
         setStatus("speech_detected");
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = setTimeout(() => {
+          console.log(`[Mic:7] silence timer fired (${SILENCE_MS}ms) — flushing`);
           setStatus("waiting");
           flushAccumulated();
         }, SILENCE_MS);
@@ -266,20 +303,19 @@ export function useStreamerMic({
 
     rec.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") return;
-      console.warn(`[CoHostMic] ✗ error: ${event.error}`);
+      console.warn(`[Mic:5] ✗ SR onerror: ${event.error} — ${event.message ?? ""}`);
       setError(`Microphone error: ${event.error}`);
       setStatus("error");
     };
 
     rec.onend = () => {
-      console.log(`[CoHostMic] ◼ ended | enabled=${enabledRef.current} | mode=${modeRef.current} | ptt=${pttActiveRef.current}`);
+      setSpeechRecogActive(false);
+      console.log(`[Mic:5] SR onend | enabled=${enabledRef.current} | mode=${modeRef.current} | ptt=${pttActiveRef.current}`);
       if (enabledRef.current && modeRef.current === "continuous") {
-        // Continuous mode: auto-restart
         setTimeout(() => {
           if (!enabledRef.current) return;
           try { recognitionRef.current?.start(); }
           catch {
-            // Instance was replaced or already started — rebuild
             buildAndStart();
           }
         }, 200);
@@ -289,9 +325,10 @@ export function useStreamerMic({
     };
 
     try {
+      console.log("[Mic:4] → calling rec.start()...");
       rec.start();
     } catch (e) {
-      console.warn("[CoHostMic] start() failed:", e);
+      console.warn("[Mic:4] ✗ rec.start() threw:", e);
       setStatus("error");
       setError("Failed to start microphone. Check browser permissions.");
     }
@@ -310,15 +347,18 @@ export function useStreamerMic({
       try { recognitionRef.current.abort(); } catch { /* ignore */ }
       recognitionRef.current = null;
     }
+    setSpeechRecogActive(false);
   }, [flushAccumulated]);
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
   const enable = useCallback(() => {
+    console.log(`[Mic:3] enable() called | isSessionActive=${isSessionActive} | sessionId=${sessionRef.current} | browserSupported=${browserSupported}`);
     if (!isSessionActive || !sessionRef.current) {
-      console.warn("[CoHostMic] Cannot enable — no active session");
+      console.warn(`[Mic:3] ✗ BLOCKED — isSessionActive=${isSessionActive} | sessionId=${sessionRef.current ?? "NULL"}`);
       return;
     }
+    console.log("[Mic:3] ✅ starting mic — calling startAudioMeter + buildAndStart");
     enabledRef.current = true;
     setIsEnabled(true);
     setError(null);
@@ -326,11 +366,12 @@ export function useStreamerMic({
     if (modeRef.current === "continuous") {
       buildAndStart();
     } else {
-      setStatus("listening"); // PTT: ready, not yet recording
+      setStatus("listening");
     }
-  }, [isSessionActive, buildAndStart, startAudioMeter]);
+  }, [isSessionActive, buildAndStart, startAudioMeter, browserSupported]);
 
   const disable = useCallback(() => {
+    console.log("[Mic] disable() called");
     enabledRef.current = false;
     pttActiveRef.current = false;
     setIsEnabled(false);
@@ -383,7 +424,6 @@ export function useStreamerMic({
       text,
       ts: Date.now(),
     }].slice(-20));
-    // After Storm replies, go back to listening
     if (enabledRef.current) {
       setStatus("listening");
       if (modeRef.current === "continuous" && !recognitionRef.current) {
@@ -401,12 +441,10 @@ export function useStreamerMic({
     setLastSentAt(null);
   }, []);
 
-  // Auto-disable when session ends
   useEffect(() => {
     if (!isSessionActive && enabledRef.current) { disable(); }
   }, [isSessionActive, disable]);
 
-  // Cleanup on unmount
   useEffect(() => () => {
     enabledRef.current = false;
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
@@ -430,6 +468,8 @@ export function useStreamerMic({
     browserSupported,
     audioLevel,
     audioMeterReady,
+    micPermission,
+    speechRecogActive,
     lang,
     setMode,
     setLang,

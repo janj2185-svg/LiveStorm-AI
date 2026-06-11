@@ -572,6 +572,9 @@ export function useLiveSession(
     };
   }, []);
 
+  const [lastMicEmit,       setLastMicEmit]       = useState<{ text: string; lang: string; ts: number } | null>(null);
+  const [lastMicBackendAck, setLastMicBackendAck] = useState<{ ok: boolean; ts: number } | null>(null);
+
   const [stats, setStats] = useState<LiveStats>({
     viewerCount: 0, totalGifts: 0, totalLikes: 0, totalFollows: 0,
     totalComments: 0, totalShares: 0, topSupporters: [],
@@ -900,16 +903,27 @@ export function useLiveSession(
   }, [sessionId, getToken]);
 
   // ── Streamer microphone → backend co-host pipeline ────────────────────────
-  // Emits a `streamer:speech` event via the existing socket connection.
-  // The backend socket handler validates auth + session and enqueues at P3.
+  // [Mic:9] Emits `streamer:speech` via socket with ack callback.
+  // (lastMicEmit + lastMicBackendAck state declared at top of hook with other useState calls)
+
   const sendStreamerSpeech = useCallback((text: string, lang: string) => {
     const socket = socketRef.current;
+    console.log(`[Mic:9] sendStreamerSpeech called | socket=${socket ? "CONNECTED" : "NULL"} | sessionId=${sessionId ?? "NULL"} | lang=${lang} | "${text.slice(0, 60)}"`);
     if (!socket || !sessionId) {
-      console.warn("[CoHostMic] sendStreamerSpeech: no socket or session");
+      console.warn(`[Mic:9] ✗ BLOCKED — socket=${socket ? "ok" : "NULL"} | sessionId=${sessionId ?? "NULL"}`);
       return;
     }
-    console.log(`[CoHostMic] → streamer:speech | lang=${lang} | "${text.slice(0, 60)}"`);
-    socket.emit("streamer:speech", { text, lang, sessionId });
+    const ts = Date.now();
+    setLastMicEmit({ text, lang, ts });
+    console.log(`[Mic:9] ✅ socket.emit streamer:speech → backend | sessionId=${sessionId}`);
+    socket.emit(
+      "streamer:speech",
+      { text, lang, sessionId },
+      (ack: { ok: boolean; ts: number } | undefined) => {
+        console.log(`[Mic:10] ← Backend ACK received | ok=${ack?.ok} | ts=${ack?.ts ?? "no-ts"}`);
+        setLastMicBackendAck({ ok: ack?.ok ?? false, ts: Date.now() });
+      },
+    );
   }, [sessionId]);
 
   return {
@@ -937,6 +951,8 @@ export function useLiveSession(
     tiktokError,
     tiktokUsername,
     sendStreamerSpeech,
+    lastMicEmit,
+    lastMicBackendAck,
     stopAllSpeech,
     clearSpeechQueue,
     activeVoiceName,
