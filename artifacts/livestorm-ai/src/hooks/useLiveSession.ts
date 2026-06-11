@@ -275,7 +275,9 @@ function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
     if (fallback) return fallback;
   }
 
-  return null;
+  // 4. Last resort: any eligible (non-Polish) voice — never let the browser pick
+  //    its system default, which on Windows is Microsoft Adam (Polish).
+  return eligible[0] ?? null;
 }
 
 function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
