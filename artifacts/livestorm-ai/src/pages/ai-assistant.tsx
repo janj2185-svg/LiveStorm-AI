@@ -1365,9 +1365,20 @@ export function AiAssistant() {
         {/* ═══════════════ CENTER: Avatar (40%) ═══════════════ */}
         <div className="flex flex-col min-h-0 gap-2 pt-3">
 
-          {/* Branding — minimal logo mark only */}
-          <div className="flex items-center justify-center flex-shrink-0 pb-0.5">
-            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="LiveStorm AI" className="h-6 w-6 opacity-60" />
+          {/* Branding — product signature */}
+          <div className="flex items-center justify-center gap-2 flex-shrink-0 pb-1">
+            <img
+              src={`${import.meta.env.BASE_URL}logo.svg`}
+              alt="LiveStorm AI"
+              className="h-5 w-5 opacity-80"
+              style={{ filter: "drop-shadow(0 0 6px rgba(139,92,246,0.5))" }}
+            />
+            <span
+              className="text-[13px] font-black tracking-tight text-white/75"
+              style={{ textShadow: "0 0 16px rgba(139,92,246,0.35)" }}
+            >
+              ⚡ LiveStorm AI
+            </span>
           </div>
 
           {/* Avatar — fills most of the height */}
