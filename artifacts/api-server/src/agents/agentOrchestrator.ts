@@ -815,7 +815,8 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
         context: battleResult.context,
       });
       // Route battle reply through the same TTS voice pipeline with emotion speed modifier
-      if (config.voiceEnabled && state.enabledAgents.has("voice")) {
+      const battleRoomSockets = io.sockets.adapter.rooms.get(`session:${sessionId}`)?.size ?? 0;
+      if (config.voiceEnabled && state.enabledAgents.has("voice") && battleRoomSockets > 0) {
         void (async () => {
           try {
             const battleSpeedBoost = getVoiceSpeedModifier(emotionState);
@@ -1002,7 +1003,11 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   });
 
   // ── Voice Agent: synthesize TTS (emotion-adjusted speed) ────────────────────
+  const socketsInRoom = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
   if (config.voiceEnabled && state.enabledAgents.has("voice")) {
+    if (socketsInRoom === 0) {
+      console.log(`[Agent:Voice] ⚠️ skipping TTS — no sockets in room ${roomId} (prevents silent billing)`);
+    } else {
     try {
       const emotionSpeedBoost = getVoiceSpeedModifier(emotionState);
       const adjustedSpeed     = Math.min(1.8, Math.max(0.5, (voice.speed ?? 1.0) + emotionSpeedBoost));
@@ -1017,6 +1022,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       }
     } catch (err: unknown) {
       console.error("[Agent:Voice] ✗ TTS error:", (err as Error)?.message);
+    }
     }
   }
 

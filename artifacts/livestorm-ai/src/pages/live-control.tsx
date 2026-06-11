@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
   Radio, Plug, Activity, ShieldAlert, Layers, Cpu,
-  Wifi, WifiOff, PlayCircle, ChevronRight, Zap, Eye,
+  Wifi, WifiOff, PlayCircle, ChevronRight, Eye,
   MessageSquare, Gift, Heart, UserPlus,
 } from "lucide-react";
 import { useLiveSessionContext } from "@/contexts/LiveSessionContext";
@@ -87,7 +87,6 @@ export function LiveControl() {
     { label: t("dash_gifts"),        value: stats.totalGifts,    icon: Gift,          color: "text-amber-400" },
     { label: t("dash_followers"),    value: stats.totalFollows,  icon: UserPlus,      color: "text-violet-400" },
     { label: t("dash_likes"),        value: stats.totalLikes,    icon: Heart,         color: "text-pink-400" },
-    { label: t("event_xp"),          value: 0,                   icon: Zap,           color: "text-yellow-400" },
   ];
 
   return (

@@ -46,7 +46,7 @@ import {
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
   Boxes, SlidersHorizontal, Monitor, Cpu,
   Shirt, Tv2, Palette, Sun, Square, Activity, Eye, ArrowDown,
-  TrendingUp, Trophy, MessageCircle, UserPlus, Gem, Languages,
+  TrendingUp, Trophy, MessageCircle, UserPlus, Gem, Languages, Swords,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/react";
@@ -1096,7 +1096,7 @@ export function AiAssistant() {
                   <span>{t("ai_mode_assistant")}</span>
                 </button>
                 <button
-                  onClick={() => handleTtsModeChange(ttsMode === "off" ? "browser" : "off")}
+                  onClick={() => handleTtsModeChange(ttsMode === "off" ? "openai" : "off")}
                   className={cn(
                     "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-[10px] font-semibold transition-all",
                     ttsMode !== "off"
@@ -1177,6 +1177,33 @@ export function AiAssistant() {
                 </Link>
               </p>
             </div>
+          </div>
+
+          {/* ── Battle Mode toggle ── */}
+          <div className="px-3 py-2.5 border-t border-white/[0.06]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Swords className="h-3.5 w-3.5 text-red-400" />
+                <span className="text-xs font-bold text-white/80">Battle Mode</span>
+              </div>
+              <Switch
+                checked={config?.operatingMode === "battle" as any}
+                onCheckedChange={(on) => {
+                  if (isSessionActive && activeSessionId) {
+                    authFetch(`/agents/battle`, {
+                      method: "PUT",
+                      body: JSON.stringify({ sessionId: activeSessionId, active: on }),
+                    });
+                  }
+                  updateConfig.mutate({ operatingMode: on ? ("battle" as any) : "semi-auto" });
+                }}
+                disabled={!isSessionActive}
+                className="scale-75"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 mt-1 leading-tight">
+              AI fires sharp comebacks at every comment. Requires active session.
+            </p>
           </div>
 
           {/* ── Voice Status Panel ── */}
@@ -1366,8 +1393,8 @@ export function AiAssistant() {
           <SidebarSection isOpen={expandedSections.has("voice")} onToggle={() => toggleSection("voice")} title="Voice" icon={<Volume2 className="h-4 w-4 text-blue-400" />}>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">TTS Mode</Label>
-              <div className="grid grid-cols-3 gap-1 p-1 bg-white/5 rounded-lg">
-                {(["off", "browser", "openai"] as TtsMode[]).map((mode) => (
+              <div className="grid grid-cols-2 gap-1 p-1 bg-white/5 rounded-lg">
+                {(["off", "openai"] as TtsMode[]).map((mode) => (
                   <button
                     key={mode}
                     onClick={() => handleTtsModeChange(mode)}
@@ -1377,9 +1404,8 @@ export function AiAssistant() {
                     )}
                   >
                     {mode === "off" && <VolumeX className="h-3 w-3 mx-auto mb-0.5" />}
-                    {mode === "browser" && <Radio className="h-3 w-3 mx-auto mb-0.5" />}
                     {mode === "openai" && <Mic className="h-3 w-3 mx-auto mb-0.5" />}
-                    {mode}
+                    {mode === "off" ? "Off" : "OpenAI"}
                   </button>
                 ))}
               </div>
