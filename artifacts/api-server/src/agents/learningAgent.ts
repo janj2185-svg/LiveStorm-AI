@@ -72,19 +72,42 @@ export async function runLearningAgent(opts: {
   let recommendations = "";
   let personalityAdjustments = "";
 
+  interface LearningAnalysis {
+    recommendations: string;
+    personalityAdjustments: string;
+    suggestedMode: "savage" | "funny" | "motivational" | "professional" | "flirty" | "friendly" | null;
+    confidenceScore: number; // 0-10: how confident the model is in the suggested mode change
+    keyAdjustments: {
+      energyLevel?: "lower" | "higher" | "maintain";
+      responseLength?: "shorter" | "longer" | "maintain";
+      humorLevel?: "increase" | "decrease" | "maintain";
+    };
+  }
+
+  let analysis: LearningAnalysis = {
+    recommendations: `Session completed with ${scores.length} AI responses. Average engagement score: ${avgScore.toFixed(1)}/10.`,
+    personalityAdjustments: "Maintain current personality settings.",
+    suggestedMode: null,
+    confidenceScore: 0,
+    keyAdjustments: {},
+  };
+
   try {
     const resp = await openai.chat.completions.create({
       model: "gpt-4o",
-      max_tokens: 300,
+      max_tokens: 400,
       messages: [
         {
           role: "system",
-          content: `You are an AI performance analyst for a TikTok LIVE stream AI co-host. 
-Analyze the session responses and provide:
-1. 3 specific recommendations to improve the AI's performance
-2. Personality adjustments to make the AI more engaging
+          content: `You are an AI performance analyst for a TikTok LIVE stream AI co-host.
+Analyze the session data and return a JSON object with these exact fields:
+- "recommendations": string — 3 specific, actionable improvements for future sessions
+- "personalityAdjustments": string — freeform explanation of what to adjust in the AI's style
+- "suggestedMode": one of "savage" | "funny" | "motivational" | "professional" | "flirty" | "friendly" | null — only suggest a mode change if you are highly confident it would improve engagement; null means keep current mode
+- "confidenceScore": number 0-10 — your confidence in the suggestedMode change (0 = no change needed, 10 = very certain)
+- "keyAdjustments": object with optional fields "energyLevel" ("lower"|"higher"|"maintain"), "responseLength" ("shorter"|"longer"|"maintain"), "humorLevel" ("increase"|"decrease"|"maintain")
 
-Return JSON: {"recommendations": "...", "personalityAdjustments": "..."}`,
+Only suggest a non-null suggestedMode when confidenceScore >= 7 AND avgScore < 6.5 AND you have >= 10 responses.`,
         },
         {
           role: "user",
@@ -94,13 +117,20 @@ Return JSON: {"recommendations": "...", "personalityAdjustments": "..."}`,
       response_format: { type: "json_object" },
     });
 
-    const parsed = JSON.parse(resp.choices[0]?.message?.content ?? "{}") as { recommendations?: string; personalityAdjustments?: string };
-    recommendations = parsed.recommendations ?? "Continue current strategy. Monitor engagement patterns.";
-    personalityAdjustments = parsed.personalityAdjustments ?? "No major adjustments needed.";
+    const parsed = JSON.parse(resp.choices[0]?.message?.content ?? "{}") as Partial<LearningAnalysis>;
+    analysis = {
+      recommendations:     parsed.recommendations     ?? analysis.recommendations,
+      personalityAdjustments: parsed.personalityAdjustments ?? analysis.personalityAdjustments,
+      suggestedMode:       parsed.suggestedMode        ?? null,
+      confidenceScore:     typeof parsed.confidenceScore === "number" ? parsed.confidenceScore : 0,
+      keyAdjustments:      parsed.keyAdjustments       ?? {},
+    };
   } catch {
-    recommendations = `Session completed with ${scores.length} AI responses. Average engagement score: ${avgScore.toFixed(1)}/10.`;
-    personalityAdjustments = "Maintain current personality settings.";
+    // analysis stays as default fallback
   }
+
+  recommendations     = analysis.recommendations;
+  personalityAdjustments = analysis.personalityAdjustments;
 
   const [report] = await db
     .insert(aiLearningReportsTable)
@@ -124,29 +154,47 @@ Return JSON: {"recommendations": "...", "personalityAdjustments": "..."}`,
     importance: 3,
   });
 
-  // Auto-apply personality adjustment only when there's sufficient evidence:
-  // - minimum 10 responses in the session (avoids drift from tiny samples)
+  // Auto-apply personality adjustment when the model is highly confident:
+  // - suggestedMode returned directly by GPT (no keyword fallback needed)
+  // - confidenceScore >= 7 (model is sure)
+  // - minimum 10 responses (avoids drift from tiny samples)
   // - average score below 6.5 (AI is underperforming — adjustment is warranted)
-  const suggestedMode = detectPersonalityAdjustment(personalityAdjustments);
-  const enoughData    = scores.length >= 10;
+  const { suggestedMode, confidenceScore, keyAdjustments } = analysis;
+  const enoughData      = scores.length >= 10;
   const underperforming = avgScore < 6.5;
+  const highConfidence  = confidenceScore >= 7;
 
-  if (suggestedMode && enoughData && underperforming) {
+  if (suggestedMode && enoughData && underperforming && highConfidence) {
     try {
       await db
         .update(aiPersonaConfigsTable)
         .set({ personalityType: suggestedMode })
         .where(eq(aiPersonaConfigsTable.streamerId, opts.streamerId));
       console.log(
-        `[LearningAgent] ✅ auto-applied personality → mode="${suggestedMode}" | responses=${scores.length} avgScore=${avgScore.toFixed(2)} streamer=${opts.streamerId}`,
+        `[LearningAgent] ✅ auto-applied personality → mode="${suggestedMode}" confidence=${confidenceScore}/10 | responses=${scores.length} avgScore=${avgScore.toFixed(2)} streamer=${opts.streamerId}`,
       );
     } catch (err) {
       console.error("[LearningAgent] personality auto-apply error:", (err as Error)?.message);
     }
   } else if (suggestedMode) {
     console.log(
-      `[LearningAgent] ⏭ personality adjustment "${suggestedMode}" skipped — insufficient evidence (responses=${scores.length}/${enoughData ? "✓" : "✗"} avgScore=${avgScore.toFixed(2)}/${underperforming ? "✓" : "✗"})`,
+      `[LearningAgent] ⏭ personality adjustment "${suggestedMode}" skipped — confidence=${confidenceScore}/10 responses=${scores.length} avgScore=${avgScore.toFixed(2)} (need: conf≥7 + data≥10 + score<6.5)`,
     );
+  }
+
+  // Apply key behavioral adjustments to ai_persona_configs even without a mode change
+  if (Object.keys(keyAdjustments).length > 0) {
+    console.log(
+      `[LearningAgent] 🔧 keyAdjustments: energy=${keyAdjustments.energyLevel ?? "—"} length=${keyAdjustments.responseLength ?? "—"} humor=${keyAdjustments.humorLevel ?? "—"}`,
+    );
+    // Store as a stream memory so the next session's prompt can reference recent coaching
+    await storeMemory({
+      streamerId: opts.streamerId,
+      memoryType: "preference",
+      key:        "last_session_coaching",
+      value:      `energy:${keyAdjustments.energyLevel ?? "maintain"} responseLength:${keyAdjustments.responseLength ?? "maintain"} humor:${keyAdjustments.humorLevel ?? "maintain"} (session ${opts.sessionId}, avgScore ${avgScore.toFixed(1)})`,
+      importance: 4,
+    });
   }
 
   console.log(`[LearningAgent] Report generated for session ${opts.sessionId}: ${scores.length} responses, avg ${avgScore.toFixed(2)}${suggestedMode ? ` | auto-adjusted personality → ${suggestedMode}` : ""}`);

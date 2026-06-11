@@ -25,6 +25,7 @@
  */
 
 import type { EmotionalState, EmotionType, EmotionalTrigger } from "./emotionEngine";
+import type { MoodBehaviorModifiers } from "./moodEngine";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 1. SESSION LIFECYCLE  —  stream fatigue clock
@@ -281,6 +282,8 @@ export interface ParalinguisticOpts {
   humor:              HumorSignal;
   questionComplexity: QuestionComplexity;
   streamFatigue:      number;
+  /** Mood-driven probability multipliers — from getMoodBehaviorModifiers() */
+  moodModifiers?:     MoodBehaviorModifiers;
 }
 
 /**
@@ -291,20 +294,27 @@ export interface ParalinguisticOpts {
  * Never injects when text is too short (< 8 chars) — would look wrong.
  */
 export function injectParalinguistics(text: string, opts: ParalinguisticOpts): string {
-  const { emotionState, personalityKey, humor, questionComplexity, streamFatigue } = opts;
+  const { emotionState, personalityKey, humor, questionComplexity, streamFatigue, moodModifiers } = opts;
   const profile = PARALINGUISTIC_PROFILES[personalityKey] ?? PARALINGUISTIC_PROFILES.friendly!;
   const trimmed = text.trim();
 
   if (trimmed.length < 8) return text; // too short — don't touch it
 
+  // Mood multipliers default to 1.0 (no effect) when mood is at baseline
+  const laughMult      = moodModifiers?.laughProbabilityMult      ?? 1;
+  const hesitationMult = moodModifiers?.hesitationProbabilityMult ?? 1;
+  const fadeMult       = moodModifiers?.fadeProbabilityMult       ?? 1;
+  const excitedMult    = moodModifiers?.excitedTailMult           ?? 1;
+
   const alreadyHasStarter = REACTION_STARTER_RE.test(trimmed);
   let result = trimmed;
   const rng = Math.random();
 
-  // ── Priority 1: Laughter (humor detected) ────────────────────────────────
+  // ── Priority 1: Laughter (humor detected, scaled by humor mood) ──────────
   if (humor.isHumorous && !alreadyHasStarter && profile.laughs.length > 0) {
-    const prob = humor.intensity === "unhinged" ? 0.82 :
-                 humor.intensity === "strong"   ? 0.65 : 0.40;
+    const baseProb = humor.intensity === "unhinged" ? 0.82 :
+                     humor.intensity === "strong"   ? 0.65 : 0.40;
+    const prob = Math.min(0.95, baseProb * laughMult);
     if (rng < prob) {
       const laugh = pickRandom(profile.laughs);
       if (laugh) return laugh + result;
@@ -321,12 +331,13 @@ export function injectParalinguistics(text: string, opts: ParalinguisticOpts): s
     return result;
   }
 
-  // ── Priority 3: Hesitation (complex question OR high-curiosity) ──────────
+  // ── Priority 3: Hesitation (complex question, curiosity, or low confidence mood) ─
   if (!alreadyHasStarter) {
-    const hesitationProb =
+    const baseHesitationProb =
       questionComplexity === "complex"  ? 0.65 :
       questionComplexity === "moderate" ? 0.30 :
       (emotionState.primary === "curious" && emotionState.intensity >= 6) ? 0.35 : 0;
+    const hesitationProb = Math.min(0.90, baseHesitationProb * hesitationMult);
 
     if (hesitationProb > 0 && rng < hesitationProb) {
       const hesitation = pickRandom(profile.hesitations);
@@ -334,26 +345,26 @@ export function injectParalinguistics(text: string, opts: ParalinguisticOpts): s
     }
   }
 
-  // ── Priority 4: Excited tail (high-energy moments) ───────────────────────
+  // ── Priority 4: Excited tail (high-energy moments, scaled by energy mood) ─
   if (
     profile.excitedTail.length > 0 &&
     (emotionState.primary === "excited" || emotionState.primary === "competitive") &&
     emotionState.intensity >= 7 &&
     !result.endsWith("!") && !result.endsWith("!\"") && !result.endsWith("!")
   ) {
-    if (Math.random() < 0.28) {
+    if (Math.random() < Math.min(0.70, 0.28 * excitedMult)) {
       const tail = pickRandom(profile.excitedTail);
       if (tail) result = result + tail;
     }
   }
 
-  // ── Priority 5: Stream fatigue fade (quiet ending after long streams) ────
+  // ── Priority 5: Stream fatigue / mood fade (quiet ending, scaled by valence mood) ─
   if (
     profile.fades.length > 0 &&
-    streamFatigue >= 0.5 &&
+    (streamFatigue >= 0.5 || (moodModifiers?.fadeProbabilityMult ?? 1) >= 1.5) &&
     !result.endsWith("!") && !result.endsWith("!")
   ) {
-    if (Math.random() < 0.18) {
+    if (Math.random() < Math.min(0.55, 0.18 * fadeMult)) {
       const fade = pickRandom(profile.fades);
       if (fade) result = result + fade;
     }

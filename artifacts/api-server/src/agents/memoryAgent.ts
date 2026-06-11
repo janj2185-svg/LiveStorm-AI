@@ -91,9 +91,30 @@ export async function getMemoryContext(streamerId: number, viewerName?: string):
       limit: 3,
     });
 
+    // Also pull joke and preference memories for richer character context
+    const jokeMem = await db.query.aiMemoriesTable.findMany({
+      where: and(
+        eq(aiMemoriesTable.streamerId, streamerId),
+        eq(aiMemoriesTable.memoryType, "joke"),
+      ),
+      orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
+      limit: 3,
+    });
+
+    const prefMem = await db.query.aiMemoriesTable.findMany({
+      where: and(
+        eq(aiMemoriesTable.streamerId, streamerId),
+        eq(aiMemoriesTable.memoryType, "preference"),
+      ),
+      orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
+      limit: 3,
+    });
+
     const lines: string[] = [];
-    for (const m of global) lines.push(`[Global] ${m.key}: ${m.value}`);
+    for (const m of global)   lines.push(`[Global] ${m.key}: ${m.value}`);
     for (const m of streamMem) lines.push(`[Stream] ${m.key}: ${m.value}`);
+    for (const m of jokeMem)  lines.push(`[Joke] ${m.key}: ${m.value}`);
+    for (const m of prefMem)  lines.push(`[Preference] ${m.key}: ${m.value}`);
 
     if (viewerName) {
       // VIP status from viewer profile

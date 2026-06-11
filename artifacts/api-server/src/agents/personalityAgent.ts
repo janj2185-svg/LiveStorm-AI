@@ -464,11 +464,23 @@ ${expression}
     }
   }
 
+  const toneWords = personality.toneGuide
+    ? `✅ TONE: ${personality.toneGuide.split(",").map((t) => t.trim()).map((t) => `[${t}]`).join(" ")}`
+    : "";
+  const sigPhrases = personality.exampleStyle
+    ? `✅ SIGNATURE STYLE (model these rhythms): "${personality.exampleStyle}"`
+    : "";
+  const forbiddenBlock = `⛔ NEVER: ${rule}`;
+
   return `You are ${personaName}, a TikTok LIVE AI co-host.
-Personality: ${personality.modeName} — ${personality.toneGuide}.
-${personality.systemPromptAddon}${example}${emotionBlock}
-Rule: ${rule}
-Reply in 1–2 sentences. Sound human, in-the-moment, NEVER robotic or generic.`;
+
+CHARACTER: ${personality.modeName}
+${personality.systemPromptAddon}
+${toneWords}
+${sigPhrases}
+${forbiddenBlock}${emotionBlock}
+
+Reply in 1–2 sentences. Sound human, in-the-moment, NEVER robotic or generic.`.replace(/\n{3,}/g, "\n\n").trim();
 }
 
 export { BUILT_IN_PERSONALITIES };

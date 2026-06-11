@@ -38,6 +38,14 @@ import {
   injectParalinguistics,
   getStreamFatigue,
 } from "./behaviorEngine";
+import {
+  initMoodState,
+  clearMoodState,
+  applyMoodEvent,
+  decayAllMoods,
+  getMoodPromptContext,
+  getMoodBehaviorModifiers,
+} from "./moodEngine";
 
 const MAX_QUEUE_SIZE = 50;
 const MAX_GENERAL_ITEM_AGE_MS = 15_000;
@@ -66,14 +74,16 @@ function ttsCooldown(priority: number): number {
 }
 
 // Engagement scores by priority / event type for the learning system
-function computeBaseScore(priority: number, eventType: string): number {
-  if (eventType === "gift")   return 8.5;
-  if (eventType === "follow") return 7.5;
-  if (eventType === "share")  return 7.0;
+// Spec: gift=9, follow=8, direct_question=7, first_timer=7, vip=6, general=5
+function computeBaseScore(priority: number, eventType: string, viewerContext?: "first_timer" | "vip" | "regular"): number {
+  if (eventType === "gift")   return 9.0;
+  if (eventType === "follow") return 8.0;
+  if (eventType === "share")  return 7.5;
+  if (viewerContext === "first_timer") return 7.0;
+  if (viewerContext === "vip")         return 6.0;
   switch (priority) {
     case 4: return 7.0;  // direct question answered
-    case 5: return 6.5;  // vip viewer
-    default: return 5.0; // general
+    default: return 5.0; // general chat
   }
 }
 
@@ -119,8 +129,9 @@ export function initOrchestrator(io: SocketServer): void {
   setInterval(processQueue, 200);
   setInterval(cleanQueue, 30_000);
   setInterval(decayAllEmotions, 30_000);
+  setInterval(decayAllMoods, 60_000);
 
-  // Silence detection: check every 15s, emit emotion:state when a session goes quiet
+  // Silence detection: check every 15s, emit emotion:state + update mood
   setInterval(() => {
     if (!ioRef) return;
     const silenced = checkSilentSessions();
@@ -132,6 +143,8 @@ export function initOrchestrator(io: SocketServer): void {
       console.log(
         `[Agent:Emotion] ${EMOTION_META[state.primary].emoji} silence detected → ${state.primary} intensity=${state.intensity}/10 | session=${sessionId}`,
       );
+      // Mood: deep silence drains energy and patience more than brief silence
+      applyMoodEvent(sessionId, state.primary === "frustrated" ? "deep_silence" : "silence");
     }
   }, 15_000);
 
@@ -143,7 +156,7 @@ function cleanQueue(): void {
   const before = state.queue.length;
 
   // Drop stale general-chat items early when queue is busy
-  if (state.queue.length > 20) {
+  if (state.queue.length > 25) {
     state.queue = state.queue.filter((item) => {
       const age = now - item.enqueuedAt;
       if (item.priority >= 6 && age > MAX_GENERAL_ITEM_AGE_MS) {
@@ -211,6 +224,7 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     // Emotion trigger
     const milestoneEmotion = applyEmotionalTrigger(event.sessionId, "like_milestone");
     ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...milestoneEmotion, ...EMOTION_META[milestoneEmotion.primary] });
+    applyMoodEvent(event.sessionId, "like_milestone");
     // Enrich event so hostAgent can craft a milestone-specific reply
     event = { ...event, data: { ...event.data, milestone } };
   }
@@ -259,6 +273,11 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     const giftEmotion = applyEmotionalTrigger(event.sessionId, amplifiedTrigger);
     console.log(`[Agent:Emotion] ${EMOTION_META[giftEmotion.primary].emoji} ${giftEmotion.primary} intensity=${giftEmotion.intensity}/10 ← gift ${coins} coins`);
     ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...giftEmotion, ...EMOTION_META[giftEmotion.primary] });
+    // Mood: gift chain creates lasting positivity and energy boost
+    applyMoodEvent(event.sessionId,
+      amplifiedTrigger === "gift_whale"    ? "whale_gift" :
+      amplifiedTrigger === "gift_big"      ? "big_gift"   : "standard_gift",
+    );
   }
 
   // ── 3. Share events: per-session cooldown ──────────────────────────────────
@@ -301,6 +320,7 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     console.log(`[NEW-PIPELINE] 👤 follow passed cooldown | session=${event.sessionId} viewer=${event.username}`);
     const followEmotion = applyEmotionalTrigger(event.sessionId, "follow");
     ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...followEmotion, ...EMOTION_META[followEmotion.primary] });
+    applyMoodEvent(event.sessionId, "follow");
   }
 
   // ── 5. Comment events: fast spam check + per-viewer reply cooldown ──────────
@@ -320,6 +340,8 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
         reason: spamResult.reason,
         pipeline: "orchestrator",
       });
+      // Mood: toxic/spam content slowly erodes patience and positivity
+      applyMoodEvent(event.sessionId, "toxic_comment");
       return;
     }
 
@@ -355,7 +377,14 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
       console.log(`[Agent:Emotion] ${EMOTION_META[burstEmotion.primary].emoji} ${burst.burstLabel} (${burst.count30s}/30s) → ${burstEmotion.primary} intensity=${burstEmotion.intensity}/10`);
       ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...burstEmotion, ...EMOTION_META[burstEmotion.primary] });
     }
+    // Mood: active chat builds energy and humor over time
+    if (burst.burstLabel === "wild" || burst.burstLabel === "buzzing") {
+      applyMoodEvent(event.sessionId, "chat_surge");
+    } else if (burst.burstLabel === "warming") {
+      applyMoodEvent(event.sessionId, "chat_warming");
+    }
   }
+  initMoodState(event.sessionId); // idempotent — only initializes if not yet tracked
   recordSessionStart(event.sessionId);
   recordActivity(event.sessionId);
 
@@ -599,9 +628,11 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       if (!viewerProfile) {
         emotionState = applyEmotionalTrigger(sessionId, "first_timer");
         console.log(`[Agent:Emotion] ${EMOTION_META[emotionState.primary].emoji} first-timer: ${event.username}`);
+        applyMoodEvent(sessionId, "first_timer");
       } else if (viewerProfile.vipLevel !== "none") {
         emotionState = applyEmotionalTrigger(sessionId, "vip_comment");
         console.log(`[Agent:Emotion] ${EMOTION_META[emotionState.primary].emoji} VIP comment: ${event.username} (${viewerProfile.vipLevel})`);
+        applyMoodEvent(sessionId, "vip_comment");
       }
       if (ioRef) ioRef.to(`session:${sessionId}`).emit("emotion:state", { ...emotionState, ...EMOTION_META[emotionState.primary] });
     } catch { /* non-fatal */ }
@@ -660,6 +691,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       void scoreResponse({ sessionId, streamerId, agentType: "battle", triggerEvent: "comment", aiResponse: battleResult.suggestedReply, score: 8.0 });
       void logTask({ sessionId, streamerId, agentType: "battle", eventType: "comment", priority: item.priority, input: { opponent: commentText.slice(0, 100) }, output: { reply: battleResult.suggestedReply.slice(0, 100) } });
       recordBattleAftermath(sessionId, "win");
+      applyMoodEvent(sessionId, "battle_win");
       return; // battle reply takes over — skip standard host agent
     }
   }
@@ -670,8 +702,9 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const questionComplexity = detectQuestionComplexity(commentText2);
   const fatigueCtx        = getStreamFatiguePromptContext(sessionId);
   const aftermathCtx      = getBattleAftermathContext(sessionId);
+  const moodCtx           = getMoodPromptContext(sessionId);
   const behaviorHints     = getBehaviorPromptContext({ humor, questionComplexity });
-  const behaviorCtx = [fatigueCtx, aftermathCtx, behaviorHints].filter(Boolean).join("\n");
+  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
   // When multiple viewers sent the same message, give the AI crowd context
@@ -703,6 +736,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     humor,
     questionComplexity,
     streamFatigue: getStreamFatigue(sessionId),
+    moodModifiers: getMoodBehaviorModifiers(sessionId),
   });
   if (spokenText !== hostResult.text) {
     console.log(`[Agent:Behavior] 🎭 paralinguistic | "${spokenText.slice(0, 80)}"`);
@@ -758,14 +792,18 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     console.log(`[NEW-PIPELINE] 🕐 per-viewer cooldown set | viewer=${event.username} | session=${sessionId}`);
   }
 
-  // ── Strategy Agent: score response (engagement-weighted, not hardcoded 5.0) ──
+  // ── Strategy Agent: score response (engagement-weighted) ────────────────────
+  const _lastTrigger = emotionState.lastTrigger ?? "";
+  const _viewerCtx =
+    _lastTrigger === "first_timer" ? "first_timer" :
+    _lastTrigger === "vip_comment" ? "vip" : "regular";
   void scoreResponse({
     sessionId,
     streamerId,
     agentType: "host",
     triggerEvent: event.type,
     aiResponse: hostResult.text,
-    score: computeBaseScore(item.priority, event.type),
+    score: computeBaseScore(item.priority, event.type, _viewerCtx),
   });
 
   // ── Voice Agent: synthesize TTS (emotion-adjusted speed) ────────────────────
@@ -878,6 +916,7 @@ export function clearSessionHistory(sessionId: number): void {
   state.conversationHistory.delete(sessionId);
   clearEmotionalState(sessionId);
   clearBehaviorState(sessionId);
+  clearMoodState(sessionId);
 }
 
 export const AGENT_TYPES = ["host", "chat", "battle", "memory", "personality", "voice", "strategy", "moderation", "learning"] as const;
