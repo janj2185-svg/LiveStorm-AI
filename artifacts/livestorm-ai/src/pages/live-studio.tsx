@@ -585,6 +585,7 @@ export function LiveStudio() {
     aiAnnouncements, sendStreamerSpeech, activeSessionId,
     stopAllSpeech, clearSpeechQueue, activeVoiceName, ttsQueueLen,
     ttsModeLive, openaiTtsOk, openaiTtsErr, lastSpokenLang, lastSpokenEngine,
+    isAudioUnlocked, unlockAudio,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
 
@@ -761,6 +762,22 @@ export function LiveStudio() {
                     </span>
                   )}
                   {openaiTtsOk === null  && <span className="text-[11px] text-muted-foreground/60 italic">Not tested yet</span>}
+                </div>
+              )}
+
+              {/* ── Autoplay unlock button ─────────────────────────────── */}
+              {ttsModeLive === "openai" && !isAudioUnlocked && (
+                <button
+                  onClick={unlockAudio}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-300 hover:bg-blue-500/25 hover:text-blue-200 active:scale-95 transition-all text-xs font-semibold"
+                >
+                  🔊 Enable Voice Output
+                </button>
+              )}
+              {ttsModeLive === "openai" && isAudioUnlocked && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">Autoplay</span>
+                  <span className="text-[11px] text-green-400 font-semibold">✓ Enabled</span>
                 </div>
               )}
 

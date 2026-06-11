@@ -158,15 +158,57 @@ let ttsQueueDepth = 0;
 // Track the currently playing OpenAI Audio element so stopAllSpeech() can cancel it
 let currentAudioElement: HTMLAudioElement | null = null;
 
+// ── Autoplay unlock ────────────────────────────────────────────────────────────
+// Browsers block audio.play() triggered by socket events (no user gesture).
+// The user must click "Enable Voice" once. That click calls unlockAudio(), which
+// plays a silent frame so Chrome marks the page as "activated". After that, all
+// socket-triggered audio.play() calls succeed for the life of the page session.
+let audioUnlocked = false;
+
+function unlockAudio(): void {
+  if (audioUnlocked) return;
+  try {
+    // AudioContext silent buffer — satisfies Chrome's activation requirement
+    type AnyAudioContext = typeof AudioContext;
+    const win = window as unknown as Record<string, unknown>;
+    const Ctx: AnyAudioContext = (window.AudioContext ?? win["webkitAudioContext"]) as AnyAudioContext;
+    if (Ctx) {
+      const ctx = new Ctx();
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+      void ctx.close();
+    }
+  } catch { /* ignore */ }
+  audioUnlocked = true;
+  console.log("[TTS:OpenAI] 🔓 Audio unlocked — autoplay enabled for this session");
+  window.dispatchEvent(new CustomEvent("tts:audio:unlocked"));
+}
+
+// ── OpenAI TTS — full pipeline with numbered step logging ────────────────────
 async function playOpenAiTts(rawText: string, voice: string, volume: number, speed = 1.0): Promise<void> {
-  // Normalize FIRST — OpenAI TTS may also read some emoji names
+  // STEP 3 — generateVoice() entry point
+  console.log(`[TTS:3] generateVoice called | voice=${voice} | speed=${speed} | audioUnlocked=${audioUnlocked} | text="${rawText.slice(0, 60)}"`);
+
+  if (!audioUnlocked) {
+    console.warn("[TTS:3] ⚠ Audio NOT unlocked — click '🔊 Enable Voice' on the Voice panel. Playback will be blocked.");
+  }
+
+  // Normalize: strip/replace emojis so OpenAI doesn't read them literally
   const { text, hasEmojis, emojiEmotion } = normalizeTtsText(rawText);
-  if (!text.trim()) return;
+  if (!text.trim()) {
+    console.log("[TTS:3] text empty after normalization — skip");
+    return;
+  }
   if (hasEmojis) {
-    console.log(`[TTS:Normalize:OpenAI] raw="${rawText.slice(0,60)}" → normalized="${text.slice(0,60)}" | emojiEmotion=${emojiEmotion}`);
+    console.log(`[TTS:Normalize] raw="${rawText.slice(0,60)}" → "${text.slice(0,60)}" | emojiEmotion=${emojiEmotion}`);
   }
 
   try {
+    // STEP 4 — HTTP request to /api/ai/voice
+    console.log(`[TTS:4] → POST ${API_BASE}/ai/voice`);
     const res = await fetch(`${API_BASE}/ai/voice`, {
       method: "POST",
       credentials: "include",
@@ -174,56 +216,78 @@ async function playOpenAiTts(rawText: string, voice: string, volume: number, spe
       body: JSON.stringify({ text, voice, speed }),
     });
 
+    // STEP 5 — HTTP response status
+    console.log(`[TTS:5] ← HTTP ${res.status} | ok=${res.ok} | content-type=${res.headers.get("content-type") ?? "?"}`);
+
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       const msg = body?.error ?? `HTTP ${res.status}`;
-      console.warn(`[TTS:OpenAI] ✗ HTTP ${res.status}: ${msg}`);
+      console.warn(`[TTS:5] ✗ HTTP error: ${msg}`);
       window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: `HTTP ${res.status}: ${msg}` } }));
       return;
     }
 
+    // STEP 6 — Audio buffer from response
     const blob = await res.blob();
+    console.log(`[TTS:6] Audio buffer | size=${blob.size} bytes | type=${blob.type || "audio/mpeg"}`);
+
+    if (blob.size === 0) {
+      console.warn("[TTS:6] ✗ Empty audio blob — OpenAI returned no audio data");
+      window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: "empty audio response" } }));
+      return;
+    }
+
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    currentAudioElement = audio; // track so stopAllSpeech() can cancel this
+    currentAudioElement = audio;
     audio.volume = Math.max(0, Math.min(1, volume));
 
+    // STEP 7 — tts:audio event (window, not socket — frontend-internal signal)
+    console.log("[TTS:7] tts:audio window event dispatched");
     window.dispatchEvent(new CustomEvent("tts:audio", { detail: audio }));
     window.dispatchEvent(new CustomEvent("tts:start", { detail: { voice } }));
+
+    // STEP 8 — frontend receives / STEP 9 — Audio element ready
+    console.log(`[TTS:8+9] Audio element created | volume=${audio.volume}`);
 
     await new Promise<void>((resolve) => {
       audio.onended = () => {
         currentAudioElement = null;
         URL.revokeObjectURL(url);
+        console.log("[TTS:10] ✅ Playback finished");
         window.dispatchEvent(new CustomEvent("tts:end"));
         resolve();
       };
-      audio.onerror = () => {
+      audio.onerror = (e) => {
         currentAudioElement = null;
         URL.revokeObjectURL(url);
-        console.warn("[TTS:OpenAI] ✗ audio playback error");
+        console.warn("[TTS:10] ✗ audio.onerror — decode/format error:", e);
         window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: "audio playback error" } }));
         resolve();
       };
 
+      // STEP 10 — audio.play()
+      console.log("[TTS:10] audio.play() → calling...");
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
+            console.log("[TTS:10] ✅ play() resolved — audio started");
             window.dispatchEvent(new CustomEvent("tts:openai:ok", { detail: { voice } }));
           })
-          .catch(() => {
+          .catch((err: Error) => {
             currentAudioElement = null;
             URL.revokeObjectURL(url);
-            console.warn("[TTS:OpenAI] ✗ play() rejected — autoplay blocked by browser");
-            window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: "autoplay blocked" } }));
+            console.warn(`[TTS:10] ❌ play() REJECTED — ${err?.name}: ${err?.message}`);
+            console.warn("[TTS:10] ⚠ AUTOPLAY BLOCKED — click '🔊 Enable Voice' on the Voice panel to unlock audio");
+            window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: `autoplay blocked: click Enable Voice button` } }));
             resolve();
           });
       }
     });
   } catch (err) {
     const msg = (err as Error)?.message ?? String(err);
-    console.warn("[TTS:OpenAI] ✗ network error:", msg);
+    console.warn("[TTS:4-5] ✗ network/fetch error:", msg);
     window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: msg } }));
   }
 }
@@ -456,6 +520,20 @@ export function useLiveSession(
   }, []);
   const setTtsSpeed = useCallback((speed: number) => {
     ttsSpeedRef.current = Math.max(0.25, Math.min(4.0, speed));
+  }, []);
+
+  // ── Audio unlock state ─────────────────────────────────────────────────────
+  // Mirrors the module-level `audioUnlocked` flag into React state so the UI
+  // can show/hide the "Enable Voice" button reactively.
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(() => audioUnlocked);
+  useEffect(() => {
+    const handler = () => setIsAudioUnlocked(true);
+    window.addEventListener("tts:audio:unlocked", handler);
+    return () => window.removeEventListener("tts:audio:unlocked", handler);
+  }, []);
+  const unlockAudioCallback = useCallback(() => {
+    unlockAudio();
+    setIsAudioUnlocked(true);
   }, []);
 
   // Legacy compatibility
@@ -868,5 +946,7 @@ export function useLiveSession(
     openaiTtsErr,
     lastSpokenLang,
     lastSpokenEngine,
+    isAudioUnlocked,
+    unlockAudio: unlockAudioCallback,
   };
 }
