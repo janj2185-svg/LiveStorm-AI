@@ -717,8 +717,16 @@ export class TikToolsClient extends EventEmitter {
         `roomId=${roomId} alive=${alive} cached=${cached}`,
       );
 
-      // Cache roomId for roomId-based reconnects (bypasses username lookup on retry)
-      if (roomId && roomId !== "unknown" && !this.cachedRoomId) {
+      // Always update cachedRoomId from the REST API response.
+      // Previously guarded by !this.cachedRoomId which caused the WS to keep connecting
+      // to a stale old room even when the creator started a NEW live session with a new roomId.
+      if (roomId && roomId !== "unknown") {
+        if (this.cachedRoomId && this.cachedRoomId !== roomId) {
+          console.log(
+            `[TikTools:room_info] @${this.username} → roomId CHANGED ` +
+            `${this.cachedRoomId} → ${roomId} (alive=${alive} cached=${cached}) — updating cache`,
+          );
+        }
         this.cachedRoomId = roomId;
         console.log(`[TikTools:room_info] @${this.username} → cached roomId=${roomId} for reconnect`);
       }
