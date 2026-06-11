@@ -798,12 +798,20 @@ export function LiveStudio() {
                 </div>
               )}
 
-              {/* ── Browser TTS warning ────────────────────────────────── */}
+              {/* ── Browser TTS disabled warning ───────────────────────── */}
               {ttsModeLive === "browser" && (
-                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                  <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-amber-300/80 leading-snug">
-                    Browser TTS is active — Storm is speaking with a system voice, not Storm's AI voice. Switch to <strong>OpenAI TTS</strong> in <em>AI Settings → Voice</em>.
+                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-red-500/5 border border-red-500/20">
+                  <AlertTriangle className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-red-300/90 leading-snug">
+                    Browser TTS is <strong>disabled</strong>. Storm will stay silent until you switch to <strong>OpenAI TTS</strong> in <em>AI Settings → Voice</em>.
+                  </p>
+                </div>
+              )}
+              {ttsModeLive === "off" && (
+                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/8">
+                  <VolumeX className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-muted-foreground/70 leading-snug">
+                    Voice is off. Enable <strong>OpenAI TTS</strong> in <em>AI Settings → Voice</em>.
                   </p>
                 </div>
               )}

@@ -346,229 +346,13 @@ function normalizeTtsText(rawText: string, ttsLang?: string): NormalizeResult {
   return { text, emojiEmotion, hasEmojis };
 }
 
-// ── Voice audit: comprehensive diagnostic log ─────────────────────────────────
-// Logs every available browser voice, which one is selected for a given lang,
-// and what normalization would produce for example inputs.
-export function logVoiceAudit(streamerLang = "uk"): void {
-  const voices = window.speechSynthesis?.getVoices() ?? [];
-  const langs  = ["uk-UA", "ru-RU", "pl-PL", "en-US", "de-DE"];
-
-  console.group("[TTS:VoiceAudit] ──────────────────────────────────");
-  console.log(`Available browser voices (${voices.length}):`);
-  voices.forEach(v => console.log(`  ${v.lang.padEnd(10)} ${v.name}${v.default ? " ← DEFAULT" : ""}`));
-
-  console.log("\nOpenAI voices (when voiceKey = openai):");
-  ["alloy","echo","fable","onyx","nova","shimmer"].forEach(v =>
-    console.log(`  ${v} — multilingual, best for long-form Ukrainian text`)
-  );
-
-  console.log("\nVoice selection per language:");
-  langs.forEach(l => {
-    const selected = selectBrowserVoice(l);
-    const status   = selected?.lang === l ? "✅ exact match" : selected ? `⚠ fallback: ${selected.lang}` : "❌ none — browser default";
-    console.log(`  ${l.padEnd(8)} → ${selected?.name ?? "(none)"} [${status}]`);
-  });
-
-  const examples = [
-    `Привіт 😄`,
-    `😂 Це найкращий жарт`,
-    `Нічого собі! 🔥`,
-    `Дякую за подарунок ❤️`,
-    `😢 Як шкода`,
-  ];
-  console.log("\nNormalization examples:");
-  examples.forEach(raw => {
-    const detLang = detectTtsLang(raw, streamerLang);
-    const { text, emojiEmotion } = normalizeTtsText(raw, detLang);
-    console.log(`  raw:        "${raw}"`);
-    console.log(`  normalized: "${text}"  [emojiEmotion=${emojiEmotion}]`);
-    console.log(`  lang:       ${detLang}`);
-    console.log("");
-  });
-  console.groupEnd();
-}
-
-// Map TTS lang codes → Slavic/close-family fallback chains
-// When exact voice not found, try these in order before giving up
-const TTS_LANG_FALLBACKS: Record<string, string[]> = {
-  "uk-UA": ["uk", "ru-RU", "ru"],     // Ukrainian → Russian (closest available in most browsers)
-  "ru-RU": ["ru"],
-  "pl-PL": ["pl"],
-  "de-DE": ["de"],
-  "fr-FR": ["fr"],
-  "es-ES": ["es"],
-};
-
-function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-
-  // Never use a Polish voice unless the requested language is Polish.
-  // On Windows, Microsoft Adam/Paulina (pl-PL) sit first in the voice list and
-  // the OS will play them in parallel if the utterance lang doesn't match the
-  // explicitly set voice — causing the audible "overlap" the user hears.
-  const isPolishRequest = lang.startsWith("pl");
-  const eligible = isPolishRequest ? voices : voices.filter(v => !v.lang.startsWith("pl"));
-
-  // 1. Exact match
-  const exact = eligible.find(v => v.lang === lang);
-  if (exact) return exact;
-
-  // 2. Same language code (e.g., "uk" matches "uk-UA")
-  const langCode = lang.split("-")[0];
-  const partial = eligible.find(v => v.lang.startsWith(langCode));
-  if (partial) return partial;
-
-  // 3. Configured fallback chain
-  const chain = TTS_LANG_FALLBACKS[lang] ?? [];
-  for (const fb of chain) {
-    const fallback = eligible.find(v => v.lang === fb || v.lang.startsWith(fb));
-    if (fallback) return fallback;
-  }
-
-  // 4. Last resort: any eligible (non-Polish) voice — never let the browser pick
-  //    its system default, which on Windows is Microsoft Adam (Polish).
-  return eligible[0] ?? null;
-}
-
-
-function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
-  return new Promise((resolve) => {
-    const synth = window.speechSynthesis;
-    if (!synth) { resolve(); return; }
-
-    // Chrome bug: speech synthesis pauses when the tab loses focus.
-    // Must call resume() before speak() or the utterance queues silently.
-    if (synth.paused) {
-      console.log("[TTS:Browser] ⚠ synthesis paused — resuming");
-      synth.resume();
-    }
-
-    const detectedLang = detectTtsLang(rawText, opts?.defaultLang);
-
-    // ── Normalization pipeline ─────────────────────────────────────────────
-    // Converts emojis to natural speech equivalents BEFORE SpeechSynthesis sees
-    // the text. Without this, browsers read names like "smiling face" / "fire emoji".
-    const { text, emojiEmotion, hasEmojis } = normalizeTtsText(rawText, detectedLang);
-
-    if (!text.trim()) { resolve(); return; } // nothing to speak after stripping
-
-    if (hasEmojis) {
-      console.log(`[TTS:Normalize] raw="${rawText.slice(0,70)}" → "${text.slice(0,70)}" | emojiEmotion=${emojiEmotion}`);
-    }
-
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = detectedLang;
-
-    // ── Emotion-aware delivery ─────────────────────────────────────────────
-    // Two signals: declared `emotion` from the AI (happy/excited/grateful…)
-    // and `emojiEmotion` extracted from emojis in the text.
-    // Emoji emotion takes priority when it's not neutral.
-    const baseRate       = opts?.rate ?? 1.05;
-    const declaredEmotion = opts?.emotion ?? "neutral";
-    const effectiveEmotion: string = emojiEmotion !== "neutral" ? emojiEmotion : declaredEmotion;
-
-    // Rate modifiers — how fast to speak
-    const rateBoost: Record<string, number> = {
-      laugh:     +0.12, // laugh rhythm — slightly quicker, more natural
-      excited:   +0.10,
-      hype:      +0.12,
-      funny:     +0.08,
-      happy:     +0.06,
-      playful:   +0.08,
-      confident: +0.05,
-      grateful:  +0.03,
-      warm:      -0.02, // slightly slower, warmer feel
-      curious:   0,
-      sad:       -0.14, // slower, heavier delivery
-      frustrated:-0.05,
-      angry:     +0.05, // forceful but not rushed
-      neutral:   0,
-    };
-
-    // Pitch modifiers — higher = brighter/lighter, lower = deeper/heavier
-    const pitchBoost: Record<string, number> = {
-      laugh:     +0.18,
-      excited:   +0.14,
-      hype:      +0.14,
-      funny:     +0.10,
-      happy:     +0.08,
-      playful:   +0.12,
-      confident: +0.04,
-      grateful:  +0.06,
-      warm:      +0.06,
-      curious:   +0.04,
-      sad:       -0.18,
-      frustrated:-0.08,
-      angry:     -0.12,
-      neutral:   0,
-    };
-
-    const dr = rateBoost[effectiveEmotion]  ?? rateBoost[declaredEmotion]  ?? 0;
-    const dp = pitchBoost[effectiveEmotion] ?? pitchBoost[declaredEmotion] ?? 0;
-
-    utt.rate  = Math.min(1.6, Math.max(0.7, baseRate + dr));
-    utt.pitch = Math.min(2.0, Math.max(0.3, 1.0 + dp));
-
-    // ── Voice selection: language-aware (Storm speaks in the viewer's language) ──
-    // Storm replies in the viewer's language. OpenAI TTS handles all languages
-    // natively with the same voice character (nova/echo/shimmer etc.).
-    // When browser TTS is used, select a voice matching the detected language so
-    // Polish replies use a Polish voice, Ukrainian replies use Ukrainian, etc.
-    //
-    // CRITICAL: utt.lang MUST equal utt.voice.lang.
-    // If they differ, Windows plays the OS system-default in parallel (double-voice bug).
-    const selectedVoice = selectBrowserVoice(detectedLang);
-    if (selectedVoice) {
-      utt.voice = selectedVoice;
-      utt.lang  = selectedVoice.lang; // MUST match voice.lang — prevents Windows double-voice bug
-      if (selectedVoice.lang !== detectedLang) {
-        console.log(`[TTS:Browser] 🎙️ Voice "${selectedVoice.name}" (${selectedVoice.lang}) speaking ${detectedLang} text`);
-      }
-    } else {
-      utt.lang = detectedLang; // no matching voice found — set lang hint for OS default
-    }
-    window.dispatchEvent(new CustomEvent("tts:lang", { detail: { lang: utt.lang, engine: "browser" } }));
-
-    // Safety timeout: if onend never fires (Chrome pause/autoplay bug),
-    // advance the queue after 12s instead of deadlocking forever.
-    const timeout = setTimeout(() => {
-      console.warn(`[TTS:Browser] ⏰ timeout — queue forced-advance | lang=${utt.lang}`);
-      resolve();
-    }, 12_000);
-
-    utt.onstart = () => {
-      const voiceName = utt.voice?.name ?? "browser-default";
-      console.log(
-        `[TTS:Browser] ▶ | lang=${utt.lang} | voice="${voiceName}"` +
-        ` | eff-emotion=${effectiveEmotion} | rate=${utt.rate.toFixed(2)} | pitch=${utt.pitch.toFixed(2)}` +
-        ` | chars=${text.length}`
-      );
-      window.dispatchEvent(new CustomEvent("tts:start", { detail: { voice: voiceName } }));
-    };
-    utt.onend = () => {
-      clearTimeout(timeout);
-      console.log("[TTS:Browser] ✓ done");
-      window.dispatchEvent(new CustomEvent("tts:end"));
-      resolve();
-    };
-    utt.onerror = (e) => {
-      clearTimeout(timeout);
-      const errMsg = (e as SpeechSynthesisErrorEvent).error ?? "unknown";
-      console.warn(`[TTS:Browser] ✗ error: ${errMsg}`);
-      if (errMsg !== "interrupted") {
-        window.dispatchEvent(new CustomEvent("tts:error", { detail: { reason: errMsg } }));
-      }
-      resolve();
-    };
-
-    synth.speak(utt);
-  });
-}
+// ── Browser TTS is permanently disabled ───────────────────────────────────────
+// Only OpenAI TTS is allowed to speak. speechSynthesis.speak() is never called.
+// Keeping detectTtsLang + normalizeTtsText for pipeline logging and OpenAI input.
 
 // ── Stop all speech immediately and flush the queue ───────────────────────────
 function stopAllSpeechNow(): void {
-  // 1. Cancel every pending and active browser utterance
+  // 1. Cancel any lingering browser speech (safety no-op — browser TTS is disabled)
   if (typeof window !== "undefined" && window.speechSynthesis) {
     window.speechSynthesis.cancel();
   }
@@ -589,14 +373,6 @@ function stopAllSpeechNow(): void {
 }
 
 function enqueueTts(fn: () => Promise<void>, text?: string): void {
-  // If synthesis is paused (Chrome tab-switch bug), the queue may be deadlocked.
-  // Reset it so the next item plays immediately rather than waiting forever.
-  if (typeof window !== "undefined" && window.speechSynthesis?.paused) {
-    window.speechSynthesis.resume();
-    ttsQueue = Promise.resolve();
-    ttsQueueDepth = 0;
-    console.log("[TTS:Browser] 🔄 queue reset — synthesis was paused");
-  }
   ttsQueueDepth++;
   window.dispatchEvent(new CustomEvent("tts:queue", { detail: { depth: ttsQueueDepth } }));
   ttsQueue = ttsQueue.then(async () => {
@@ -989,16 +765,13 @@ export function useLiveSession(
         console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | emotion=${emotion} | emojiEmotion=${previewNorm.emojiEmotion} | text="${payload.text.slice(0, 60)}"`);
 
         if (mode === "openai") {
-          console.log(`[TTS] → OpenAI TTS | voice=${ttsVoiceRef.current} | speed=${ttsSpeedRef.current}`);
+          console.log(`[TTS] → OpenAI TTS | voice=${ttsVoiceRef.current} | lang=${detectedLang} | speed=${ttsSpeedRef.current}`);
+          window.dispatchEvent(new CustomEvent("tts:lang", { detail: { lang: detectedLang, engine: "openai" } }));
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current), payload.text);
         } else if (mode === "browser") {
-          const selectedVoice = selectBrowserVoice(detectedLang);
-          console.log(
-            `[TTS] → Browser | lang=${detectedLang} | streamLang=${streamerLang}` +
-            ` | voice="${selectedVoice?.name ?? "none"}" (${selectedVoice?.lang ?? "?"})` +
-            ` | emotion=${emotion} | rate=${ttsSpeedRef.current}`
-          );
-          enqueueTts(() => playBrowserTts(payload.text, { rate: ttsSpeedRef.current, emotion, defaultLang: streamerLang }), payload.text);
+          // Browser TTS is permanently disabled — speechSynthesis.speak() is never called.
+          console.warn(`[TTS] ⛔ Browser TTS is DISABLED. Storm stays silent. Switch to "OpenAI TTS" in AI Settings → Voice.`);
+          window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: 'Browser TTS disabled — switch to OpenAI TTS in AI Settings → Voice' } }));
         } else {
           console.log(`[TTS] mode=off — speech skipped`);
         }
