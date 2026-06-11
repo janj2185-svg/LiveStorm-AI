@@ -327,7 +327,7 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   }
 
   // ── Dedup: tik.tools replays the same buffered events on every reconnect ──
-  // Skip events whose msgId we have already processed in the last 10 minutes.
+  // Skip events whose msgId we have already processed in the last 5 minutes.
   const rawMsgId = (event.data as Record<string, unknown>)?.msgId;
   if (rawMsgId != null) {
     const msgIdStr = String(rawMsgId);

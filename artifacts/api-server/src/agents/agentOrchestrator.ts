@@ -460,6 +460,31 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
       return;
     }
 
+    // Low-value comment throttling: emoji-only, number-only, filler words
+    // Real streamers don't reply to every "lol" or "🔥🔥🔥"
+    {
+      const stripped = comment.replace(/[\s\u200B-\u200D\uFEFF]/g, "");
+      const emojiOnly = /^[\p{Emoji}\p{Emoji_Presentation}\uFE0F\u20E3]+$/u.test(stripped);
+      const numberOnly = /^\d+$/.test(stripped);
+      const shortNoise = stripped.length <= 4 && !emojiOnly;
+      const fillerWords = new Set(["lol","lmao","xd","gg","ok","okay","nice","hi","hey","wow","haha","hehe","omg","wtf","bruh","ngl","fr","nah","yep","yup","yeah","kek","pog","poggers","oof","rip","ayo","bro","sus","based","cringe","mid","slay"]);
+      const isFiller = fillerWords.has(stripped.toLowerCase());
+
+      let skipProb = 0;
+      let skipReason = "";
+      if (emojiOnly)  { skipProb = 0.80; skipReason = "emoji-only"; }
+      else if (numberOnly) { skipProb = 0.70; skipReason = "number-only"; }
+      else if (isFiller)   { skipProb = 0.60; skipReason = `filler-word(${stripped})`; }
+      else if (shortNoise) { skipProb = 0.65; skipReason = "short-noise"; }
+
+      if (skipProb > 0 && Math.random() < skipProb) {
+        console.log(`[LowValue] ⏭️ skip | viewer=${event.username ?? "?"} reason="${skipReason}" prob=${skipProb} | session=${event.sessionId}`);
+        return;
+      } else if (skipProb > 0) {
+        console.log(`[LowValue] ✅ allowed | viewer=${event.username ?? "?"} reason="${skipReason}" rolled-through | session=${event.sessionId}`);
+      }
+    }
+
     // Per-viewer reply cooldown (mirrors old pipeline autoReplySpamMap logic)
     let commentConfig: typeof import("@workspace/db")["aiPersonaConfigsTable"]["$inferSelect"] | undefined;
     try {

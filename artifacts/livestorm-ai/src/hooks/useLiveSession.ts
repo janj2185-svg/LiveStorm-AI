@@ -544,7 +544,10 @@ export function useLiveSession(
     ttsModeRef.current = mode;
     setTtsModeLive(mode);
   }, []);
-  const setTtsVoice = useCallback((voice: string) => { ttsVoiceRef.current = voice; }, []);
+  const setTtsVoice = useCallback((voice: string) => {
+    ttsVoiceRef.current = voice;
+    try { localStorage.setItem("ttsVoice", voice); } catch { /* ignore */ }
+  }, []);
   const setTtsVolume = useCallback((volume: number) => {
     ttsVolumeRef.current = Math.max(0, Math.min(1, volume));
   }, []);
