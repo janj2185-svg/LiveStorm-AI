@@ -77,9 +77,12 @@ export interface UseStreamerMicReturn {
   interimTranscript: string;
   lastFinalTranscript: string;
   lastSentText: string;
+  lastSentAt: number | null;
   transcripts: TranscriptEntry[];
   error: string | null;
   browserSupported: boolean;
+  audioLevel: number;       // 0–100 live audio level from AnalyserNode
+  audioMeterReady: boolean; // getUserMedia succeeded
   lang: string;
   setMode: (mode: MicMode) => void;
   setLang: (lang: string) => void;
@@ -108,9 +111,12 @@ export function useStreamerMic({
   const [interimTranscript,   setInterimTranscript]   = useState("");
   const [lastFinalTranscript, setLastFinalTranscript] = useState("");
   const [lastSentText,        setLastSentText]        = useState("");
+  const [lastSentAt,          setLastSentAt]          = useState<number | null>(null);
   const [transcripts,         setTranscripts]         = useState<TranscriptEntry[]>([]);
   const [error,               setError]               = useState<string | null>(null);
   const [lang,                setLangState]           = useState(defaultLang);
+  const [audioLevel,          setAudioLevel]          = useState(0);
+  const [audioMeterReady,     setAudioMeterReady]     = useState(false);
 
   const recognitionRef   = useRef<SpeechRecognitionLike | null>(null);
   const accumulatorRef   = useRef<string>("");
@@ -119,6 +125,12 @@ export function useStreamerMic({
   const modeRef          = useRef<MicMode>("continuous");
   const pttActiveRef     = useRef(false);
   const langRef          = useRef(defaultLang);
+
+  // Audio level meter refs
+  const audioContextRef  = useRef<AudioContext | null>(null);
+  const analyserRef      = useRef<AnalyserNode | null>(null);
+  const audioStreamRef   = useRef<MediaStream | null>(null);
+  const levelTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Keep stable refs to latest prop values (avoids stale closures in callbacks)
   const sendRef     = useRef(sendStreamerSpeech);
@@ -129,6 +141,46 @@ export function useStreamerMic({
 
   const browserSupported = typeof window !== "undefined" &&
     !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  // ── Audio level meter via getUserMedia + AnalyserNode ─────────────────────
+  const startAudioMeter = useCallback(async () => {
+    if (audioContextRef.current) return; // already running
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      audioStreamRef.current = stream;
+      const ctx = new AudioContext();
+      audioContextRef.current = ctx;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.7;
+      analyserRef.current = analyser;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      setAudioMeterReady(true);
+      const buf = new Uint8Array(analyser.frequencyBinCount);
+      levelTimerRef.current = setInterval(() => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(buf);
+        const sum = buf.reduce((a, b) => a + b, 0);
+        const avg = sum / buf.length;
+        // Scale: raw avg ~0-128; clamp to 0-100
+        setAudioLevel(Math.min(100, Math.round(avg * 100 / 64)));
+      }, 80);
+    } catch {
+      // Permission denied or no mic — fail silently, level stays 0
+      console.warn("[CoHostMic] Audio meter: getUserMedia denied or unavailable");
+    }
+  }, []);
+
+  const stopAudioMeter = useCallback(() => {
+    if (levelTimerRef.current) { clearInterval(levelTimerRef.current); levelTimerRef.current = null; }
+    try { audioContextRef.current?.close(); } catch { /* ignore */ }
+    audioStreamRef.current?.getTracks().forEach(t => t.stop());
+    audioContextRef.current = null;
+    analyserRef.current = null;
+    audioStreamRef.current = null;
+    setAudioLevel(0);
+    setAudioMeterReady(false);
+  }, []);
 
   // ── Detect language from transcript text ───────────────────────────────────
   const detectLang = useCallback((text: string): string => {
@@ -149,12 +201,14 @@ export function useStreamerMic({
     const shortLang = detectLang(text);
     console.log(`[CoHostMic] 🎙️ flush | "${text.slice(0, 70)}" | lang=${shortLang}`);
     sendRef.current(text, shortLang);
+    const now = Date.now();
     setLastSentText(text);
+    setLastSentAt(now);
     setTranscripts(prev => [...prev, {
-      id: `${Date.now()}-s`,
+      id: `${now}-s`,
       side: "streamer" as const,
       text,
-      ts: Date.now(),
+      ts: now,
       lang: shortLang,
     }].slice(-20));
     accumulatorRef.current = "";
@@ -268,21 +322,23 @@ export function useStreamerMic({
     enabledRef.current = true;
     setIsEnabled(true);
     setError(null);
+    void startAudioMeter();
     if (modeRef.current === "continuous") {
       buildAndStart();
     } else {
       setStatus("listening"); // PTT: ready, not yet recording
     }
-  }, [isSessionActive, buildAndStart]);
+  }, [isSessionActive, buildAndStart, startAudioMeter]);
 
   const disable = useCallback(() => {
     enabledRef.current = false;
     pttActiveRef.current = false;
     setIsEnabled(false);
     stopRecognition(true);
+    stopAudioMeter();
     setStatus("idle");
     setInterimTranscript("");
-  }, [stopRecognition]);
+  }, [stopRecognition, stopAudioMeter]);
 
   const setMode = useCallback((m: MicMode) => {
     modeRef.current = m;
@@ -329,7 +385,7 @@ export function useStreamerMic({
     }].slice(-20));
     // After Storm replies, go back to listening
     if (enabledRef.current) {
-      setStatus(modeRef.current === "push_to_talk" ? "listening" : "listening");
+      setStatus("listening");
       if (modeRef.current === "continuous" && !recognitionRef.current) {
         setTimeout(buildAndStart, 300);
       }
@@ -342,6 +398,7 @@ export function useStreamerMic({
     setInterimTranscript("");
     setLastFinalTranscript("");
     setLastSentText("");
+    setLastSentAt(null);
   }, []);
 
   // Auto-disable when session ends
@@ -354,6 +411,9 @@ export function useStreamerMic({
     enabledRef.current = false;
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (recognitionRef.current) { try { recognitionRef.current.abort(); } catch { /* ignore */ } }
+    if (levelTimerRef.current) clearInterval(levelTimerRef.current);
+    try { audioContextRef.current?.close(); } catch { /* ignore */ }
+    audioStreamRef.current?.getTracks().forEach(t => t.stop());
   }, []);
 
   return {
@@ -364,9 +424,12 @@ export function useStreamerMic({
     interimTranscript,
     lastFinalTranscript,
     lastSentText,
+    lastSentAt,
     transcripts,
     error,
     browserSupported,
+    audioLevel,
+    audioMeterReady,
     lang,
     setMode,
     setLang,

@@ -717,6 +717,7 @@ export function LiveStudio() {
             sessionId={activeSessionId}
             isSessionActive={!!isActive}
             aiAnnouncements={aiAnnouncements}
+            ttsModeLive={ttsModeLive}
           />
 
           {/* ── Voice Control ──────────────────────────────────────────── */}

@@ -3,16 +3,15 @@
  *
  * Renders:
  *   - Co-host mode ON/OFF toggle
- *   - Status indicator (idle / listening / speech_detected / waiting / processing)
+ *   - Status indicator
  *   - Continuous vs Push-to-Talk mode selector
- *   - PTT hold button (push_to_talk mode)
  *   - Language selector
- *   - Live transcript (streamer ↔ Storm conversation thread)
- *   - Debug panel (collapsible)
+ *   - Always-visible Voice Debug panel (7 live diagnostics)
+ *   - Live transcript thread
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Radio, Bot, ChevronDown, ChevronUp, X, Info } from "lucide-react";
+import { Mic, MicOff, Bot, X, AlertTriangle, CheckCircle2, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStreamerMic, type TranscriptEntry } from "@/hooks/useStreamerMic";
 import type { AiAnnouncementEvent } from "@/hooks/useLiveSession";
@@ -22,6 +21,7 @@ interface CoHostPanelProps {
   sessionId: number | undefined;
   isSessionActive: boolean;
   aiAnnouncements: AiAnnouncementEvent[];
+  ttsModeLive?: string;
   defaultLang?: string;
 }
 
@@ -34,16 +34,15 @@ const LANG_OPTIONS = [
 ];
 
 const STATUS_CONFIG = {
-  not_supported: { color: "text-red-400",    bg: "bg-red-500/10",    label: "Not supported",     pulse: false },
-  idle:          { color: "text-slate-400",   bg: "bg-slate-500/10",  label: "Idle",               pulse: false },
-  listening:     { color: "text-emerald-400", bg: "bg-emerald-500/10",label: "Listening…",         pulse: true  },
-  speech_detected:{ color: "text-cyan-400",  bg: "bg-cyan-500/10",   label: "Hearing you…",       pulse: true  },
-  waiting:       { color: "text-amber-400",   bg: "bg-amber-500/10",  label: "Sending…",           pulse: true  },
-  processing:    { color: "text-violet-400",  bg: "bg-violet-500/10", label: "Storm is thinking…", pulse: true  },
-  error:         { color: "text-red-400",     bg: "bg-red-500/10",    label: "Error",              pulse: false },
+  not_supported:  { color: "text-red-400",    bg: "bg-red-500/10",     label: "Not supported",     pulse: false },
+  idle:           { color: "text-slate-400",  bg: "bg-slate-500/10",   label: "Idle",              pulse: false },
+  listening:      { color: "text-emerald-400",bg: "bg-emerald-500/10", label: "Listening…",        pulse: true  },
+  speech_detected:{ color: "text-cyan-400",   bg: "bg-cyan-500/10",    label: "Hearing you…",      pulse: true  },
+  waiting:        { color: "text-amber-400",  bg: "bg-amber-500/10",   label: "Sending…",          pulse: true  },
+  processing:     { color: "text-violet-400", bg: "bg-violet-500/10",  label: "Storm thinking…",   pulse: true  },
+  error:          { color: "text-red-400",    bg: "bg-red-500/10",     label: "Error",             pulse: false },
 } as const;
 
-// Track which announcement IDs we've already added as storm replies
 const seenAnnouncementIds = new Set<number>();
 
 export function CoHostPanel({
@@ -51,10 +50,15 @@ export function CoHostPanel({
   sessionId,
   isSessionActive,
   aiAnnouncements,
+  ttsModeLive,
   defaultLang = "uk-UA",
 }: CoHostPanelProps) {
-  const [debugOpen, setDebugOpen] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  // Track last Storm reply for debug panel
+  const [lastStormReply, setLastStormReply] = useState<{ text: string; ts: number } | null>(null);
+  // Track last TTS spoken text from window event
+  const [lastTtsSpoken, setLastTtsSpoken] = useState<string | null>(null);
 
   const mic = useStreamerMic({
     sendStreamerSpeech,
@@ -62,6 +66,16 @@ export function CoHostPanel({
     isSessionActive,
     defaultLang,
   });
+
+  // Listen for TTS spoken events (fired after audio plays)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) setLastTtsSpoken(text);
+    };
+    window.addEventListener("tts:spoken", handler);
+    return () => window.removeEventListener("tts:spoken", handler);
+  }, []);
 
   // Watch aiAnnouncements for Storm's replies to streamer speech
   const prevAnnouncementsLength = useRef(0);
@@ -72,14 +86,13 @@ export function CoHostPanel({
     }
     prevAnnouncementsLength.current = aiAnnouncements.length;
 
-    // New announcements are prepended, so check the first item
     const newest = aiAnnouncements[0];
     if (!newest) return;
-    // Only pick up streamer_speech type replies
     const id = newest.timestamp;
     if ((newest.type as string) === "streamer_speech" && !seenAnnouncementIds.has(id)) {
       seenAnnouncementIds.add(id);
       mic.addStormReply(newest.text);
+      setLastStormReply({ text: newest.text, ts: newest.timestamp });
       console.log(`[CoHostMic] ← Storm replied | "${newest.text.slice(0, 60)}"`);
     }
   }, [aiAnnouncements, mic]);
@@ -90,6 +103,8 @@ export function CoHostPanel({
   }, [mic.transcripts.length]);
 
   const statusCfg = STATUS_CONFIG[mic.status];
+  const isListening = mic.status === "listening" || mic.status === "speech_detected";
+  const ttsOk = ttsModeLive === "openai";
 
   return (
     <div className={cn(
@@ -99,7 +114,7 @@ export function CoHostPanel({
         : "border-white/8",
     )}>
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
         <span className="flex items-center gap-2 text-sm font-semibold text-white">
           <div className="p-1.5 rounded-lg bg-violet-500/15 border border-violet-500/20">
@@ -108,7 +123,6 @@ export function CoHostPanel({
           Co-Host Mic
         </span>
 
-        {/* Co-Host Mode toggle */}
         <button
           onClick={() => mic.setCoHostEnabled(!mic.isCoHostEnabled)}
           className={cn(
@@ -129,7 +143,7 @@ export function CoHostPanel({
       {mic.isCoHostEnabled && (
         <div className="p-4 space-y-3">
 
-          {/* ── Status pill ──────────────────────────────────────────── */}
+          {/* ── Status pill ─────────────────────────────────────────── */}
           <div className="flex items-center justify-between">
             <span className={cn(
               "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full",
@@ -148,18 +162,18 @@ export function CoHostPanel({
             )}
           </div>
 
-          {/* ── Not supported notice ─────────────────────────────────── */}
+          {/* ── Not supported notice ──────────────────────────────── */}
           {!mic.browserSupported && (
             <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2">
               <p className="text-xs text-red-300">
-                Speech recognition is not supported in this browser. Try Chrome or Edge.
+                Speech recognition is not supported in this browser. Use Chrome or Edge.
               </p>
             </div>
           )}
 
           {mic.browserSupported && (
             <>
-              {/* ── Mode selector ────────────────────────────────────── */}
+              {/* ── Mode selector ──────────────────────────────────── */}
               <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-white/5">
                 {(["continuous", "push_to_talk"] as const).map((m) => (
                   <button
@@ -177,7 +191,7 @@ export function CoHostPanel({
                 ))}
               </div>
 
-              {/* ── Language selector ─────────────────────────────────── */}
+              {/* ── Language selector ───────────────────────────────── */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground flex-none">Lang:</span>
                 <select
@@ -191,7 +205,7 @@ export function CoHostPanel({
                 </select>
               </div>
 
-              {/* ── Main mic button ───────────────────────────────────── */}
+              {/* ── Main mic button ─────────────────────────────────── */}
               {mic.mode === "continuous" ? (
                 <button
                   onClick={() => mic.isEnabled ? mic.disable() : mic.enable()}
@@ -212,7 +226,6 @@ export function CoHostPanel({
                   }
                 </button>
               ) : (
-                /* PTT: two-button layout */
                 <div className="space-y-2">
                   <button
                     onClick={() => mic.isEnabled ? mic.disable() : mic.enable()}
@@ -252,7 +265,7 @@ export function CoHostPanel({
                 </div>
               )}
 
-              {/* ── Error notice ──────────────────────────────────────── */}
+              {/* ── Error notice ─────────────────────────────────────── */}
               {mic.error && (
                 <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2">
                   <span className="text-xs text-red-300 flex-1">{mic.error}</span>
@@ -262,14 +275,14 @@ export function CoHostPanel({
                 </div>
               )}
 
-              {/* ── Live interim transcript ───────────────────────────── */}
+              {/* ── Live interim transcript ──────────────────────────── */}
               {mic.interimTranscript && (
                 <div className="px-3 py-2 rounded-xl bg-cyan-500/8 border border-cyan-500/15">
                   <p className="text-xs text-cyan-300 italic opacity-80">{mic.interimTranscript}</p>
                 </div>
               )}
 
-              {/* ── Conversation thread ───────────────────────────────── */}
+              {/* ── Conversation thread ──────────────────────────────── */}
               {mic.transcripts.length > 0 && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -281,8 +294,7 @@ export function CoHostPanel({
                       Clear
                     </button>
                   </div>
-
-                  <div className="space-y-1.5 max-h-52 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 pr-1">
+                  <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 pr-1">
                     {mic.transcripts.map((entry: TranscriptEntry) => (
                       <TranscriptBubble key={entry.id} entry={entry} />
                     ))}
@@ -291,19 +303,19 @@ export function CoHostPanel({
                 </div>
               )}
 
-              {/* ── Debug panel ──────────────────────────────────────── */}
-              <button
-                onClick={() => setDebugOpen(d => !d)}
-                className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors"
-              >
-                <Info className="h-3 w-3" />
-                Debug
-                {debugOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </button>
-
-              {debugOpen && (
-                <DebugPanel mic={mic} sessionId={sessionId} isSessionActive={isSessionActive} />
-              )}
+              {/* ────────────────────────────────────────────────────────
+                  VOICE DEBUG PANEL — always visible
+              ──────────────────────────────────────────────────────── */}
+              <VoiceDebugPanel
+                mic={mic}
+                sessionId={sessionId}
+                isSessionActive={isSessionActive}
+                isListening={isListening}
+                ttsModeLive={ttsModeLive}
+                ttsOk={ttsOk}
+                lastStormReply={lastStormReply}
+                lastTtsSpoken={lastTtsSpoken}
+              />
             </>
           )}
         </div>
@@ -312,7 +324,7 @@ export function CoHostPanel({
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// ── Sub-components ──────────────────────────────────────────────────────────
 
 function TranscriptBubble({ entry }: { entry: TranscriptEntry }) {
   const isStreamer = entry.side === "streamer";
@@ -324,9 +336,7 @@ function TranscriptBubble({ entry }: { entry: TranscriptEntry }) {
       )}>
         <div className={cn(
           "flex-none w-5 h-5 rounded-full flex items-center justify-center text-[9px] mt-0.5",
-          isStreamer
-            ? "bg-violet-500/20 text-violet-400"
-            : "bg-cyan-500/20 text-cyan-400",
+          isStreamer ? "bg-violet-500/20 text-violet-400" : "bg-cyan-500/20 text-cyan-400",
         )}>
           {isStreamer ? "Y" : <Bot className="h-3 w-3" />}
         </div>
@@ -346,43 +356,211 @@ function TranscriptBubble({ entry }: { entry: TranscriptEntry }) {
   );
 }
 
-function DebugPanel({
-  mic,
-  sessionId,
-  isSessionActive,
-}: {
+// ── Always-visible Voice Debug Panel ───────────────────────────────────────
+
+interface DebugProps {
   mic: ReturnType<typeof useStreamerMic>;
   sessionId: number | undefined;
   isSessionActive: boolean;
+  isListening: boolean;
+  ttsModeLive: string | undefined;
+  ttsOk: boolean;
+  lastStormReply: { text: string; ts: number } | null;
+  lastTtsSpoken: string | null;
+}
+
+function DebugRow({
+  label,
+  value,
+  ok,
+  warn,
+}: {
+  label: string;
+  value: string;
+  ok?: boolean;
+  warn?: boolean;
 }) {
-  const rows = [
-    { label: "Browser support",    value: mic.browserSupported ? "✅ yes" : "❌ no" },
-    { label: "Session ID",         value: sessionId ? `#${sessionId}` : "none" },
-    { label: "Session active",     value: isSessionActive ? "✅ yes" : "❌ no" },
-    { label: "Mic enabled",        value: mic.isEnabled ? "✅ on" : "off" },
-    { label: "Mode",               value: mic.mode },
-    { label: "Status",             value: mic.status },
-    { label: "Language",           value: mic.lang },
-    { label: "Interim transcript", value: mic.interimTranscript || "—" },
-    { label: "Final transcript",   value: mic.lastFinalTranscript || "—" },
-    { label: "Last sent",          value: mic.lastSentText ? `"${mic.lastSentText.slice(0, 40)}"` : "—" },
-    { label: "Transcript entries", value: String(mic.transcripts.length) },
-  ];
+  return (
+    <div className="flex items-start justify-between gap-3 py-0.5">
+      <span className="text-[10px] text-muted-foreground/60 flex-none w-28 shrink-0">{label}</span>
+      <span className={cn(
+        "text-[10px] font-mono text-right break-all leading-snug",
+        ok   ? "text-emerald-400"         :
+        warn ? "text-amber-400"           :
+               "text-muted-foreground/80",
+      )}>{value}</span>
+    </div>
+  );
+}
+
+function AudioLevelBar({ level, active }: { level: number; active: boolean }) {
+  const BARS = 20;
+  const filled = Math.round((level / 100) * BARS);
+  return (
+    <div className="flex items-center gap-0.5 h-3">
+      {Array.from({ length: BARS }, (_, i) => (
+        <div
+          key={i}
+          className={cn(
+            "w-1.5 rounded-sm transition-all duration-75",
+            i < filled
+              ? level > 70 ? "bg-red-400 h-3"
+              : level > 40 ? "bg-amber-400 h-2.5"
+              : "bg-emerald-400 h-2"
+              : active ? "bg-white/10 h-1.5" : "bg-white/5 h-1",
+          )}
+        />
+      ))}
+      <span className="ml-1 text-[9px] text-muted-foreground/40 font-mono">{level}</span>
+    </div>
+  );
+}
+
+function VoiceDebugPanel({
+  mic,
+  sessionId,
+  isSessionActive,
+  isListening,
+  ttsModeLive,
+  ttsOk,
+  lastStormReply,
+  lastTtsSpoken,
+}: DebugProps) {
+  const fmtTs = (ts: number | null) => {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+
+  const lastSentDisplay = mic.lastSentText
+    ? `"${mic.lastSentText.slice(0, 45)}${mic.lastSentText.length > 45 ? "…" : ""}"  ${fmtTs(mic.lastSentAt)}`
+    : "—";
+
+  const lastReplyDisplay = lastStormReply
+    ? `"${lastStormReply.text.slice(0, 45)}${lastStormReply.text.length > 45 ? "…" : ""}"  ${fmtTs(lastStormReply.ts)}`
+    : "—";
+
+  const lastTtsDisplay = lastTtsSpoken
+    ? `"${lastTtsSpoken.slice(0, 45)}${lastTtsSpoken.length > 45 ? "…" : ""}"`
+    : "—";
+
+  const ttsWarning = !ttsOk;
 
   return (
-    <div className="rounded-xl bg-black/20 border border-white/5 p-3 space-y-1">
-      <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide mb-1.5">
-        Debug
-      </p>
-      {rows.map(r => (
-        <div key={r.label} className="flex items-start justify-between gap-2">
-          <span className="text-[10px] text-muted-foreground/50 flex-none">{r.label}</span>
-          <span className="text-[10px] text-muted-foreground font-mono text-right break-all">{r.value}</span>
+    <div className="rounded-xl border border-white/8 bg-black/30 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 bg-white/[0.02]">
+        <Radio className="h-3 w-3 text-violet-400/70" />
+        <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+          Voice Pipeline Debug
+        </span>
+      </div>
+
+      <div className="px-3 py-2.5 space-y-0.5">
+
+        {/* 1. Microphone detected */}
+        <DebugRow
+          label="1. Mic detected"
+          value={mic.browserSupported ? "✅ YES" : "❌ NO — use Chrome/Edge"}
+          ok={mic.browserSupported}
+          warn={!mic.browserSupported}
+        />
+
+        {/* 2. Listening */}
+        <DebugRow
+          label="2. Listening"
+          value={
+            isListening        ? "✅ YES — hearing you" :
+            mic.status === "speech_detected" ? "✅ YES — speech detected" :
+            mic.status === "processing"      ? "⏳ processing…" :
+            mic.isEnabled      ? `⚠ ${mic.status}` :
+                                 "❌ NO — press Start"
+          }
+          ok={isListening}
+          warn={!isListening && mic.isEnabled}
+        />
+
+        {/* 3. Audio level meter */}
+        <div className="flex items-center justify-between gap-3 py-0.5">
+          <span className="text-[10px] text-muted-foreground/60 flex-none w-28">3. Audio level</span>
+          <div className="flex-1 flex justify-end">
+            {mic.isEnabled ? (
+              <div className="flex items-center gap-1.5">
+                {!mic.audioMeterReady && (
+                  <span className="text-[9px] text-amber-400/70">perm?</span>
+                )}
+                <AudioLevelBar level={mic.audioLevel} active={mic.isEnabled} />
+              </div>
+            ) : (
+              <span className="text-[10px] text-muted-foreground/40 font-mono">start mic first</span>
+            )}
+          </div>
         </div>
-      ))}
-      <p className="text-[10px] text-muted-foreground/30 mt-2 leading-relaxed">
-        Pipeline: Mic → SpeechRecognition → silence 1.5s → streamer:speech (socket) → Orchestrator P3 → hostAgent CO-HOST → ai:announcement[type=streamer_speech] → Storm TTS
-      </p>
+
+        {/* 4. Last transcript */}
+        <DebugRow
+          label="4. Last transcript"
+          value={
+            mic.interimTranscript
+              ? `"${mic.interimTranscript.slice(0, 50)}…" (interim)`
+              : mic.lastFinalTranscript
+              ? `"${mic.lastFinalTranscript.slice(0, 50)}"`
+              : "—"
+          }
+          ok={!!(mic.interimTranscript || mic.lastFinalTranscript)}
+        />
+
+        {/* 5. Last streamer:speech sent */}
+        <DebugRow
+          label="5. Last sent ⬆"
+          value={lastSentDisplay}
+          ok={!!mic.lastSentText}
+        />
+
+        {/* 6. Last Storm reply */}
+        <DebugRow
+          label="6. Storm replied ⬇"
+          value={lastReplyDisplay}
+          ok={!!lastStormReply}
+        />
+
+        {/* 7. Last TTS spoken */}
+        <DebugRow
+          label="7. TTS spoken 🔊"
+          value={lastTtsDisplay}
+          ok={!!lastTtsSpoken}
+        />
+
+        {/* Session status */}
+        <div className="border-t border-white/5 mt-2 pt-2">
+          <DebugRow
+            label="Session"
+            value={isSessionActive && sessionId ? `✅ active #${sessionId}` : "❌ no active session"}
+            ok={isSessionActive && !!sessionId}
+            warn={!isSessionActive}
+          />
+        </div>
+
+        {/* TTS mode warning */}
+        {ttsWarning && (
+          <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-500/8 border border-amber-500/20 px-2.5 py-2">
+            <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-amber-300/90 leading-snug">
+              <strong>Storm cannot speak back.</strong>{" "}
+              TTS mode is <code className="font-mono">{ttsModeLive ?? "off"}</code> — switch to{" "}
+              <strong>OpenAI TTS</strong> in <em>AI Settings → Voice</em>.
+              Storm hears you but replies will be silent.
+            </p>
+          </div>
+        )}
+
+        {ttsOk && (
+          <div className="mt-1 flex items-center gap-1.5 text-[10px] text-emerald-400/70">
+            <CheckCircle2 className="h-3 w-3" />
+            OpenAI TTS active — Storm will speak back
+          </div>
+        )}
+      </div>
     </div>
   );
 }
