@@ -335,17 +335,24 @@ export async function generateVoice(
   voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "nova",
   speed = 1.0,
 ): Promise<Buffer | null> {
+  if (!ttsOpenai) {
+    console.error("[TTS] ❌ generateVoice: OPENAI_API_KEY not set — OpenAI API key required for TTS");
+    return null;
+  }
   try {
     const truncated = text.slice(0, 500);
     const safeSpeed = Math.max(0.25, Math.min(4.0, speed));
-    const mp3 = await openai.audio.speech.create({
+    console.log(`[TTS] 🎙️ OpenAI direct speech | voice=${voice} speed=${safeSpeed} chars=${truncated.length}`);
+    const mp3 = await ttsOpenai.audio.speech.create({
       model: "tts-1",
       voice,
       input: truncated,
       speed: safeSpeed,
     });
     const arrayBuffer = await mp3.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    const buf = Buffer.from(arrayBuffer);
+    console.log(`[TTS] ✅ audio buffer | bytes=${buf.length}`);
+    return buf;
   } catch (err: any) {
     console.error("[TTS] generateVoice error:", err?.message);
     return null;

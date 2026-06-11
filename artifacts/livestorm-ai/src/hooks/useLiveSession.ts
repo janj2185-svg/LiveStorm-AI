@@ -188,7 +188,13 @@ function unlockAudio(): void {
 }
 
 // ── OpenAI TTS — full pipeline with numbered step logging ────────────────────
-async function playOpenAiTts(rawText: string, voice: string, volume: number, speed = 1.0): Promise<void> {
+async function playOpenAiTts(
+  rawText: string,
+  voice: string,
+  volume: number,
+  speed = 1.0,
+  getToken?: () => Promise<string | null>,
+): Promise<void> {
   // STEP 3 — generateVoice() entry point
   console.log(`[TTS:3] generateVoice called | voice=${voice} | speed=${speed} | audioUnlocked=${audioUnlocked} | text="${rawText.slice(0, 60)}"`);
 
@@ -207,12 +213,19 @@ async function playOpenAiTts(rawText: string, voice: string, volume: number, spe
   }
 
   try {
-    // STEP 4 — HTTP request to /api/ai/voice
-    console.log(`[TTS:4] → POST ${API_BASE}/ai/voice`);
+    // STEP 4 — HTTP request to /api/ai/voice with Bearer token auth
+    const token = getToken ? await getToken() : null;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+      console.log(`[TTS:4] → POST ${API_BASE}/ai/voice [Bearer token attached]`);
+    } else {
+      console.warn(`[TTS:4] → POST ${API_BASE}/ai/voice [no token — may get 401]`);
+    }
     const res = await fetch(`${API_BASE}/ai/voice`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ text, voice, speed }),
     });
 
@@ -848,7 +861,7 @@ export function useLiveSession(
         if (mode === "openai") {
           console.log(`[TTS] → OpenAI TTS | voice=${ttsVoiceRef.current} | lang=${detectedLang} | speed=${ttsSpeedRef.current}`);
           window.dispatchEvent(new CustomEvent("tts:lang", { detail: { lang: detectedLang, engine: "openai" } }));
-          enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current), payload.text);
+          enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current, getToken), payload.text);
         } else if (mode === "browser") {
           // Browser TTS is permanently disabled — speechSynthesis.speak() is never called.
           console.warn(`[TTS] ⛔ Browser TTS is DISABLED. Storm stays silent. Switch to "OpenAI TTS" in AI Settings → Voice.`);
