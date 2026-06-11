@@ -78,6 +78,9 @@ export interface RendererStats {
 }
 
 export interface AvatarCanvasProps {
+  cameraFov?: number;
+  cameraY?: number;
+  cameraZ?: number;
   avatarKey: string;
   accentColor: string;
   scale: number;
@@ -766,6 +769,7 @@ export function AvatarCanvas({
   avatarEnabled, avatarUrl, showFps = true, onStats, onError, className,
   animationState = "idle", mouthOpenAmount = 0, expressionIntensity = 0.8,
   backgroundGradient, enableZoom, enableRotate,
+  cameraFov = 36, cameraY = 1.2, cameraZ = 2.4,
 }: AvatarCanvasProps) {
   const [stats, setStats] = useState<RendererStats>({
     geometries: 0, textures: 0, triangles: 0, drawCalls: 0, fps: 60, quality: "high",
@@ -846,7 +850,7 @@ export function AvatarCanvas({
         <Canvas
           gl={{ antialias: quality !== "low", alpha: true, powerPreference: quality === "low" ? "low-power" : "high-performance" }}
           shadows={quality === "high" ? { type: THREE.PCFShadowMap } : false}
-          camera={{ position: [0, 1.2, 2.4], fov: 36 }}
+          camera={{ position: [0, cameraY, cameraZ], fov: cameraFov }}
           onCreated={({ gl }) => { if (quality === "high") gl.shadowMap.type = THREE.PCFShadowMap; }}
           dpr={dpr}
           style={{ position: "relative" }}

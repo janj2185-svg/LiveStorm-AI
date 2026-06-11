@@ -49,8 +49,8 @@ const POS_MAX    = 0.4;
 const POS_STEP   = 0.05;
 
 const DEFAULTS = {
-  scale: 1.0,
-  positionY: -0.8,
+  scale: 1.3,
+  positionY: -0.2,
   lightingPreset: "studio",
   backgroundId: "studio",
   accentColor: "#8b5cf6",
@@ -370,60 +370,51 @@ export function AvatarStudio() {
           </div>
         </div>
 
-        {/* ═══════════════ RIGHT: Avatar preview ═══════════════ */}
-        <div className="flex flex-col min-h-0 pt-3 gap-2">
+        {/* ═══════════════ RIGHT: 9:16 portrait preview ═══════════════ */}
+        <div className="flex flex-col min-h-0 pt-2 gap-2 overflow-hidden">
 
-          {/* Branding signature */}
-          <div className="flex items-center justify-center gap-2 flex-shrink-0 pb-0.5">
-            <img
-              src={`${import.meta.env.BASE_URL}logo.svg`}
-              alt="LiveStorm AI"
-              className="h-5 w-5 opacity-80"
-              style={{ filter: "drop-shadow(0 0 6px rgba(139,92,246,0.5))" }}
-            />
-            <span
-              className="text-[13px] font-black tracking-tight text-white/75"
-              style={{ textShadow: "0 0 16px rgba(139,92,246,0.35)" }}
+          {/* Portrait frame — 9:16 centered, fills available height */}
+          <div className="flex-1 min-h-0 flex justify-center items-start overflow-hidden">
+            <motion.div
+              className="h-full relative"
+              style={{ aspectRatio: "9/16" }}
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
             >
-              LiveStorm AI
-            </span>
+              <AvatarStage
+                avatarKey={avatarKey}
+                accentColor={accentColor}
+                scale={scale}
+                positionY={positionY}
+                lightingPreset={lightingPreset}
+                avatarEnabled
+                avatarUrl={avatarUrl}
+                animationState={animState}
+                mouthOpenAmount={0}
+                expressionIntensity={0.85}
+                backgroundGradient={getBackgroundGradient(backgroundId)}
+                isSpeaking={false}
+                personaName={PRESENTER_SLOTS[avatarKey]?.name ?? "Avatar"}
+                enableZoom
+                showLogo
+                cameraFov={38}
+                cameraY={1.0}
+                cameraZ={2.0}
+                className="w-full h-full"
+              />
+            </motion.div>
           </div>
 
-          {/* 3D Avatar Stage — hero */}
-          <motion.div
-            className="flex-1 min-h-[480px] rounded-2xl overflow-hidden"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <AvatarStage
-              avatarKey={avatarKey}
-              accentColor={accentColor}
-              scale={scale}
-              positionY={positionY}
-              lightingPreset={lightingPreset}
-              avatarEnabled
-              avatarUrl={avatarUrl}
-              animationState={animState}
-              mouthOpenAmount={0}
-              expressionIntensity={0.85}
-              backgroundGradient={getBackgroundGradient(backgroundId)}
-              isSpeaking={false}
-              personaName={PRESENTER_SLOTS[avatarKey]?.name ?? "Avatar"}
-              enableZoom
-              className="w-full h-full"
-            />
-          </motion.div>
-
           {/* Animation test strip */}
-          <div className="flex-shrink-0 space-y-2">
+          <div className="flex-shrink-0 space-y-1.5 pb-1">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
               {PREVIEW_ANIMATIONS.map((anim) => (
                 <button
                   key={anim}
                   onClick={() => setAnimState(anim)}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-semibold whitespace-nowrap transition-all flex-shrink-0",
+                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[10px] font-semibold whitespace-nowrap transition-all flex-shrink-0",
                     animState === anim
                       ? "border-violet-500/50 bg-violet-500/15 text-violet-300"
                       : "border-white/[0.07] text-muted-foreground/60 hover:border-white/15 hover:text-white",

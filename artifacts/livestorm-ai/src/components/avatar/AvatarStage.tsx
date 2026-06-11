@@ -25,6 +25,10 @@ export interface AvatarStageProps {
   className?: string;
   enableZoom?: boolean;
   enableRotate?: boolean;
+  showLogo?: boolean;
+  cameraFov?: number;
+  cameraY?: number;
+  cameraZ?: number;
 }
 
 const BAR_BASES = [0.40, 0.70, 1.00, 0.85, 0.60, 0.90, 0.50];
@@ -155,6 +159,10 @@ export function AvatarStage({
   className,
   enableZoom,
   enableRotate,
+  showLogo = false,
+  cameraFov,
+  cameraY,
+  cameraZ,
 }: AvatarStageProps) {
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -206,7 +214,30 @@ export function AvatarStage({
         className="w-full h-full rounded-2xl"
         enableZoom={enableZoom}
         enableRotate={enableRotate}
+        cameraFov={cameraFov}
+        cameraY={cameraY}
+        cameraZ={cameraZ}
       />
+
+      {/* Logo overlay — top center */}
+      {showLogo && (
+        <div className="absolute top-0 left-0 right-0 flex justify-center pt-5 z-20 pointer-events-none">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/10">
+            <img
+              src={`${import.meta.env.BASE_URL}logo.svg`}
+              alt="LiveStorm AI"
+              className="h-5 w-5 flex-shrink-0"
+              style={{ filter: "drop-shadow(0 0 8px rgba(139,92,246,0.8))" }}
+            />
+            <span
+              className="text-[13px] font-black tracking-tight text-white/90"
+              style={{ textShadow: "0 0 20px rgba(139,92,246,0.6)" }}
+            >
+              LiveStorm AI
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Bottom gradient scrim */}
       <div
