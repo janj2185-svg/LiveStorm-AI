@@ -584,6 +584,7 @@ export function LiveStudio() {
     isActive, sessionMode, emotionState,
     aiAnnouncements, sendStreamerSpeech, activeSessionId,
     stopAllSpeech, clearSpeechQueue, activeVoiceName, ttsQueueLen,
+    ttsModeLive, openaiTtsOk, openaiTtsErr, lastSpokenLang, lastSpokenEngine,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
 
@@ -734,9 +735,37 @@ export function LiveStudio() {
               )}
             </div>
             <div className="p-4 space-y-3">
-              {/* Active voice name */}
+
+              {/* ── TTS Engine row ─────────────────────────────────────── */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs">Engine</span>
+                <span className={cn(
+                  "text-[11px] font-semibold px-2.5 py-0.5 rounded-full border",
+                  ttsModeLive === "openai"  && "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                  ttsModeLive === "browser" && "bg-amber-500/10 text-amber-400 border-amber-500/30",
+                  ttsModeLive === "off"     && "bg-white/5 text-muted-foreground border-white/10",
+                )}>
+                  {ttsModeLive === "openai" ? "OpenAI TTS" : ttsModeLive === "browser" ? "Browser TTS" : "Off"}
+                </span>
+              </div>
+
+              {/* ── OpenAI TTS status ──────────────────────────────────── */}
+              {ttsModeLive === "openai" && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">OpenAI status</span>
+                  {openaiTtsOk === true  && <span className="text-[11px] text-green-400 font-semibold">✓ Working</span>}
+                  {openaiTtsOk === false && (
+                    <span className="text-[11px] text-red-400 font-semibold truncate max-w-[130px]" title={openaiTtsErr ?? ""}>
+                      ✗ {openaiTtsErr ?? "Error"}
+                    </span>
+                  )}
+                  {openaiTtsOk === null  && <span className="text-[11px] text-muted-foreground/60 italic">Not tested yet</span>}
+                </div>
+              )}
+
+              {/* ── Active voice (speaking indicator) ─────────────────── */}
               <div className="flex items-center justify-between min-h-[20px]">
-                <span className="text-muted-foreground text-xs">Active voice</span>
+                <span className="text-muted-foreground text-xs">Speaking</span>
                 {activeVoiceName ? (
                   <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
                     <span className="relative flex h-1.5 w-1.5">
@@ -750,7 +779,36 @@ export function LiveStudio() {
                 )}
               </div>
 
-              {/* Control buttons */}
+              {/* ── Last spoken language + engine ─────────────────────── */}
+              {(lastSpokenLang || lastSpokenEngine) && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">Last spoken</span>
+                  <span className="text-[11px] text-white/70 font-mono">
+                    {lastSpokenLang ?? "—"}
+                    {lastSpokenEngine && (
+                      <span className={cn(
+                        "ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full border",
+                        lastSpokenEngine === "openai"  && "bg-blue-500/10 text-blue-400 border-blue-500/20",
+                        lastSpokenEngine === "browser" && "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                      )}>
+                        {lastSpokenEngine === "openai" ? "AI" : "Browser"}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              {/* ── Browser TTS warning ────────────────────────────────── */}
+              {ttsModeLive === "browser" && (
+                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                  <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-amber-300/80 leading-snug">
+                    Browser TTS is active — Storm is speaking with a system voice, not Storm's AI voice. Switch to <strong>OpenAI TTS</strong> in <em>AI Settings → Voice</em>.
+                  </p>
+                </div>
+              )}
+
+              {/* ── Control buttons ────────────────────────────────────── */}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={stopAllSpeech}
@@ -768,9 +826,6 @@ export function LiveStudio() {
                 </button>
               </div>
 
-              <p className="text-[10px] text-muted-foreground/50 leading-snug text-center">
-                Storm's voice is locked to Ukrainian/Russian — never Polish.
-              </p>
             </div>
           </div>
         </div>

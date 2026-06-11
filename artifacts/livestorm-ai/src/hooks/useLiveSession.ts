@@ -177,9 +177,9 @@ async function playOpenAiTts(rawText: string, voice: string, volume: number, spe
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       const msg = body?.error ?? `HTTP ${res.status}`;
-      console.warn(`[TTS:OpenAI] ✗ HTTP ${res.status}: ${msg} — skipping (Polish browser fallback disabled)`);
-      window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
-      return; // NEVER fall back to browser TTS — that path can play Polish voices
+      console.warn(`[TTS:OpenAI] ✗ HTTP ${res.status}: ${msg}`);
+      window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: `HTTP ${res.status}: ${msg}` } }));
+      return;
     }
 
     const blob = await res.blob();
@@ -201,27 +201,30 @@ async function playOpenAiTts(rawText: string, voice: string, volume: number, spe
       audio.onerror = () => {
         currentAudioElement = null;
         URL.revokeObjectURL(url);
-        // NEVER fall back to browser TTS — that path can play Polish voices
-        console.warn("[TTS:OpenAI] ✗ audio error — skipping (Polish browser fallback disabled)");
+        console.warn("[TTS:OpenAI] ✗ audio playback error");
+        window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: "audio playback error" } }));
         resolve();
       };
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          currentAudioElement = null;
-          URL.revokeObjectURL(url);
-          // NEVER fall back to browser TTS — that path can play Polish voices
-          console.warn("[TTS:OpenAI] ✗ play() rejected — skipping (Polish browser fallback disabled)");
-          resolve();
-        });
+        playPromise
+          .then(() => {
+            window.dispatchEvent(new CustomEvent("tts:openai:ok", { detail: { voice } }));
+          })
+          .catch(() => {
+            currentAudioElement = null;
+            URL.revokeObjectURL(url);
+            console.warn("[TTS:OpenAI] ✗ play() rejected — autoplay blocked by browser");
+            window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: "autoplay blocked" } }));
+            resolve();
+          });
       }
     });
   } catch (err) {
     const msg = (err as Error)?.message ?? String(err);
-    console.warn("[TTS:OpenAI] ✗ error:", msg, "— skipping (Polish browser fallback disabled)");
-    window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
-    // NEVER fall back to browser TTS — that path can play Polish voices
+    console.warn("[TTS:OpenAI] ✗ network error:", msg);
+    window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: msg } }));
   }
 }
 
@@ -428,32 +431,6 @@ function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
   return eligible[0] ?? null;
 }
 
-// Storm's fixed voice — ALWAYS Ukrainian/Russian/English, NEVER Polish.
-// Used for ALL browser TTS output regardless of what language the text is in.
-// Storm has one voice; the content language is irrelevant to which voice speaks.
-function selectStormVoice(): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-
-  // Absolute blacklist: Polish voices are permanently excluded
-  const eligible = voices.filter(v => !v.lang.startsWith("pl"));
-  if (!eligible.length) return null;
-
-  // Priority chain: uk-UA > uk > ru-RU > ru > en-US > en > any non-Polish
-  const priorities: Array<(v: SpeechSynthesisVoice) => boolean> = [
-    v => v.lang === "uk-UA",
-    v => v.lang.startsWith("uk"),
-    v => v.lang === "ru-RU",
-    v => v.lang.startsWith("ru"),
-    v => v.lang === "en-US",
-    v => v.lang.startsWith("en"),
-  ];
-  for (const pred of priorities) {
-    const match = eligible.find(pred);
-    if (match) return match;
-  }
-  return eligible[0];
-}
 
 function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
   return new Promise((resolve) => {
@@ -533,27 +510,25 @@ function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: strin
     utt.rate  = Math.min(1.6, Math.max(0.7, baseRate + dr));
     utt.pitch = Math.min(2.0, Math.max(0.3, 1.0 + dp));
 
-    // ── Voice selection: Storm's FIXED voice — never language-dependent ──────
-    // Storm has exactly one voice. We NEVER switch the voice based on what
-    // language the reply text is in — that is the root cause of the Polish
-    // voice bug on Windows (detectTtsLang → pl-PL → Google Polish selected).
+    // ── Voice selection: language-aware (Storm speaks in the viewer's language) ──
+    // Storm replies in the viewer's language. OpenAI TTS handles all languages
+    // natively with the same voice character (nova/echo/shimmer etc.).
+    // When browser TTS is used, select a voice matching the detected language so
+    // Polish replies use a Polish voice, Ukrainian replies use Ukrainian, etc.
     //
     // CRITICAL: utt.lang MUST equal utt.voice.lang.
-    // If they differ, Windows plays the OS system-default (often Microsoft Adam
-    // Polish) in parallel — producing the audible double-voice overlap.
-    const stormVoice = selectStormVoice();
-    if (!stormVoice) {
-      // No non-Polish voice available — skip entirely rather than let the OS
-      // default to a Polish voice.
-      console.warn("[TTS:Browser] ⚠ no Storm voice found (uk/ru/en) — skipping to prevent Polish OS default");
-      resolve();
-      return;
+    // If they differ, Windows plays the OS system-default in parallel (double-voice bug).
+    const selectedVoice = selectBrowserVoice(detectedLang);
+    if (selectedVoice) {
+      utt.voice = selectedVoice;
+      utt.lang  = selectedVoice.lang; // MUST match voice.lang — prevents Windows double-voice bug
+      if (selectedVoice.lang !== detectedLang) {
+        console.log(`[TTS:Browser] 🎙️ Voice "${selectedVoice.name}" (${selectedVoice.lang}) speaking ${detectedLang} text`);
+      }
+    } else {
+      utt.lang = detectedLang; // no matching voice found — set lang hint for OS default
     }
-    utt.voice = stormVoice;
-    utt.lang  = stormVoice.lang; // MUST match voice.lang — prevents OS double-voice bug
-    if (stormVoice.lang !== detectedLang) {
-      console.log(`[TTS:Browser] 🎙️ Storm voice "${stormVoice.name}" (${stormVoice.lang}) speaking ${detectedLang} text`);
-    }
+    window.dispatchEvent(new CustomEvent("tts:lang", { detail: { lang: utt.lang, engine: "browser" } }));
 
     // Safety timeout: if onend never fires (Chrome pause/autoplay bug),
     // advance the queue after 12s instead of deadlocking forever.
@@ -684,7 +659,21 @@ export function useLiveSession(
     (() => { try { return Number(localStorage.getItem("ttsSpeed") ?? "1.0") || 1.0; } catch { return 1.0; } })()
   );
 
-  const setTtsMode = useCallback((mode: TtsMode) => { ttsModeRef.current = mode; }, []);
+  // ── Reactive TTS diagnostic state ──────────────────────────────────────────
+  // `ttsModeRef` is a ref (non-reactive) for perf; these state mirrors let the
+  // UI display the current engine, OpenAI status, and last spoken language.
+  const [ttsModeLive, setTtsModeLive] = useState<TtsMode>(
+    (() => { try { return (localStorage.getItem("ttsMode") as TtsMode | null) ?? "off"; } catch { return "off"; } })()
+  );
+  const [openaiTtsOk,     setOpenaiTtsOk]     = useState<boolean | null>(null);
+  const [openaiTtsErr,    setOpenaiTtsErr]     = useState<string | null>(null);
+  const [lastSpokenLang,  setLastSpokenLang]   = useState<string | null>(null);
+  const [lastSpokenEngine,setLastSpokenEngine] = useState<"openai" | "browser" | null>(null);
+
+  const setTtsMode = useCallback((mode: TtsMode) => {
+    ttsModeRef.current = mode;
+    setTtsModeLive(mode);
+  }, []);
   const setTtsVoice = useCallback((voice: string) => { ttsVoiceRef.current = voice; }, []);
   const setTtsVolume = useCallback((volume: number) => {
     ttsVolumeRef.current = Math.max(0, Math.min(1, volume));
@@ -696,6 +685,37 @@ export function useLiveSession(
   // Legacy compatibility
   const setTtsEnabled = useCallback((enabled: boolean) => {
     ttsModeRef.current = enabled ? "browser" : "off";
+  }, []);
+
+  // ── TTS diagnostic event listeners ─────────────────────────────────────────
+  // Listen for custom events dispatched by playOpenAiTts and playBrowserTts so
+  // React state stays in sync with what the module-level TTS functions report.
+  useEffect(() => {
+    const handleOk = () => {
+      setOpenaiTtsOk(true);
+      setOpenaiTtsErr(null);
+      setLastSpokenEngine("openai");
+    };
+    const handleErr = (e: Event) => {
+      const detail = (e as CustomEvent<{ error?: string }>).detail;
+      setOpenaiTtsOk(false);
+      setOpenaiTtsErr(detail?.error ?? "TTS failed");
+    };
+    const handleLang = (e: Event) => {
+      const detail = (e as CustomEvent<{ lang?: string; engine?: string }>).detail;
+      if (detail?.lang) setLastSpokenLang(detail.lang);
+      if (detail?.engine === "openai" || detail?.engine === "browser") {
+        setLastSpokenEngine(detail.engine as "openai" | "browser");
+      }
+    };
+    window.addEventListener("tts:openai:ok",  handleOk);
+    window.addEventListener("tts:openai:err", handleErr);
+    window.addEventListener("tts:lang",       handleLang);
+    return () => {
+      window.removeEventListener("tts:openai:ok",  handleOk);
+      window.removeEventListener("tts:openai:err", handleErr);
+      window.removeEventListener("tts:lang",       handleLang);
+    };
   }, []);
 
   const [stats, setStats] = useState<LiveStats>({
@@ -1070,5 +1090,10 @@ export function useLiveSession(
     clearSpeechQueue,
     activeVoiceName,
     ttsQueueLen,
+    ttsModeLive,
+    openaiTtsOk,
+    openaiTtsErr,
+    lastSpokenLang,
+    lastSpokenEngine,
   };
 }
