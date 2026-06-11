@@ -34,10 +34,31 @@ export interface TranscriptEntry {
   lang?: string;
 }
 
+// Minimal types for cross-browser SpeechRecognition (avoids TS2304 on SpeechRecognition global)
+interface SrAlternative { readonly transcript: string; readonly confidence: number; }
+interface SrResult     { readonly isFinal: boolean; readonly length: number; [i: number]: SrAlternative; }
+interface SrResultList { readonly length: number; [i: number]: SrResult; }
+interface SrResultEvent extends Event { readonly resultIndex: number; readonly results: SrResultList; }
+interface SrErrorEvent  extends Event { readonly error: string; readonly message: string; }
+
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  lang: string;
+  onstart: ((ev: Event) => void) | null;
+  onresult: ((ev: SrResultEvent) => void) | null;
+  onerror: ((ev: SrErrorEvent) => void) | null;
+  onend: ((ev: Event) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
   }
 }
 
@@ -91,7 +112,7 @@ export function useStreamerMic({
   const [error,               setError]               = useState<string | null>(null);
   const [lang,                setLangState]           = useState(defaultLang);
 
-  const recognitionRef   = useRef<SpeechRecognition | null>(null);
+  const recognitionRef   = useRef<SpeechRecognitionLike | null>(null);
   const accumulatorRef   = useRef<string>("");
   const silenceTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const enabledRef       = useRef(false);
@@ -131,7 +152,7 @@ export function useStreamerMic({
     setLastSentText(text);
     setTranscripts(prev => [...prev, {
       id: `${Date.now()}-s`,
-      side: "streamer",
+      side: "streamer" as const,
       text,
       ts: Date.now(),
       lang: shortLang,
@@ -150,6 +171,7 @@ export function useStreamerMic({
       recognitionRef.current = null;
     }
     const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (!SR) return;
     const rec = new SR();
     rec.continuous      = true;
     rec.interimResults  = true;
@@ -301,7 +323,7 @@ export function useStreamerMic({
   const addStormReply = useCallback((text: string) => {
     setTranscripts(prev => [...prev, {
       id: `${Date.now()}-r`,
-      side: "storm",
+      side: "storm" as const,
       text,
       ts: Date.now(),
     }].slice(-20));

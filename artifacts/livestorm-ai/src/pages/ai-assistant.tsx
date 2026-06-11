@@ -832,7 +832,7 @@ export function AiAssistant() {
   }, []);
 
   useEffect(() => {
-    const finishTimerRef = { id: 0 as ReturnType<typeof setTimeout> };
+    const finishTimerRef = { id: 0 as unknown as ReturnType<typeof setTimeout> };
     const handleStart = () => {
       machineRef.current.setBase("talking");
       setTtsPlaybackState("speaking");

@@ -155,6 +155,9 @@ const API_BASE = `${BASE_URL}/api`;
 let ttsQueue: Promise<void> = Promise.resolve();
 let ttsQueueDepth = 0;
 
+// Track the currently playing OpenAI Audio element so stopAllSpeech() can cancel it
+let currentAudioElement: HTMLAudioElement | null = null;
+
 async function playOpenAiTts(rawText: string, voice: string, volume: number, speed = 1.0): Promise<void> {
   // Normalize FIRST — OpenAI TTS may also read some emoji names
   const { text, hasEmojis, emojiEmotion } = normalizeTtsText(rawText);
@@ -174,46 +177,51 @@ async function playOpenAiTts(rawText: string, voice: string, volume: number, spe
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       const msg = body?.error ?? `HTTP ${res.status}`;
-      console.warn(`[TTS] OpenAI TTS error: ${msg} — falling back to browser TTS`);
+      console.warn(`[TTS:OpenAI] ✗ HTTP ${res.status}: ${msg} — skipping (Polish browser fallback disabled)`);
       window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
-      await playBrowserTts(rawText);
-      return;
+      return; // NEVER fall back to browser TTS — that path can play Polish voices
     }
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
+    currentAudioElement = audio; // track so stopAllSpeech() can cancel this
     audio.volume = Math.max(0, Math.min(1, volume));
 
     window.dispatchEvent(new CustomEvent("tts:audio", { detail: audio }));
-    window.dispatchEvent(new CustomEvent("tts:start"));
+    window.dispatchEvent(new CustomEvent("tts:start", { detail: { voice } }));
 
     await new Promise<void>((resolve) => {
       audio.onended = () => {
+        currentAudioElement = null;
         URL.revokeObjectURL(url);
         window.dispatchEvent(new CustomEvent("tts:end"));
         resolve();
       };
       audio.onerror = () => {
+        currentAudioElement = null;
         URL.revokeObjectURL(url);
-        playBrowserTts(rawText);
+        // NEVER fall back to browser TTS — that path can play Polish voices
+        console.warn("[TTS:OpenAI] ✗ audio error — skipping (Polish browser fallback disabled)");
         resolve();
       };
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
+          currentAudioElement = null;
           URL.revokeObjectURL(url);
-          playBrowserTts(rawText);
+          // NEVER fall back to browser TTS — that path can play Polish voices
+          console.warn("[TTS:OpenAI] ✗ play() rejected — skipping (Polish browser fallback disabled)");
           resolve();
         });
       }
     });
   } catch (err) {
     const msg = (err as Error)?.message ?? String(err);
-    console.warn("[TTS] OpenAI TTS playback error:", msg, "— falling back to browser TTS");
+    console.warn("[TTS:OpenAI] ✗ error:", msg, "— skipping (Polish browser fallback disabled)");
     window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
-    await playBrowserTts(rawText);
+    // NEVER fall back to browser TTS — that path can play Polish voices
   }
 }
 
@@ -420,6 +428,33 @@ function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
   return eligible[0] ?? null;
 }
 
+// Storm's fixed voice — ALWAYS Ukrainian/Russian/English, NEVER Polish.
+// Used for ALL browser TTS output regardless of what language the text is in.
+// Storm has one voice; the content language is irrelevant to which voice speaks.
+function selectStormVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  // Absolute blacklist: Polish voices are permanently excluded
+  const eligible = voices.filter(v => !v.lang.startsWith("pl"));
+  if (!eligible.length) return null;
+
+  // Priority chain: uk-UA > uk > ru-RU > ru > en-US > en > any non-Polish
+  const priorities: Array<(v: SpeechSynthesisVoice) => boolean> = [
+    v => v.lang === "uk-UA",
+    v => v.lang.startsWith("uk"),
+    v => v.lang === "ru-RU",
+    v => v.lang.startsWith("ru"),
+    v => v.lang === "en-US",
+    v => v.lang.startsWith("en"),
+  ];
+  for (const pred of priorities) {
+    const match = eligible.find(pred);
+    if (match) return match;
+  }
+  return eligible[0];
+}
+
 function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
@@ -498,24 +533,26 @@ function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: strin
     utt.rate  = Math.min(1.6, Math.max(0.7, baseRate + dr));
     utt.pitch = Math.min(2.0, Math.max(0.3, 1.0 + dp));
 
-    // ── Voice selection ────────────────────────────────────────────────────
-    // Prefer uk-UA; if unavailable fall back through chain defined in
-    // TTS_LANG_FALLBACKS (currently: uk → ru-RU → ru).
-    // IMPORTANT: set utt.lang to match the actual voice, not the detected lang.
-    // Mismatching lang vs voice on Windows causes the system default (Microsoft
-    // Adam Polish) to play in parallel — audible double-voice overlap.
-    const selectedVoice = selectBrowserVoice(detectedLang);
-    if (selectedVoice) {
-      utt.voice = selectedVoice;
-      utt.lang  = selectedVoice.lang;
-      if (selectedVoice.lang !== detectedLang) {
-        console.warn(
-          `[TTS:Browser] ⚠ no ${detectedLang} voice — using "${selectedVoice.name}" (${selectedVoice.lang}) as fallback` +
-          (detectedLang === "uk-UA" ? " | install a uk-UA voice for native Ukrainian pronunciation" : "")
-        );
-      }
-    } else {
-      console.warn(`[TTS:Browser] ⚠ no voice found for ${detectedLang} — browser default will be used`);
+    // ── Voice selection: Storm's FIXED voice — never language-dependent ──────
+    // Storm has exactly one voice. We NEVER switch the voice based on what
+    // language the reply text is in — that is the root cause of the Polish
+    // voice bug on Windows (detectTtsLang → pl-PL → Google Polish selected).
+    //
+    // CRITICAL: utt.lang MUST equal utt.voice.lang.
+    // If they differ, Windows plays the OS system-default (often Microsoft Adam
+    // Polish) in parallel — producing the audible double-voice overlap.
+    const stormVoice = selectStormVoice();
+    if (!stormVoice) {
+      // No non-Polish voice available — skip entirely rather than let the OS
+      // default to a Polish voice.
+      console.warn("[TTS:Browser] ⚠ no Storm voice found (uk/ru/en) — skipping to prevent Polish OS default");
+      resolve();
+      return;
+    }
+    utt.voice = stormVoice;
+    utt.lang  = stormVoice.lang; // MUST match voice.lang — prevents OS double-voice bug
+    if (stormVoice.lang !== detectedLang) {
+      console.log(`[TTS:Browser] 🎙️ Storm voice "${stormVoice.name}" (${stormVoice.lang}) speaking ${detectedLang} text`);
     }
 
     // Safety timeout: if onend never fires (Chrome pause/autoplay bug),
@@ -532,7 +569,7 @@ function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: strin
         ` | eff-emotion=${effectiveEmotion} | rate=${utt.rate.toFixed(2)} | pitch=${utt.pitch.toFixed(2)}` +
         ` | chars=${text.length}`
       );
-      window.dispatchEvent(new CustomEvent("tts:start"));
+      window.dispatchEvent(new CustomEvent("tts:start", { detail: { voice: voiceName } }));
     };
     utt.onend = () => {
       clearTimeout(timeout);
@@ -552,6 +589,28 @@ function playBrowserTts(rawText: string, opts?: { rate?: number; emotion?: strin
 
     synth.speak(utt);
   });
+}
+
+// ── Stop all speech immediately and flush the queue ───────────────────────────
+function stopAllSpeechNow(): void {
+  // 1. Cancel every pending and active browser utterance
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  // 2. Stop any playing OpenAI audio element
+  if (currentAudioElement) {
+    currentAudioElement.pause();
+    currentAudioElement.src = "";
+    currentAudioElement = null;
+  }
+  // 3. Flush the queue — replace with a resolved promise so the next item runs immediately
+  ttsQueue = Promise.resolve();
+  ttsQueueDepth = 0;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("tts:queue", { detail: { depth: 0 } }));
+    window.dispatchEvent(new CustomEvent("tts:end"));
+  }
+  console.log("[TTS] 🛑 stopAllSpeech — synthesis cancelled, audio stopped, queue flushed");
 }
 
 function enqueueTts(fn: () => Promise<void>, text?: string): void {
@@ -596,6 +655,8 @@ export function useLiveSession(
   const [kingdomUpdates, setKingdomUpdates] = useState<KingdomUpdateEvent[]>([]);
   const [leaderboardVersion, setLeaderboardVersion] = useState(0);
   const [emotionState, setEmotionState] = useState<EmotionalState | null>(null);
+  const [activeVoiceName, setActiveVoiceName] = useState<string | null>(null);
+  const [ttsQueueLen, setTtsQueueLen] = useState(0);
 
   const [tiktokMode, setTiktokMode] = useState<ConnectionMode | null>(initialMode ?? null);
   const [tiktokError, setTiktokError] = useState<string | null>(null);
@@ -663,6 +724,41 @@ export function useLiveSession(
       totalComments: 0, totalShares: 0, topSupporters: [],
     });
     supportersRef.current = new Map();
+  }, []);
+
+  const stopAllSpeech = useCallback(() => {
+    stopAllSpeechNow();
+    setActiveVoiceName(null);
+    setTtsQueueLen(0);
+  }, []);
+
+  const clearSpeechQueue = useCallback(() => {
+    ttsQueue = Promise.resolve();
+    ttsQueueDepth = 0;
+    window.dispatchEvent(new CustomEvent("tts:queue", { detail: { depth: 0 } }));
+    setTtsQueueLen(0);
+    console.log("[TTS] 🗑️ speech queue cleared");
+  }, []);
+
+  // Track active voice name and queue depth from window TTS events
+  useEffect(() => {
+    const onStart = (e: Event) => {
+      const name = (e as CustomEvent<{ voice?: string }>).detail?.voice ?? "Speaking…";
+      setActiveVoiceName(name);
+    };
+    const onEnd   = () => setActiveVoiceName(null);
+    const onQueue = (e: Event) => {
+      const depth = (e as CustomEvent<{ depth: number }>).detail?.depth ?? 0;
+      setTtsQueueLen(depth);
+    };
+    window.addEventListener("tts:start", onStart);
+    window.addEventListener("tts:end",   onEnd);
+    window.addEventListener("tts:queue", onQueue);
+    return () => {
+      window.removeEventListener("tts:start", onStart);
+      window.removeEventListener("tts:end",   onEnd);
+      window.removeEventListener("tts:queue", onQueue);
+    };
   }, []);
 
   useEffect(() => {
@@ -970,5 +1066,9 @@ export function useLiveSession(
     tiktokError,
     tiktokUsername,
     sendStreamerSpeech,
+    stopAllSpeech,
+    clearSpeechQueue,
+    activeVoiceName,
+    ttsQueueLen,
   };
 }

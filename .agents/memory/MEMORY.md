@@ -29,3 +29,4 @@
 - [Orchestrator conv-history all events](orchestrator-conv-history.md) — conversationHistory must log all event types (gift/follow/share) not just comments; non-comment context line format: `[gift: user sent X (N coins)]`.
 - [Strategy suggestion feedback loop](strategy-suggestion-feedback.md) — lastStrategySuggestion cached in OrchestratorState; injected as optional 5-min hint into behaviorCtx; cleared in clearSessionHistory.
 - [Browser TTS pause bug & queue deadlock](browser-tts-pause-bug.md) — Chrome pauses speechSynthesis on tab switch → speak() silently no-ops → ttsQueue deadlocks. Fix: resume() + 12s timeout in playBrowserTts + queue reset in enqueueTts.
+- [Polish voice fix — Storm TTS](polish-voice-fix.md) — 3 paths caused Polish voice: detectTtsLang→pl-PL, utt.lang≠voice.lang Windows double-voice, OpenAI fallback→playBrowserTts. Fix: selectStormVoice() + no browser fallbacks.

@@ -9,7 +9,7 @@ import {
   AlertTriangle, Radio, Bot, Wifi, WifiOff,
   MessageCircle, Gift, Heart, UserPlus, Eye, Gem,
   ArrowDown, Share2, Sparkles, Zap, Trophy, TrendingUp,
-  Brain,
+  Brain, Volume2, VolumeX, Square, Trash2,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
@@ -583,6 +583,7 @@ export function LiveStudio() {
     events, translations, stats, connected, tiktokMode, tiktokError, tiktokUsername,
     isActive, sessionMode, emotionState,
     aiAnnouncements, sendStreamerSpeech, activeSessionId,
+    stopAllSpeech, clearSpeechQueue, activeVoiceName, ttsQueueLen,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
 
@@ -716,6 +717,62 @@ export function LiveStudio() {
             isSessionActive={!!isActive}
             aiAnnouncements={aiAnnouncements}
           />
+
+          {/* ── Voice Control ──────────────────────────────────────────── */}
+          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
+              {activeVoiceName ? (
+                <Volume2 className="w-4 h-4 text-green-400 animate-pulse" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-muted-foreground" />
+              )}
+              <span className="text-sm font-semibold text-white">Storm's Voice</span>
+              {ttsQueueLen > 0 && (
+                <span className="ml-auto text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full px-2 py-0.5">
+                  {ttsQueueLen} queued
+                </span>
+              )}
+            </div>
+            <div className="p-4 space-y-3">
+              {/* Active voice name */}
+              <div className="flex items-center justify-between min-h-[20px]">
+                <span className="text-muted-foreground text-xs">Active voice</span>
+                {activeVoiceName ? (
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
+                    </span>
+                    <span className="truncate max-w-[130px]">{activeVoiceName}</span>
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted-foreground/50">Silent</span>
+                )}
+              </div>
+
+              {/* Control buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={stopAllSpeech}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 transition-all text-red-400 text-xs font-semibold"
+                >
+                  <Square className="w-3 h-3 fill-current" />
+                  Stop Speech
+                </button>
+                <button
+                  onClick={clearSpeechQueue}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-amber-400 text-xs font-semibold"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Clear Queue
+                </button>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground/50 leading-snug text-center">
+                Storm's voice is locked to Ukrainian/Russian — never Polish.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* ── Right panel: feeds ───────────────────────────────────────────── */}
