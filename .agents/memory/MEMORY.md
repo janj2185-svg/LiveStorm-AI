@@ -18,3 +18,4 @@
 - [Socket re-auth after server restart](socket-reauth.md) — Clerk JWT (60s TTL) expires; socket.io auto-reconnect reuses stale handshake token → session:join REJECTED → socketsInRoom=0. Fix: authRetryRef in useLiveSession.ts, session:error handler disconnects + reconnects with fresh getToken().
 - [AI auto-reply gating](ai-autoreply-gate.md) — auto_reply_enabled=false in ai_persona_configs silently skips ALL comment replies. operatingMode="assistant" sets it false; operatingMode="autopilot" sets it true. Check DB when AI stops responding to comments.
 - [lib/db project references rebuild](db-project-references.md) — after schema changes, run `npx tsc --build lib/db` or dist/ stays stale; pnpm build script doesn't exist.
+- [Orchestrator wiring requirements](orchestrator-wiring.md) — two missing wires (initOrchestrator + orchestratorEnqueue) caused all events to silently drop; both now wired in socketServer.ts.

@@ -1422,45 +1422,31 @@ export function AiAssistant() {
 
         </div>
 
-        {/* ═══════════════ CENTER: Avatar (40%) ═══════════════ */}
-        <div className="flex flex-col min-h-0 gap-2 pt-3">
+        {/* ═══════════════ CENTER: Avatar (40%) — 9:16 portrait frame ═══════════════ */}
+        <div className="flex flex-col min-h-0 gap-2 py-2">
 
-          {/* Branding — product signature */}
-          <div className="flex items-center justify-center gap-2 flex-shrink-0 pb-1">
-            <img
-              src={`${import.meta.env.BASE_URL}logo.svg`}
-              alt="LiveStorm AI"
-              className="h-5 w-5 opacity-80"
-              style={{ filter: "drop-shadow(0 0 6px rgba(139,92,246,0.5))" }}
-            />
-            <span
-              className="text-[13px] font-black tracking-tight text-white/75"
-              style={{ textShadow: "0 0 16px rgba(139,92,246,0.35)" }}
-            >
-              LiveStorm AI
-            </span>
-          </div>
-
-          {/* Avatar — fills most of the height */}
-          <div className="relative flex-1 min-h-[430px] rounded-2xl overflow-hidden bg-black/20">
-            <AvatarStage
-              avatarKey={avatarConfig?.avatarKey ?? "marcus"}
-              accentColor={accentColor}
-              scale={avatarConfig?.scale ?? 1.0}
-              positionY={avatarConfig?.positionY ?? -0.8}
-              lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
-              avatarEnabled={avatarConfig?.avatarEnabled ?? true}
-              avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
-              animationState={animState}
-              mouthOpenAmount={mouthOpen}
-              expressionIntensity={expressionIntensity}
-              backgroundGradient={getBackgroundGradient(selectedBackground)}
-              isSpeaking={isSpeaking}
-              personaName={personaName}
-              onOpenSettings={() => setAvatarSheetOpen(true)}
-              showDebug={showAvatarDebug}
-              className="w-full h-full"
-            />
+          {/* 9:16 portrait frame — scales by height, centers horizontally */}
+          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+            <div className="relative h-full aspect-[9/16] max-w-full rounded-2xl overflow-hidden bg-black/20 flex-shrink-0">
+              <AvatarStage
+                avatarKey={avatarConfig?.avatarKey ?? "marcus"}
+                accentColor={accentColor}
+                scale={avatarConfig?.scale ?? 1.0}
+                positionY={avatarConfig?.positionY ?? -0.8}
+                lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
+                avatarEnabled={avatarConfig?.avatarEnabled ?? true}
+                avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
+                animationState={animState}
+                mouthOpenAmount={mouthOpen}
+                expressionIntensity={expressionIntensity}
+                backgroundGradient={getBackgroundGradient(selectedBackground)}
+                isSpeaking={isSpeaking}
+                personaName={personaName}
+                onOpenSettings={() => setAvatarSheetOpen(true)}
+                showDebug={showAvatarDebug}
+                showLogo={true}
+                className="absolute inset-0 w-full h-full"
+              />
 
             {/* Top-left: status indicators */}
             <div className="absolute top-3 left-3 flex flex-col gap-1.5">
@@ -1533,7 +1519,8 @@ export function AiAssistant() {
                 <p className="text-[10px] font-semibold text-emerald-300">@{tiktokUsername}</p>
               </div>
             )}
-          </div>
+            </div>{/* /9:16 frame */}
+          </div>{/* /centering wrapper */}
 
           {/* Stats row — below avatar */}
           <div className="grid grid-cols-4 gap-2 flex-shrink-0">

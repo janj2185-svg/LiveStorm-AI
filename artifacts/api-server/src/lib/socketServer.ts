@@ -22,6 +22,7 @@ import {
 import { upsertViewerProfile, getViewerContext } from "./agents/memoryAgent";
 import { scorePriority, enqueueComment, markReplied } from "./agents/priorityAgent";
 import { scoreReply } from "./agents/learningAgent";
+import { initOrchestrator, enqueueEvent as orchestratorEnqueue } from "../agents/agentOrchestrator";
 
 let io: SocketServer | null = null;
 
@@ -438,6 +439,7 @@ export function initSocketServer(httpServer: HttpServer) {
   });
 
   seedAchievements().catch(() => {});
+  initOrchestrator(io);
 
   io.on("connection", (socket: Socket) => {
     const authToken = socket.handshake.auth?.token as string | undefined;
@@ -593,6 +595,7 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
   if (streamerId) {
     void processAiAnnouncements(io, event, streamerId);
     void processTranslation(io, event, streamerId);
+    void orchestratorEnqueue(event, streamerId);
   }
 
   try {

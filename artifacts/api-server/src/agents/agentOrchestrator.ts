@@ -10,6 +10,7 @@ import { getActiveVoice } from "./voiceAgent";
 import { getMemoryContext, upsertViewerProfile } from "./memoryAgent";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
+import { isBattleActive, generateBattleReply } from "./battleAgent";
 import { generateVoice } from "../lib/aiService";
 
 const GLOBAL_TTS_COOLDOWN_MS = 8_000;
@@ -128,8 +129,13 @@ async function processQueue(): Promise<void> {
 async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const { event, streamerId, sessionId, agentType } = item;
 
+  console.log(`[Orchestrator] ⚡ dispatch | event=${event.type} | agent=${agentType} | viewer=${event.username ?? "anon"} | session=${sessionId} | priority=${item.priority}`);
+
   const isAgentEnabled = await checkAgentEnabled(streamerId, agentType);
-  if (!isAgentEnabled) return;
+  if (!isAgentEnabled) {
+    console.log(`[Orchestrator] ✗ agent=${agentType} disabled for streamer=${streamerId}`);
+    return;
+  }
 
   const config = await db.query.aiPersonaConfigsTable.findFirst({
     where: eq(aiPersonaConfigsTable.streamerId, streamerId),
@@ -138,9 +144,11 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
 
   const viewerId = (event.data.uniqueId as string) ?? event.username ?? "anon";
 
+  // ── Memory Agent: upsert viewer profile ─────────────────────────────────────
   if (state.enabledAgents.has("memory")) {
     const eventTypeForProfile = event.type as "comment" | "gift" | "follow" | "like";
     if (["comment", "gift", "follow", "like"].includes(event.type)) {
+      console.log(`[Agent:Memory] 🧠 upsertViewerProfile | viewer=${event.username} | event=${event.type}`);
       void upsertViewerProfile({
         streamerId,
         tiktokViewerId: viewerId,
@@ -150,9 +158,12 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     }
   }
 
+  // ── Moderation Agent ─────────────────────────────────────────────────────────
   if (agentType === "moderation" && state.enabledAgents.has("moderation")) {
+    console.log(`[Agent:Moderation] 🛡️ checking content | viewer=${event.username}`);
     const result = await runModerationAgent({ event, streamerId, sessionId, useAI: config.moderationEnabled });
     if (result.flagged) {
+      console.log(`[Agent:Moderation] 🚨 FLAGGED | viewer=${event.username} | reason=${result.reason} | severity=${result.severity}`);
       io.to(`session:${sessionId}`).emit("agent:task", {
         agentType: "moderation",
         action: "flagged",
@@ -160,23 +171,60 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
         reason: result.reason,
         severity: result.severity,
       });
+    } else {
+      console.log(`[Agent:Moderation] ✓ content clean | viewer=${event.username}`);
     }
     return;
   }
 
   if (!state.enabledAgents.has("host")) return;
 
+  // ── Personality Agent ────────────────────────────────────────────────────────
   const personality = await getActivePersonality(streamerId);
+  console.log(`[Agent:Personality] 🎭 mode=${personality.modeKey} | modeName="${personality.modeName}" | tone="${personality.toneGuide}"`);
+
+  // ── Voice Agent ──────────────────────────────────────────────────────────────
   const voice = await getActiveVoice(streamerId, personality.modeKey);
+  console.log(`[Agent:Voice] 🎵 voiceKey=${voice.voiceKey} | speed=${voice.speed} | desc="${voice.description}"`);
+
+  // ── Memory Agent: load context ───────────────────────────────────────────────
   const memoryCtx = state.enabledAgents.has("memory")
     ? await getMemoryContext(streamerId, event.username ?? undefined)
     : "";
+  if (memoryCtx) {
+    console.log(`[Agent:Memory] 🧠 context loaded | ${memoryCtx.length} chars | viewer=${event.username}`);
+  } else {
+    console.log(`[Agent:Memory] 🧠 no prior context for viewer=${event.username}`);
+  }
 
   const history = state.conversationHistory.get(sessionId) ?? [];
   const conversationHistory = history.length > 0
     ? history.slice(-5).map((h) => `@${h.viewer}: "${h.comment}" → AI: "${h.reply}"`).join("\n")
     : undefined;
 
+  // ── Battle Agent: override if battle is active ───────────────────────────────
+  if (state.enabledAgents.has("battle") && isBattleActive(sessionId) && event.type === "comment") {
+    const commentText = (event.data.text as string) ?? "";
+    console.log(`[Agent:Battle] ⚔️ BATTLE ACTIVE | session=${sessionId} | opponent: "${commentText.slice(0, 60)}"`);
+    const battleResult = await generateBattleReply({
+      sessionId,
+      streamerId,
+      opponentStatement: commentText,
+      personaName: config.personaName,
+      personality,
+      replyLanguage: config.replyLanguage ?? "auto",
+    });
+    if (battleResult.shouldSpeak && battleResult.suggestedReply) {
+      console.log(`[Agent:Battle] ⚔️ battle reply: "${battleResult.suggestedReply.slice(0, 80)}"`);
+      io.to(`session:${sessionId}`).emit("agent:battle:reply", {
+        suggestedReply: battleResult.suggestedReply,
+        opponentStatement: commentText,
+        context: battleResult.context,
+      });
+    }
+  }
+
+  // ── Host Agent: generate main AI reply ──────────────────────────────────────
   const hostResult = await runHostAgent({
     event,
     streamerId,
@@ -187,7 +235,12 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     conversationHistory,
   });
 
-  if (!hostResult?.text) return;
+  if (!hostResult?.text) {
+    console.log(`[Agent:Host] ✗ no reply generated for event=${event.type} viewer=${event.username}`);
+    return;
+  }
+
+  console.log(`[Agent:Host] 🎙️ reply="${hostResult.text.slice(0, 100)}" | emotion=${hostResult.emotion} | personality=${personality.modeKey}`);
 
   state.lastTtsTime = Date.now();
 
@@ -228,6 +281,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     state.conversationHistory.set(sessionId, updated.slice(-10));
   }
 
+  // ── Strategy Agent: score response ──────────────────────────────────────────
   void scoreResponse({
     sessionId,
     streamerId,
@@ -236,20 +290,25 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     aiResponse: hostResult.text,
   });
 
+  // ── Voice Agent: synthesize TTS ──────────────────────────────────────────────
   if (config.voiceEnabled && state.enabledAgents.has("voice")) {
     try {
+      console.log(`[Agent:Voice] 🎙️ synthesizing TTS | voiceKey=${voice.voiceKey} | text="${hostResult.text.slice(0, 50)}..."`);
       const audioBuffer = await generateVoice(hostResult.text, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", voice.speed);
       if (audioBuffer) {
+        console.log(`[Agent:Voice] ✓ TTS audio generated | ${audioBuffer.byteLength ?? 0} bytes`);
         io.to(roomId).emit("tts:audio", { audio: audioBuffer, text: hostResult.text });
       }
     } catch (err: unknown) {
-      console.error("[Orchestrator] TTS error:", (err as Error)?.message);
+      console.error("[Agent:Voice] ✗ TTS error:", (err as Error)?.message);
     }
   }
 
+  // ── Strategy Agent: generate suggestions ────────────────────────────────────
   if (state.enabledAgents.has("strategy") && await shouldGenerateSuggestion(sessionId)) {
     const suggestion = await generateStrategySuggestion({ sessionId, streamerId, personaName: config.personaName });
     if (suggestion) {
+      console.log(`[Agent:Strategy] 📊 strategy suggestion generated`);
       io.to(roomId).emit("agent:strategy:suggest", suggestion);
     }
   }
@@ -279,7 +338,9 @@ async function logTask(opts: {
     ...opts,
     status: "done",
     processedAt: new Date(),
-  }).catch(() => {});
+  }).catch((err: unknown) => {
+    console.error("[Agent:TaskLog] DB insert failed:", (err as Error)?.message ?? err);
+  });
 }
 
 export async function triggerLearningAgent(sessionId: number, streamerId: number): Promise<void> {
