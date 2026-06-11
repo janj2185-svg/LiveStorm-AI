@@ -682,7 +682,7 @@ export function Dashboard() {
                     <Bot className="h-4 w-4 text-violet-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">AI Co-Host</p>
+                    <p className="font-semibold text-white text-sm">AI Assistant</p>
                     <p className="text-[10px] text-muted-foreground/50">Active announcements</p>
                   </div>
                 </div>
@@ -756,7 +756,7 @@ export function Dashboard() {
               </div>
               <div className="p-2 space-y-1">
                 {[
-                  { href: "/ai-assistant",  emoji: "🤖", label: "AI Co-Host",   desc: "Configure your AI persona",   glow: "hover:border-violet-500/20 hover:bg-violet-500/[0.05]" },
+                  { href: "/ai-assistant",  emoji: "🤖", label: "AI Assistant", desc: "Configure your AI persona",   glow: "hover:border-violet-500/20 hover:bg-violet-500/[0.05]" },
                   { href: "/games",         emoji: "🎮", label: "Games Hub",    desc: "Boss battles, XP & mini-games", glow: "hover:border-cyan-500/20 hover:bg-cyan-500/[0.05]" },
                   { href: "/live-control",  emoji: "📡", label: "Live Control", desc: "TikTok connection & event feed", glow: "hover:border-green-500/20 hover:bg-green-500/[0.05]" },
                 ].map((link, i) => (

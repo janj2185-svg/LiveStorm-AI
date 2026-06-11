@@ -422,7 +422,7 @@ router.post("/ai/test-announce", requireAuth, async (req: any, res: any) => {
     const io = getIO();
     if (!io) return res.status(503).json({ error: "Socket server not ready" });
 
-    const text = req.body?.text?.trim() || "Hey! This is a test voice announcement from your AI Co-Host. If you can hear this, TTS is working!";
+    const text = req.body?.text?.trim() || "Hey! This is a test voice announcement from your AI Assistant. If you can hear this, TTS is working!";
     const roomId = `session:${activeSession.id}`;
     io.to(roomId).emit("ai:announcement", {
       text,

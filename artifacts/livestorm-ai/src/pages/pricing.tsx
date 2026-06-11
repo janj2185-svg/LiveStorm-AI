@@ -39,7 +39,7 @@ const PLANS = [
     yearlyPriceId: null,
     trialDays: 0,
     features: [
-      "Basic AI Co-Host",
+      "Basic AI Assistant",
       "Basic Boss Battle",
       "Limited XP & Gamification",
       "1 TikTok account",

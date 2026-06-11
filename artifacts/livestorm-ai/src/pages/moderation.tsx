@@ -115,7 +115,7 @@ export function Moderation() {
             )}
             <Link href="/ai-assistant">
               <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:border-primary/30 text-xs">
-                AI Co-Host Settings
+                AI Assistant Settings
                 <ChevronRight className="h-3 w-3" />
               </Button>
             </Link>
@@ -268,13 +268,13 @@ export function Moderation() {
                 <Info className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white mb-1">AI Co-Host Moderation</p>
+                <p className="text-sm font-semibold text-white mb-1">AI Assistant Moderation</p>
                 <p className="text-xs text-muted-foreground mb-3">
-                  The AI Co-Host includes smart moderation — it automatically flags toxic comments and handles them based on your persona settings.
+                  The AI Assistant includes smart moderation — it automatically flags toxic comments and handles them based on your persona settings.
                 </p>
                 <Link href="/ai-assistant">
                   <Button size="sm" variant="outline" className="w-full border-white/10 hover:border-primary/30 gap-1.5 text-xs">
-                    Configure AI Co-Host
+                    Configure AI Assistant
                     <ChevronRight className="h-3 w-3" />
                   </Button>
                 </Link>

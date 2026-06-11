@@ -775,7 +775,7 @@ export function Settings() {
                   <div className="space-y-2 text-sm">
                     {(user?.plan === "free" || !user?.plan) && (
                       <>
-                        <p className="text-green-400">✓ Basic AI Co-Host</p>
+                        <p className="text-green-400">✓ Basic AI Assistant</p>
                         <p className="text-green-400">✓ Basic Boss Battle</p>
                         <p className="text-green-400">✓ Viewer leaderboard</p>
                         <p className="text-muted-foreground line-through">✕ AI Voice (Pro+)</p>

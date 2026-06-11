@@ -482,7 +482,7 @@ export function useLiveSession(
             {
               type: "ai_announcement" as const,
               sessionId: sessionId!,
-              username: "AI Co-host",
+              username: "AI Assistant",
               data: { text: payload.text, announcementType: payload.type },
               timestamp: ts,
             },
@@ -500,7 +500,7 @@ export function useLiveSession(
           console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang}`);
           enqueueTts(() => playBrowserTts(payload.text));
         } else {
-          console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Co-Host settings or Dashboard toggle.`);
+          console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Assistant settings or Dashboard toggle.`);
         }
       });
 

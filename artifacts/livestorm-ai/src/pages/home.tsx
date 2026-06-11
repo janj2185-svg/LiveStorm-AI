@@ -116,7 +116,7 @@ export function Home() {
               },
               {
                 icon: Users,
-                title: "AI Co-Host",
+                title: "AI Assistant",
                 desc: "An intelligent chatbot that welcomes viewers, answers FAQs, and hypes up your top supporters."
               }
             ].map((feat, i) => (

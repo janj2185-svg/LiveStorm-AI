@@ -363,7 +363,7 @@ export function AvatarStudio() {
                 </Button>
               </div>
               <p className="text-[9px] text-muted-foreground/35 text-center mt-2">
-                Saved settings apply to AI Co-Host live sessions
+                Saved settings apply to AI Assistant live sessions
               </p>
             </ControlBlock>
 

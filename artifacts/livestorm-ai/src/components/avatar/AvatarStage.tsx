@@ -255,7 +255,7 @@ export function AvatarStage({
             transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
           />
           <span className="text-xs font-bold text-white/85 tracking-wide truncate">
-            {personaName ?? "AI Co-Host"}
+            {personaName ?? "AI Assistant"}
           </span>
         </div>
 

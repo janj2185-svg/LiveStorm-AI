@@ -313,7 +313,7 @@ function AiAnnouncementCard({ event }: { event: LiveEvent }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-xs font-semibold text-purple-300">AI Co-host</span>
+          <span className="text-xs font-semibold text-purple-300">AI Assistant</span>
           {isReply && attrName && (
             <span className="text-xs text-muted-foreground/60">↳ @{attrName}</span>
           )}
@@ -906,7 +906,7 @@ export function AiAssistant() {
     setIsVoicePreviewing(true);
     try {
       const token = await getToken();
-      const previewText = `Hey! I'm ${config.personaName}, your AI co-host. Let's make this stream absolutely amazing!`;
+      const previewText = `Hey! I'm ${config.personaName}, your AI assistant. Let's make this stream absolutely amazing!`;
       const resp = await fetch(`${API_BASE}/ai/voice`, {
         method: "POST",
         credentials: "include",
@@ -1003,7 +1003,7 @@ export function AiAssistant() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white truncate">{personaName}</p>
-                <p className="text-[10px] text-muted-foreground/50">AI Co-Host</p>
+                <p className="text-[10px] text-muted-foreground/50">AI Assistant</p>
               </div>
               <div className={cn(
                 "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border",
@@ -1733,7 +1733,7 @@ export function AiAssistant() {
 
           <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 flex-shrink-0">
             <div>
-              <p className="text-sm font-medium">3D Co-Host</p>
+              <p className="text-sm font-medium">3D Avatar</p>
               <p className="text-xs text-muted-foreground">Show avatar on stream</p>
             </div>
             <Switch

@@ -28,7 +28,7 @@ export async function emitAiAutomationAnnouncement(
     const config = await getPersona(streamerId);
     const persona = config
       ? { name: config.personaName, tone: config.tone }
-      : { name: "AI Co-host", tone: "friendly" };
+      : { name: "AI Assistant", tone: "friendly" };
 
     const text = await generateAnnouncement({
       type: event.type,
