@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Tabs, TabsContent, TabsList, TabsTrigger,
@@ -566,9 +566,9 @@ export function AvatarCreatorModal({
             <Sparkles className="h-4 w-4 text-violet-400" />
             {t("avatar_create_presenter")}
           </DialogTitle>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <DialogDescription className="text-[11px] text-muted-foreground mt-0.5">
             Photorealistic avatar · ARKit lip sync · TikTok reactions · Free Avaturn account required
-          </p>
+          </DialogDescription>
           <WizardSteps step={wizardStep} />
         </DialogHeader>
 

@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { useLiveSessionContext } from "@/contexts/LiveSessionContext";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -159,6 +159,7 @@ export function Automation() {
             <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
               <DialogHeader>
                 <DialogTitle>Create Automation Trigger</DialogTitle>
+                <DialogDescription>Set a trigger event and configure the automated action.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">

@@ -1,0 +1,115 @@
+Build the Multi-Agent Core for LiveStorm AI now.
+
+Do not build it as one simple chatbot.
+
+Create a real Super Agent architecture with multiple specialized agents working together.
+
+Required agents:
+
+1. Host Agent
+- Main AI co-host voice.
+- Speaks to viewers.
+- Keeps the stream alive.
+- Makes jokes, welcomes people, reacts to gifts and follows.
+
+2. Chat Agent
+- Reads high-volume chat.
+- Does not answer every message.
+- Groups similar comments.
+- Detects important questions.
+- Prioritizes VIPs, gifters, moderators, subscribers, regular viewers.
+
+3. Battle Agent
+- Activates during TikTok battles.
+- Listens to opponent speech when available.
+- Converts speech to text.
+- Understands opponent context.
+- Suggests or speaks smart replies.
+- Supports our streamer during battles.
+
+4. Memory Agent
+- Stores long-term memory.
+- Remembers viewers, regulars, jokes, preferences, gifts, behavior.
+- Remembers streamer settings and style.
+- Provides memory context to other agents.
+
+5. Personality Agent
+- Controls tone and character.
+- Supports modes:
+  - Friendly
+  - Professional
+  - Funny
+  - Savage / Edgy
+  - Flirty
+  - Motivational
+- Keeps replies consistent with selected personality.
+
+6. Voice Agent
+- Manages voice profiles.
+- Supports male, female, young/child-like, broadcaster, gamer, robot voices.
+- Connects selected voice to TTS.
+- Allows per-personality voice mapping.
+
+7. Strategy Agent
+- Watches stream performance.
+- Detects what gets likes, comments, gifts, follows.
+- Recommends what the AI should do next.
+- Suggests topics, jokes, games, and engagement moves.
+
+8. Moderation Agent
+- Detects spam, hate, insults, dangerous messages, harassment.
+- Can flag, ignore, or recommend moderator action.
+- Must protect the stream from bad behavior.
+
+9. Learning Agent
+- After each stream, reviews AI replies and audience reactions.
+- Scores which replies worked best.
+- Finds weak replies.
+- Generates improvement suggestions.
+- Updates prompt recommendations for the next stream.
+
+System requirements:
+
+- Create an Agent Orchestrator.
+- The orchestrator decides which agent should handle each event.
+- Use queues and priorities so the AI does not get overwhelmed during high chat volume.
+- Important events must be handled first:
+  1. Gifts
+  2. Follows
+  3. Battle opponent speech
+  4. Direct questions to AI
+  5. VIP / regular viewers
+  6. General chat
+
+- Add rate limits:
+  - AI should not speak too often.
+  - AI should batch similar comments.
+  - AI should summarize chat mood when many messages arrive.
+
+Database requirements:
+
+Add or extend tables for:
+- ai_agents
+- ai_agent_tasks
+- ai_memories
+- viewer_profiles
+- ai_response_scores
+- ai_learning_reports
+- ai_voice_profiles
+- ai_personality_modes
+- battle_transcripts
+- chat_priority_queue
+
+UI requirements:
+
+Add an "AI Brain" or "Super Agent" section where the streamer can:
+- Enable/disable agents.
+- Select personality mode.
+- Select voice profile.
+- View what AI remembers.
+- View learning reports.
+- View chat priority decisions.
+- View battle mode status.
+
+Goal:
+LiveStorm AI must become a real AI Super Agent system, not a simple chatbot. It should remember, learn, manage chat overload, speak with different voices, react to TikTok battles, and improve after every stream.
