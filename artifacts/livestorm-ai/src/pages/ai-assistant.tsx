@@ -1370,11 +1370,8 @@ export function AiAssistant() {
             <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="LiveStorm AI" className="h-6 w-6 opacity-60" />
           </div>
 
-          {/* Avatar — fills most of the height, with glow ring */}
-          <div
-            className="relative flex-1 min-h-[430px] rounded-2xl overflow-hidden bg-black/20"
-            style={{ boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 40px rgba(139,92,246,0.12), 0 0 80px rgba(99,102,241,0.07)' }}
-          >
+          {/* Avatar — fills most of the height */}
+          <div className="relative flex-1 min-h-[430px] rounded-2xl overflow-hidden bg-black/20">
             <AvatarStage
               avatarKey={avatarConfig?.avatarKey ?? "marcus"}
               accentColor={accentColor}
