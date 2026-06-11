@@ -832,13 +832,47 @@ export function AiAssistant() {
   }, []);
 
   useEffect(() => {
-    const handleStart = () => machineRef.current.setBase("talking");
-    const handleEnd = () => machineRef.current.setBase("idle");
+    const finishTimerRef = { id: 0 as ReturnType<typeof setTimeout> };
+    const handleStart = () => {
+      machineRef.current.setBase("talking");
+      setTtsPlaybackState("speaking");
+      clearTimeout(finishTimerRef.id);
+    };
+    const handleEnd = () => {
+      machineRef.current.setBase("idle");
+      setTtsPlaybackState("finished");
+      finishTimerRef.id = setTimeout(() => setTtsPlaybackState("idle"), 3000);
+    };
+    const handleQueue = (e: Event) => {
+      const depth = (e as CustomEvent<{ depth: number }>).detail?.depth ?? 0;
+      setTtsQueueLength(depth);
+      setTtsPlaybackState((prev) => (depth > 0 && prev === "idle" ? "queued" : prev));
+    };
+    const handleSpoken = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) setLastSpokenText(text);
+    };
+    const handleFallback = () => {
+      setUsingBrowserFallback(true);
+      setLastTtsError("OpenAI TTS unavailable — using browser voice fallback.");
+    };
+    const handleTtsError = () => {
+      setTtsPlaybackState("error");
+    };
     window.addEventListener("tts:start", handleStart);
     window.addEventListener("tts:end", handleEnd);
+    window.addEventListener("tts:queue", handleQueue);
+    window.addEventListener("tts:spoken", handleSpoken);
+    window.addEventListener("tts:fallback", handleFallback);
+    window.addEventListener("tts:error", handleTtsError);
     return () => {
+      clearTimeout(finishTimerRef.id);
       window.removeEventListener("tts:start", handleStart);
       window.removeEventListener("tts:end", handleEnd);
+      window.removeEventListener("tts:queue", handleQueue);
+      window.removeEventListener("tts:spoken", handleSpoken);
+      window.removeEventListener("tts:fallback", handleFallback);
+      window.removeEventListener("tts:error", handleTtsError);
     };
   }, []);
 
@@ -900,6 +934,13 @@ export function AiAssistant() {
 
   // ── Voice preview ─────────────────────────────────────────────────────────
   const [isVoicePreviewing, setIsVoicePreviewing] = useState(false);
+
+  // ── Voice Status panel state ───────────────────────────────────────────────
+  const [ttsPlaybackState, setTtsPlaybackState] = useState<"idle" | "queued" | "speaking" | "finished" | "error">("idle");
+  const [ttsQueueLength, setTtsQueueLength] = useState(0);
+  const [lastSpokenText, setLastSpokenText] = useState<string | null>(null);
+  const [lastTtsError, setLastTtsError] = useState<string | null>(null);
+  const [usingBrowserFallback, setUsingBrowserFallback] = useState(false);
 
   const handleVoicePreview = async () => {
     if (!config || isVoicePreviewing) return;
@@ -1132,6 +1173,115 @@ export function AiAssistant() {
                 </Link>
               </p>
             </div>
+          </div>
+
+          {/* ── Voice Status Panel ── */}
+          <div className="px-3 py-3 border-t border-white/[0.06]">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-1.5">
+                {ttsPlaybackState === "speaking"
+                  ? <Volume2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+                  : ttsMode === "off"
+                  ? <VolumeX className="h-3.5 w-3.5 text-red-400/70" />
+                  : <Volume2 className="h-3.5 w-3.5 text-blue-400" />}
+                <span className="text-xs font-bold text-white/80">Voice Status</span>
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border",
+                ttsPlaybackState === "speaking"
+                  ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/30"
+                  : ttsPlaybackState === "error"
+                  ? "text-red-300 bg-red-500/15 border-red-500/30"
+                  : ttsPlaybackState === "queued"
+                  ? "text-blue-300 bg-blue-500/15 border-blue-500/30"
+                  : ttsPlaybackState === "finished"
+                  ? "text-purple-300 bg-purple-500/15 border-purple-500/30"
+                  : "text-muted-foreground/50 bg-white/5 border-white/10",
+              )}>
+                {ttsPlaybackState === "speaking" && (
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                )}
+                {ttsPlaybackState === "speaking" ? "SPEAKING"
+                  : ttsPlaybackState === "queued" ? `QUEUED${ttsQueueLength > 0 ? ` (${ttsQueueLength})` : ""}`
+                  : ttsPlaybackState === "finished" ? "DONE"
+                  : ttsPlaybackState === "error" ? "ERROR"
+                  : "IDLE"}
+              </div>
+            </div>
+
+            {/* Voice OFF warning */}
+            {ttsMode === "off" && (
+              <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-300/90 leading-tight">
+                  Storm can reply in text, but voice is disabled.
+                </p>
+              </div>
+            )}
+
+            {/* Browser fallback notice */}
+            {usingBrowserFallback && ttsMode !== "off" && (
+              <div className="flex items-start gap-2 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-2">
+                <Radio className="h-3.5 w-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-blue-300/90 leading-tight">
+                  Using browser voice fallback.
+                </p>
+              </div>
+            )}
+
+            {/* Status grid — Voice / Mode / Voice name / Language */}
+            <div className="grid grid-cols-2 gap-1.5 mb-2">
+              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Voice</p>
+                <p className={cn("text-xs font-bold", ttsMode !== "off" ? "text-emerald-400" : "text-red-400")}>
+                  {ttsMode !== "off" ? "ON" : "OFF"}
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Mode</p>
+                <p className="text-xs font-bold text-white">
+                  {ttsMode === "openai" ? "OpenAI" : ttsMode === "browser" ? "Browser" : "Off"}
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Selected</p>
+                <p className="text-xs font-bold text-white capitalize truncate">{ttsVoice}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Language</p>
+                <p className="text-xs font-bold text-white truncate">
+                  {config?.replyLanguage === "auto" ? "Auto" : (config?.replyLanguage ?? "—")}
+                </p>
+              </div>
+            </div>
+
+            {/* Queue length row (only when > 0) */}
+            {ttsQueueLength > 0 && (
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 mb-2">
+                <Activity className="h-3 w-3 text-blue-400 flex-shrink-0" />
+                <p className="text-[11px] text-blue-300/90">
+                  {ttsQueueLength} message{ttsQueueLength !== 1 ? "s" : ""} waiting to be spoken
+                </p>
+              </div>
+            )}
+
+            {/* Last spoken message */}
+            {lastSpokenText && ttsMode !== "off" && (
+              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] mb-1.5">
+                <p className="text-[9px] text-muted-foreground/50 mb-1 uppercase tracking-wide">Last spoken</p>
+                <p className="text-[10px] text-white/70 line-clamp-2 leading-relaxed">
+                  {lastSpokenText.length > 120 ? lastSpokenText.slice(0, 120) + "…" : lastSpokenText}
+                </p>
+              </div>
+            )}
+
+            {/* TTS error */}
+            {lastTtsError && ttsMode !== "off" && (
+              <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-[10px] text-amber-300/90 leading-tight">{lastTtsError}</p>
+              </div>
+            )}
           </div>
 
           {/* ── Settings sections — all collapsed by default ── */}

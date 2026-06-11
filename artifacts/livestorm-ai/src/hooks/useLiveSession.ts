@@ -153,6 +153,7 @@ const API_BASE = `${BASE_URL}/api`;
 
 // Queue to prevent overlapping TTS playback
 let ttsQueue: Promise<void> = Promise.resolve();
+let ttsQueueDepth = 0;
 
 async function playOpenAiTts(text: string, voice: string, volume: number, speed = 1.0): Promise<void> {
   try {
@@ -167,8 +168,8 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
       const body = await res.json().catch(() => ({}));
       const msg = body?.error ?? `HTTP ${res.status}`;
       console.warn(`[TTS] OpenAI TTS error: ${msg} — falling back to browser TTS`);
-      window.dispatchEvent(new CustomEvent("tts:error", { detail: msg }));
-      playBrowserTts(text);
+      window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
+      await playBrowserTts(text);
       return;
     }
 
@@ -205,8 +206,8 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
   } catch (err) {
     const msg = (err as Error)?.message ?? String(err);
     console.warn("[TTS] OpenAI TTS playback error:", msg, "— falling back to browser TTS");
-    window.dispatchEvent(new CustomEvent("tts:error", { detail: msg }));
-    playBrowserTts(text);
+    window.dispatchEvent(new CustomEvent("tts:fallback", { detail: { reason: msg } }));
+    await playBrowserTts(text);
   }
 }
 
@@ -264,7 +265,11 @@ function playBrowserTts(text: string): Promise<void> {
     };
     utt.onerror = (e) => {
       clearTimeout(timeout);
-      console.warn(`[TTS:Browser] ✗ error: ${(e as SpeechSynthesisErrorEvent).error}`);
+      const errMsg = (e as SpeechSynthesisErrorEvent).error ?? "unknown";
+      console.warn(`[TTS:Browser] ✗ error: ${errMsg}`);
+      if (errMsg !== "interrupted") {
+        window.dispatchEvent(new CustomEvent("tts:error", { detail: { reason: errMsg } }));
+      }
       resolve();
     };
 
@@ -272,15 +277,29 @@ function playBrowserTts(text: string): Promise<void> {
   });
 }
 
-function enqueueTts(fn: () => Promise<void>): void {
+function enqueueTts(fn: () => Promise<void>, text?: string): void {
   // If synthesis is paused (Chrome tab-switch bug), the queue may be deadlocked.
   // Reset it so the next item plays immediately rather than waiting forever.
   if (typeof window !== "undefined" && window.speechSynthesis?.paused) {
     window.speechSynthesis.resume();
     ttsQueue = Promise.resolve();
+    ttsQueueDepth = 0;
     console.log("[TTS:Browser] 🔄 queue reset — synthesis was paused");
   }
-  ttsQueue = ttsQueue.then(fn).catch(() => {});
+  ttsQueueDepth++;
+  window.dispatchEvent(new CustomEvent("tts:queue", { detail: { depth: ttsQueueDepth } }));
+  ttsQueue = ttsQueue.then(async () => {
+    try {
+      await fn();
+      if (text) window.dispatchEvent(new CustomEvent("tts:spoken", { detail: { text } }));
+    } finally {
+      ttsQueueDepth = Math.max(0, ttsQueueDepth - 1);
+      window.dispatchEvent(new CustomEvent("tts:queue", { detail: { depth: ttsQueueDepth } }));
+    }
+  }).catch(() => {
+    ttsQueueDepth = Math.max(0, ttsQueueDepth - 1);
+    window.dispatchEvent(new CustomEvent("tts:queue", { detail: { depth: ttsQueueDepth } }));
+  });
 }
 
 export function useLiveSession(
@@ -561,11 +580,11 @@ export function useLiveSession(
         console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | text="${payload.text.slice(0, 60)}"`);
         if (mode === "openai") {
           console.log(`[TTS] → enqueuing OpenAI TTS | voice=${ttsVoiceRef.current} | speed=${ttsSpeedRef.current}`);
-          enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current));
+          enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current), payload.text);
         } else if (mode === "browser") {
           const detectedLang = detectTtsLang(payload.text);
           console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang}`);
-          enqueueTts(() => playBrowserTts(payload.text));
+          enqueueTts(() => playBrowserTts(payload.text), payload.text);
         } else {
           console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Assistant settings or Dashboard toggle.`);
         }
