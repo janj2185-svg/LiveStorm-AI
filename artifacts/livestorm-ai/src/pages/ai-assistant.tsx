@@ -1377,7 +1377,7 @@ export function AiAssistant() {
               className="text-[13px] font-black tracking-tight text-white/75"
               style={{ textShadow: "0 0 16px rgba(139,92,246,0.35)" }}
             >
-              ⚡ LiveStorm AI
+              LiveStorm AI
             </span>
           </div>
 
