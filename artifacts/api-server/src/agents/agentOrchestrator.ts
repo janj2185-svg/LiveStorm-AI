@@ -1,8 +1,8 @@
 import type { Server as SocketServer } from "socket.io";
-import { db, aiAgentsTable, aiAgentTasksTable, aiPersonaConfigsTable } from "@workspace/db";
+import { db, aiAgentsTable, aiAgentTasksTable, aiPersonaConfigsTable, agentViewerProfilesTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import type { TikTokEvent } from "../lib/tiktokSimulator";
-import { classifyEvent, savePriorityDecision, PRIORITY_LEVELS } from "./chatAgent";
+import { classifyEvent, savePriorityDecision, PRIORITY_LEVELS, batchSimilarMessages } from "./chatAgent";
 import { runHostAgent } from "./hostAgent";
 import { runModerationAgent } from "./moderationAgent";
 import { getActivePersonality } from "./personalityAgent";
@@ -12,6 +12,17 @@ import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion,
 import { runLearningAgent } from "./learningAgent";
 import { isBattleActive, generateBattleReply } from "./battleAgent";
 import { generateVoice, fastSpamCheck } from "../lib/aiService";
+import {
+  applyEmotionalTrigger,
+  getEmotionalState,
+  getVoiceSpeedModifier,
+  decayAllEmotions,
+  clearEmotionalState,
+  trackCommentBurst,
+  recordActivity,
+  giftTierTrigger,
+  EMOTION_META,
+} from "./emotionEngine";
 
 const MAX_QUEUE_SIZE = 50;
 const MAX_GENERAL_ITEM_AGE_MS = 15_000;
@@ -28,8 +39,8 @@ const ANNOUNCEMENT_COOLDOWN_MS: Record<string, number> = {
 // Priority-aware TTS cooldowns — high-value events respond faster
 const TTS_COOLDOWN_MS: Record<number, number> = {
   1: 2_000,   // gift — react immediately
-  2: 3_000,   // follow / share
-  3: 2_000,   // battle
+  2: 4_000,   // follow / share
+  3: 3_000,   // battle
   4: 5_000,   // direct question
   5: 6_000,   // vip viewer
   6: 8_000,   // general chat
@@ -92,6 +103,7 @@ export function initOrchestrator(io: SocketServer): void {
   ioRef = io;
   setInterval(processQueue, 200);
   setInterval(cleanQueue, 30_000);
+  setInterval(decayAllEmotions, 30_000);
   console.log("[Orchestrator] Multi-Agent Core initialized");
 }
 
@@ -165,6 +177,9 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     state.announcementCooldowns.set(milestoneKey, Date.now());
     const milestone = nextMilestone * 100;
     console.log(`[NEW-PIPELINE] ⭐ like_milestone=${milestone} | session=${event.sessionId} totalLikes=${next}`);
+    // Emotion trigger
+    const milestoneEmotion = applyEmotionalTrigger(event.sessionId, "like_milestone");
+    ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...milestoneEmotion, ...EMOTION_META[milestoneEmotion.primary] });
     // Enrich event so hostAgent can craft a milestone-specific reply
     event = { ...event, data: { ...event.data, milestone } };
   }
@@ -199,6 +214,10 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     }
     state.announcementCooldowns.set(giftKey, Date.now());
     console.log(`[NEW-PIPELINE] 🎁 gift passed threshold | coins=${coins} threshold=${threshold} | session=${event.sessionId}`);
+    // Emotion trigger — scale with gift size
+    const giftEmotion = applyEmotionalTrigger(event.sessionId, giftTierTrigger(coins));
+    console.log(`[Agent:Emotion] ${EMOTION_META[giftEmotion.primary].emoji} ${giftEmotion.primary} intensity=${giftEmotion.intensity}/10 ← gift ${coins} coins`);
+    ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...giftEmotion, ...EMOTION_META[giftEmotion.primary] });
   }
 
   // ── 3. Share events: per-session cooldown ──────────────────────────────────
@@ -212,6 +231,8 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     }
     state.announcementCooldowns.set(shareKey, Date.now());
     console.log(`[NEW-PIPELINE] 📢 share passed cooldown | session=${event.sessionId} viewer=${event.username}`);
+    const shareEmotion = applyEmotionalTrigger(event.sessionId, "share");
+    ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...shareEmotion, ...EMOTION_META[shareEmotion.primary] });
   }
 
   // ── 4. Follow events: announceLevelUp flag + per-session cooldown ───────────
@@ -237,6 +258,8 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     }
     state.announcementCooldowns.set(followKey, Date.now());
     console.log(`[NEW-PIPELINE] 👤 follow passed cooldown | session=${event.sessionId} viewer=${event.username}`);
+    const followEmotion = applyEmotionalTrigger(event.sessionId, "follow");
+    ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...followEmotion, ...EMOTION_META[followEmotion.primary] });
   }
 
   // ── 5. Comment events: fast spam check + per-viewer reply cooldown ──────────
@@ -283,9 +306,91 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
 
   // ── End pre-filters: all checks passed → classify and enqueue ──────────────
 
+  // Track comment burst and record activity for silence detection
+  if (event.type === "comment") {
+    const burstTrigger = trackCommentBurst(event.sessionId);
+    if (burstTrigger) {
+      const burstEmotion = applyEmotionalTrigger(event.sessionId, burstTrigger);
+      console.log(`[Agent:Emotion] ${EMOTION_META[burstEmotion.primary].emoji} comment burst → ${burstEmotion.primary} intensity=${burstEmotion.intensity}/10`);
+      ioRef.to(`session:${event.sessionId}`).emit("emotion:state", { ...burstEmotion, ...EMOTION_META[burstEmotion.primary] });
+    }
+  }
+  recordActivity(event.sessionId);
+
   const classification = await classifyEvent(event, streamerId);
 
-  // Deduplicate general chat: merge similar messages already sitting in queue
+  // ── GENERAL comment batching: aggregate similar messages in a 3s window ──────
+  // This fires BEFORE the in-queue dedup so identical comments from many viewers
+  // collapse into a single AI call with crowd-context instead of N separate calls.
+  if (event.type === "comment" && classification.priority === PRIORITY_LEVELS.GENERAL && classification.groupKey) {
+    const text = (event.data.text as string) ?? "";
+
+    // Emit priority signal immediately for UI feedback (don't wait for batch)
+    ioRef.to(`session:${event.sessionId}`).emit("agent:chat:priority", {
+      viewerName: event.username,
+      message: text,
+      priorityLevel: classification.priority,
+      priorityReason: classification.reason,
+      agentType: classification.agentType,
+      isQuestion: classification.isQuestion,
+      isVip: classification.isVip,
+    });
+
+    batchSimilarMessages(
+      event.sessionId,
+      streamerId,
+      event.username ?? "unknown",
+      text,
+      classification.groupKey,
+      (result) => {
+        // Secondary dedup: if an identical group is already queued, merge counts
+        const alreadyQueued = state.queue.find(
+          (q) => q.sessionId === event.sessionId && q.groupKey === classification.groupKey,
+        );
+        if (alreadyQueued) {
+          alreadyQueued.batchCount = (alreadyQueued.batchCount ?? 1) + result.count;
+          console.log(`[Chat:Batch] 📦 merged flush ${result.count}x into queued item → group="${result.groupKey}" (${alreadyQueued.batchCount} total)`);
+          return;
+        }
+
+        // Enrich event text with crowd context when multiple viewers sent it
+        const batchedEvent = result.count > 1
+          ? { ...event, data: { ...event.data, text: result.topMessage } }
+          : event;
+
+        const batchedItem: QueueItem = {
+          priority: classification.priority,
+          sessionId: event.sessionId,
+          streamerId,
+          event:     batchedEvent,
+          agentType: classification.agentType,
+          priorityReason: classification.reason,
+          enqueuedAt: Date.now(),
+          groupKey:   classification.groupKey,
+          batchCount: result.count,
+        };
+
+        state.queue.push(batchedItem);
+        state.queue.sort((a, b) => a.priority - b.priority || a.enqueuedAt - b.enqueuedAt);
+        console.log(`[Chat:Batch] ⏱️ flushed ${result.count}x similar → group="${result.groupKey}" priority=${classification.priority}`);
+      },
+    );
+
+    void savePriorityDecision({
+      sessionId:     event.sessionId,
+      streamerId,
+      viewerName:    event.username ?? "Unknown",
+      message:       text,
+      priorityLevel: classification.priority,
+      priorityReason: classification.reason,
+      agentType:     classification.agentType,
+    });
+
+    trackStreamEvent(event.sessionId, event.type);
+    return; // batch timer handles queue insertion
+  }
+
+  // ── Non-GENERAL / non-comment: in-queue dedup (safety net) ──────────────────
   if (classification.priority === PRIORITY_LEVELS.GENERAL && classification.groupKey) {
     const existing = state.queue.find(
       (q) => q.sessionId === event.sessionId && q.groupKey === classification.groupKey,
@@ -439,6 +544,33 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     ? history.slice(-5).map((h) => `@${h.viewer}: "${h.comment}" → AI: "${h.reply}"`).join("\n")
     : undefined;
 
+  // ── Emotion Agent: get current state + trigger for VIP / first-timer ─────────
+  let emotionState = getEmotionalState(sessionId);
+  if (event.type === "comment" && state.enabledAgents.has("memory")) {
+    try {
+      const viewerProfile = await db.query.agentViewerProfilesTable.findFirst({
+        where: and(
+          eq(agentViewerProfilesTable.streamerId, streamerId),
+          eq(agentViewerProfilesTable.viewerName, event.username ?? ""),
+        ),
+      });
+      if (!viewerProfile) {
+        emotionState = applyEmotionalTrigger(sessionId, "first_timer");
+        console.log(`[Agent:Emotion] ${EMOTION_META[emotionState.primary].emoji} first-timer: ${event.username}`);
+      } else if (viewerProfile.vipLevel !== "none") {
+        emotionState = applyEmotionalTrigger(sessionId, "vip_comment");
+        console.log(`[Agent:Emotion] ${EMOTION_META[emotionState.primary].emoji} VIP comment: ${event.username} (${viewerProfile.vipLevel})`);
+      }
+      if (ioRef) ioRef.to(`session:${sessionId}`).emit("emotion:state", { ...emotionState, ...EMOTION_META[emotionState.primary] });
+    } catch { /* non-fatal */ }
+  }
+  // Battle mode locks in competitive emotion
+  if (isBattleActive(sessionId) && emotionState.primary !== "competitive") {
+    emotionState = applyEmotionalTrigger(sessionId, "battle_start");
+    if (ioRef) ioRef.to(`session:${sessionId}`).emit("emotion:state", { ...emotionState, ...EMOTION_META[emotionState.primary] });
+  }
+  console.log(`[Agent:Emotion] ${EMOTION_META[emotionState.primary].emoji} state=${emotionState.primary} intensity=${emotionState.intensity}/10 trigger="${emotionState.lastTrigger}"`);
+
   // ── Battle Agent: override if battle is active ───────────────────────────────
   if (state.enabledAgents.has("battle") && isBattleActive(sessionId) && event.type === "comment") {
     const commentText = (event.data.text as string) ?? "";
@@ -450,6 +582,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       personaName: config.personaName,
       personality,
       replyLanguage: config.replyLanguage ?? "auto",
+      emotionState,
     });
     if (battleResult.shouldSpeak && battleResult.suggestedReply) {
       console.log(`[Agent:Battle] ⚔️ battle reply: "${battleResult.suggestedReply.slice(0, 80)}"`);
@@ -497,6 +630,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     memoryContext: memoryCtx,
     replyLanguage: config.replyLanguage ?? "auto",
     conversationHistory,
+    emotionState,
   });
 
   if (!hostResult?.text) {
@@ -564,11 +698,16 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     score: computeBaseScore(item.priority, event.type),
   });
 
-  // ── Voice Agent: synthesize TTS ──────────────────────────────────────────────
+  // ── Voice Agent: synthesize TTS (emotion-adjusted speed) ────────────────────
   if (config.voiceEnabled && state.enabledAgents.has("voice")) {
     try {
-      console.log(`[Agent:Voice] 🎙️ synthesizing TTS | voiceKey=${voice.voiceKey} | text="${hostResult.text.slice(0, 50)}..."`);
-      const audioBuffer = await generateVoice(hostResult.text, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", voice.speed);
+      const emotionSpeedBoost = getVoiceSpeedModifier(emotionState);
+      const adjustedSpeed     = Math.min(1.8, Math.max(0.5, (voice.speed ?? 1.0) + emotionSpeedBoost));
+      if (Math.abs(emotionSpeedBoost) > 0.01) {
+        console.log(`[Agent:Voice] 🎙️ speed adjusted by emotion | base=${voice.speed} boost=${emotionSpeedBoost.toFixed(2)} → ${adjustedSpeed.toFixed(2)}`);
+      }
+      console.log(`[Agent:Voice] 🎙️ synthesizing TTS | voiceKey=${voice.voiceKey} speed=${adjustedSpeed.toFixed(2)} | text="${hostResult.text.slice(0, 50)}..."`);
+      const audioBuffer = await generateVoice(hostResult.text, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", adjustedSpeed);
       if (audioBuffer) {
         console.log(`[Agent:Voice] ✓ TTS audio generated | ${audioBuffer.byteLength ?? 0} bytes`);
         io.to(roomId).emit("tts:audio", { audio: audioBuffer, text: hostResult.text });
@@ -667,6 +806,7 @@ export async function getRecentTasks(streamerId: number, sessionId?: number, lim
 
 export function clearSessionHistory(sessionId: number): void {
   state.conversationHistory.delete(sessionId);
+  clearEmotionalState(sessionId);
 }
 
 export const AGENT_TYPES = ["host", "chat", "battle", "memory", "personality", "voice", "strategy", "moderation", "learning"] as const;

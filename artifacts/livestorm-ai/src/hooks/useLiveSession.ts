@@ -119,6 +119,35 @@ export interface LeaderboardUpdateEvent {
 
 export type TtsMode = "off" | "browser" | "openai";
 
+// ── Emotion Engine types (mirrored from backend emotionEngine.ts) ──────────────
+
+export type EmotionType =
+  | "happy" | "excited" | "confident" | "curious" | "playful"
+  | "competitive" | "grateful" | "frustrated" | "surprised";
+
+export interface EmotionalHistoryEntry {
+  emotion: EmotionType;
+  intensity: number;
+  trigger: string;
+  ts: number;
+}
+
+export interface EmotionalState {
+  sessionId: number;
+  primary: EmotionType;
+  intensity: number;
+  secondary: EmotionType | null;
+  secondaryIntensity: number;
+  lastUpdatedAt: number;
+  lastTrigger: string;
+  history: EmotionalHistoryEntry[];
+  // UI enrichment from backend
+  emoji?: string;
+  label?: string;
+  color?: string;
+  bgClass?: string;
+}
+
 const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
 const API_BASE = `${BASE_URL}/api`;
 
@@ -233,6 +262,7 @@ export function useLiveSession(
   const [levelUps, setLevelUps] = useState<LevelUpEvent[]>([]);
   const [kingdomUpdates, setKingdomUpdates] = useState<KingdomUpdateEvent[]>([]);
   const [leaderboardVersion, setLeaderboardVersion] = useState(0);
+  const [emotionState, setEmotionState] = useState<EmotionalState | null>(null);
 
   const [tiktokMode, setTiktokMode] = useState<ConnectionMode | null>(initialMode ?? null);
   const [tiktokError, setTiktokError] = useState<string | null>(null);
@@ -525,6 +555,10 @@ export function useLiveSession(
         );
       });
 
+      socket.on("emotion:state", (payload: EmotionalState) => {
+        setEmotionState(payload);
+      });
+
       socket.on("session:ended", () => {
         socket.disconnect();
       });
@@ -557,6 +591,7 @@ export function useLiveSession(
     levelUps,
     kingdomUpdates,
     leaderboardVersion,
+    emotionState,
     connected,
     clearEvents,
     setTtsEnabled,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLiveSessionContext, type LiveEvent } from "@/contexts/LiveSessionContext";
+import type { EmotionalState } from "@/hooks/useLiveSession";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +9,7 @@ import {
   AlertTriangle, Radio, Bot, Wifi, WifiOff,
   MessageCircle, Gift, Heart, UserPlus, Eye, Gem,
   ArrowDown, Share2, Sparkles, Zap, Trophy, TrendingUp,
+  Brain,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
@@ -372,6 +374,146 @@ function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean
   );
 }
 
+// ── Emotion Widget ────────────────────────────────────────────────────────────
+
+const INTENSITY_COLORS: Record<string, string> = {
+  happy:       "bg-green-400",
+  excited:     "bg-orange-400",
+  confident:   "bg-indigo-400",
+  curious:     "bg-cyan-400",
+  playful:     "bg-pink-400",
+  competitive: "bg-red-400",
+  grateful:    "bg-amber-400",
+  frustrated:  "bg-lime-400",
+  surprised:   "bg-purple-400",
+};
+
+function EmotionWidget({ emotionState, isActive }: { emotionState: EmotionalState | null; isActive: boolean }) {
+  const pipCount = 5;
+
+  if (!isActive) {
+    return (
+      <div className="rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
+          <Brain className="h-4 w-4 text-muted-foreground/40" />
+          <span className="text-sm font-semibold text-white/30">AI Mood</span>
+        </div>
+        <div className="px-4 py-5 flex flex-col items-center gap-2">
+          <span className="text-2xl opacity-20">😶</span>
+          <p className="text-[10px] text-muted-foreground/40 text-center">Start a session to see AI emotional state</p>
+        </div>
+      </div>
+    );
+  }
+
+  const state = emotionState ?? {
+    primary: "happy" as const,
+    intensity: 3,
+    secondary: null,
+    secondaryIntensity: 0,
+    lastTrigger: "stream started",
+    emoji: "😊",
+    label: "Happy",
+    history: [],
+  };
+
+  const pipColor = INTENSITY_COLORS[state.primary] ?? "bg-white/40";
+  const filledPips = Math.round((state.intensity / 10) * pipCount);
+
+  const recentHistory = state.history?.slice(0, 3) ?? [];
+
+  return (
+    <motion.div
+      key={state.primary}
+      className="rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden"
+      initial={{ opacity: 0.8 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
+        <Brain className="h-4 w-4 text-violet-400" />
+        <span className="text-sm font-semibold text-white">AI Mood</span>
+        <span className="ml-auto text-[10px] text-muted-foreground/50">Emotion Engine</span>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Primary emotion */}
+        <div className="flex items-center gap-3">
+          <motion.span
+            key={state.primary}
+            className="text-3xl leading-none"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          >
+            {state.emoji ?? "😊"}
+          </motion.span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-bold text-white">{state.label ?? "Happy"}</span>
+              <span className="text-[10px] text-muted-foreground/60">{state.intensity}/10</span>
+            </div>
+            {/* Intensity pips */}
+            <div className="flex gap-1 mt-1">
+              {Array.from({ length: pipCount }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-1.5 flex-1 rounded-full transition-all duration-500",
+                    i < filledPips ? pipColor : "bg-white/10",
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Trigger */}
+        {state.lastTrigger && (
+          <p className="text-[10px] text-muted-foreground/60 truncate">
+            ↳ {state.lastTrigger}
+          </p>
+        )}
+
+        {/* Secondary emotion */}
+        {state.secondary && state.secondaryIntensity >= 3 && (
+          <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+            <span className="text-xs text-muted-foreground/50">Also:</span>
+            <span className="text-xs font-medium text-white/70 capitalize">{state.secondary}</span>
+            <div className="flex gap-0.5 ml-auto">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-1 w-3 rounded-full transition-all",
+                    i < Math.round((state.secondaryIntensity / 10) * 3)
+                      ? (INTENSITY_COLORS[state.secondary!] ?? "bg-white/40")
+                      : "bg-white/10",
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* History */}
+        {recentHistory.length > 0 && (
+          <div className="space-y-1 pt-1 border-t border-white/[0.05]">
+            <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wider">History</p>
+            {recentHistory.map((entry, i) => (
+              <div key={i} className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50">
+                <span className="capitalize text-white/40">{entry.emotion}</span>
+                <span className="text-white/20">·</span>
+                <span className="truncate">{entry.trigger}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Connection status badge ───────────────────────────────────────────────────
 
 function ConnectionBadge({
@@ -438,7 +580,7 @@ function ConnectionBadge({
 export function LiveStudio() {
   const {
     events, translations, stats, connected, tiktokMode, tiktokError, tiktokUsername,
-    isActive, sessionMode,
+    isActive, sessionMode, emotionState,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
 
@@ -561,6 +703,9 @@ export function LiveStudio() {
               </div>
             </div>
           </div>
+
+          {/* ── Emotion Widget ─────────────────────────────────────────── */}
+          <EmotionWidget emotionState={emotionState ?? null} isActive={!!isActive} />
         </div>
 
         {/* ── Right panel: feeds ───────────────────────────────────────────── */}

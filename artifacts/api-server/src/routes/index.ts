@@ -21,6 +21,7 @@ import moderationRouter from "./moderation";
 import avatarRouter from "./avatar";
 import devRouter from "./dev";
 import analyticsRouter from "./analytics";
+import emotionRouter from "./emotion";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use(billingRouter);
 router.use(adminRouter);
 router.use(devRouter);
 router.use(analyticsRouter);
+router.use(emotionRouter);
 
 export default router;

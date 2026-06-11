@@ -3,6 +3,8 @@ import type { TikTokEvent } from "../lib/tiktokSimulator";
 import type { PersonalityContext } from "./personalityAgent";
 import { buildPersonalityPrompt } from "./personalityAgent";
 import { storeMemory } from "./memoryAgent";
+import type { EmotionalState } from "./emotionEngine";
+import { getEmotionPromptContext } from "./emotionEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
@@ -22,8 +24,9 @@ export async function runHostAgent(opts: {
   memoryContext: string;
   replyLanguage: string;
   conversationHistory?: string;
+  emotionState?: EmotionalState;
 }): Promise<HostAgentResult | null> {
-  const { event, personaName, personality, memoryContext, replyLanguage, conversationHistory } = opts;
+  const { event, personaName, personality, memoryContext, replyLanguage, conversationHistory, emotionState } = opts;
   const viewerName = event.username ?? "someone";
 
   let userPrompt = "";
@@ -31,15 +34,15 @@ export async function runHostAgent(opts: {
 
   switch (event.type) {
     case "gift": {
-      const coins = (event.data.coins as number) ?? 0;
+      const coins    = (event.data.coins as number) ?? 0;
       const giftName = (event.data.giftName as string) ?? "a gift";
       userPrompt = `${viewerName} just sent a ${giftName} worth ${coins} coins! React with genuine excitement and thank them specifically.`;
-      emotion = "grateful";
+      emotion    = "grateful";
       await storeMemory({
         streamerId: opts.streamerId,
         memoryType: "viewer",
-        key: `${viewerName}_last_gift`,
-        value: `${viewerName} sent ${giftName} (${coins} coins)`,
+        key:        `${viewerName}_last_gift`,
+        value:      `${viewerName} sent ${giftName} (${coins} coins)`,
         viewerName,
         importance: 4,
       });
@@ -47,43 +50,54 @@ export async function runHostAgent(opts: {
     }
     case "follow": {
       userPrompt = `${viewerName} just followed the stream! Welcome them warmly and encourage them to stay.`;
-      emotion = "excited";
+      emotion    = "excited";
       break;
     }
     case "comment": {
       const comment = (event.data.text as string) ?? "";
-      userPrompt = `${viewerName} says: "${comment}"${conversationHistory ? `\n\nRecent conversation:\n${conversationHistory}` : ""}`;
-      emotion = "neutral";
+      userPrompt    = `${viewerName} says: "${comment}"${conversationHistory ? `\n\nRecent conversation:\n${conversationHistory}` : ""}`;
+      emotion       = "neutral";
       break;
     }
     case "share": {
       userPrompt = `${viewerName} just shared the stream! Thank them and hype up the moment.`;
-      emotion = "hype";
+      emotion    = "hype";
       break;
     }
     case "like": {
       const count = (event.data.likeCount as number) ?? 1;
-      userPrompt = `${viewerName} sent ${count} likes! Acknowledge the love.`;
-      emotion = "excited";
+      userPrompt  = `${viewerName} sent ${count} likes! Acknowledge the love.`;
+      emotion     = "excited";
       break;
     }
     default:
       return null;
   }
 
-  const systemPrompt = buildPersonalityPrompt(personality, personaName);
-  const memorySection = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
+  // Build system prompt with personality × emotion expression matrix
+  const systemPrompt = buildPersonalityPrompt(personality, personaName, emotionState);
+
+  // Build context sections
+  const emotionSection = emotionState ? getEmotionPromptContext(emotionState) : "";
+  const memorySection  = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
   const langInstruction = replyLanguage === "auto"
     ? "Respond in the SAME language the viewer used. Detect it carefully. Only fall back to Ukrainian if the language is completely unclear."
     : `Always respond in ${replyLanguage}.`;
 
+  const fullSystem = [
+    systemPrompt,
+    emotionSection,
+    memorySection,
+    langInstruction,
+  ].filter(Boolean).join("\n");
+
   try {
     const resp = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model:      "gpt-4o-mini",
       max_tokens: 80,
-      messages: [
-        { role: "system", content: `${systemPrompt}${memorySection}\n${langInstruction}` },
-        { role: "user", content: userPrompt },
+      messages:   [
+        { role: "system", content: fullSystem },
+        { role: "user",   content: userPrompt },
       ],
     });
 
@@ -101,16 +115,17 @@ export async function generateWelcomeMessage(opts: {
   personaName: string;
   personality: PersonalityContext;
   streamTitle?: string;
+  emotionState?: EmotionalState;
 }): Promise<string> {
-  const systemPrompt = buildPersonalityPrompt(opts.personality, opts.personaName);
+  const systemPrompt = buildPersonalityPrompt(opts.personality, opts.personaName, opts.emotionState);
   try {
     const resp = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model:      "gpt-4o-mini",
       max_tokens: 60,
-      messages: [
+      messages:   [
         { role: "system", content: systemPrompt },
         {
-          role: "user",
+          role:    "user",
           content: `Generate a short welcome message to kick off the stream${opts.streamTitle ? ` titled "${opts.streamTitle}"` : ""}. Keep it under 20 words.`,
         },
       ],

@@ -3,6 +3,8 @@ import { db, battleTranscriptsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import type { PersonalityContext } from "./personalityAgent";
 import { buildPersonalityPrompt } from "./personalityAgent";
+import type { EmotionalState } from "./emotionEngine";
+import { getEmotionPromptContext } from "./emotionEngine";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
@@ -49,11 +51,11 @@ export async function addBattleTranscript(opts: {
   const [transcript] = await db
     .insert(battleTranscriptsTable)
     .values({
-      sessionId: opts.sessionId,
+      sessionId:  opts.sessionId,
       streamerId: opts.streamerId,
-      speaker: opts.speaker,
-      text: opts.text,
-      language: opts.language ?? "auto",
+      speaker:    opts.speaker,
+      text:       opts.text,
+      language:   opts.language ?? "auto",
     })
     .returning();
 
@@ -67,14 +69,24 @@ export async function generateBattleReply(opts: {
   personaName: string;
   personality: PersonalityContext;
   replyLanguage?: string;
+  emotionState?: EmotionalState;
 }): Promise<BattleAgentResult> {
-  const battle = activeBattles.get(opts.sessionId);
+  const battle         = activeBattles.get(opts.sessionId);
   const recentOpponent = battle?.opponentContext.slice(-3).join(" | ") ?? opts.opponentStatement;
 
-  const systemPrompt = `${buildPersonalityPrompt(opts.personality, opts.personaName)}
-You are in a TikTok LIVE battle. Help our streamer respond to the opponent.
-Battle strategy: be confident, entertaining, crowd-pleasing. Keep it clean and fun.
-Respond in 1-2 punchy sentences. Maximum impact.`;
+  // Personality × emotion matrix fires during battle — adds competitive expression
+  const basePrompt = buildPersonalityPrompt(opts.personality, opts.personaName, opts.emotionState);
+
+  // Emotion context for battle intensifies competitive edge
+  const emotionCtx = opts.emotionState ? getEmotionPromptContext(opts.emotionState) : "";
+
+  const systemPrompt = [
+    basePrompt,
+    emotionCtx,
+    `You are in a TikTok LIVE battle. Help our streamer respond to the opponent.`,
+    `Battle strategy: be confident, entertaining, crowd-pleasing. Maximum impact in 1-2 punchy sentences.`,
+    `The crowd is watching — make every word count.`,
+  ].filter(Boolean).join("\n");
 
   const userPrompt = `Opponent just said: "${opts.opponentStatement}"
 Context from opponent: ${recentOpponent}
@@ -82,11 +94,11 @@ Generate a smart, crowd-pleasing comeback for our streamer to say.`;
 
   try {
     const resp = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model:      "gpt-4o-mini",
       max_tokens: 80,
-      messages: [
+      messages:   [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        { role: "user",   content: userPrompt },
       ],
     });
 
@@ -95,18 +107,18 @@ Generate a smart, crowd-pleasing comeback for our streamer to say.`;
     await db
       .insert(battleTranscriptsTable)
       .values({
-        sessionId: opts.sessionId,
-        streamerId: opts.streamerId,
-        speaker: "opponent",
-        text: opts.opponentStatement,
-        language: opts.replyLanguage ?? "auto",
+        sessionId:     opts.sessionId,
+        streamerId:    opts.streamerId,
+        speaker:       "opponent",
+        text:          opts.opponentStatement,
+        language:      opts.replyLanguage ?? "auto",
         suggestedReply,
       })
       .catch(() => {});
 
     return {
       suggestedReply,
-      context: recentOpponent,
+      context:     recentOpponent,
       shouldSpeak: suggestedReply.length > 0,
     };
   } catch (err: unknown) {
@@ -117,9 +129,9 @@ Generate a smart, crowd-pleasing comeback for our streamer to say.`;
 
 export async function getBattleTranscripts(sessionId: number, streamerId: number) {
   return db.query.battleTranscriptsTable.findMany({
-    where: eq(battleTranscriptsTable.sessionId, sessionId),
+    where:   eq(battleTranscriptsTable.sessionId, sessionId),
     orderBy: [desc(battleTranscriptsTable.createdAt)],
-    limit: 50,
+    limit:   50,
   });
 }
 
@@ -134,11 +146,11 @@ export async function summarizeBattle(sessionId: number, streamerId: number): Pr
 
   try {
     const resp = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model:      "gpt-4o-mini",
       max_tokens: 100,
-      messages: [
+      messages:   [
         { role: "system", content: "Summarize this TikTok LIVE battle transcript in 2 sentences. Who had the better performance?" },
-        { role: "user", content: formatted },
+        { role: "user",   content: formatted },
       ],
     });
     return resp.choices[0]?.message?.content?.trim() ?? "Battle completed.";
