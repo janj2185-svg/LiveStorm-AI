@@ -20,7 +20,7 @@ let io: SocketServer | null = null;
 // ─── Per-session msgId deduplication ──────────────────────────────────────────
 // tik.tools replays the same buffered events on every reconnect (same msgIds).
 // We track seen msgIds per session for 10 minutes to prevent duplicate feed entries.
-const DEDUP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const DEDUP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 interface DedupEntry { ts: number }
 const seenMsgIds = new Map<number, Map<string, DedupEntry>>();
 

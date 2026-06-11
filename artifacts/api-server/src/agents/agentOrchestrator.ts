@@ -151,6 +151,26 @@ function isOpenerRepeated(newOpener: string, recentOpeners: string[]): boolean {
   });
 }
 
+// Word-overlap (Jaccard) similarity — catches paraphrased repetitions
+function computeSimilarity(a: string, b: string): number {
+  const tokenize = (s: string) =>
+    new Set(s.toLowerCase().split(/\s+/).filter((w) => w.replace(/[^a-zа-яіїєґё]/gi, "").length > 2));
+  const wa = tokenize(a);
+  const wb = tokenize(b);
+  if (wa.size === 0 || wb.size === 0) return 0;
+  const intersection = [...wa].filter((w) => wb.has(w)).length;
+  const union = new Set([...wa, ...wb]).size;
+  return intersection / union;
+}
+
+function isTooSimilarToRecent(text: string, recentReplies: string[], threshold = 0.7): boolean {
+  const check = recentReplies.slice(-10); // compare against last 10 replies
+  for (const prev of check) {
+    if (computeSimilarity(text, prev) >= threshold) return true;
+  }
+  return false;
+}
+
 let ioRef: SocketServer | null = null;
 
 export function initOrchestrator(io: SocketServer): void {
@@ -933,39 +953,44 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     return;
   }
 
-  // ── Anti-repetition: check opener + regenerate once if needed ────────────────
+  // ── Anti-repetition: opener check + semantic similarity + regenerate once ─────
   const newOpener = extractOpener(hostResult.text);
-  if (isOpenerRepeated(newOpener, sessionRecentOpeners)) {
-    console.log(`[Anti-Repeat] 🔄 opener="${newOpener.slice(0, 30)}" matches recent history — regenerating once...`);
+  const openerRepeated = isOpenerRepeated(newOpener, sessionRecentOpeners);
+  const tooSimilar     = isTooSimilarToRecent(hostResult.text, sessionRecentReplies);
+
+  if (openerRepeated || tooSimilar) {
+    const reason = openerRepeated ? `opener repeated "${newOpener.slice(0, 25)}"` : `similarity >70%`;
+    console.log(`[Anti-Repeat] 🔄 ${reason} — regenerating once...`);
     const regenResult = await runHostAgent({
       event: eventForHost,
       streamerId,
-      personaName:     config.personaName,
+      personaName:      config.personaName,
       personality,
-      memoryContext:   memoryCtx,
-      replyLanguage:   config.replyLanguage   ?? "auto",
-      defaultLanguage: config.defaultLanguage ?? "uk",
+      memoryContext:    memoryCtx,
+      replyLanguage:    config.replyLanguage   ?? "auto",
+      defaultLanguage:  config.defaultLanguage ?? "uk",
       conversationHistory,
       emotionState,
-      behaviorCtx:     behaviorCtx || undefined,
-      recentReplies:   sessionRecentReplies.slice(-5),
-      personaGender:   (config as any).personaGender ?? "neutral",
+      behaviorCtx:      behaviorCtx || undefined,
+      recentReplies:    sessionRecentReplies.slice(-8),
+      personaGender:    (config as any).personaGender ?? "neutral",
       forceAlternative: true,
     });
     if (regenResult?.text) {
       const regenOpener = extractOpener(regenResult.text);
-      console.log(`[Anti-Repeat] ✅ alternative generated | opener="${regenOpener.slice(0, 30)}" | text="${regenResult.text.slice(0, 60)}"`);
+      const regenSim    = isTooSimilarToRecent(regenResult.text, sessionRecentReplies);
+      console.log(`[Anti-Repeat] ✅ alternative | opener="${regenOpener.slice(0, 25)}" sim-ok=${!regenSim} | "${regenResult.text.slice(0, 55)}"`);
       hostResult = regenResult;
     }
   } else {
-    console.log(`[Anti-Repeat] ✓ opener="${newOpener.slice(0, 30)}" is fresh`);
+    console.log(`[Anti-Repeat] ✓ opener="${newOpener.slice(0, 25)}" fresh | sim<70%`);
   }
 
   // Track this reply for future anti-repetition
   const finalOpener = extractOpener(hostResult.text);
   state.recentOpeners.set(sessionId, [...sessionRecentOpeners, finalOpener].slice(-5));
-  state.recentReplies.set(sessionId, [...sessionRecentReplies, hostResult.text].slice(-20));
-  console.log(`[Anti-Repeat] 📝 tracked | recentReplies=${state.recentReplies.get(sessionId)!.length}/20 | recentOpeners=${state.recentOpeners.get(sessionId)!.length}/5`);
+  state.recentReplies.set(sessionId, [...sessionRecentReplies, hostResult.text].slice(-50));
+  console.log(`[Anti-Repeat] 📝 tracked | recentReplies=${state.recentReplies.get(sessionId)!.length}/50 | recentOpeners=${state.recentOpeners.get(sessionId)!.length}/5`);
 
   // ── Behavior Engine: inject paralinguistic texture into spoken text ──────────
   const spokenText = injectParalinguistics(hostResult.text, {

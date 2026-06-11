@@ -16,17 +16,25 @@ export const VOICE_CATALOG: Record<string, VoiceConfig & { label: string }> = {
   shimmer: { voiceKey: "shimmer", speed: 1.0,  description: "Warm, expressive female voice",                     label: "Shimmer (Warm Female)" },
 };
 
-const PERSONALITY_VOICE_MAP: Record<string, string> = {
-  friendly:     "nova",
-  professional: "onyx",
-  funny:        "fable",
-  savage:       "echo",
-  flirty:       "shimmer",
-  motivational: "onyx",
+// Maps named profiles (calm_male, warm_female etc.) to their underlying OpenAI voice + speed
+const NAMED_PROFILE_MAP: Record<string, { voice: string; speed: number; description: string }> = {
+  calm_male:        { voice: "onyx",    speed: 0.9,  description: "Calm Male Host — deep & composed" },
+  deep_male:        { voice: "onyx",    speed: 0.85, description: "Deep Broadcaster — powerful & authoritative" },
+  energetic_male:   { voice: "echo",    speed: 1.1,  description: "Energetic Streamer — fast-paced & direct" },
+  funny_male:       { voice: "fable",   speed: 1.05, description: "Funny Commentator — expressive & playful" },
+  warm_female:      { voice: "nova",    speed: 0.95, description: "Warm Female Host — natural & inviting" },
+  confident_female: { voice: "shimmer", speed: 1.0,  description: "Confident Streamer — bold & expressive" },
+  soft_female:      { voice: "nova",    speed: 0.85, description: "Soft Assistant — gentle & clear" },
+  energetic_female: { voice: "shimmer", speed: 1.1,  description: "Energetic Creator — upbeat & vibrant" },
+  playful:          { voice: "shimmer", speed: 1.2,  description: "Playful & Youthful — light & bouncy" },
+  robot:            { voice: "alloy",   speed: 0.8,  description: "Robot Voice — flat & synthetic" },
+  news:             { voice: "fable",   speed: 0.9,  description: "News Presenter — formal & clear" },
+  caster:           { voice: "echo",    speed: 1.15, description: "Gaming Caster — fast & energetic" },
 };
 
-export async function getActiveVoice(streamerId: number, personalityKey?: string): Promise<VoiceConfig> {
+export async function getActiveVoice(streamerId: number, _personalityKey?: string): Promise<VoiceConfig> {
   try {
+    // 1. Check for explicitly saved default DB profile
     const defaultProfile = await db.query.aiVoiceProfilesTable.findFirst({
       where: and(
         eq(aiVoiceProfilesTable.streamerId, streamerId),
@@ -35,6 +43,10 @@ export async function getActiveVoice(streamerId: number, personalityKey?: string
     });
 
     if (defaultProfile) {
+      const resolved = NAMED_PROFILE_MAP[defaultProfile.voiceKey];
+      if (resolved) {
+        return { voiceKey: resolved.voice, speed: defaultProfile.speed, description: resolved.description };
+      }
       return {
         voiceKey: defaultProfile.voiceKey,
         speed: defaultProfile.speed,
@@ -42,21 +54,24 @@ export async function getActiveVoice(streamerId: number, personalityKey?: string
       };
     }
 
-    if (personalityKey) {
-      const mapped = PERSONALITY_VOICE_MAP[personalityKey];
-      if (mapped && VOICE_CATALOG[mapped]) {
-        const cat = VOICE_CATALOG[mapped]!;
-        return { voiceKey: cat.voiceKey, speed: cat.speed, description: cat.description };
-      }
-    }
-
+    // 2. Always respect the user's explicit voiceName selection from persona config
     const config = await db.query.aiPersonaConfigsTable.findFirst({
       where: eq(aiPersonaConfigsTable.streamerId, streamerId),
     });
 
-    const vk = config?.voiceName ?? "nova";
-    const cat = VOICE_CATALOG[vk] ?? VOICE_CATALOG.nova!;
-    return { voiceKey: vk, speed: config?.voiceSpeed ?? cat.speed, description: cat.description };
+    const voiceKey = config?.voiceName ?? "nova";
+    const speed    = config?.voiceSpeed ?? 1.0;
+
+    // 3. Resolve named profile → underlying OpenAI voice
+    const named = NAMED_PROFILE_MAP[voiceKey];
+    if (named) {
+      return { voiceKey: named.voice, speed, description: named.description };
+    }
+
+    // 4. Direct OpenAI voice in catalog
+    const cat = VOICE_CATALOG[voiceKey] ?? VOICE_CATALOG.nova!;
+    return { voiceKey: cat.voiceKey, speed, description: cat.description };
+
   } catch {
     return { voiceKey: "nova", speed: 1.0, description: "Default" };
   }

@@ -284,8 +284,21 @@ Always reply in ${streamerLangName}. This is the stream's primary language.
   const langContext = isCommentEvent ? "viewer-reply" : "stream-address";
   console.log(`[HostAgent:lang] event=${event.type} ctx=${langContext} | fixed=${replyLanguage !== "auto" ? replyLangName : "no"} | streamerLang=${streamerLangName}`);
 
+  // Natural speech fillers — injected occasionally to sound human
+  const speechFillers = [
+    "До речі...", "Слухай...", "Оце цікаво...", "Зараз подумав...", "Хвилинку...",
+    "Між іншим...", "Ось що думаю...", "Хоча...",
+  ];
+  const useFiller = Math.random() < 0.15; // 15% chance of natural filler opening
+  const fillerHint = useFiller
+    ? `NATURAL OPENER OPTION: You MAY start with a natural Ukrainian filler like "${speechFillers[Math.floor(Math.random() * speechFillers.length)]}" if it fits the moment naturally — but only if it genuinely sounds right, don't force it.`
+    : "";
+
   // Structural variety guard — prevents templated 3-part response patterns
-  const varietyInstruction = "VARIETY: Change your response structure each time — sometimes just react, sometimes ask a question, sometimes make a quick observation. Never open the same way twice in a row.";
+  const varietyInstruction = `VARIETY: Change your response structure EVERY reply.
+Options: sharp one-liner | genuine question | playful tease | short observation | strong opinion | skeptical pushback | callback to earlier | admit uncertainty
+Never use the same structure twice in a row. Mix short punchy replies with slightly longer natural ones.
+${fillerHint}`;
 
   // ── Prompt assembly — emotion section LAST before variety for maximum LLM attention ──
   const fullSystem = [

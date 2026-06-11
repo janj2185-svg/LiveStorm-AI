@@ -393,15 +393,31 @@ router.post("/ai/generate-event", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// Named profile → OpenAI voice resolution (must match voiceAgent.ts NAMED_PROFILE_MAP)
+const NAMED_TO_OPENAI: Record<string, string> = {
+  calm_male: "onyx", deep_male: "onyx", energetic_male: "echo", funny_male: "fable",
+  warm_female: "nova", confident_female: "shimmer", soft_female: "nova", energetic_female: "shimmer",
+  playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
+};
+const OPENAI_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
+type OpenAIVoice = typeof OPENAI_VOICES[number];
+
+function resolveToOpenAIVoice(voiceKey: string): OpenAIVoice {
+  if (NAMED_TO_OPENAI[voiceKey]) return NAMED_TO_OPENAI[voiceKey] as OpenAIVoice;
+  if (OPENAI_VOICES.includes(voiceKey as OpenAIVoice)) return voiceKey as OpenAIVoice;
+  return "nova";
+}
+
 // ── POST /ai/voice ─────────────────────────────────────────────────────────────
 router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
   try {
     const { text, voice, speed } = req.body;
     if (!text?.trim()) return res.status(400).json({ error: "text is required" });
 
-    const safeVoice: VoiceOption = VALID_VOICES.includes(voice) ? voice : "nova";
+    const resolvedVoice = resolveToOpenAIVoice(String(voice ?? "nova"));
     const safeSpeed = Math.max(0.25, Math.min(4.0, Number(speed) || 1.0));
-    const audioBuffer = await generateVoice(text.trim(), safeVoice, safeSpeed);
+    console.log(`[TTS] /ai/voice | requested="${voice}" resolved="${resolvedVoice}" speed=${safeSpeed}`);
+    const audioBuffer = await generateVoice(text.trim(), resolvedVoice, safeSpeed);
 
     if (!audioBuffer) {
       return res.status(503).json({ error: "Voice generation failed. Check OpenAI configuration." });
