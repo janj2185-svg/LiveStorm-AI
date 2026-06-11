@@ -109,6 +109,7 @@ interface OrchestratorState {
   sessionLikeTotals: Map<number, number>;       // cumulative likes per session for milestone detection
   announcementCooldowns: Map<string, number>;   // "sessionId:eventType" → last-fired timestamp
   perViewerReplyCooldown: Map<string, number>;  // "sessionId:viewerName" → last-reply timestamp
+  sessionToStreamer: Map<number, number>;        // sessionId → streamerId (used by silence filler)
 }
 
 const state: OrchestratorState = {
@@ -120,6 +121,7 @@ const state: OrchestratorState = {
   sessionLikeTotals: new Map(),
   announcementCooldowns: new Map(),
   perViewerReplyCooldown: new Map(),
+  sessionToStreamer: new Map(),
 };
 
 let ioRef: SocketServer | null = null;
@@ -135,16 +137,34 @@ export function initOrchestrator(io: SocketServer): void {
   setInterval(() => {
     if (!ioRef) return;
     const silenced = checkSilentSessions();
-    for (const { sessionId, state } of silenced) {
+    for (const { sessionId, state: silenceState } of silenced) {
       ioRef.to(`session:${sessionId}`).emit("emotion:state", {
-        ...state,
-        ...EMOTION_META[state.primary],
+        ...silenceState,
+        ...EMOTION_META[silenceState.primary],
       });
       console.log(
-        `[Agent:Emotion] ${EMOTION_META[state.primary].emoji} silence detected → ${state.primary} intensity=${state.intensity}/10 | session=${sessionId}`,
+        `[Agent:Emotion] ${EMOTION_META[silenceState.primary].emoji} silence detected → ${silenceState.primary} intensity=${silenceState.intensity}/10 | session=${sessionId}`,
       );
       // Mood: deep silence drains energy and patience more than brief silence
-      applyMoodEvent(sessionId, state.primary === "frustrated" ? "deep_silence" : "silence");
+      applyMoodEvent(sessionId, silenceState.primary === "frustrated" ? "deep_silence" : "silence");
+
+      // Verbal filler: real hosts don't go silent during dead air — they think out loud,
+      // check in with chat, or share an observation. ~45% chance per silence tick.
+      const streamerId = state.sessionToStreamer.get(sessionId);
+      if (streamerId && Math.random() < 0.45) {
+        const isExtended = silenceState.intensity >= 7;
+        void enqueueEvent(
+          {
+            type:      "silence_filler",
+            sessionId,
+            username:  undefined,
+            data:      { silenceDuration: isExtended ? "extended" : "brief" },
+            timestamp: Date.now(),
+          } satisfies TikTokEvent,
+          streamerId,
+        );
+        console.log(`[Agent:Silence] 💬 verbal filler enqueued | session=${sessionId} extended=${isExtended}`);
+      }
     }
   }, 15_000);
 
@@ -192,6 +212,28 @@ function cleanQueue(): void {
 
 export async function enqueueEvent(event: TikTokEvent, streamerId: number): Promise<void> {
   if (!ioRef) return;
+
+  // Track session → streamer mapping so the silence filler can find the right config
+  state.sessionToStreamer.set(event.sessionId, streamerId);
+
+  // ── Silence filler: bypass all pre-filters, enqueue directly at P6 ──────────
+  // These are internally-generated ambient responses during dead air.
+  // They skip viewer cooldowns, spam checks, and classification.
+  if ((event.type as string) === "silence_filler") {
+    initMoodState(event.sessionId);
+    const fillerItem: QueueItem = {
+      priority:      PRIORITY_LEVELS.GENERAL,
+      sessionId:     event.sessionId,
+      streamerId,
+      event,
+      agentType:     "host",
+      priorityReason: "Ambient filler — silence",
+      enqueuedAt:    Date.now(),
+    };
+    state.queue.push(fillerItem);
+    state.queue.sort((a, b) => a.priority - b.priority || a.enqueuedAt - b.enqueuedAt);
+    return;
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PRE-FILTERS: logic migrated from old processAiAnnouncements pipeline.
@@ -414,6 +456,18 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
       text,
       classification.groupKey,
       (result) => {
+        // Selective non-response: real people don't reply to every P6 comment.
+        // Skip probability increases with queue depth and stream fatigue.
+        const queueDepth = state.queue.length;
+        const fatigue    = getStreamFatigue(event.sessionId);
+        const baseSkip   = fatigue >= 0.6 ? 0.22 : fatigue >= 0.3 ? 0.12 : 0.06;
+        const queueSkip  = queueDepth > 10 ? 0.15 : queueDepth > 5 ? 0.08 : 0;
+        const skipProb   = Math.min(0.35, baseSkip + queueSkip);
+        if (Math.random() < skipProb) {
+          console.log(`[Orchestrator] 🎲 skip | P6 viewer=${event.username ?? "?"} skip=${skipProb.toFixed(2)} q=${queueDepth} fatigue=${fatigue.toFixed(2)}`);
+          return;
+        }
+
         // Secondary dedup: if an identical group is already queued, merge counts
         const alreadyQueued = state.queue.find(
           (q) => q.sessionId === event.sessionId && q.groupKey === classification.groupKey,
@@ -698,18 +752,30 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
 
   // ── Behavior Engine: build behavioral context for this event ────────────────
   const commentText2 = event.type === "comment" ? ((event.data.text as string) ?? "") : "";
-  const humor             = detectHumor(commentText2);
+  const humor              = detectHumor(commentText2);
   const questionComplexity = detectQuestionComplexity(commentText2);
-  const fatigueCtx        = getStreamFatiguePromptContext(sessionId);
-  const aftermathCtx      = getBattleAftermathContext(sessionId);
-  const moodCtx           = getMoodPromptContext(sessionId);
-  const behaviorHints     = getBehaviorPromptContext({ humor, questionComplexity });
-  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints].filter(Boolean).join("\n");
+  const fatigueCtx         = getStreamFatiguePromptContext(sessionId);
+  const aftermathCtx       = getBattleAftermathContext(sessionId);
+  const moodCtx            = getMoodPromptContext(sessionId);
+  const behaviorHints      = getBehaviorPromptContext({ humor, questionComplexity });
+  // Comment depth hint: long personal comments deserve a response that matches their depth
+  const commentDepthHint   = commentText2.length > 60
+    ? "This viewer wrote something personal and detailed — match their depth and specificity in your reply."
+    : "";
+  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
-  // When multiple viewers sent the same message, give the AI crowd context
-  const eventForHost = (item.batchCount && item.batchCount > 1 && event.type === "comment")
-    ? { ...event, data: { ...event.data, text: `[${item.batchCount} viewers are saying:] ${(event.data.text as string) ?? ""}` } }
+  // When multiple viewers sent the same message, give the AI crowd context in
+  // natural language (not a metadata tag) so the response addresses the crowd.
+  const batchSize    = item.batchCount ?? 1;
+  const originalText = (event.data.text as string) ?? "";
+  const crowdPrefix  = batchSize > 4
+    ? `A lot of chat (${batchSize} viewers) are all saying: `
+    : batchSize > 2
+    ? `Several viewers (${batchSize}) are saying: `
+    : "";
+  const eventForHost = (batchSize > 1 && event.type === "comment" && crowdPrefix)
+    ? { ...event, data: { ...event.data, text: `${crowdPrefix}"${originalText}"` } }
     : event;
 
   const hostResult = await runHostAgent({

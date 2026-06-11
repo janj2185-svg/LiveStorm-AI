@@ -25,7 +25,6 @@ export async function runHostAgent(opts: {
   replyLanguage: string;
   conversationHistory?: string;
   emotionState?: EmotionalState;
-  /** Behavioral context: fatigue arc, battle aftermath, humor/complexity hints */
   behaviorCtx?: string;
 }): Promise<HostAgentResult | null> {
   const { event, personaName, personality, memoryContext, replyLanguage, conversationHistory, emotionState, behaviorCtx } = opts;
@@ -38,8 +37,10 @@ export async function runHostAgent(opts: {
     case "gift": {
       const coins    = (event.data.coins as number) ?? 0;
       const giftName = (event.data.giftName as string) ?? "a gift";
-      userPrompt = `${viewerName} just sent a ${giftName} worth ${coins} coins! React with genuine excitement and thank them specifically.`;
-      emotion    = "grateful";
+      userPrompt = coins > 0
+        ? `${viewerName} just sent ${giftName} — ${coins} coins.`
+        : `${viewerName} just sent ${giftName}.`;
+      emotion = "grateful";
       await storeMemory({
         streamerId: opts.streamerId,
         memoryType: "viewer",
@@ -50,41 +51,93 @@ export async function runHostAgent(opts: {
       });
       break;
     }
+
     case "follow": {
-      userPrompt = `${viewerName} just followed the stream! Welcome them warmly and encourage them to stay.`;
+      userPrompt = `${viewerName} just followed.`;
       emotion    = "excited";
       break;
     }
+
     case "comment": {
       const comment = (event.data.text as string) ?? "";
-      userPrompt    = `${viewerName} says: "${comment}"${conversationHistory ? `\n\nRecent conversation:\n${conversationHistory}` : ""}`;
+      userPrompt    = `${viewerName}: "${comment}"`;
       emotion       = "neutral";
       break;
     }
+
     case "share": {
-      userPrompt = `${viewerName} just shared the stream! Thank them and hype up the moment.`;
+      userPrompt = `${viewerName} just shared the stream.`;
       emotion    = "hype";
       break;
     }
+
     case "like": {
-      const count = (event.data.likeCount as number) ?? 1;
-      userPrompt  = `${viewerName} sent ${count} likes! Acknowledge the love.`;
-      emotion     = "excited";
+      const milestone = (event.data.milestone as number) ?? (event.data.likeCount as number) ?? 100;
+      userPrompt = `The stream just hit ${milestone} total likes.`;
+      emotion    = "excited";
       break;
     }
+
+    case "silence_filler": {
+      const isExtended = (event.data.silenceDuration as string) === "extended";
+      userPrompt = isExtended
+        ? "Chat has been quiet for a while. Think out loud — share something genuine you've been noticing, a question you're actually curious about, or a passing thought."
+        : "A quiet moment in the stream. Say something natural and present — a brief thought, a check-in, or a passing observation. Keep it short.";
+      emotion = "neutral";
+      break;
+    }
+
     default:
       return null;
   }
 
-  // Build system prompt with personality × emotion expression matrix
+  // Append conversation context to ALL event types when available.
+  // A gift arriving mid-conversation, or a follow from someone who was just chatting,
+  // should reference the thread — real hosts always acknowledge things in context.
+  if (conversationHistory) {
+    const contextLabel = event.type === "comment"
+      ? "\n\nRecent conversation:"
+      : "\n\nStream was just talking about:";
+    userPrompt += `${contextLabel}\n${conversationHistory}`;
+  }
+
+  // ── Token budget — vary by event so responses feel naturally sized ────────────
+  // Short events (follows, likes) get brief reactions.
+  // Long personal comments get space to match depth.
+  // 18% chance of a shorter-than-normal response — real people sometimes just react.
+  const commentLen  = event.type === "comment" ? ((event.data.text as string) ?? "").length : 0;
+  const isCrowdText = event.type === "comment" && ((event.data.text as string) ?? "").startsWith("A lot of");
+  const baseTokens  =
+    event.type === "silence_filler" ? 58 :
+    event.type === "follow"         ? 38 :
+    event.type === "share"          ? 46 :
+    event.type === "like"           ? 44 :
+    event.type === "gift"           ? 60 :
+    isCrowdText                     ? 76 :
+    commentLen > 60                 ? 88 :
+    commentLen > 30                 ? 68 :
+                                      60;
+  const jitter    = Math.random() < 0.18 ? -Math.floor(Math.random() * 18 + 6) : 0;
+  const maxTokens = Math.max(22, baseTokens + jitter);
+
+  // ── Temperature — slightly higher for hype/emotional peaks ───────────────────
+  const temperature =
+    (emotionState?.intensity ?? 5) >= 8 ? 0.92 :
+    event.type === "silence_filler"      ? 0.95 :
+    event.type === "gift"                ? 0.85 :
+                                           0.80;
+
+  // Build system prompt with full personality × emotion direction
   const systemPrompt = buildPersonalityPrompt(personality, personaName, emotionState);
 
-  // Build context sections
-  const emotionSection = emotionState ? getEmotionPromptContext(emotionState) : "";
-  const memorySection  = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
+  const emotionSection  = emotionState ? getEmotionPromptContext(emotionState) : "";
+  const memorySection   = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
   const langInstruction = replyLanguage === "auto"
     ? "Respond in the SAME language the viewer used. Detect it carefully. Only fall back to Ukrainian if the language is completely unclear."
     : `Always respond in ${replyLanguage}.`;
+
+  // Structural variety guard — prevents templated 3-part response patterns
+  const varietyInstruction = "VARIETY: Change your response structure each time — sometimes just react, sometimes ask a question, sometimes make a quick observation. Never open the same way twice in a row.";
 
   const fullSystem = [
     systemPrompt,
@@ -92,13 +145,15 @@ export async function runHostAgent(opts: {
     behaviorCtx || "",
     memorySection,
     langInstruction,
+    varietyInstruction,
   ].filter(Boolean).join("\n");
 
   try {
     const resp = await openai.chat.completions.create({
-      model:      "gpt-4o-mini",
-      max_tokens: 80,
-      messages:   [
+      model:       "gpt-4o-mini",
+      max_tokens:  maxTokens,
+      temperature,
+      messages:    [
         { role: "system", content: fullSystem },
         { role: "user",   content: userPrompt },
       ],
