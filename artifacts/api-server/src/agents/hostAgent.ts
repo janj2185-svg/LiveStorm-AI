@@ -11,6 +11,30 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
 });
 
+// Map short language codes → full English names the LLM understands
+const LANGUAGE_NAMES: Record<string, string> = {
+  "auto": "auto",
+  "uk":   "Ukrainian",
+  "en":   "English",
+  "pl":   "Polish",
+  "de":   "German",
+  "ru":   "Russian",
+  "fr":   "French",
+  "es":   "Spanish",
+  "pt":   "Portuguese",
+  "it":   "Italian",
+  "nl":   "Dutch",
+  "tr":   "Turkish",
+  "cs":   "Czech",
+  "ro":   "Romanian",
+  "sv":   "Swedish",
+  "ar":   "Arabic",
+  "ja":   "Japanese",
+  "ko":   "Korean",
+  "zh":   "Chinese",
+  "hi":   "Hindi",
+};
+
 export interface HostAgentResult {
   text: string;
   emotion: "neutral" | "excited" | "grateful" | "funny" | "hype";
@@ -23,11 +47,12 @@ export async function runHostAgent(opts: {
   personality: PersonalityContext;
   memoryContext: string;
   replyLanguage: string;
+  defaultLanguage?: string;
   conversationHistory?: string;
   emotionState?: EmotionalState;
   behaviorCtx?: string;
 }): Promise<HostAgentResult | null> {
-  const { event, personaName, personality, memoryContext, replyLanguage, conversationHistory, emotionState, behaviorCtx } = opts;
+  const { event, personaName, personality, memoryContext, replyLanguage, defaultLanguage, conversationHistory, emotionState, behaviorCtx } = opts;
   const viewerName = event.username ?? "someone";
 
   let userPrompt = "";
@@ -37,8 +62,14 @@ export async function runHostAgent(opts: {
     case "gift": {
       const coins    = (event.data.coins as number) ?? 0;
       const giftName = (event.data.giftName as string) ?? "a gift";
+      // Tier label gives the LLM a clear signal about the emotional weight of the gift
+      const giftTier =
+        coins >= 1000 ? "LEGENDARY gift — absolutely insane" :
+        coins >= 500  ? "MASSIVE gift — wow" :
+        coins >= 100  ? "generous gift — that's real support" :
+        coins >= 20   ? "nice gift" : "";
       userPrompt = coins > 0
-        ? `${viewerName} just sent ${giftName} — ${coins} coins.`
+        ? `${viewerName} just sent ${giftName} — ${coins} coins.${giftTier ? ` [${giftTier}]` : ""}`
         : `${viewerName} just sent ${giftName}.`;
       emotion = "grateful";
       await storeMemory({
@@ -53,7 +84,7 @@ export async function runHostAgent(opts: {
     }
 
     case "follow": {
-      userPrompt = `${viewerName} just followed.`;
+      userPrompt = `${viewerName} just followed. [React with genuine energy — a new member of the community just showed up]`;
       emotion    = "excited";
       break;
     }
@@ -66,14 +97,18 @@ export async function runHostAgent(opts: {
     }
 
     case "share": {
-      userPrompt = `${viewerName} just shared the stream.`;
+      userPrompt = `${viewerName} just shared the stream with their friends. [That grows the community — acknowledge it]`;
       emotion    = "hype";
       break;
     }
 
     case "like": {
       const milestone = (event.data.milestone as number) ?? (event.data.likeCount as number) ?? 100;
-      userPrompt = `The stream just hit ${milestone} total likes.`;
+      const likeEnergy =
+        milestone >= 10000 ? "MASSIVE milestone — celebrate it" :
+        milestone >= 1000  ? "big milestone" :
+        milestone >= 500   ? "solid milestone" : "milestone";
+      userPrompt = `The stream just hit ${milestone} total likes. [${likeEnergy}]`;
       emotion    = "excited";
       break;
     }
@@ -107,46 +142,72 @@ export async function runHostAgent(opts: {
   // 18% chance of a shorter-than-normal response — real people sometimes just react.
   const commentLen  = event.type === "comment" ? ((event.data.text as string) ?? "").length : 0;
   const isCrowdText = event.type === "comment" && ((event.data.text as string) ?? "").startsWith("A lot of");
+  const coins       = event.type === "gift" ? ((event.data.coins as number) ?? 0) : 0;
   const baseTokens  =
-    event.type === "silence_filler" ? 58 :
-    event.type === "follow"         ? 38 :
-    event.type === "share"          ? 46 :
-    event.type === "like"           ? 44 :
-    event.type === "gift"           ? 60 :
-    isCrowdText                     ? 76 :
-    commentLen > 60                 ? 88 :
-    commentLen > 30                 ? 68 :
-                                      60;
+    event.type === "silence_filler"         ? 72 :
+    event.type === "follow"                 ? 52 :
+    event.type === "share"                  ? 56 :
+    event.type === "like"                   ? 52 :
+    (event.type === "gift" && coins >= 500) ? 90 :
+    (event.type === "gift" && coins >= 100) ? 78 :
+    event.type === "gift"                   ? 68 :
+    isCrowdText                             ? 84 :
+    commentLen > 60                         ? 96 :
+    commentLen > 30                         ? 76 :
+                                              68;
   const jitter    = Math.random() < 0.18 ? -Math.floor(Math.random() * 18 + 6) : 0;
-  const maxTokens = Math.max(22, baseTokens + jitter);
+  const maxTokens = Math.max(28, baseTokens + jitter);
 
-  // ── Temperature — slightly higher for hype/emotional peaks ───────────────────
+  // ── Temperature — rises with emotional intensity; high for expressive events ──
+  const emotionIntensity = emotionState?.intensity ?? 5;
   const temperature =
-    (emotionState?.intensity ?? 5) >= 8 ? 0.92 :
+    emotionIntensity >= 8                ? 0.96 :
+    emotionIntensity >= 6                ? 0.92 :
     event.type === "silence_filler"      ? 0.95 :
-    event.type === "gift"                ? 0.85 :
-                                           0.80;
+    (event.type === "gift" && coins >= 100) ? 0.92 :
+    event.type === "gift"                ? 0.88 :
+    event.type === "follow"              ? 0.88 :
+                                           0.85;
 
   // Build system prompt with full personality × emotion direction
   const systemPrompt = buildPersonalityPrompt(personality, personaName, emotionState);
 
-  const emotionSection  = emotionState ? getEmotionPromptContext(emotionState) : "";
-  const memorySection   = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
+  const emotionSection = emotionState ? getEmotionPromptContext(emotionState) : "";
+  const memorySection  = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
+
+  // ── Language instruction — map short codes to full names the LLM understands ─
+  const fallbackLangName = LANGUAGE_NAMES[defaultLanguage ?? "uk"] ?? "Ukrainian";
+  const replyLangName    = LANGUAGE_NAMES[replyLanguage] ?? replyLanguage;
+
+  // Auto mode: strong, explicit, non-negotiable language matching.
+  // Single-line soft hints get ignored; a rule table with examples does not.
   const langInstruction = replyLanguage === "auto"
-    ? "Respond in the SAME language the viewer used. Detect it carefully. Only fall back to Ukrainian if the language is completely unclear."
-    : `Always respond in ${replyLanguage}.`;
+    ? `LANGUAGE RULE (NON-NEGOTIABLE — follow this exactly):
+- Viewer wrote Cyrillic (е, х, к, д, з…) → they are likely writing in ${fallbackLangName}. Reply in ${fallbackLangName}.
+- Viewer wrote Polish diacritics (ą, ę, ó, ś…) → reply in Polish.
+- Viewer wrote English → reply in English.
+- Viewer wrote German diacritics (ä, ö, ü) → reply in German.
+- Default/unclear → reply in ${fallbackLangName}.
+DO NOT reply in English unless the viewer clearly wrote in English.
+DO NOT change languages mid-reply.`
+    : `LANGUAGE RULE (NON-NEGOTIABLE): Always reply in ${replyLangName}. Never switch to another language, even if the viewer writes in a different language.`;
+
+  console.log(`[HostAgent:lang] replyLang="${replyLanguage}"→"${replyLangName}" | fallback="${fallbackLangName}" | event=${event.type}`);
 
   // Structural variety guard — prevents templated 3-part response patterns
   const varietyInstruction = "VARIETY: Change your response structure each time — sometimes just react, sometimes ask a question, sometimes make a quick observation. Never open the same way twice in a row.";
 
+  // ── Prompt assembly — emotion section LAST before variety for maximum LLM attention ──
   const fullSystem = [
     systemPrompt,
-    emotionSection,
     behaviorCtx || "",
     memorySection,
     langInstruction,
+    emotionSection,    // near the end = highest attention weight from the model
     varietyInstruction,
   ].filter(Boolean).join("\n");
+
+  console.log(`[HostAgent:params] event=${event.type} | emotion=${emotionState?.primary ?? "none"}(${emotionIntensity}) | maxTokens=${maxTokens} | temp=${temperature}`);
 
   try {
     const resp = await openai.chat.completions.create({

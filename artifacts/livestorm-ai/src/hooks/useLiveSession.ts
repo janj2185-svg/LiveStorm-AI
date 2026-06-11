@@ -229,7 +229,41 @@ function detectTtsLang(text: string): string {
   return "en-US";
 }
 
-function playBrowserTts(text: string): Promise<void> {
+// Map TTS lang codes → Slavic/close-family fallback chains
+// When exact voice not found, try these in order before giving up
+const TTS_LANG_FALLBACKS: Record<string, string[]> = {
+  "uk-UA": ["uk", "ru-RU", "ru"],     // Ukrainian → Russian (closer than Polish)
+  "ru-RU": ["ru"],
+  "pl-PL": ["pl"],
+  "de-DE": ["de"],
+  "fr-FR": ["fr"],
+  "es-ES": ["es"],
+};
+
+function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  // 1. Exact match
+  const exact = voices.find(v => v.lang === lang);
+  if (exact) return exact;
+
+  // 2. Same language code (e.g., "uk" matches "uk-UA")
+  const langCode = lang.split("-")[0];
+  const partial = voices.find(v => v.lang.startsWith(langCode));
+  if (partial) return partial;
+
+  // 3. Configured fallback chain
+  const chain = TTS_LANG_FALLBACKS[lang] ?? [];
+  for (const fb of chain) {
+    const fallback = voices.find(v => v.lang === fb || v.lang.startsWith(fb));
+    if (fallback) return fallback;
+  }
+
+  return null; // browser will use its default
+}
+
+function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string }): Promise<void> {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
     if (!synth) { resolve(); return; }
@@ -241,10 +275,31 @@ function playBrowserTts(text: string): Promise<void> {
       synth.resume();
     }
 
+    const detectedLang = detectTtsLang(text);
     const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = detectTtsLang(text);
-    utt.rate = 1.1;
-    utt.pitch = 1.05;
+    utt.lang = detectedLang;
+
+    // Emotion-aware delivery: excited/hype → faster + higher pitch; calm → slower
+    const baseRate = opts?.rate ?? 1.05;
+    const emotion  = opts?.emotion ?? "neutral";
+    const emotionRateBoost =
+      emotion === "excited" || emotion === "hype" ? +0.08 :
+      emotion === "grateful"                       ? +0.03 :
+      emotion === "funny"                          ? +0.05 : 0;
+    utt.rate  = Math.min(1.6, Math.max(0.7, baseRate + emotionRateBoost));
+    utt.pitch = (emotion === "excited" || emotion === "hype") ? 1.1 : 1.0;
+
+    // Voice selection — explicitly pick the best available voice for this language
+    // and log which one was chosen (or if fallback was needed)
+    const selectedVoice = selectBrowserVoice(detectedLang);
+    if (selectedVoice) {
+      utt.voice = selectedVoice;
+      if (selectedVoice.lang !== detectedLang) {
+        console.warn(`[TTS:Browser] ⚠ no ${detectedLang} voice — using "${selectedVoice.name}" (${selectedVoice.lang}) as fallback`);
+      }
+    } else {
+      console.warn(`[TTS:Browser] ⚠ no voice found for ${detectedLang} — browser default will be used`);
+    }
 
     // Safety timeout: if onend never fires (Chrome pause/autoplay bug),
     // advance the queue after 12s instead of deadlocking forever.
@@ -254,7 +309,8 @@ function playBrowserTts(text: string): Promise<void> {
     }, 12_000);
 
     utt.onstart = () => {
-      console.log(`[TTS:Browser] ▶ playing | lang=${utt.lang} | chars=${text.length}`);
+      const voiceName = utt.voice?.name ?? "browser-default";
+      console.log(`[TTS:Browser] ▶ playing | lang=${utt.lang} | voice="${voiceName}" | emotion=${emotion} | rate=${utt.rate.toFixed(2)} | chars=${text.length}`);
       window.dispatchEvent(new CustomEvent("tts:start"));
     };
     utt.onend = () => {
@@ -577,14 +633,21 @@ export function useLiveSession(
         );
 
         const mode = ttsModeRef.current;
-        console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | text="${payload.text.slice(0, 60)}"`);
+        console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | emotion=${(payload as Record<string,unknown>).emotion ?? "?"} | text="${payload.text.slice(0, 60)}"`);
         if (mode === "openai") {
           console.log(`[TTS] → enqueuing OpenAI TTS | voice=${ttsVoiceRef.current} | speed=${ttsSpeedRef.current}`);
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current), payload.text);
         } else if (mode === "browser") {
+          // Log available voices once so we know what the browser has
+          const voices = window.speechSynthesis?.getVoices() ?? [];
+          if (voices.length > 0) {
+            const voiceList = voices.map(v => `${v.lang}:${v.name}`).join(" | ");
+            console.log(`[TTS:Browser] available voices (${voices.length}): ${voiceList}`);
+          }
+          const emotion = ((payload as Record<string,unknown>).emotion as string | undefined) ?? "neutral";
           const detectedLang = detectTtsLang(payload.text);
-          console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang}`);
-          enqueueTts(() => playBrowserTts(payload.text), payload.text);
+          console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang} | emotion=${emotion} | rate=${ttsSpeedRef.current}`);
+          enqueueTts(() => playBrowserTts(payload.text, { rate: ttsSpeedRef.current, emotion }), payload.text);
         } else {
           console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Assistant settings or Dashboard toggle.`);
         }
