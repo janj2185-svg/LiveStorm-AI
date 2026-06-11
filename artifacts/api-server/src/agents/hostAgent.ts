@@ -175,24 +175,47 @@ export async function runHostAgent(opts: {
   const emotionSection = emotionState ? getEmotionPromptContext(emotionState) : "";
   const memorySection  = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
 
-  // ── Language instruction — map short codes to full names the LLM understands ─
-  const fallbackLangName = LANGUAGE_NAMES[defaultLanguage ?? "uk"] ?? "Ukrainian";
+  // ── Language instruction — event-type-aware language contract ───────────────
+  //
+  // The stream has a PRIMARY LANGUAGE (streamer's language = defaultLanguage).
+  // Language rules:
+  //   comment      → reply in the VIEWER'S language (detect from their text)
+  //   follow/gift/ → reply in the STREAMER'S language (addressing the whole stream)
+  //   share/like/
+  //   silence_filler
+  //
+  const streamerLangName = LANGUAGE_NAMES[defaultLanguage ?? "uk"] ?? "Ukrainian";
   const replyLangName    = LANGUAGE_NAMES[replyLanguage] ?? replyLanguage;
+  const isCommentEvent   = event.type === "comment";
 
-  // Auto mode: strong, explicit, non-negotiable language matching.
-  // Single-line soft hints get ignored; a rule table with examples does not.
-  const langInstruction = replyLanguage === "auto"
-    ? `LANGUAGE RULE (NON-NEGOTIABLE — follow this exactly):
-- Viewer wrote Cyrillic (е, х, к, д, з…) → they are likely writing in ${fallbackLangName}. Reply in ${fallbackLangName}.
-- Viewer wrote Polish diacritics (ą, ę, ó, ś…) → reply in Polish.
-- Viewer wrote English → reply in English.
-- Viewer wrote German diacritics (ä, ö, ü) → reply in German.
-- Default/unclear → reply in ${fallbackLangName}.
-DO NOT reply in English unless the viewer clearly wrote in English.
-DO NOT change languages mid-reply.`
-    : `LANGUAGE RULE (NON-NEGOTIABLE): Always reply in ${replyLangName}. Never switch to another language, even if the viewer writes in a different language.`;
+  let langInstruction: string;
 
-  console.log(`[HostAgent:lang] replyLang="${replyLanguage}"→"${replyLangName}" | fallback="${fallbackLangName}" | event=${event.type}`);
+  if (replyLanguage !== "auto") {
+    // Fixed language: streamer locked Storm to one specific language for everything
+    langInstruction = `LANGUAGE RULE (NON-NEGOTIABLE): Always reply in ${replyLangName}. Never switch to another language.`;
+
+  } else if (isCommentEvent) {
+    // Viewer's comment → detect their language and reply in IT
+    // Cyrillic without Ukrainian markers defaults to the stream's primary language
+    langInstruction = `LANGUAGE RULE (NON-NEGOTIABLE — replying to a VIEWER comment, use THEIR language):
+• Viewer used Ukrainian letters (і, ї, є, ґ) or words (привіт, дякую, що, як, хто) → reply in Ukrainian
+• Viewer used Cyrillic but no clear Ukrainian markers → reply in ${streamerLangName} (stream's primary language)
+• Viewer used Polish diacritics (ą, ę, ó, ś, ź, ż, ć, ł, ń) → reply in Polish
+• Viewer used English (Latin alphabet, no special diacritics) → reply in English
+• Viewer used German diacritics (ä, ö, ü, ß) → reply in German
+• Unclear or no text → reply in ${streamerLangName}
+⛔ DO NOT default to English unless the viewer clearly wrote in English.
+⛔ DO NOT switch languages mid-reply.`;
+
+  } else {
+    // Non-comment event: Storm is speaking to the WHOLE STREAM → use streamer's language
+    langInstruction = `LANGUAGE RULE (NON-NEGOTIABLE — addressing the WHOLE STREAM, not a single viewer):
+Always reply in ${streamerLangName}. This is the stream's primary language.
+⛔ Never use English or any other language. ${streamerLangName} only.`;
+  }
+
+  const langContext = isCommentEvent ? "viewer-reply" : "stream-address";
+  console.log(`[HostAgent:lang] event=${event.type} ctx=${langContext} | fixed=${replyLanguage !== "auto" ? replyLangName : "no"} | streamerLang=${streamerLangName}`);
 
   // Structural variety guard — prevents templated 3-part response patterns
   const varietyInstruction = "VARIETY: Change your response structure each time — sometimes just react, sometimes ask a question, sometimes make a quick observation. Never open the same way twice in a row.";

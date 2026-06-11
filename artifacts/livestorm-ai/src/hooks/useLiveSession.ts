@@ -211,13 +211,21 @@ async function playOpenAiTts(text: string, voice: string, volume: number, speed 
   }
 }
 
-function detectTtsLang(text: string): string {
+// detectTtsLang: detect the spoken language of AI output text.
+// defaultLang = stream's primary language (e.g. "uk", "pl"). Used as a
+// tiebreaker for generic Cyrillic that lacks Ukrainian-specific letters.
+function detectTtsLang(text: string, defaultLang?: string): string {
   // Ukrainian-specific letters (not in Russian) — strongest signal
   if (/[іїєІЇЄґҐ]/.test(text)) return "uk-UA";
   // Ukrainian words/phrases without unique letters (common in announcements)
   if (/виграв|виграш|щасли|привіт|вітаємо|дякую|будь ласка|зараз|будемо|рівень|переможе|молодець|неймовірно|чудово|стрим|глядач|підписник|подарунок|лайк|перемог/i.test(text)) return "uk-UA";
-  // Cyrillic without Ukrainian-specific letters → Russian
-  if (/[а-яА-Я]/.test(text)) return "ru-RU";
+  // Generic Cyrillic: fall back to the stream's primary language when known.
+  // A Ukrainian stream replying in Cyrillic without unique letters is still Ukrainian.
+  if (/[а-яА-Я]/.test(text)) {
+    if (defaultLang === "uk") return "uk-UA";
+    if (defaultLang === "ru") return "ru-RU";
+    return "ru-RU"; // safe fallback when stream lang unknown
+  }
   // Polish diacritics
   if (/[ąęóśźżćłńĄĘÓŚŹŻĆŁŃ]/.test(text)) return "pl-PL";
   // German diacritics / eszett
@@ -263,7 +271,7 @@ function selectBrowserVoice(lang: string): SpeechSynthesisVoice | null {
   return null; // browser will use its default
 }
 
-function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string }): Promise<void> {
+function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string; defaultLang?: string }): Promise<void> {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
     if (!synth) { resolve(); return; }
@@ -275,7 +283,7 @@ function playBrowserTts(text: string, opts?: { rate?: number; emotion?: string }
       synth.resume();
     }
 
-    const detectedLang = detectTtsLang(text);
+    const detectedLang = detectTtsLang(text, opts?.defaultLang);
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = detectedLang;
 
@@ -645,9 +653,10 @@ export function useLiveSession(
             console.log(`[TTS:Browser] available voices (${voices.length}): ${voiceList}`);
           }
           const emotion = ((payload as Record<string,unknown>).emotion as string | undefined) ?? "neutral";
-          const detectedLang = detectTtsLang(payload.text);
-          console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang} | emotion=${emotion} | rate=${ttsSpeedRef.current}`);
-          enqueueTts(() => playBrowserTts(payload.text, { rate: ttsSpeedRef.current, emotion }), payload.text);
+          const streamerLang = ((payload as Record<string,unknown>).streamerLang as string | undefined) ?? "uk";
+          const detectedLang = detectTtsLang(payload.text, streamerLang);
+          console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang} | streamLang=${streamerLang} | emotion=${emotion} | rate=${ttsSpeedRef.current}`);
+          enqueueTts(() => playBrowserTts(payload.text, { rate: ttsSpeedRef.current, emotion, defaultLang: streamerLang }), payload.text);
         } else {
           console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Assistant settings or Dashboard toggle.`);
         }

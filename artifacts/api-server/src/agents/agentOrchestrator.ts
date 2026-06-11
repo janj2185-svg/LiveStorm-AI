@@ -846,6 +846,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     agentType: "host",
     personality: personality.modeKey,
     pipeline: "orchestrator",  // proof: every announcement from the new pipeline carries this field
+    streamerLang: config.defaultLanguage ?? "uk", // stream's primary language for TTS selection
   });
 
   io.to(roomId).emit("agent:task", {
