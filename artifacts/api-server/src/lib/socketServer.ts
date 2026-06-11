@@ -294,8 +294,8 @@ async function processAiAnnouncements(
             `cooldown OK (${sinceLastReply}ms >= ${cooldownMs}ms)`,
           );
 
-          if (!priority.shouldReply && priority.score < 4) {
-            console.log(`[AI:priority] session=${event.sessionId} viewer=${viewerName} — LOW PRIORITY (${priority.score}) skipping reply`);
+          if (!priority.shouldReply) {
+            console.log(`[AI:priority] session=${event.sessionId} viewer=${viewerName} — SKIP score=${priority.score} reason="${priority.reason}"`);
           } else {
             try {
               autoReplySpamMap.set(spamKey, Date.now());

@@ -199,16 +199,18 @@ function detectTtsLang(text: string): string {
   return "en-US";
 }
 
-function playBrowserTts(text: string): void {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.lang = detectTtsLang(text);
-  utt.rate = 1.1;
-  utt.pitch = 1.05;
-  utt.onstart = () => window.dispatchEvent(new CustomEvent("tts:start"));
-  utt.onend = () => window.dispatchEvent(new CustomEvent("tts:end"));
-  window.speechSynthesis.speak(utt);
+function playBrowserTts(text: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("speechSynthesis" in window)) { resolve(); return; }
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = detectTtsLang(text);
+    utt.rate = 1.1;
+    utt.pitch = 1.05;
+    utt.onstart = () => window.dispatchEvent(new CustomEvent("tts:start"));
+    utt.onend = () => { window.dispatchEvent(new CustomEvent("tts:end")); resolve(); };
+    utt.onerror = () => resolve();
+    window.speechSynthesis.speak(utt);
+  });
 }
 
 function enqueueTts(fn: () => Promise<void>): void {
@@ -495,8 +497,8 @@ export function useLiveSession(
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current));
         } else if (mode === "browser") {
           const detectedLang = detectTtsLang(payload.text);
-          console.log(`[TTS] → calling Browser Speech API | lang=${detectedLang}`);
-          playBrowserTts(payload.text);
+          console.log(`[TTS] → enqueuing Browser Speech API | lang=${detectedLang}`);
+          enqueueTts(() => playBrowserTts(payload.text));
         } else {
           console.warn(`[TTS] mode=off — speech skipped. Enable TTS via AI Co-Host settings or Dashboard toggle.`);
         }
