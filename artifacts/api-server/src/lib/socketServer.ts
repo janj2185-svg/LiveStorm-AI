@@ -239,6 +239,35 @@ export function initSocketServer(httpServer: HttpServer) {
       socket.leave(`session:${sessionId}`);
     });
 
+    // ── Streamer microphone input → co-host orchestrator ────────────────────────
+    socket.on("streamer:speech", async (data: { text: string; lang: string; sessionId: number }) => {
+      try {
+        const sid = Number(data?.sessionId);
+        const text = (data?.text ?? "").trim();
+        if (!sid || !text) return;
+        if (!socket.data.userId) {
+          console.warn(`[Mic] streamer:speech rejected — no auth | socketId=${socket.id}`);
+          return;
+        }
+        const session = await db.query.sessionsTable.findFirst({
+          where: eq(sessionsTable.id, sid),
+        });
+        if (!session || session.endedAt) return;
+        const event = {
+          type:      "streamer_speech" as const,
+          sessionId: sid,
+          username:  "streamer",
+          source:    "microphone",
+          data:      { text, lang: data?.lang ?? "uk" },
+          timestamp: Date.now(),
+        };
+        console.log(`[Mic] 🎙️ streamer speech | session=${sid} | lang=${data?.lang} | "${text.slice(0, 60)}"`);
+        void orchestratorEnqueue(event, session.streamerId);
+      } catch (err) {
+        console.error("[Mic] streamer:speech error:", (err as Error)?.message);
+      }
+    });
+
     socket.on("disconnect", () => {});
   });
 

@@ -3,7 +3,7 @@ import { ingestLiveEvent } from "./socketServer";
 
 export interface TikTokEvent {
   source?: string;
-  type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "silence_filler";
+  type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "silence_filler" | "streamer_speech";
   sessionId: number;
   userId?: string;
   username?: string;

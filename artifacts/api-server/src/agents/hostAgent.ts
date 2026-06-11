@@ -122,6 +122,25 @@ export async function runHostAgent(opts: {
       break;
     }
 
+    case "streamer_speech": {
+      const transcript = (event.data.text as string) ?? "";
+      userPrompt = `[CO-HOST MODE]: The streamer just said — "${transcript}"
+
+As their co-host, react naturally. You can: pick up their thought and continue it, add your own short take, bridge what they said to what the audience is thinking, or hype the moment. Keep it to 1–2 sentences — conversational, not scripted.`;
+      emotion = "neutral";
+      // Remember significant things the streamer mentions
+      if (transcript.length > 15) {
+        void storeMemory({
+          streamerId: opts.streamerId,
+          memoryType: "stream",
+          key:        `streamer_said_${Date.now()}`,
+          value:      transcript,
+          importance: 3,
+        });
+      }
+      break;
+    }
+
     default:
       return null;
   }
@@ -144,6 +163,7 @@ export async function runHostAgent(opts: {
   const isCrowdText = event.type === "comment" && ((event.data.text as string) ?? "").startsWith("A lot of");
   const coins       = event.type === "gift" ? ((event.data.coins as number) ?? 0) : 0;
   const baseTokens  =
+    event.type === "streamer_speech"        ? 84 :
     event.type === "silence_filler"         ? 72 :
     event.type === "follow"                 ? 52 :
     event.type === "share"                  ? 56 :
@@ -193,6 +213,14 @@ export async function runHostAgent(opts: {
   if (replyLanguage !== "auto") {
     // Fixed language: streamer locked Storm to one specific language for everything
     langInstruction = `LANGUAGE RULE (NON-NEGOTIABLE): Always reply in ${replyLangName}. Never switch to another language.`;
+
+  } else if (event.type === "streamer_speech") {
+    // Streamer spoke via microphone — reply in the language they were speaking
+    const spokenLangCode = ((event.data.lang as string) ?? defaultLanguage ?? "uk").split("-")[0];
+    const spokenLangName = LANGUAGE_NAMES[spokenLangCode ?? "uk"] ?? streamerLangName;
+    langInstruction = `LANGUAGE RULE (NON-NEGOTIABLE — the STREAMER just spoke in ${spokenLangName}, reply in ${spokenLangName}):
+Always reply in ${spokenLangName}. Match the streamer's language exactly.
+⛔ Never switch to another language.`;
 
   } else if (isCommentEvent) {
     // Viewer's comment → detect their language and reply in IT

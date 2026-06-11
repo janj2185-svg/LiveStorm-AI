@@ -49,8 +49,9 @@ import {
   getMoodBehaviorModifiers,
 } from "./moodEngine";
 
-const MAX_QUEUE_SIZE = 50;
-const MAX_GENERAL_ITEM_AGE_MS = 15_000;
+const MAX_QUEUE_SIZE         = 40;   // hard cap — evict oldest P6 items first
+const QUEUE_PRUNE_THRESHOLD  = 25;   // start pruning when queue exceeds this depth
+const MAX_GENERAL_ITEM_AGE_MS = 15_000; // P6 items older than 15s are stale
 
 // ─── Announcement cooldowns (migrated from old processAiAnnouncements) ────────
 // These mirror the old pipeline exactly so no behaviour is lost after migration.
@@ -113,6 +114,7 @@ interface OrchestratorState {
   perViewerReplyCooldown: Map<string, number>;  // "sessionId:viewerName" → last-reply timestamp
   sessionToStreamer: Map<number, number>;        // sessionId → streamerId (used by silence filler)
   lastStrategySuggestion: Map<number, { suggestion: StrategySuggestion; ts: number }>; // injected as optional hint into behaviorCtx
+  streamerSpeechHistory: Map<number, Array<{ text: string; ts: number }>>; // what the streamer said recently (mic input)
 }
 
 const state: OrchestratorState = {
@@ -126,6 +128,7 @@ const state: OrchestratorState = {
   perViewerReplyCooldown: new Map(),
   sessionToStreamer: new Map(),
   lastStrategySuggestion: new Map(),
+  streamerSpeechHistory: new Map(),
 };
 
 let ioRef: SocketServer | null = null;
@@ -219,6 +222,30 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
 
   // Track session → streamer mapping so the silence filler can find the right config
   state.sessionToStreamer.set(event.sessionId, streamerId);
+
+  // ── Streamer mic input: record history + enqueue at P3 (high priority) ──────
+  // Streamer speech bypasses all viewer-facing pre-filters.
+  if ((event.type as string) === "streamer_speech") {
+    const text = (event.data.text as string) ?? "";
+    const tenMinAgo = Date.now() - 10 * 60_000;
+    const hist = (state.streamerSpeechHistory.get(event.sessionId) ?? []).filter(h => h.ts > tenMinAgo);
+    hist.push({ text, ts: Date.now() });
+    state.streamerSpeechHistory.set(event.sessionId, hist.slice(-5));
+    recordActivity(event.sessionId);
+    const streamerItem: QueueItem = {
+      priority:       3,
+      sessionId:      event.sessionId,
+      streamerId,
+      event,
+      agentType:      "host",
+      priorityReason: "Streamer microphone input",
+      enqueuedAt:     Date.now(),
+    };
+    state.queue.push(streamerItem);
+    state.queue.sort((a, b) => a.priority - b.priority || a.enqueuedAt - b.enqueuedAt);
+    console.log(`[Orchestrator] 🎙️ streamer speech | P3 | session=${event.sessionId} | "${text.slice(0, 60)}"`);
+    return;
+  }
 
   // ── Silence filler: bypass all pre-filters, enqueue directly at P6 ──────────
   // These are internally-generated ambient responses during dead air.
@@ -575,8 +602,61 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
   trackStreamEvent(event.sessionId, event.type, event.type === "like" ? ((event.data.likeCount as number) ?? 1) : 1);
 }
 
+/**
+ * High-volume queue protection — called before every dispatch cycle.
+ *
+ * Phase 1 (soft prune): When depth > QUEUE_PRUNE_THRESHOLD (25), evict all
+ *   P6 (GENERAL) items that are older than MAX_GENERAL_ITEM_AGE_MS (15s).
+ *   These are stale low-priority chat messages — the moment has passed.
+ *
+ * Phase 2 (hard cap): If queue is still above MAX_QUEUE_SIZE (40) after the
+ *   soft prune, evict the oldest P6 items until we're at or below the cap.
+ *   This prevents unbounded memory growth during spikes.
+ */
+function pruneQueue(): void {
+  if (state.queue.length <= QUEUE_PRUNE_THRESHOLD) return;
+
+  const now = Date.now();
+
+  // Phase 1: drop stale P6 items
+  const before = state.queue.length;
+  state.queue = state.queue.filter((item) => {
+    if (item.priority !== PRIORITY_LEVELS.GENERAL) return true; // keep all non-P6
+    return now - item.enqueuedAt < MAX_GENERAL_ITEM_AGE_MS;
+  });
+  const afterPhase1 = state.queue.length;
+  if (afterPhase1 < before) {
+    console.log(`[Orchestrator:Queue] 🧹 pruned ${before - afterPhase1} stale P6 items (>${MAX_GENERAL_ITEM_AGE_MS / 1000}s old) | depth: ${before}→${afterPhase1}`);
+  }
+
+  // Phase 2: hard cap — evict oldest P6 items until queue ≤ MAX_QUEUE_SIZE
+  if (state.queue.length > MAX_QUEUE_SIZE) {
+    const p6Indices = state.queue
+      .map((item, idx) => (item.priority === PRIORITY_LEVELS.GENERAL ? idx : -1))
+      .filter((idx) => idx !== -1)
+      .sort((a, b) => (state.queue[a]!.enqueuedAt - state.queue[b]!.enqueuedAt)); // oldest first
+
+    let evicted = 0;
+    const toRemove = new Set<number>();
+    for (const idx of p6Indices) {
+      if (state.queue.length - toRemove.size <= MAX_QUEUE_SIZE) break;
+      toRemove.add(idx);
+      evicted++;
+    }
+    if (evicted > 0) {
+      state.queue = state.queue.filter((_, idx) => !toRemove.has(idx));
+      console.log(`[Orchestrator:Queue] ⚠️ hard cap hit — evicted ${evicted} P6 items | depth now: ${state.queue.length}`);
+    }
+  }
+}
+
 async function processQueue(): Promise<void> {
   if (state.processing || state.queue.length === 0 || !ioRef) return;
+
+  // Prune stale low-priority items before deciding what to dispatch next
+  pruneQueue();
+
+  if (state.queue.length === 0) return;
 
   const now = Date.now();
   const nextItem = state.queue[0]!;
@@ -782,7 +862,18 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const strategyHint = stratEntry && Date.now() - stratEntry.ts < 5 * 60_000
     ? `💡 Optional strategy hint (use when it fits naturally — not forced): ${stratEntry.suggestion.suggestion}`
     : "";
-  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint].filter(Boolean).join("\n");
+  // Recent streamer speech — give Storm memory of what the streamer said recently
+  const recentStreamerSpeech = (state.streamerSpeechHistory.get(sessionId) ?? [])
+    .filter(s => Date.now() - s.ts < 10 * 60_000)
+    .slice(-3);
+  const streamerSpeechCtx = recentStreamerSpeech.length > 0
+    ? recentStreamerSpeech.map(s => {
+        const ageMs  = Date.now() - s.ts;
+        const ageLbl = ageMs < 60_000 ? `${Math.round(ageMs / 1000)}s ago` : `${Math.round(ageMs / 60_000)}m ago`;
+        return `[Streamer said ${ageLbl}]: "${s.text}"`;
+      }).join("\n")
+    : "";
+  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint, streamerSpeechCtx].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
   // When multiple viewers sent the same message, give the AI crowd context in
@@ -876,6 +967,8 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     const contextLine =
       event.type === "comment"
         ? (event.data.text as string) ?? ""
+        : event.type === "streamer_speech"
+        ? `[streamer said]: "${(event.data.text as string) ?? ""}"`
         : event.type === "gift"
         ? `[gift: ${event.username} sent ${(event.data.giftName as string) ?? "a gift"} (${(event.data.coins as number) ?? 0} coins)]`
         : event.type === "follow"
