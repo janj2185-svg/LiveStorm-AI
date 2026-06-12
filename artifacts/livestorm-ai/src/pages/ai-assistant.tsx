@@ -1218,13 +1218,16 @@ export function AiAssistant() {
               <Switch
                 checked={config?.operatingMode === "battle" as any}
                 onCheckedChange={(on) => {
-                  if (isSessionActive && activeSessionId) {
-                    authFetch(`/agents/battle`, {
-                      method: "PUT",
-                      body: JSON.stringify({ sessionId: activeSessionId, active: on }),
-                    });
-                  }
                   updateConfig.mutate({ operatingMode: on ? ("battle" as any) : "semi-auto" });
+                  if (isSessionActive && activeSessionId) {
+                    console.log(`[BattleMode] toggle → active=${on} sessionId=${activeSessionId} → POST /agents/battle/activate`);
+                    authFetch(`/agents/battle/activate`, {
+                      method: "POST",
+                      body: JSON.stringify({ sessionId: activeSessionId, active: on }),
+                    })
+                      .then(() => console.log(`[BattleMode] ✅ activated=${on}`))
+                      .catch((err: unknown) => console.warn(`[BattleMode] ⚠ activate failed (non-critical):`, err));
+                  }
                 }}
                 disabled={!isSessionActive}
                 className="scale-75"
