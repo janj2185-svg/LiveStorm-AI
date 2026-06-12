@@ -4,6 +4,9 @@ import { useAuth } from "@clerk/react";
 
 export type ConnectionMode = "real" | "demo" | "error";
 
+// Mirrors useStreamerMic — true on iOS/Android/any mobile UA
+const IS_MOBILE_DETECT = typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
 export interface LiveEvent {
   type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "ai_announcement"
       | "xp_awarded" | "achievement_unlocked" | "level_up"
@@ -570,6 +573,28 @@ export function useLiveSession(
     setIsAudioUnlocked(true);
   }, []);
 
+  // ── Co-host latency tracking ──────────────────────────────────────────────
+  const lastSpeechEmitAtRef = useRef<number | null>(null);
+  const lastAnnounceAtRef   = useRef<number | null>(null);
+  const [coHostLatency, setCoHostLatency] = useState<{
+    stt: number; ai: number; tts: number; total: number;
+  } | null>(null);
+
+  // Listen for tts:start to measure TTS synthesis latency
+  useEffect(() => {
+    const handleTtsStart = () => {
+      const announceAt = lastAnnounceAtRef.current;
+      if (announceAt === null) return;
+      const ttsMs = Date.now() - announceAt;
+      lastAnnounceAtRef.current = null;
+      setCoHostLatency(prev =>
+        prev ? { ...prev, tts: ttsMs, total: prev.stt + prev.ai + ttsMs } : null,
+      );
+    };
+    window.addEventListener("tts:start", handleTtsStart);
+    return () => window.removeEventListener("tts:start", handleTtsStart);
+  }, []);
+
   // Replay any text through the TTS pipeline (used for blocked-reply playback).
   const replayTts = useCallback((text: string) => {
     if (ttsModeRef.current !== "openai") return;
@@ -889,7 +914,14 @@ export function useLiveSession(
         console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | emotion=${emotion} | emojiEmotion=${previewNorm.emojiEmotion} | text="${payload.text.slice(0, 60)}"`);
 
         if (payload.type === "streamer_speech") {
-          console.log(`[AIReply:Frontend] ✅ Storm reply to mic input received | text="${payload.text.slice(0, 80)}"`);
+          const now      = Date.now();
+          const emitAt   = lastSpeechEmitAtRef.current;
+          const aiMs     = emitAt !== null ? now - emitAt : 0;
+          const silenceMs = IS_MOBILE_DETECT ? 900 : 600; // mirrors useStreamerMic SILENCE_MS
+          lastSpeechEmitAtRef.current = null;
+          lastAnnounceAtRef.current   = now;
+          setCoHostLatency({ stt: silenceMs, ai: aiMs, tts: 0, total: silenceMs + aiMs });
+          console.log(`[AIReply:Frontend] ✅ Storm reply to mic | aiLatency=${aiMs}ms | text="${payload.text.slice(0, 80)}"`);
         }
 
         if (mode === "openai") {
@@ -965,6 +997,7 @@ export function useLiveSession(
       return;
     }
     const ts = Date.now();
+    lastSpeechEmitAtRef.current = ts;   // start AI latency timer
     setLastMicEmit({ text, lang, ts });
     console.log(`[Mic:9] ✅ socket.emit streamer:speech → backend | sessionId=${sessionId}`);
     socket.emit(
@@ -1016,5 +1049,6 @@ export function useLiveSession(
     isAudioUnlocked,
     unlockAudio: unlockAudioCallback,
     replayTts,
+    coHostLatency,
   };
 }

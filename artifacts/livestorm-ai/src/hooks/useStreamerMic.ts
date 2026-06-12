@@ -105,7 +105,11 @@ export interface UseStreamerMicReturn {
   clearTranscripts: () => void;
 }
 
-const SILENCE_MS = 1500;
+// Silence timer — time to wait after last speech result before flushing.
+// Android flushes immediately on final result (no timer needed).
+// Mobile (iOS/non-Android): 900ms. Desktop: 600ms.
+const IS_MOBILE  = typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const SILENCE_MS = IS_ANDROID ? 0 : IS_MOBILE ? 900 : 600;
 const MIN_CHARS  = 3;
 
 export function useStreamerMic({

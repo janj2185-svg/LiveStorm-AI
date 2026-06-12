@@ -347,7 +347,7 @@ export function LiveStudio() {
     aiAnnouncements, sendStreamerSpeech, activeSessionId, lastMicEmit, lastMicBackendAck,
     activeVoiceName, ttsQueueLen,
     ttsModeLive, openaiTtsOk,
-    isAudioUnlocked, unlockAudio, replayTts,
+    isAudioUnlocked, unlockAudio, replayTts, coHostLatency,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
   const [eventLogOpen, setEventLogOpen] = useState(false);
@@ -477,6 +477,7 @@ export function LiveStudio() {
             isAudioUnlocked={isAudioUnlocked}
             unlockAudio={unlockAudio}
             replayTts={replayTts}
+            coHostLatency={coHostLatency}
             openaiTtsOk={openaiTtsOk}
             lastMicEmit={lastMicEmit}
             lastMicBackendAck={lastMicBackendAck}

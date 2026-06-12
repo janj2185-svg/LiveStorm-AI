@@ -100,6 +100,7 @@ interface QueueItem {
   enqueuedAt: number;
   groupKey?: string;
   batchCount?: number;
+  bypassTtsCooldown?: boolean; // true = skip TTS cooldown gate (real-time co-host voice)
 }
 
 interface OrchestratorState {
@@ -283,17 +284,18 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     state.streamerSpeechHistory.set(event.sessionId, hist.slice(-5));
     recordActivity(event.sessionId);
     const streamerItem: QueueItem = {
-      priority:       3,
+      priority:          1,          // P1 = highest — real-time co-host voice, same tier as gift
+      bypassTtsCooldown: true,       // no cooldown wait — process immediately
       sessionId:      event.sessionId,
       streamerId,
       event,
       agentType:      "host",
-      priorityReason: "Streamer microphone input",
+      priorityReason: "Streamer microphone input — real-time priority",
       enqueuedAt:     Date.now(),
     };
     state.queue.push(streamerItem);
     state.queue.sort((a, b) => a.priority - b.priority || a.enqueuedAt - b.enqueuedAt);
-    console.log(`[Orchestrator] 🎙️ streamer speech | P3 | session=${event.sessionId} | "${text.slice(0, 60)}"`);
+    console.log(`[Orchestrator] 🎙️ streamer speech | P1+bypass | session=${event.sessionId} | "${text.slice(0, 60)}"`);
     return;
   }
 
@@ -745,10 +747,14 @@ async function processQueue(): Promise<void> {
 
   const now = Date.now();
   const nextItem = state.queue[0]!;
-  const cooldown = ttsCooldown(nextItem.priority);
-  const timeSinceLastTts = now - state.lastTtsTime;
 
-  if (timeSinceLastTts < cooldown) return;
+  // Real-time co-host voice (streamer speech) bypasses the TTS cooldown gate entirely.
+  // For everything else, enforce priority-aware cooldown to prevent audio flooding.
+  if (!nextItem.bypassTtsCooldown) {
+    const cooldown = ttsCooldown(nextItem.priority);
+    const timeSinceLastTts = now - state.lastTtsTime;
+    if (timeSinceLastTts < cooldown) return;
+  }
 
   const item = state.queue.shift();
   if (!item) return;

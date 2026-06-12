@@ -30,6 +30,7 @@ export interface CoHostPanelProps {
   openaiTtsOk?: boolean | null;
   lastMicEmit?: { text: string; lang: string; ts: number } | null;
   lastMicBackendAck?: { ok: boolean; ts: number } | null;
+  coHostLatency?: { stt: number; ai: number; tts: number; total: number } | null;
 }
 
 const LANG_OPTIONS = [
@@ -56,6 +57,7 @@ export function CoHostPanel({
   openaiTtsOk,
   lastMicEmit,
   lastMicBackendAck,
+  coHostLatency,
 }: CoHostPanelProps) {
   const [lastStormReply,  setLastStormReply]  = useState<{ text: string; ts: number } | null>(null);
   const [pendingReply,   setPendingReply]    = useState<string | null>(null);
@@ -347,6 +349,49 @@ export function CoHostPanel({
             </span>
           )}
         </div>
+
+        {/* ── ⚡ Latency metrics (appears after first Storm reply to mic) ──────── */}
+        {coHostLatency && (
+          <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                ⚡ Last Reply Latency
+              </span>
+              <span className={cn(
+                "text-[10px] font-bold tabular-nums",
+                coHostLatency.total < 4000  ? "text-emerald-400"
+                : coHostLatency.total < 6000 ? "text-amber-400"
+                : "text-red-400",
+              )}>
+                {(coHostLatency.total / 1000).toFixed(1)}s total
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { label: "STT", ms: coHostLatency.stt,   goal: 1000, hint: "silence timer" },
+                { label: "AI",  ms: coHostLatency.ai,    goal: 2000, hint: "LLM + hostAgent" },
+                { label: "TTS", ms: coHostLatency.tts,   goal: 2000, hint: "OpenAI synthesis" },
+              ].map(({ label, ms, goal, hint }) => (
+                <div
+                  key={label}
+                  title={hint}
+                  className="flex flex-col items-center gap-0.5 rounded-lg bg-white/[0.04] border border-white/8 px-2 py-1.5"
+                >
+                  <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">{label}</span>
+                  <span className={cn(
+                    "text-sm font-bold tabular-nums leading-none",
+                    ms === 0         ? "text-muted-foreground/30"
+                    : ms <= goal * 0.6  ? "text-emerald-400"
+                    : ms <= goal        ? "text-amber-400"
+                    : "text-red-400",
+                  )}>
+                    {ms === 0 ? "—" : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Amber warning: mic active but audio not unlocked ──────────────── */}
         {ttsModeLive === "openai" && !isAudioUnlocked && mic.isEnabled && (
