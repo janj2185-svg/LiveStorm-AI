@@ -1033,6 +1033,31 @@ export function AiAssistant() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [battleActivating, setBattleActivating] = useState(false);
   const [battleOn, setBattleOn] = useState(false);
+  const [battleStartTime, setBattleStartTime] = useState<number | null>(null);
+  const [battleElapsed, setBattleElapsed] = useState("0:00");
+  const [battleScore, setBattleScore] = useState<{ us: number; opponent: number; exchanges: number } | null>(null);
+
+  // Battle elapsed timer + score polling
+  useEffect(() => {
+    if (!battleOn || !battleStartTime) return;
+    const timerInterval = setInterval(() => {
+      const s = Math.floor((Date.now() - battleStartTime) / 1000);
+      const m = Math.floor(s / 60);
+      setBattleElapsed(`${m}:${String(s % 60).padStart(2, "0")}`);
+    }, 1000);
+    const pollInterval = isSessionActive && activeSessionId
+      ? setInterval(async () => {
+          try {
+            const data = await authFetch(`/agents/battle/status?sessionId=${activeSessionId}`);
+            if (data?.score) setBattleScore(data.score);
+          } catch { /* silent */ }
+        }, 5000)
+      : null;
+    return () => {
+      clearInterval(timerInterval);
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [battleOn, battleStartTime, isSessionActive, activeSessionId, authFetch]);
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
@@ -1237,6 +1262,9 @@ export function AiAssistant() {
                 onCheckedChange={async (on) => {
                   if (battleActivating) return;
                   setBattleOn(on);
+                  setBattleStartTime(on ? Date.now() : null);
+                  setBattleScore(null);
+                  setBattleElapsed("0:00");
                   if (isSessionActive && activeSessionId) {
                     setBattleActivating(true);
                     try {
@@ -1248,6 +1276,7 @@ export function AiAssistant() {
                     } catch (err) {
                       console.warn(`[BattleMode] ⚠ activate failed:`, err);
                       setBattleOn(!on);
+                      setBattleStartTime(null);
                     } finally {
                       setBattleActivating(false);
                     }
@@ -1263,6 +1292,45 @@ export function AiAssistant() {
                 : "Start a live session first, then enable Battle Mode here."}
             </p>
           </div>
+
+          {/* ── Battle Status Card ── */}
+          {battleOn && isSessionActive && (
+            <div className="mx-3 mb-0 rounded-xl border border-red-500/25 bg-red-500/5 p-2.5">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Battle Active</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center">
+                  <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Time</p>
+                  <p className="text-[11px] font-bold text-white/80 font-mono">{battleElapsed}</p>
+                </div>
+                <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center">
+                  <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Score</p>
+                  <p className="text-[11px] font-bold font-mono">
+                    <span className="text-emerald-400">{battleScore?.us ?? 0}</span>
+                    <span className="text-muted-foreground/40 mx-0.5">:</span>
+                    <span className="text-red-400">{battleScore?.opponent ?? 0}</span>
+                  </p>
+                </div>
+                <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center">
+                  <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Leader</p>
+                  <p className="text-[11px] font-bold text-white/80">
+                    {!battleScore || battleScore.us === battleScore.opponent
+                      ? <span className="text-yellow-400">Tied</span>
+                      : battleScore.us > battleScore.opponent
+                      ? <span className="text-emerald-400">Us</span>
+                      : <span className="text-red-400">Them</span>}
+                  </p>
+                </div>
+              </div>
+              {battleScore?.exchanges != null && battleScore.exchanges > 0 && (
+                <p className="text-[9px] text-muted-foreground/35 text-center mt-1.5">
+                  {battleScore.exchanges} exchange{battleScore.exchanges !== 1 ? "s" : ""} — score updates with gifts
+                </p>
+              )}
+            </div>
+          )}
 
           {/* ── Voice Status Panel ── */}
           <div className="px-3 py-3 border-t border-white/[0.06]">

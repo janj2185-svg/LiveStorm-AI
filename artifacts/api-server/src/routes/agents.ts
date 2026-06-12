@@ -266,7 +266,8 @@ router.get("/agents/battle/status", requireAuth, async (req, res) => {
   if (!streamerId) return res.status(404).json({ error: "Streamer not found" });
 
   const sessionId = req.query.sessionId ? Number(req.query.sessionId) : 0;
-  return res.json({ active: isBattleActive(sessionId), sessionId });
+  const score = getBattleScore(sessionId);
+  return res.json({ active: isBattleActive(sessionId), sessionId, score });
 });
 
 router.post("/agents/battle/activate", requireAuth, async (req, res) => {

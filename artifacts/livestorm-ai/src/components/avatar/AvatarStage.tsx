@@ -23,6 +23,7 @@ export interface AvatarStageProps {
   isSpeaking?: boolean;
   personaName?: string;
   onOpenSettings?: () => void;
+  onStats?: (stats: import("./AvatarCanvas").RendererStats) => void;
   showDebug?: boolean;
   className?: string;
   enableZoom?: boolean;
@@ -157,6 +158,7 @@ export function AvatarStage({
   isSpeaking = false,
   personaName,
   onOpenSettings,
+  onStats,
   showDebug = false,
   className,
   enableZoom,
@@ -213,6 +215,7 @@ export function AvatarStage({
         expressionIntensity={expressionIntensity}
         backgroundGradient={backgroundGradient}
         showFps={false}
+        onStats={onStats}
         onError={(msg) => setLastError(msg)}
         className="w-full h-full rounded-2xl"
         enableZoom={enableZoom}

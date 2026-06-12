@@ -47,24 +47,26 @@ export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
   "aria": {
     key: "aria",
     name: "Aria",
-    tagline: "Female Host · Portrait",
+    tagline: "Female Host · 3D Avatar",
     role: "Female Host",
     gender: "Female",
     accentColor: "#8b5cf6",
     personality: "Elegant and trustworthy — best for interviews and lifestyle content",
     isPrimary: false,
     portraitUrl: "/avatars/female_8_neutral.png",
+    vrmPath: "/avatars/storm-default.vrm",
   },
   "sofia": {
     key: "sofia",
     name: "Sofia",
-    tagline: "Female Streamer · Portrait",
+    tagline: "Female Streamer · 3D Avatar",
     role: "Female Streamer",
     gender: "Female",
     accentColor: "#ec4899",
     personality: "Creative and community-driven — maximises engagement for lifestyle vlogs",
     isPrimary: false,
     portraitUrl: "/avatars/female_6_neutral.png",
+    vrmPath: "/avatars/storm-serious.vrm",
   },
 };
 
