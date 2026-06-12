@@ -168,7 +168,18 @@ export function CoHostPanel({
           <div className="flex-1 min-w-0">
             <AudioLevelBar level={mic.audioLevel} active={mic.isEnabled} />
           </div>
-          {!mic.browserSupported ? (
+          {mic.isWebView ? (
+            /* ── Android WebView: Web Speech API blocked ── */
+            <div className="flex-1 flex items-start gap-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2.5">
+              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-amber-300 leading-tight">Open in Chrome for Android</p>
+                <p className="text-[10px] text-amber-400/70 leading-snug mt-0.5">
+                  The Replit in-app browser blocks speech recognition. Copy the URL and open it directly in Chrome.
+                </p>
+              </div>
+            </div>
+          ) : !mic.browserSupported ? (
             /* ── Not supported: full-width banner ── */
             <div className="flex-1 flex items-start gap-2.5 rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2.5">
               <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
@@ -353,12 +364,15 @@ export function CoHostPanel({
                 value={mic.audioMeterReady ? "YES — audio stream active" : mic.isEnabled ? "requesting…" : "NO"}
               />
               <DiagRow n={3}  label="SpeechRecognition API"
-                ok={mic.browserSupported}
-                value={mic.browserSupported
-                  ? `Chrome/Edge ✓${mic.isAndroidChrome ? " (Android — restart-per-utterance mode)" : ""}`
-                  : mic.isAndroidChrome
-                    ? "NOT SUPPORTED — open in Chrome for Android"
-                    : "NOT SUPPORTED — use Chrome or Edge"}
+                ok={mic.browserSupported && !mic.isWebView}
+                warn={mic.isWebView}
+                value={mic.isWebView
+                  ? "⚠️ Android WebView — Google SR blocked. Open in Chrome."
+                  : mic.browserSupported
+                    ? `Chrome/Edge ✓${mic.isAndroidChrome ? " (Android: interimResults=off, flush-on-result)" : ""}`
+                    : mic.isAndroidChrome
+                      ? "NOT SUPPORTED — open in Chrome for Android"
+                      : "NOT SUPPORTED — use Chrome or Edge"}
               />
               <DiagRow n={4}  label="Session active + sessionId"
                 ok={activeSession}

@@ -64,6 +64,9 @@ declare global {
 // Android Chrome ignores continuous=true and stops after each utterance.
 // We detect it at module level so we can adjust behaviour at runtime.
 const IS_ANDROID = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+// Android WebView (Replit app, in-app browsers) blocks Google's cloud Speech API via network.
+// Detectable via 'wv' token in the User-Agent string.
+const IS_ANDROID_WEBVIEW = IS_ANDROID && /\bwv\b/i.test(typeof navigator !== "undefined" ? navigator.userAgent : "");
 
 interface UseStreamerMicOptions {
   sendStreamerSpeech: ((text: string, lang: string) => void) | undefined;
@@ -85,6 +88,7 @@ export interface UseStreamerMicReturn {
   error: string | null;
   browserSupported: boolean;
   isAndroidChrome: boolean;
+  isWebView: boolean;
   audioLevel: number;
   audioMeterReady: boolean;
   micPermission: MicPermission;
@@ -137,6 +141,7 @@ export function useStreamerMic({
   const modeRef          = useRef<MicMode>("continuous");
   const pttActiveRef     = useRef(false);
   const langRef          = useRef(defaultLang);
+  const noSpeechCountRef = useRef(0);
 
   const audioContextRef  = useRef<AudioContext | null>(null);
   const analyserRef      = useRef<AnalyserNode | null>(null);
@@ -267,22 +272,29 @@ export function useStreamerMic({
     const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SR) return;
     const rec = new SR();
-    // Android Chrome ignores continuous=true — use false and restart manually via onend.
+    // Android Chrome: continuous=false (ignores true), interimResults=false (avoids a Chrome
+    // Android bug where onresult never fires when interim results are requested via cloud SR).
     rec.continuous      = !IS_ANDROID;
-    rec.interimResults  = true;
+    rec.interimResults  = !IS_ANDROID;
     rec.maxAlternatives = 1;
     rec.lang            = langRef.current;
     recognitionRef.current = rec;
-    console.log(`[Mic:4] ✅ SR created | lang=${rec.lang} | continuous=${rec.continuous} | android=${IS_ANDROID} | interimResults=true`);
+    console.log(`[Mic:4] ✅ SR created | lang=${rec.lang} | continuous=${rec.continuous} | android=${IS_ANDROID} | webview=${IS_ANDROID_WEBVIEW} | interimResults=${rec.interimResults}`);
 
     rec.onstart = () => {
       console.log(`[Mic:5] ✅ SR onstart fired — NOW LISTENING | lang=${langRef.current}`);
+      if (IS_ANDROID) {
+        console.log(`[MobileSpeechStart] ✅ Android SR started | lang=${langRef.current} | continuous=false | interimResults=false | webview=${IS_ANDROID_WEBVIEW} | ua="${navigator.userAgent.slice(0, 80)}"`);
+      }
       setSpeechRecogActive(true);
       setStatus("listening");
       setError(null);
     };
 
     rec.onresult = (event) => {
+      if (IS_ANDROID) {
+        console.log(`[MobileSpeechResult] onresult fired ✅ | resultIndex=${event.resultIndex} | totalResults=${event.results.length} | isFinal=${event.results[event.resultIndex]?.[0] ? event.results[event.resultIndex].isFinal : "?"}`);
+      }
       let interim = "";
       let newFinal = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -295,17 +307,29 @@ export function useStreamerMic({
       }
 
       if (newFinal) {
+        noSpeechCountRef.current = 0;
         accumulatorRef.current += (accumulatorRef.current ? " " : "") + newFinal.trim();
-        console.log(`[SpeechRecognized] ✅ final segment="${newFinal.trim().slice(0, 60)}" | accumulated="${accumulatorRef.current.slice(0, 80)}" | totalLen=${accumulatorRef.current.length}`);
+        console.log(`[SpeechRecognized] ✅ final="${newFinal.trim().slice(0, 60)}" | accumulated="${accumulatorRef.current.slice(0, 80)}" | totalLen=${accumulatorRef.current.length}`);
+        if (IS_ANDROID) {
+          console.log(`[MobileTranscriptReceived] ✅ text="${newFinal.trim().slice(0, 80)}" | len=${newFinal.trim().length}`);
+        }
         setLastFinalTranscript(accumulatorRef.current);
         setInterimTranscript("");
         setStatus("speech_detected");
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = setTimeout(() => {
-          console.log(`[Mic:7] silence timer fired (${SILENCE_MS}ms) — flushing`);
+        if (IS_ANDROID) {
+          // Android: continuous=false → onend fires immediately after onresult.
+          // Flush right now instead of waiting for the silence timer.
+          console.log(`[MobileSpeechResult] Android: flushing immediately (no silence wait) | "${accumulatorRef.current.slice(0, 60)}"`);
           setStatus("waiting");
           flushAccumulated();
-        }, SILENCE_MS);
+        } else {
+          silenceTimerRef.current = setTimeout(() => {
+            console.log(`[Mic:7] silence timer fired (${SILENCE_MS}ms) — flushing`);
+            setStatus("waiting");
+            flushAccumulated();
+          }, SILENCE_MS);
+        }
       } else if (interim) {
         setInterimTranscript(interim);
         setStatus("speech_detected");
@@ -313,14 +337,37 @@ export function useStreamerMic({
     };
 
     rec.onerror = (event) => {
-      // Ignore expected non-errors
-      if (event.error === "no-speech" || event.error === "aborted") return;
-      // Network errors: SR will fire onend and restart automatically — no UI alert needed
-      if (event.error === "network") {
-        console.warn("[Mic:5] SR network error — will restart via onend");
+      if (IS_ANDROID) {
+        console.log(`[MobileSpeechError] error="${event.error}" | msg="${event.message ?? ""}" | webview=${IS_ANDROID_WEBVIEW}`);
+      }
+      // aborted = user stopped mic intentionally
+      if (event.error === "aborted") return;
+      // no-speech: Android fires this when it hears nothing (or can't process audio)
+      if (event.error === "no-speech") {
+        noSpeechCountRef.current++;
+        if (IS_ANDROID) {
+          console.warn(`[MobileSpeechError] no-speech #${noSpeechCountRef.current} | webview=${IS_ANDROID_WEBVIEW}`);
+          if (noSpeechCountRef.current >= 3) {
+            noSpeechCountRef.current = 0;
+            setError(IS_ANDROID_WEBVIEW
+              ? "Speech recognition is blocked. Copy the URL and open it in Chrome for Android."
+              : "Not hearing you — speak louder or hold the phone closer. Still in \"Listening\" mode.");
+          }
+        }
         return;
       }
-      // Permission denied — stop mic, show actionable message
+      // network: on Android WebView this usually means Google SR servers are blocked
+      if (event.error === "network") {
+        if (IS_ANDROID_WEBVIEW) {
+          console.warn(`[MobileSpeechError] ⛔ network — WebView blocks Google SR servers | webview=true`);
+          setError("Speech recognition blocked by the in-app browser. Copy the URL and open in Chrome for Android.");
+          setStatus("error");
+        } else {
+          console.warn(`[MobileSpeechError] network | android=${IS_ANDROID} — will restart via onend`);
+        }
+        return;
+      }
+      // Permission denied
       if (event.error === "not-allowed" || event.error === "permission-denied") {
         setMicPermission("denied");
         setError("Microphone access denied. Allow mic in browser settings, then reload the page.");
@@ -503,6 +550,7 @@ export function useStreamerMic({
     error,
     browserSupported,
     isAndroidChrome: IS_ANDROID,
+    isWebView: IS_ANDROID_WEBVIEW,
     audioLevel,
     audioMeterReady,
     micPermission,
