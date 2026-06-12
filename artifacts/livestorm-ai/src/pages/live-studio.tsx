@@ -351,6 +351,7 @@ export function LiveStudio() {
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
   const [eventLogOpen, setEventLogOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"cohost" | "comments">("cohost");
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
@@ -434,26 +435,55 @@ export function LiveStudio() {
         </div>
       )}
 
+      {/* ── Mobile tab switcher ──────────────────────────────────────────── */}
+      <div className="flex lg:hidden gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.07]">
+        <button
+          onClick={() => setMobileTab("cohost")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all",
+            mobileTab === "cohost" ? "bg-cyan-600 text-white" : "text-muted-foreground/50 hover:text-white/70",
+          )}
+        >
+          <Bot className="h-3.5 w-3.5" />Co-Host
+        </button>
+        <button
+          onClick={() => setMobileTab("comments")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all",
+            mobileTab === "comments" ? "bg-cyan-600 text-white" : "text-muted-foreground/50 hover:text-white/70",
+          )}
+        >
+          <MessageCircle className="h-3.5 w-3.5" />Comments
+          {events.filter(e => e.type === "comment").length > 0 && (
+            <span className="ml-0.5 text-[9px] bg-white/15 rounded-full px-1.5 tabular-nums">
+              {events.filter(e => e.type === "comment").length}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* ── Main grid: Co-Host + Comments ───────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
 
         {/* Co-Host Voice Panel */}
-        <CoHostPanel
-          sendStreamerSpeech={sendStreamerSpeech}
-          sessionId={activeSessionId}
-          isSessionActive={!!isActive}
-          aiAnnouncements={aiAnnouncements}
-          ttsModeLive={ttsModeLive}
-          activeVoiceName={activeVoiceName ?? null}
-          isAudioUnlocked={isAudioUnlocked}
-          unlockAudio={unlockAudio}
-          openaiTtsOk={openaiTtsOk}
-          lastMicEmit={lastMicEmit}
-          lastMicBackendAck={lastMicBackendAck}
-        />
+        <div className={cn(mobileTab !== "cohost" && "hidden lg:block")}>
+          <CoHostPanel
+            sendStreamerSpeech={sendStreamerSpeech}
+            sessionId={activeSessionId}
+            isSessionActive={!!isActive}
+            aiAnnouncements={aiAnnouncements}
+            ttsModeLive={ttsModeLive}
+            activeVoiceName={activeVoiceName ?? null}
+            isAudioUnlocked={isAudioUnlocked}
+            unlockAudio={unlockAudio}
+            openaiTtsOk={openaiTtsOk}
+            lastMicEmit={lastMicEmit}
+            lastMicBackendAck={lastMicBackendAck}
+          />
+        </div>
 
         {/* Comment Feed */}
-        <div className="h-[520px] flex flex-col min-h-0">
+        <div className={cn("h-[480px] lg:h-[520px] flex flex-col min-h-0", mobileTab !== "comments" && "hidden lg:flex")}>
           <CommentFeed events={events} isActive={!!isActive} translations={translations} />
         </div>
       </div>

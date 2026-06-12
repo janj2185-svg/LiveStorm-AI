@@ -207,25 +207,25 @@ function ObsTab({ authToken }: { authToken: string | null }) {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">{overlay.description}</p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-xs bg-black/30 border border-white/8 rounded-lg px-3 py-2 text-slate-300 truncate font-mono">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <code className="flex-1 text-xs bg-black/30 border border-white/8 rounded-lg px-3 py-2 text-slate-300 font-mono break-all sm:truncate overflow-hidden">
                       {overlay.url}
                     </code>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="shrink-0 border-white/10 gap-1.5 h-8 px-3"
+                      className="shrink-0 border-white/10 gap-1.5 h-10 sm:h-8 px-4 sm:px-3 w-full sm:w-auto"
                       onClick={() => handleCopy(overlay.url, overlay.key)}
                     >
                       {copiedKey === overlay.key ? (
                         <>
                           <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
-                          <span className="text-xs text-green-400">Copied</span>
+                          <span className="text-xs text-green-400">Copied!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="h-3.5 w-3.5" />
-                          <span className="text-xs">Copy</span>
+                          <span className="text-xs">Copy URL</span>
                         </>
                       )}
                     </Button>
@@ -453,19 +453,19 @@ export function Settings() {
         }
       />
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/8 w-fit">
+      {/* Tabs — horizontal scroll on mobile */}
+      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/8 overflow-x-auto scrollbar-none w-full sm:w-fit">
         {TABS.map((tb) => (
           <button
             key={tb.id}
             onClick={() => setTab(tb.id)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
               tab === tb.id
                 ? "bg-primary/20 text-primary shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-white/5"
             }`}
           >
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
               {tb.icon}
               {tb.label}
             </span>

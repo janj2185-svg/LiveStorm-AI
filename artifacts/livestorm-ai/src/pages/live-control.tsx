@@ -104,30 +104,27 @@ export function LiveControl() {
             : "border-white/[0.08] bg-gradient-to-r from-violet-500/[0.06] to-cyan-500/[0.03]",
         )}
       >
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
             <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border",
+              "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border",
               isActive
                 ? "bg-green-500/15 border-green-500/30"
                 : "bg-violet-500/10 border-violet-500/20",
             )}>
-              {isActive
-                ? <Radio className="h-6 w-6 text-green-400" />
-                : <Radio className="h-6 w-6 text-violet-400" />
-              }
+              <Radio className={cn("h-5 w-5", isActive ? "text-green-400" : "text-violet-400")} />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 {isActive
                   ? <><PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} /><span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>{connected ? t("lc_live_now") : t("dash_status_reconnecting")}</span></>
-                  : <><span className="h-2 w-2 rounded-full bg-slate-500 inline-block" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("lc_offline")}</span></>
+                  : <><span className="h-2 w-2 rounded-full bg-slate-500 inline-block flex-shrink-0" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("lc_offline")}</span></>
                 }
               </div>
-              <p className="font-bold text-white">
+              <p className="font-bold text-white truncate">
                 {isActive ? `${t("lc_streaming_as")} @${profile?.tiktokUsername}` : t("lc_ready_to_stream")}
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
                 {profile?.tiktokUsername
                   ? `TikTok: @${profile.tiktokUsername} · ${isActive ? t("lc_session_active") : t("lc_session_inactive")}`
                   : t("lc_no_tiktok")
@@ -136,14 +133,14 @@ export function LiveControl() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {connected
-              ? <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400"><Wifi className="h-3.5 w-3.5" /> {t("lc_connected")}</div>
-              : <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400"><WifiOff className="h-3.5 w-3.5" /> {t("lc_disconnected")}</div>
+              ? <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400"><Wifi className="h-3 w-3" /> <span className="hidden sm:inline">{t("lc_connected")}</span></div>
+              : <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400"><WifiOff className="h-3 w-3" /> <span className="hidden sm:inline">{t("lc_disconnected")}</span></div>
             }
             {!isActive && (
               <Link href="/dashboard">
-                <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold cursor-pointer transition-colors">
+                <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold cursor-pointer transition-colors">
                   <PlayCircle className="h-4 w-4" />
                   {t("lc_go_live")}
                 </div>
@@ -154,16 +151,16 @@ export function LiveControl() {
 
         {/* Quick Stats */}
         {isActive && (
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-4 pt-4 border-t border-white/[0.06]">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4 pt-4 border-t border-white/[0.06]">
             {quickStats.map((s) => {
               const Icon = s.icon;
               return (
                 <div key={s.label} className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-0.5">
-                    <Icon className={cn("h-3 w-3", s.color)} />
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">{s.label}</span>
+                    <Icon className={cn("h-3 w-3 flex-shrink-0", s.color)} />
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground/60 uppercase tracking-wider truncate">{s.label}</span>
                   </div>
-                  <p className={cn("text-lg font-black tabular-nums", s.color)}>{s.value.toLocaleString()}</p>
+                  <p className={cn("text-base sm:text-lg font-black tabular-nums", s.color)}>{s.value.toLocaleString()}</p>
                 </div>
               );
             })}

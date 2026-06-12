@@ -197,23 +197,23 @@ function CommandStrip({
           : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(14,165,233,0.05) 100%)",
       }}
     >
-      <div className="px-5 py-4 flex items-center justify-between flex-wrap gap-4">
+      <div className="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
         {/* Left: Status + Info */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <div className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-lg",
+            "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-lg",
             isActive
               ? "bg-green-500/15 border-green-500/25 shadow-green-500/20"
               : "bg-violet-500/10 border-violet-500/20 shadow-violet-500/10",
           )}>
             {isActive
-              ? <Radio className="h-6 w-6 text-green-400" />
-              : <PlugZap className="h-6 w-6 text-violet-400" />
+              ? <Radio className="h-5 w-5 text-green-400" />
+              : <PlugZap className="h-5 w-5 text-violet-400" />
             }
           </div>
-          <div>
-            <div className="flex items-center gap-2.5 mb-1">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
               {isActive ? (
                 <>
                   <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
@@ -226,32 +226,24 @@ function CommandStrip({
                 </>
               ) : (
                 <>
-                  <span className="h-2 w-2 rounded-full bg-slate-500 inline-block" />
+                  <span className="h-2 w-2 rounded-full bg-slate-500 inline-block flex-shrink-0" />
                   <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Offline</span>
                 </>
               )}
             </div>
-            <p className="font-bold text-white text-lg leading-tight">
-              {isActive ? (
-                <span>@{username}</span>
-              ) : (
-                <span>
-                  Ready to{" "}
-                  <GradientText from="from-violet-400" to="to-cyan-400">Go Live</GradientText>
-                </span>
+            <p className="font-bold text-white text-base leading-tight truncate">
+              {isActive ? `@${username}` : (
+                <span>Ready to <GradientText from="from-violet-400" to="to-cyan-400">Go Live</GradientText></span>
               )}
             </p>
-            <p className="text-xs text-muted-foreground/50 mt-0.5">
-              {isActive
-                ? `${eventCount} events captured`
-                : `@${username} · Start a session to begin`
-              }
+            <p className="text-xs text-muted-foreground/50 mt-0.5 truncate">
+              {isActive ? `${eventCount} events captured` : `@${username} · Start a session to begin`}
             </p>
           </div>
         </div>
 
         {/* Right: Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           {isOwner && (
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/15 border border-amber-500/35">
               <KeyRound className="h-3.5 w-3.5 text-amber-300" />
@@ -272,7 +264,7 @@ function CommandStrip({
               variant="destructive"
               onClick={onEnd}
               disabled={endPending}
-              className="font-bold gap-2 shadow-lg shadow-red-500/20 h-9"
+              className="font-bold gap-2 shadow-lg shadow-red-500/20 h-10 flex-1 sm:flex-none"
             >
               <Square className="h-3.5 w-3.5" fill="currentColor" />
               {endPending ? "Ending…" : "End Stream"}
@@ -281,7 +273,7 @@ function CommandStrip({
             <Button
               onClick={onStart}
               disabled={startPending}
-              className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-bold gap-2 px-5 shadow-lg shadow-violet-500/25 h-9"
+              className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-bold gap-2 px-5 shadow-lg shadow-violet-500/25 h-10 flex-1 sm:flex-none"
             >
               <PlayCircle className="h-4 w-4" />
               {startPending ? "Starting…" : "Go Live"}
@@ -292,11 +284,11 @@ function CommandStrip({
             size="sm"
             onClick={onReset}
             disabled={resetPending}
-            className="gap-1.5 text-xs text-muted-foreground/60 border-white/10 hover:border-red-500/30 hover:text-red-400 h-9"
+            className="gap-1.5 text-xs text-muted-foreground/60 border-white/10 hover:border-red-500/30 hover:text-red-400 h-10 px-3"
             title="Force-clears any stuck session."
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            {resetPending ? "…" : "Reset"}
+            <span className="hidden sm:inline">{resetPending ? "…" : "Reset"}</span>
           </Button>
         </div>
       </div>
