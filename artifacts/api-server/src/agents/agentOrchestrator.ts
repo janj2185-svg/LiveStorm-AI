@@ -66,7 +66,7 @@ const ANNOUNCEMENT_COOLDOWN_MS: Record<string, number> = {
 const TTS_COOLDOWN_MS: Record<number, number> = {
   1: 2_000,   // gift — react immediately
   2: 4_000,   // follow / share
-  3: 3_000,   // battle
+  3: 1_500,   // battle / streamer speech — fast response
   4: 5_000,   // direct question
   5: 6_000,   // vip viewer
   6: 8_000,   // general chat
@@ -1035,7 +1035,11 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const openerRepeated = isOpenerRepeated(newOpener, sessionRecentOpeners);
   const tooSimilar     = isTooSimilarToRecent(hostResult.text, sessionRecentReplies);
 
-  if (openerRepeated || tooSimilar) {
+  // Short-circuit streamer intents (greetings, thanks, laughs) are inherently brief
+  // and similar by nature — skip the regeneration LLM call to cut latency.
+  const shouldSkipAntiRepeat = hostResult.skipAntiRepetition === true;
+
+  if (!shouldSkipAntiRepeat && (openerRepeated || tooSimilar)) {
     const reason = openerRepeated ? `opener repeated "${newOpener.slice(0, 25)}"` : `similarity >70%`;
     console.log(`[Anti-Repeat] 🔄 ${reason} — regenerating once...`);
     const regenResult = await runHostAgent({

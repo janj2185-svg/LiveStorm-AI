@@ -38,6 +38,43 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export interface HostAgentResult {
   text: string;
   emotion: "neutral" | "excited" | "grateful" | "funny" | "hype";
+  skipAntiRepetition?: boolean; // true for short-circuit intents (greetings, thanks, laughs)
+}
+
+// ─── Streamer speech intent classifier ──────────────────────────────────────
+// Identifies WHAT the streamer is communicating so Storm responds appropriately
+// instead of treating every utterance as a topic to expand or question.
+type StreamerIntent = "greeting" | "farewell" | "thanks" | "laugh" | "exclamation" | "affirmation" | "casual" | "question" | "statement";
+
+function classifyStreamerIntent(text: string): { intent: StreamerIntent; shortCircuit: boolean } {
+  const t = text.trim().toLowerCase();
+  const wc = t.split(/\s+/).filter(Boolean).length;
+
+  if (/^(привіт|вітаю|хай|йо|hey|hello|hi\b|добрий|добридень|доброго|доброї|good morning|good evening|good night|guten tag|hola|bonjour|cześć|ahoj|salut|ciao)\b/i.test(t))
+    return { intent: "greeting", shortCircuit: true };
+
+  if (/^(до побачення|бувай|пока|па-па|па\b|bye|goodbye|see you|later|ciao|auf wiedersehen|tschüss|do widzenia|na shledanou|tchau)\b/i.test(t))
+    return { intent: "farewell", shortCircuit: true };
+
+  if (wc <= 6 && /\b(дякую|дяк|спасибо|спасиб|thanks|thank you|merci|gracias|danke|dziękuj)\b/i.test(t))
+    return { intent: "thanks", shortCircuit: true };
+
+  if (/\b(ха-ха|хаха|хех|хіхі|лол|lol|haha|hehe|ахаха|ахах)\b/i.test(t) || (wc <= 5 && /\b(жарт|прикол|смішн|funny|joke)\b/i.test(t)))
+    return { intent: "laugh", shortCircuit: true };
+
+  if (wc <= 4 && /^(вау|ого|боже|оце так|ну і|та ну|нічого собі|wow|omg|whoa|oh my|no way|seriously)\b/i.test(t))
+    return { intent: "exclamation", shortCircuit: true };
+
+  if (wc <= 3 && /^(так|точно|ага|угу|звісно|звичайно|авжеж|yes|yep|yeah|sure|right|exactly|ok|okay|ок)\b/i.test(t))
+    return { intent: "affirmation", shortCircuit: true };
+
+  if (wc <= 3 && !t.includes("?"))
+    return { intent: "casual", shortCircuit: true };
+
+  if (t.endsWith("?") || /^(як |що |хто |чому |коли |де |чи |навіщо |скільки |what |who |why |when |where |how |do you|can you|will you|is it|are you)\b/i.test(t))
+    return { intent: "question", shortCircuit: false };
+
+  return { intent: "statement", shortCircuit: false };
 }
 
 export async function runHostAgent(opts: {
@@ -61,6 +98,9 @@ export async function runHostAgent(opts: {
 
   let userPrompt = "";
   let emotion: HostAgentResult["emotion"] = "neutral";
+  // Streamer speech intent — set inside case "streamer_speech", used for token budget + anti-repeat skip
+  let ssIntent: StreamerIntent = "statement";
+  let ssShortCircuit = false;
 
   switch (event.type) {
     case "gift": {
@@ -136,12 +176,45 @@ export async function runHostAgent(opts: {
 
     case "streamer_speech": {
       const transcript = (event.data.text as string) ?? "";
-      userPrompt = `[CO-HOST MODE]: The streamer just said — "${transcript}"
+      ({ intent: ssIntent, shortCircuit: ssShortCircuit } = classifyStreamerIntent(transcript));
 
-As their co-host, react naturally. You can: pick up their thought and continue it, add your own short take, bridge what they said to what the audience is thinking, or hype the moment. Keep it to 1–2 sentences — conversational, not scripted.`;
-      emotion = "neutral";
-      // Remember significant things the streamer mentions
-      if (transcript.length > 15) {
+      // Energy-palette hints — inspire the tone, never copy literally
+      const flavorMap: Partial<Record<StreamerIntent, string[]>> = {
+        greeting:    ["Йо!", "О, привіт!", "Хай!", "А, вітаю!", "Hey!"],
+        farewell:    ["Бувай!", "До зустрічі!", "Давай!", "Take care!"],
+        thanks:      ["Та будь ласка.", "Та не питання.", "Звичайно.", "No worries."],
+        laugh:       ["Не можу 😂", "Ну ти й дав.", "Ха, справді.", "Okay I'm done 😂"],
+        exclamation: ["Ого!", "Серйозно?!", "Та ну!", "Нічого собі!"],
+        affirmation: ["Прям так.", "Ось саме.", "Хм, є в цьому щось.", "Agreed."],
+      };
+      const flavorArr = flavorMap[ssIntent] ?? [];
+      const flavorNote = flavorArr.length
+        ? ` [React with THIS energy — flavor inspiration, not literally: ${flavorArr.join(" / ")}]`
+        : "";
+      const noQ = `⛔ DO NOT end your response with a question — just react naturally.`;
+
+      const intentPrompts: Record<StreamerIntent, string> = {
+        greeting:    `The streamer just greeted you — "${transcript}"\nGreet them back naturally and warmly. ONE short sentence max. Be genuine.${flavorNote}\n${noQ}`,
+        farewell:    `The streamer said goodbye — "${transcript}"\nWarm natural farewell. ONE sentence.${flavorNote}\n${noQ}`,
+        thanks:      `The streamer said thanks — "${transcript}"\nAcknowledge it naturally. 1 sentence. Keep it real, not formal.${flavorNote}\n${noQ}`,
+        laugh:       `The streamer laughed or joked — "${transcript}"\nReact to the humor. Short and genuine.${flavorNote}\n${noQ}`,
+        exclamation: `The streamer reacted with surprise — "${transcript}"\nMatch their energy with a short natural reaction. 1 sentence.${flavorNote}\n${noQ}`,
+        affirmation: `The streamer agreed with something — "${transcript}"\nReact naturally. 1 sentence. Add your own micro-take.${flavorNote}\n${noQ}`,
+        casual:      `The streamer said something casual — "${transcript}"\nReact naturally, briefly. 1 sentence. ${noQ}`,
+        question:    `The streamer asked — "${transcript}"\nAnswer as their co-host. Give your real take. 1-2 sentences. You MAY ask ONE follow-up if it genuinely continues the conversation.`,
+        statement:   `[CO-HOST MODE]: The streamer just said — "${transcript}"\nAs their co-host, react naturally. Pick up their thought, add your own angle, or hype the moment. 1-2 sentences. Only ask a question back if it genuinely advances the conversation.${flavorNote}`,
+      };
+
+      console.log(`[HostAgent:intent] streamer_speech | intent=${ssIntent} | shortCircuit=${ssShortCircuit} | "${transcript.slice(0, 50)}"`);
+
+      userPrompt = intentPrompts[ssIntent];
+      emotion = (ssIntent === "greeting" || ssIntent === "exclamation") ? "excited"
+        : ssIntent === "laugh" ? "funny"
+        : (ssIntent === "thanks" || ssIntent === "farewell") ? "grateful"
+        : "neutral";
+
+      // Store significant streamer statements for memory context
+      if (transcript.length > 15 && ssIntent === "statement") {
         void storeMemory({
           streamerId: opts.streamerId,
           memoryType: "stream",
@@ -157,10 +230,9 @@ As their co-host, react naturally. You can: pick up their thought and continue i
       return null;
   }
 
-  // Append conversation context to ALL event types when available.
-  // A gift arriving mid-conversation, or a follow from someone who was just chatting,
-  // should reference the thread — real hosts always acknowledge things in context.
-  if (conversationHistory) {
+  // Append conversation context — but skip for short-circuit streamer intents
+  // (greetings, thanks, laughs don't need history; it adds noise and latency).
+  if (conversationHistory && !ssShortCircuit) {
     const contextLabel = event.type === "comment"
       ? "\n\nRecent conversation:"
       : "\n\nStream was just talking about:";
@@ -175,7 +247,7 @@ As their co-host, react naturally. You can: pick up their thought and continue i
   const isCrowdText = event.type === "comment" && ((event.data.text as string) ?? "").startsWith("A lot of");
   const coins       = event.type === "gift" ? ((event.data.coins as number) ?? 0) : 0;
   const baseTokens  =
-    event.type === "streamer_speech"        ? 84 :
+    event.type === "streamer_speech"        ? (ssShortCircuit ? 32 : 84) :
     event.type === "silence_filler"         ? 72 :
     event.type === "follow"                 ? 52 :
     event.type === "share"                  ? 56 :
@@ -352,7 +424,7 @@ ${fillerHint}`;
     const text = resp.choices[0]?.message?.content?.trim() ?? "";
     if (!text) return null;
 
-    return { text, emotion };
+    return { text, emotion, skipAntiRepetition: ssShortCircuit };
   } catch (err: unknown) {
     console.error("[HostAgent] error:", (err as Error)?.message);
     return null;
