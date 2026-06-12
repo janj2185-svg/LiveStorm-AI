@@ -294,6 +294,7 @@ async function playOpenAiTts(
             console.warn(`[TTS:10] ❌ play() REJECTED — ${err?.name}: ${err?.message}`);
             console.warn("[TTS:10] ⚠ AUTOPLAY BLOCKED — click '🔊 Enable Voice' on the Voice panel to unlock audio");
             window.dispatchEvent(new CustomEvent("tts:openai:err", { detail: { error: `autoplay blocked: click Enable Voice button` } }));
+            window.dispatchEvent(new CustomEvent("tts:blocked", { detail: { text: rawText, voice } }));
             resolve();
           });
       }
@@ -568,6 +569,15 @@ export function useLiveSession(
     unlockAudio();
     setIsAudioUnlocked(true);
   }, []);
+
+  // Replay any text through the TTS pipeline (used for blocked-reply playback).
+  const replayTts = useCallback((text: string) => {
+    if (ttsModeRef.current !== "openai") return;
+    enqueueTts(
+      () => playOpenAiTts(text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current, getToken),
+      text,
+    );
+  }, [getToken]);
 
   // Legacy compatibility — maps true→openai, false→off (never browser)
   const setTtsEnabled = useCallback((enabled: boolean) => {
@@ -1005,5 +1015,6 @@ export function useLiveSession(
     lastSpokenEngine,
     isAudioUnlocked,
     unlockAudio: unlockAudioCallback,
+    replayTts,
   };
 }

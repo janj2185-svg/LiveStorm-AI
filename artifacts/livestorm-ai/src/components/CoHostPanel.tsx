@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Mic, MicOff, Bot, X, AlertTriangle, CheckCircle2,
-  Volume2, Zap, Brain, Radio, ChevronDown, ChevronUp,
+  Volume2, Zap, Brain, Radio, ChevronDown, ChevronUp, Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStreamerMic } from "@/hooks/useStreamerMic";
@@ -26,6 +26,7 @@ export interface CoHostPanelProps {
   activeVoiceName?: string | null;
   isAudioUnlocked?: boolean;
   unlockAudio?: () => void;
+  replayTts?: (text: string) => void;
   openaiTtsOk?: boolean | null;
   lastMicEmit?: { text: string; lang: string; ts: number } | null;
   lastMicBackendAck?: { ok: boolean; ts: number } | null;
@@ -51,13 +52,20 @@ export function CoHostPanel({
   activeVoiceName,
   isAudioUnlocked,
   unlockAudio,
+  replayTts,
   openaiTtsOk,
   lastMicEmit,
   lastMicBackendAck,
 }: CoHostPanelProps) {
-  const [lastStormReply, setLastStormReply] = useState<{ text: string; ts: number } | null>(null);
-  const [diagOpen, setDiagOpen] = useState(false);
-  const [emitCount, setEmitCount] = useState(0);
+  const [lastStormReply,  setLastStormReply]  = useState<{ text: string; ts: number } | null>(null);
+  const [pendingReply,   setPendingReply]    = useState<string | null>(null);
+  const [justUnlocked,   setJustUnlocked]   = useState(false);
+  const [diagOpen,       setDiagOpen]       = useState(false);
+  const [emitCount,      setEmitCount]      = useState(0);
+
+  // Stable ref so event listeners never capture a stale replayTts closure
+  const replayTtsRef = useRef(replayTts);
+  useEffect(() => { replayTtsRef.current = replayTts; }, [replayTts]);
 
   const mic = useStreamerMic({
     sendStreamerSpeech,
@@ -92,6 +100,29 @@ export function CoHostPanel({
       setLastStormReply({ text: newest.text, ts: newest.timestamp });
     }
   }, [aiAnnouncements, mic]);
+
+  // Listen for autoplay-blocked TTS events and auto-replay on audio unlock
+  useEffect(() => {
+    const handleBlocked = (e: Event) => {
+      const text = (e as CustomEvent<{ text?: string }>).detail?.text;
+      if (text) setPendingReply(text);
+    };
+    const handleUnlocked = () => {
+      setJustUnlocked(true);
+      setTimeout(() => setJustUnlocked(false), 3500);
+      // Auto-replay the pending reply now that audio is unlocked
+      setPendingReply(prev => {
+        if (prev) setTimeout(() => replayTtsRef.current?.(prev), 150);
+        return null;
+      });
+    };
+    window.addEventListener("tts:blocked",       handleBlocked);
+    window.addEventListener("tts:audio:unlocked", handleUnlocked);
+    return () => {
+      window.removeEventListener("tts:blocked",       handleBlocked);
+      window.removeEventListener("tts:audio:unlocked", handleUnlocked);
+    };
+  }, []);
 
   const isMicConnected = mic.browserSupported && mic.isEnabled && mic.audioMeterReady;
   const isListening    = mic.status === "listening" || mic.status === "speech_detected";
@@ -300,24 +331,57 @@ export function CoHostPanel({
           {ttsModeLive === "openai" && !isAudioUnlocked && unlockAudio && (
             <button
               onClick={unlockAudio}
-              className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-500/25 text-blue-300 hover:bg-blue-500/25 text-[10px] font-semibold transition-all"
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 hover:bg-amber-500/30 text-xs font-bold transition-all active:scale-[0.97]"
             >
               🔊 Enable Voice
             </button>
           )}
-          {ttsModeLive === "openai" && isAudioUnlocked && (
+          {ttsModeLive === "openai" && isAudioUnlocked && !justUnlocked && (
             <span className="ml-auto flex items-center gap-1 text-[10px] text-emerald-400/70">
               <CheckCircle2 className="h-2.5 w-2.5" />Voice enabled
             </span>
           )}
-
-          {!ttsOk && mic.isEnabled && (
-            <span className="text-[10px] text-amber-400/80 flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              Storm can hear you but won't speak back
+          {ttsModeLive === "openai" && isAudioUnlocked && justUnlocked && (
+            <span className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-300">
+              <CheckCircle2 className="h-3 w-3" />Voice Ready!
             </span>
           )}
         </div>
+
+        {/* ── Amber warning: mic active but audio not unlocked ──────────────── */}
+        {ttsModeLive === "openai" && !isAudioUnlocked && mic.isEnabled && (
+          <div className="flex items-center gap-2 rounded-xl bg-amber-500/8 border border-amber-500/20 px-3 py-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+            <p className="text-[11px] text-amber-200/80 leading-tight">
+              Storm will hear you but <strong className="text-amber-100">won't speak back</strong> — tap{" "}
+              <strong className="text-amber-100">Enable Voice</strong> above first.
+            </p>
+          </div>
+        )}
+
+        {/* ── Blocked reply: audio was locked when Storm replied ────────────── */}
+        {pendingReply && (
+          <div className="rounded-xl border border-amber-500/35 bg-amber-500/8 px-3 py-2.5 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-300/80 flex-1">
+                Storm replied — audio was blocked
+              </span>
+              <button
+                onClick={() => {
+                  unlockAudio?.();
+                  replayTtsRef.current?.(pendingReply);
+                  setPendingReply(null);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/25 border border-amber-500/40 text-amber-200 text-[11px] font-bold hover:bg-amber-500/35 active:scale-[0.97] transition-all"
+              >
+                <Play className="h-3 w-3 fill-current" />
+                Play Reply
+              </button>
+            </div>
+            <p className="text-xs text-amber-100 leading-snug">{pendingReply}</p>
+          </div>
+        )}
 
         {/* ── Mic error ─────────────────────────────────────────────────────── */}
         {mic.error && (
