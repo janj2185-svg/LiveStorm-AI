@@ -275,15 +275,21 @@ export function AvatarStudio() {
                 {(Object.values(PRESENTER_SLOTS) as typeof PRESENTER_SLOTS[PresenterSlotKey][]).map((slot) => (
                   <button
                     key={slot.key}
-                    onClick={() => { setAvatarKey(slot.key as PresenterSlotKey); setAvatarUrl(null); }}
+                    onClick={() => {
+                      setAvatarKey(slot.key as PresenterSlotKey);
+                      setAvatarUrl(slot.vrmPath ? `${import.meta.env.BASE_URL}${slot.vrmPath.replace(/^\//, "")}` : null);
+                    }}
                     title={slot.name}
                     className={cn(
-                      "flex flex-col items-center gap-1 py-2 rounded-xl border text-[9px] font-bold transition-all",
-                      avatarKey === slot.key && !avatarUrl
+                      "flex flex-col items-center gap-1 py-2 rounded-xl border text-[9px] font-bold transition-all relative",
+                      avatarKey === slot.key
                         ? "border-violet-500/50 bg-violet-500/15 text-violet-300"
                         : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
                     )}
                   >
+                    {slot.vrmPath && (
+                      <span className="absolute top-1 right-1 text-[7px] text-emerald-400/80 font-semibold leading-none">3D</span>
+                    )}
                     <span className="text-base leading-none">
                       {slot.gender === "Male" ? "👤" : "👩"}
                     </span>
@@ -291,10 +297,12 @@ export function AvatarStudio() {
                   </button>
                 ))}
               </div>
-              {/* Honest 2D-only notice for persona slots */}
+              {/* Slot mode notice */}
               {!avatarUrl && (
-                <p className="text-[9px] text-amber-400/70 text-center mb-2 leading-tight">
-                  Portrait only — no 3D VRM. Import below for a real 3D avatar.
+                <p className="text-[9px] text-muted-foreground/50 text-center mb-2 leading-tight">
+                  {PRESENTER_SLOTS[avatarKey]?.vrmPath
+                    ? "3D avatar loaded — animations & lip sync active."
+                    : "Portrait only — no 3D VRM. Import below or pick Marcus / Kai for 3D."}
                 </p>
               )}
               <Button
@@ -308,7 +316,7 @@ export function AvatarStudio() {
               </Button>
               {avatarUrl && (
                 <p className="text-[10px] text-emerald-400 text-center mt-1.5 font-medium">
-                  ✓ Custom 3D avatar loaded
+                  {PRESENTER_SLOTS[avatarKey]?.vrmPath ? "✓ 3D avatar active" : "✓ Custom 3D avatar loaded"}
                 </p>
               )}
             </ControlBlock>

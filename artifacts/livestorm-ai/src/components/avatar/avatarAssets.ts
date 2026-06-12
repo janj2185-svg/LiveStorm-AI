@@ -16,35 +16,38 @@ export interface PresenterSlot {
   personality: string;
   isPrimary: boolean;
   portraitUrl: string;
+  vrmPath?: string;
 }
 
 export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
   "marcus": {
     key: "marcus",
     name: "Marcus",
-    tagline: "Male Host · Professional",
+    tagline: "Male Host · 3D Avatar",
     role: "Male Host",
     gender: "Male",
     accentColor: "#3b82f6",
     personality: "Polished and charismatic — perfect for product reviews and brand stories",
     isPrimary: true,
     portraitUrl: "/avatars/male_1_neutral.png",
+    vrmPath: "/avatars/storm-default.vrm",
   },
   "kai": {
     key: "kai",
     name: "Kai",
-    tagline: "Male Streamer · Content Creator",
+    tagline: "Male Streamer · 3D Avatar",
     role: "Male Streamer",
     gender: "Male",
     accentColor: "#06b6d4",
     personality: "High-energy and community-driven — ideal for gaming and interactive drops",
     isPrimary: false,
     portraitUrl: "/avatars/male_2_neutral.png",
+    vrmPath: "/avatars/storm-serious.vrm",
   },
   "aria": {
     key: "aria",
     name: "Aria",
-    tagline: "Female Host · Professional",
+    tagline: "Female Host · Portrait",
     role: "Female Host",
     gender: "Female",
     accentColor: "#8b5cf6",
@@ -55,7 +58,7 @@ export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
   "sofia": {
     key: "sofia",
     name: "Sofia",
-    tagline: "Female Streamer · Content Creator",
+    tagline: "Female Streamer · Portrait",
     role: "Female Streamer",
     gender: "Female",
     accentColor: "#ec4899",

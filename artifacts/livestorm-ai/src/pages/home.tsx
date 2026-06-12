@@ -64,7 +64,12 @@ export function Home() {
                   Start Broadcasting Free
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg h-14 px-8 border-white/20 hover:bg-white/5">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-lg h-14 px-8 border-white/20 hover:bg-white/5"
+                onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+              >
                 <Play className="w-5 h-5 mr-2" />
                 Watch Demo
               </Button>
@@ -93,7 +98,7 @@ export function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 px-4 bg-black/40 border-y border-white/5">
+      <section id="features" className="py-24 px-4 bg-black/40 border-y border-white/5">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Command Your Audience</h2>
