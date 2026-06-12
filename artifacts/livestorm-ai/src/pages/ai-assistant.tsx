@@ -119,34 +119,30 @@ const TONE_OPTIONS = [
 
 type VoiceGender = "male" | "female" | "neutral";
 
-const NAMED_TO_OPENAI_FRONTEND: Record<string, string> = {
+// Legacy key → real OpenAI voice name (for users who saved old keys to DB)
+const LEGACY_TO_OPENAI: Record<string, string> = {
   calm_male: "alloy", deep_male: "onyx", energetic_male: "echo", funny_male: "fable",
   warm_female: "nova", confident_female: "shimmer", soft_female: "nova", energetic_female: "shimmer",
   playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
 };
+const OPENAI_VOICE_KEYS = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
+
 function resolveVoiceLabel(voiceKey: string): string {
-  const oai = NAMED_TO_OPENAI_FRONTEND[voiceKey];
-  if (oai) return oai;
-  if (["alloy","echo","fable","onyx","nova","shimmer"].includes(voiceKey)) return voiceKey;
+  if (LEGACY_TO_OPENAI[voiceKey]) return LEGACY_TO_OPENAI[voiceKey];
+  if ((OPENAI_VOICE_KEYS as readonly string[]).includes(voiceKey)) return voiceKey;
   return "nova";
+}
+function normalizeVoiceKey(voiceKey: string): string {
+  return LEGACY_TO_OPENAI[voiceKey] ?? ((OPENAI_VOICE_KEYS as readonly string[]).includes(voiceKey) ? voiceKey : "nova");
 }
 
 const VOICE_PROFILES: { value: string; label: string; desc: string; gender: VoiceGender; emoji: string }[] = [
-  // Male
-  { value: "calm_male",         label: "Calm Male Host",      desc: "alloy — balanced & composed",      gender: "male",    emoji: "🎙️" },
-  { value: "deep_male",         label: "Deep Broadcaster",    desc: "onyx — powerful & authoritative",  gender: "male",    emoji: "📻" },
-  { value: "energetic_male",    label: "Energetic Streamer",  desc: "echo — fast-paced & direct",       gender: "male",    emoji: "⚡" },
-  { value: "funny_male",        label: "Funny Commentator",   desc: "fable — expressive & playful",     gender: "male",    emoji: "😂" },
-  // Female
-  { value: "warm_female",       label: "Warm Female Host",    desc: "nova — natural & inviting",        gender: "female",  emoji: "🌸" },
-  { value: "confident_female",  label: "Confident Streamer",  desc: "shimmer — bold & expressive",      gender: "female",  emoji: "💪" },
-  { value: "soft_female",       label: "Soft Assistant",      desc: "nova — gentle & clear",            gender: "female",  emoji: "🌙" },
-  { value: "energetic_female",  label: "Energetic Creator",   desc: "shimmer — upbeat & vibrant",       gender: "female",  emoji: "✨" },
-  // Other
-  { value: "playful",           label: "Playful & Youthful",  desc: "shimmer — light & bouncy",         gender: "neutral", emoji: "🎈" },
-  { value: "robot",             label: "Robot Voice",         desc: "alloy — flat & synthetic",         gender: "neutral", emoji: "🤖" },
-  { value: "news",              label: "News Presenter",      desc: "fable — formal & clear",           gender: "neutral", emoji: "📰" },
-  { value: "caster",            label: "Gaming Caster",       desc: "echo — fast & energetic",          gender: "neutral", emoji: "🎮" },
+  { value: "onyx",    label: "Onyx",    desc: "Deep & authoritative",       gender: "male",    emoji: "♂" },
+  { value: "echo",    label: "Echo",    desc: "Clear & direct",             gender: "male",    emoji: "♂" },
+  { value: "nova",    label: "Nova",    desc: "Warm & natural",             gender: "female",  emoji: "♀" },
+  { value: "shimmer", label: "Shimmer", desc: "Bright & expressive",        gender: "female",  emoji: "♀" },
+  { value: "fable",   label: "Fable",   desc: "Expressive, British accent", gender: "neutral", emoji: "◎" },
+  { value: "alloy",   label: "Alloy",   desc: "Neutral & balanced",         gender: "neutral", emoji: "◎" },
 ];
 
 const GENDER_OPTIONS: { value: VoiceGender; label: string; emoji: string }[] = [
@@ -786,8 +782,9 @@ export function AiAssistant() {
       catch { mode = config.voiceEnabled ? "openai" : "off"; }
       setTtsModeLocal(mode);
       setTtsMode(mode);
-      setTtsVoiceLocal(config.voiceName ?? "nova");
-      setTtsVoice(config.voiceName ?? "nova");
+      const savedVoice = normalizeVoiceKey(config.voiceName ?? "nova");
+      setTtsVoiceLocal(savedVoice);
+      setTtsVoice(savedVoice);
       setTtsVolume(config.voiceVolume ?? 1.0);
       setTtsSpeed(config.voiceSpeed ?? 1.0);
     }
@@ -1035,6 +1032,7 @@ export function AiAssistant() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [battleActivating, setBattleActivating] = useState(false);
+  const [battleOn, setBattleOn] = useState(false);
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
@@ -1235,10 +1233,10 @@ export function AiAssistant() {
                 {battleActivating && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/50" />}
               </div>
               <Switch
-                checked={config?.operatingMode === "battle" as any}
+                checked={battleOn}
                 onCheckedChange={async (on) => {
                   if (battleActivating) return;
-                  updateConfig.mutate({ operatingMode: on ? ("battle" as any) : "semi-auto" });
+                  setBattleOn(on);
                   if (isSessionActive && activeSessionId) {
                     setBattleActivating(true);
                     try {
@@ -1249,17 +1247,20 @@ export function AiAssistant() {
                       console.log(`[BattleMode] ✅ activated=${on}`);
                     } catch (err) {
                       console.warn(`[BattleMode] ⚠ activate failed:`, err);
+                      setBattleOn(!on);
                     } finally {
                       setBattleActivating(false);
                     }
                   }
                 }}
-                disabled={!isSessionActive || battleActivating}
+                disabled={battleActivating}
                 className="scale-75"
               />
             </div>
             <p className="text-[10px] text-muted-foreground/40 mt-1 leading-tight">
-              AI fires sharp comebacks at every comment. Requires active session.
+              {isSessionActive
+                ? battleOn ? "Active — Storm fires sharp comebacks at every comment." : "Off — toggle to activate for this session."
+                : "Start a live session first, then enable Battle Mode here."}
             </p>
           </div>
 
@@ -1332,9 +1333,9 @@ export function AiAssistant() {
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Selected</p>
-                <p className="text-xs font-bold text-white capitalize truncate">{ttsVoice}</p>
-                <p className="text-[9px] text-muted-foreground/35 mt-0.5">→ {resolveVoiceLabel(ttsVoice)}</p>
+                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Voice</p>
+                <p className="text-xs font-bold text-white capitalize truncate">{resolveVoiceLabel(ttsVoice)}</p>
+                <p className="text-[9px] text-muted-foreground/35 mt-0.5">OpenAI TTS</p>
               </div>
               <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
                 <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Language</p>
@@ -1516,56 +1517,48 @@ export function AiAssistant() {
                   </div>
                   <p className="text-[10px] text-muted-foreground/60">Affects Slavic grammar (Ukrainian/Polish/Russian)</p>
                 </div>
-                {/* Voice Profiles */}
+                {/* Voice Profiles — 6 real OpenAI voices */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Voice Profile</Label>
-                  <div className="space-y-1">
-                    {(["male", "female", "neutral"] as VoiceGender[]).map((group) => {
-                      const profiles = VOICE_PROFILES.filter((p) => p.gender === group);
-                      const groupLabel = group === "male" ? "♂ Male" : group === "female" ? "♀ Female" : "◎ Other";
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">Voice (OpenAI TTS)</Label>
+                    <span className="text-[9px] text-muted-foreground/40">6 available</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {VOICE_PROFILES.map((v) => {
+                      const isSelected = ttsVoice === v.value;
+                      const isPreviewing = isVoicePreviewing === v.value;
                       return (
-                        <div key={group}>
-                          <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-0.5 pl-0.5">{groupLabel}</p>
-                          <div className="grid grid-cols-2 gap-1">
-                            {profiles.map((v) => {
-                              const isSelected = ttsVoice === v.value;
-                              const isPreviewing = isVoicePreviewing === v.value;
-                              return (
-                                <div
-                                  key={v.value}
-                                  className={cn(
-                                    "rounded-md border text-xs transition-all overflow-hidden",
-                                    isSelected
-                                      ? "border-blue-500/50 bg-blue-500/10"
-                                      : "border-white/5 bg-white/3 hover:border-white/10",
-                                  )}
-                                >
-                                  <button
-                                    onClick={() => handleTtsVoiceChange(v.value)}
-                                    className="w-full text-left px-2 pt-1.5 pb-1"
-                                  >
-                                    <div className={cn("font-medium leading-tight", isSelected ? "text-blue-300" : "text-white/80")}>
-                                      {v.emoji} {v.label}
-                                    </div>
-                                    <div className="text-[10px] text-muted-foreground/60 leading-tight">{v.desc}</div>
-                                  </button>
-                                  <button
-                                    onClick={() => handleVoicePreview(v.value)}
-                                    disabled={!!isVoicePreviewing}
-                                    className={cn(
-                                      "w-full flex items-center justify-center gap-1 py-1 text-[10px] border-t transition-all",
-                                      isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/50 hover:text-white/60",
-                                      !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
-                                    )}
-                                  >
-                                    {isPreviewing
-                                      ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</>
-                                      : <><Play className="h-2.5 w-2.5" />Preview</>}
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
+                        <div
+                          key={v.value}
+                          className={cn(
+                            "rounded-md border text-xs transition-all overflow-hidden",
+                            isSelected
+                              ? "border-blue-500/50 bg-blue-500/10"
+                              : "border-white/5 bg-white/[0.02] hover:border-white/10",
+                          )}
+                        >
+                          <button
+                            onClick={() => handleTtsVoiceChange(v.value)}
+                            className="w-full text-left px-2 pt-1.5 pb-1"
+                          >
+                            <div className={cn("font-semibold leading-tight", isSelected ? "text-blue-300" : "text-white/80")}>
+                              {v.emoji} {v.label}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground/55 leading-tight mt-0.5">{v.desc}</div>
+                          </button>
+                          <button
+                            onClick={() => handleVoicePreview(v.value)}
+                            disabled={!!isVoicePreviewing}
+                            className={cn(
+                              "w-full flex items-center justify-center gap-1 py-1 text-[10px] border-t transition-all",
+                              isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/50 hover:text-white/60",
+                              !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
+                            )}
+                          >
+                            {isPreviewing
+                              ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</>
+                              : <><Play className="h-2.5 w-2.5" />Preview</>}
+                          </button>
                         </div>
                       );
                     })}

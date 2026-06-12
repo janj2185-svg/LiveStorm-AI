@@ -271,7 +271,7 @@ export function AvatarStudio() {
             {/* ── Avatar source ── */}
             <ControlBlock>
               <ControlLabel>Avatar Slot</ControlLabel>
-              <div className="grid grid-cols-4 gap-1.5 mb-2.5">
+              <div className="grid grid-cols-4 gap-1.5 mb-1.5">
                 {(Object.values(PRESENTER_SLOTS) as typeof PRESENTER_SLOTS[PresenterSlotKey][]).map((slot) => (
                   <button
                     key={slot.key}
@@ -291,6 +291,12 @@ export function AvatarStudio() {
                   </button>
                 ))}
               </div>
+              {/* Honest 2D-only notice for persona slots */}
+              {!avatarUrl && (
+                <p className="text-[9px] text-amber-400/70 text-center mb-2 leading-tight">
+                  Portrait only — no 3D VRM. Import below for a real 3D avatar.
+                </p>
+              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -298,11 +304,11 @@ export function AvatarStudio() {
                 onClick={() => setCreatorOpen(true)}
               >
                 <Upload className="h-3 w-3 mr-1.5" />
-                Import VRM / GLB
+                Import VRM / GLB (3D)
               </Button>
               {avatarUrl && (
                 <p className="text-[10px] text-emerald-400 text-center mt-1.5 font-medium">
-                  ✓ Custom avatar loaded
+                  ✓ Custom 3D avatar loaded
                 </p>
               )}
             </ControlBlock>

@@ -262,9 +262,9 @@ export function AvatarStage({
             style={{ background: "linear-gradient(to bottom, transparent 45%, rgba(4,5,18,0.92) 100%)" }}
           />
           {/* 2D mode badge — top right */}
-          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 border border-white/[0.07] backdrop-blur-sm">
-            <Upload className="h-2.5 w-2.5 text-white/25" />
-            <span className="text-[8px] text-white/25 font-medium">2D Preview</span>
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-black/70 border border-amber-500/30 backdrop-blur-sm">
+            <Upload className="h-2.5 w-2.5 text-amber-400/80" />
+            <span className="text-[9px] text-amber-300/90 font-semibold">2D Preview</span>
           </div>
           {/* Bottom name + tagline */}
           <div className="absolute bottom-11 left-3 right-3">

@@ -56,7 +56,7 @@ export function CoHostPanel({
   lastMicBackendAck,
 }: CoHostPanelProps) {
   const [lastStormReply, setLastStormReply] = useState<{ text: string; ts: number } | null>(null);
-  const [diagOpen, setDiagOpen] = useState(true);
+  const [diagOpen, setDiagOpen] = useState(false);
   const [emitCount, setEmitCount] = useState(0);
 
   const mic = useStreamerMic({
