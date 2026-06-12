@@ -976,7 +976,7 @@ export function AiAssistant() {
 
   const handleVoicePreview = async (previewVoice?: string) => {
     if (!config || isVoicePreviewing) return;
-    const voiceKey = previewVoice ?? config.voiceName ?? "nova";
+    const voiceKey = previewVoice ?? ttsVoice ?? config.voiceName ?? "nova";
     setIsVoicePreviewing(voiceKey);
     try {
       const token = await getToken();

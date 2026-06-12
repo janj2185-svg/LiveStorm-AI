@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLiveSessionContext, type LiveEvent } from "@/contexts/LiveSessionContext";
-import type { EmotionalState } from "@/hooks/useLiveSession";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,19 +8,16 @@ import {
   AlertTriangle, Radio, Bot, Wifi, WifiOff,
   MessageCircle, Gift, Heart, UserPlus, Eye, Gem,
   ArrowDown, Share2, Sparkles, Zap, Trophy, TrendingUp,
-  Brain, Volume2, VolumeX, Square, Trash2,
+  Volume2, VolumeX, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { PageHero, GradientText } from "@/components/ui/premium";
 import { CoHostPanel } from "@/components/CoHostPanel";
 
 // ── Comment feed ──────────────────────────────────────────────────────────────
 
 function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; isActive: boolean; translations: Record<string, string> }) {
-  // useLiveSession prepends events ([newest, ...older]), so reverse to get oldest→newest
-  // for correct bottom-scroll: bottomRef sits below newest comment
   const comments = [...events.filter((e) => e.type === "comment")].reverse();
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -85,7 +81,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="flex gap-2.5 px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.04] transition-colors group"
+                    className="flex gap-2.5 px-3 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.04] transition-colors"
                   >
                     <div className="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500/25 flex-shrink-0 flex items-center justify-center overflow-hidden mt-0.5">
                       {e.avatarUrl ? (
@@ -140,138 +136,70 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
   );
 }
 
-// ── Gift feed ─────────────────────────────────────────────────────────────────
+// ── Stats bar (compact) ───────────────────────────────────────────────────────
 
-function GiftFeed({ events, totalCoins, isActive }: { events: LiveEvent[]; totalCoins: number; isActive: boolean }) {
-  const gifts = events.filter((e) => e.type === "gift").slice(0, 20);
-
-  return (
-    <div className="flex flex-col rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden">
-      <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between flex-none">
-        <span className="flex items-center gap-2 text-sm font-semibold text-white">
-          <Gift className="h-4 w-4 text-amber-400" />
-          Gifts
-        </span>
-        {totalCoins > 0 && (
-          <span className="flex items-center gap-1 text-[11px] font-bold text-amber-300 px-2 py-0.5 bg-amber-500/10 rounded-full border border-amber-500/20">
-            <Gem className="h-2.5 w-2.5" />
-            {totalCoins.toLocaleString()}
-          </span>
-        )}
-      </div>
-
-      <div className="overflow-y-auto max-h-[280px] scrollbar-thin scrollbar-thumb-white/10">
-        {!isActive ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center px-4">
-            <Gift className="h-6 w-6 text-white/10 mb-2" />
-            <p className="text-xs text-muted-foreground/60">Start a session to see gifts</p>
-          </div>
-        ) : gifts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center px-4">
-            <Gift className="h-6 w-6 text-white/10 mb-2 animate-pulse" />
-            <p className="text-xs text-muted-foreground/60">Waiting for gifts…</p>
-          </div>
-        ) : (
-          <div className="p-3 space-y-1.5">
-            <AnimatePresence initial={false}>
-              {gifts.map((e, idx) => (
-                <motion.div
-                  key={`${e.timestamp}-${idx}`}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/15 hover:bg-amber-500/8 transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-500/25 flex-shrink-0 flex items-center justify-center">
-                    <Gift className="h-3.5 w-3.5 text-amber-300" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-bold text-amber-200 truncate">
-                        {e.username ?? "Unknown"}
-                      </span>
-                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-300 flex-shrink-0">
-                        <Gem className="h-2.5 w-2.5" />
-                        {((e.data.coins as number) ?? 0).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-amber-300/60 truncate mt-0.5">
-                      {(e.data.giftName as string) ?? "Gift"}
-                      {(e.data.count as number) > 1 && ` ×${e.data.count}`}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Stats bar ─────────────────────────────────────────────────────────────────
-
-function StatsBar({ stats, isActive }: { stats: { viewerCount: number; totalLikes: number; totalFollows: number; totalComments: number; totalShares: number }; isActive: boolean }) {
+function StatsBar({ stats, isActive }: { stats: { viewerCount: number; totalLikes: number; totalFollows: number; totalComments: number; totalGifts: number }; isActive: boolean }) {
   const tiles = [
-    { label: "Viewers", value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
-    { label: "Likes", value: stats.totalLikes, icon: Heart, color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/20" },
-    { label: "Follows", value: stats.totalFollows, icon: UserPlus, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20" },
-    { label: "Comments", value: stats.totalComments, icon: MessageCircle, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+    { label: "Viewers",  value: stats.viewerCount,   icon: Eye,         color: "text-violet-400" },
+    { label: "Likes",    value: stats.totalLikes,     icon: Heart,       color: "text-pink-400"   },
+    { label: "Follows",  value: stats.totalFollows,   icon: UserPlus,    color: "text-green-400"  },
+    { label: "Comments", value: stats.totalComments,  icon: MessageCircle, color: "text-blue-400" },
+    { label: "Coins",    value: stats.totalGifts,     icon: Gem,         color: "text-amber-400"  },
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {tiles.map(({ label, value, icon: Icon, color, bg, border }) => (
-        <div key={label} className={cn("rounded-xl border p-3 flex flex-col items-center gap-1 transition-all duration-300", bg, border)}>
-          <Icon className={cn("h-4 w-4", color)} />
-          <span className={cn("text-lg font-black tabular-nums leading-none", isActive ? "text-white" : "text-muted-foreground/40")}>
+    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/6 flex-wrap">
+      {tiles.map(({ label, value, icon: Icon, color }) => (
+        <div key={label} className="flex items-center gap-1.5 min-w-fit">
+          <Icon className={cn("h-3 w-3", isActive ? color : "text-white/15")} />
+          <span className={cn("text-xs font-bold tabular-nums", isActive ? "text-white" : "text-white/20")}>
             {isActive ? value.toLocaleString() : "—"}
           </span>
-          <span className="text-[10px] text-muted-foreground/60 font-medium">{label}</span>
+          <span className="text-[10px] text-muted-foreground/40">{label}</span>
+          <span className="w-px h-3 bg-white/[0.06] mx-1 last:hidden" />
         </div>
       ))}
     </div>
   );
 }
 
-// ── Filterable event log ──────────────────────────────────────────────────────
+// ── Event log ─────────────────────────────────────────────────────────────────
 
 type FilterType = "all" | "comment" | "gift" | "follow" | "like" | "share" | "ai_announcement";
 
 const FILTER_BUTTONS: { label: string; value: FilterType; color: string }[] = [
-  { label: "All", value: "all", color: "text-white" },
-  { label: "Comments", value: "comment", color: "text-blue-400" },
-  { label: "Gifts", value: "gift", color: "text-amber-400" },
-  { label: "Follows", value: "follow", color: "text-green-400" },
-  { label: "Likes", value: "like", color: "text-pink-400" },
-  { label: "AI", value: "ai_announcement", color: "text-purple-400" },
+  { label: "All",      value: "all",            color: "text-white"    },
+  { label: "Comments", value: "comment",         color: "text-blue-400" },
+  { label: "Gifts",    value: "gift",            color: "text-amber-400"},
+  { label: "Follows",  value: "follow",          color: "text-green-400"},
+  { label: "Likes",    value: "like",            color: "text-pink-400" },
+  { label: "AI",       value: "ai_announcement", color: "text-purple-400"},
 ];
 
 const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  comment:             MessageCircle,
-  gift:                Gift,
-  like:                Heart,
-  follow:              UserPlus,
-  share:               Share2,
-  viewerCount:         Eye,
-  ai_announcement:     Sparkles,
-  xp_awarded:          Zap,
+  comment:              MessageCircle,
+  gift:                 Gift,
+  like:                 Heart,
+  follow:               UserPlus,
+  share:                Share2,
+  viewerCount:          Eye,
+  ai_announcement:      Sparkles,
+  xp_awarded:           Zap,
   achievement_unlocked: Trophy,
-  level_up:            TrendingUp,
+  level_up:             TrendingUp,
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  gift:                "text-amber-400 bg-amber-500/10 border-amber-500/20",
-  like:                "text-pink-400 bg-pink-500/10 border-pink-500/20",
-  comment:             "text-blue-400 bg-blue-500/10 border-blue-500/20",
-  follow:              "text-green-400 bg-green-500/10 border-green-500/20",
-  share:               "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-  viewerCount:         "text-violet-400 bg-violet-500/10 border-violet-500/20",
-  ai_announcement:     "text-purple-300 bg-purple-500/10 border-purple-500/20",
-  xp_awarded:          "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  gift:                 "text-amber-400 bg-amber-500/10 border-amber-500/20",
+  like:                 "text-pink-400 bg-pink-500/10 border-pink-500/20",
+  comment:              "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  follow:               "text-green-400 bg-green-500/10 border-green-500/20",
+  share:                "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+  viewerCount:          "text-violet-400 bg-violet-500/10 border-violet-500/20",
+  ai_announcement:      "text-purple-300 bg-purple-500/10 border-purple-500/20",
+  xp_awarded:           "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
   achievement_unlocked: "text-orange-400 bg-orange-500/10 border-orange-500/20",
-  level_up:            "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  level_up:             "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
 };
 
 function eventSummary(event: LiveEvent): string {
@@ -292,18 +220,11 @@ function eventSummary(event: LiveEvent): string {
 
 function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean }) {
   const [filter, setFilter] = useState<FilterType>("all");
-
-  const filtered = filter === "all"
-    ? events
-    : events.filter((e) => e.type === filter);
+  const filtered = filter === "all" ? events : events.filter((e) => e.type === filter);
 
   return (
-    <div className="rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden">
-      <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between flex-wrap gap-2">
-        <span className="text-sm font-semibold text-white flex items-center gap-2">
-          <Activity className="h-4 w-4 text-muted-foreground" />
-          Event Log
-        </span>
+    <div>
+      <div className="px-4 py-2.5 border-b border-white/5 flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">
           {FILTER_BUTTONS.map(({ label, value, color }) => (
             <button
@@ -375,153 +296,10 @@ function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean
   );
 }
 
-// ── Emotion Widget ────────────────────────────────────────────────────────────
-
-const INTENSITY_COLORS: Record<string, string> = {
-  happy:       "bg-green-400",
-  excited:     "bg-orange-400",
-  confident:   "bg-indigo-400",
-  curious:     "bg-cyan-400",
-  playful:     "bg-pink-400",
-  competitive: "bg-red-400",
-  grateful:    "bg-amber-400",
-  frustrated:  "bg-lime-400",
-  surprised:   "bg-purple-400",
-};
-
-function EmotionWidget({ emotionState, isActive }: { emotionState: EmotionalState | null; isActive: boolean }) {
-  const pipCount = 5;
-
-  if (!isActive) {
-    return (
-      <div className="rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
-          <Brain className="h-4 w-4 text-muted-foreground/40" />
-          <span className="text-sm font-semibold text-white/30">AI Mood</span>
-        </div>
-        <div className="px-4 py-5 flex flex-col items-center gap-2">
-          <span className="text-2xl opacity-20">😶</span>
-          <p className="text-[10px] text-muted-foreground/40 text-center">Start a session to see AI emotional state</p>
-        </div>
-      </div>
-    );
-  }
-
-  const state = emotionState ?? {
-    primary: "happy" as const,
-    intensity: 3,
-    secondary: null,
-    secondaryIntensity: 0,
-    lastTrigger: "stream started",
-    emoji: "😊",
-    label: "Happy",
-    history: [],
-  };
-
-  const pipColor = INTENSITY_COLORS[state.primary] ?? "bg-white/40";
-  const filledPips = Math.round((state.intensity / 10) * pipCount);
-
-  const recentHistory = state.history?.slice(0, 3) ?? [];
-
-  return (
-    <motion.div
-      key={state.primary}
-      className="rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden"
-      initial={{ opacity: 0.8 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
-        <Brain className="h-4 w-4 text-violet-400" />
-        <span className="text-sm font-semibold text-white">AI Mood</span>
-        <span className="ml-auto text-[10px] text-muted-foreground/50">Emotion Engine</span>
-      </div>
-
-      <div className="p-4 space-y-3">
-        {/* Primary emotion */}
-        <div className="flex items-center gap-3">
-          <motion.span
-            key={state.primary}
-            className="text-3xl leading-none"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-          >
-            {state.emoji ?? "😊"}
-          </motion.span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm font-bold text-white">{state.label ?? "Happy"}</span>
-              <span className="text-[10px] text-muted-foreground/60">{state.intensity}/10</span>
-            </div>
-            {/* Intensity pips */}
-            <div className="flex gap-1 mt-1">
-              {Array.from({ length: pipCount }).map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "h-1.5 flex-1 rounded-full transition-all duration-500",
-                    i < filledPips ? pipColor : "bg-white/10",
-                  )}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Trigger */}
-        {state.lastTrigger && (
-          <p className="text-[10px] text-muted-foreground/60 truncate">
-            ↳ {state.lastTrigger}
-          </p>
-        )}
-
-        {/* Secondary emotion */}
-        {state.secondary && state.secondaryIntensity >= 3 && (
-          <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-            <span className="text-xs text-muted-foreground/50">Also:</span>
-            <span className="text-xs font-medium text-white/70 capitalize">{state.secondary}</span>
-            <div className="flex gap-0.5 ml-auto">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "h-1 w-3 rounded-full transition-all",
-                    i < Math.round((state.secondaryIntensity / 10) * 3)
-                      ? (INTENSITY_COLORS[state.secondary!] ?? "bg-white/40")
-                      : "bg-white/10",
-                  )}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* History */}
-        {recentHistory.length > 0 && (
-          <div className="space-y-1 pt-1 border-t border-white/[0.05]">
-            <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wider">History</p>
-            {recentHistory.map((entry, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50">
-                <span className="capitalize text-white/40">{entry.emotion}</span>
-                <span className="text-white/20">·</span>
-                <span className="truncate">{entry.trigger}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Connection status badge ───────────────────────────────────────────────────
+// ── Connection badge ──────────────────────────────────────────────────────────
 
 function ConnectionBadge({
-  connected,
-  isActive,
-  effectiveMode,
-  tiktokError,
+  connected, isActive, effectiveMode, tiktokError,
 }: {
   connected: boolean;
   isActive: boolean;
@@ -544,35 +322,19 @@ function ConnectionBadge({
 
   if (!isActive) return null;
 
-  if (effectiveMode === "real" && connected) {
-    return (
-      <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/25 gap-1.5 text-xs">
-        <Radio className="h-2.5 w-2.5 animate-pulse" />Live
-      </Badge>
-    );
-  }
-  if (effectiveMode === "demo" && connected) {
-    return (
-      <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/25 gap-1.5 text-xs">
-        <Bot className="h-2.5 w-2.5" />Demo
-      </Badge>
-    );
-  }
-  if (effectiveMode === "error") {
-    return (
-      <Badge className="bg-red-500/15 text-red-400 border-red-500/25 gap-1.5 text-xs">
-        <AlertTriangle className="h-2.5 w-2.5" />Error
-      </Badge>
-    );
-  }
-  if (!connected && isActive) {
+  if (effectiveMode === "real" && connected)
+    return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/25 gap-1.5 text-xs"><Radio className="h-2.5 w-2.5 animate-pulse" />Live</Badge>;
+  if (effectiveMode === "demo" && connected)
+    return <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/25 gap-1.5 text-xs"><Bot className="h-2.5 w-2.5" />Demo</Badge>;
+  if (effectiveMode === "error")
+    return <Badge className="bg-red-500/15 text-red-400 border-red-500/25 gap-1.5 text-xs"><AlertTriangle className="h-2.5 w-2.5" />Error</Badge>;
+  if (!connected && isActive)
     return (
       <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/25 gap-1.5 text-xs animate-pulse">
         <WifiOff className="h-2.5 w-2.5" />
         Reconnecting{reconnectSeconds > 0 ? ` (${reconnectSeconds}s)` : "…"}
       </Badge>
     );
-  }
   return null;
 }
 
@@ -581,310 +343,142 @@ function ConnectionBadge({
 export function LiveStudio() {
   const {
     events, translations, stats, connected, tiktokMode, tiktokError, tiktokUsername,
-    isActive, sessionMode, emotionState,
+    isActive, sessionMode,
     aiAnnouncements, sendStreamerSpeech, activeSessionId, lastMicEmit, lastMicBackendAck,
-    stopAllSpeech, clearSpeechQueue, activeVoiceName, ttsQueueLen,
-    ttsModeLive, openaiTtsOk, openaiTtsErr, lastSpokenLang, lastSpokenEngine,
+    activeVoiceName, ttsQueueLen,
+    ttsModeLive, openaiTtsOk,
     isAudioUnlocked, unlockAudio,
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
+  const [eventLogOpen, setEventLogOpen] = useState(false);
 
   return (
-    <div className="space-y-5 max-w-6xl mx-auto">
-      <PageHero
-        gradientFrom="rgba(14,165,233,0.14)"
-        gradientTo="rgba(124,58,237,0.08)"
-        icon={
-          <div className="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
-            <Video className="h-8 w-8 text-cyan-400" />
+    <div className="space-y-4 max-w-5xl mx-auto">
+
+      {/* ── Header + Status ─────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/20">
+            <Video className="h-5 w-5 text-cyan-400" />
           </div>
-        }
-        title={
-          <span>
-            Live{" "}
-            <GradientText from="from-cyan-400" to="to-violet-400">Studio</GradientText>
-          </span>
-        }
-        subtitle="Manage your active broadcast and monitor real-time events."
-        right={
-          isActive ? (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          <div>
+            <h1 className="text-lg font-bold text-white">Live Studio</h1>
+            <p className="text-[11px] text-muted-foreground/60">
+              {tiktokUsername ? `@${tiktokUsername}` : "No active session"}
+              {effectiveMode === "real" ? " · Real LIVE" : effectiveMode === "demo" ? " · Demo" : ""}
+            </p>
+          </div>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <ConnectionBadge connected={connected} isActive={!!isActive} effectiveMode={effectiveMode} tiktokError={tiktokError} />
+          {isActive ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
               </span>
-              <span className="text-xs font-bold text-emerald-300">LIVE</span>
+              <span className="text-[11px] font-bold text-emerald-300">LIVE</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-              <span className="w-2 h-2 rounded-full bg-slate-500" />
-              <span className="text-xs font-semibold text-muted-foreground">OFFLINE</span>
-            </div>
-          )
-        }
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
-
-        {/* ── Left sidebar: session status (read-only) ─────────────────── */}
-        <div className="space-y-4">
-          <div className={cn(
-            "rounded-2xl bg-white/[0.04] backdrop-blur-sm border overflow-hidden transition-all duration-300",
-            isActive ? "border-primary/25 shadow-lg shadow-primary/8" : "border-white/8",
-          )}>
-            <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
-              <Video className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold text-white">Session Status</span>
-            </div>
-            <div className="p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs">Session</span>
-                {isActive ? (
-                  <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
-                    </span>
-                    LIVE
-                  </span>
-                ) : (
-                  <span className="text-xs font-semibold text-muted-foreground">OFFLINE</span>
-                )}
+            <Link href="/dashboard">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer">
+                <Radio className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[11px] font-semibold text-muted-foreground">Go Live →</span>
               </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs">WebSocket</span>
-                {connected ? (
-                  <span className="flex items-center gap-1 text-xs font-semibold text-green-400">
-                    <Wifi className="h-3 w-3" />Connected
-                  </span>
-                ) : isActive ? (
-                  <span className="flex items-center gap-1 text-xs font-semibold text-amber-400 animate-pulse">
-                    <WifiOff className="h-3 w-3" />Reconnecting…
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <WifiOff className="h-3 w-3" />Idle
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs">Mode</span>
-                <span className="text-xs font-semibold">
-                  {effectiveMode === "real"  && <span className="text-emerald-400">Real LIVE</span>}
-                  {effectiveMode === "demo"  && <span className="text-blue-400">Demo</span>}
-                  {effectiveMode === "error" && <span className="text-red-400">Error</span>}
-                  {!effectiveMode            && <span className="text-muted-foreground">—</span>}
-                </span>
-              </div>
-
-              {tiktokUsername && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">Stream</span>
-                  <span className="text-xs font-mono text-white">@{tiktokUsername}</span>
-                </div>
-              )}
-
-              <div className="border-t border-white/5 pt-3">
-                {isActive ? (
-                  <p className="text-[10px] text-muted-foreground/60 text-center leading-snug">
-                    {effectiveMode === "real"
-                      ? "Receiving real TikTok LIVE events."
-                      : effectiveMode === "demo"
-                      ? "Demo mode: simulated events flowing."
-                      : effectiveMode === "error"
-                      ? "Connection error — check event feed."
-                      : "Waiting for TikTok connection…"}
-                  </p>
-                ) : (
-                  <Link href="/dashboard">
-                    <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer group">
-                      <Radio className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      <span className="text-xs font-semibold text-muted-foreground group-hover:text-primary transition-colors">Go Live from Dashboard</span>
-                    </div>
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ── Emotion Widget ─────────────────────────────────────────── */}
-          <EmotionWidget emotionState={emotionState ?? null} isActive={!!isActive} />
-
-          {/* ── Voice Control ──────────────────────────────────────────── */}
-          <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
-              {activeVoiceName ? (
-                <Volume2 className="w-4 h-4 text-green-400 animate-pulse" />
-              ) : (
-                <VolumeX className="w-4 h-4 text-muted-foreground" />
-              )}
-              <span className="text-sm font-semibold text-white">Storm's Voice</span>
-              {ttsQueueLen > 0 && (
-                <span className="ml-auto text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full px-2 py-0.5">
-                  {ttsQueueLen} queued
-                </span>
-              )}
-            </div>
-            <div className="p-4 space-y-3">
-
-              {/* ── TTS Engine row ─────────────────────────────────────── */}
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs">Engine</span>
-                <span className={cn(
-                  "text-[11px] font-semibold px-2.5 py-0.5 rounded-full border",
-                  ttsModeLive === "openai"  && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                  ttsModeLive === "off"     && "bg-white/5 text-muted-foreground border-white/10",
-                )}>
-                  {ttsModeLive === "openai" ? "OpenAI TTS" : "Off"}
-                </span>
-              </div>
-
-              {/* ── OpenAI TTS status ──────────────────────────────────── */}
-              {ttsModeLive === "openai" && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">OpenAI status</span>
-                  {openaiTtsOk === true  && <span className="text-[11px] text-green-400 font-semibold">✓ Working</span>}
-                  {openaiTtsOk === false && (
-                    <span className="text-[11px] text-red-400 font-semibold truncate max-w-[130px]" title={openaiTtsErr ?? ""}>
-                      ✗ {openaiTtsErr ?? "Error"}
-                    </span>
-                  )}
-                  {openaiTtsOk === null  && <span className="text-[11px] text-muted-foreground/60 italic">Not tested yet</span>}
-                </div>
-              )}
-
-              {/* ── Autoplay unlock button ─────────────────────────────── */}
-              {ttsModeLive === "openai" && !isAudioUnlocked && (
-                <button
-                  onClick={unlockAudio}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-300 hover:bg-blue-500/25 hover:text-blue-200 active:scale-95 transition-all text-xs font-semibold"
-                >
-                  🔊 Enable Voice Output
-                </button>
-              )}
-              {ttsModeLive === "openai" && isAudioUnlocked && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">Autoplay</span>
-                  <span className="text-[11px] text-green-400 font-semibold">✓ Enabled</span>
-                </div>
-              )}
-
-              {/* ── Active voice (speaking indicator) ─────────────────── */}
-              <div className="flex items-center justify-between min-h-[20px]">
-                <span className="text-muted-foreground text-xs">Speaking</span>
-                {activeVoiceName ? (
-                  <span className="flex items-center gap-1.5 text-xs font-semibold text-green-400">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
-                    </span>
-                    <span className="truncate max-w-[130px]">{activeVoiceName}</span>
-                  </span>
-                ) : (
-                  <span className="text-xs text-muted-foreground/50">Silent</span>
-                )}
-              </div>
-
-              {/* ── Last spoken language + engine ─────────────────────── */}
-              {(lastSpokenLang || lastSpokenEngine) && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">Last spoken</span>
-                  <span className="text-[11px] text-white/70 font-mono">
-                    {lastSpokenLang ?? "—"}
-                    {lastSpokenEngine && (
-                      <span className={cn(
-                        "ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full border",
-                        lastSpokenEngine === "openai"  && "bg-blue-500/10 text-blue-400 border-blue-500/20",
-                      )}>
-                        {"AI"}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
-
-              {ttsModeLive === "off" && (
-                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/8">
-                  <VolumeX className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-muted-foreground/70 leading-snug">
-                    Voice is off. Enable <strong>OpenAI TTS</strong> in <em>AI Settings → Voice</em>.
-                  </p>
-                </div>
-              )}
-
-              {/* ── Control buttons ────────────────────────────────────── */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={stopAllSpeech}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 transition-all text-red-400 text-xs font-semibold"
-                >
-                  <Square className="w-3 h-3 fill-current" />
-                  Stop Speech
-                </button>
-                <button
-                  onClick={clearSpeechQueue}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-amber-400 text-xs font-semibold"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Clear Queue
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* ── Right panel: Co-Host + feeds ─────────────────────────────────── */}
-        <div className="space-y-4 min-w-0">
-
-          {/* Connection status + stats */}
-          <div className="flex items-center justify-between gap-3">
-            <ConnectionBadge
-              connected={connected}
-              isActive={!!isActive}
-              effectiveMode={effectiveMode}
-              tiktokError={tiktokError}
-            />
-            {isActive && tiktokError && effectiveMode === "error" && (
-              <p className="text-[10px] text-red-400/80 flex items-center gap-1 truncate">
-                <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-                {tiktokError.slice(0, 90)}
-              </p>
-            )}
-          </div>
-
-          <StatsBar stats={stats} isActive={!!isActive} />
-
-          {/* ── Co-Host Voice Panel ── always visible, primary interaction ── */}
-          <CoHostPanel
-            sendStreamerSpeech={sendStreamerSpeech}
-            sessionId={activeSessionId}
-            isSessionActive={!!isActive}
-            aiAnnouncements={aiAnnouncements}
-            ttsModeLive={ttsModeLive}
-            activeVoiceName={activeVoiceName ?? null}
-            isAudioUnlocked={isAudioUnlocked}
-            unlockAudio={unlockAudio}
-            openaiTtsOk={openaiTtsOk}
-            lastMicEmit={lastMicEmit}
-            lastMicBackendAck={lastMicBackendAck}
-          />
-
-          {/* ── Live Chat ─────────────────────────────────────────────────── */}
-          {/* Comment + Gift feeds side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-4">
-            <div className="h-[300px] flex flex-col min-h-0">
-              <CommentFeed events={events} isActive={!!isActive} translations={translations} />
-            </div>
-            <GiftFeed events={events} totalCoins={stats.totalGifts} isActive={!!isActive} />
-          </div>
-
-          {/* Event log with filter tabs */}
-          <EventLog events={events} isActive={!!isActive} />
+            </Link>
+          )}
         </div>
       </div>
+
+      {/* ── ENABLE VOICE — cannot-miss banner ───────────────────────────── */}
+      {ttsModeLive === "openai" && !isAudioUnlocked && (
+        <motion.button
+          onClick={unlockAudio}
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full flex items-center gap-4 py-4 px-5 rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/18 hover:border-amber-500/60 active:scale-[0.995] transition-all group text-left"
+        >
+          <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 flex-shrink-0 group-hover:scale-105 transition-transform">
+            <Volume2 className="h-5 w-5 text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-amber-300">Click here to enable Storm's voice</p>
+            <p className="text-[11px] text-amber-400/70 mt-0.5">Browsers block audio until you interact — tap once to unlock. Required each session.</p>
+          </div>
+          <span className="flex-shrink-0 text-[11px] font-bold bg-amber-500/25 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full animate-pulse">
+            TAP TO UNLOCK
+          </span>
+        </motion.button>
+      )}
+
+      {/* ── Voice is off warning ──────────────────────────────────────────── */}
+      {ttsModeLive === "off" && isActive && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/8">
+          <VolumeX className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+          <p className="text-xs text-muted-foreground/70 flex-1">
+            Storm's voice is disabled — AI can hear you but won't speak back.
+          </p>
+          <Link href="/ai-assistant">
+            <span className="text-xs font-semibold text-primary/80 hover:text-primary cursor-pointer whitespace-nowrap">
+              Enable in AI Settings →
+            </span>
+          </Link>
+        </div>
+      )}
+
+      {/* ── TikTok error ─────────────────────────────────────────────────── */}
+      {isActive && tiktokError && effectiveMode === "error" && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/8 border border-red-500/20">
+          <AlertTriangle className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+          <p className="text-xs text-red-400/80 truncate">{tiktokError.slice(0, 120)}</p>
+        </div>
+      )}
+
+      {/* ── Main grid: Co-Host + Comments ───────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
+
+        {/* Co-Host Voice Panel */}
+        <CoHostPanel
+          sendStreamerSpeech={sendStreamerSpeech}
+          sessionId={activeSessionId}
+          isSessionActive={!!isActive}
+          aiAnnouncements={aiAnnouncements}
+          ttsModeLive={ttsModeLive}
+          activeVoiceName={activeVoiceName ?? null}
+          isAudioUnlocked={isAudioUnlocked}
+          unlockAudio={unlockAudio}
+          openaiTtsOk={openaiTtsOk}
+          lastMicEmit={lastMicEmit}
+          lastMicBackendAck={lastMicBackendAck}
+        />
+
+        {/* Comment Feed */}
+        <div className="h-[520px] flex flex-col min-h-0">
+          <CommentFeed events={events} isActive={!!isActive} translations={translations} />
+        </div>
+      </div>
+
+      {/* ── Stats row ────────────────────────────────────────────────────── */}
+      <StatsBar stats={{ ...stats, totalGifts: stats.totalGifts ?? 0 }} isActive={!!isActive} />
+
+      {/* ── Event log (collapsible) ──────────────────────────────────────── */}
+      <div className="rounded-2xl border border-white/8 overflow-hidden">
+        <button
+          onClick={() => setEventLogOpen((o) => !o)}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+        >
+          <Activity className="h-4 w-4 text-muted-foreground/50" />
+          <span className="text-sm font-semibold text-white/70">Event Log</span>
+          {events.length > 0 && (
+            <span className="text-[10px] text-muted-foreground/40">{events.length} events</span>
+          )}
+          <span className="ml-auto text-muted-foreground/40">
+            {eventLogOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </span>
+        </button>
+        {eventLogOpen && <EventLog events={events} isActive={!!isActive} />}
+      </div>
+
     </div>
   );
 }

@@ -106,6 +106,12 @@ function AvatarPresetLibrary({
 
       {expanded && (
         <div className="space-y-2">
+          {/* Honest label — presets are 2D concept images */}
+          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-amber-500/8 border border-amber-500/20">
+            <span className="text-[9px] font-bold text-amber-400">⚠ 2D Preview Only</span>
+            <span className="text-[9px] text-amber-400/60">— Concept images, not working 3D avatars. Use "Import VRM / GLB" above for a real 3D avatar.</span>
+          </div>
+
           {/* Category pills */}
           <div className="flex flex-wrap gap-1">
             {AVATAR_PRESET_CATEGORIES.map((cat) => (
@@ -150,6 +156,7 @@ function AvatarPresetLibrary({
                 <div className="px-1.5 py-1.5 text-left">
                   <p className="text-[10px] font-bold text-white leading-none">{preset.name}</p>
                   <p className="text-[8px] text-muted-foreground/60 mt-0.5 leading-tight">{preset.role}</p>
+                  <p className="text-[8px] text-amber-400/50 mt-0.5">2D preview</p>
                 </div>
                 {selectedPresetId === preset.id && (
                   <div className="absolute top-1 right-1 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">

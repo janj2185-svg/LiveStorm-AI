@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
   Trophy, Sword, Gamepad2, Castle, Globe, ChevronRight,
-  Zap, Crown, Star, Users,
+  Zap, Crown, Star, Users, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ const GAME_MODES = [
     badge: "XP & Levels",
     badgeColor: "text-amber-300 bg-amber-500/15 border-amber-500/30",
     stats: ["Viewer XP", "Level-ups", "Leaderboard"],
+    comingSoon: false,
   },
   {
     label: "Boss Battle",
@@ -32,6 +33,7 @@ const GAME_MODES = [
     badge: "Co-op",
     badgeColor: "text-red-300 bg-red-500/15 border-red-500/30",
     stats: ["Boss HP", "Damage Dealt", "Rewards"],
+    comingSoon: true,
   },
   {
     label: "Mini-Games",
@@ -45,6 +47,7 @@ const GAME_MODES = [
     badge: "Interactive",
     badgeColor: "text-cyan-300 bg-cyan-500/15 border-cyan-500/30",
     stats: ["Lucky Draw", "Quiz", "Treasure Hunt"],
+    comingSoon: true,
   },
   {
     label: "Kingdom",
@@ -58,6 +61,7 @@ const GAME_MODES = [
     badge: "Build",
     badgeColor: "text-violet-300 bg-violet-500/15 border-violet-500/30",
     stats: ["Buildings", "Resources", "Upgrades"],
+    comingSoon: true,
   },
   {
     label: "Universe",
@@ -71,14 +75,15 @@ const GAME_MODES = [
     badge: "Global",
     badgeColor: "text-blue-300 bg-blue-500/15 border-blue-500/30",
     stats: ["Rankings", "Alliances", "Seasons"],
+    comingSoon: true,
   },
 ];
 
 const FEATURE_HIGHLIGHTS = [
-  { icon: Zap, label: "Real-time XP", desc: "Instant viewer engagement rewards", color: "text-yellow-400" },
-  { icon: Crown, label: "Live Leaderboards", desc: "Top supporters displayed live", color: "text-amber-400" },
-  { icon: Star, label: "Achievements", desc: "Unlock badges for milestones", color: "text-violet-400" },
-  { icon: Users, label: "Co-op Events", desc: "Viewers team up together", color: "text-cyan-400" },
+  { icon: Zap,   label: "Real-time XP",      desc: "Instant viewer engagement rewards", color: "text-yellow-400" },
+  { icon: Crown, label: "Live Leaderboards",  desc: "Top supporters displayed live",     color: "text-amber-400"  },
+  { icon: Star,  label: "Achievements",       desc: "Unlock badges for milestones",      color: "text-violet-400" },
+  { icon: Users, label: "Co-op Events",       desc: "Viewers team up together",          color: "text-cyan-400"   },
 ];
 
 export function Games() {
@@ -131,6 +136,50 @@ export function Games() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {GAME_MODES.map((game, i) => {
             const Icon = game.icon;
+
+            if (game.comingSoon) {
+              return (
+                <motion.div
+                  key={game.href}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: i * 0.07 }}
+                >
+                  <div className={cn(
+                    "group p-5 rounded-2xl border",
+                    "bg-gradient-to-br opacity-50 cursor-not-allowed select-none",
+                    game.gradient,
+                    game.border,
+                  )}>
+                    <div className="flex items-start gap-4">
+                      <div className={cn("p-3 rounded-xl flex-shrink-0 border shadow-inner", game.iconBg, game.border)}>
+                        <Icon className={cn("h-6 w-6", game.iconColor)} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-bold text-white">{game.label}</p>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full border font-bold text-white/50 bg-white/5 border-white/10 flex items-center gap-1">
+                            <Lock className="h-2 w-2" />Coming Soon
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground/70 leading-relaxed">{game.desc}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {game.stats.map((stat) => (
+                            <span
+                              key={stat}
+                              className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.07] text-muted-foreground/40"
+                            >
+                              {stat}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            }
+
             return (
               <motion.div
                 key={game.href}
