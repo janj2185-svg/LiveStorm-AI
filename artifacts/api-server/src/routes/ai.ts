@@ -400,7 +400,7 @@ router.post("/ai/generate-event", requireAuth, async (req: any, res: any) => {
 
 // Named profile → OpenAI voice resolution (must match voiceAgent.ts NAMED_PROFILE_MAP)
 const NAMED_TO_OPENAI: Record<string, string> = {
-  calm_male: "onyx", deep_male: "onyx", energetic_male: "echo", funny_male: "fable",
+  calm_male: "alloy", deep_male: "onyx", energetic_male: "echo", funny_male: "fable",
   warm_female: "nova", confident_female: "shimmer", soft_female: "nova", energetic_female: "shimmer",
   playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
 };

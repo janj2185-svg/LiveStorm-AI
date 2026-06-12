@@ -18,7 +18,7 @@ export const VOICE_CATALOG: Record<string, VoiceConfig & { label: string }> = {
 
 // Maps named profiles (calm_male, warm_female etc.) to their underlying OpenAI voice + speed
 const NAMED_PROFILE_MAP: Record<string, { voice: string; speed: number; description: string }> = {
-  calm_male:        { voice: "onyx",    speed: 0.9,  description: "Calm Male Host — deep & composed" },
+  calm_male:        { voice: "alloy",   speed: 0.9,  description: "Calm Male Host — balanced & composed" },
   deep_male:        { voice: "onyx",    speed: 0.85, description: "Deep Broadcaster — powerful & authoritative" },
   energetic_male:   { voice: "echo",    speed: 1.1,  description: "Energetic Streamer — fast-paced & direct" },
   funny_male:       { voice: "fable",   speed: 1.05, description: "Funny Commentator — expressive & playful" },

@@ -90,7 +90,7 @@ function AvatarPresetLibrary({
   onSelect: (preset: AvatarPreset) => void;
 }) {
   const [activeCategory, setActiveCategory] = useState<string>("TikTok Hosts");
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const filtered = AVATAR_PRESETS.filter((p) => p.category === activeCategory);
 
@@ -512,7 +512,6 @@ export function AvatarStudio() {
                 isSpeaking={false}
                 personaName={PRESENTER_SLOTS[avatarKey]?.name ?? "Avatar"}
                 enableZoom
-                showLogo
                 cameraFov={38}
                 cameraY={1.0}
                 cameraZ={2.0}

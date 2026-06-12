@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Settings2, Bot, ChevronDown, ChevronUp } from "lucide-react";
+import { Mic, Settings2, Bot, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarCanvas, checkWebGL } from "./AvatarCanvas";
 import type { AnimationState } from "./avatarAnimationMachine";
@@ -219,8 +219,8 @@ export function AvatarStage({
         cameraZ={cameraZ}
       />
 
-      {/* Logo overlay — top center */}
-      {showLogo && (
+      {/* Logo overlay — top center (only when explicitly requested AND avatar is loaded) */}
+      {showLogo && hasAvatar && (
         <div className="absolute top-0 left-0 right-0 flex justify-center pt-5 z-20 pointer-events-none">
           <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/10">
             <img
@@ -235,6 +235,23 @@ export function AvatarStage({
             >
               LiveStorm AI
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* No-avatar overlay — shown when no VRM/GLB URL is supplied */}
+      {!hasAvatar && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
+          <div className="flex flex-col items-center gap-3 px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-violet-500/10 border border-dashed border-violet-500/25 flex items-center justify-center">
+              <Upload className="h-6 w-6 text-violet-400/35" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white/40">No 3D Avatar</p>
+              <p className="text-[11px] text-white/20 mt-1 leading-snug max-w-[130px]">
+                Import a VRM or GLB file to see your avatar here
+              </p>
+            </div>
           </div>
         </div>
       )}

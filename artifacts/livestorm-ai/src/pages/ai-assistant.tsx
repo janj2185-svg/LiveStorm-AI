@@ -119,22 +119,34 @@ const TONE_OPTIONS = [
 
 type VoiceGender = "male" | "female" | "neutral";
 
+const NAMED_TO_OPENAI_FRONTEND: Record<string, string> = {
+  calm_male: "alloy", deep_male: "onyx", energetic_male: "echo", funny_male: "fable",
+  warm_female: "nova", confident_female: "shimmer", soft_female: "nova", energetic_female: "shimmer",
+  playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
+};
+function resolveVoiceLabel(voiceKey: string): string {
+  const oai = NAMED_TO_OPENAI_FRONTEND[voiceKey];
+  if (oai) return oai;
+  if (["alloy","echo","fable","onyx","nova","shimmer"].includes(voiceKey)) return voiceKey;
+  return "nova";
+}
+
 const VOICE_PROFILES: { value: string; label: string; desc: string; gender: VoiceGender; emoji: string }[] = [
   // Male
-  { value: "calm_male",         label: "Calm Male Host",      desc: "Deep & composed",         gender: "male",    emoji: "🎙️" },
-  { value: "deep_male",         label: "Deep Broadcaster",    desc: "Powerful & authoritative", gender: "male",    emoji: "📻" },
-  { value: "energetic_male",    label: "Energetic Streamer",  desc: "Fast-paced & direct",      gender: "male",    emoji: "⚡" },
-  { value: "funny_male",        label: "Funny Commentator",   desc: "Expressive & playful",     gender: "male",    emoji: "😂" },
+  { value: "calm_male",         label: "Calm Male Host",      desc: "alloy — balanced & composed",      gender: "male",    emoji: "🎙️" },
+  { value: "deep_male",         label: "Deep Broadcaster",    desc: "onyx — powerful & authoritative",  gender: "male",    emoji: "📻" },
+  { value: "energetic_male",    label: "Energetic Streamer",  desc: "echo — fast-paced & direct",       gender: "male",    emoji: "⚡" },
+  { value: "funny_male",        label: "Funny Commentator",   desc: "fable — expressive & playful",     gender: "male",    emoji: "😂" },
   // Female
-  { value: "warm_female",       label: "Warm Female Host",    desc: "Natural & inviting",       gender: "female",  emoji: "🌸" },
-  { value: "confident_female",  label: "Confident Streamer",  desc: "Bold & expressive",        gender: "female",  emoji: "💪" },
-  { value: "soft_female",       label: "Soft Assistant",      desc: "Gentle & clear",           gender: "female",  emoji: "🌙" },
-  { value: "energetic_female",  label: "Energetic Creator",   desc: "Upbeat & vibrant",         gender: "female",  emoji: "✨" },
+  { value: "warm_female",       label: "Warm Female Host",    desc: "nova — natural & inviting",        gender: "female",  emoji: "🌸" },
+  { value: "confident_female",  label: "Confident Streamer",  desc: "shimmer — bold & expressive",      gender: "female",  emoji: "💪" },
+  { value: "soft_female",       label: "Soft Assistant",      desc: "nova — gentle & clear",            gender: "female",  emoji: "🌙" },
+  { value: "energetic_female",  label: "Energetic Creator",   desc: "shimmer — upbeat & vibrant",       gender: "female",  emoji: "✨" },
   // Other
-  { value: "playful",           label: "Playful & Youthful",  desc: "Light & bouncy",           gender: "neutral", emoji: "🎈" },
-  { value: "robot",             label: "Robot Voice",         desc: "Flat & synthetic",         gender: "neutral", emoji: "🤖" },
-  { value: "news",              label: "News Presenter",      desc: "Formal & clear",           gender: "neutral", emoji: "📰" },
-  { value: "caster",            label: "Gaming Caster",       desc: "Fast & energetic",         gender: "neutral", emoji: "🎮" },
+  { value: "playful",           label: "Playful & Youthful",  desc: "shimmer — light & bouncy",         gender: "neutral", emoji: "🎈" },
+  { value: "robot",             label: "Robot Voice",         desc: "alloy — flat & synthetic",         gender: "neutral", emoji: "🤖" },
+  { value: "news",              label: "News Presenter",      desc: "fable — formal & clear",           gender: "neutral", emoji: "📰" },
+  { value: "caster",            label: "Gaming Caster",       desc: "echo — fast & energetic",          gender: "neutral", emoji: "🎮" },
 ];
 
 const GENDER_OPTIONS: { value: VoiceGender; label: string; emoji: string }[] = [
@@ -1309,6 +1321,7 @@ export function AiAssistant() {
               <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
                 <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Selected</p>
                 <p className="text-xs font-bold text-white capitalize truncate">{ttsVoice}</p>
+                <p className="text-[9px] text-muted-foreground/35 mt-0.5">→ {resolveVoiceLabel(ttsVoice)}</p>
               </div>
               <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
                 <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Language</p>
