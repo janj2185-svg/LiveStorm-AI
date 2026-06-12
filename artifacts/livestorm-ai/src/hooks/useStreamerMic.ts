@@ -67,6 +67,12 @@ const IS_ANDROID = typeof navigator !== "undefined" && /Android/i.test(navigator
 // Android WebView (Replit app, in-app browsers) blocks Google's cloud Speech API via network.
 // Detectable via 'wv' token in the User-Agent string.
 const IS_ANDROID_WEBVIEW = IS_ANDROID && /\bwv\b/i.test(typeof navigator !== "undefined" ? navigator.userAgent : "");
+// iOS Safari supports webkitSpeechRecognition but silently fails with continuous=true:
+// onstart fires, audio meter works, but onresult never fires.
+// Fix: use continuous=false (single-shot) on iOS — same pattern as Android.
+const IS_IOS = typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+// Single-shot SR mode required on ALL mobile platforms (Android + iOS)
+const IS_MOBILE_SR = IS_ANDROID || IS_IOS;
 
 interface UseStreamerMicOptions {
   sendStreamerSpeech: ((text: string, lang: string) => void) | undefined;
@@ -88,6 +94,7 @@ export interface UseStreamerMicReturn {
   error: string | null;
   browserSupported: boolean;
   isAndroidChrome: boolean;
+  isIos: boolean;
   isWebView: boolean;
   audioLevel: number;
   audioMeterReady: boolean;
@@ -276,19 +283,22 @@ export function useStreamerMic({
     const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SR) return;
     const rec = new SR();
-    // Android Chrome: continuous=false (ignores true), interimResults=false (avoids a Chrome
-    // Android bug where onresult never fires when interim results are requested via cloud SR).
-    rec.continuous      = !IS_ANDROID;
-    rec.interimResults  = !IS_ANDROID;
+    // Mobile SR mode: continuous=false, interimResults=false on ALL mobile platforms.
+    // Android Chrome: ignores continuous=true, onresult never fires with interimResults=true.
+    // iOS Safari: continuous=true silently fails — onstart fires, audio meter works,
+    //             but onresult NEVER fires. continuous=false (single-shot) is required.
+    rec.continuous      = !IS_MOBILE_SR;
+    rec.interimResults  = !IS_MOBILE_SR;
     rec.maxAlternatives = 1;
     rec.lang            = langRef.current;
     recognitionRef.current = rec;
-    console.log(`[Mic:4] ✅ SR created | lang=${rec.lang} | continuous=${rec.continuous} | android=${IS_ANDROID} | webview=${IS_ANDROID_WEBVIEW} | interimResults=${rec.interimResults}`);
+    const platform = IS_IOS ? "iOS" : IS_ANDROID ? "Android" : "Desktop";
+    console.log(`[Mic:4] ✅ SR created | lang=${rec.lang} | platform=${platform} | continuous=${rec.continuous} | interimResults=${rec.interimResults} | android=${IS_ANDROID} | ios=${IS_IOS} | webview=${IS_ANDROID_WEBVIEW}`);
 
     rec.onstart = () => {
-      console.log(`[Mic:5] ✅ SR onstart fired — NOW LISTENING | lang=${langRef.current}`);
-      if (IS_ANDROID) {
-        console.log(`[MobileSpeechStart] ✅ Android SR started | lang=${langRef.current} | continuous=false | interimResults=false | webview=${IS_ANDROID_WEBVIEW} | ua="${navigator.userAgent.slice(0, 80)}"`);
+      console.log(`[Mic:5] ✅ SR onstart fired — NOW LISTENING | lang=${langRef.current} | platform=${platform}`);
+      if (IS_MOBILE_SR) {
+        console.log(`[MobileSpeechStart] ✅ ${platform} SR started | lang=${langRef.current} | continuous=false | interimResults=false${IS_ANDROID ? ` | webview=${IS_ANDROID_WEBVIEW}` : ""} | ua="${navigator.userAgent.slice(0, 100)}"`);
       }
       setSpeechRecogActive(true);
       setStatus("listening");
@@ -296,8 +306,8 @@ export function useStreamerMic({
     };
 
     rec.onresult = (event) => {
-      if (IS_ANDROID) {
-        console.log(`[MobileSpeechResult] onresult fired ✅ | resultIndex=${event.resultIndex} | totalResults=${event.results.length} | isFinal=${event.results[event.resultIndex]?.[0] ? event.results[event.resultIndex].isFinal : "?"}`);
+      if (IS_MOBILE_SR) {
+        console.log(`[MobileSpeechResult] onresult fired ✅ | platform=${platform} | resultIndex=${event.resultIndex} | totalResults=${event.results.length} | isFinal=${event.results[event.resultIndex]?.[0] ? event.results[event.resultIndex].isFinal : "?"}`);
       }
       let interim = "";
       let newFinal = "";
@@ -314,17 +324,17 @@ export function useStreamerMic({
         noSpeechCountRef.current = 0;
         accumulatorRef.current += (accumulatorRef.current ? " " : "") + newFinal.trim();
         console.log(`[SpeechRecognized] ✅ final="${newFinal.trim().slice(0, 60)}" | accumulated="${accumulatorRef.current.slice(0, 80)}" | totalLen=${accumulatorRef.current.length}`);
-        if (IS_ANDROID) {
-          console.log(`[MobileTranscriptReceived] ✅ text="${newFinal.trim().slice(0, 80)}" | len=${newFinal.trim().length}`);
+        if (IS_MOBILE_SR) {
+          console.log(`[MobileTranscriptReceived] ✅ platform=${platform} | text="${newFinal.trim().slice(0, 80)}" | len=${newFinal.trim().length}`);
         }
         setLastFinalTranscript(accumulatorRef.current);
         setInterimTranscript("");
         setStatus("speech_detected");
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-        if (IS_ANDROID) {
-          // Android: continuous=false → onend fires immediately after onresult.
-          // Flush right now instead of waiting for the silence timer.
-          console.log(`[MobileSpeechResult] Android: flushing immediately (no silence wait) | "${accumulatorRef.current.slice(0, 60)}"`);
+        if (IS_MOBILE_SR) {
+          // Mobile (Android + iOS): continuous=false → onend fires right after onresult.
+          // Flush immediately — no silence timer needed.
+          console.log(`[MobileSpeechResult] ${platform}: flushing immediately (no silence wait) | "${accumulatorRef.current.slice(0, 60)}"`);
           setStatus("waiting");
           flushAccumulated();
         } else {
@@ -341,21 +351,23 @@ export function useStreamerMic({
     };
 
     rec.onerror = (event) => {
-      if (IS_ANDROID) {
-        console.log(`[MobileSpeechError] error="${event.error}" | msg="${event.message ?? ""}" | webview=${IS_ANDROID_WEBVIEW}`);
+      if (IS_MOBILE_SR) {
+        console.log(`[MobileSpeechError] error="${event.error}" | msg="${event.message ?? ""}" | platform=${platform}${IS_ANDROID ? ` | webview=${IS_ANDROID_WEBVIEW}` : ""}`);
       }
       // aborted = user stopped mic intentionally
       if (event.error === "aborted") return;
-      // no-speech: Android fires this when it hears nothing (or can't process audio)
+      // no-speech: mobile fires this when it hears nothing (or can't process audio)
       if (event.error === "no-speech") {
         noSpeechCountRef.current++;
-        if (IS_ANDROID) {
-          console.warn(`[MobileSpeechError] no-speech #${noSpeechCountRef.current} | webview=${IS_ANDROID_WEBVIEW}`);
+        if (IS_MOBILE_SR) {
+          console.warn(`[MobileSpeechError] no-speech #${noSpeechCountRef.current} | platform=${platform}`);
           if (noSpeechCountRef.current >= 3) {
             noSpeechCountRef.current = 0;
             setError(IS_ANDROID_WEBVIEW
               ? "Speech recognition is blocked. Copy the URL and open it in Chrome for Android."
-              : "Not hearing you — speak louder or hold the phone closer. Still in \"Listening\" mode.");
+              : IS_IOS
+                ? "Not hearing you — speak clearly into the mic. Still in \"Listening\" mode."
+                : "Not hearing you — speak louder or hold the phone closer. Still in \"Listening\" mode.");
           }
         }
         return;
@@ -367,7 +379,7 @@ export function useStreamerMic({
           setError("Speech recognition blocked by the in-app browser. Copy the URL and open in Chrome for Android.");
           setStatus("error");
         } else {
-          console.warn(`[MobileSpeechError] network | android=${IS_ANDROID} — will restart via onend`);
+          console.warn(`[MobileSpeechError] network | platform=${platform} — will restart via onend`);
         }
         return;
       }
@@ -389,10 +401,11 @@ export function useStreamerMic({
       setSpeechRecogActive(false);
       // Always null before restart so we never call .start() on a dead instance.
       recognitionRef.current = null;
-      console.log(`[Mic:5] SR onend | enabled=${enabledRef.current} | mode=${modeRef.current} | ptt=${pttActiveRef.current} | android=${IS_ANDROID}`);
+      console.log(`[Mic:5] SR onend | enabled=${enabledRef.current} | mode=${modeRef.current} | ptt=${pttActiveRef.current} | platform=${platform}`);
       if (enabledRef.current && modeRef.current === "continuous") {
-        // Android needs a longer pause + always creates a fresh instance (continuous=false there).
-        const delay = IS_ANDROID ? 600 : 200;
+        // Mobile needs a longer pause + always creates a fresh instance (continuous=false).
+        // iOS: same pattern as Android — restart after each single-shot recognition.
+        const delay = IS_MOBILE_SR ? 600 : 200;
         setTimeout(() => {
           if (!enabledRef.current) return;
           buildAndStart();
@@ -554,6 +567,7 @@ export function useStreamerMic({
     error,
     browserSupported,
     isAndroidChrome: IS_ANDROID,
+    isIos: IS_IOS,
     isWebView: IS_ANDROID_WEBVIEW,
     audioLevel,
     audioMeterReady,

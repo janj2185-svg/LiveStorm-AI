@@ -478,7 +478,11 @@ export function CoHostPanel({
                 value={mic.isWebView
                   ? "⚠️ Android WebView — Google SR blocked. Open in Chrome."
                   : mic.browserSupported
-                    ? `Chrome/Edge ✓${mic.isAndroidChrome ? " (Android: interimResults=off, flush-on-result)" : ""}`
+                    ? mic.isIos
+                      ? "iOS Safari ✓ (single-shot mode — restarts after each phrase)"
+                      : mic.isAndroidChrome
+                        ? "Android Chrome ✓ (single-shot mode — flush-on-result)"
+                        : "Chrome/Edge ✓ (continuous mode)"
                     : mic.isAndroidChrome
                       ? "NOT SUPPORTED — open in Chrome for Android"
                       : "NOT SUPPORTED — use Chrome or Edge"}
