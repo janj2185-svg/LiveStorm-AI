@@ -475,17 +475,16 @@ export function CoHostPanel({
               <DiagRow n={3}  label="SpeechRecognition API"
                 ok={mic.browserSupported && !mic.isWebView}
                 warn={mic.isWebView}
-                value={mic.isWebView
-                  ? "⚠️ Android WebView — Google SR blocked. Open in Chrome."
-                  : mic.browserSupported
-                    ? mic.isIos
-                      ? "iOS Safari ✓ (single-shot mode — restarts after each phrase)"
-                      : mic.isAndroidChrome
-                        ? "Android Chrome ✓ (single-shot mode — flush-on-result)"
-                        : "Chrome/Edge ✓ (continuous mode)"
-                    : mic.isAndroidChrome
-                      ? "NOT SUPPORTED — open in Chrome for Android"
-                      : "NOT SUPPORTED — use Chrome or Edge"}
+                value={(() => {
+                  const ua = navigator.userAgent.slice(0, 90);
+                  if (mic.isWebView) return `⚠️ Android WebView — SR blocked. Open in Chrome. UA: ${ua}`;
+                  if (!mic.browserSupported) return mic.isAndroidChrome
+                    ? `NOT SUPPORTED — open in Chrome. UA: ${ua}`
+                    : `NOT SUPPORTED — use Chrome/Edge. UA: ${ua}`;
+                  if (mic.isIos) return `iOS Safari ✓ single-shot | UA: ${ua}`;
+                  if (mic.isAndroidChrome) return `Android Chrome ✓ single-shot | UA: ${ua}`;
+                  return `Desktop ✓ continuous | UA: ${ua}`;
+                })()}
               />
               <DiagRow n={4}  label="Session active + sessionId"
                 ok={activeSession}
@@ -497,7 +496,19 @@ export function CoHostPanel({
               />
               <DiagRow n={6}  label="SR started (onstart fired)"
                 ok={mic.speechRecogActive}
-                value={mic.speechRecogActive ? "YES — LISTENING" : `NO | status=${mic.status}`}
+                value={mic.speechRecogActive ? `YES — LISTENING | lang=${mic.lang}` : `NO | status=${mic.status}`}
+              />
+              <DiagRow n={6.5}  label="SR restarts / no-speech count"
+                ok={mic.srRestartCount === 0 && mic.noSpeechCount === 0}
+                warn={mic.noSpeechCount >= 1}
+                neutral={!mic.isEnabled}
+                value={!mic.isEnabled
+                  ? "—"
+                  : mic.noSpeechCount >= 3
+                    ? `🔴 ${mic.noSpeechCount}× no-speech — SR loop! Language mismatch or quiet audio. Try switching language.`
+                    : mic.noSpeechCount > 0
+                      ? `⚠️ ${mic.noSpeechCount}× no-speech | restarts=${mic.srRestartCount} — speak loudly, check lang=${mic.lang}`
+                      : `restarts=${mic.srRestartCount} | no-speech=0 ✓`}
               />
               <DiagRow n={7}  label="Hearing audio (level > 5%)"
                 ok={mic.audioMeterReady && mic.audioLevel > 5}

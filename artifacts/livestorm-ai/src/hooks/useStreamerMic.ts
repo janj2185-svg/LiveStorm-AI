@@ -100,6 +100,8 @@ export interface UseStreamerMicReturn {
   audioMeterReady: boolean;
   micPermission: MicPermission;
   speechRecogActive: boolean;
+  noSpeechCount: number;    // consecutive no-speech errors — high = SR loop / language mismatch
+  srRestartCount: number;   // total SR restarts since enabled — high = cycling
   lang: string;
   setMode: (mode: MicMode) => void;
   setLang: (lang: string) => void;
@@ -144,6 +146,8 @@ export function useStreamerMic({
   const [audioMeterReady,     setAudioMeterReady]     = useState(false);
   const [micPermission,       setMicPermission]       = useState<MicPermission>("unknown");
   const [speechRecogActive,   setSpeechRecogActive]   = useState(false);
+  const [noSpeechCount,       setNoSpeechCount]       = useState(0);
+  const [srRestartCount,      setSrRestartCount]      = useState(0);
 
   const recognitionRef   = useRef<SpeechRecognitionLike | null>(null);
   const accumulatorRef   = useRef<string>("");
@@ -321,7 +325,13 @@ export function useStreamerMic({
       }
 
       if (newFinal) {
-        noSpeechCountRef.current = 0;
+        // Reset no-speech counter on any successful recognition
+        if (noSpeechCountRef.current > 0) {
+          console.log(`[SRSuccess] cleared no-speech counter (was ${noSpeechCountRef.current})`);
+          noSpeechCountRef.current = 0;
+          setNoSpeechCount(0);
+          setError(null);
+        }
         accumulatorRef.current += (accumulatorRef.current ? " " : "") + newFinal.trim();
         console.log(`[SpeechRecognized] ✅ final="${newFinal.trim().slice(0, 60)}" | accumulated="${accumulatorRef.current.slice(0, 80)}" | totalLen=${accumulatorRef.current.length}`);
         if (IS_MOBILE_SR) {
@@ -356,19 +366,23 @@ export function useStreamerMic({
       }
       // aborted = user stopped mic intentionally
       if (event.error === "aborted") return;
-      // no-speech: mobile fires this when it hears nothing (or can't process audio)
+      // no-speech: mobile fires this when SR can't hear/process audio.
+      // On Android this creates a silent restart loop if language mismatch or quiet audio.
       if (event.error === "no-speech") {
         noSpeechCountRef.current++;
-        if (IS_MOBILE_SR) {
-          console.warn(`[MobileSpeechError] no-speech #${noSpeechCountRef.current} | platform=${platform}`);
-          if (noSpeechCountRef.current >= 3) {
-            noSpeechCountRef.current = 0;
-            setError(IS_ANDROID_WEBVIEW
-              ? "Speech recognition is blocked. Copy the URL and open it in Chrome for Android."
+        setNoSpeechCount(noSpeechCountRef.current);
+        console.warn(`[SRNoSpeech] #${noSpeechCountRef.current} | platform=${platform} | lang=${langRef.current} — SR restarting via onend`);
+        if (noSpeechCountRef.current >= 3) {
+          // After 3 consecutive no-speech: show diagnostic hint
+          const hint = IS_ANDROID_WEBVIEW
+            ? "Speech recognition is blocked. Open in Chrome for Android."
+            : IS_ANDROID
+              ? `Not hearing you (${noSpeechCountRef.current}× no-speech). Check: language matches what you're speaking, mic not muted, Chrome (not Samsung Browser).`
               : IS_IOS
-                ? "Not hearing you — speak clearly into the mic. Still in \"Listening\" mode."
-                : "Not hearing you — speak louder or hold the phone closer. Still in \"Listening\" mode.");
-          }
+                ? `Not hearing you (${noSpeechCountRef.current}× no-speech). Speak clearly. Check Settings → Safari → Microphone.`
+                : `Mic active but SR returned no-speech ${noSpeechCountRef.current}× — speak clearly or check language.`;
+          setError(hint);
+          // Don't reset counter so UI keeps showing the count — reset on success instead
         }
         return;
       }
@@ -406,6 +420,7 @@ export function useStreamerMic({
         // Mobile needs a longer pause + always creates a fresh instance (continuous=false).
         // iOS: same pattern as Android — restart after each single-shot recognition.
         const delay = IS_MOBILE_SR ? 600 : 200;
+        setSrRestartCount(c => c + 1);
         setTimeout(() => {
           if (!enabledRef.current) return;
           buildAndStart();
@@ -479,6 +494,9 @@ export function useStreamerMic({
     stopAudioMeter();
     setStatus("idle");
     setInterimTranscript("");
+    setNoSpeechCount(0);
+    setSrRestartCount(0);
+    noSpeechCountRef.current = 0;
   }, [stopRecognition, stopAudioMeter]);
 
   const setMode = useCallback((m: MicMode) => {
@@ -573,6 +591,8 @@ export function useStreamerMic({
     audioMeterReady,
     micPermission,
     speechRecogActive,
+    noSpeechCount,
+    srRestartCount,
     lang,
     setMode,
     setLang,
