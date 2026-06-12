@@ -221,6 +221,7 @@ interface ParalinguisticProfile {
   reactions:   string[];  // when surprised or high-intensity
   fades:       string[];  // stream fatigue trailing energy (suffix)
   excitedTail: string[];  // excited peak emphasis (suffix)
+  topicDrift:  string[];  // natural mid-thought pivots — "Хоча... " / "Actually—" etc.
 }
 
 const PARALINGUISTIC_PROFILES: Record<string, ParalinguisticProfile> = {
@@ -230,6 +231,7 @@ const PARALINGUISTIC_PROFILES: Record<string, ParalinguisticProfile> = {
     reactions:   ["Oh! ", "Oh wow— ", "Wait— "],
     fades:       [" ...yeah.", " really.", " honestly."],
     excitedTail: [" no for real!", " seriously!", " I love this!"],
+    topicDrift:  ["Oh— actually— ", "Wait, though— ", "Hm, actually— ", "Actually wait— "],
   },
   savage: {
     laughs:      ["Ha. ", "...", "Nah— "],
@@ -237,6 +239,7 @@ const PARALINGUISTIC_PROFILES: Record<string, ParalinguisticProfile> = {
     reactions:   ["Huh. ", "Oh? ", "...wait. "],
     fades:       [" ...yeah.", " period.", ""],
     excitedTail: [" no cap.", " fr.", ""],
+    topicDrift:  ["Actually— ", "Hold on— ", "Wait, no— ", "...actually— "],
   },
   motivational: {
     laughs:      ["HA— ", "HAHA— okay— ", "OKAY— "],
@@ -244,6 +247,7 @@ const PARALINGUISTIC_PROFILES: Record<string, ParalinguisticProfile> = {
     reactions:   ["OH— ", "WAIT— ", "WOW— "],
     fades:       [],  // motivational NEVER fades
     excitedTail: [" LET'S GO!", " THAT'S IT!", ""],
+    topicDrift:  ["Actually— WAIT— ", "Hold on— ", "But here's the thing— "],
   },
   professional: {
     laughs:      [],  // professional expresses humor through word choice only
@@ -251,6 +255,7 @@ const PARALINGUISTIC_PROFILES: Record<string, ParalinguisticProfile> = {
     reactions:   ["Well— ", "Hmm— ", "Noteworthy— "],
     fades:       [" ...noted.", " ...indeed."],
     excitedTail: [" Precisely.", " Indeed."],
+    topicDrift:  ["Actually— ", "Although— ", "On reflection— ", "That said— "],
   },
   funny: {
     laughs:      ["HAHA— ", "Ha— wait— ", "Okay I'm dead— ", "HA— okay— "],
@@ -258,6 +263,7 @@ const PARALINGUISTIC_PROFILES: Record<string, ParalinguisticProfile> = {
     reactions:   ["WAIT WHAT— ", "OKAY— ", "Ha— "],
     fades:       [" ...okay.", " I'm done.", ""],
     excitedTail: [" I can't.", " okay I'm fine.", ""],
+    topicDrift:  ["Wait— no— ", "Actually— hold on— ", "Okay but— ", "No wait— "],
   },
   flirty: {
     laughs:      ["Ha— stop— ", "Okay— haha— ", "Oh no— haha, "],
@@ -265,6 +271,7 @@ const PARALINGUISTIC_PROFILES: Record<string, ParalinguisticProfile> = {
     reactions:   ["Oh— ", "Oh stop— ", "Wait— "],
     fades:       [" ...yeah. 😊", " ...hi.", ""],
     excitedTail: [" stop it.", " seriously though.", ""],
+    topicDrift:  ["Oh— wait— ", "Actually— hmm— ", "I mean— ", "Okay but— "],
   },
 };
 
@@ -368,6 +375,15 @@ export function injectParalinguistics(text: string, opts: ParalinguisticOpts): s
       const fade = pickRandom(profile.fades);
       if (fade) result = result + fade;
     }
+  }
+
+  // ── Priority 6: Topic drift — natural mid-thought pivot (8% base chance) ────
+  // Simulates the human habit of starting a thought, then catching themselves
+  // and steering in a slightly different direction. Only prefixes that haven't
+  // already been injected (alreadyHasStarter guard re-used).
+  if (profile.topicDrift.length > 0 && !alreadyHasStarter && Math.random() < 0.08) {
+    const drift = pickRandom(profile.topicDrift);
+    if (drift) result = drift + result;
   }
 
   return result;

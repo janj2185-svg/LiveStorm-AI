@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { TikTokEvent } from "../lib/tiktokSimulator";
 import type { PersonalityContext } from "./personalityAgent";
-import { buildPersonalityPrompt } from "./personalityAgent";
+import { buildPersonalityPrompt, getPersonalitySilenceTopics } from "./personalityAgent";
 import { storeMemory } from "./memoryAgent";
 import type { EmotionalState } from "./emotionEngine";
 import { getEmotionPromptContext } from "./emotionEngine";
@@ -95,8 +95,12 @@ export async function runHostAgent(opts: {
 
     case "comment": {
       const comment = (event.data.text as string) ?? "";
-      userPrompt    = `${viewerName}: "${comment}"`;
-      emotion       = "neutral";
+      // Hint: addressing viewer by name adds warmth; ask back when it feels right
+      const nameHint = viewerName && viewerName !== "someone"
+        ? ` [Feel free to address ${viewerName} by name naturally — makes it personal. If the comment invites it, ask them something back.]`
+        : "";
+      userPrompt = `${viewerName}: "${comment}"${nameHint}`;
+      emotion    = "neutral";
       break;
     }
 
@@ -119,33 +123,13 @@ export async function runHostAgent(opts: {
 
     case "silence_filler": {
       const isExtended = (event.data.silenceDuration as string) === "extended";
-
-      const EXTENDED_TOPICS = [
-        "Share a genuine hot take about something in your life right now — the more specific, the better.",
-        "Ask the chat a debate question — something with no right answer. 'Would you rather...' or 'What's better: X or Y?'",
-        "Tell a 1-sentence story that starts with 'I once...' — make it real, make it interesting.",
-        "React to something random you're noticing about the stream right now.",
-        "Challenge the chat: 'First person to reply with X wins my respect forever.'",
-        "Share a weird thought you've had recently that you can't shake.",
-        "Give the chat a task: 'Tell me the most underrated thing about where you live.'",
-        "Start a running bit: 'I'm going to rank _____ by how much I trust the people who like them.'",
-      ];
-
-      const BRIEF_TOPICS = [
-        "Say one thing that's on your mind right now — quick, unfiltered.",
-        "Drop a question for the chat. Something you're actually curious about.",
-        "Make a quick, specific observation about the moment.",
-        "Start with 'You know what I've been thinking...' and finish the thought.",
-        "Give a quick check-in — are you even okay? React to the silence honestly.",
-        "Start a casual debate: 'Hot take incoming...'",
-      ];
-
-      const topicPool = isExtended ? EXTENDED_TOPICS : BRIEF_TOPICS;
-      const randomTopic = topicPool[Math.floor(Math.random() * topicPool.length)];
-
+      // Use personality-specific topics for more character-driven silence fillers
+      const personalityTopics = getPersonalitySilenceTopics(personality.modeKey, isExtended);
+      const randomTopic = personalityTopics[Math.floor(Math.random() * personalityTopics.length)]
+        ?? (isExtended ? "Share a genuine hot take — the more specific, the better." : "Drop a quick question for chat.");
       userPrompt = isExtended
-        ? `Chat has been quiet for a while. Do this: ${randomTopic}`
-        : `Quiet moment in the stream. Do this: ${randomTopic}`;
+        ? `Chat has been quiet for a while. Stay in character and do this: ${randomTopic}`
+        : `Quiet moment in the stream. Stay in character and do this: ${randomTopic}`;
       emotion = "neutral";
       break;
     }
@@ -309,14 +293,28 @@ Always reply in ${streamerLangName}. This is the stream's primary language.
   const langContext = isCommentEvent ? "viewer-reply" : "stream-address";
   console.log(`[HostAgent:lang] event=${event.type} ctx=${langContext} | fixed=${replyLanguage !== "auto" ? replyLangName : "no"} | streamerLang=${streamerLangName}`);
 
-  // Natural speech fillers — injected occasionally to sound human
+  // Natural speech fillers — multilingual, injected occasionally to sound human
   const speechFillers = [
+    // Ukrainian
     "До речі...", "Слухай...", "Оце цікаво...", "Зараз подумав...", "Хвилинку...",
-    "Між іншим...", "Ось що думаю...", "Хоча...",
+    "Між іншим...", "Ось що думаю...", "Хоча...", "Стривай...", "Взагалі-то...",
+    // English
+    "Actually...", "Wait—", "Here's the thing...", "You know what...", "Okay but—",
+    "Hmm, actually...", "Hold on—", "Low key though...",
+    // Polish
+    "Słuchaj...", "Właściwie...", "Chwileczkę...",
   ];
-  const useFiller = Math.random() < 0.15; // 15% chance of natural filler opening
+  const useFiller = Math.random() < 0.22; // 22% chance of natural filler opening
   const fillerHint = useFiller
-    ? `NATURAL OPENER OPTION: You MAY start with a natural Ukrainian filler like "${speechFillers[Math.floor(Math.random() * speechFillers.length)]}" if it fits the moment naturally — but only if it genuinely sounds right, don't force it.`
+    ? `NATURAL OPENER OPTION: You MAY start with a natural filler like "${speechFillers[Math.floor(Math.random() * speechFillers.length)]}" if it fits the moment — but only if it genuinely sounds right in the reply language. Don't force it.`
+    : "";
+
+  // ── Viewer recognition signal — explicit cue when we have history with this person ──
+  // The memory context already contains the data; this signal tells Storm to USE it
+  // in a natural, human way (not a formal acknowledgement).
+  const hasViewerHistory = event.type === "comment" && memoryContext.includes(`[Viewer:${viewerName}]`);
+  const recognitionSignal = hasViewerHistory
+    ? `[Viewer Recognition Signal] You have real history with ${viewerName} — it's in your memory above. Reference it naturally. Don't be formal: say "welcome back", call out how long they've been around, mention a past gift, or just show you KNOW them. Real streamers remember their regulars.`
     : "";
 
   // Structural variety guard — prevents templated 3-part response patterns
@@ -331,6 +329,7 @@ ${fillerHint}`;
     genderSection,
     behaviorCtx || "",
     memorySection,
+    recognitionSignal,    // viewer history cue — near memory for contextual proximity
     langInstruction,
     emotionSection,       // near the end = highest attention weight from the model
     antiRepeatSection,    // right before variety = freshness enforced at last moment

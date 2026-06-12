@@ -118,6 +118,8 @@ interface OrchestratorState {
   // Anti-repetition system:
   recentReplies: Map<number, string[]>;         // last 20 AI replies per session
   recentOpeners: Map<number, string[]>;         // last 5 reply openers per session (first 3 words)
+  // Real-time engagement tracking:
+  recentEventTimes: Map<number, number[]>;      // timestamps of recent processed events per session (for engagement signal)
 }
 
 const state: OrchestratorState = {
@@ -134,6 +136,7 @@ const state: OrchestratorState = {
   streamerSpeechHistory: new Map(),
   recentReplies: new Map(),
   recentOpeners: new Map(),
+  recentEventTimes: new Map(),
 };
 
 // ── Anti-repetition helpers ────────────────────────────────────────────────────
@@ -958,7 +961,34 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
         return `[Streamer said ${ageLbl}]: "${s.text}"`;
       }).join("\n")
     : "";
-  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint, streamerSpeechCtx].filter(Boolean).join("\n");
+
+  // ── Live atmosphere: viewer count → energy calibration hint ─────────────────
+  const roomSize = io.sockets.adapter.rooms.get(`session:${sessionId}`)?.size ?? 0;
+  const atmosphereCtx = roomSize >= 100
+    ? `[Live Atmosphere] Big crowd — ${roomSize} viewers watching. Elevate energy, address the whole room as one massive unit.`
+    : roomSize >= 30
+    ? `[Live Atmosphere] Good crowd — ${roomSize} viewers. Balance personal attention with group hype.`
+    : roomSize >= 10
+    ? `[Live Atmosphere] Smaller stream — ${roomSize} viewers. More personal, get people talking to each other.`
+    : roomSize > 0
+    ? `[Live Atmosphere] Intimate stream — ${roomSize} viewer(s). Ultra-personal, one-on-one conversational feeling.`
+    : "";
+
+  // ── Real-time engagement signal: event frequency in last 2 min ──────────────
+  const nowEngTs = Date.now();
+  const prevEventTimes = state.recentEventTimes.get(sessionId) ?? [];
+  const updatedEventTimes = [...prevEventTimes.filter(t => t > nowEngTs - 120_000), nowEngTs];
+  state.recentEventTimes.set(sessionId, updatedEventTimes);
+  const eventsPer2Min = updatedEventTimes.length;
+  const engagementCtx = eventsPer2Min >= 15
+    ? `[Engagement Signal] 🔥 Stream is extremely active — ${eventsPer2Min} events in 2 min. This energy is working, keep it going.`
+    : eventsPer2Min >= 6
+    ? `[Engagement Signal] Good engagement — ${eventsPer2Min} events in 2 min. Building well.`
+    : eventsPer2Min <= 1
+    ? `[Engagement Signal] Chat is slow right now. Try a new angle — ask a question, provoke a debate, or change your energy completely.`
+    : "";
+
+  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint, streamerSpeechCtx, atmosphereCtx, engagementCtx].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
   // When multiple viewers sent the same message, give the AI crowd context in
