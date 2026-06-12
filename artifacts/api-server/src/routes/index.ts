@@ -23,6 +23,7 @@ import avatarRouter from "./avatar";
 import devRouter from "./dev";
 import analyticsRouter from "./analytics";
 import emotionRouter from "./emotion";
+import micRouter from "./mic";
 
 const router: IRouter = Router();
 
@@ -50,5 +51,6 @@ router.use(adminRouter);
 router.use(devRouter);
 router.use(analyticsRouter);
 router.use(emotionRouter);
+router.use(micRouter);
 
 export default router;
