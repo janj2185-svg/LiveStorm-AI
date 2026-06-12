@@ -454,10 +454,10 @@ function UnifiedChatTab({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <Radio className="h-8 w-8 text-white/10 mb-3" />
-        <p className="text-xs text-muted-foreground/60">Start a session to see live chat</p>
+        <p className="text-xs text-muted-foreground/60">{t("ai_start_see_chat")}</p>
         <Link href="/dashboard">
           <span className="text-[11px] text-violet-400 hover:underline cursor-pointer mt-2 inline-block">
-            Go to Dashboard →
+            {t("ai_go_to_dashboard")}
           </span>
         </Link>
       </div>
@@ -468,7 +468,7 @@ function UnifiedChatTab({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <MessageCircle className="h-8 w-8 text-white/10 mb-3 animate-pulse" />
-        <p className="text-xs text-muted-foreground/60">Waiting for chat messages…</p>
+        <p className="text-xs text-muted-foreground/60">{t("ai_waiting_chat")}</p>
       </div>
     );
   }
@@ -1540,7 +1540,7 @@ export function AiAssistant() {
                     onClick={() => setVoicePickerOpen(true)}
                     className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg border border-white/10 bg-white/[0.04] text-[11px] font-bold text-white/70 hover:bg-white/[0.07] transition-all"
                   >
-                    <SlidersHorizontal className="h-3 w-3" />Change Voice
+                    <SlidersHorizontal className="h-3 w-3" />{t("ai_change_voice")}
                   </button>
                   <button
                     onClick={() => handleVoicePreview()}
@@ -1557,7 +1557,7 @@ export function AiAssistant() {
                     onClick={unlockAudio}
                     className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all"
                   >
-                    <Volume2 className="h-3.5 w-3.5" />Enable Voice Output
+                    <Volume2 className="h-3.5 w-3.5" />{t("ai_voice_enable_output")}
                   </button>
                 )}
 
@@ -1794,9 +1794,9 @@ export function AiAssistant() {
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground/60 mt-1">Affects Slavic grammar (Ukrainian/Polish/Russian)</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">{t("ai_gender_hint")}</p>
           </SidebarSection>
-          <SidebarSection isOpen={expandedSections.has("language")} onToggle={() => toggleSection("language")} title="Reply Language" icon={<Globe className="h-4 w-4 text-teal-400" />}>
+          <SidebarSection isOpen={expandedSections.has("language")} onToggle={() => toggleSection("language")} title={t("ai_reply_language")} icon={<Globe className="h-4 w-4 text-teal-400" />}>
             <div className="grid grid-cols-1 gap-1">
               {LANGUAGE_OPTIONS.map((lang) => (
                 <button
@@ -1817,7 +1817,7 @@ export function AiAssistant() {
             {config?.replyLanguage === "auto" && (
               <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  When language is uncertain, reply in:
+                  {t("ai_uncertain_lang")}
                 </p>
                 <div className="grid grid-cols-1 gap-1">
                   {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
@@ -1840,11 +1840,10 @@ export function AiAssistant() {
             )}
           </SidebarSection>
 
-          <SidebarSection isOpen={expandedSections.has("translation")} onToggle={() => toggleSection("translation")} title="Chat Translation" icon={<Languages className="h-4 w-4 text-yellow-400" />}>
+          <SidebarSection isOpen={expandedSections.has("translation")} onToggle={() => toggleSection("translation")} title={t("ai_chat_translation")} icon={<Languages className="h-4 w-4 text-yellow-400" />}>
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
-                <Label className="text-sm text-muted-foreground">Translate Live Chat</Label>
-                <span className="text-[10px] text-muted-foreground/50">Show Ukrainian under each message</span>
+                <Label className="text-sm text-muted-foreground">{t("ai_translate_live_chat")}</Label>
               </div>
               <Switch
                 checked={config?.translateChat ?? false}
@@ -1853,7 +1852,7 @@ export function AiAssistant() {
             </div>
             {config?.translateChat && (
               <div className="mt-2 pt-2 border-t border-white/5 space-y-2">
-                <p className="text-xs text-muted-foreground">Translate into:</p>
+                <p className="text-xs text-muted-foreground">{t("ai_translate_into")}</p>
                 <div className="grid grid-cols-1 gap-1">
                   {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
                     <button
@@ -1878,9 +1877,9 @@ export function AiAssistant() {
             )}
           </SidebarSection>
 
-          <SidebarSection isOpen={expandedSections.has("autoreply")} onToggle={() => toggleSection("autoreply")} title="Auto-Reply" icon={<MessageSquare className="h-4 w-4 text-orange-400" />}>
+          <SidebarSection isOpen={expandedSections.has("autoreply")} onToggle={() => toggleSection("autoreply")} title={t("ai_auto_reply_section")} icon={<MessageSquare className="h-4 w-4 text-orange-400" />}>
             <div className="flex items-center justify-between">
-              <Label className="text-sm text-muted-foreground">Reply to comments</Label>
+              <Label className="text-sm text-muted-foreground">{t("ai_reply_to_comments")}</Label>
               <Switch
                 checked={config?.autoReplyEnabled ?? false}
                 onCheckedChange={(v) => updateConfig.mutate({ autoReplyEnabled: v })}
@@ -1891,7 +1890,7 @@ export function AiAssistant() {
                 <div className="flex items-center justify-between">
                   <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
                     <Shield className="h-3.5 w-3.5 text-blue-400" />
-                    Spam protection
+                    {t("ai_spam_protection")}
                   </Label>
                   <Switch
                     checked={config?.spamProtectionEnabled ?? true}
@@ -1900,7 +1899,7 @@ export function AiAssistant() {
                 </div>
                 {config?.spamProtectionEnabled && (
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Cooldown per viewer (sec)</Label>
+                    <Label className="text-xs text-muted-foreground">{t("ai_cooldown_viewer")}</Label>
                     <Input
                       key={config?.spamCooldownSeconds}
                       type="number"
@@ -1919,15 +1918,15 @@ export function AiAssistant() {
             )}
           </SidebarSection>
 
-          <SidebarSection isOpen={expandedSections.has("announcements")} onToggle={() => toggleSection("announcements")} title="Announcements" icon={<Zap className="h-4 w-4 text-yellow-400" />}>
+          <SidebarSection isOpen={expandedSections.has("announcements")} onToggle={() => toggleSection("announcements")} title={t("ai_announcements")} icon={<Zap className="h-4 w-4 text-yellow-400" />}>
             {([
-              { key: "announceGifts", label: "Gift alerts", icon: "🎁" },
-              { key: "announceLevelUp", label: "Follow alerts", icon: "💚" },
-              { key: "announceBossKill", label: "Boss kills", icon: "💀" },
+              { key: "announceGifts", labelKey: "ai_gift_alerts" as const, icon: "🎁" },
+              { key: "announceLevelUp", labelKey: "ai_follow_alerts" as const, icon: "💚" },
+              { key: "announceBossKill", labelKey: "ai_boss_kills" as const, icon: "💀" },
             ] as const).map((item) => (
               <div key={item.key} className="flex items-center justify-between">
                 <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <span>{item.icon}</span>{item.label}
+                  <span>{item.icon}</span>{t(item.labelKey)}
                 </Label>
                 <Switch
                   checked={(config?.[item.key] as boolean) ?? false}
@@ -1960,7 +1959,7 @@ export function AiAssistant() {
             >
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-violet-400" />
-                Avatar Settings
+                {t("ai_avatar_settings_title")}
               </CardTitle>
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
@@ -2332,14 +2331,14 @@ export function AiAssistant() {
           <SheetHeader className="px-5 py-4 border-b border-white/10 flex-shrink-0">
             <SheetTitle className="flex items-center gap-2 text-base font-bold">
               <Boxes className="h-4 w-4 text-violet-400" />
-              Configure Avatar
+              {t("ai_configure_avatar")}
             </SheetTitle>
           </SheetHeader>
 
           <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 flex-shrink-0">
             <div>
-              <p className="text-sm font-medium">3D Avatar</p>
-              <p className="text-xs text-muted-foreground">Show avatar on stream</p>
+              <p className="text-sm font-medium">{t("ai_3d_avatar")}</p>
+              <p className="text-xs text-muted-foreground">{t("ai_show_avatar_stream")}</p>
             </div>
             <Switch
               checked={avatarConfig?.avatarEnabled ?? false}

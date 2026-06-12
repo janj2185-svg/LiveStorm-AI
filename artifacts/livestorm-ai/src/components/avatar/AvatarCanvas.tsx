@@ -6,6 +6,7 @@ import * as THREE from "three";
 import type { VRM } from "@pixiv/three-vrm";
 import { Boxes, Upload, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getAvatarVRMPath } from "./avatarAssets";
 import type { AnimationState } from "./avatarAnimationMachine";
 import { ANIMATION_EMOJI } from "./avatarAnimationMachine";
@@ -26,6 +27,7 @@ export function checkWebGL(): boolean {
 
 // ── WebGL-unavailable 2D placeholder ──────────────────────────────────────────
 function WebGLFallback({ className }: { className?: string }) {
+  const { t } = useLanguage();
   return (
     <div className={cn("flex flex-col items-center justify-center bg-gradient-to-b from-violet-950/40 to-black/60 rounded-2xl border border-violet-500/20", className)}>
       <div className="flex flex-col items-center gap-3 text-center px-6">
@@ -36,8 +38,8 @@ function WebGLFallback({ className }: { className?: string }) {
           <div className="absolute inset-0 rounded-full bg-violet-500/10" style={{ animation: "ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite" }} />
         </div>
         <div>
-          <p className="text-sm font-semibold text-white/70">3D Avatar</p>
-          <p className="text-[11px] text-muted-foreground/50 mt-0.5">Ready to render in-browser</p>
+          <p className="text-sm font-semibold text-white/70">{t("ai_3d_avatar")}</p>
+          <p className="text-[11px] text-muted-foreground/50 mt-0.5">{t("ai_ready_render")}</p>
         </div>
       </div>
     </div>
