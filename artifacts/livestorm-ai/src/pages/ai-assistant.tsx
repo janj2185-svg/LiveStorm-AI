@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -1029,6 +1030,9 @@ export function AiAssistant() {
 
   // ── Settings sidebar sections ─────────────────────────────────────────────
   // All collapsed by default (secondary tools, not primary focus)
+  const isMobile = useIsMobile();
+  const [mobilePanelTab, setMobilePanelTab] = useState<"control" | "chat">("control");
+
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [battleActivating, setBattleActivating] = useState(false);
@@ -1087,7 +1091,7 @@ export function AiAssistant() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-[calc(100vh-4.5rem)] flex flex-col gap-2 overflow-hidden">
+    <div className="h-[calc(100vh-4.5rem)] flex flex-col gap-2 overflow-hidden overflow-x-hidden">
 
       {/* ── Connection error banner ── */}
       {isSessionActive && effectiveMode === "error" && effectiveError && (
@@ -1100,13 +1104,44 @@ export function AiAssistant() {
         </div>
       )}
 
+      {/* ── Mobile panel switcher ── */}
+      {isMobile && (
+        <div className="flex-shrink-0 flex items-center gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.07] mx-0">
+          <button
+            onClick={() => setMobilePanelTab("control")}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
+              mobilePanelTab === "control"
+                ? "bg-purple-600 text-white shadow-sm"
+                : "text-muted-foreground/50 hover:text-white/70",
+            )}
+          >
+            <Zap className="h-3.5 w-3.5" />Control
+          </button>
+          <button
+            onClick={() => setMobilePanelTab("chat")}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
+              mobilePanelTab === "chat"
+                ? "bg-purple-600 text-white shadow-sm"
+                : "text-muted-foreground/50 hover:text-white/70",
+            )}
+          >
+            <MessageCircle className="h-3.5 w-3.5" />Chat
+          </button>
+        </div>
+      )}
+
       {/* ══════════════════════════════════════════════════════════════════════
           3-COLUMN LAYOUT: Settings | Avatar | Chat
       ══════════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 min-h-0 grid grid-cols-[260px_1fr_360px] gap-3">
+      <div className={cn("flex-1 min-h-0 gap-3 min-w-0", isMobile ? "overflow-hidden" : "grid grid-cols-[260px_1fr_360px]")}>
 
-        {/* ═══════════════ LEFT: Settings (25%) ═══════════════ */}
-        <div className="flex flex-col gap-2 overflow-y-auto min-h-0 pr-0.5 scrollbar-thin scrollbar-thumb-white/10">
+        {/* ═══════════════ LEFT: Settings ═══════════════ */}
+        <div className={cn(
+          "flex flex-col gap-2 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-white/10",
+          isMobile ? (mobilePanelTab === "control" ? "flex" : "hidden") : "pr-0.5",
+        )}>
 
           {/* ── Unified AI Control Panel ── */}
           <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
@@ -1137,8 +1172,8 @@ export function AiAssistant() {
               </div>
             </div>
 
-            {/* Mode quick-select */}
-            <div className="px-3 pt-2.5 pb-3 border-b border-white/[0.05]">
+            {/* Mode quick-select — hidden on mobile */}
+            {!isMobile && <div className="px-3 pt-2.5 pb-3 border-b border-white/[0.05]">
               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Mode</p>
               <div className="grid grid-cols-3 gap-1">
                 <button
@@ -1178,7 +1213,7 @@ export function AiAssistant() {
                   <span>Voice</span>
                 </button>
               </div>
-            </div>
+            </div>}
 
             {/* Stream control — always visible */}
             <div className="px-3 py-3">
@@ -1249,18 +1284,30 @@ export function AiAssistant() {
             </div>
           </div>
 
-          {/* ── Battle Mode toggle ── */}
-          <div className="px-3 py-2.5 border-t border-white/[0.06]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Swords className="h-3.5 w-3.5 text-red-400" />
-                <span className="text-xs font-bold text-white/80">Battle Mode</span>
-                {battleActivating && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/50" />}
+          {/* ── Battle Mode ── */}
+          <div className="mx-3 my-1 rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden flex-shrink-0">
+            {/* Header row */}
+            <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+              <Swords className="h-4 w-4 text-red-400 flex-shrink-0" />
+              <span className="text-sm font-bold text-white/90 flex-1">Battle Mode</span>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black border",
+                battleOn && isSessionActive
+                  ? "border-red-500/40 bg-red-500/15 text-red-300"
+                  : "border-white/10 bg-white/5 text-white/25",
+              )}>
+                {battleOn && isSessionActive && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}
+                {battleOn && isSessionActive ? "ACTIVE" : "INACTIVE"}
               </div>
-              <Switch
-                checked={battleOn}
-                onCheckedChange={async (on) => {
+            </div>
+
+            {/* Big toggle button */}
+            <div className="px-3 pb-3">
+              <button
+                disabled={battleActivating || !isSessionActive}
+                onClick={async () => {
                   if (battleActivating) return;
+                  const on = !battleOn;
                   setBattleOn(on);
                   setBattleStartTime(on ? Date.now() : null);
                   setBattleScore(null);
@@ -1272,7 +1319,6 @@ export function AiAssistant() {
                         method: "POST",
                         body: JSON.stringify({ sessionId: activeSessionId, active: on }),
                       });
-                      console.log(`[BattleMode] ✅ activated=${on}`);
                     } catch (err) {
                       console.warn(`[BattleMode] ⚠ activate failed:`, err);
                       setBattleOn(!on);
@@ -1282,55 +1328,74 @@ export function AiAssistant() {
                     }
                   }
                 }}
-                disabled={battleActivating}
-                className="scale-75"
-              />
+                className={cn(
+                  "w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border",
+                  battleOn && isSessionActive
+                    ? "bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30"
+                    : isSessionActive
+                    ? "bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/[0.08] hover:border-white/20"
+                    : "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed",
+                )}
+              >
+                {battleActivating
+                  ? <><Loader2 className="h-4 w-4 animate-spin" />Activating…</>
+                  : battleOn && isSessionActive
+                  ? <><Swords className="h-4 w-4" />Stop Battle</>
+                  : isSessionActive
+                  ? <><Swords className="h-4 w-4" />Start Battle</>
+                  : <span className="text-xs">Start a live session first</span>}
+              </button>
             </div>
-            <p className="text-[10px] text-muted-foreground/40 mt-1 leading-tight">
-              {isSessionActive
-                ? battleOn ? "Active — Storm fires sharp comebacks at every comment." : "Off — toggle to activate for this session."
-                : "Start a live session first, then enable Battle Mode here."}
-            </p>
-          </div>
 
-          {/* ── Battle Status Card ── */}
-          {battleOn && isSessionActive && (
-            <div className="mx-3 mb-0 rounded-xl border border-red-500/25 bg-red-500/5 p-2.5">
-              <div className="flex items-center gap-1.5 mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Battle Active</span>
+            {/* Live battle stats — only when active */}
+            {battleOn && isSessionActive && (
+              <div className="border-t border-red-500/10 bg-red-500/[0.03] px-3 py-2.5 space-y-2">
+                {/* Us vs Them score */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 py-2 flex flex-col items-center">
+                    <p className="text-[9px] text-emerald-400/60 uppercase tracking-wide font-bold mb-0.5">Us</p>
+                    <p className="text-2xl font-black text-emerald-400 leading-none tabular-nums">{battleScore?.us ?? 0}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <Swords className="h-3.5 w-3.5 text-red-400/40" />
+                    <span className="text-[9px] text-muted-foreground/30 font-bold">VS</span>
+                  </div>
+                  <div className="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 py-2 flex flex-col items-center">
+                    <p className="text-[9px] text-red-400/60 uppercase tracking-wide font-bold mb-0.5">Them</p>
+                    <p className="text-2xl font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</p>
+                  </div>
+                </div>
+                {/* Timer + exchanges + leader */}
+                <div className="flex gap-2">
+                  <div className="flex-1 rounded-lg bg-black/30 px-2 py-1.5 text-center">
+                    <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Time</p>
+                    <p className="text-xs font-black text-white/80 font-mono">{battleElapsed}</p>
+                  </div>
+                  <div className="flex-1 rounded-lg bg-black/30 px-2 py-1.5 text-center">
+                    <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Rounds</p>
+                    <p className="text-xs font-black text-white/80 font-mono">{battleScore?.exchanges ?? 0}</p>
+                  </div>
+                  <div className="flex-1 rounded-lg bg-black/30 px-2 py-1.5 text-center">
+                    <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Leader</p>
+                    <p className="text-xs font-black">
+                      {!battleScore || battleScore.us === battleScore.opponent
+                        ? <span className="text-yellow-400">Tied</span>
+                        : battleScore.us > battleScore.opponent
+                        ? <span className="text-emerald-400">Us</span>
+                        : <span className="text-red-400">Them</span>}
+                    </p>
+                  </div>
+                </div>
+                {/* Last AI reply (from TTS) */}
+                {lastSpokenText && (
+                  <div className="rounded-lg bg-black/20 px-2.5 py-2">
+                    <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Last AI reply</p>
+                    <p className="text-[10px] text-white/70 leading-relaxed line-clamp-2">{lastSpokenText}</p>
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center">
-                  <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Time</p>
-                  <p className="text-[11px] font-bold text-white/80 font-mono">{battleElapsed}</p>
-                </div>
-                <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center">
-                  <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Score</p>
-                  <p className="text-[11px] font-bold font-mono">
-                    <span className="text-emerald-400">{battleScore?.us ?? 0}</span>
-                    <span className="text-muted-foreground/40 mx-0.5">:</span>
-                    <span className="text-red-400">{battleScore?.opponent ?? 0}</span>
-                  </p>
-                </div>
-                <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center">
-                  <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Leader</p>
-                  <p className="text-[11px] font-bold text-white/80">
-                    {!battleScore || battleScore.us === battleScore.opponent
-                      ? <span className="text-yellow-400">Tied</span>
-                      : battleScore.us > battleScore.opponent
-                      ? <span className="text-emerald-400">Us</span>
-                      : <span className="text-red-400">Them</span>}
-                  </p>
-                </div>
-              </div>
-              {battleScore?.exchanges != null && battleScore.exchanges > 0 && (
-                <p className="text-[9px] text-muted-foreground/35 text-center mt-1.5">
-                  {battleScore.exchanges} exchange{battleScore.exchanges !== 1 ? "s" : ""} — score updates with gifts
-                </p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           {/* ── Voice Control ── */}
           <div className="px-3 py-3 border-t border-white/[0.06]">
@@ -1490,9 +1555,9 @@ export function AiAssistant() {
             />
           </div>
 
-          {/* ── Settings sections — all collapsed by default ── */}
+          {/* ── Settings sections — hidden on mobile (use Advanced Settings) ── */}
 
-          <SidebarSection isOpen={expandedSections.has("persona")} onToggle={() => toggleSection("persona")} title="Persona" icon={<Sparkles className="h-4 w-4 text-purple-400" />}>
+          {!isMobile && <SidebarSection isOpen={expandedSections.has("persona")} onToggle={() => toggleSection("persona")} title="Persona" icon={<Sparkles className="h-4 w-4 text-purple-400" />}>
             {configLoading ? (
               <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}</div>
             ) : (
@@ -1571,7 +1636,7 @@ export function AiAssistant() {
                 </div>
               </>
             )}
-          </SidebarSection>
+          </SidebarSection>}
 
           {/* ── Advanced Settings collapsible ── */}
           <div className="rounded-xl border border-white/[0.07] overflow-hidden flex-shrink-0">
@@ -1779,8 +1844,8 @@ export function AiAssistant() {
 
         </div>
 
-        {/* ═══════════════ CENTER: Avatar (40%) — 9:16 portrait frame ═══════════════ */}
-        <div className="flex flex-col min-h-0 gap-2 py-2">
+        {/* ═══════════════ CENTER: Avatar — desktop only ═══════════════ */}
+        {!isMobile && <div className="flex flex-col min-h-0 gap-2 py-2">
 
           {/* 9:16 portrait frame — scales by height, centers horizontally */}
           <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
@@ -1897,10 +1962,10 @@ export function AiAssistant() {
             ))}
           </div>
 
-        </div>
+        </div>}
 
-        {/* ═══════════════ RIGHT: Unified Chat (35%) ═══════════════ */}
-        <div className="flex flex-col min-h-0">
+        {/* ═══════════════ RIGHT: Unified Chat ═══════════════ */}
+        <div className={cn("flex flex-col min-h-0", isMobile && mobilePanelTab !== "chat" ? "hidden" : "")}>
 
           {/* Tab bar */}
           <div className="flex gap-1 p-1 bg-white/5 rounded-xl mb-2 flex-shrink-0">
@@ -2064,6 +2129,7 @@ export function AiAssistant() {
         </div>
 
       </div>
+
 
       {/* ── Avatar Configuration Sheet ── */}
       <Sheet open={avatarSheetOpen} onOpenChange={setAvatarSheetOpen}>
