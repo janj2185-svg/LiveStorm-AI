@@ -1332,114 +1332,145 @@ export function AiAssistant() {
             </div>
           )}
 
-          {/* ── Voice Status Panel ── */}
+          {/* ── Voice Control ── */}
           <div className="px-3 py-3 border-t border-white/[0.06]">
-            <div className="flex items-center justify-between mb-2.5">
+            {/* Header: title + ON/OFF toggle */}
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 {ttsPlaybackState === "speaking"
                   ? <Volume2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
                   : ttsMode === "off"
                   ? <VolumeX className="h-3.5 w-3.5 text-red-400/70" />
                   : <Volume2 className="h-3.5 w-3.5 text-blue-400" />}
-                <span className="text-xs font-bold text-white/80">Voice Status</span>
+                <span className="text-xs font-bold text-white/80">Voice</span>
+              </div>
+              {/* TTS ON / OFF pill toggle */}
+              <div className="flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08]">
+                <button
+                  onClick={() => handleTtsModeChange("off")}
+                  className={cn(
+                    "px-3 py-0.5 rounded-full text-[10px] font-bold transition-all",
+                    ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60",
+                  )}
+                >OFF</button>
+                <button
+                  onClick={() => handleTtsModeChange("openai")}
+                  className={cn(
+                    "px-3 py-0.5 rounded-full text-[10px] font-bold transition-all",
+                    ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60",
+                  )}
+                >ON</button>
+              </div>
+            </div>
+
+            {/* Active voice + playback status row */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", ttsMode !== "off" ? "bg-emerald-400" : "bg-red-400/50")} />
+                <span className="text-[11px] text-white/70">
+                  {ttsMode !== "off"
+                    ? <>Using <span className="font-bold text-white capitalize">{resolveVoiceLabel(ttsVoice)}</span> · OpenAI TTS</>
+                    : <span className="text-muted-foreground/50">Voice disabled</span>}
+                </span>
               </div>
               <div className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border",
-                ttsPlaybackState === "speaking"
-                  ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/30"
-                  : ttsPlaybackState === "error"
-                  ? "text-red-300 bg-red-500/15 border-red-500/30"
-                  : ttsPlaybackState === "queued"
-                  ? "text-blue-300 bg-blue-500/15 border-blue-500/30"
-                  : ttsPlaybackState === "finished"
-                  ? "text-purple-300 bg-purple-500/15 border-purple-500/30"
-                  : "text-muted-foreground/50 bg-white/5 border-white/10",
+                "text-[9px] font-bold px-1.5 py-0.5 rounded border",
+                ttsPlaybackState === "speaking" ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/25 animate-pulse"
+                : ttsPlaybackState === "queued" ? "text-blue-300 bg-blue-500/15 border-blue-500/25"
+                : ttsPlaybackState === "error" ? "text-red-300 bg-red-500/15 border-red-500/25"
+                : "text-muted-foreground/40 bg-white/5 border-white/10",
               )}>
-                {ttsPlaybackState === "speaking" && (
-                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                )}
-                {ttsPlaybackState === "speaking" ? "SPEAKING"
-                  : ttsPlaybackState === "queued" ? `QUEUED${ttsQueueLength > 0 ? ` (${ttsQueueLength})` : ""}`
+                {ttsPlaybackState === "speaking" ? "▶ SPEAKING"
+                  : ttsPlaybackState === "queued" ? `Q(${ttsQueueLength})`
                   : ttsPlaybackState === "finished" ? "DONE"
-                  : ttsPlaybackState === "error" ? "ERROR"
+                  : ttsPlaybackState === "error" ? "ERR"
                   : "IDLE"}
               </div>
             </div>
 
-            {/* Voice OFF warning */}
-            {ttsMode === "off" && (
-              <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-2">
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-300/90 leading-tight">
-                  Storm can reply in text, but voice is disabled.
-                </p>
-              </div>
+            {/* Enable Voice Output button (autoplay unlock) */}
+            {!isAudioUnlocked && ttsMode !== "off" && (
+              <button
+                onClick={unlockAudio}
+                className="w-full flex items-center justify-center gap-1.5 py-2 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all"
+              >
+                <Volume2 className="h-3.5 w-3.5" />Enable Voice Output
+              </button>
             )}
 
-            {/* Browser fallback notice */}
-            {usingBrowserFallback && ttsMode !== "off" && (
-              <div className="flex items-start gap-2 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-2">
-                <Radio className="h-3.5 w-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <p className="text-[11px] text-blue-300/90 leading-tight">
-                  Using browser voice fallback.
-                </p>
-              </div>
-            )}
-
-            {/* Status grid — Voice / Mode / Voice name / Language */}
-            <div className="grid grid-cols-2 gap-1.5 mb-2">
-              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Voice</p>
-                <p className={cn("text-xs font-bold", ttsMode !== "off" ? "text-emerald-400" : "text-red-400")}>
-                  {ttsMode !== "off" ? "ON" : "OFF"}
-                </p>
-              </div>
-              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Mode</p>
-                <p className="text-xs font-bold text-white">
-                  {ttsMode === "openai" ? "OpenAI" : "Off"}
-                </p>
-              </div>
-              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Voice</p>
-                <p className="text-xs font-bold text-white capitalize truncate">{resolveVoiceLabel(ttsVoice)}</p>
-                <p className="text-[9px] text-muted-foreground/35 mt-0.5">OpenAI TTS</p>
-              </div>
-              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-[9px] text-muted-foreground/50 mb-0.5 uppercase tracking-wide">Language</p>
-                <p className="text-xs font-bold text-white truncate">
-                  {config?.replyLanguage === "auto" ? "Auto" : (config?.replyLanguage ?? "—")}
-                </p>
-              </div>
+            {/* Voice grid — 3 columns */}
+            <div className="grid grid-cols-3 gap-1 mb-2">
+              {VOICE_PROFILES.map((v) => {
+                const isSelected = ttsVoice === v.value;
+                const isPreviewing = isVoicePreviewing === v.value;
+                return (
+                  <div key={v.value} className={cn(
+                    "rounded-lg border transition-all overflow-hidden flex flex-col",
+                    isSelected
+                      ? "border-blue-500/50 bg-blue-500/10"
+                      : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]",
+                  )}>
+                    <button
+                      onClick={() => handleTtsVoiceChange(v.value)}
+                      className="flex flex-col items-center justify-center pt-2 pb-1 px-0.5 w-full text-center"
+                    >
+                      <span className="text-sm leading-none mb-0.5">{v.emoji}</span>
+                      <span className={cn("text-[10px] font-semibold leading-tight", isSelected ? "text-blue-300" : "text-white/80")}>{v.label}</span>
+                      <span className="text-[8px] text-muted-foreground/45 leading-tight mt-0.5 px-0.5 line-clamp-1">{v.desc}</span>
+                      {isSelected && <CheckCircle2 className="h-2.5 w-2.5 text-blue-400 mt-0.5" />}
+                    </button>
+                    <button
+                      onClick={() => handleVoicePreview(v.value)}
+                      disabled={!!isVoicePreviewing}
+                      className={cn(
+                        "flex items-center justify-center gap-0.5 py-1 text-[9px] border-t w-full transition-all",
+                        isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/40 hover:text-white/60",
+                        !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
+                      )}
+                    >
+                      {isPreviewing
+                        ? <><Loader2 className="h-2 w-2 animate-spin" />…</>
+                        : <><Play className="h-2 w-2" />▶</>}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Queue length row (only when > 0) */}
-            {ttsQueueLength > 0 && (
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 mb-2">
-                <Activity className="h-3 w-3 text-blue-400 flex-shrink-0" />
-                <p className="text-[11px] text-blue-300/90">
-                  {ttsQueueLength} message{ttsQueueLength !== 1 ? "s" : ""} waiting to be spoken
-                </p>
-              </div>
-            )}
+            {/* Test Voice button — uses currently selected voice */}
+            <button
+              onClick={() => handleVoicePreview()}
+              disabled={ttsMode === "off" || !!isVoicePreviewing}
+              className={cn(
+                "w-full flex items-center justify-center gap-1.5 py-1.5 mb-2 rounded-lg border text-xs font-medium transition-all",
+                ttsMode !== "off" && !isVoicePreviewing
+                  ? "border-blue-500/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20"
+                  : "border-white/5 text-muted-foreground/30 cursor-not-allowed",
+              )}
+            >
+              {isVoicePreviewing
+                ? <><Loader2 className="h-3 w-3 animate-spin" />Playing…</>
+                : <><Play className="h-3 w-3" />Test Voice</>}
+            </button>
 
-            {/* Last spoken message */}
+            {/* Last spoken — compact */}
             {lastSpokenText && ttsMode !== "off" && (
               <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] mb-1.5">
-                <p className="text-[9px] text-muted-foreground/50 mb-1 uppercase tracking-wide">Last spoken</p>
-                <p className="text-[10px] text-white/70 line-clamp-2 leading-relaxed">
-                  {lastSpokenText.length > 120 ? lastSpokenText.slice(0, 120) + "…" : lastSpokenText}
+                <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Last spoken</p>
+                <p className="text-[10px] text-white/60 line-clamp-1 leading-relaxed">
+                  {lastSpokenText.length > 80 ? lastSpokenText.slice(0, 80) + "…" : lastSpokenText}
                 </p>
               </div>
             )}
 
-            {/* TTS error */}
+            {/* TTS error — compact */}
             {lastTtsError && ttsMode !== "off" && (
               <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
                 <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-[10px] text-amber-300/90 leading-tight">{lastTtsError}</p>
+                <p className="text-[10px] text-amber-300/90 line-clamp-1 leading-tight">{lastTtsError}</p>
               </div>
             )}
+
           </div>
 
           {/* ── Co-Host Voice Panel ── */}
@@ -1542,100 +1573,6 @@ export function AiAssistant() {
             )}
           </SidebarSection>
 
-          <SidebarSection isOpen={expandedSections.has("voice")} onToggle={() => toggleSection("voice")} title="Voice" icon={<Volume2 className="h-4 w-4 text-blue-400" />}>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">TTS Mode</Label>
-              <div className="grid grid-cols-2 gap-1 p-1 bg-white/5 rounded-lg">
-                {(["off", "openai"] as TtsMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => handleTtsModeChange(mode)}
-                    className={cn(
-                      "text-xs py-1.5 px-1 rounded-md font-medium transition-all capitalize",
-                      ttsMode === mode ? "bg-blue-600 text-white shadow" : "text-muted-foreground hover:text-white hover:bg-white/5",
-                    )}
-                  >
-                    {mode === "off" && <VolumeX className="h-3 w-3 mx-auto mb-0.5" />}
-                    {mode === "openai" && <Mic className="h-3 w-3 mx-auto mb-0.5" />}
-                    {mode === "off" ? "Off" : "OpenAI"}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {ttsMode === "openai" && (
-              <div className="space-y-3">
-                {/* Persona Gender */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Persona Gender</Label>
-                  <div className="grid grid-cols-3 gap-1">
-                    {GENDER_OPTIONS.map((g) => (
-                      <button
-                        key={g.value}
-                        onClick={() => updateConfig.mutate({ personaGender: g.value })}
-                        className={cn(
-                          "text-xs py-1.5 px-1 rounded-md border font-medium transition-all text-center",
-                          (config?.personaGender ?? "neutral") === g.value
-                            ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
-                            : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                        )}
-                      >
-                        <span className="mr-1">{g.emoji}</span>{g.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground/60">Affects Slavic grammar (Ukrainian/Polish/Russian)</p>
-                </div>
-                {/* Voice Profiles — 6 real OpenAI voices */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">Voice (OpenAI TTS)</Label>
-                    <span className="text-[9px] text-muted-foreground/40">6 available</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    {VOICE_PROFILES.map((v) => {
-                      const isSelected = ttsVoice === v.value;
-                      const isPreviewing = isVoicePreviewing === v.value;
-                      return (
-                        <div
-                          key={v.value}
-                          className={cn(
-                            "rounded-md border text-xs transition-all overflow-hidden",
-                            isSelected
-                              ? "border-blue-500/50 bg-blue-500/10"
-                              : "border-white/5 bg-white/[0.02] hover:border-white/10",
-                          )}
-                        >
-                          <button
-                            onClick={() => handleTtsVoiceChange(v.value)}
-                            className="w-full text-left px-2 pt-1.5 pb-1"
-                          >
-                            <div className={cn("font-semibold leading-tight", isSelected ? "text-blue-300" : "text-white/80")}>
-                              {v.emoji} {v.label}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground/55 leading-tight mt-0.5">{v.desc}</div>
-                          </button>
-                          <button
-                            onClick={() => handleVoicePreview(v.value)}
-                            disabled={!!isVoicePreviewing}
-                            className={cn(
-                              "w-full flex items-center justify-center gap-1 py-1 text-[10px] border-t transition-all",
-                              isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/50 hover:text-white/60",
-                              !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
-                            )}
-                          >
-                            {isPreviewing
-                              ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</>
-                              : <><Play className="h-2.5 w-2.5" />Preview</>}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-          </SidebarSection>
-
           {/* ── Advanced Settings collapsible ── */}
           <div className="rounded-xl border border-white/[0.07] overflow-hidden flex-shrink-0">
             <button
@@ -1648,6 +1585,25 @@ export function AiAssistant() {
             </button>
 
           {advancedOpen && (<div className="border-t border-white/[0.06]">
+          <SidebarSection isOpen={expandedSections.has("gender")} onToggle={() => toggleSection("gender")} title="Persona Gender" icon={<Mic className="h-4 w-4 text-purple-400" />}>
+            <div className="grid grid-cols-3 gap-1">
+              {GENDER_OPTIONS.map((g) => (
+                <button
+                  key={g.value}
+                  onClick={() => updateConfig.mutate({ personaGender: g.value })}
+                  className={cn(
+                    "text-xs py-1.5 px-1 rounded-md border font-medium transition-all text-center",
+                    (config?.personaGender ?? "neutral") === g.value
+                      ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
+                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                  )}
+                >
+                  <span className="mr-1">{g.emoji}</span>{g.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground/60 mt-1">Affects Slavic grammar (Ukrainian/Polish/Russian)</p>
+          </SidebarSection>
           <SidebarSection isOpen={expandedSections.has("language")} onToggle={() => toggleSection("language")} title="Reply Language" icon={<Globe className="h-4 w-4 text-teal-400" />}>
             <div className="grid grid-cols-1 gap-1">
               {LANGUAGE_OPTIONS.map((lang) => (
