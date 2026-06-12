@@ -1775,7 +1775,7 @@ export function AiAssistant() {
                 positionY={avatarConfig?.positionY ?? -0.8}
                 lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
                 avatarEnabled={avatarConfig?.avatarEnabled ?? true}
-                avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
+                avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? `${import.meta.env.BASE_URL}avatars/storm-default.vrm`}
                 animationState={animState}
                 mouthOpenAmount={mouthOpen}
                 expressionIntensity={expressionIntensity}
@@ -2208,7 +2208,7 @@ export function AiAssistant() {
                     positionY={avatarConfig?.positionY ?? -0.8}
                     lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
                     avatarEnabled={avatarConfig?.avatarEnabled ?? true}
-                    avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl}
+                    avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? `${import.meta.env.BASE_URL}avatars/storm-default.vrm`}
                     onStats={setRendererStats}
                     showFps={false}
                     animationState={animState}

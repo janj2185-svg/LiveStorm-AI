@@ -15,6 +15,7 @@ export interface PresenterSlot {
   accentColor: string;
   personality: string;
   isPrimary: boolean;
+  portraitUrl: string;
 }
 
 export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
@@ -27,6 +28,7 @@ export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
     accentColor: "#3b82f6",
     personality: "Polished and charismatic — perfect for product reviews and brand stories",
     isPrimary: true,
+    portraitUrl: "/avatars/male_1_neutral.png",
   },
   "kai": {
     key: "kai",
@@ -37,6 +39,7 @@ export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
     accentColor: "#06b6d4",
     personality: "High-energy and community-driven — ideal for gaming and interactive drops",
     isPrimary: false,
+    portraitUrl: "/avatars/male_2_neutral.png",
   },
   "aria": {
     key: "aria",
@@ -47,6 +50,7 @@ export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
     accentColor: "#8b5cf6",
     personality: "Elegant and trustworthy — best for interviews and lifestyle content",
     isPrimary: false,
+    portraitUrl: "/avatars/female_8_neutral.png",
   },
   "sofia": {
     key: "sofia",
@@ -57,6 +61,7 @@ export const PRESENTER_SLOTS: Record<PresenterSlotKey, PresenterSlot> = {
     accentColor: "#ec4899",
     personality: "Creative and community-driven — maximises engagement for lifestyle vlogs",
     isPrimary: false,
+    portraitUrl: "/avatars/female_6_neutral.png",
   },
 };
 

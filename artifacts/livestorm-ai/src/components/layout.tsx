@@ -7,7 +7,7 @@ import { type TranslationKey } from "@/lib/i18n";
 import { AnimatedBackground, type BgVariant } from "./AnimatedBackground";
 import {
   LayoutDashboard, Bot, Sparkles, Radio, BarChart2,
-  Settings as SettingsIcon, Gamepad2, LogOut,
+  Settings as SettingsIcon, LogOut,
   MoreHorizontal, X, ChevronRight, ChevronDown, ChevronLeft,
   Activity, ShieldAlert, Layers, Plug, Cpu, LayoutGrid,
   PanelLeftClose, PanelLeftOpen, Menu,

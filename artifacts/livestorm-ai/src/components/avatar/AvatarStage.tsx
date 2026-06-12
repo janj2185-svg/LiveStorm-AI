@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { AvatarCanvas, checkWebGL } from "./AvatarCanvas";
 import type { AnimationState } from "./avatarAnimationMachine";
 import { ANIMATION_EMOJI, ANIMATION_LABELS } from "./avatarAnimationMachine";
+import { PRESENTER_SLOTS } from "./avatarAssets";
+import type { PresenterSlotKey } from "./avatarAssets";
 
 export interface AvatarStageProps {
   avatarKey: string;
@@ -173,6 +175,7 @@ export function AvatarStage({
     animationState !== "thinking";
 
   const hasAvatar = !!avatarUrl;
+  const slot = PRESENTER_SLOTS[avatarKey as PresenterSlotKey] ?? null;
 
   return (
     <div className={cn("relative rounded-2xl overflow-hidden flex-shrink-0", className)}>
@@ -239,19 +242,54 @@ export function AvatarStage({
         </div>
       )}
 
-      {/* No-avatar overlay — shown when no VRM/GLB URL is supplied */}
-      {!hasAvatar && (
+      {/* No-avatar overlay — persona portrait shown when no VRM/GLB URL is supplied */}
+      {!hasAvatar && slot && (
+        <div className="absolute inset-0 z-20 pointer-events-none">
+          {/* Portrait image */}
+          <img
+            src={`${import.meta.env.BASE_URL}${slot.portraitUrl.replace(/^\//, "")}`}
+            alt={slot.name}
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+          {/* Accent color radial glow behind image */}
+          <div
+            className="absolute inset-0"
+            style={{ background: `radial-gradient(ellipse at 50% 0%, ${slot.accentColor}18 0%, transparent 65%)` }}
+          />
+          {/* Bottom dark scrim for text legibility */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(to bottom, transparent 45%, rgba(4,5,18,0.92) 100%)" }}
+          />
+          {/* 2D mode badge — top right */}
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 border border-white/[0.07] backdrop-blur-sm">
+            <Upload className="h-2.5 w-2.5 text-white/25" />
+            <span className="text-[8px] text-white/25 font-medium">2D Preview</span>
+          </div>
+          {/* Bottom name + tagline */}
+          <div className="absolute bottom-11 left-3 right-3">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <motion.div
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: slot.accentColor }}
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <span className="text-xs font-black text-white/90 tracking-wide">{slot.name}</span>
+            </div>
+            <p className="text-[9px] text-white/35 leading-snug pl-3">{slot.tagline}</p>
+          </div>
+        </div>
+      )}
+      {/* Fallback when no slot info */}
+      {!hasAvatar && !slot && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
           <div className="flex flex-col items-center gap-3 px-6 text-center">
             <div className="w-16 h-16 rounded-full bg-violet-500/10 border border-dashed border-violet-500/25 flex items-center justify-center">
               <Upload className="h-6 w-6 text-violet-400/35" />
             </div>
-            <div>
-              <p className="text-sm font-bold text-white/40">No 3D Avatar</p>
-              <p className="text-[11px] text-white/20 mt-1 leading-snug max-w-[130px]">
-                Import a VRM or GLB file to see your avatar here
-              </p>
-            </div>
+            <p className="text-sm font-bold text-white/40">No 3D Avatar</p>
+            <p className="text-[11px] text-white/20 leading-snug max-w-[130px]">Import a VRM or GLB file</p>
           </div>
         </div>
       )}
