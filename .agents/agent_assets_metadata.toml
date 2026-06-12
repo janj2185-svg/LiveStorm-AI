@@ -162,6 +162,78 @@ uri = "file://attached_assets/avatars/male_5_smile.png"
 type = "image"
 title = "broadcaster smile"
 
+[[generated]]
+id = "PTsPPMrSVHm3LgCZ45ULy"
+uri = "file://attached_assets/avatars/male_2_neutral.png"
+type = "image"
+title = "gaming creator neutral"
+
+[[generated]]
+id = "5j3bZmTi4FMeeoh5CwL5b"
+uri = "file://attached_assets/avatars/male_2_smile.png"
+type = "image"
+title = "gaming creator smile"
+
+[[generated]]
+id = "mJhT8j0btwl2dmpIuN1Jt"
+uri = "file://attached_assets/avatars/male_2_surprise.png"
+type = "image"
+title = "gaming creator surprise"
+
+[[generated]]
+id = "xsEAwiYWx2YgkM9blwEy6"
+uri = "file://attached_assets/avatars/male_2_talking.png"
+type = "image"
+title = "gaming creator talking"
+
+[[generated]]
+id = "VbdQjC7xlfC7KCnQOLCKJ"
+uri = "file://attached_assets/avatars/male_3_surprise.png"
+type = "image"
+title = "battle host reaction"
+
+[[generated]]
+id = "gvhIc50q1gKNi1kiTskN8"
+uri = "file://attached_assets/avatars/male_3_talking.png"
+type = "image"
+title = "battle host talking"
+
+[[generated]]
+id = "IqB34ROdLiyl2Cpy0UQHA"
+uri = "file://attached_assets/avatars/male_4_smile.png"
+type = "image"
+title = "cyberpunk host smirk"
+
+[[generated]]
+id = "t6VAbi-42ya57f7p0ffv4"
+uri = "file://attached_assets/avatars/male_4_surprise.png"
+type = "image"
+title = "cyberpunk host surprised"
+
+[[generated]]
+id = "sudyuZlMGj7nLpwQM7WIO"
+uri = "file://attached_assets/avatars/male_4_talking.png"
+type = "image"
+title = "cyberpunk host talking"
+
+[[generated]]
+id = "DWK49SMtW-mHjM60gJuq0"
+uri = "file://attached_assets/avatars/male_5_neutral.png"
+type = "image"
+title = "broadcaster neutral"
+
+[[generated]]
+id = "S249H5TEcyqu_PoGQ-GGT"
+uri = "file://attached_assets/avatars/male_5_surprise.png"
+type = "image"
+title = "broadcaster surprise"
+
+[[generated]]
+id = "jaiIOfNLTzA0z-Ka_ivya"
+uri = "file://attached_assets/avatars/male_5_talking.png"
+type = "image"
+title = "broadcaster talking"
+
 [[outputs]]
 id = "rQq6SBMxLh4UMtFxW18dE"
 uri = "file://screenshots/desktop-dashboard.jpg"
@@ -364,25 +436,25 @@ title = "M1 — Talking"
 id = "palJJj0tKepz3inj93gpw"
 uri = "file://attached_assets/avatars/male_3_neutral.png"
 type = "image"
-title = "M3 — Battle Host: Neutral"
+title = "M3 Battle Host — Neutral"
 
 [[outputs]]
 id = "YT1U7-eN3Oj0EXNlnLdYP"
 uri = "file://attached_assets/avatars/male_3_smile.png"
 type = "image"
-title = "M3 — Battle Host: Confident Smirk"
+title = "M3 Battle Host — Smirk"
 
 [[outputs]]
 id = "xcHNMswntUDCp_TF97-4D"
 uri = "file://attached_assets/avatars/male_4_neutral.png"
 type = "image"
-title = "M4 — Cyberpunk: Cold Neutral"
+title = "M4 Cyberpunk — Neutral"
 
 [[outputs]]
 id = "2ZIzqGVAbNf6ftRsWB0z_"
 uri = "file://attached_assets/avatars/male_5_smile.png"
 type = "image"
-title = "M5 — Broadcaster: Authoritative Smile"
+title = "M5 Broadcaster — Smile"
 
 [[outputs]]
 id = "t8Y_yCKITPErCf2dj_weQ"
@@ -461,3 +533,75 @@ id = "r6dE_xr4fXne8NRMKCLza"
 uri = "file://attached_assets/avatars/female_8_surprise.png"
 type = "image"
 title = "F8 — TikTok Host: Surprised Delight"
+
+[[outputs]]
+id = "s4wnmuUXF_J6QSQkLJUwM"
+uri = "file://attached_assets/avatars/male_2_neutral.png"
+type = "image"
+title = "M2 Gaming — Neutral"
+
+[[outputs]]
+id = "zwcuGnk4XhV2eohNwaNQl"
+uri = "file://attached_assets/avatars/male_2_smile.png"
+type = "image"
+title = "M2 Gaming — Smile"
+
+[[outputs]]
+id = "UIr4H3GuOmFjgS39Z3cPL"
+uri = "file://attached_assets/avatars/male_2_surprise.png"
+type = "image"
+title = "M2 Gaming — Surprise"
+
+[[outputs]]
+id = "ADmYdC6sVeWb3jdC-D8XE"
+uri = "file://attached_assets/avatars/male_2_talking.png"
+type = "image"
+title = "M2 Gaming — Talking"
+
+[[outputs]]
+id = "4EwkyOJo7cIvspfd3-IjY"
+uri = "file://attached_assets/avatars/male_3_surprise.png"
+type = "image"
+title = "M3 Battle Host — Reaction"
+
+[[outputs]]
+id = "lJRNEX2Jp5DETXde_bu3z"
+uri = "file://attached_assets/avatars/male_3_talking.png"
+type = "image"
+title = "M3 Battle Host — Talking"
+
+[[outputs]]
+id = "x2-73HdpM7JdFXNpHE1wL"
+uri = "file://attached_assets/avatars/male_4_smile.png"
+type = "image"
+title = "M4 Cyberpunk — Cold Smirk"
+
+[[outputs]]
+id = "HVZDuv28S4HwYtEUFPTpo"
+uri = "file://attached_assets/avatars/male_4_surprise.png"
+type = "image"
+title = "M4 Cyberpunk — System Glitch"
+
+[[outputs]]
+id = "jWh2x8nS3xVjmrENecXcA"
+uri = "file://attached_assets/avatars/male_4_talking.png"
+type = "image"
+title = "M4 Cyberpunk — Talking"
+
+[[outputs]]
+id = "cLJWnfqP9_SvWK9A8DIz0"
+uri = "file://attached_assets/avatars/male_5_neutral.png"
+type = "image"
+title = "M5 Broadcaster — Neutral"
+
+[[outputs]]
+id = "oVxjhKAq2e3d3jwMoYAdo"
+uri = "file://attached_assets/avatars/male_5_surprise.png"
+type = "image"
+title = "M5 Broadcaster — Surprise"
+
+[[outputs]]
+id = "2g0R9hYWdtqMZp0NFvgMQ"
+uri = "file://attached_assets/avatars/male_5_talking.png"
+type = "image"
+title = "M5 Broadcaster — Talking"
