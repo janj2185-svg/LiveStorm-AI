@@ -1169,7 +1169,7 @@ export function AiAssistant() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white truncate">{personaName}</p>
-                <p className="text-[10px] text-muted-foreground/50">AI Assistant</p>
+                <p className="text-[10px] text-muted-foreground/50">{t("nav_ai_assistant")}</p>
               </div>
               <div className={cn(
                 "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border",
@@ -1184,13 +1184,13 @@ export function AiAssistant() {
                   : isSessionActive ? "bg-yellow-400 animate-pulse"
                   : "bg-white/20",
                 )} />
-                {isSessionActive && connected ? "Online" : isSessionActive ? "Connecting" : "Offline"}
+                {isSessionActive && connected ? t("ai_online_badge") : isSessionActive ? t("ai_connecting_badge") : t("ai_offline_badge")}
               </div>
             </div>
 
             {/* Mode quick-select — hidden on mobile */}
             {!isMobile && <div className="px-3 pt-2.5 pb-3 border-b border-white/[0.05]">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Mode</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">{t("ai_mode_label")}</p>
               <div className="grid grid-cols-3 gap-1">
                 <button
                   onClick={() => updateConfig.mutate({ operatingMode: "autopilot", tone: "professional" })}
@@ -1226,7 +1226,7 @@ export function AiAssistant() {
                   )}
                 >
                   {ttsMode !== "off" ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-                  <span>Voice</span>
+                  <span>{t("ai_mode_voice")}</span>
                 </button>
               </div>
             </div>}
@@ -1244,9 +1244,9 @@ export function AiAssistant() {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-white truncate">
-                    {!isSessionActive ? "Ready to go live"
+                    {!isSessionActive ? t("ai_ready_live")
                       : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
-                      : "Demo mode"}
+                      : t("ai_demo_mode_label")}
                   </p>
                 </div>
                 {isSessionActive && (
@@ -1261,7 +1261,7 @@ export function AiAssistant() {
                     disabled={startSession.isPending}
                     onClick={() => startSession.mutate(undefined)}
                   >
-                    {startSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Play className="h-3 w-3 mr-1" />Go Live</>}
+                    {startSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Play className="h-3 w-3 mr-1" />{t("ai_go_live")}</>}
                   </Button>
                 ) : (
                   <Button
@@ -1271,7 +1271,7 @@ export function AiAssistant() {
                     disabled={endSession.isPending}
                     onClick={() => endSession.mutate(undefined)}
                   >
-                    {endSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Square className="h-3 w-3 mr-1" />End</>}
+                    {endSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Square className="h-3 w-3 mr-1" />{t("ai_end_stream")}</>}
                   </Button>
                 )}
               </div>
@@ -1281,7 +1281,7 @@ export function AiAssistant() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5">
                     <Radio className="h-3.5 w-3.5 text-red-400" />
-                    <span className="text-xs font-bold text-white/80">Stream Control</span>
+                    <span className="text-xs font-bold text-white/80">{t("ai_stream_control")}</span>
                   </div>
                   {isSessionActive && (
                     <span className="flex items-center gap-1 text-[10px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
@@ -1299,12 +1299,12 @@ export function AiAssistant() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium">
-                      {!isSessionActive ? "Ready to go live"
+                      {!isSessionActive ? t("ai_ready_live")
                         : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
-                        : "Demo mode active"}
+                        : t("ai_demo_mode_label")}
                     </p>
                     {isSessionActive && activeSessionId && (
-                      <p className="text-[10px] text-muted-foreground/50">Session #{activeSessionId}</p>
+                      <p className="text-[10px] text-muted-foreground/50">{t("ai_session_num")}{activeSessionId}</p>
                     )}
                   </div>
                 </div>
@@ -1315,8 +1315,8 @@ export function AiAssistant() {
                     onClick={() => startSession.mutate(undefined)}
                   >
                     {startSession.isPending
-                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Starting…</>
-                      : <><Play className="h-3.5 w-3.5 mr-2" />Go Live</>}
+                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />{t("dash_starting")}</>
+                      : <><Play className="h-3.5 w-3.5 mr-2" />{t("ai_go_live")}</>}
                   </Button>
                 ) : (
                   <Button
@@ -1326,12 +1326,12 @@ export function AiAssistant() {
                     onClick={() => endSession.mutate(undefined)}
                   >
                     {endSession.isPending
-                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Ending…</>
-                      : <><Square className="h-3.5 w-3.5 mr-2" />End Stream</>}
+                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />{t("dash_ending")}</>
+                      : <><Square className="h-3.5 w-3.5 mr-2" />{t("ai_end_stream")}</>}
                   </Button>
                 )}
                 <p className="text-[10px] text-muted-foreground/35 text-center mt-2">
-                  Advanced setup in{" "}
+                  {t("ai_advanced_setup_in")}{" "}
                   <Link href="/dashboard">
                     <span className="text-violet-400/70 hover:text-violet-400 transition-colors cursor-pointer">Dashboard</span>
                   </Link>
@@ -1348,7 +1348,7 @@ export function AiAssistant() {
               onClick={isMobile ? () => setMobileBattleOpen(v => !v) : undefined}
             >
               <Swords className="h-4 w-4 text-red-400 flex-shrink-0" />
-              <span className="text-sm font-bold text-white/90 flex-1">Battle Mode</span>
+              <span className="text-sm font-bold text-white/90 flex-1">{t("ai_battle_mode")}</span>
 
               {/* Compact: active badge + start/stop + expand arrow */}
               {isMobile ? (
@@ -1395,7 +1395,7 @@ export function AiAssistant() {
                   >
                     {battleActivating
                       ? <Loader2 className="h-3 w-3 animate-spin" />
-                      : battleOn && isSessionActive ? "Stop" : "Start"}
+                      : battleOn && isSessionActive ? t("ai_battle_stop") : t("ai_battle_start")}
                   </button>
                   <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground/40 transition-transform", mobileBattleOpen && "rotate-180")} />
                 </div>
@@ -1407,7 +1407,7 @@ export function AiAssistant() {
                     : "border-white/10 bg-white/5 text-white/25",
                 )}>
                   {battleOn && isSessionActive && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}
-                  {battleOn && isSessionActive ? "ACTIVE" : "INACTIVE"}
+                  {battleOn && isSessionActive ? t("ai_battle_active").toUpperCase() : t("ai_battle_inactive").toUpperCase()}
                 </div>
               )}
             </div>
@@ -1450,12 +1450,12 @@ export function AiAssistant() {
                   )}
                 >
                   {battleActivating
-                    ? <><Loader2 className="h-4 w-4 animate-spin" />Activating…</>
+                    ? <><Loader2 className="h-4 w-4 animate-spin" />{t("ai_battle_activating")}</>
                     : battleOn && isSessionActive
-                    ? <><Swords className="h-4 w-4" />Stop Battle</>
+                    ? <><Swords className="h-4 w-4" />{t("ai_battle_stop")}</>
                     : isSessionActive
-                    ? <><Swords className="h-4 w-4" />Start Battle</>
-                    : <span className="text-xs">Start a live session first</span>}
+                    ? <><Swords className="h-4 w-4" />{t("ai_battle_start")}</>
+                    : <span className="text-xs">{t("ai_start_live_first")}</span>}
                 </button>
               </div>
             )}
@@ -1570,17 +1570,17 @@ export function AiAssistant() {
                 )}
               </div>
             ) : (
-              /* ── Desktop: full layout ── */
+              /* ── Desktop: compact layout + Change Voice sheet ── */
               <>
-                {/* Header: title + ON/OFF toggle */}
-                <div className="flex items-center justify-between mb-3">
+                {/* Header: icon + Voice label + ON/OFF toggle */}
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
                     {ttsPlaybackState === "speaking"
                       ? <Volume2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
                       : ttsMode === "off"
                       ? <VolumeX className="h-3.5 w-3.5 text-red-400/70" />
                       : <Volume2 className="h-3.5 w-3.5 text-blue-400" />}
-                    <span className="text-xs font-bold text-white/80">Voice</span>
+                    <span className="text-xs font-bold text-white/80">{t("ai_mode_voice")}</span>
                   </div>
                   <div className="flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08]">
                     <button onClick={() => handleTtsModeChange("off")} className={cn("px-3 py-0.5 rounded-full text-[10px] font-bold transition-all", ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}>OFF</button>
@@ -1588,36 +1588,41 @@ export function AiAssistant() {
                   </div>
                 </div>
 
-                {/* Active voice + playback status row */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", ttsMode !== "off" ? "bg-emerald-400" : "bg-red-400/50")} />
-                    <span className="text-[11px] text-white/70">
-                      {ttsMode !== "off"
-                        ? <>Using <span className="font-bold text-white capitalize">{resolveVoiceLabel(ttsVoice)}</span> · OpenAI TTS</>
-                        : <span className="text-muted-foreground/50">Voice disabled</span>}
-                    </span>
-                  </div>
-                  <div className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded border",
+                {/* Current voice + playback badge + preview + change */}
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", ttsMode !== "off" ? "bg-emerald-400" : "bg-red-400/50")} />
+                  <span className="text-[11px] text-white/70 flex-1 truncate">
+                    {ttsMode !== "off"
+                      ? (() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return `${p?.emoji ?? "🎙️"} ${p?.label ?? resolveVoiceLabel(ttsVoice)}`; })()
+                      : <span className="text-muted-foreground/50">{t("ai_voice_disabled")}</span>}
+                  </span>
+                  <div className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0",
                     ttsPlaybackState === "speaking" ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/25 animate-pulse"
                     : ttsPlaybackState === "queued" ? "text-blue-300 bg-blue-500/15 border-blue-500/25"
                     : ttsPlaybackState === "error" ? "text-red-300 bg-red-500/15 border-red-500/25"
                     : "text-muted-foreground/40 bg-white/5 border-white/10",
                   )}>
-                    {ttsPlaybackState === "speaking" ? "▶ SPEAKING"
+                    {ttsPlaybackState === "speaking" ? t("ai_voice_tts_speaking")
                       : ttsPlaybackState === "queued" ? `Q(${ttsQueueLength})`
-                      : ttsPlaybackState === "finished" ? "DONE"
-                      : ttsPlaybackState === "error" ? "ERR"
-                      : "IDLE"}
+                      : ttsPlaybackState === "finished" ? t("ai_voice_tts_done")
+                      : ttsPlaybackState === "error" ? t("ai_voice_tts_err")
+                      : t("ai_voice_tts_idle")}
                   </div>
-                </div>
-
-                {/* Enable Voice Output (autoplay unlock) */}
-                {!isAudioUnlocked && ttsMode !== "off" && (
-                  <button onClick={unlockAudio} className="w-full flex items-center justify-center gap-1.5 py-2 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all">
-                    <Volume2 className="h-3.5 w-3.5" />Enable Voice Output
+                  <button
+                    onClick={() => handleVoicePreview()}
+                    disabled={!!isVoicePreviewing || ttsMode === "off"}
+                    className="h-6 w-6 flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.07] transition-all disabled:opacity-30"
+                  >
+                    {isVoicePreviewing ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Play className="h-2.5 w-2.5" />}
                   </button>
-                )}
+                  <button
+                    onClick={() => setVoicePickerOpen(true)}
+                    className="h-6 w-6 flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.07] transition-all"
+                    title={t("ai_voice_change")}
+                  >
+                    <SlidersHorizontal className="h-2.5 w-2.5" />
+                  </button>
+                </div>
 
                 {/* Avatar-gender suggestion banner */}
                 {config?.personaGender && config.personaGender !== "neutral" && (() => {
@@ -1628,68 +1633,23 @@ export function AiAssistant() {
                     <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 mb-2">
                       <span className="text-base">{suggested === "female" ? "♀️" : "♂️"}</span>
                       <p className="text-[10px] text-purple-300/80 leading-tight">
-                        {suggested === "female" ? "Female avatar — consider a Female voice" : "Male avatar — consider a Male voice"}
+                        {suggested === "female" ? t("ai_female_avatar_hint") : t("ai_male_avatar_hint")}
                       </p>
                     </div>
                   );
                 })()}
 
-                {/* Male Voices */}
-                <div className="mb-2">
-                  <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♂ Male Voices</p>
-                  <div className="grid grid-cols-2 gap-1">
-                    {MALE_VOICE_PROFILES.map((v) => {
-                      const isSelected = ttsVoice === v.value;
-                      const isPreviewing = isVoicePreviewing === v.value;
-                      return (
-                        <div key={v.value} className={cn("rounded-xl border transition-all overflow-hidden", isSelected ? "border-blue-500/50 bg-blue-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]")}>
-                          <button onClick={() => handleTtsVoiceChange(v.value)} className="flex items-center gap-2 px-2.5 py-2 w-full text-left">
-                            <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</div>
-                              <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
-                            </div>
-                            {isSelected && <CheckCircle2 className="h-3 w-3 text-blue-400 flex-shrink-0" />}
-                          </button>
-                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all", isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60", !!isVoicePreviewing && "opacity-40 cursor-not-allowed")}>
-                            {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Female Voices */}
-                <div className="mb-2">
-                  <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♀ Female Voices</p>
-                  <div className="grid grid-cols-2 gap-1">
-                    {FEMALE_VOICE_PROFILES.map((v) => {
-                      const isSelected = ttsVoice === v.value;
-                      const isPreviewing = isVoicePreviewing === v.value;
-                      return (
-                        <div key={v.value} className={cn("rounded-xl border transition-all overflow-hidden", isSelected ? "border-pink-500/50 bg-pink-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]")}>
-                          <button onClick={() => handleTtsVoiceChange(v.value)} className="flex items-center gap-2 px-2.5 py-2 w-full text-left">
-                            <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</div>
-                              <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
-                            </div>
-                            {isSelected && <CheckCircle2 className="h-3 w-3 text-pink-400 flex-shrink-0" />}
-                          </button>
-                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all", isSelected ? "border-pink-500/20 text-pink-400/70 hover:text-pink-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60", !!isVoicePreviewing && "opacity-40 cursor-not-allowed")}>
-                            {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* Enable Voice Output (autoplay unlock) */}
+                {!isAudioUnlocked && ttsMode !== "off" && (
+                  <button onClick={unlockAudio} className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all">
+                    <Volume2 className="h-3.5 w-3.5" />{t("ai_voice_enable_output")}
+                  </button>
+                )}
 
                 {/* Last spoken */}
                 {lastSpokenText && ttsMode !== "off" && (
                   <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] mb-1.5">
-                    <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Last spoken</p>
+                    <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
                     <p className="text-[10px] text-white/60 line-clamp-1 leading-relaxed">{lastSpokenText.length > 80 ? lastSpokenText.slice(0, 80) + "…" : lastSpokenText}</p>
                   </div>
                 )}
@@ -1724,13 +1684,13 @@ export function AiAssistant() {
 
           {/* ── Settings sections — hidden on mobile (use Advanced Settings) ── */}
 
-          {!isMobile && <SidebarSection isOpen={expandedSections.has("persona")} onToggle={() => toggleSection("persona")} title="Persona" icon={<Sparkles className="h-4 w-4 text-purple-400" />}>
+          {!isMobile && <SidebarSection isOpen={expandedSections.has("persona")} onToggle={() => toggleSection("persona")} title={t("ai_section_persona")} icon={<Sparkles className="h-4 w-4 text-purple-400" />}>
             {configLoading ? (
               <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}</div>
             ) : (
               <>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">AI Name</Label>
+                  <Label className="text-xs text-muted-foreground">{t("ai_field_ai_name")}</Label>
                   <Input
                     key={config?.personaName}
                     defaultValue={config?.personaName}
@@ -1743,7 +1703,7 @@ export function AiAssistant() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Tone</Label>
+                  <Label className="text-xs text-muted-foreground">{t("ai_field_tone")}</Label>
                   <Select value={config?.tone ?? "hype"} onValueChange={(v) => updateConfig.mutate({ tone: v })}>
                     <SelectTrigger className="bg-background/50 border-white/10 h-8 text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1757,7 +1717,7 @@ export function AiAssistant() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Personality</Label>
+                  <Label className="text-xs text-muted-foreground">{t("ai_field_personality")}</Label>
                   <div className="grid grid-cols-3 gap-1">
                     {PERSONALITY_OPTIONS.map((p) => (
                       <button
@@ -1778,7 +1738,7 @@ export function AiAssistant() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Intensity Mode</Label>
+                  <Label className="text-xs text-muted-foreground">{t("ai_intensity_mode")}</Label>
                   <div className="grid grid-cols-2 gap-1">
                     {INTENSITY_MODES.map((m) => (
                       <button
@@ -1812,12 +1772,12 @@ export function AiAssistant() {
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors"
             >
               <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/50" />
-              <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">Advanced Settings</span>
+              <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">{t("ai_advanced_settings")}</span>
               <ChevronDown className={cn("h-3 w-3 text-muted-foreground/35 transition-transform duration-200", advancedOpen && "rotate-180")} />
             </button>
 
           {advancedOpen && (<div className="border-t border-white/[0.06]">
-          <SidebarSection isOpen={expandedSections.has("gender")} onToggle={() => toggleSection("gender")} title="Persona Gender" icon={<Mic className="h-4 w-4 text-purple-400" />}>
+          <SidebarSection isOpen={expandedSections.has("gender")} onToggle={() => toggleSection("gender")} title={t("ai_persona_gender")} icon={<Mic className="h-4 w-4 text-purple-400" />}>
             <div className="grid grid-cols-3 gap-1">
               {GENDER_OPTIONS.map((g) => (
                 <button
@@ -2053,16 +2013,16 @@ export function AiAssistant() {
                   : isSessionActive ? "bg-yellow-400"
                   : "bg-white/30",
                 )} />
-                {isSessionActive && connected ? "Connected"
-                  : isSessionActive ? "Connecting…"
-                  : "Offline"}
+                {isSessionActive && connected ? t("ai_connected_badge")
+                  : isSessionActive ? t("ai_connecting_badge")
+                  : t("ai_offline_badge")}
               </div>
 
               {/* Speaking indicator */}
               {isSpeaking && (
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-purple-500/40 text-purple-300 bg-purple-500/20">
                   <Mic className="h-3 w-3 animate-pulse" />
-                  Speaking
+                  {t("ai_speaking")}
                 </div>
               )}
 
@@ -2074,7 +2034,7 @@ export function AiAssistant() {
                       <span key={d} className="h-1 w-1 rounded-full bg-blue-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
                     ))}
                   </span>
-                  Thinking
+                  {t("ai_thinking")}
                 </div>
               )}
             </div>
@@ -2114,17 +2074,17 @@ export function AiAssistant() {
           {/* Stats row — below avatar */}
           <div className="grid grid-cols-4 gap-2 flex-shrink-0">
             {[
-              { label: "Viewers", value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20", glow: "shadow-violet-500/10" },
-              { label: "Gifts", value: stats.totalGifts, icon: Gift, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", glow: "shadow-amber-500/10" },
-              { label: "Followers", value: stats.totalFollows, icon: Users, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20", glow: "shadow-green-500/10" },
-              { label: "Replies", value: aiAnnouncements?.length ?? 0, icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-purple-500/10" },
-            ].map(({ label, value, icon: Icon, color, bg, glow }) => (
-              <div key={label} className={cn("rounded-2xl border p-4 flex flex-col items-center gap-1.5 transition-all duration-300 shadow-lg", bg, glow)}>
+              { labelKey: "ai_stat_viewers" as const, value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20", glow: "shadow-violet-500/10" },
+              { labelKey: "ai_stat_gifts" as const, value: stats.totalGifts, icon: Gift, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", glow: "shadow-amber-500/10" },
+              { labelKey: "ai_stat_followers" as const, value: stats.totalFollows, icon: Users, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20", glow: "shadow-green-500/10" },
+              { labelKey: "ai_stat_replies" as const, value: aiAnnouncements?.length ?? 0, icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-purple-500/10" },
+            ].map(({ labelKey, value, icon: Icon, color, bg, glow }) => (
+              <div key={labelKey} className={cn("rounded-2xl border p-4 flex flex-col items-center gap-1.5 transition-all duration-300 shadow-lg", bg, glow)}>
                 <Icon className={cn("h-4 w-4", color)} />
                 <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-muted-foreground/30")}>
                   {isSessionActive ? value.toLocaleString() : "—"}
                 </span>
-                <span className="text-[10px] text-muted-foreground/60 font-semibold">{label}</span>
+                <span className="text-[10px] text-muted-foreground/60 font-semibold">{t(labelKey)}</span>
               </div>
             ))}
           </div>
@@ -2137,9 +2097,9 @@ export function AiAssistant() {
           {/* Tab bar */}
           <div className="flex gap-1 p-1 bg-white/5 rounded-xl mb-2 flex-shrink-0">
             {[
-              { key: "chat" as const, label: "Chat", icon: <MessageCircle className="h-3.5 w-3.5" />, badge: isSessionActive ? feedEvents.filter((e) => e.type === "comment").length : null },
-              { key: "events" as const, label: "Events", icon: <Activity className="h-3.5 w-3.5" />, badge: null },
-              { key: "ai" as const, label: "AI Activity", icon: <Sparkles className="h-3.5 w-3.5" />, badge: isSessionActive && (aiAnnouncements?.length ?? 0) > 0 ? aiAnnouncements?.length : null },
+              { key: "chat" as const, label: t("ai_tab_chat"), icon: <MessageCircle className="h-3.5 w-3.5" />, badge: isSessionActive ? feedEvents.filter((e) => e.type === "comment").length : null },
+              { key: "events" as const, label: t("ai_tab_events"), icon: <Activity className="h-3.5 w-3.5" />, badge: null },
+              { key: "ai" as const, label: t("ai_tab_ai_activity"), icon: <Sparkles className="h-3.5 w-3.5" />, badge: isSessionActive && (aiAnnouncements?.length ?? 0) > 0 ? aiAnnouncements?.length : null },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -2171,15 +2131,15 @@ export function AiAssistant() {
                 <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="h-3.5 w-3.5 text-purple-400" />
-                    <span className="text-sm font-medium">Live Chat</span>
+                    <span className="text-sm font-medium">{t("ai_live_chat_title")}</span>
                     {feedEvents.length > 0 && (
-                      <span className="text-xs text-muted-foreground/50">{feedEvents.filter((e) => e.type === "comment").length} comments</span>
+                      <span className="text-xs text-muted-foreground/50">{feedEvents.filter((e) => e.type === "comment").length} {t("ai_comments_count")}</span>
                     )}
                   </div>
                   {isSessionActive && effectiveMode === "real" && (
                     <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
                       <CheckCircle2 className="h-3 w-3" />
-                      Real TikTok
+                      {t("ai_real_tiktok")}
                     </span>
                   )}
                 </div>
@@ -2201,7 +2161,7 @@ export function AiAssistant() {
                 <div className="px-4 py-2.5 border-b border-white/5 flex-shrink-0">
                   <span className="text-sm font-medium flex items-center gap-2">
                     <Activity className="h-3.5 w-3.5 text-cyan-400" />
-                    Event Log
+                    {t("ai_event_log_title")}
                   </span>
                 </div>
                 <div className="flex-1 min-h-0 overflow-hidden">
@@ -2216,19 +2176,19 @@ export function AiAssistant() {
                 <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
                   <span className="text-sm font-medium flex items-center gap-2">
                     <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                    AI Responses
+                    {t("ai_responses_title")}
                   </span>
                   <div className="flex items-center gap-2">
                     {ttsMode !== "off" && (
                       <span className="text-[10px] text-blue-400 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
                         <Volume2 className="h-2.5 w-2.5" />
-                        Voice on
+                        {t("ai_voice_on")}
                       </span>
                     )}
                     {config?.autoReplyEnabled && (
                       <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
                         <CheckCircle2 className="h-2.5 w-2.5" />
-                        Auto-reply
+                        {t("ai_auto_reply_badge")}
                       </span>
                     )}
                   </div>
@@ -2249,7 +2209,7 @@ export function AiAssistant() {
           <div className="flex-shrink-0 mt-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
             <p className="text-[10px] text-muted-foreground/40 mb-1.5 flex items-center gap-1">
               <Bot className="h-3 w-3" />
-              Ask {personaName} for stream advice
+              {t("ai_ask_advice")} · {personaName}
             </p>
             <div className="flex gap-2">
               <Input
@@ -2297,6 +2257,74 @@ export function AiAssistant() {
 
       </div>
 
+
+      {/* ── Voice Picker Sheet ── */}
+      <Sheet open={voicePickerOpen} onOpenChange={setVoicePickerOpen}>
+        <SheetContent side="right" className="w-[340px] sm:max-w-[340px] p-0 flex flex-col" aria-describedby={undefined}>
+          <SheetHeader className="px-5 py-4 border-b border-white/10 flex-shrink-0">
+            <SheetTitle className="flex items-center gap-2 text-base font-bold">
+              <Volume2 className="h-4 w-4 text-blue-400" />
+              {t("ai_voice_change")}
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-4">
+              <div>
+                <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♂ {t("ai_male_voices")}</p>
+                <div className="space-y-1.5">
+                  {MALE_VOICE_PROFILES.map((v) => {
+                    const isSelected = ttsVoice === v.value;
+                    const isPreviewing = isVoicePreviewing === v.value;
+                    return (
+                      <div key={v.value} className={cn("rounded-xl border transition-all overflow-hidden", isSelected ? "border-blue-500/50 bg-blue-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]")}>
+                        <div className="flex items-center gap-3 px-3 py-2.5">
+                          <button onClick={() => handleTtsVoiceChange(v.value)} className="flex items-center gap-3 flex-1 text-left min-w-0">
+                            <span className="text-lg flex-shrink-0 leading-none">{v.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className={cn("text-xs font-semibold leading-tight truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</div>
+                              <div className="text-[10px] text-muted-foreground/50 leading-tight">{v.desc}</div>
+                            </div>
+                            {isSelected && <CheckCircle2 className="h-4 w-4 text-blue-400 flex-shrink-0" />}
+                          </button>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-blue-500/30 text-blue-400/70 hover:text-blue-300" : "border-white/10 text-muted-foreground/40 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
+                            {isPreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♀ {t("ai_female_voices")}</p>
+                <div className="space-y-1.5">
+                  {FEMALE_VOICE_PROFILES.map((v) => {
+                    const isSelected = ttsVoice === v.value;
+                    const isPreviewing = isVoicePreviewing === v.value;
+                    return (
+                      <div key={v.value} className={cn("rounded-xl border transition-all overflow-hidden", isSelected ? "border-pink-500/50 bg-pink-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]")}>
+                        <div className="flex items-center gap-3 px-3 py-2.5">
+                          <button onClick={() => handleTtsVoiceChange(v.value)} className="flex items-center gap-3 flex-1 text-left min-w-0">
+                            <span className="text-lg flex-shrink-0 leading-none">{v.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className={cn("text-xs font-semibold leading-tight truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</div>
+                              <div className="text-[10px] text-muted-foreground/50 leading-tight">{v.desc}</div>
+                            </div>
+                            {isSelected && <CheckCircle2 className="h-4 w-4 text-pink-400 flex-shrink-0" />}
+                          </button>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-pink-500/30 text-pink-400/70 hover:text-pink-300" : "border-white/10 text-muted-foreground/40 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
+                            {isPreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
 
       {/* ── Avatar Configuration Sheet ── */}
       <Sheet open={avatarSheetOpen} onOpenChange={setAvatarSheetOpen}>

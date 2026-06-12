@@ -44,7 +44,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     (key: TranslationKey): string => {
       const dict = translations[language] as Record<string, string> | undefined;
       const fallback = translations.en as Record<string, string>;
-      return dict?.[key] ?? fallback[key] ?? key;
+      const value = dict?.[key] ?? fallback[key] ?? key;
+      if (import.meta.env.DEV && language !== "en" && !dict?.[key]) {
+        console.warn(`[i18n] Missing "${language}" translation for key: "${key}"`);
+      }
+      return value;
     },
     [language],
   );
