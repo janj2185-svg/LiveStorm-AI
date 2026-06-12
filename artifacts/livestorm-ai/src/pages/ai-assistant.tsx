@@ -120,39 +120,52 @@ const TONE_OPTIONS = [
 
 type VoiceGender = "male" | "female" | "neutral";
 
-// Legacy key → real OpenAI voice name (for users who saved old keys to DB)
-const LEGACY_TO_OPENAI: Record<string, string> = {
-  calm_male: "alloy", deep_male: "onyx", energetic_male: "echo", funny_male: "fable",
-  warm_female: "nova", confident_female: "shimmer", soft_female: "nova", energetic_female: "shimmer",
-  playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
+// Named profile key → OpenAI voice (for preview resolution)
+const NAMED_TO_OPENAI: Record<string, string> = {
+  deep_male: "onyx", broadcaster: "echo", calm_male: "alloy", energetic_male: "echo", young_male: "fable",
+  soft_female: "nova", streamer_female: "shimmer", warm_female: "nova", energetic_female: "shimmer", calm_female: "nova",
+  // Legacy
+  funny_male: "fable", confident_female: "shimmer", playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
 };
 const OPENAI_VOICE_KEYS = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
+const ALL_NAMED_KEYS = Object.keys(NAMED_TO_OPENAI);
 
 function resolveVoiceLabel(voiceKey: string): string {
-  if (LEGACY_TO_OPENAI[voiceKey]) return LEGACY_TO_OPENAI[voiceKey];
+  if (NAMED_TO_OPENAI[voiceKey]) return NAMED_TO_OPENAI[voiceKey];
   if ((OPENAI_VOICE_KEYS as readonly string[]).includes(voiceKey)) return voiceKey;
   return "nova";
 }
 function normalizeVoiceKey(voiceKey: string): string {
-  return LEGACY_TO_OPENAI[voiceKey] ?? ((OPENAI_VOICE_KEYS as readonly string[]).includes(voiceKey) ? voiceKey : "nova");
+  if (ALL_NAMED_KEYS.includes(voiceKey)) return voiceKey;
+  if ((OPENAI_VOICE_KEYS as readonly string[]).includes(voiceKey)) return voiceKey;
+  return "nova";
 }
 
-const VOICE_PROFILES: { value: string; label: string; desc: string; gender: VoiceGender; emoji: string }[] = [
-  { value: "onyx",    label: "Onyx",    desc: "Deep & authoritative",       gender: "male",    emoji: "♂" },
-  { value: "echo",    label: "Echo",    desc: "Clear & direct",             gender: "male",    emoji: "♂" },
-  { value: "nova",    label: "Nova",    desc: "Warm & natural",             gender: "female",  emoji: "♀" },
-  { value: "shimmer", label: "Shimmer", desc: "Bright & expressive",        gender: "female",  emoji: "♀" },
-  { value: "fable",   label: "Fable",   desc: "Expressive, British accent", gender: "neutral", emoji: "◎" },
-  { value: "alloy",   label: "Alloy",   desc: "Neutral & balanced",         gender: "neutral", emoji: "◎" },
+type VoiceProfile = { value: string; label: string; desc: string; speed: number; emoji: string; gender: VoiceGender };
+
+const MALE_VOICE_PROFILES: VoiceProfile[] = [
+  { value: "deep_male",       label: "Deep Male",       desc: "Powerful & authoritative", speed: 0.85, emoji: "🎙️", gender: "male" },
+  { value: "broadcaster",     label: "Broadcaster",     desc: "Clear TV-style delivery",  speed: 0.92, emoji: "📺", gender: "male" },
+  { value: "calm_male",       label: "Calm Male",       desc: "Balanced & composed",      speed: 0.88, emoji: "🧘", gender: "male" },
+  { value: "energetic_male",  label: "Energetic Male",  desc: "Fast-paced & direct",      speed: 1.15, emoji: "⚡", gender: "male" },
+  { value: "young_male",      label: "Young Male",      desc: "Light & casual",            speed: 1.08, emoji: "🎤", gender: "male" },
 ];
+
+const FEMALE_VOICE_PROFILES: VoiceProfile[] = [
+  { value: "soft_female",      label: "Soft Female",      desc: "Gentle & soothing",    speed: 0.87, emoji: "🌸", gender: "female" },
+  { value: "streamer_female",  label: "Streamer Female",  desc: "Upbeat & vibrant",     speed: 1.12, emoji: "🎮", gender: "female" },
+  { value: "warm_female",      label: "Warm Female",      desc: "Natural & inviting",   speed: 0.93, emoji: "☀️", gender: "female" },
+  { value: "energetic_female", label: "Energetic Female", desc: "Bold & dynamic",       speed: 1.18, emoji: "💫", gender: "female" },
+  { value: "calm_female",      label: "Calm Female",      desc: "Clear & composed",     speed: 0.85, emoji: "🌿", gender: "female" },
+];
+
+const ALL_VOICE_PROFILES = [...MALE_VOICE_PROFILES, ...FEMALE_VOICE_PROFILES];
 
 const GENDER_OPTIONS: { value: VoiceGender; label: string; emoji: string }[] = [
   { value: "male",    label: "Male",    emoji: "♂" },
   { value: "female",  label: "Female",  emoji: "♀" },
   { value: "neutral", label: "Neutral", emoji: "◎" },
 ];
-
-const VOICE_OPTIONS = VOICE_PROFILES;
 
 const LANGUAGE_OPTIONS = [
   { value: "auto", label: "Auto-detect", flag: "🌍" },
@@ -986,7 +999,7 @@ export function AiAssistant() {
   const [lastTtsError, setLastTtsError] = useState<string | null>(null);
   const [usingBrowserFallback, setUsingBrowserFallback] = useState(false);
 
-  const handleVoicePreview = async (previewVoice?: string) => {
+  const handleVoicePreview = async (previewVoice?: string, previewSpeed?: number) => {
     if (!config || isVoicePreviewing) return;
     const voiceKey = previewVoice ?? ttsVoice ?? config.voiceName ?? "nova";
     const resolved = resolveVoiceLabel(voiceKey);
@@ -995,11 +1008,12 @@ export function AiAssistant() {
     try {
       const token = await getToken();
       const previewText = `Hey! I'm ${config.personaName}, your AI co-host. Let's make this stream amazing!`;
+      const speed = previewSpeed ?? ALL_VOICE_PROFILES.find(p => p.value === voiceKey)?.speed ?? config.voiceSpeed ?? 1.0;
       const resp = await fetch(`${API_BASE}/ai/voice`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ text: previewText, voice: voiceKey, speed: config.voiceSpeed ?? 1.0 }),
+        body: JSON.stringify({ text: previewText, voice: voiceKey, speed }),
       });
       if (!resp.ok) throw new Error("Voice generation failed");
       const blob = await resp.blob();
@@ -1463,60 +1477,101 @@ export function AiAssistant() {
               </button>
             )}
 
-            {/* Voice grid — 3 columns */}
-            <div className="grid grid-cols-3 gap-1 mb-2">
-              {VOICE_PROFILES.map((v) => {
-                const isSelected = ttsVoice === v.value;
-                const isPreviewing = isVoicePreviewing === v.value;
-                return (
-                  <div key={v.value} className={cn(
-                    "rounded-lg border transition-all overflow-hidden flex flex-col",
-                    isSelected
-                      ? "border-blue-500/50 bg-blue-500/10"
-                      : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]",
-                  )}>
-                    <button
-                      onClick={() => handleTtsVoiceChange(v.value)}
-                      className="flex flex-col items-center justify-center pt-2 pb-1 px-0.5 w-full text-center"
-                    >
-                      <span className="text-sm leading-none mb-0.5">{v.emoji}</span>
-                      <span className={cn("text-[10px] font-semibold leading-tight", isSelected ? "text-blue-300" : "text-white/80")}>{v.label}</span>
-                      <span className="text-[8px] text-muted-foreground/45 leading-tight mt-0.5 px-0.5 line-clamp-1">{v.desc}</span>
-                      {isSelected && <CheckCircle2 className="h-2.5 w-2.5 text-blue-400 mt-0.5" />}
-                    </button>
-                    <button
-                      onClick={() => handleVoicePreview(v.value)}
-                      disabled={!!isVoicePreviewing}
-                      className={cn(
-                        "flex items-center justify-center gap-0.5 py-1 text-[9px] border-t w-full transition-all",
-                        isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/40 hover:text-white/60",
-                        !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
-                      )}
-                    >
-                      {isPreviewing
-                        ? <><Loader2 className="h-2 w-2 animate-spin" />…</>
-                        : <><Play className="h-2 w-2" />▶</>}
-                    </button>
-                  </div>
-                );
-              })}
+            {/* ── Avatar-gender suggestion banner ── */}
+            {config?.personaGender && config.personaGender !== "neutral" && (() => {
+              const suggested = config.personaGender === "female" ? "female" : "male";
+              const selectedProfile = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice);
+              const alreadyMatches = selectedProfile?.gender === suggested;
+              if (alreadyMatches) return null;
+              return (
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 mb-2">
+                  <span className="text-base">{suggested === "female" ? "♀️" : "♂️"}</span>
+                  <p className="text-[10px] text-purple-300/80 leading-tight">
+                    {suggested === "female" ? "Female avatar detected — consider a Female voice" : "Male avatar detected — consider a Male voice"}
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* ── Male Voices ── */}
+            <div className="mb-2">
+              <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♂ Male Voices</p>
+              <div className="grid grid-cols-2 gap-1">
+                {MALE_VOICE_PROFILES.map((v) => {
+                  const isSelected = ttsVoice === v.value;
+                  const isPreviewing = isVoicePreviewing === v.value;
+                  return (
+                    <div key={v.value} className={cn(
+                      "rounded-xl border transition-all overflow-hidden",
+                      isSelected ? "border-blue-500/50 bg-blue-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]",
+                    )}>
+                      <button
+                        onClick={() => handleTtsVoiceChange(v.value)}
+                        className="flex items-center gap-2 px-2.5 py-2 w-full text-left"
+                      >
+                        <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</div>
+                          <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
+                        </div>
+                        {isSelected && <CheckCircle2 className="h-3 w-3 text-blue-400 flex-shrink-0" />}
+                      </button>
+                      <button
+                        onClick={() => handleVoicePreview(v.value, v.speed)}
+                        disabled={!!isVoicePreviewing}
+                        className={cn(
+                          "flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all",
+                          isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60",
+                          !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
+                        )}
+                      >
+                        {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Test Voice button — uses currently selected voice */}
-            <button
-              onClick={() => handleVoicePreview()}
-              disabled={ttsMode === "off" || !!isVoicePreviewing}
-              className={cn(
-                "w-full flex items-center justify-center gap-1.5 py-1.5 mb-2 rounded-lg border text-xs font-medium transition-all",
-                ttsMode !== "off" && !isVoicePreviewing
-                  ? "border-blue-500/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20"
-                  : "border-white/5 text-muted-foreground/30 cursor-not-allowed",
-              )}
-            >
-              {isVoicePreviewing
-                ? <><Loader2 className="h-3 w-3 animate-spin" />Playing…</>
-                : <><Play className="h-3 w-3" />Test Voice</>}
-            </button>
+            {/* ── Female Voices ── */}
+            <div className="mb-2">
+              <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♀ Female Voices</p>
+              <div className="grid grid-cols-2 gap-1">
+                {FEMALE_VOICE_PROFILES.map((v) => {
+                  const isSelected = ttsVoice === v.value;
+                  const isPreviewing = isVoicePreviewing === v.value;
+                  return (
+                    <div key={v.value} className={cn(
+                      "rounded-xl border transition-all overflow-hidden",
+                      isSelected ? "border-pink-500/50 bg-pink-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]",
+                    )}>
+                      <button
+                        onClick={() => handleTtsVoiceChange(v.value)}
+                        className="flex items-center gap-2 px-2.5 py-2 w-full text-left"
+                      >
+                        <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</div>
+                          <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
+                        </div>
+                        {isSelected && <CheckCircle2 className="h-3 w-3 text-pink-400 flex-shrink-0" />}
+                      </button>
+                      <button
+                        onClick={() => handleVoicePreview(v.value, v.speed)}
+                        disabled={!!isVoicePreviewing}
+                        className={cn(
+                          "flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all",
+                          isSelected ? "border-pink-500/20 text-pink-400/70 hover:text-pink-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60",
+                          !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
+                        )}
+                      >
+                        {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Last spoken — compact */}
             {lastSpokenText && ttsMode !== "off" && (

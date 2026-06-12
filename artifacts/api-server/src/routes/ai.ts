@@ -25,9 +25,12 @@ const router = Router();
 
 const VALID_VOICES = [
   "alloy", "echo", "fable", "onyx", "nova", "shimmer",
-  "calm_male", "deep_male", "energetic_male", "funny_male",
-  "warm_female", "confident_female", "soft_female", "energetic_female",
-  "playful", "robot", "news", "caster",
+  // Named male profiles
+  "deep_male", "broadcaster", "calm_male", "energetic_male", "young_male",
+  // Named female profiles
+  "soft_female", "streamer_female", "warm_female", "energetic_female", "calm_female",
+  // Legacy (backward compat)
+  "funny_male", "confident_female", "playful", "robot", "news", "caster",
 ] as const;
 type VoiceOption = (typeof VALID_VOICES)[number];
 
@@ -400,9 +403,12 @@ router.post("/ai/generate-event", requireAuth, async (req: any, res: any) => {
 
 // Named profile → OpenAI voice resolution (must match voiceAgent.ts NAMED_PROFILE_MAP)
 const NAMED_TO_OPENAI: Record<string, string> = {
-  calm_male: "alloy", deep_male: "onyx", energetic_male: "echo", funny_male: "fable",
-  warm_female: "nova", confident_female: "shimmer", soft_female: "nova", energetic_female: "shimmer",
-  playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
+  // Male profiles
+  deep_male: "onyx", broadcaster: "echo", calm_male: "alloy", energetic_male: "echo", young_male: "fable",
+  // Female profiles
+  soft_female: "nova", streamer_female: "shimmer", warm_female: "nova", energetic_female: "shimmer", calm_female: "nova",
+  // Legacy
+  funny_male: "fable", confident_female: "shimmer", playful: "shimmer", robot: "alloy", news: "fable", caster: "echo",
 };
 const OPENAI_VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] as const;
 type OpenAIVoice = typeof OPENAI_VOICES[number];

@@ -16,16 +16,23 @@ export const VOICE_CATALOG: Record<string, VoiceConfig & { label: string }> = {
   shimmer: { voiceKey: "shimmer", speed: 1.0,  description: "Warm, expressive female voice",                     label: "Shimmer (Warm Female)" },
 };
 
-// Maps named profiles (calm_male, warm_female etc.) to their underlying OpenAI voice + speed
+// Maps named profiles to their underlying OpenAI voice + speed
 const NAMED_PROFILE_MAP: Record<string, { voice: string; speed: number; description: string }> = {
-  calm_male:        { voice: "alloy",   speed: 0.9,  description: "Calm Male Host — balanced & composed" },
-  deep_male:        { voice: "onyx",    speed: 0.85, description: "Deep Broadcaster — powerful & authoritative" },
-  energetic_male:   { voice: "echo",    speed: 1.1,  description: "Energetic Streamer — fast-paced & direct" },
-  funny_male:       { voice: "fable",   speed: 1.05, description: "Funny Commentator — expressive & playful" },
-  warm_female:      { voice: "nova",    speed: 0.95, description: "Warm Female Host — natural & inviting" },
-  confident_female: { voice: "shimmer", speed: 1.0,  description: "Confident Streamer — bold & expressive" },
-  soft_female:      { voice: "nova",    speed: 0.85, description: "Soft Assistant — gentle & clear" },
-  energetic_female: { voice: "shimmer", speed: 1.1,  description: "Energetic Creator — upbeat & vibrant" },
+  // ── Male profiles ──
+  deep_male:        { voice: "onyx",    speed: 0.85, description: "Deep Male — powerful & authoritative" },
+  broadcaster:      { voice: "echo",    speed: 0.92, description: "Broadcaster — clear TV-style delivery" },
+  calm_male:        { voice: "alloy",   speed: 0.88, description: "Calm Male — balanced & composed" },
+  energetic_male:   { voice: "echo",    speed: 1.15, description: "Energetic Male — fast-paced & direct" },
+  young_male:       { voice: "fable",   speed: 1.08, description: "Young Male — light & casual" },
+  // ── Female profiles ──
+  soft_female:      { voice: "nova",    speed: 0.87, description: "Soft Female — gentle & soothing" },
+  streamer_female:  { voice: "shimmer", speed: 1.12, description: "Streamer Female — upbeat & vibrant" },
+  warm_female:      { voice: "nova",    speed: 0.93, description: "Warm Female — natural & inviting" },
+  energetic_female: { voice: "shimmer", speed: 1.18, description: "Energetic Female — bold & dynamic" },
+  calm_female:      { voice: "nova",    speed: 0.85, description: "Calm Female — clear & composed" },
+  // ── Legacy (kept for backward compat) ──
+  funny_male:       { voice: "fable",   speed: 1.05, description: "Funny Male — expressive & playful" },
+  confident_female: { voice: "shimmer", speed: 1.0,  description: "Confident Female — bold & expressive" },
   playful:          { voice: "shimmer", speed: 1.2,  description: "Playful & Youthful — light & bouncy" },
   robot:            { voice: "alloy",   speed: 0.8,  description: "Robot Voice — flat & synthetic" },
   news:             { voice: "fable",   speed: 0.9,  description: "News Presenter — formal & clear" },
