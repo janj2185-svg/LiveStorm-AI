@@ -12,7 +12,7 @@ import { getViewerContext } from "../lib/agents/memoryAgent";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
 import type { StrategySuggestion } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
-import { isBattleActive, generateBattleReply } from "./battleAgent";
+import { isBattleActive, generateBattleReply, updateBattleScore } from "./battleAgent";
 import { generateVoice, fastSpamCheck } from "../lib/aiService";
 import {
   applyEmotionalTrigger,
@@ -393,6 +393,16 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
       amplifiedTrigger === "gift_whale"    ? "whale_gift" :
       amplifiedTrigger === "gift_big"      ? "big_gift"   : "standard_gift",
     );
+    // ── Battle score: all gifts received go to OUR side ────────────────────
+    if (isBattleActive(event.sessionId)) {
+      const updatedScore = updateBattleScore(event.sessionId, "us", coins);
+      if (updatedScore) {
+        const gap = Math.abs(updatedScore.us - updatedScore.opponent);
+        const leader = updatedScore.us > updatedScore.opponent ? "us" : updatedScore.opponent > updatedScore.us ? "opponent" : "tied";
+        console.log(`[BattleAgent] 🏆 score | us=${updatedScore.us} vs opp=${updatedScore.opponent} | gap=${gap} | leader=${leader} | session=${event.sessionId}`);
+        ioRef.to(`session:${event.sessionId}`).emit("battle:score", updatedScore);
+      }
+    }
   }
 
   // ── 3. Share events: per-session cooldown ──────────────────────────────────

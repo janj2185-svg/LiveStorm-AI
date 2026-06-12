@@ -362,21 +362,56 @@ export interface AiPersonaConfig {
   streamerId: number;
   personaName: string;
   tone: string;
+  personalityType: string;
+  customPersonality: string | null;
+  operatingMode: string;
   announceGifts: boolean;
   announceGiftThreshold: number;
   announceLevelUp: boolean;
   announceBossKill: boolean;
   moderationEnabled: boolean;
+  autoReplyEnabled: boolean;
+  replyLanguage: string;
+  defaultLanguage: string;
+  spamProtectionEnabled: boolean;
+  spamCooldownSeconds: number;
+  voiceEnabled: boolean;
+  voiceName: string;
+  voiceSpeed: number;
+  voiceVolume: number;
+  voiceEmotion: string;
+  personaGender: string;
+  translateChat: boolean;
+  translateTargetLang: string;
+  intensityMode: string;
+  updatedAt: string;
 }
 
 export interface AiPersonaConfigUpdate {
   personaName?: string;
   tone?: string;
+  personalityType?: string;
+  customPersonality?: string;
+  operatingMode?: string;
   announceGifts?: boolean;
   announceGiftThreshold?: number;
   announceLevelUp?: boolean;
   announceBossKill?: boolean;
   moderationEnabled?: boolean;
+  autoReplyEnabled?: boolean;
+  replyLanguage?: string;
+  defaultLanguage?: string;
+  spamProtectionEnabled?: boolean;
+  spamCooldownSeconds?: number;
+  voiceEnabled?: boolean;
+  voiceName?: string;
+  voiceSpeed?: number;
+  voiceVolume?: number;
+  voiceEmotion?: string;
+  personaGender?: string;
+  translateChat?: boolean;
+  translateTargetLang?: string;
+  intensityMode?: string;
 }
 
 export interface AiMessage {

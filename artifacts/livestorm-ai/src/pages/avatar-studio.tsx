@@ -201,6 +201,11 @@ export function AvatarStudio() {
     setAccent(avatarConfig.accentColor ?? DEFAULTS.accentColor);
     if (avatarConfig.avatarKey) setAvatarKey(avatarConfig.avatarKey as PresenterSlotKey);
     setAvatarUrl(avatarConfig.avatarUrl ?? null);
+    // Restore selected preset from localStorage (no DB column needed)
+    try {
+      const saved = localStorage.getItem("avatarPresetId");
+      if (saved) setSelectedPresetId(saved);
+    } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarConfig?.id]);
 
@@ -300,8 +305,12 @@ export function AvatarStudio() {
               selectedPresetId={selectedPresetId}
               onSelect={(preset) => {
                 setSelectedPresetId(preset.id);
-                setAvatarUrl(preset.thumbnailUrl);
+                // Only apply accent color — do NOT overwrite avatarUrl with a PNG thumbnail.
+                // The preset library is a visual reference; real 3D model URLs come from
+                // RPM / Avaturn / VRM uploads only.
                 setAccent(preset.accentColor);
+                // Persist the chosen preset ID in localStorage so it survives refresh.
+                try { localStorage.setItem("avatarPresetId", preset.id); } catch {}
               }}
             />
 

@@ -7,7 +7,7 @@ import { getActiveVoice, VOICE_CATALOG } from "../agents/voiceAgent";
 import { getMemoryContext, storeMemory } from "../agents/memoryAgent";
 import { runHostAgent } from "../agents/hostAgent";
 import { runLearningAgent } from "../agents/learningAgent";
-import { setBattleMode, generateBattleReply } from "../agents/battleAgent";
+import { setBattleMode, generateBattleReply, getBattleScore } from "../agents/battleAgent";
 import { triggerLearningAgent } from "../agents/agentOrchestrator";
 import { classifyEvent } from "../agents/chatAgent";
 
@@ -277,6 +277,7 @@ if (process.env.NODE_ENV !== "production") {
         shouldSpeak: battleResult.shouldSpeak,
         context: battleResult.context,
         personality: personality.modeKey,
+        score: getBattleScore(Number(sessionId)),
         dbTranscripts: transcripts,
       });
     } catch (err) {
