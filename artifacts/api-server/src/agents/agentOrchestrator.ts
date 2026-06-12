@@ -1007,6 +1007,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const sessionRecentReplies  = state.recentReplies.get(sessionId)  ?? [];
   const sessionRecentOpeners  = state.recentOpeners.get(sessionId)  ?? [];
 
+  console.log(`[HostAgentStarted] event=${event.type} | session=${sessionId} | streamer=${streamerId}${event.type === "streamer_speech" ? ` | speech="${((event.data.text as string) ?? "").slice(0, 60)}"` : ` | viewer="${event.username ?? "anon"}"`}`);
   let hostResult = await runHostAgent({
     event: eventForHost,
     streamerId,
@@ -1023,6 +1024,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     intensityMode:   (config as any).intensityMode ?? "streamer",
   });
 
+  console.log(`[HostAgentCompleted] event=${event.type} | hasText=${!!hostResult?.text} | text="${(hostResult?.text ?? "").slice(0, 80)}"`);
   if (!hostResult?.text) {
     console.log(`[Agent:Host] ✗ no reply generated for event=${event.type} viewer=${event.username}`);
     return;
@@ -1082,6 +1084,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   }
 
   console.log(`[Agent:Host] 🎙️ reply="${spokenText.slice(0, 100)}" | emotion=${hostResult.emotion} | personality=${personality.modeKey}`);
+  console.log(`[AIReply] event=${event.type} | "${spokenText.slice(0, 120)}"`);
 
   state.lastTtsTime = Date.now();
 
@@ -1164,6 +1167,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
 
   // ── Voice Agent: synthesize TTS (emotion-adjusted speed) ────────────────────
   const socketsInRoom = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+  console.log(`[TTSRequested] voiceEnabled=${config.voiceEnabled} | socketsInRoom=${socketsInRoom} | event=${event.type} | voiceKey=${voice.voiceKey}`);
   if (config.voiceEnabled && state.enabledAgents.has("voice")) {
     if (socketsInRoom === 0) {
       console.log(`[Agent:Voice] ⚠️ skipping TTS — no sockets in room ${roomId} (prevents silent billing)`);
@@ -1177,13 +1181,18 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       console.log(`[Agent:Voice] 🎙️ synthesizing TTS | voiceKey=${voice.voiceKey} speed=${adjustedSpeed.toFixed(2)} | text="${spokenText.slice(0, 50)}..."`);
       const audioBuffer = await generateVoice(spokenText, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", adjustedSpeed);
       if (audioBuffer) {
+        console.log(`[TTSGenerated] bytes=${audioBuffer.byteLength ?? 0} | event=${event.type} → emitting tts:audio to ${roomId}`);
         console.log(`[Agent:Voice] ✓ TTS audio generated | ${audioBuffer.byteLength ?? 0} bytes`);
         io.to(roomId).emit("tts:audio", { audio: audioBuffer, text: spokenText });
+      } else {
+        console.warn(`[TTSGenerated] ✗ audioBuffer is null — generateVoice returned nothing | event=${event.type}`);
       }
     } catch (err: unknown) {
       console.error("[Agent:Voice] ✗ TTS error:", (err as Error)?.message);
     }
     }
+  } else {
+    console.log(`[TTSRequested] ⚠️ server TTS skipped — voiceEnabled=${config.voiceEnabled} | voice agent enabled=${state.enabledAgents.has("voice")} → client-side TTS via ai:announcement`);
   }
 
   // ── Strategy Agent: generate suggestions ────────────────────────────────────

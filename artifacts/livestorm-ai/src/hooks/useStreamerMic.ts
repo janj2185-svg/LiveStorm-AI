@@ -296,6 +296,7 @@ export function useStreamerMic({
 
       if (newFinal) {
         accumulatorRef.current += (accumulatorRef.current ? " " : "") + newFinal.trim();
+        console.log(`[SpeechRecognized] ✅ final segment="${newFinal.trim().slice(0, 60)}" | accumulated="${accumulatorRef.current.slice(0, 80)}" | totalLen=${accumulatorRef.current.length}`);
         setLastFinalTranscript(accumulatorRef.current);
         setInterimTranscript("");
         setStatus("speech_detected");

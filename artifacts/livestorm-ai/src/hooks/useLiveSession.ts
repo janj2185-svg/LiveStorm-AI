@@ -280,7 +280,7 @@ async function playOpenAiTts(
       };
 
       // STEP 10 — audio.play()
-      console.log("[TTS:10] audio.play() → calling...");
+      console.log("[PlaybackStarted][TTS:10] audio.play() → calling...");
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise
@@ -878,8 +878,12 @@ export function useLiveSession(
 
         console.log(`[TTS] ai:announcement | mode=${mode} | type=${payload.type} | emotion=${emotion} | emojiEmotion=${previewNorm.emojiEmotion} | text="${payload.text.slice(0, 60)}"`);
 
+        if (payload.type === "streamer_speech") {
+          console.log(`[AIReply:Frontend] ✅ Storm reply to mic input received | text="${payload.text.slice(0, 80)}"`);
+        }
+
         if (mode === "openai") {
-          console.log(`[TTS] → OpenAI TTS | voice=${ttsVoiceRef.current} | lang=${detectedLang} | speed=${ttsSpeedRef.current}`);
+          console.log(`[TTSRequested:Frontend] type=${payload.type} | voice=${ttsVoiceRef.current} | lang=${detectedLang} | speed=${ttsSpeedRef.current}`);
           window.dispatchEvent(new CustomEvent("tts:lang", { detail: { lang: detectedLang, engine: "openai" } }));
           enqueueTts(() => playOpenAiTts(payload.text, ttsVoiceRef.current, ttsVolumeRef.current, ttsSpeedRef.current, getToken), payload.text);
         } else {

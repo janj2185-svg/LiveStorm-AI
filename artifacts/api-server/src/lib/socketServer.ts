@@ -277,7 +277,7 @@ export function initSocketServer(httpServer: HttpServer) {
         try {
           const sid  = Number(data?.sessionId);
           const text = (data?.text ?? "").trim();
-          console.log(`[Mic:10] streamer:speech received | socketId=${socket.id} | userId=${socket.data.userId ?? "NONE"} | sessionId=${sid} | lang=${data?.lang} | textLen=${text.length}`);
+          console.log(`[StreamerSpeechReceived][Mic:10] socketId=${socket.id} | userId=${socket.data.userId ?? "NONE"} | sessionId=${sid} | lang=${data?.lang} | textLen=${text.length} | text="${text.slice(0, 60)}"`);
           if (!sid || !text) { ack(false, "missing-sid-or-text"); return; }
           if (!socket.data.userId) {
             console.warn(`[Mic:10] ✗ REJECTED — no auth (socket.data.userId missing) | socketId=${socket.id}`);
@@ -300,7 +300,7 @@ export function initSocketServer(httpServer: HttpServer) {
             data:      { text, lang: data?.lang ?? "uk" },
             timestamp: Date.now(),
           };
-          console.log(`[Mic:10] ✅ enqueuing | session=${sid} | streamer=${session.streamerId} | lang=${data?.lang} | "${text.slice(0, 60)}"`);
+          console.log(`[StreamerSpeechReceived] ✅ enqueuing → orchestrator | session=${sid} | streamer=${session.streamerId} | lang=${data?.lang} | "${text.slice(0, 60)}"`);
           void orchestratorEnqueue(event, session.streamerId);
           ack(true);
         } catch (err) {
