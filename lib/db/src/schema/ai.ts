@@ -32,6 +32,7 @@ export const aiPersonaConfigsTable = pgTable("ai_persona_configs", {
   personaGender: text("persona_gender").notNull().default("neutral"),
   translateChat: boolean("translate_chat").notNull().default(false),
   translateTargetLang: text("translate_target_lang").notNull().default("uk"),
+  intensityMode: text("intensity_mode").notNull().default("streamer"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

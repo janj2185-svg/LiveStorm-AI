@@ -98,6 +98,7 @@ type PersonaConfig = {
   personaGender: string;
   translateChat: boolean;
   translateTargetLang: string;
+  intensityMode: string;
 };
 
 type ChatMessage = {
@@ -166,6 +167,13 @@ const OPERATING_MODES = [
   { value: "assistant", label: "Assistant", emoji: "💡", desc: "AI suggests replies, you approve before sending" },
   { value: "semi-auto", label: "Semi-Auto", emoji: "⚡", desc: "AI auto-handles simple messages, you control the rest" },
   { value: "autopilot", label: "Autopilot", emoji: "🤖", desc: "AI fully manages all chat interactions" },
+];
+
+const INTENSITY_MODES = [
+  { value: "family_friendly", label: "Family", emoji: "👨‍👩‍👧", desc: "Safe for all ages, zero edge" },
+  { value: "streamer", label: "Streamer", emoji: "🎮", desc: "Natural TikTok creator energy" },
+  { value: "unfiltered", label: "Unfiltered", emoji: "🔥", desc: "Bold, sarcastic, raw opinions" },
+  { value: "savage_battle", label: "Savage", emoji: "⚡", desc: "Max charisma, full battle mode" },
 ];
 
 const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -1406,6 +1414,31 @@ export function AiAssistant() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Intensity Mode</Label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {INTENSITY_MODES.map((m) => (
+                      <button
+                        key={m.value}
+                        onClick={() => updateConfig.mutate({ intensityMode: m.value })}
+                        title={m.desc}
+                        className={cn(
+                          "flex flex-col items-center justify-center py-2 px-1 rounded-md border text-xs transition-all",
+                          (config?.intensityMode ?? "streamer") === m.value
+                            ? "border-orange-500/50 bg-orange-500/10 text-orange-300"
+                            : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
+                        )}
+                      >
+                        <span className="text-base leading-none mb-0.5">{m.emoji}</span>
+                        <span className="font-medium text-[10px]">{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-muted-foreground/50 text-center">
+                    {INTENSITY_MODES.find(m => m.value === (config?.intensityMode ?? "streamer"))?.desc}
+                  </p>
                 </div>
               </>
             )}

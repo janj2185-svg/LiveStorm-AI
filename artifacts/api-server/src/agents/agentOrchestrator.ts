@@ -7,7 +7,7 @@ import { runHostAgent } from "./hostAgent";
 import { runModerationAgent } from "./moderationAgent";
 import { getActivePersonality } from "./personalityAgent";
 import { getActiveVoice } from "./voiceAgent";
-import { getMemoryContext, upsertViewerProfile } from "./memoryAgent";
+import { getMemoryContext, upsertViewerProfile, trackViewerInSession } from "./memoryAgent";
 import { getViewerContext } from "../lib/agents/memoryAgent";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
 import type { StrategySuggestion } from "./strategyAgent";
@@ -766,7 +766,8 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   if (state.enabledAgents.has("memory")) {
     const eventTypeForProfile = event.type as "comment" | "gift" | "follow" | "like";
     if (["comment", "gift", "follow", "like"].includes(event.type)) {
-      console.log(`[Agent:Memory] 🧠 upsertViewerProfile | viewer=${event.username} | event=${event.type}`);
+      const viewerVisitStatus = trackViewerInSession(sessionId, event.username ?? "Unknown");
+      console.log(`[Agent:Memory] 🧠 upsertViewerProfile | viewer=${event.username} | event=${event.type} | visit=${viewerVisitStatus}`);
       void upsertViewerProfile({
         streamerId,
         tiktokViewerId: viewerId,
@@ -870,6 +871,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       personality,
       replyLanguage: config.replyLanguage ?? "auto",
       emotionState,
+      intensityMode: (config as any).intensityMode ?? "savage_battle",
     });
     if (battleResult.shouldSpeak && battleResult.suggestedReply) {
       console.log(`[Agent:Battle] ⚔️ battle reply: "${battleResult.suggestedReply.slice(0, 80)}"`);
@@ -971,6 +973,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     behaviorCtx:     behaviorCtx || undefined,
     recentReplies:   sessionRecentReplies.slice(-5),
     personaGender:   (config as any).personaGender ?? "neutral",
+    intensityMode:   (config as any).intensityMode ?? "streamer",
   });
 
   if (!hostResult?.text) {
@@ -999,6 +1002,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       behaviorCtx:      behaviorCtx || undefined,
       recentReplies:    sessionRecentReplies.slice(-8),
       personaGender:    (config as any).personaGender ?? "neutral",
+      intensityMode:    (config as any).intensityMode ?? "streamer",
       forceAlternative: true,
     });
     if (regenResult?.text) {

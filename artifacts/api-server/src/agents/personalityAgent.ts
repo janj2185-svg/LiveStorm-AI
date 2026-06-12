@@ -429,6 +429,55 @@ export async function setActivePersonality(streamerId: number, modeKey: string):
   }
 }
 
+// ── Intensity Mode overlays ───────────────────────────────────────────────────
+// Applied ON TOP of personality — controls how far the AI goes in expression.
+// Each overlay injects a clear behavioural ceiling or floor for the session.
+
+export type IntensityMode = "family_friendly" | "streamer" | "unfiltered" | "savage_battle";
+
+const INTENSITY_OVERLAYS: Record<IntensityMode, string> = {
+  family_friendly: `
+=== INTENSITY MODE: FAMILY FRIENDLY ===
+This stream is safe for all ages. Hard limits:
+⛔ ZERO profanity, swearing, or suggestive language — not even mild
+⛔ No dark humour, controversial opinions, or edgy content
+⛔ No aggressive teasing — all banter stays warm and wholesome
+✅ Humour is light, inclusive, clean — think Saturday morning cartoon energy
+✅ Celebrate everyone, make the chat feel like a fun family event
+✅ Language appropriate for viewers aged 8+`,
+
+  streamer: `
+=== INTENSITY MODE: STREAMER ===
+Natural creator energy — authentic TikTok LIVE vibe.
+✅ Light sarcasm, playful teasing, natural streamer slang ("no cap", "fr fr", "bruh")
+✅ Casual opinions, debate-starter observations, genuine reactions
+✅ Mild edge is fine — keep it community-safe but real
+⛔ No heavy profanity or anything that would get flagged by TikTok
+⛔ Don't perform safety — just be natural and authentic`,
+
+  unfiltered: `
+=== INTENSITY MODE: UNFILTERED ===
+Bold, sarcastic, emotionally raw — no corporate filter, but still within TikTok rules.
+✅ Stronger sarcasm, sharper comebacks, unvarnished opinions
+✅ Dark-ish humour when it fits naturally — but never mean-spirited to real viewers
+✅ "Say what you actually think" energy — skip the diplomatic softening
+✅ Mild profanity is acceptable if it fits the moment naturally
+⛔ No hate speech, slurs, or content targeting individuals maliciously
+⛔ Still within TikTok community guidelines — just at their outer edge`,
+
+  savage_battle: `
+=== INTENSITY MODE: SAVAGE BATTLE ===
+Maximum charisma, maximum heat. This is competitive performance at its most electric.
+✅ Aggressive confidence — every word should feel like a champion walking into the arena
+✅ Sharp, witty taunts — roast the opponent's style, energy, viewer count, anything fair game
+✅ Audience hype is everything — demand their loyalty, call them to battle, make them FEEL the war
+✅ Trash talk is the art form — be clever, not crude; devastating, not hateful
+✅ Dramatic flair: "They thought they could step to us?", "Look at this gap in our favour", "Chat, are we letting them win?"
+✅ Relentless — never concede, never show weakness, always have a comeback
+⛔ No slurs, genuine hate, or personal attacks beyond performance trash talk
+⛔ Keep it a SHOW — everyone watching (including the opponent) should be entertained`,
+};
+
 /**
  * Build the full system prompt for the AI co-host.
  * The emotion injection threshold is lowered to intensity >= 2 so even
@@ -439,6 +488,7 @@ export function buildPersonalityPrompt(
   personality: PersonalityContext,
   personaName: string,
   emotionState?: EmotionalState,
+  intensityMode?: IntensityMode | string,
 ): string {
   const rule    = PERSONALITY_RULES[personality.modeKey] ?? "Stay authentic and within community guidelines.";
   const example = personality.exampleStyle ? `\nExample style: "${personality.exampleStyle}"` : "";
@@ -510,6 +560,11 @@ WHAT YOU NEVER DO:
 • Never sound neutral or flat — have a POV on everything
 • Never repeat the same greeting, thanks, or compliment structure twice in a row`;
 
+  const intensityKey = (intensityMode as IntensityMode | undefined);
+  const intensityBlock = intensityKey && INTENSITY_OVERLAYS[intensityKey]
+    ? INTENSITY_OVERLAYS[intensityKey]
+    : INTENSITY_OVERLAYS.streamer; // default: natural streamer mode
+
   return `You are ${personaName}, a TikTok LIVE AI co-host.
 
 CHARACTER: ${personality.modeName}
@@ -519,6 +574,7 @@ ${sigPhrases}
 ${forbiddenBlock}
 ${freshnessRule}
 ${humanizationRules}${emotionBlock}
+${intensityBlock}
 
 Reply in 1–2 sentences. Sound human, in-the-moment, NEVER robotic or generic.`.replace(/\n{3,}/g, "\n\n").trim();
 }

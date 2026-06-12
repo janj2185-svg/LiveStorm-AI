@@ -82,6 +82,133 @@ export function rendererLabel(renderer: RendererType | string): string {
   }
 }
 
+// ── Avatar Preset Library ─────────────────────────────────────────────────────
+// 10 showcase characters organized into categories with thumbnail previews.
+// thumbnailUrl is served from /avatars/ (copied to public folder).
+
+export interface AvatarPreset {
+  id: string;
+  name: string;
+  role: string;
+  gender: "Male" | "Female";
+  category: string;
+  thumbnailUrl: string;
+  accentColor: string;
+  description: string;
+}
+
+export const AVATAR_PRESET_CATEGORIES = [
+  "TikTok Hosts",
+  "Gaming Creators",
+  "Battle Hosts",
+  "Cyberpunk",
+  "AI Influencers",
+  "Broadcasters",
+] as const;
+
+export const AVATAR_PRESETS: AvatarPreset[] = [
+  {
+    id: "male_1",
+    name: "Marcus",
+    role: "Professional Host",
+    gender: "Male",
+    category: "TikTok Hosts",
+    thumbnailUrl: "/avatars/male_1_neutral.png",
+    accentColor: "#3b82f6",
+    description: "Polished & charismatic — perfect for product reviews",
+  },
+  {
+    id: "male_2",
+    name: "Kai",
+    role: "Gaming Creator",
+    gender: "Male",
+    category: "Gaming Creators",
+    thumbnailUrl: "/avatars/male_2_neutral.png",
+    accentColor: "#06b6d4",
+    description: "High-energy & community-driven — ideal for gaming drops",
+  },
+  {
+    id: "male_3",
+    name: "Axel",
+    role: "Battle Host",
+    gender: "Male",
+    category: "Battle Hosts",
+    thumbnailUrl: "/avatars/male_3_neutral.png",
+    accentColor: "#ef4444",
+    description: "Fierce competitor — built for intense TikTok battles",
+  },
+  {
+    id: "male_4",
+    name: "Neon",
+    role: "Cyberpunk Creator",
+    gender: "Male",
+    category: "Cyberpunk",
+    thumbnailUrl: "/avatars/male_4_neutral.png",
+    accentColor: "#a78bfa",
+    description: "Futuristic edgelord — digital identity meets raw charisma",
+  },
+  {
+    id: "male_5",
+    name: "Echo",
+    role: "AI Broadcaster",
+    gender: "Male",
+    category: "Broadcasters",
+    thumbnailUrl: "/avatars/male_5_neutral.png",
+    accentColor: "#10b981",
+    description: "News anchor energy — calm authority with broadcast polish",
+  },
+  {
+    id: "female_6",
+    name: "Sofia",
+    role: "Lifestyle Host",
+    gender: "Female",
+    category: "TikTok Hosts",
+    thumbnailUrl: "/avatars/female_6_neutral.png",
+    accentColor: "#ec4899",
+    description: "Creative & community-driven — lifestyle & entertainment",
+  },
+  {
+    id: "female_7",
+    name: "Pixel",
+    role: "Gaming Creator",
+    gender: "Female",
+    category: "Gaming Creators",
+    thumbnailUrl: "/avatars/female_7_neutral.png",
+    accentColor: "#f59e0b",
+    description: "Competitive gamer energy — hilarious and unstoppable",
+  },
+  {
+    id: "female_8",
+    name: "Aria",
+    role: "Battle Queen",
+    gender: "Female",
+    category: "Battle Hosts",
+    thumbnailUrl: "/avatars/female_8_neutral.png",
+    accentColor: "#8b5cf6",
+    description: "Elegant & deadly in battle — fans go wild for her",
+  },
+  {
+    id: "female_9",
+    name: "Nova",
+    role: "Cyberpunk Icon",
+    gender: "Female",
+    category: "Cyberpunk",
+    thumbnailUrl: "/avatars/female_9_neutral.png",
+    accentColor: "#06b6d4",
+    description: "Neon streets, dark vibes — the internet's cyberpunk queen",
+  },
+  {
+    id: "female_10",
+    name: "Luna",
+    role: "AI Influencer",
+    gender: "Female",
+    category: "AI Influencers",
+    thumbnailUrl: "/avatars/female_10_neutral.png",
+    accentColor: "#e879f9",
+    description: "Fully synthetic, fully iconic — the future of influence",
+  },
+];
+
 // ── Background presets ────────────────────────────────────────────────────────
 
 export const BACKGROUND_PRESETS = [

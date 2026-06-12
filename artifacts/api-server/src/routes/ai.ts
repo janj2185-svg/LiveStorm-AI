@@ -38,6 +38,7 @@ type LangOption = (typeof VALID_LANGUAGES)[number];
 
 const VALID_OPERATING_MODES = ["assistant", "semi-auto", "autopilot"] as const;
 const VALID_PERSONALITIES = ["funny", "serious", "troll", "motivator", "battle", "friendly", "custom"] as const;
+const VALID_INTENSITY_MODES = ["family_friendly", "streamer", "unfiltered", "savage_battle"] as const;
 const VALID_EMOTIONS = ["neutral", "excited", "calm", "dramatic", "warm"] as const;
 
 async function getStreamer(clerkId: string) {
@@ -103,6 +104,7 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
       personaGender,
       translateChat,
       translateTargetLang,
+      intensityMode,
     } = req.body;
 
     const existing = await db.query.aiPersonaConfigsTable.findFirst({
@@ -159,6 +161,9 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     if (translateChat !== undefined) updates.translateChat = Boolean(translateChat);
     if (translateTargetLang !== undefined && typeof translateTargetLang === "string") {
       updates.translateTargetLang = String(translateTargetLang).slice(0, 10);
+    }
+    if (intensityMode !== undefined && VALID_INTENSITY_MODES.includes(intensityMode)) {
+      updates.intensityMode = intensityMode;
     }
 
     let result;

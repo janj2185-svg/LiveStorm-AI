@@ -5,6 +5,8 @@ import { logger } from "./lib/logger";
 import { runMigrations } from "stripe-replit-sync";
 import { getStripeSync } from "./lib/stripeClient";
 import { recoverActiveSessions, cleanupStaleSessions } from "./lib/tiktokConnector";
+import { db } from "@workspace/db";
+import { sql } from "drizzle-orm";
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -54,6 +56,11 @@ httpServer.listen(port, (err?: Error) => {
     process.exit(1);
   }
   logger.info({ port }, "Server listening");
+
+  // Schema migrations (non-fatal — add new columns if not present)
+  db.execute(sql`
+    ALTER TABLE ai_persona_configs ADD COLUMN IF NOT EXISTS intensity_mode TEXT NOT NULL DEFAULT 'streamer';
+  `).catch((err) => logger.warn({ msg: String(err?.message) }, "Schema migration skipped"));
 
   // Stripe (non-fatal — gracefully skips if not connected)
   initStripe().catch((err) =>

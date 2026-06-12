@@ -17,7 +17,10 @@ import {
   BACKGROUND_PRESETS,
   getBackgroundGradient,
   PRESENTER_SLOTS,
+  AVATAR_PRESETS,
+  AVATAR_PRESET_CATEGORIES,
   type PresenterSlotKey,
+  type AvatarPreset,
 } from "@/components/avatar/avatarAssets";
 import {
   type AnimationState,
@@ -77,6 +80,91 @@ function ControlBlock({ children, className }: { children: React.ReactNode; clas
   return <div className={cn("px-3 py-3 border-b border-white/[0.04] last:border-0", className)}>{children}</div>;
 }
 
+// ── Avatar Preset Library Component ──────────────────────────────────────────
+
+function AvatarPresetLibrary({
+  selectedPresetId,
+  onSelect,
+}: {
+  selectedPresetId: string | null;
+  onSelect: (preset: AvatarPreset) => void;
+}) {
+  const [activeCategory, setActiveCategory] = useState<string>("TikTok Hosts");
+  const [expanded, setExpanded] = useState(false);
+
+  const filtered = AVATAR_PRESETS.filter((p) => p.category === activeCategory);
+
+  return (
+    <ControlBlock>
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between"
+      >
+        <ControlLabel>Preset Library ({AVATAR_PRESETS.length} Characters)</ControlLabel>
+        <span className="text-[9px] text-muted-foreground/40 mb-2">{expanded ? "▲" : "▼"}</span>
+      </button>
+
+      {expanded && (
+        <div className="space-y-2">
+          {/* Category pills */}
+          <div className="flex flex-wrap gap-1">
+            {AVATAR_PRESET_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={cn(
+                  "text-[9px] font-bold px-2 py-0.5 rounded-full border transition-all",
+                  activeCategory === cat
+                    ? "border-violet-500/50 bg-violet-500/15 text-violet-300"
+                    : "border-white/5 text-muted-foreground hover:border-white/10",
+                )}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Preset grid */}
+          <div className="grid grid-cols-2 gap-2">
+            {filtered.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => onSelect(preset)}
+                className={cn(
+                  "relative flex flex-col rounded-xl border overflow-hidden transition-all group",
+                  selectedPresetId === preset.id
+                    ? "border-violet-500/60 bg-violet-500/10"
+                    : "border-white/5 hover:border-white/15",
+                )}
+              >
+                <div className="w-full aspect-[3/4] bg-black/30 overflow-hidden">
+                  <img
+                    src={preset.thumbnailUrl}
+                    alt={preset.name}
+                    className="w-full h-full object-cover object-top transition-transform group-hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </div>
+                <div className="px-1.5 py-1.5 text-left">
+                  <p className="text-[10px] font-bold text-white leading-none">{preset.name}</p>
+                  <p className="text-[8px] text-muted-foreground/60 mt-0.5 leading-tight">{preset.role}</p>
+                </div>
+                {selectedPresetId === preset.id && (
+                  <div className="absolute top-1 right-1 w-4 h-4 bg-violet-500 rounded-full flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-white" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </ControlBlock>
+  );
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export function AvatarStudio() {
@@ -99,8 +187,9 @@ export function AvatarStudio() {
   const [avatarKey, setAvatarKey]       = useState<PresenterSlotKey>(DEFAULTS.avatarKey);
   const [avatarUrl, setAvatarUrl]       = useState<string | null | undefined>(null);
   const [animState, setAnimState]       = useState<AnimationState>("idle");
-  const [creatorOpen, setCreatorOpen]   = useState(false);
-  const [saved, setSaved]               = useState(false);
+  const [creatorOpen, setCreatorOpen]       = useState(false);
+  const [saved, setSaved]                   = useState(false);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
   // Sync from saved config on first load
   useEffect(() => {
@@ -205,6 +294,16 @@ export function AvatarStudio() {
                 </p>
               )}
             </ControlBlock>
+
+            {/* ── Preset Library ── */}
+            <AvatarPresetLibrary
+              selectedPresetId={selectedPresetId}
+              onSelect={(preset) => {
+                setSelectedPresetId(preset.id);
+                setAvatarUrl(preset.thumbnailUrl);
+                setAccent(preset.accentColor);
+              }}
+            />
 
             {/* ── Scale ── */}
             <ControlBlock>

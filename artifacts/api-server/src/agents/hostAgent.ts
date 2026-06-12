@@ -54,8 +54,9 @@ export async function runHostAgent(opts: {
   recentReplies?: string[];
   personaGender?: string;
   forceAlternative?: boolean;
+  intensityMode?: string;
 }): Promise<HostAgentResult | null> {
-  const { event, personaName, personality, memoryContext, replyLanguage, defaultLanguage, conversationHistory, emotionState, behaviorCtx, recentReplies, personaGender, forceAlternative } = opts;
+  const { event, personaName, personality, memoryContext, replyLanguage, defaultLanguage, conversationHistory, emotionState, behaviorCtx, recentReplies, personaGender, forceAlternative, intensityMode } = opts;
   const viewerName = event.username ?? "someone";
 
   let userPrompt = "";
@@ -118,9 +119,33 @@ export async function runHostAgent(opts: {
 
     case "silence_filler": {
       const isExtended = (event.data.silenceDuration as string) === "extended";
+
+      const EXTENDED_TOPICS = [
+        "Share a genuine hot take about something in your life right now — the more specific, the better.",
+        "Ask the chat a debate question — something with no right answer. 'Would you rather...' or 'What's better: X or Y?'",
+        "Tell a 1-sentence story that starts with 'I once...' — make it real, make it interesting.",
+        "React to something random you're noticing about the stream right now.",
+        "Challenge the chat: 'First person to reply with X wins my respect forever.'",
+        "Share a weird thought you've had recently that you can't shake.",
+        "Give the chat a task: 'Tell me the most underrated thing about where you live.'",
+        "Start a running bit: 'I'm going to rank _____ by how much I trust the people who like them.'",
+      ];
+
+      const BRIEF_TOPICS = [
+        "Say one thing that's on your mind right now — quick, unfiltered.",
+        "Drop a question for the chat. Something you're actually curious about.",
+        "Make a quick, specific observation about the moment.",
+        "Start with 'You know what I've been thinking...' and finish the thought.",
+        "Give a quick check-in — are you even okay? React to the silence honestly.",
+        "Start a casual debate: 'Hot take incoming...'",
+      ];
+
+      const topicPool = isExtended ? EXTENDED_TOPICS : BRIEF_TOPICS;
+      const randomTopic = topicPool[Math.floor(Math.random() * topicPool.length)];
+
       userPrompt = isExtended
-        ? "Chat has been quiet for a while. Think out loud — share something genuine you've been noticing, a question you're actually curious about, or a passing thought."
-        : "A quiet moment in the stream. Say something natural and present — a brief thought, a check-in, or a passing observation. Keep it short.";
+        ? `Chat has been quiet for a while. Do this: ${randomTopic}`
+        : `Quiet moment in the stream. Do this: ${randomTopic}`;
       emotion = "neutral";
       break;
     }
@@ -193,7 +218,7 @@ As their co-host, react naturally. You can: pick up their thought and continue i
                                            0.85;
 
   // Build system prompt with full personality × emotion direction
-  const systemPrompt = buildPersonalityPrompt(personality, personaName, emotionState);
+  const systemPrompt = buildPersonalityPrompt(personality, personaName, emotionState, intensityMode as any);
 
   const emotionSection = emotionState ? getEmotionPromptContext(emotionState) : "";
   const memorySection  = memoryContext ? `\nMemory context:\n${memoryContext}` : "";

@@ -4,6 +4,45 @@ import { eq, and, desc, sql, lt, lte } from "drizzle-orm";
 const memoryCache = new Map<number, { memories: string[]; ts: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
+// In-memory: track which viewers have been seen in each session (for return-visitor detection)
+// Key: `${sessionId}:${viewerName}` → whether they appeared earlier in THIS session
+const sessionViewersSeen = new Map<number, Set<string>>();
+
+export function trackViewerInSession(sessionId: number, viewerName: string): "first_time" | "returning" {
+  if (!sessionViewersSeen.has(sessionId)) sessionViewersSeen.set(sessionId, new Set());
+  const seen = sessionViewersSeen.get(sessionId)!;
+  if (seen.has(viewerName)) return "returning";
+  seen.add(viewerName);
+  return "first_time";
+}
+
+export function clearSessionViewers(sessionId: number): void {
+  sessionViewersSeen.delete(sessionId);
+}
+
+// Derive a human-readable recognition tag from the viewer's profile history
+export function getViewerRecognitionTag(profile: {
+  firstSeen: Date;
+  lastSeen: Date;
+  totalComments: number;
+  totalGifts: number;
+  vipLevel: string;
+}): string | null {
+  const now = Date.now();
+  const msSinceFirst = now - profile.firstSeen.getTime();
+  const daysSinceFirst = msSinceFirst / (1000 * 60 * 60 * 24);
+  const hoursSinceLast = (now - profile.lastSeen.getTime()) / (1000 * 60 * 60);
+  const isReturning = hoursSinceLast < 24 && daysSinceFirst > 0.01; // seen before, within 24h
+  const isRegular = profile.totalComments >= 15 || profile.totalGifts >= 2;
+  const isLegend  = profile.totalGifts >= 10 || profile.totalComments >= 50;
+
+  if (isLegend)    return `legendary_regular: ${Math.round(daysSinceFirst)}d member, ${profile.totalGifts} gifts, ${profile.totalComments} comments — treat like a legend of the stream`;
+  if (isRegular && isReturning) return `loyal_viewer: back again after ${Math.round(hoursSinceLast)}h, ${profile.totalComments} total comments — they keep showing up`;
+  if (isRegular)   return `regular_viewer: ${profile.totalComments} comments over ${Math.round(daysSinceFirst)}d — familiar face`;
+  if (isReturning) return `returning_viewer: was here ${Math.round(hoursSinceLast)}h ago — came back`;
+  return null;
+}
+
 export async function pruneOldMemories(streamerId: number): Promise<void> {
   try {
     const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // 14 days
@@ -117,7 +156,7 @@ export async function getMemoryContext(streamerId: number, viewerName?: string):
     for (const m of prefMem)  lines.push(`[Preference] ${m.key}: ${m.value}`);
 
     if (viewerName) {
-      // VIP status from viewer profile
+      // VIP status + return-visitor recognition from viewer profile
       try {
         const profile = await db.query.agentViewerProfilesTable.findFirst({
           where: and(
@@ -125,8 +164,14 @@ export async function getMemoryContext(streamerId: number, viewerName?: string):
             eq(viewerProfilesTable.viewerName, viewerName),
           ),
         });
-        if (profile && profile.vipLevel !== "none") {
-          lines.push(`[Viewer:${viewerName}] vip_status: ${viewerName} is a ${profile.vipLevel} viewer (${profile.totalGifts} gifts, ${profile.totalComments} comments). Treat them with extra respect.`);
+        if (profile) {
+          if (profile.vipLevel !== "none") {
+            lines.push(`[Viewer:${viewerName}] vip_status: ${viewerName} is a ${profile.vipLevel} viewer (${profile.totalGifts} gifts, ${profile.totalComments} comments). Treat them with extra respect.`);
+          }
+          const recognitionTag = getViewerRecognitionTag(profile);
+          if (recognitionTag) {
+            lines.push(`[Viewer:${viewerName}] recognition: ${recognitionTag}`);
+          }
         }
       } catch {}
 
