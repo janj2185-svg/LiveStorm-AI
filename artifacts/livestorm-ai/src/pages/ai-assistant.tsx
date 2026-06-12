@@ -1046,6 +1046,8 @@ export function AiAssistant() {
   // All collapsed by default (secondary tools, not primary focus)
   const isMobile = useIsMobile();
   const [mobilePanelTab, setMobilePanelTab] = useState<"control" | "chat">("control");
+  const [voicePickerOpen, setVoicePickerOpen] = useState(false);
+  const [mobileBattleOpen, setMobileBattleOpen] = useState(false);
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -1229,368 +1231,478 @@ export function AiAssistant() {
               </div>
             </div>}
 
-            {/* Stream control — always visible */}
-            <div className="px-3 py-3">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-1.5">
-                  <Radio className="h-3.5 w-3.5 text-red-400" />
-                  <span className="text-xs font-bold text-white/80">Stream Control</span>
-                </div>
-                {isSessionActive && (
-                  <span className="flex items-center gap-1 text-[10px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
-                    <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
-                    LIVE
-                  </span>
-                )}
-              </div>
-
-              {/* Status row */}
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-3">
+            {/* Stream control — compact on mobile, full on desktop */}
+            {isMobile ? (
+              /* ── Mobile: single compact row ── */
+              <div className="px-3 py-2.5 flex items-center gap-2 border-t border-white/[0.05]">
                 {effectiveMode === "real" ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                 ) : effectiveMode === "error" ? (
-                  <WifiOff className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+                  <WifiOff className="h-4 w-4 text-red-400 flex-shrink-0" />
                 ) : (
-                  <Server className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0" />
+                  <Radio className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium">
+                  <p className="text-xs font-bold text-white truncate">
                     {!isSessionActive ? "Ready to go live"
                       : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
-                      : "Demo mode active"}
+                      : "Demo mode"}
                   </p>
-                  {isSessionActive && activeSessionId && (
-                    <p className="text-[10px] text-muted-foreground/50">Session #{activeSessionId}</p>
+                </div>
+                {isSessionActive && (
+                  <span className="flex items-center gap-1 text-[9px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-1.5 py-0.5 flex-shrink-0">
+                    <span className="w-1 h-1 bg-red-400 rounded-full animate-pulse" />LIVE
+                  </span>
+                )}
+                {!isSessionActive ? (
+                  <Button
+                    size="sm"
+                    className="h-8 px-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 flex-shrink-0"
+                    disabled={startSession.isPending}
+                    onClick={() => startSession.mutate(undefined)}
+                  >
+                    {startSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Play className="h-3 w-3 mr-1" />Go Live</>}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-3 text-xs font-bold border-red-500/30 text-red-400 hover:bg-red-500/10 flex-shrink-0"
+                    disabled={endSession.isPending}
+                    onClick={() => endSession.mutate(undefined)}
+                  >
+                    {endSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Square className="h-3 w-3 mr-1" />End</>}
+                  </Button>
+                )}
+              </div>
+            ) : (
+              /* ── Desktop: full layout ── */
+              <div className="px-3 py-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <Radio className="h-3.5 w-3.5 text-red-400" />
+                    <span className="text-xs font-bold text-white/80">Stream Control</span>
+                  </div>
+                  {isSessionActive && (
+                    <span className="flex items-center gap-1 text-[10px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
+                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />LIVE
+                    </span>
                   )}
                 </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-3">
+                  {effectiveMode === "real" ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                  ) : effectiveMode === "error" ? (
+                    <WifiOff className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+                  ) : (
+                    <Server className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">
+                      {!isSessionActive ? "Ready to go live"
+                        : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
+                        : "Demo mode active"}
+                    </p>
+                    {isSessionActive && activeSessionId && (
+                      <p className="text-[10px] text-muted-foreground/50">Session #{activeSessionId}</p>
+                    )}
+                  </div>
+                </div>
+                {!isSessionActive ? (
+                  <Button
+                    className="w-full h-9 text-sm font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20 disabled:opacity-40"
+                    disabled={startSession.isPending}
+                    onClick={() => startSession.mutate(undefined)}
+                  >
+                    {startSession.isPending
+                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Starting…</>
+                      : <><Play className="h-3.5 w-3.5 mr-2" />Go Live</>}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full h-9 text-sm font-bold border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-40"
+                    disabled={endSession.isPending}
+                    onClick={() => endSession.mutate(undefined)}
+                  >
+                    {endSession.isPending
+                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Ending…</>
+                      : <><Square className="h-3.5 w-3.5 mr-2" />End Stream</>}
+                  </Button>
+                )}
+                <p className="text-[10px] text-muted-foreground/35 text-center mt-2">
+                  Advanced setup in{" "}
+                  <Link href="/dashboard">
+                    <span className="text-violet-400/70 hover:text-violet-400 transition-colors cursor-pointer">Dashboard</span>
+                  </Link>
+                </p>
               </div>
-
-              {/* Go Live / End Stream */}
-              {!isSessionActive ? (
-                <Button
-                  className="w-full h-9 text-sm font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20 disabled:opacity-40"
-                  disabled={startSession.isPending}
-                  onClick={() => startSession.mutate(undefined)}
-                >
-                  {startSession.isPending
-                    ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Starting…</>
-                    : <><Play className="h-3.5 w-3.5 mr-2" />Go Live</>}
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full h-9 text-sm font-bold border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-40"
-                  disabled={endSession.isPending}
-                  onClick={() => endSession.mutate(undefined)}
-                >
-                  {endSession.isPending
-                    ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Ending…</>
-                    : <><Square className="h-3.5 w-3.5 mr-2" />End Stream</>}
-                </Button>
-              )}
-
-              <p className="text-[10px] text-muted-foreground/35 text-center mt-2">
-                Advanced setup in{" "}
-                <Link href="/dashboard">
-                  <span className="text-violet-400/70 hover:text-violet-400 transition-colors cursor-pointer">Dashboard</span>
-                </Link>
-              </p>
-            </div>
+            )}
           </div>
 
           {/* ── Battle Mode ── */}
           <div className="mx-3 my-1 rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden flex-shrink-0">
-            {/* Header row */}
-            <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+            {/* Header row — compact on mobile */}
+            <div
+              className={cn("flex items-center gap-2 px-3 py-2.5", isMobile && "cursor-pointer")}
+              onClick={isMobile ? () => setMobileBattleOpen(v => !v) : undefined}
+            >
               <Swords className="h-4 w-4 text-red-400 flex-shrink-0" />
               <span className="text-sm font-bold text-white/90 flex-1">Battle Mode</span>
-              <div className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black border",
-                battleOn && isSessionActive
-                  ? "border-red-500/40 bg-red-500/15 text-red-300"
-                  : "border-white/10 bg-white/5 text-white/25",
-              )}>
-                {battleOn && isSessionActive && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}
-                {battleOn && isSessionActive ? "ACTIVE" : "INACTIVE"}
-              </div>
-            </div>
 
-            {/* Big toggle button */}
-            <div className="px-3 pb-3">
-              <button
-                disabled={battleActivating || !isSessionActive}
-                onClick={async () => {
-                  if (battleActivating) return;
-                  const on = !battleOn;
-                  setBattleOn(on);
-                  setBattleStartTime(on ? Date.now() : null);
-                  setBattleScore(null);
-                  setBattleElapsed("0:00");
-                  if (isSessionActive && activeSessionId) {
-                    setBattleActivating(true);
-                    try {
-                      await authFetch(`/agents/battle/activate`, {
-                        method: "POST",
-                        body: JSON.stringify({ sessionId: activeSessionId, active: on }),
-                      });
-                    } catch (err) {
-                      console.warn(`[BattleMode] ⚠ activate failed:`, err);
-                      setBattleOn(!on);
-                      setBattleStartTime(null);
-                    } finally {
-                      setBattleActivating(false);
-                    }
-                  }
-                }}
-                className={cn(
-                  "w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border",
-                  battleOn && isSessionActive
-                    ? "bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30"
-                    : isSessionActive
-                    ? "bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/[0.08] hover:border-white/20"
-                    : "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed",
-                )}
-              >
-                {battleActivating
-                  ? <><Loader2 className="h-4 w-4 animate-spin" />Activating…</>
-                  : battleOn && isSessionActive
-                  ? <><Swords className="h-4 w-4" />Stop Battle</>
-                  : isSessionActive
-                  ? <><Swords className="h-4 w-4" />Start Battle</>
-                  : <span className="text-xs">Start a live session first</span>}
-              </button>
-            </div>
-
-            {/* Live battle stats — only when active */}
-            {battleOn && isSessionActive && (
-              <div className="border-t border-red-500/10 bg-red-500/[0.03] px-3 py-2.5 space-y-2">
-                {/* Us vs Them score */}
+              {/* Compact: active badge + start/stop + expand arrow */}
+              {isMobile ? (
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 py-2 flex flex-col items-center">
-                    <p className="text-[9px] text-emerald-400/60 uppercase tracking-wide font-bold mb-0.5">Us</p>
-                    <p className="text-2xl font-black text-emerald-400 leading-none tabular-nums">{battleScore?.us ?? 0}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-0.5">
-                    <Swords className="h-3.5 w-3.5 text-red-400/40" />
-                    <span className="text-[9px] text-muted-foreground/30 font-bold">VS</span>
-                  </div>
-                  <div className="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 py-2 flex flex-col items-center">
-                    <p className="text-[9px] text-red-400/60 uppercase tracking-wide font-bold mb-0.5">Them</p>
-                    <p className="text-2xl font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</p>
-                  </div>
+                  {battleOn && isSessionActive && (
+                    <span className="flex items-center gap-1 text-[9px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-1.5 py-0.5">
+                      <span className="w-1 h-1 bg-red-400 rounded-full animate-pulse" />ACTIVE
+                    </span>
+                  )}
+                  <button
+                    disabled={battleActivating || !isSessionActive}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (battleActivating) return;
+                      const on = !battleOn;
+                      setBattleOn(on);
+                      setBattleStartTime(on ? Date.now() : null);
+                      setBattleScore(null);
+                      setBattleElapsed("0:00");
+                      if (isSessionActive && activeSessionId) {
+                        setBattleActivating(true);
+                        try {
+                          await authFetch(`/agents/battle/activate`, {
+                            method: "POST",
+                            body: JSON.stringify({ sessionId: activeSessionId, active: on }),
+                          });
+                        } catch (err) {
+                          console.warn(`[BattleMode] ⚠ activate failed:`, err);
+                          setBattleOn(!on);
+                          setBattleStartTime(null);
+                        } finally {
+                          setBattleActivating(false);
+                        }
+                      }
+                    }}
+                    className={cn(
+                      "h-7 px-3 rounded-lg text-[11px] font-bold transition-all border flex items-center gap-1",
+                      battleOn && isSessionActive
+                        ? "bg-red-500/20 border-red-500/40 text-red-300"
+                        : isSessionActive
+                        ? "bg-white/[0.05] border-white/10 text-white/60"
+                        : "border-white/5 text-white/20 cursor-not-allowed",
+                    )}
+                  >
+                    {battleActivating
+                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                      : battleOn && isSessionActive ? "Stop" : "Start"}
+                  </button>
+                  <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground/40 transition-transform", mobileBattleOpen && "rotate-180")} />
                 </div>
-                {/* Timer + exchanges + leader */}
-                <div className="flex gap-2">
-                  <div className="flex-1 rounded-lg bg-black/30 px-2 py-1.5 text-center">
-                    <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Time</p>
+              ) : (
+                <div className={cn(
+                  "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black border",
+                  battleOn && isSessionActive
+                    ? "border-red-500/40 bg-red-500/15 text-red-300"
+                    : "border-white/10 bg-white/5 text-white/25",
+                )}>
+                  {battleOn && isSessionActive && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}
+                  {battleOn && isSessionActive ? "ACTIVE" : "INACTIVE"}
+                </div>
+              )}
+            </div>
+
+            {/* Desktop: Big toggle button */}
+            {!isMobile && (
+              <div className="px-3 pb-3">
+                <button
+                  disabled={battleActivating || !isSessionActive}
+                  onClick={async () => {
+                    if (battleActivating) return;
+                    const on = !battleOn;
+                    setBattleOn(on);
+                    setBattleStartTime(on ? Date.now() : null);
+                    setBattleScore(null);
+                    setBattleElapsed("0:00");
+                    if (isSessionActive && activeSessionId) {
+                      setBattleActivating(true);
+                      try {
+                        await authFetch(`/agents/battle/activate`, {
+                          method: "POST",
+                          body: JSON.stringify({ sessionId: activeSessionId, active: on }),
+                        });
+                      } catch (err) {
+                        console.warn(`[BattleMode] ⚠ activate failed:`, err);
+                        setBattleOn(!on);
+                        setBattleStartTime(null);
+                      } finally {
+                        setBattleActivating(false);
+                      }
+                    }
+                  }}
+                  className={cn(
+                    "w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border",
+                    battleOn && isSessionActive
+                      ? "bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30"
+                      : isSessionActive
+                      ? "bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/[0.08] hover:border-white/20"
+                      : "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed",
+                  )}
+                >
+                  {battleActivating
+                    ? <><Loader2 className="h-4 w-4 animate-spin" />Activating…</>
+                    : battleOn && isSessionActive
+                    ? <><Swords className="h-4 w-4" />Stop Battle</>
+                    : isSessionActive
+                    ? <><Swords className="h-4 w-4" />Start Battle</>
+                    : <span className="text-xs">Start a live session first</span>}
+                </button>
+              </div>
+            )}
+
+            {/* Live battle stats — shown when active (always on desktop, expandable on mobile) */}
+            {battleOn && isSessionActive && (!isMobile || mobileBattleOpen) && (
+              <div className="border-t border-red-500/10 bg-red-500/[0.03] px-3 py-2.5 space-y-2">
+                {/* Compact score row */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 py-1.5 flex items-center justify-center gap-1.5">
+                    <span className="text-[9px] text-emerald-400/60 uppercase font-bold">Us</span>
+                    <span className="text-lg font-black text-emerald-400 leading-none tabular-nums">{battleScore?.us ?? 0}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Swords className="h-3 w-3 text-red-400/40" />
+                  </div>
+                  <div className="flex-1 rounded-lg bg-red-500/10 border border-red-500/20 py-1.5 flex items-center justify-center gap-1.5">
+                    <span className="text-[9px] text-red-400/60 uppercase font-bold">Them</span>
+                    <span className="text-lg font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</span>
+                  </div>
+                  <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center min-w-[44px]">
+                    <p className="text-[8px] text-muted-foreground/40 uppercase">Time</p>
                     <p className="text-xs font-black text-white/80 font-mono">{battleElapsed}</p>
                   </div>
-                  <div className="flex-1 rounded-lg bg-black/30 px-2 py-1.5 text-center">
-                    <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Rounds</p>
-                    <p className="text-xs font-black text-white/80 font-mono">{battleScore?.exchanges ?? 0}</p>
-                  </div>
-                  <div className="flex-1 rounded-lg bg-black/30 px-2 py-1.5 text-center">
-                    <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Leader</p>
-                    <p className="text-xs font-black">
-                      {!battleScore || battleScore.us === battleScore.opponent
-                        ? <span className="text-yellow-400">Tied</span>
-                        : battleScore.us > battleScore.opponent
-                        ? <span className="text-emerald-400">Us</span>
-                        : <span className="text-red-400">Them</span>}
-                    </p>
-                  </div>
                 </div>
-                {/* Last AI reply (from TTS) */}
+                {/* Last AI reply */}
                 {lastSpokenText && (
-                  <div className="rounded-lg bg-black/20 px-2.5 py-2">
-                    <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Last AI reply</p>
-                    <p className="text-[10px] text-white/70 leading-relaxed line-clamp-2">{lastSpokenText}</p>
+                  <div className="rounded-lg bg-black/20 px-2.5 py-1.5">
+                    <p className="text-[10px] text-white/60 line-clamp-1">{lastSpokenText}</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Mobile: inactive state note */}
+            {isMobile && !battleOn && mobileBattleOpen && !isSessionActive && (
+              <div className="px-3 pb-2.5">
+                <p className="text-[10px] text-muted-foreground/40 text-center">Start a session to use Battle Mode</p>
               </div>
             )}
           </div>
 
           {/* ── Voice Control ── */}
-          <div className="px-3 py-3 border-t border-white/[0.06]">
-            {/* Header: title + ON/OFF toggle */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                {ttsPlaybackState === "speaking"
-                  ? <Volume2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
-                  : ttsMode === "off"
-                  ? <VolumeX className="h-3.5 w-3.5 text-red-400/70" />
-                  : <Volume2 className="h-3.5 w-3.5 text-blue-400" />}
-                <span className="text-xs font-bold text-white/80">Voice</span>
-              </div>
-              {/* TTS ON / OFF pill toggle */}
-              <div className="flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08]">
-                <button
-                  onClick={() => handleTtsModeChange("off")}
-                  className={cn(
-                    "px-3 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                    ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60",
-                  )}
-                >OFF</button>
-                <button
-                  onClick={() => handleTtsModeChange("openai")}
-                  className={cn(
-                    "px-3 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                    ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60",
-                  )}
-                >ON</button>
-              </div>
-            </div>
+          <div className={cn("border-t border-white/[0.06]", isMobile ? "px-3 py-2.5" : "px-3 py-3")}>
 
-            {/* Active voice + playback status row */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", ttsMode !== "off" ? "bg-emerald-400" : "bg-red-400/50")} />
-                <span className="text-[11px] text-white/70">
-                  {ttsMode !== "off"
-                    ? <>Using <span className="font-bold text-white capitalize">{resolveVoiceLabel(ttsVoice)}</span> · OpenAI TTS</>
-                    : <span className="text-muted-foreground/50">Voice disabled</span>}
-                </span>
-              </div>
-              <div className={cn(
-                "text-[9px] font-bold px-1.5 py-0.5 rounded border",
-                ttsPlaybackState === "speaking" ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/25 animate-pulse"
-                : ttsPlaybackState === "queued" ? "text-blue-300 bg-blue-500/15 border-blue-500/25"
-                : ttsPlaybackState === "error" ? "text-red-300 bg-red-500/15 border-red-500/25"
-                : "text-muted-foreground/40 bg-white/5 border-white/10",
-              )}>
-                {ttsPlaybackState === "speaking" ? "▶ SPEAKING"
-                  : ttsPlaybackState === "queued" ? `Q(${ttsQueueLength})`
-                  : ttsPlaybackState === "finished" ? "DONE"
-                  : ttsPlaybackState === "error" ? "ERR"
-                  : "IDLE"}
-              </div>
-            </div>
-
-            {/* Enable Voice Output button (autoplay unlock) */}
-            {!isAudioUnlocked && ttsMode !== "off" && (
-              <button
-                onClick={unlockAudio}
-                className="w-full flex items-center justify-center gap-1.5 py-2 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all"
-              >
-                <Volume2 className="h-3.5 w-3.5" />Enable Voice Output
-              </button>
-            )}
-
-            {/* ── Avatar-gender suggestion banner ── */}
-            {config?.personaGender && config.personaGender !== "neutral" && (() => {
-              const suggested = config.personaGender === "female" ? "female" : "male";
-              const selectedProfile = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice);
-              const alreadyMatches = selectedProfile?.gender === suggested;
-              if (alreadyMatches) return null;
-              return (
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 mb-2">
-                  <span className="text-base">{suggested === "female" ? "♀️" : "♂️"}</span>
-                  <p className="text-[10px] text-purple-300/80 leading-tight">
-                    {suggested === "female" ? "Female avatar detected — consider a Female voice" : "Male avatar detected — consider a Male voice"}
-                  </p>
+            {isMobile ? (
+              /* ── Mobile: compact voice row ── */
+              <div className="space-y-2">
+                {/* Row 1: icon + voice name + TTS toggle */}
+                <div className="flex items-center gap-2">
+                  {ttsPlaybackState === "speaking"
+                    ? <Volume2 className="h-4 w-4 text-emerald-400 animate-pulse flex-shrink-0" />
+                    : ttsMode === "off"
+                    ? <VolumeX className="h-4 w-4 text-red-400/70 flex-shrink-0" />
+                    : <Volume2 className="h-4 w-4 text-blue-400 flex-shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white/90 truncate">
+                      {ttsMode !== "off"
+                        ? (() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return `${p?.emoji ?? "🎙️"} ${p?.label ?? resolveVoiceLabel(ttsVoice)}`; })()
+                        : "Voice OFF"}
+                    </p>
+                    {ttsPlaybackState === "speaking" && (
+                      <p className="text-[9px] text-emerald-400/80 font-bold">▶ Speaking…</p>
+                    )}
+                  </div>
+                  {/* TTS ON/OFF pill */}
+                  <div className="flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08] flex-shrink-0">
+                    <button
+                      onClick={() => handleTtsModeChange("off")}
+                      className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold transition-all", ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50")}
+                    >OFF</button>
+                    <button
+                      onClick={() => handleTtsModeChange("openai")}
+                      className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold transition-all", ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50")}
+                    >ON</button>
+                  </div>
                 </div>
-              );
-            })()}
 
-            {/* ── Male Voices ── */}
-            <div className="mb-2">
-              <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♂ Male Voices</p>
-              <div className="grid grid-cols-2 gap-1">
-                {MALE_VOICE_PROFILES.map((v) => {
-                  const isSelected = ttsVoice === v.value;
-                  const isPreviewing = isVoicePreviewing === v.value;
+                {/* Row 2: Change Voice + Test buttons */}
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setVoicePickerOpen(true)}
+                    className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg border border-white/10 bg-white/[0.04] text-[11px] font-bold text-white/70 hover:bg-white/[0.07] transition-all"
+                  >
+                    <SlidersHorizontal className="h-3 w-3" />Change Voice
+                  </button>
+                  <button
+                    onClick={() => handleVoicePreview()}
+                    disabled={!!isVoicePreviewing || ttsMode === "off"}
+                    className="flex items-center justify-center gap-1 h-8 px-3 rounded-lg border border-white/10 bg-white/[0.04] text-[11px] font-bold text-white/60 hover:bg-white/[0.07] transition-all disabled:opacity-30"
+                  >
+                    {isVoicePreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                  </button>
+                </div>
+
+                {/* Enable Voice Output (autoplay unlock) — only when needed */}
+                {!isAudioUnlocked && ttsMode !== "off" && (
+                  <button
+                    onClick={unlockAudio}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all"
+                  >
+                    <Volume2 className="h-3.5 w-3.5" />Enable Voice Output
+                  </button>
+                )}
+
+                {/* TTS error */}
+                {lastTtsError && ttsMode !== "off" && (
+                  <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                    <p className="text-[10px] text-amber-300/90 line-clamp-1">{lastTtsError}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Desktop: full layout ── */
+              <>
+                {/* Header: title + ON/OFF toggle */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    {ttsPlaybackState === "speaking"
+                      ? <Volume2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+                      : ttsMode === "off"
+                      ? <VolumeX className="h-3.5 w-3.5 text-red-400/70" />
+                      : <Volume2 className="h-3.5 w-3.5 text-blue-400" />}
+                    <span className="text-xs font-bold text-white/80">Voice</span>
+                  </div>
+                  <div className="flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08]">
+                    <button onClick={() => handleTtsModeChange("off")} className={cn("px-3 py-0.5 rounded-full text-[10px] font-bold transition-all", ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}>OFF</button>
+                    <button onClick={() => handleTtsModeChange("openai")} className={cn("px-3 py-0.5 rounded-full text-[10px] font-bold transition-all", ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}>ON</button>
+                  </div>
+                </div>
+
+                {/* Active voice + playback status row */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", ttsMode !== "off" ? "bg-emerald-400" : "bg-red-400/50")} />
+                    <span className="text-[11px] text-white/70">
+                      {ttsMode !== "off"
+                        ? <>Using <span className="font-bold text-white capitalize">{resolveVoiceLabel(ttsVoice)}</span> · OpenAI TTS</>
+                        : <span className="text-muted-foreground/50">Voice disabled</span>}
+                    </span>
+                  </div>
+                  <div className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded border",
+                    ttsPlaybackState === "speaking" ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/25 animate-pulse"
+                    : ttsPlaybackState === "queued" ? "text-blue-300 bg-blue-500/15 border-blue-500/25"
+                    : ttsPlaybackState === "error" ? "text-red-300 bg-red-500/15 border-red-500/25"
+                    : "text-muted-foreground/40 bg-white/5 border-white/10",
+                  )}>
+                    {ttsPlaybackState === "speaking" ? "▶ SPEAKING"
+                      : ttsPlaybackState === "queued" ? `Q(${ttsQueueLength})`
+                      : ttsPlaybackState === "finished" ? "DONE"
+                      : ttsPlaybackState === "error" ? "ERR"
+                      : "IDLE"}
+                  </div>
+                </div>
+
+                {/* Enable Voice Output (autoplay unlock) */}
+                {!isAudioUnlocked && ttsMode !== "off" && (
+                  <button onClick={unlockAudio} className="w-full flex items-center justify-center gap-1.5 py-2 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all">
+                    <Volume2 className="h-3.5 w-3.5" />Enable Voice Output
+                  </button>
+                )}
+
+                {/* Avatar-gender suggestion banner */}
+                {config?.personaGender && config.personaGender !== "neutral" && (() => {
+                  const suggested = config.personaGender === "female" ? "female" : "male";
+                  const selectedProfile = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice);
+                  if (selectedProfile?.gender === suggested) return null;
                   return (
-                    <div key={v.value} className={cn(
-                      "rounded-xl border transition-all overflow-hidden",
-                      isSelected ? "border-blue-500/50 bg-blue-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]",
-                    )}>
-                      <button
-                        onClick={() => handleTtsVoiceChange(v.value)}
-                        className="flex items-center gap-2 px-2.5 py-2 w-full text-left"
-                      >
-                        <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</div>
-                          <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
-                        </div>
-                        {isSelected && <CheckCircle2 className="h-3 w-3 text-blue-400 flex-shrink-0" />}
-                      </button>
-                      <button
-                        onClick={() => handleVoicePreview(v.value, v.speed)}
-                        disabled={!!isVoicePreviewing}
-                        className={cn(
-                          "flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all",
-                          isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60",
-                          !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
-                        )}
-                      >
-                        {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
-                      </button>
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 mb-2">
+                      <span className="text-base">{suggested === "female" ? "♀️" : "♂️"}</span>
+                      <p className="text-[10px] text-purple-300/80 leading-tight">
+                        {suggested === "female" ? "Female avatar — consider a Female voice" : "Male avatar — consider a Male voice"}
+                      </p>
                     </div>
                   );
-                })}
-              </div>
-            </div>
+                })()}
 
-            {/* ── Female Voices ── */}
-            <div className="mb-2">
-              <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♀ Female Voices</p>
-              <div className="grid grid-cols-2 gap-1">
-                {FEMALE_VOICE_PROFILES.map((v) => {
-                  const isSelected = ttsVoice === v.value;
-                  const isPreviewing = isVoicePreviewing === v.value;
-                  return (
-                    <div key={v.value} className={cn(
-                      "rounded-xl border transition-all overflow-hidden",
-                      isSelected ? "border-pink-500/50 bg-pink-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]",
-                    )}>
-                      <button
-                        onClick={() => handleTtsVoiceChange(v.value)}
-                        className="flex items-center gap-2 px-2.5 py-2 w-full text-left"
-                      >
-                        <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</div>
-                          <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
+                {/* Male Voices */}
+                <div className="mb-2">
+                  <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♂ Male Voices</p>
+                  <div className="grid grid-cols-2 gap-1">
+                    {MALE_VOICE_PROFILES.map((v) => {
+                      const isSelected = ttsVoice === v.value;
+                      const isPreviewing = isVoicePreviewing === v.value;
+                      return (
+                        <div key={v.value} className={cn("rounded-xl border transition-all overflow-hidden", isSelected ? "border-blue-500/50 bg-blue-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]")}>
+                          <button onClick={() => handleTtsVoiceChange(v.value)} className="flex items-center gap-2 px-2.5 py-2 w-full text-left">
+                            <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</div>
+                              <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
+                            </div>
+                            {isSelected && <CheckCircle2 className="h-3 w-3 text-blue-400 flex-shrink-0" />}
+                          </button>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all", isSelected ? "border-blue-500/20 text-blue-400/70 hover:text-blue-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60", !!isVoicePreviewing && "opacity-40 cursor-not-allowed")}>
+                            {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
+                          </button>
                         </div>
-                        {isSelected && <CheckCircle2 className="h-3 w-3 text-pink-400 flex-shrink-0" />}
-                      </button>
-                      <button
-                        onClick={() => handleVoicePreview(v.value, v.speed)}
-                        disabled={!!isVoicePreviewing}
-                        className={cn(
-                          "flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all",
-                          isSelected ? "border-pink-500/20 text-pink-400/70 hover:text-pink-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60",
-                          !!isVoicePreviewing && "opacity-40 cursor-not-allowed",
-                        )}
-                      >
-                        {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            {/* Last spoken — compact */}
-            {lastSpokenText && ttsMode !== "off" && (
-              <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] mb-1.5">
-                <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Last spoken</p>
-                <p className="text-[10px] text-white/60 line-clamp-1 leading-relaxed">
-                  {lastSpokenText.length > 80 ? lastSpokenText.slice(0, 80) + "…" : lastSpokenText}
-                </p>
-              </div>
+                {/* Female Voices */}
+                <div className="mb-2">
+                  <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-0.5 mb-1.5">♀ Female Voices</p>
+                  <div className="grid grid-cols-2 gap-1">
+                    {FEMALE_VOICE_PROFILES.map((v) => {
+                      const isSelected = ttsVoice === v.value;
+                      const isPreviewing = isVoicePreviewing === v.value;
+                      return (
+                        <div key={v.value} className={cn("rounded-xl border transition-all overflow-hidden", isSelected ? "border-pink-500/50 bg-pink-500/10" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]")}>
+                          <button onClick={() => handleTtsVoiceChange(v.value)} className="flex items-center gap-2 px-2.5 py-2 w-full text-left">
+                            <span className="text-base flex-shrink-0 leading-none">{v.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className={cn("text-[11px] font-semibold leading-tight truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</div>
+                              <div className="text-[9px] text-muted-foreground/45 leading-tight truncate">{v.desc}</div>
+                            </div>
+                            {isSelected && <CheckCircle2 className="h-3 w-3 text-pink-400 flex-shrink-0" />}
+                          </button>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("flex items-center justify-center gap-1 py-1 text-[9px] border-t w-full transition-all", isSelected ? "border-pink-500/20 text-pink-400/70 hover:text-pink-300" : "border-white/5 text-muted-foreground/35 hover:text-white/60", !!isVoicePreviewing && "opacity-40 cursor-not-allowed")}>
+                            {isPreviewing ? <><Loader2 className="h-2.5 w-2.5 animate-spin" />Playing…</> : <><Play className="h-2.5 w-2.5" />Preview</>}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Last spoken */}
+                {lastSpokenText && ttsMode !== "off" && (
+                  <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] mb-1.5">
+                    <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">Last spoken</p>
+                    <p className="text-[10px] text-white/60 line-clamp-1 leading-relaxed">{lastSpokenText.length > 80 ? lastSpokenText.slice(0, 80) + "…" : lastSpokenText}</p>
+                  </div>
+                )}
+
+                {/* TTS error */}
+                {lastTtsError && ttsMode !== "off" && (
+                  <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-amber-300/90 line-clamp-1 leading-tight">{lastTtsError}</p>
+                  </div>
+                )}
+              </>
             )}
-
-            {/* TTS error — compact */}
-            {lastTtsError && ttsMode !== "off" && (
-              <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-[10px] text-amber-300/90 line-clamp-1 leading-tight">{lastTtsError}</p>
-              </div>
-            )}
-
           </div>
 
           {/* ── Co-Host Voice Panel ── */}
@@ -2532,6 +2644,116 @@ export function AiAssistant() {
         onOpenChange={setCreatorModalOpen}
         onSave={handleCreatorSave}
       />
+
+      {/* ── Voice Picker Sheet (mobile) ─────────────────────────────────── */}
+      <Sheet open={voicePickerOpen} onOpenChange={setVoicePickerOpen}>
+        <SheetContent side="bottom" className="h-[80vh] p-0 flex flex-col rounded-t-2xl border-t border-white/10 bg-[#111114]" aria-describedby={undefined}>
+          <SheetHeader className="px-4 pt-4 pb-3 border-b border-white/[0.06] flex-shrink-0">
+            <SheetTitle className="text-sm font-bold text-white flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-blue-400" />
+              Choose Voice
+            </SheetTitle>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto p-3 space-y-4">
+            {/* Enable Voice Output — only if needed */}
+            {!isAudioUnlocked && ttsMode !== "off" && (
+              <button
+                onClick={() => { unlockAudio(); }}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-sm font-medium"
+              >
+                <Volume2 className="h-4 w-4" />Enable Voice Output first
+              </button>
+            )}
+
+            {/* Male Voices */}
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♂ Male Voices</p>
+              <div className="space-y-1.5">
+                {MALE_VOICE_PROFILES.map((v) => {
+                  const isSelected = ttsVoice === v.value;
+                  const isPreviewing = isVoicePreviewing === v.value;
+                  return (
+                    <div key={v.value} className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all",
+                      isSelected ? "border-blue-500/50 bg-blue-500/10" : "border-white/[0.07] bg-white/[0.02]",
+                    )}>
+                      <span className="text-xl flex-shrink-0">{v.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={cn("text-sm font-semibold truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</p>
+                        <p className="text-[10px] text-muted-foreground/50 truncate">{v.desc}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => handleVoicePreview(v.value, v.speed)}
+                          disabled={!!isVoicePreviewing}
+                          className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground/60 hover:text-white disabled:opacity-30"
+                        >
+                          {isPreviewing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => { handleTtsVoiceChange(v.value); setVoicePickerOpen(false); }}
+                          className={cn(
+                            "h-8 px-3 rounded-lg text-xs font-bold border transition-all",
+                            isSelected
+                              ? "bg-blue-500/20 border-blue-500/40 text-blue-300"
+                              : "border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.08]",
+                          )}
+                        >
+                          {isSelected ? "Selected" : "Select"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Female Voices */}
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♀ Female Voices</p>
+              <div className="space-y-1.5">
+                {FEMALE_VOICE_PROFILES.map((v) => {
+                  const isSelected = ttsVoice === v.value;
+                  const isPreviewing = isVoicePreviewing === v.value;
+                  return (
+                    <div key={v.value} className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all",
+                      isSelected ? "border-pink-500/50 bg-pink-500/10" : "border-white/[0.07] bg-white/[0.02]",
+                    )}>
+                      <span className="text-xl flex-shrink-0">{v.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={cn("text-sm font-semibold truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</p>
+                        <p className="text-[10px] text-muted-foreground/50 truncate">{v.desc}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => handleVoicePreview(v.value, v.speed)}
+                          disabled={!!isVoicePreviewing}
+                          className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground/60 hover:text-white disabled:opacity-30"
+                        >
+                          {isPreviewing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => { handleTtsVoiceChange(v.value); setVoicePickerOpen(false); }}
+                          className={cn(
+                            "h-8 px-3 rounded-lg text-xs font-bold border transition-all",
+                            isSelected
+                              ? "bg-pink-500/20 border-pink-500/40 text-pink-300"
+                              : "border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.08]",
+                          )}
+                        >
+                          {isSelected ? "Selected" : "Select"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
