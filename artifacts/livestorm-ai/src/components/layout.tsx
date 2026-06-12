@@ -55,9 +55,8 @@ const LIVE_CONTROL_GROUP: NavGroup = {
 };
 
 const BOTTOM_NAV: NavItem[] = [
-  { nameKey: "nav_analytics", shortNameKey: "nav_short_stats",  href: "/analytics", icon: BarChart2,    testId: "analytics", shortcut: 4 },
-  { nameKey: "nav_games",     shortNameKey: "nav_short_games",  href: "/games",     icon: Gamepad2,     testId: "games",     shortcut: 5 },
-  { nameKey: "nav_settings",  shortNameKey: "nav_settings",     href: "/settings",  icon: SettingsIcon, testId: "settings",  shortcut: 6 },
+  { nameKey: "nav_analytics", shortNameKey: "nav_short_stats", href: "/analytics", icon: BarChart2,    testId: "analytics", shortcut: 4 },
+  { nameKey: "nav_settings",  shortNameKey: "nav_settings",    href: "/settings",  icon: SettingsIcon, testId: "settings",  shortcut: 5 },
 ];
 
 const ALL_MAIN_NAV: NavItem[] = [

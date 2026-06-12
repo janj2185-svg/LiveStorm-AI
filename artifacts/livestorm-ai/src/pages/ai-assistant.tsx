@@ -802,6 +802,8 @@ export function AiAssistant() {
   }, [setTtsMode]);
 
   const handleTtsVoiceChange = useCallback((voice: string) => {
+    const resolved = resolveVoiceLabel(voice);
+    console.log(`[TTS] selectedVoice=${voice} actualVoiceSentToOpenAI=${resolved}`);
     setTtsVoiceLocal(voice);
     setTtsVoice(voice);
     updateConfig.mutate({ voiceName: voice });
@@ -989,6 +991,8 @@ export function AiAssistant() {
   const handleVoicePreview = async (previewVoice?: string) => {
     if (!config || isVoicePreviewing) return;
     const voiceKey = previewVoice ?? ttsVoice ?? config.voiceName ?? "nova";
+    const resolved = resolveVoiceLabel(voiceKey);
+    console.log(`[TTS] preview selectedVoice=${voiceKey} actualVoiceSentToOpenAI=${resolved}`);
     setIsVoicePreviewing(voiceKey);
     try {
       const token = await getToken();
@@ -1029,6 +1033,8 @@ export function AiAssistant() {
   // ── Settings sidebar sections ─────────────────────────────────────────────
   // All collapsed by default (secondary tools, not primary focus)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [battleActivating, setBattleActivating] = useState(false);
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
@@ -1226,22 +1232,29 @@ export function AiAssistant() {
               <div className="flex items-center gap-1.5">
                 <Swords className="h-3.5 w-3.5 text-red-400" />
                 <span className="text-xs font-bold text-white/80">Battle Mode</span>
+                {battleActivating && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground/50" />}
               </div>
               <Switch
                 checked={config?.operatingMode === "battle" as any}
-                onCheckedChange={(on) => {
+                onCheckedChange={async (on) => {
+                  if (battleActivating) return;
                   updateConfig.mutate({ operatingMode: on ? ("battle" as any) : "semi-auto" });
                   if (isSessionActive && activeSessionId) {
-                    console.log(`[BattleMode] toggle → active=${on} sessionId=${activeSessionId} → POST /agents/battle/activate`);
-                    authFetch(`/agents/battle/activate`, {
-                      method: "POST",
-                      body: JSON.stringify({ sessionId: activeSessionId, active: on }),
-                    })
-                      .then(() => console.log(`[BattleMode] ✅ activated=${on}`))
-                      .catch((err: unknown) => console.warn(`[BattleMode] ⚠ activate failed (non-critical):`, err));
+                    setBattleActivating(true);
+                    try {
+                      await authFetch(`/agents/battle/activate`, {
+                        method: "POST",
+                        body: JSON.stringify({ sessionId: activeSessionId, active: on }),
+                      });
+                      console.log(`[BattleMode] ✅ activated=${on}`);
+                    } catch (err) {
+                      console.warn(`[BattleMode] ⚠ activate failed:`, err);
+                    } finally {
+                      setBattleActivating(false);
+                    }
                   }
                 }}
-                disabled={!isSessionActive}
+                disabled={!isSessionActive || battleActivating}
                 className="scale-75"
               />
             </div>
@@ -1562,6 +1575,18 @@ export function AiAssistant() {
             )}
           </SidebarSection>
 
+          {/* ── Advanced Settings collapsible ── */}
+          <div className="rounded-xl border border-white/[0.07] overflow-hidden flex-shrink-0">
+            <button
+              onClick={() => setAdvancedOpen((v) => !v)}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/50" />
+              <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">Advanced Settings</span>
+              <ChevronDown className={cn("h-3 w-3 text-muted-foreground/35 transition-transform duration-200", advancedOpen && "rotate-180")} />
+            </button>
+
+          {advancedOpen && (<div className="border-t border-white/[0.06]">
           <SidebarSection isOpen={expandedSections.has("language")} onToggle={() => toggleSection("language")} title="Reply Language" icon={<Globe className="h-4 w-4 text-teal-400" />}>
             <div className="grid grid-cols-1 gap-1">
               {LANGUAGE_OPTIONS.map((lang) => (
@@ -1719,7 +1744,7 @@ export function AiAssistant() {
           </SidebarSection>
 
           {/* 3D Avatar settings shortcut */}
-          <Card className="bg-card border-white/5 flex-shrink-0">
+          <Card className="bg-card border-white/5 flex-shrink-0 rounded-none border-x-0 border-b-0">
             <button
               className="w-full flex items-center justify-between px-4 py-3 text-left"
               onClick={() => setAvatarSheetOpen(true)}
@@ -1731,6 +1756,9 @@ export function AiAssistant() {
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </Card>
+
+          </div>)}
+          </div>{/* /Advanced Settings */}
 
         </div>
 
