@@ -234,6 +234,78 @@ uri = "file://attached_assets/avatars/male_5_talking.png"
 type = "image"
 title = "broadcaster talking"
 
+[[generated]]
+id = "hSNjlQAx3fQFFa9v7XZZp"
+uri = "file://attached_assets/avatars/female_7_neutral.png"
+type = "image"
+title = "female gaming neutral"
+
+[[generated]]
+id = "MW9zC2fH9i-Tiat9ulKrq"
+uri = "file://attached_assets/avatars/female_7_smile.png"
+type = "image"
+title = "female gaming smile"
+
+[[generated]]
+id = "7yL_22XtdLB3rnqDMoZMv"
+uri = "file://attached_assets/avatars/female_7_surprise.png"
+type = "image"
+title = "female gaming surprise"
+
+[[generated]]
+id = "joy5Xuf_PUwtoHWdH9XGo"
+uri = "file://attached_assets/avatars/female_7_talking.png"
+type = "image"
+title = "female gaming talking"
+
+[[generated]]
+id = "Z69zE6Tqtgg8gfqVNvlNh"
+uri = "file://attached_assets/avatars/female_8_neutral.png"
+type = "image"
+title = "tiktok host neutral"
+
+[[generated]]
+id = "vRT1jiBb0tn2FfpJGXRI_"
+uri = "file://attached_assets/avatars/female_8_smile.png"
+type = "image"
+title = "tiktok host smile"
+
+[[generated]]
+id = "C3bYJBNgL--KaobMD-5lG"
+uri = "file://attached_assets/avatars/female_8_talking.png"
+type = "image"
+title = "tiktok host talking"
+
+[[generated]]
+id = "d9KVXIixbSzKZH_6u4C3q"
+uri = "file://attached_assets/avatars/female_9_smile.png"
+type = "image"
+title = "cyberpunk female smirk"
+
+[[generated]]
+id = "yW1mz8ooo__9bnop_Eid6"
+uri = "file://attached_assets/avatars/female_9_surprise.png"
+type = "image"
+title = "cyberpunk female surprise"
+
+[[generated]]
+id = "gPkIdx0CM2YcRTZN7E0ds"
+uri = "file://attached_assets/avatars/female_9_talking.png"
+type = "image"
+title = "cyberpunk female talking"
+
+[[generated]]
+id = "SVNa0RMoMvfrJM6JX3NS9"
+uri = "file://attached_assets/avatars/female_10_surprise.png"
+type = "image"
+title = "AI influencer surprise"
+
+[[generated]]
+id = "UIy-ZHbuGULT3gyO-fKPT"
+uri = "file://attached_assets/avatars/female_10_talking.png"
+type = "image"
+title = "AI influencer talking"
+
 [[outputs]]
 id = "rQq6SBMxLh4UMtFxW18dE"
 uri = "file://screenshots/desktop-dashboard.jpg"
@@ -490,49 +562,49 @@ title = "F10 — Virtual AI Influencer"
 id = "FqViNgkX8ZDxOC83cKOqb"
 uri = "file://attached_assets/avatars/female_6_neutral.png"
 type = "image"
-title = "F6 — Neutral"
+title = "F6 Streamer — Neutral"
 
 [[outputs]]
 id = "R7OdrTtRWHvj8xtGFGzfj"
 uri = "file://attached_assets/avatars/female_6_smile.png"
 type = "image"
-title = "F6 — Smile"
+title = "F6 Streamer — Smile"
 
 [[outputs]]
 id = "lX6_rryeIFGYo2H--oeNi"
 uri = "file://attached_assets/avatars/female_6_surprise.png"
 type = "image"
-title = "F6 — Surprise"
+title = "F6 Streamer — Surprise"
 
 [[outputs]]
 id = "bRPWzkdw6RjhjzyFULa_s"
 uri = "file://attached_assets/avatars/female_6_talking.png"
 type = "image"
-title = "F6 — Talking"
+title = "F6 Streamer — Talking"
 
 [[outputs]]
 id = "Exp3E36y2SqZ_BMdfyQEF"
 uri = "file://attached_assets/avatars/female_9_neutral.png"
 type = "image"
-title = "F9 — Cyberpunk: Intense Neutral"
+title = "F9 Cyberpunk — Neutral"
 
 [[outputs]]
 id = "H8kF-D9B2SW49so-zm5fE"
 uri = "file://attached_assets/avatars/female_10_neutral.png"
 type = "image"
-title = "F10 — AI Influencer: Serene Neutral"
+title = "F10 Virtual AI — Neutral"
 
 [[outputs]]
 id = "lzXpaX1FRyLJEnyePXlOy"
 uri = "file://attached_assets/avatars/female_10_smile.png"
 type = "image"
-title = "F10 — AI Influencer: Ethereal Smile"
+title = "F10 Virtual AI — Ethereal Smile"
 
 [[outputs]]
 id = "r6dE_xr4fXne8NRMKCLza"
 uri = "file://attached_assets/avatars/female_8_surprise.png"
 type = "image"
-title = "F8 — TikTok Host: Surprised Delight"
+title = "F8 TikTok Host — Surprise"
 
 [[outputs]]
 id = "s4wnmuUXF_J6QSQkLJUwM"
@@ -605,3 +677,75 @@ id = "2g0R9hYWdtqMZp0NFvgMQ"
 uri = "file://attached_assets/avatars/male_5_talking.png"
 type = "image"
 title = "M5 Broadcaster — Talking"
+
+[[outputs]]
+id = "TXKONEEBKaO7pN0P1dU1x"
+uri = "file://attached_assets/avatars/female_7_neutral.png"
+type = "image"
+title = "F7 Gaming — Neutral"
+
+[[outputs]]
+id = "5cxKpQtIzbV46Lx7Ck3Zy"
+uri = "file://attached_assets/avatars/female_7_smile.png"
+type = "image"
+title = "F7 Gaming — Smile"
+
+[[outputs]]
+id = "1d-PYS9IWxTHX3apds8bu"
+uri = "file://attached_assets/avatars/female_7_surprise.png"
+type = "image"
+title = "F7 Gaming — Surprise"
+
+[[outputs]]
+id = "xT7hbvyQzjlZls8lb5bpU"
+uri = "file://attached_assets/avatars/female_7_talking.png"
+type = "image"
+title = "F7 Gaming — Talking"
+
+[[outputs]]
+id = "z_4rby6gWLtKOFJ1LA2gx"
+uri = "file://attached_assets/avatars/female_8_neutral.png"
+type = "image"
+title = "F8 TikTok Host — Neutral"
+
+[[outputs]]
+id = "7kXcQq78ip1BTjb_1CX_H"
+uri = "file://attached_assets/avatars/female_8_smile.png"
+type = "image"
+title = "F8 TikTok Host — Smile"
+
+[[outputs]]
+id = "sg6Dx4gkDd8jaqQbiLmIv"
+uri = "file://attached_assets/avatars/female_8_talking.png"
+type = "image"
+title = "F8 TikTok Host — Talking"
+
+[[outputs]]
+id = "I9RS8M7B5c69Nh-iGPqrF"
+uri = "file://attached_assets/avatars/female_9_smile.png"
+type = "image"
+title = "F9 Cyberpunk — Smirk"
+
+[[outputs]]
+id = "Bnp4AUz6rZ8NarrU2Sbk9"
+uri = "file://attached_assets/avatars/female_9_surprise.png"
+type = "image"
+title = "F9 Cyberpunk — System Shock"
+
+[[outputs]]
+id = "sWUIUW6ny7lbNGKm_n9p2"
+uri = "file://attached_assets/avatars/female_9_talking.png"
+type = "image"
+title = "F9 Cyberpunk — Talking"
+
+[[outputs]]
+id = "xw2VYLX5quWbH-Swr2R3o"
+uri = "file://attached_assets/avatars/female_10_surprise.png"
+type = "image"
+title = "F10 Virtual AI — Surprise"
+
+[[outputs]]
+id = "MM9qcCfYJpCaS9X3dsVTR"
+uri = "file://attached_assets/avatars/female_10_talking.png"
+type = "image"
+title = "F10 Virtual AI — Talking"
