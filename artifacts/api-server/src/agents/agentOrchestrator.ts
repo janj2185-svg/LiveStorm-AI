@@ -7,12 +7,12 @@ import { runHostAgent } from "./hostAgent";
 import { runModerationAgent } from "./moderationAgent";
 import { getActivePersonality } from "./personalityAgent";
 import { getActiveVoice } from "./voiceAgent";
-import { getMemoryContext, upsertViewerProfile, trackViewerInSession } from "./memoryAgent";
+import { getMemoryContext, upsertViewerProfile, trackViewerInSession, schedulePruning } from "./memoryAgent";
 import { getViewerContext } from "../lib/agents/memoryAgent";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
 import type { StrategySuggestion } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
-import { isBattleActive, generateBattleReply, updateBattleScore } from "./battleAgent";
+import { isBattleActive, generateBattleReply, updateBattleScore, initBattleAgent } from "./battleAgent";
 import { generateVoice, fastSpamCheck } from "../lib/aiService";
 import {
   applyEmotionalTrigger,
@@ -214,6 +214,13 @@ export function initOrchestrator(io: SocketServer): void {
       }
     }
   }, 15_000);
+
+  // Restore battle sessions from DB (server restart recovery)
+  void initBattleAgent();
+
+  // Background memory pruning — runs 30s after startup, then every 24h
+  setTimeout(() => void schedulePruning(), 30_000);
+  setInterval(() => void schedulePruning(), 24 * 60 * 60 * 1000);
 
   console.log("[Orchestrator] Multi-Agent Core initialized");
 }

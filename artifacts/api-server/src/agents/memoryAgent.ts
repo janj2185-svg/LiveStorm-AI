@@ -281,3 +281,28 @@ export async function listMemories(streamerId: number, memoryType?: string, limi
     limit,
   });
 }
+
+// ── Scheduled background pruning ─────────────────────────────────────────────
+// Called at startup (after 30s delay) and every 24h by initOrchestrator.
+// Queries all distinct streamers that have memories and prunes stale entries.
+export async function schedulePruning(): Promise<void> {
+  const startTs = Date.now();
+  try {
+    const rows = await db
+      .selectDistinct({ id: aiMemoriesTable.streamerId })
+      .from(aiMemoriesTable);
+
+    let pruned = 0;
+    for (const { id } of rows) {
+      await pruneOldMemories(id);
+      pruned++;
+    }
+
+    const elapsed = Date.now() - startTs;
+    console.log(
+      `[MemoryAgent] 🗓️ scheduled pruning complete | ${pruned} streamer(s) processed | ${elapsed}ms`,
+    );
+  } catch (err) {
+    console.error("[MemoryAgent] schedulePruning error:", (err as Error)?.message);
+  }
+}

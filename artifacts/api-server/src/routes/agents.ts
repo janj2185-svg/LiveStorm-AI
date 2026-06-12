@@ -34,6 +34,7 @@ import {
 import {
   setBattleMode,
   isBattleActive,
+  getBattleScore,
   generateBattleReply,
   getBattleTranscripts,
   addBattleTranscript,
@@ -274,7 +275,9 @@ router.post("/agents/battle/activate", requireAuth, async (req, res) => {
   const user = await getOrCreateUser((req as any).clerkUserId);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
   const { sessionId, active } = req.body as { sessionId: number; active: boolean };
-  setBattleMode(Number(sessionId), Boolean(active));
+  const streamerId2 = await getStreamerId(user.id);
+  if (!streamerId2) return res.status(404).json({ error: "Streamer not found" });
+  await setBattleMode(Number(sessionId), streamerId2, Boolean(active));
   return res.json({ ok: true, active: Boolean(active) });
 });
 

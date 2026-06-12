@@ -138,19 +138,94 @@ function applyVRMAccentTint(vrm: VRM, accentColor: string, strength = 0.18) {
   });
 }
 
+// ── VRM dispose helper ────────────────────────────────────────────────────────
+
+function disposeVRM(vrm: VRM, url: string): void {
+  try {
+    vrm.scene.traverse((obj) => {
+      if (!(obj instanceof THREE.Mesh)) return;
+      obj.geometry?.dispose();
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach((mat) => {
+        if (!mat) return;
+        // Dispose all map textures the material may hold
+        for (const key of Object.keys(mat) as (keyof typeof mat)[]) {
+          const val = (mat as Record<string, unknown>)[key as string];
+          if (val instanceof THREE.Texture) val.dispose();
+        }
+        (mat as THREE.Material).dispose();
+      });
+    });
+    // Clear Three.js file-loader cache so the next load re-fetches fresh
+    THREE.Cache.remove(url);
+    console.log(`[AvatarCanvas] ♻️ VRM disposed | ${url.split("/").pop()}`);
+  } catch (e) {
+    console.warn("[AvatarCanvas] VRM dispose error:", e);
+  }
+}
+
+function disposeScene(scene: THREE.Group, url: string): void {
+  try {
+    scene.traverse((obj) => {
+      if (!(obj instanceof THREE.Mesh)) return;
+      obj.geometry?.dispose();
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach((mat) => {
+        if (!mat) return;
+        for (const key of Object.keys(mat) as (keyof typeof mat)[]) {
+          const val = (mat as Record<string, unknown>)[key as string];
+          if (val instanceof THREE.Texture) val.dispose();
+        }
+        (mat as THREE.Material).dispose();
+      });
+    });
+    THREE.Cache.remove(url);
+    console.log(`[AvatarCanvas] ♻️ GLB scene disposed | ${url.split("/").pop()?.slice(0, 40)}`);
+  } catch (e) {
+    console.warn("[AvatarCanvas] GLB dispose error:", e);
+  }
+}
+
 // ── VRM loader ────────────────────────────────────────────────────────────────
 
 function useVRMLoader(url: string | null | undefined): VRMState {
   const [state, setState] = useState<VRMState>({ status: "idle" });
-  const mounted = useRef(true);
+  const mountedRef = useRef(true);
+  const loadedVrmRef = useRef<VRM | null>(null);
+  const loadedUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      // Dispose previous VRM when hook unmounts entirely
+      if (loadedVrmRef.current && loadedUrlRef.current) {
+        disposeVRM(loadedVrmRef.current, loadedUrlRef.current);
+        loadedVrmRef.current = null;
+        loadedUrlRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
-    if (!url) { setState({ status: "idle" }); return; }
+    if (!url) {
+      // Dispose previous model when url clears
+      if (loadedVrmRef.current && loadedUrlRef.current) {
+        disposeVRM(loadedVrmRef.current, loadedUrlRef.current);
+        loadedVrmRef.current = null;
+        loadedUrlRef.current = null;
+      }
+      setState({ status: "idle" });
+      return;
+    }
+
+    // Dispose previous model before loading a new one
+    if (loadedVrmRef.current && loadedUrlRef.current && loadedUrlRef.current !== url) {
+      disposeVRM(loadedVrmRef.current, loadedUrlRef.current);
+      loadedVrmRef.current = null;
+      loadedUrlRef.current = null;
+    }
+
     setState({ status: "loading" });
 
     (async () => {
@@ -166,9 +241,16 @@ function useVRMLoader(url: string | null | undefined): VRMState {
         VRMUtils.removeUnnecessaryVertices(vrm.scene);
         VRMUtils.removeUnnecessaryJoints(vrm.scene);
         vrm.scene.rotation.y = Math.PI;
-        if (mounted.current) setState({ status: "loaded", vrm });
+        if (mountedRef.current) {
+          loadedVrmRef.current = vrm;
+          loadedUrlRef.current = url;
+          setState({ status: "loaded", vrm });
+        } else {
+          // Component unmounted during async load — dispose immediately
+          disposeVRM(vrm, url);
+        }
       } catch (err) {
-        if (mounted.current) {
+        if (mountedRef.current) {
           setState({
             status: "error",
             message: err instanceof Error ? err.message : "Failed to load VRM",
@@ -185,15 +267,39 @@ function useVRMLoader(url: string | null | undefined): VRMState {
 
 function useGLBLoader(url: string | null | undefined): GLBState {
   const [state, setState] = useState<GLBState>({ status: "idle" });
-  const mounted = useRef(true);
+  const mountedRef = useRef(true);
+  const loadedSceneRef = useRef<THREE.Group | null>(null);
+  const loadedUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (loadedSceneRef.current && loadedUrlRef.current) {
+        disposeScene(loadedSceneRef.current, loadedUrlRef.current);
+        loadedSceneRef.current = null;
+        loadedUrlRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
-    if (!url) { setState({ status: "idle" }); return; }
+    if (!url) {
+      if (loadedSceneRef.current && loadedUrlRef.current) {
+        disposeScene(loadedSceneRef.current, loadedUrlRef.current);
+        loadedSceneRef.current = null;
+        loadedUrlRef.current = null;
+      }
+      setState({ status: "idle" });
+      return;
+    }
+
+    if (loadedSceneRef.current && loadedUrlRef.current && loadedUrlRef.current !== url) {
+      disposeScene(loadedSceneRef.current, loadedUrlRef.current);
+      loadedSceneRef.current = null;
+      loadedUrlRef.current = null;
+    }
+
     setState({ status: "loading" });
 
     (async () => {
@@ -227,13 +333,18 @@ function useGLBLoader(url: string | null | undefined): GLBState {
           }
         });
 
-        if (mounted.current) setState({ status: "loaded", scene, morphTargets: [...new Set(morphTargets)] });
-        // If we created a blob URL, release it after load
-        if (loadUrl !== url) {
-          URL.revokeObjectURL(loadUrl);
+        // Release blob URL immediately after load (no longer needed)
+        if (loadUrl !== url) URL.revokeObjectURL(loadUrl);
+
+        if (mountedRef.current) {
+          loadedSceneRef.current = scene;
+          loadedUrlRef.current = url;
+          setState({ status: "loaded", scene, morphTargets: [...new Set(morphTargets)] });
+        } else {
+          disposeScene(scene, url);
         }
       } catch (err) {
-        if (mounted.current) {
+        if (mountedRef.current) {
           setState({
             status: "error",
             message: err instanceof Error ? err.message : "Failed to load avatar",

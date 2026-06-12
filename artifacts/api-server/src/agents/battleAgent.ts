@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { db, battleTranscriptsTable } from "@workspace/db";
+import { db, battleTranscriptsTable, battleSessionsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import type { PersonalityContext } from "./personalityAgent";
 import { buildPersonalityPrompt } from "./personalityAgent";
@@ -35,7 +35,78 @@ interface BattleState {
 
 const activeBattles = new Map<number, BattleState>();
 
-export function setBattleMode(sessionId: number, active: boolean): void {
+// ── DB persistence helpers ─────────────────────────────────────────────────────
+
+async function persistBattleState(sessionId: number, streamerId: number): Promise<void> {
+  const battle = activeBattles.get(sessionId);
+  if (!battle) return;
+  try {
+    await db
+      .insert(battleSessionsTable)
+      .values({
+        sessionId,
+        streamerId,
+        active: battle.active,
+        scoreUs: battle.score.us,
+        scoreOpponent: battle.score.opponent,
+        coinUs: battle.score.coinUs,
+        coinOpponent: battle.score.coinOpponent,
+        exchanges: battle.score.exchanges,
+        lastLeadChange: battle.score.lastLeadChange ? new Date(battle.score.lastLeadChange) : null,
+        startedAt: new Date(battle.startedAt),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: battleSessionsTable.sessionId,
+        set: {
+          active: battle.active,
+          scoreUs: battle.score.us,
+          scoreOpponent: battle.score.opponent,
+          coinUs: battle.score.coinUs,
+          coinOpponent: battle.score.coinOpponent,
+          exchanges: battle.score.exchanges,
+          lastLeadChange: battle.score.lastLeadChange ? new Date(battle.score.lastLeadChange) : null,
+          updatedAt: new Date(),
+        },
+      });
+  } catch (err) {
+    console.error(`[BattleAgent] DB persist error session=${sessionId}:`, (err as Error)?.message);
+  }
+}
+
+/** Called once at server startup — restores any battles that were active when the server last shut down. */
+export async function initBattleAgent(): Promise<void> {
+  try {
+    const rows = await db.query.battleSessionsTable.findMany({
+      where: eq(battleSessionsTable.active, true),
+    });
+    for (const row of rows) {
+      activeBattles.set(row.sessionId, {
+        active: true,
+        opponentContext: [],
+        score: {
+          us: row.scoreUs,
+          opponent: row.scoreOpponent,
+          coinUs: row.coinUs,
+          coinOpponent: row.coinOpponent,
+          exchanges: row.exchanges,
+          lastLeadChange: row.lastLeadChange ? row.lastLeadChange.getTime() : undefined,
+        },
+        startedAt: row.startedAt.getTime(),
+      });
+      console.log(
+        `[BattleAgent] ♻️ restored session=${row.sessionId} | us=${row.scoreUs} opp=${row.scoreOpponent} exchanges=${row.exchanges}`,
+      );
+    }
+    if (rows.length > 0) {
+      console.log(`[BattleAgent] ✅ restored ${rows.length} active battle(s) from DB`);
+    }
+  } catch (err) {
+    console.error("[BattleAgent] initBattleAgent error:", (err as Error)?.message);
+  }
+}
+
+export async function setBattleMode(sessionId: number, streamerId: number, active: boolean): Promise<void> {
   if (active) {
     activeBattles.set(sessionId, {
       active: true,
@@ -43,15 +114,45 @@ export function setBattleMode(sessionId: number, active: boolean): void {
       score: { us: 0, opponent: 0, coinUs: 0, coinOpponent: 0, exchanges: 0 },
       startedAt: Date.now(),
     });
-    console.log(`[BattleAgent] Battle mode ACTIVATED for session ${sessionId}`);
+    await persistBattleState(sessionId, streamerId);
+    console.log(`[BattleAgent] ⚔️ Battle mode ACTIVATED | session=${sessionId} streamer=${streamerId}`);
   } else {
     activeBattles.delete(sessionId);
-    console.log(`[BattleAgent] Battle mode DEACTIVATED for session ${sessionId}`);
+    try {
+      await db
+        .update(battleSessionsTable)
+        .set({ active: false, updatedAt: new Date() })
+        .where(eq(battleSessionsTable.sessionId, sessionId));
+    } catch (err) {
+      console.error(`[BattleAgent] DB deactivate error:`, (err as Error)?.message);
+    }
+    console.log(`[BattleAgent] 🏳️ Battle mode DEACTIVATED | session=${sessionId}`);
   }
 }
 
 export function isBattleActive(sessionId: number): boolean {
   return activeBattles.get(sessionId)?.active === true;
+}
+
+export async function getBattleScoreAsync(sessionId: number): Promise<BattleScore | null> {
+  const mem = activeBattles.get(sessionId);
+  if (mem) return { ...mem.score };
+  try {
+    const row = await db.query.battleSessionsTable.findFirst({
+      where: eq(battleSessionsTable.sessionId, sessionId),
+    });
+    if (!row || !row.active) return null;
+    return {
+      us: row.scoreUs,
+      opponent: row.scoreOpponent,
+      coinUs: row.coinUs,
+      coinOpponent: row.coinOpponent,
+      exchanges: row.exchanges,
+      lastLeadChange: row.lastLeadChange?.getTime(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function getBattleScore(sessionId: number): BattleScore | null {
@@ -62,6 +163,7 @@ export function updateBattleScore(
   sessionId: number,
   side: "us" | "opponent",
   coins: number,
+  streamerId?: number,
 ): BattleScore | null {
   const battle = activeBattles.get(sessionId);
   if (!battle) return null;
@@ -83,6 +185,12 @@ export function updateBattleScore(
   }
 
   console.log(`[BattleAgent] 💰 Score update | us=${battle.score.us} vs opponent=${battle.score.opponent} | session=${sessionId}`);
+
+  // Persist score to DB asynchronously (non-blocking — score update must never delay TTS)
+  if (streamerId != null) {
+    void persistBattleState(sessionId, streamerId);
+  }
+
   return { ...battle.score };
 }
 

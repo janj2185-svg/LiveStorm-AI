@@ -135,6 +135,23 @@ export const battleTranscriptsTable = pgTable("battle_transcripts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const battleSessionsTable = pgTable("battle_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().unique(),
+  streamerId: integer("streamer_id")
+    .notNull()
+    .references(() => streamersTable.id, { onDelete: "cascade" }),
+  active: boolean("active").notNull().default(true),
+  scoreUs: integer("score_us").notNull().default(0),
+  scoreOpponent: integer("score_opponent").notNull().default(0),
+  coinUs: integer("coin_us").notNull().default(0),
+  coinOpponent: integer("coin_opponent").notNull().default(0),
+  exchanges: integer("exchanges").notNull().default(0),
+  lastLeadChange: timestamp("last_lead_change"),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const chatPriorityQueueTable = pgTable("chat_priority_queue", {
   id: serial("id").primaryKey(),
   sessionId: integer("session_id").notNull(),
@@ -159,4 +176,5 @@ export type AiLearningReport = typeof aiLearningReportsTable.$inferSelect;
 export type AiVoiceProfile = typeof aiVoiceProfilesTable.$inferSelect;
 export type AiPersonalityMode = typeof aiPersonalityModesTable.$inferSelect;
 export type BattleTranscript = typeof battleTranscriptsTable.$inferSelect;
+export type BattleSession = typeof battleSessionsTable.$inferSelect;
 export type ChatPriorityQueueEntry = typeof chatPriorityQueueTable.$inferSelect;

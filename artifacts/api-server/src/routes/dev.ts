@@ -249,7 +249,7 @@ if (process.env.NODE_ENV !== "production") {
         opponentStatement = "My viewers love me way more than yours!",
       } = req.body;
 
-      setBattleMode(Number(sessionId), true);
+      void setBattleMode(Number(sessionId), Number(streamerId), true);
 
       const personality = await getActivePersonality(Number(streamerId));
 
