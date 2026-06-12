@@ -168,52 +168,61 @@ export function CoHostPanel({
           <div className="flex-1 min-w-0">
             <AudioLevelBar level={mic.audioLevel} active={mic.isEnabled} />
           </div>
-          {mic.browserSupported ? (
-            mic.mode === "continuous" ? (
-              <button
-                onClick={() => mic.isEnabled ? mic.disable() : mic.enable()}
-                disabled={!activeSession}
-                className={cn(
-                  "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold",
-                  "border transition-all duration-200 shrink-0",
-                  !activeSession
-                    ? "opacity-40 cursor-not-allowed bg-white/5 border-white/10 text-muted-foreground"
-                    : mic.isEnabled
-                      ? "bg-red-500/15 border-red-500/25 text-red-400 hover:bg-red-500/25 hover:border-red-500/40"
-                      : "bg-violet-500/15 border-violet-500/25 text-violet-300 hover:bg-violet-500/25 hover:border-violet-500/40",
-                )}
-              >
-                {mic.isEnabled
-                  ? <><MicOff className="h-3.5 w-3.5" />Stop</>
-                  : <><Mic className="h-3.5 w-3.5" />Start</>}
-              </button>
-            ) : (
-              <button
-                onMouseDown={mic.isEnabled ? mic.pushToTalkStart : undefined}
-                onMouseUp={mic.isEnabled ? mic.pushToTalkEnd : undefined}
-                onMouseLeave={mic.isEnabled ? mic.pushToTalkEnd : undefined}
-                onTouchStart={(e) => { e.preventDefault(); if (mic.isEnabled) mic.pushToTalkStart(); }}
-                onTouchEnd={(e) => { e.preventDefault(); if (mic.isEnabled) mic.pushToTalkEnd(); }}
-                onClick={() => !mic.isEnabled && mic.enable()}
-                disabled={!activeSession}
-                className={cn(
-                  "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold",
-                  "border transition-all duration-200 shrink-0 select-none",
-                  !activeSession
-                    ? "opacity-40 cursor-not-allowed bg-white/5 border-white/10 text-muted-foreground"
-                    : !mic.isEnabled
-                      ? "bg-violet-500/15 border-violet-500/25 text-violet-300 hover:bg-violet-500/25"
-                      : mic.status === "speech_detected"
-                        ? "bg-cyan-500/20 border-cyan-500/30 text-cyan-300 scale-[0.97]"
-                        : "bg-violet-600/20 border-violet-500/30 text-violet-300 hover:bg-violet-600/30 active:scale-[0.97]",
-                )}
-              >
-                <Mic className="h-3.5 w-3.5" />
-                {!mic.isEnabled ? "Enable" : mic.status === "speech_detected" ? "Speaking…" : "Hold"}
-              </button>
-            )
+          {!mic.browserSupported ? (
+            /* ── Not supported: full-width banner ── */
+            <div className="flex-1 flex items-start gap-2.5 rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2.5">
+              <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-red-300 leading-tight">Voice recognition not supported</p>
+                <p className="text-[10px] text-red-400/70 leading-snug mt-0.5">
+                  {mic.isAndroidChrome
+                    ? "Open this page in Chrome for Android to use Co-Host Voice."
+                    : "Use Chrome or Edge to enable microphone voice input."}
+                </p>
+              </div>
+            </div>
+          ) : mic.mode === "continuous" ? (
+            <button
+              onClick={() => mic.isEnabled ? mic.disable() : mic.enable()}
+              disabled={!activeSession}
+              className={cn(
+                "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold",
+                "border transition-all duration-200 shrink-0",
+                !activeSession
+                  ? "opacity-40 cursor-not-allowed bg-white/5 border-white/10 text-muted-foreground"
+                  : mic.isEnabled
+                    ? "bg-red-500/15 border-red-500/25 text-red-400 hover:bg-red-500/25 hover:border-red-500/40"
+                    : "bg-violet-500/15 border-violet-500/25 text-violet-300 hover:bg-violet-500/25 hover:border-violet-500/40",
+              )}
+            >
+              {mic.isEnabled
+                ? <><MicOff className="h-3.5 w-3.5" />Stop</>
+                : <><Mic className="h-3.5 w-3.5" />Start</>}
+            </button>
           ) : (
-            <span className="text-[10px] text-red-400 shrink-0">Chrome/Edge only</span>
+            <button
+              onMouseDown={mic.isEnabled ? mic.pushToTalkStart : undefined}
+              onMouseUp={mic.isEnabled ? mic.pushToTalkEnd : undefined}
+              onMouseLeave={mic.isEnabled ? mic.pushToTalkEnd : undefined}
+              onTouchStart={(e) => { e.preventDefault(); if (mic.isEnabled) mic.pushToTalkStart(); }}
+              onTouchEnd={(e) => { e.preventDefault(); if (mic.isEnabled) mic.pushToTalkEnd(); }}
+              onClick={() => !mic.isEnabled && mic.enable()}
+              disabled={!activeSession}
+              className={cn(
+                "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold",
+                "border transition-all duration-200 shrink-0 select-none",
+                !activeSession
+                  ? "opacity-40 cursor-not-allowed bg-white/5 border-white/10 text-muted-foreground"
+                  : !mic.isEnabled
+                    ? "bg-violet-500/15 border-violet-500/25 text-violet-300 hover:bg-violet-500/25"
+                    : mic.status === "speech_detected"
+                      ? "bg-cyan-500/20 border-cyan-500/30 text-cyan-300 scale-[0.97]"
+                      : "bg-violet-600/20 border-violet-500/30 text-violet-300 hover:bg-violet-600/30 active:scale-[0.97]",
+              )}
+            >
+              <Mic className="h-3.5 w-3.5" />
+              {!mic.isEnabled ? "Enable" : mic.status === "speech_detected" ? "Speaking…" : "Hold"}
+            </button>
           )}
         </div>
 
@@ -337,15 +346,19 @@ export function CoHostPanel({
               <DiagRow n={1}  label="Mic permission"
                 ok={mic.micPermission === "granted"}
                 warn={mic.micPermission === "unknown"}
-                value={mic.micPermission}
+                value={mic.micPermission === "granted" ? "granted ✓" : mic.micPermission === "denied" ? "DENIED — check browser settings" : "unknown (will ask on Start)"}
               />
               <DiagRow n={2}  label="Mic connected (AudioContext)"
                 ok={mic.audioMeterReady}
-                value={mic.audioMeterReady ? "YES" : mic.isEnabled ? "requesting…" : "NO"}
+                value={mic.audioMeterReady ? "YES — audio stream active" : mic.isEnabled ? "requesting…" : "NO"}
               />
               <DiagRow n={3}  label="SpeechRecognition API"
                 ok={mic.browserSupported}
-                value={mic.browserSupported ? "Chrome/Edge ✓" : "NOT SUPPORTED"}
+                value={mic.browserSupported
+                  ? `Chrome/Edge ✓${mic.isAndroidChrome ? " (Android — restart-per-utterance mode)" : ""}`
+                  : mic.isAndroidChrome
+                    ? "NOT SUPPORTED — open in Chrome for Android"
+                    : "NOT SUPPORTED — use Chrome or Edge"}
               />
               <DiagRow n={4}  label="Session active + sessionId"
                 ok={activeSession}
@@ -359,24 +372,30 @@ export function CoHostPanel({
                 ok={mic.speechRecogActive}
                 value={mic.speechRecogActive ? "YES — LISTENING" : `NO | status=${mic.status}`}
               />
-              <DiagRow n={7}  label="Interim transcript"
-                ok={!!mic.interimTranscript}
-                neutral={!mic.isEnabled}
-                value={mic.interimTranscript ? `"${mic.interimTranscript.slice(0, 60)}"` : "—"}
+              <DiagRow n={7}  label="Hearing audio (level > 5%)"
+                ok={mic.audioMeterReady && mic.audioLevel > 5}
+                neutral={!mic.isEnabled || !mic.audioMeterReady}
+                value={mic.audioMeterReady
+                  ? `Level=${mic.audioLevel}% ${mic.audioLevel > 5 ? "— audio detected ✓" : "— silent / too quiet"}`
+                  : "AudioContext not started"}
               />
-              <DiagRow n={8}  label="Final transcript (accumulated)"
-                ok={!!mic.lastFinalTranscript || !!mic.lastSentText}
+              <DiagRow n={8}  label="Transcript received"
+                ok={!!mic.interimTranscript || !!mic.lastFinalTranscript}
                 neutral={!mic.isEnabled}
-                value={mic.lastSentText ? `"${mic.lastSentText.slice(0, 60)}"` : mic.lastFinalTranscript ? `acc: "${mic.lastFinalTranscript.slice(0, 60)}"` : "—"}
+                value={mic.interimTranscript
+                  ? `interim: "${mic.interimTranscript.slice(0, 60)}"`
+                  : mic.lastFinalTranscript
+                    ? `final: "${mic.lastFinalTranscript.slice(0, 60)}"`
+                    : "—"}
               />
-              <DiagRow n={9}  label="streamer:speech emitted"
+              <DiagRow n={9}  label="Sent to AI (streamer:speech)"
                 ok={emitCount > 0}
                 neutral={!mic.isEnabled}
                 value={emitCount > 0
                   ? `YES — ${emitCount}× | lang=${lastMicEmit?.lang ?? "?"} | "${(lastMicEmit?.text ?? "").slice(0, 40)}"`
-                  : "NO — not sent yet"}
+                  : "NO — speak something to trigger"}
               />
-              <DiagRow n={10} label="Backend ACK received"
+              <DiagRow n={10} label="AI response received"
                 ok={lastMicBackendAck?.ok === true}
                 warn={lastMicBackendAck?.ok === false}
                 neutral={!lastMicBackendAck}

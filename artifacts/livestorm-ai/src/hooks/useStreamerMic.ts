@@ -61,6 +61,10 @@ declare global {
   }
 }
 
+// Android Chrome ignores continuous=true and stops after each utterance.
+// We detect it at module level so we can adjust behaviour at runtime.
+const IS_ANDROID = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+
 interface UseStreamerMicOptions {
   sendStreamerSpeech: ((text: string, lang: string) => void) | undefined;
   sessionId: number | undefined;
@@ -80,6 +84,7 @@ export interface UseStreamerMicReturn {
   transcripts: TranscriptEntry[];
   error: string | null;
   browserSupported: boolean;
+  isAndroidChrome: boolean;
   audioLevel: number;
   audioMeterReady: boolean;
   micPermission: MicPermission;
@@ -105,7 +110,11 @@ export function useStreamerMic({
   isSessionActive,
   defaultLang = "uk-UA",
 }: UseStreamerMicOptions): UseStreamerMicReturn {
-  const [status,              setStatus]              = useState<MicStatus>("idle");
+  // Start as "not_supported" immediately if the browser can't handle SR.
+  const [status,              setStatus]              = useState<MicStatus>(() => {
+    if (typeof window === "undefined") return "idle";
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition) ? "idle" : "not_supported";
+  });
   const [mode,                setModeState]           = useState<MicMode>("continuous");
   const [isEnabled,           setIsEnabled]           = useState(false);
   const [isCoHostEnabled,     setIsCoHostEnabled]     = useState(true);
@@ -258,12 +267,13 @@ export function useStreamerMic({
     const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SR) return;
     const rec = new SR();
-    rec.continuous      = true;
+    // Android Chrome ignores continuous=true — use false and restart manually via onend.
+    rec.continuous      = !IS_ANDROID;
     rec.interimResults  = true;
     rec.maxAlternatives = 1;
     rec.lang            = langRef.current;
     recognitionRef.current = rec;
-    console.log(`[Mic:4] ✅ SpeechRecognition instance created | lang=${rec.lang} | continuous=true | interimResults=true`);
+    console.log(`[Mic:4] ✅ SR created | lang=${rec.lang} | continuous=${rec.continuous} | android=${IS_ANDROID} | interimResults=true`);
 
     rec.onstart = () => {
       console.log(`[Mic:5] ✅ SR onstart fired — NOW LISTENING | lang=${langRef.current}`);
@@ -302,7 +312,22 @@ export function useStreamerMic({
     };
 
     rec.onerror = (event) => {
+      // Ignore expected non-errors
       if (event.error === "no-speech" || event.error === "aborted") return;
+      // Network errors: SR will fire onend and restart automatically — no UI alert needed
+      if (event.error === "network") {
+        console.warn("[Mic:5] SR network error — will restart via onend");
+        return;
+      }
+      // Permission denied — stop mic, show actionable message
+      if (event.error === "not-allowed" || event.error === "permission-denied") {
+        setMicPermission("denied");
+        setError("Microphone access denied. Allow mic in browser settings, then reload the page.");
+        setStatus("error");
+        enabledRef.current = false;
+        setIsEnabled(false);
+        return;
+      }
       console.warn(`[Mic:5] ✗ SR onerror: ${event.error} — ${event.message ?? ""}`);
       setError(`Microphone error: ${event.error}`);
       setStatus("error");
@@ -310,15 +335,16 @@ export function useStreamerMic({
 
     rec.onend = () => {
       setSpeechRecogActive(false);
-      console.log(`[Mic:5] SR onend | enabled=${enabledRef.current} | mode=${modeRef.current} | ptt=${pttActiveRef.current}`);
+      // Always null before restart so we never call .start() on a dead instance.
+      recognitionRef.current = null;
+      console.log(`[Mic:5] SR onend | enabled=${enabledRef.current} | mode=${modeRef.current} | ptt=${pttActiveRef.current} | android=${IS_ANDROID}`);
       if (enabledRef.current && modeRef.current === "continuous") {
+        // Android needs a longer pause + always creates a fresh instance (continuous=false there).
+        const delay = IS_ANDROID ? 600 : 200;
         setTimeout(() => {
           if (!enabledRef.current) return;
-          try { recognitionRef.current?.start(); }
-          catch {
-            buildAndStart();
-          }
-        }, 200);
+          buildAndStart();
+        }, delay);
       } else if (!pttActiveRef.current) {
         setStatus("idle");
       }
@@ -353,7 +379,16 @@ export function useStreamerMic({
   // ── Public API ─────────────────────────────────────────────────────────────
 
   const enable = useCallback(() => {
-    console.log(`[Mic:3] enable() called | isSessionActive=${isSessionActive} | sessionId=${sessionRef.current} | browserSupported=${browserSupported}`);
+    console.log(`[Mic:3] enable() called | isSessionActive=${isSessionActive} | sessionId=${sessionRef.current} | browserSupported=${browserSupported} | android=${IS_ANDROID}`);
+    if (!browserSupported) {
+      const msg = IS_ANDROID
+        ? "Voice recognition is not supported in this browser on Android. Please use Chrome for Android."
+        : "Voice recognition is not supported in this browser. Please use Chrome or Edge.";
+      setStatus("not_supported");
+      setError(msg);
+      console.warn(`[Mic:3] ✗ BLOCKED — browserSupported=false`);
+      return;
+    }
     if (!isSessionActive || !sessionRef.current) {
       console.warn(`[Mic:3] ✗ BLOCKED — isSessionActive=${isSessionActive} | sessionId=${sessionRef.current ?? "NULL"}`);
       return;
@@ -466,6 +501,7 @@ export function useStreamerMic({
     transcripts,
     error,
     browserSupported,
+    isAndroidChrome: IS_ANDROID,
     audioLevel,
     audioMeterReady,
     micPermission,
