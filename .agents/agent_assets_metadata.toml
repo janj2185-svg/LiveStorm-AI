@@ -306,6 +306,54 @@ uri = "file://attached_assets/avatars/female_10_talking.png"
 type = "image"
 title = "AI influencer talking"
 
+[[generated]]
+id = "PVJe-NUAsZXdM19sIYhao"
+uri = "file://attached_assets/avatars/male_5_fullbody.png"
+type = "image"
+title = "broadcaster full body"
+
+[[generated]]
+id = "pAZSRUxCMEXy6Qxhwj95o"
+uri = "file://attached_assets/avatars/male_5_desk.png"
+type = "image"
+title = "broadcaster at desk"
+
+[[generated]]
+id = "qCL1_JLDqfHpUYW1wXUKS"
+uri = "file://attached_assets/avatars/male_5_cinematic.png"
+type = "image"
+title = "broadcaster cinematic mood"
+
+[[generated]]
+id = "jblx3LoNojVEKTibKGkJa"
+uri = "file://attached_assets/avatars/male_5_profile.png"
+type = "image"
+title = "broadcaster profile angle"
+
+[[generated]]
+id = "TnfG_xzIV9YoF746KY2L6"
+uri = "file://attached_assets/avatars/female_8_fullbody.png"
+type = "image"
+title = "tiktok host full body"
+
+[[generated]]
+id = "yz711CsBojV_zU_P1aSKY"
+uri = "file://attached_assets/avatars/female_8_desk.png"
+type = "image"
+title = "tiktok host at desk"
+
+[[generated]]
+id = "0QWSFbMb1QxTmDQVslja5"
+uri = "file://attached_assets/avatars/female_8_cinematic.png"
+type = "image"
+title = "tiktok host cinematic mood"
+
+[[generated]]
+id = "BpLt9NKb4D253hrKdwu7G"
+uri = "file://attached_assets/avatars/female_8_profile.png"
+type = "image"
+title = "tiktok host profile angle"
+
 [[outputs]]
 id = "rQq6SBMxLh4UMtFxW18dE"
 uri = "file://screenshots/desktop-dashboard.jpg"
@@ -749,3 +797,51 @@ id = "MM9qcCfYJpCaS9X3dsVTR"
 uri = "file://attached_assets/avatars/female_10_talking.png"
 type = "image"
 title = "F10 Virtual AI — Talking"
+
+[[outputs]]
+id = "xJAbXkb5ibb7Pv-Nq4-lm"
+uri = "file://attached_assets/avatars/male_5_fullbody.png"
+type = "image"
+title = "M5 — Full Body"
+
+[[outputs]]
+id = "iPnbzxPRjhPT8oAKvGmQ4"
+uri = "file://attached_assets/avatars/male_5_desk.png"
+type = "image"
+title = "M5 — At Desk"
+
+[[outputs]]
+id = "BmB9yElUMwb__0DtuqRD6"
+uri = "file://attached_assets/avatars/male_5_cinematic.png"
+type = "image"
+title = "M5 — Cinematic Mood"
+
+[[outputs]]
+id = "jcIQSHf1MbwJ1hZU2BXyg"
+uri = "file://attached_assets/avatars/male_5_profile.png"
+type = "image"
+title = "M5 — Profile Angle"
+
+[[outputs]]
+id = "er_Bjl3L5RJVejBp4NaYU"
+uri = "file://attached_assets/avatars/female_8_fullbody.png"
+type = "image"
+title = "F8 — Full Body"
+
+[[outputs]]
+id = "yO0NZsC35VDrDz2CfMBap"
+uri = "file://attached_assets/avatars/female_8_desk.png"
+type = "image"
+title = "F8 — At Desk"
+
+[[outputs]]
+id = "ZYbmbkRVnIouXld98lMcy"
+uri = "file://attached_assets/avatars/female_8_cinematic.png"
+type = "image"
+title = "F8 — Cinematic Mood"
+
+[[outputs]]
+id = "VBWSBSY4EcTqauAIYBP45"
+uri = "file://attached_assets/avatars/female_8_profile.png"
+type = "image"
+title = "F8 — Profile Angle"
