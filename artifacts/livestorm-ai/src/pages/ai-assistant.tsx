@@ -427,6 +427,7 @@ function UnifiedChatTab({
   sessionId: number | null;
   isActive: boolean;
 }) {
+  const { t } = useLanguage();
   const chatEvents = useMemo(
     () => [...events.filter((e) => e.type !== "viewerCount")].reverse(),
     [events],
