@@ -293,7 +293,7 @@ function AppRoutes() {
         <ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>
       </Route>
       <Route path="/pricing">
-        <ProtectedRoute><Pricing /></ProtectedRoute>
+        <Pricing />
       </Route>
       <Route path="/admin">
         <ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>

@@ -409,19 +409,57 @@ router.post("/stormpass/qr/hide", requireAuth, async (req: any, res: any) => {
   }
 });
 
+// ── In-memory rate limiter for /stormpass/log ─────────────────────────────────
+const logRateMap = new Map<string, { count: number; resetAt: number }>();
+const LOG_RATE_LIMIT   = 20;
+const LOG_RATE_WINDOW  = 60_000;
+
+function checkLogRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = logRateMap.get(ip);
+  if (!entry || now >= entry.resetAt) {
+    logRateMap.set(ip, { count: 1, resetAt: now + LOG_RATE_WINDOW });
+    return true;
+  }
+  if (entry.count >= LOG_RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
+// Prune stale entries every 5 min to avoid memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of logRateMap) {
+    if (now >= entry.resetAt) logRateMap.delete(ip);
+  }
+}, 300_000);
+
 // ── POST /stormpass/log ───────────────────────────────────────────────────────
 // Public: lightweight tracking for discovery funnel
 router.post("/stormpass/log", async (req, res) => {
   const ALLOWED = ["page_opened", "qr_shown", "search_attempted", "pass_found", "pass_not_found"];
-  const eventType = ((req.body?.eventType) as string) ?? "";
+
+  const eventType  = ((req.body?.eventType)  as string) ?? "";
+  const viewerName = ((req.body?.viewerName) as string) ?? "";
+  const streamerId = req.body?.streamerId;
+
   if (!ALLOWED.includes(eventType)) return res.json({ ok: true });
+  if (viewerName.length > 100)      return res.status(400).json({ error: "Invalid viewerName" });
+  if (streamerId !== undefined && (typeof streamerId !== "number" || !Number.isInteger(streamerId) || streamerId < 1)) {
+    return res.status(400).json({ error: "Invalid streamerId" });
+  }
+
+  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ?? req.socket.remoteAddress ?? "unknown";
+  if (!checkLogRateLimit(ip)) {
+    return res.status(429).json({ error: "Too many requests" });
+  }
 
   await db.execute(sql`
     INSERT INTO storm_pass_events (event_type, viewer_id, metadata, created_at)
     VALUES (
       ${eventType},
-      ${(req.body?.viewerName as string) ?? null},
-      ${JSON.stringify(req.body)}::jsonb,
+      ${viewerName || null},
+      ${JSON.stringify({ eventType, viewerName, streamerId })}::jsonb,
       NOW()
     )
   `).catch(() => {});

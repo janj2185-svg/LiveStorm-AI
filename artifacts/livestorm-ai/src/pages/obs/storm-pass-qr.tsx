@@ -26,10 +26,12 @@ export function ObsStormPassQR() {
   const [qrState,     setQrState]    = useState<QrState | null>(null);
   const [countdown,   setCountdown]  = useState(0);
 
-  // ── Transparent background for OBS ────────────────────────────────────────
+  // ── Transparent background for OBS — always, regardless of params ─────────
   useEffect(() => {
-    document.body.style.background = "transparent";
-    document.body.style.margin     = "0";
+    document.body.style.setProperty("background", "transparent", "important");
+    document.documentElement.style.setProperty("background", "transparent", "important");
+    document.body.style.margin  = "0";
+    document.body.style.padding = "0";
   }, []);
 
   // ── Socket connection ──────────────────────────────────────────────────────
@@ -82,7 +84,7 @@ export function ObsStormPassQR() {
     };
   }, [streamerId, token]);
 
-  if (!qrState) return null;
+  if (!qrState) return <div style={{ background: "transparent", width: "100vw", height: "100vh" }} />;
 
   const passUrl  = qrState.streamerSlug
     ? `${window.location.origin}/pass/${encodeURIComponent(qrState.streamerSlug)}`
@@ -175,7 +177,7 @@ export function ObsStormPassQR() {
             fontFamily: "monospace",
             letterSpacing: "0.02em",
           }}>
-            /pass?s={qrState.streamerSlug}
+            /pass/{qrState.streamerSlug}
           </div>
         )}
 
