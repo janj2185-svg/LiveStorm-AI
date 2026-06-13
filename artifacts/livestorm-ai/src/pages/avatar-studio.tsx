@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import {
   ZoomIn, ZoomOut, ArrowUp, ArrowDown, RotateCcw, Save,
   Upload, Sparkles, Loader2, Sun, Zap, Cloud, Tv2,
-  MousePointer2, Check,
+  MousePointer2, Check, Camera,
 } from "lucide-react";
+import { CameraPreview } from "@/components/avatar/CameraPreview";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetAvatarConfig,
@@ -199,6 +200,7 @@ export function AvatarStudio() {
   const [saved, setSaved]                   = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarStats, setAvatarStats]       = useState<RendererStats | null>(null);
+  const [cameraExpanded, setCameraExpanded] = useState(false);
 
   // Sync from saved config on first load
   useEffect(() => {
@@ -499,6 +501,30 @@ export function AvatarStudio() {
             </ControlBlock>
 
           </div>
+
+          {/* ── Camera section ──────────────────────────────────────────── */}
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden flex-shrink-0">
+            <button
+              onClick={() => setCameraExpanded((v) => !v)}
+              className="w-full flex items-center justify-between px-3 py-3 border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Camera className="h-3.5 w-3.5 text-violet-400" />
+                <div className="text-left">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Phase 1</p>
+                  <p className="text-sm font-black text-white">Camera</p>
+                </div>
+              </div>
+              <span className="text-[9px] text-muted-foreground/40">{cameraExpanded ? "▲" : "▼"}</span>
+            </button>
+
+            {cameraExpanded && (
+              <div className="px-3 py-3">
+                <CameraPreview />
+              </div>
+            )}
+          </div>
+
         </div>
 
         {/* ═══════════════ RIGHT: 9:16 portrait preview ═══════════════ */}
