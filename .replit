@@ -42,6 +42,7 @@ channel = "stable-25_05"
 
 [userenv.shared]
 LIVE_PROVIDER = "tiktools"
+YOUTUBE_REDIRECT_URI = "https://live-storm-ai.replit.app/api/youtube/callback"
 
 [userenv.development]
 DISABLE_OLD_PIPELINE = "true"
