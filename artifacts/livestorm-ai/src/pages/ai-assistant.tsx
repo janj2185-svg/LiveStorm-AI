@@ -47,7 +47,7 @@ import {
   Server, AlertTriangle, CheckCircle2, WifiOff, Plug, TestTube2,
   Boxes, SlidersHorizontal, Monitor, Cpu,
   Shirt, Tv2, Palette, Sun, Square, Activity, Eye, ArrowDown,
-  TrendingUp, Trophy, MessageCircle, UserPlus, Gem, Languages, Swords,
+  TrendingUp, Trophy, MessageCircle, UserPlus, Gem, Languages, Swords, Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/react";
@@ -1578,25 +1578,45 @@ export function AiAssistant() {
               )}>
                 {/* Futuristic stage background */}
                 <StageBackground variant="purple" showRing showScan showGrid showCorners />
-                <AvatarStage
-                  avatarKey={avatarConfig?.avatarKey ?? "marcus"}
-                  accentColor={accentColor}
-                  scale={avatarConfig?.scale ?? 1.0}
-                  positionY={avatarConfig?.positionY ?? -0.8}
-                  lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
-                  avatarEnabled={avatarConfig?.avatarEnabled ?? true}
-                  avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? `${import.meta.env.BASE_URL}avatars/storm-default.vrm`}
-                  animationState={animState}
-                  mouthOpenAmount={mouthOpen}
-                  expressionIntensity={expressionIntensity}
-                  backgroundGradient={getBackgroundGradient(selectedBackground)}
-                  isSpeaking={isSpeaking}
-                  personaName={personaName}
-                  onOpenSettings={() => setAvatarSheetOpen(true)}
-                  showDebug={showAvatarDebug}
-                  showLogo={true}
-                  className="absolute inset-0 w-full h-full"
-                />
+
+                {/* Avatar — only rendered when explicitly enabled */}
+                {avatarConfig?.avatarEnabled ? (
+                  <AvatarStage
+                    avatarKey={avatarConfig?.avatarKey ?? "marcus"}
+                    accentColor={accentColor}
+                    scale={avatarConfig?.scale ?? 1.0}
+                    positionY={avatarConfig?.positionY ?? -0.8}
+                    lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
+                    avatarEnabled={true}
+                    avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? null}
+                    animationState={animState}
+                    mouthOpenAmount={mouthOpen}
+                    expressionIntensity={expressionIntensity}
+                    backgroundGradient={getBackgroundGradient(selectedBackground)}
+                    isSpeaking={isSpeaking}
+                    personaName={personaName}
+                    onOpenSettings={() => setAvatarSheetOpen(true)}
+                    showDebug={showAvatarDebug}
+                    showLogo={true}
+                    className="absolute inset-0 w-full h-full"
+                  />
+                ) : (
+                  /* Empty stage — shown until user enables avatar in settings */
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none select-none">
+                    <div className="flex flex-col items-center gap-4 text-center px-6">
+                      <div className="relative">
+                        <div className="absolute inset-0 rounded-full blur-xl opacity-50" style={{ background: "radial-gradient(circle,rgba(139,92,246,0.5),transparent)" }} />
+                        <div className="relative w-20 h-20 rounded-full bg-violet-500/[0.08] border-2 border-dashed border-violet-400/30 flex items-center justify-center">
+                          <Upload className="h-7 w-7 text-violet-400/50" />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-white/55 tracking-wide">STAGE READY</p>
+                        <p className="text-[11px] text-white/25 mt-1 leading-snug max-w-[140px]">Enable & upload your avatar in Settings → Avatar</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Top-left: status badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
@@ -2222,8 +2242,8 @@ export function AiAssistant() {
                     scale={avatarConfig?.scale ?? 1.0}
                     positionY={avatarConfig?.positionY ?? -0.8}
                     lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
-                    avatarEnabled={avatarConfig?.avatarEnabled ?? true}
-                    avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? `${import.meta.env.BASE_URL}avatars/storm-default.vrm`}
+                    avatarEnabled={avatarConfig?.avatarEnabled ?? false}
+                    avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? null}
                     onStats={setRendererStats}
                     showFps={false}
                     animationState={animState}
