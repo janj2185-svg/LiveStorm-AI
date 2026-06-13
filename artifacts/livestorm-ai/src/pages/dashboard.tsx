@@ -321,7 +321,7 @@ export function Dashboard() {
     connected: boolean;
     channelName: string | null;
     channelId: string | null;
-    connector: { active: boolean; liveChatId: string | null } | null;
+    connector: { active: boolean; liveChatId: string | null; viewerCount: number | null } | null;
   } | null>(null);
   const [ytLoading, setYtLoading] = useState(false);
 
@@ -927,11 +927,19 @@ export function Dashboard() {
                 ) : ytStatus.connected ? (
                   <>
                     {ytStatus.connector?.liveChatId ? (
-                      <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/15">
-                        <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
-                        <span className="text-[11px] text-red-300 font-medium flex-1 truncate">
-                          Chat connected
-                        </span>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/15">
+                          <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
+                          <span className="text-[11px] text-red-300 font-medium flex-1 truncate">
+                            Chat connected
+                          </span>
+                          {ytStatus.connector.viewerCount != null && (
+                            <span className="flex items-center gap-1 text-[10px] text-red-300/70 font-semibold">
+                              <Eye className="h-2.5 w-2.5" />
+                              {ytStatus.connector.viewerCount.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ) : isActive ? (
                       <Button

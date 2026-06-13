@@ -39,13 +39,15 @@ router.get("/youtube/config", (_req: any, res: any) => {
  * GET /api/youtube/auth-url
  * Returns the Google OAuth URL the frontend should redirect to.
  */
-router.get("/youtube/auth-url", requireAuth, (_req: any, res: any) => {
+router.get("/youtube/auth-url", requireAuth, (req: any, res: any) => {
   if (!isYouTubeConfigured()) {
     return res.status(503).json({
       error: "YouTube OAuth is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and YOUTUBE_REDIRECT_URI.",
     });
   }
-  res.json({ url: getYouTubeAuthUrl() });
+  // Encode the authenticated user's Clerk ID in the state param so the
+  // unauthenticated /callback route can identify who to store tokens for.
+  res.json({ url: getYouTubeAuthUrl(req.clerkUserId as string) });
 });
 
 /**
@@ -75,32 +77,27 @@ router.get("/youtube/callback", async (req: any, res: any) => {
   }
 
   try {
+    // The state param MUST be the clerkUserId encoded by /youtube/auth-url.
+    // If it is absent or invalid we reject the callback — this prevents token
+    // mis-binding in multi-user environments.
+    if (!state || typeof state !== "string" || state.trim() === "") {
+      console.error("[YouTube:OAuth] Missing or empty state param — rejecting callback");
+      return res.redirect(`${dashboardUrl}?youtube_error=invalid_state`);
+    }
+
+    const userRow = await db.query.usersTable.findFirst({
+      where: eq(usersTable.clerkId, state),
+      columns: { id: true },
+    });
+
+    if (!userRow) {
+      console.error(`[YouTube:OAuth] No user found for clerkId in state: ${state}`);
+      return res.redirect(`${dashboardUrl}?youtube_error=unknown_user`);
+    }
+
+    const userId = userRow.id;
+
     const { accessToken, refreshToken, channelId, channelName } = await exchangeYouTubeCode(code);
-
-    // Identify the user from the state param (clerkUserId encoded) or fallback to first user
-    let userId: number | null = null;
-
-    if (state && typeof state === "string") {
-      const row = await db.query.usersTable.findFirst({
-        where: eq(usersTable.clerkId, state),
-        columns: { id: true },
-      });
-      userId = row?.id ?? null;
-    }
-
-    if (!userId) {
-      // Fallback: use the most recently created user (single-user instances)
-      const row = await db.query.usersTable.findFirst({
-        columns: { id: true },
-        orderBy: (t, { desc: d }) => [d(t.createdAt)],
-      });
-      userId = row?.id ?? null;
-    }
-
-    if (!userId) {
-      console.error("[YouTube:OAuth] Could not identify user for token storage");
-      return res.redirect(`${dashboardUrl}?youtube_error=no_user`);
-    }
 
     await db
       .update(usersTable)

@@ -23,6 +23,7 @@ import { eq } from "drizzle-orm";
 interface YouTubeConnectorEntry {
   stop: () => void;
   liveChatId: string | null;
+  viewerCount: number | null;
 }
 
 const activeYouTubeConnectors = new Map<number, YouTubeConnectorEntry>();
@@ -59,12 +60,17 @@ export function isYouTubeConfigured(): boolean {
   );
 }
 
-export function getYouTubeAuthUrl(): string {
+/**
+ * Generate an OAuth URL that encodes the user's Clerk ID in the `state` param
+ * so the unauthenticated /callback route can unambiguously identify the user.
+ */
+export function getYouTubeAuthUrl(clerkUserId: string): string {
   const client = createOAuthClient();
   return client.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/youtube.readonly"],
     prompt: "consent",
+    state: clerkUserId,
   });
 }
 
@@ -121,18 +127,34 @@ async function refreshToken(refreshTokenStr: string): Promise<string | null> {
 
 // ── Internal: YouTube API calls ───────────────────────────────────────────────
 
-async function fetchActiveLiveChatId(accessToken: string): Promise<string | null> {
+interface LiveBroadcastInfo {
+  liveChatId: string | null;
+  viewerCount: number | null;
+}
+
+async function fetchActiveBroadcastInfo(accessToken: string): Promise<LiveBroadcastInfo> {
   try {
     const res = await fetch(
-      "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&broadcastStatus=active&mine=true",
+      "https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,statistics&broadcastStatus=active&mine=true",
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
-    if (!res.ok) return null;
+    if (!res.ok) return { liveChatId: null, viewerCount: null };
     const data = (await res.json()) as any;
-    return data.items?.[0]?.snippet?.liveChatId ?? null;
+    const item = data.items?.[0];
+    return {
+      liveChatId: item?.snippet?.liveChatId ?? null,
+      viewerCount: item?.statistics?.concurrentViewers != null
+        ? parseInt(item.statistics.concurrentViewers, 10)
+        : null,
+    };
   } catch {
-    return null;
+    return { liveChatId: null, viewerCount: null };
   }
+}
+
+/** @deprecated Use fetchActiveBroadcastInfo — kept for a single call site */
+async function fetchActiveLiveChatId(accessToken: string): Promise<string | null> {
+  return (await fetchActiveBroadcastInfo(accessToken)).liveChatId;
 }
 
 interface YTMessage {
@@ -201,57 +223,62 @@ export async function startYouTubeConnector(
   let pollingTimer: ReturnType<typeof setTimeout> | null = null;
   const seenIds = new Set<string>();
 
-  // Register entry immediately to prevent duplicate starts
-  activeYouTubeConnectors.set(sessionId, {
-    stop: () => {
-      stopped = true;
-      if (pollingTimer) clearTimeout(pollingTimer);
-    },
-    liveChatId: null,
-  });
+  let viewerCount: number | null = null;
 
-  // Try to find an active broadcast
-  liveChatId = await fetchActiveLiveChatId(currentToken);
-  if (!liveChatId) {
-    const newToken = await refreshToken(refreshTokenStr);
-    if (newToken) {
-      currentToken = newToken;
-      liveChatId = await fetchActiveLiveChatId(currentToken);
-    }
-  }
-
-  if (liveChatId) {
-    console.log(`[YouTube] ✓ Live chat found for session ${sessionId}: ${liveChatId}`);
+  function setEntry(chatId: string | null, vc: number | null) {
+    liveChatId = chatId;
+    viewerCount = vc;
     activeYouTubeConnectors.set(sessionId, {
       stop: () => {
         stopped = true;
         if (pollingTimer) clearTimeout(pollingTimer);
       },
-      liveChatId,
+      liveChatId: chatId,
+      viewerCount: vc,
     });
-    io.to(roomId).emit("youtube:status", { connected: true, liveChatId });
+  }
+
+  // Register entry immediately to prevent duplicate starts
+  setEntry(null, null);
+
+  // Try to find an active broadcast
+  let info = await fetchActiveBroadcastInfo(currentToken);
+  if (!info.liveChatId) {
+    const newToken = await refreshToken(refreshTokenStr);
+    if (newToken) {
+      currentToken = newToken;
+      info = await fetchActiveBroadcastInfo(currentToken);
+    }
+  }
+
+  if (info.liveChatId) {
+    console.log(`[YouTube] ✓ Live chat found for session ${sessionId}: ${info.liveChatId} viewers=${info.viewerCount ?? "?"}`);
+    setEntry(info.liveChatId, info.viewerCount);
+    io.to(roomId).emit("youtube:status", { connected: true, liveChatId: info.liveChatId, viewerCount: info.viewerCount });
   } else {
     console.log(`[YouTube] No active broadcast for session ${sessionId} — will poll every ${POLL_INTERVAL_MS}ms`);
-    io.to(roomId).emit("youtube:status", { connected: true, liveChatId: null, waiting: true });
+    io.to(roomId).emit("youtube:status", { connected: true, liveChatId: null, viewerCount: null, waiting: true });
   }
 
   async function poll() {
     if (stopped) return;
 
     try {
-      // (Re-)discover live chat if not yet found
+      // (Re-)discover live chat if not yet found, or refresh viewer count if already connected
       if (!liveChatId) {
-        liveChatId = await fetchActiveLiveChatId(currentToken);
-        if (liveChatId) {
-          console.log(`[YouTube] Broadcast detected for session ${sessionId}: ${liveChatId}`);
-          activeYouTubeConnectors.set(sessionId, {
-            stop: () => {
-              stopped = true;
-              if (pollingTimer) clearTimeout(pollingTimer);
-            },
-            liveChatId,
-          });
-          io.to(roomId).emit("youtube:status", { connected: true, liveChatId });
+        const broadcastInfo = await fetchActiveBroadcastInfo(currentToken);
+        if (broadcastInfo.liveChatId) {
+          console.log(`[YouTube] Broadcast detected for session ${sessionId}: ${broadcastInfo.liveChatId}`);
+          setEntry(broadcastInfo.liveChatId, broadcastInfo.viewerCount);
+          io.to(roomId).emit("youtube:status", { connected: true, liveChatId: broadcastInfo.liveChatId, viewerCount: broadcastInfo.viewerCount });
+        }
+      } else {
+        // Refresh viewer count every ~30s (every 6 polls at 5s cadence)
+        if (seenIds.size % 6 === 0) {
+          const broadcastInfo = await fetchActiveBroadcastInfo(currentToken);
+          if (broadcastInfo.viewerCount !== null && broadcastInfo.viewerCount !== viewerCount) {
+            setEntry(liveChatId, broadcastInfo.viewerCount);
+          }
         }
       }
 
@@ -367,8 +394,8 @@ export function stopYouTubeConnector(sessionId: number): void {
 
 export function getYouTubeConnectorState(
   sessionId: number,
-): { active: boolean; liveChatId: string | null } | null {
+): { active: boolean; liveChatId: string | null; viewerCount: number | null } | null {
   const entry = activeYouTubeConnectors.get(sessionId);
   if (!entry) return null;
-  return { active: true, liveChatId: entry.liveChatId };
+  return { active: true, liveChatId: entry.liveChatId, viewerCount: entry.viewerCount };
 }

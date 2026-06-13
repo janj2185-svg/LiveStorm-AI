@@ -62,6 +62,14 @@ httpServer.listen(port, (err?: Error) => {
     ALTER TABLE ai_persona_configs ADD COLUMN IF NOT EXISTS intensity_mode TEXT NOT NULL DEFAULT 'streamer';
   `).catch((err) => logger.warn({ msg: String(err?.message) }, "Schema migration skipped"));
 
+  // YouTube OAuth columns
+  db.execute(sql`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube_access_token  TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube_refresh_token TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube_channel_id    TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube_channel_name  TEXT;
+  `).catch((err) => logger.warn({ msg: String(err?.message) }, "YouTube column migration skipped"));
+
   // Stripe (non-fatal — gracefully skips if not connected)
   initStripe().catch((err) =>
     logger.warn({ msg: err?.message }, "Stripe init error"),
