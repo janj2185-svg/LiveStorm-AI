@@ -82,6 +82,29 @@ function factIcon(key: string): string {
   return "💡";
 }
 
+// ── GET /storm-pass/streamer-id/:id ──────────────────────────────────────────
+// Public: backward-compat — resolve numeric streamerId → tiktokUsername for redirect
+router.get("/storm-pass/streamer-id/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
+
+    const row = await db
+      .select({ tiktokUsername: usersTable.tiktokUsername })
+      .from(streamersTable)
+      .innerJoin(usersTable, eq(usersTable.id, streamersTable.userId))
+      .where(eq(streamersTable.id, id))
+      .limit(1)
+      .then(r => r[0] ?? null);
+
+    if (!row) return res.status(404).json({ error: "Streamer not found" });
+    return res.json({ tiktokUsername: row.tiktokUsername });
+  } catch (err: unknown) {
+    console.error("[StormPass:streamer-id] error:", (err as Error)?.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ── GET /storm-pass/streamer/:slug ───────────────────────────────────────────
 // Public: lookup streamerId by TikTok username — MUST be registered before /:streamerId/:viewerId
 router.get("/storm-pass/streamer/:slug", async (req, res) => {

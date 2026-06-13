@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { ProgressRing } from "@/components/ui/premium";
 
 const BASE_URL = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
@@ -135,20 +135,45 @@ function num(n: number): string {
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────
-function NotFound({ viewerId, streamerId }: { viewerId: string; streamerId: string }) {
+function NotFound({ viewerId, streamerSlug }: { viewerId: string; streamerSlug: string }) {
   return (
     <div className="min-h-screen bg-[#060810] flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="text-7xl mb-6">⚡</div>
-        <h1 className="text-2xl font-bold text-white mb-3">Глядача не знайдено</h1>
-        <p className="text-slate-400 mb-2">
-          Storm ще не знає нікого з ніком{" "}
-          <span className="text-violet-400 font-mono">{decodeURIComponent(viewerId)}</span>
+      <div className="text-center max-w-sm">
+        <div className="text-6xl mb-5">😶‍🌫️</div>
+        <h1 className="text-2xl font-bold text-white mb-3">Storm тебе ще не бачив</h1>
+        <p className="text-slate-400 text-sm mb-2 leading-relaxed">
+          Профіль{" "}
+          <span className="text-violet-400 font-mono">@{decodeURIComponent(viewerId)}</span>
+          {" "}ще не існує.
         </p>
-        <p className="text-slate-500 text-sm">
-          Напиши в чаті стрімера {streamerId} — Storm запам'ятає тебе!
+        <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+          Storm запам'ятовує глядачів, які пишуть в чат під час стріму.
+          Зайди на стрім{streamerSlug ? (
+            <span> <span className="text-white font-semibold">@{streamerSlug}</span></span>
+          ) : ""} і напиши будь-яке повідомлення — і твій Storm Pass з'явиться автоматично.
         </p>
-        <div className="mt-8 text-xs text-slate-600">Storm Pass · LiveStorm AI</div>
+
+        <div className="flex flex-col gap-3">
+          {streamerSlug && (
+            <a
+              href={`https://www.tiktok.com/@${streamerSlug}/live`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+            >
+              ⚡ Перейти на стрім @{streamerSlug}
+            </a>
+          )}
+          <a
+            href={streamerSlug ? `/pass/${streamerSlug}` : "/pass"}
+            className="w-full py-2.5 rounded-xl font-semibold text-sm text-slate-400 border border-white/10 hover:border-white/20 transition-colors"
+          >
+            ← Спробувати ще раз
+          </a>
+        </div>
+
+        <div className="mt-8 text-xs text-slate-700">Storm Pass · LiveStorm AI</div>
       </div>
     </div>
   );
@@ -347,22 +372,69 @@ function StormPassCard({ data }: { data: StormPassData }) {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
+// Accepts /pass/:slug/:viewer where :slug is either a TikTok username OR a
+// legacy numeric streamerId (for backward compat — gets redirected to slug URL).
 export function StormPass() {
-  const params = useParams<{ streamerId: string; viewerId: string }>();
-  const streamerId = params.streamerId ?? "";
-  const viewerId   = params.viewerId   ?? "";
+  const params = useParams<{ slug: string; viewer: string }>();
+  const [, navigate] = useLocation();
+  const slug   = params.slug   ?? "";
+  const viewer = params.viewer ?? "";
 
-  const [data,    setData]    = useState<StormPassData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [resolvedId,   setResolvedId]   = useState<number | null>(null);
+  const [resolvedSlug, setResolvedSlug] = useState<string>("");
+  const [data,         setData]         = useState<StormPassData | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [notFound,     setNotFound]     = useState(false);
 
+  // Phase 1: resolve slug → streamerId (or redirect if numeric)
   useEffect(() => {
-    if (!streamerId || !viewerId) { setLoading(false); setNotFound(true); return; }
+    if (!slug || !viewer) { setLoading(false); setNotFound(true); return; }
+
+    const isNumeric = /^\d+$/.test(slug);
+
+    if (isNumeric) {
+      // Legacy numeric URL → look up tiktokUsername → redirect
+      fetch(`${BASE_URL}/api/storm-pass/streamer-id/${slug}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.tiktokUsername) {
+            navigate(`/pass/${d.tiktokUsername}/${encodeURIComponent(viewer)}`, { replace: true });
+          } else {
+            // No slug found — use numeric ID directly as fallback
+            setResolvedId(parseInt(slug, 10));
+            setResolvedSlug(slug);
+          }
+        })
+        .catch(() => {
+          setResolvedId(parseInt(slug, 10));
+          setResolvedSlug(slug);
+        });
+      return;
+    }
+
+    // Slug-based: resolve to numeric streamerId for API call
+    setResolvedSlug(slug);
+    fetch(`${BASE_URL}/api/storm-pass/streamer/${encodeURIComponent(slug)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.streamerId) {
+          setResolvedId(d.streamerId);
+        } else {
+          setNotFound(true);
+          setLoading(false);
+        }
+      })
+      .catch(() => { setNotFound(true); setLoading(false); });
+  }, [slug, viewer]);
+
+  // Phase 2: fetch profile once streamerId is resolved
+  useEffect(() => {
+    if (resolvedId === null) return;
     setLoading(true);
     setNotFound(false);
     setData(null);
 
-    fetch(`${BASE_URL}/api/storm-pass/${encodeURIComponent(streamerId)}/${encodeURIComponent(viewerId)}`)
+    fetch(`${BASE_URL}/api/storm-pass/${resolvedId}/${encodeURIComponent(viewer)}`)
       .then(async r => {
         if (r.status === 404) { setNotFound(true); return; }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -374,10 +446,10 @@ export function StormPass() {
         setNotFound(true);
       })
       .finally(() => setLoading(false));
-  }, [streamerId, viewerId]);
+  }, [resolvedId, viewer]);
 
   if (loading)  return <Loading />;
-  if (notFound) return <NotFound viewerId={viewerId} streamerId={streamerId} />;
+  if (notFound) return <NotFound viewerId={viewer} streamerSlug={resolvedSlug} />;
   if (data)     return <StormPassCard data={data} />;
   return <Loading />;
 }

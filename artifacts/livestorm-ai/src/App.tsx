@@ -299,12 +299,16 @@ function AppRoutes() {
         <ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>
       </Route>
 
-      <Route path="/pass">
+      <Route path="/pass/:slug/:viewer">
+        <StormPass />
+      </Route>
+
+      <Route path="/pass/:slug">
         <PassEntry />
       </Route>
 
-      <Route path="/pass/:streamerId/:viewerId">
-        <StormPass />
+      <Route path="/pass">
+        <PassEntry />
       </Route>
 
       <Route>

@@ -84,7 +84,9 @@ export function ObsStormPassQR() {
 
   if (!qrState) return null;
 
-  const passUrl  = `${window.location.origin}/pass${qrState.streamerSlug ? `?s=${encodeURIComponent(qrState.streamerSlug)}` : ""}`;
+  const passUrl  = qrState.streamerSlug
+    ? `${window.location.origin}/pass/${encodeURIComponent(qrState.streamerSlug)}`
+    : `${window.location.origin}/pass`;
   const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=12&color=ffffff&bgcolor=0d1120&data=${encodeURIComponent(passUrl)}`;
   const pct      = Math.round((countdown / qrState.duration) * 100);
 

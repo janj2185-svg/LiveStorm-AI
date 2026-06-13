@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useParams, useLocation } from "wouter";
 
 const BASE_URL = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
@@ -16,39 +16,52 @@ function logEvent(event: string, data?: Record<string, string>) {
 export function PassEntry() {
   const [, navigate] = useLocation();
 
-  const params        = new URLSearchParams(window.location.search);
-  const presetSlug    = params.get("s") ?? "";
+  // Support both /pass/:slug and /pass with ?s= query param
+  const params     = useParams<{ slug?: string }>();
+  const paramSlug  = params.slug ?? "";
+  const querySlug  = new URLSearchParams(window.location.search).get("s") ?? "";
+  const presetSlug = paramSlug || querySlug;
 
   const [streamer, setStreamer] = useState(presetSlug);
   const [viewer,   setViewer]   = useState("");
   const [state,    setState]    = useState<SearchState>("idle");
 
   useEffect(() => {
-    document.title = "Storm Pass — LiveStorm AI";
+    document.title = presetSlug
+      ? `@${presetSlug} · Storm Pass`
+      : "Storm Pass — LiveStorm AI";
     logEvent("page_opened", { streamerSlug: presetSlug });
+  }, [presetSlug]);
+
+  // Keep form streamer in sync if slug param changes (e.g. navigation)
+  useEffect(() => {
+    if (presetSlug) setStreamer(presetSlug);
   }, [presetSlug]);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    const s = streamer.trim().replace(/^@/, "");
-    const v = viewer.trim();
-    if (!s || !v) return;
+    const slug = streamer.trim().replace(/^@/, "");
+    const nick = viewer.trim();
+    if (!slug || !nick) return;
 
     setState("loading");
-    logEvent("search_attempted", { streamerSlug: s, viewerName: v });
+    logEvent("search_attempted", { streamerSlug: slug, viewerName: nick });
 
     try {
-      const r = await fetch(`${BASE_URL}/api/storm-pass/search?streamer=${encodeURIComponent(s)}&viewer=${encodeURIComponent(v)}`);
+      const r = await fetch(
+        `${BASE_URL}/api/storm-pass/search?streamer=${encodeURIComponent(slug)}&viewer=${encodeURIComponent(nick)}`
+      );
       if (r.status === 404) {
         setState("not_found");
-        logEvent("pass_not_found", { streamerSlug: s, viewerName: v });
+        logEvent("pass_not_found", { streamerSlug: slug, viewerName: nick });
         return;
       }
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
       const data = await r.json();
-      logEvent("pass_found", { streamerSlug: s, viewerName: v });
-      navigate(`/pass/${data.streamerId}/${encodeURIComponent(data.viewerName ?? v)}`);
+      logEvent("pass_found", { streamerSlug: slug, viewerName: nick });
+      // Navigate to slug-based URL — no numeric IDs in public URLs
+      navigate(`/pass/${encodeURIComponent(slug)}/${encodeURIComponent(data.viewerName ?? nick)}`);
     } catch {
       setState("error");
     }
@@ -61,9 +74,16 @@ export function PassEntry() {
       <div className="text-center mb-10">
         <div className="text-6xl mb-4">⚡</div>
         <h1 className="text-3xl font-black text-white tracking-tight mb-2">Storm Pass</h1>
-        <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
-          Знайди свій профіль глядача — побачиш рівень, досягнення та що Storm про тебе пам'ятає
-        </p>
+        {presetSlug ? (
+          <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
+            Стрімер <span className="text-white font-semibold">@{presetSlug}</span> ·{" "}
+            введи свій TikTok нік щоб відкрити профіль
+          </p>
+        ) : (
+          <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
+            Знайди свій профіль глядача — побачиш рівень, досягнення та що Storm про тебе пам'ятає
+          </p>
+        )}
       </div>
 
       {/* Search card */}
@@ -100,6 +120,7 @@ export function PassEntry() {
             onChange={e => setViewer(e.target.value)}
             placeholder="Jan_Kyiv"
             required
+            autoFocus={!!presetSlug}
             className="w-full bg-[#141929] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 transition-all"
           />
         </div>
@@ -107,10 +128,12 @@ export function PassEntry() {
         {/* Error states */}
         {state === "not_found" && (
           <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-950/40 border border-amber-700/40 rounded-xl">
-            <span className="text-base flex-shrink-0">😕</span>
+            <span className="text-base flex-shrink-0">😶‍🌫️</span>
             <div>
-              <p className="text-amber-400 text-xs font-semibold">Профіль не знайдено</p>
-              <p className="text-amber-500/70 text-xs mt-0.5">Напиши в чаті стрімера — Storm запам'ятає тебе!</p>
+              <p className="text-amber-400 text-xs font-semibold">Storm тебе ще не бачив</p>
+              <p className="text-amber-500/70 text-xs mt-0.5">
+                Напиши будь-що в чат стрімера під час стріму — Storm запам'ятає тебе!
+              </p>
             </div>
           </div>
         )}
