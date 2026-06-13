@@ -168,7 +168,7 @@ function computeSimilarity(a: string, b: string): number {
 }
 
 function isTooSimilarToRecent(text: string, recentReplies: string[], threshold = 0.7): boolean {
-  const check = recentReplies.slice(-10); // compare against last 10 replies
+  const check = recentReplies.slice(-20); // compare against last 20 replies
   for (const prev of check) {
     if (computeSimilarity(text, prev) >= threshold) return true;
   }

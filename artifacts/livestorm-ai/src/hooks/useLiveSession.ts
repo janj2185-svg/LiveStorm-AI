@@ -999,6 +999,7 @@ export function useLiveSession(
     const ts = Date.now();
     lastSpeechEmitAtRef.current = ts;   // start AI latency timer
     setLastMicEmit({ text, lang, ts });
+    stopAllSpeechNow();  // interrupt any playing TTS before co-host responds
     console.log(`[Mic:9] ✅ socket.emit streamer:speech → backend | sessionId=${sessionId}`);
     socket.emit(
       "streamer:speech",
