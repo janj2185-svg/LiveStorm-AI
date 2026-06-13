@@ -7,6 +7,57 @@ const openai = process.env.OPENAI_API_KEY
 const THROTTLE_MS = 15 * 60 * 1000;
 const MAX_CALLS_PER_STREAM = 30;
 
+// ── Nickname detection ────────────────────────────────────────────────────────
+// Detects when a viewer states their name/nickname in a chat message.
+// Returns { name, isChangeRequest } or null if no name found.
+
+const NICKNAME_PATTERNS: Array<{ re: RegExp; group: number }> = [
+  // Ukrainian
+  { re: /мене звати\s+([А-ЯҐЄІЇа-яґєії\w]{2,20})/i,                group: 1 },
+  { re: /звати мене\s+([А-ЯҐЄІЇа-яґєії\w]{2,20})/i,                group: 1 },
+  { re: /зви мене\s+([А-ЯҐЄІЇа-яґєії\w]{2,20})/i,                  group: 1 },
+  { re: /називай мене\s+([А-ЯҐЄІЇа-яґєії\w]{2,20})/i,              group: 1 },
+  { re: /моє (ім.я|прізвисько|нік)\s+([А-ЯҐЄІЇа-яґєії\w]{2,20})/i, group: 2 },
+  { re: /я\s+([А-ЯҐЄІЇа-яґєії][а-яґєії]{2,14})\s*$/i,              group: 1 },
+  { re: /мій нік\s+([А-ЯҐЄІЇа-яґєії\w]{2,20})/i,                   group: 1 },
+  // Russian
+  { re: /меня зовут\s+([А-ЯЁа-яё\w]{2,20})/i,                       group: 1 },
+  { re: /зови меня\s+([А-ЯЁа-яё\w]{2,20})/i,                        group: 1 },
+  { re: /называй меня\s+([А-ЯЁа-яё\w]{2,20})/i,                     group: 1 },
+  // English
+  { re: /(?:my name is|call me|i'?m called|you can call me)\s+([\w]{2,20})/i, group: 1 },
+  { re: /(?:my nickname is|my nick is)\s+([\w]{2,20})/i,             group: 1 },
+];
+
+const NICKNAME_CHANGE_PATTERNS: RegExp[] = [
+  /краще звати мене/i,
+  /тепер звати мене/i,
+  /краще називай мене/i,
+  /тепер називай мене/i,
+  /змін(и|іть) (звертання|нік)/i,
+  /хочу щоб ти звав мене/i,
+  /call me .+ instead/i,
+  /changed? (?:my name|nickname) to/i,
+];
+
+export function detectNicknameInMessage(text: string): { name: string; isChangeRequest: boolean } | null {
+  if (!text || text.length < 3 || text.length > 200) return null;
+
+  const isChangeRequest = NICKNAME_CHANGE_PATTERNS.some((p) => p.test(text));
+
+  for (const { re, group } of NICKNAME_PATTERNS) {
+    const m = text.match(re);
+    if (m?.[group]) {
+      const name = m[group].trim();
+      // Filter out common false positives
+      if (/^(ні|да|ок|все|так|тут|ну|це|хто|що|де|як|ти|я|він|вона)$/i.test(name)) continue;
+      if (name.length < 2 || name.length > 20) continue;
+      return { name, isChangeRequest };
+    }
+  }
+  return null;
+}
+
 const throttleMap = new Map<string, number>();
 const streamCallCount = new Map<number, number>();
 

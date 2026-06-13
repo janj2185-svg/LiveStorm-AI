@@ -70,6 +70,14 @@ httpServer.listen(port, (err?: Error) => {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube_channel_name  TEXT;
   `).catch((err) => logger.warn({ msg: String(err?.message) }, "YouTube column migration skipped"));
 
+  // Nickname system columns
+  db.execute(sql`
+    ALTER TABLE agent_viewer_profiles ADD COLUMN IF NOT EXISTS preferred_name    TEXT;
+    ALTER TABLE agent_viewer_profiles ADD COLUMN IF NOT EXISTS custom_nickname   TEXT;
+    ALTER TABLE agent_viewer_profiles ADD COLUMN IF NOT EXISTS nickname_source   TEXT;
+    ALTER TABLE agent_viewer_profiles ADD COLUMN IF NOT EXISTS nickname_asked_at TIMESTAMPTZ;
+  `).catch((err) => logger.warn({ msg: String(err?.message) }, "Nickname column migration skipped"));
+
   // Stripe (non-fatal — gracefully skips if not connected)
   initStripe().catch((err) =>
     logger.warn({ msg: err?.message }, "Stripe init error"),

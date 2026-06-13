@@ -49,6 +49,9 @@ type ViewerCardProfile = {
   mood: string;
   typicalHour: number | null;
   totalCoinsSpent: number;
+  preferredName?: string | null;
+  customNickname?: string | null;
+  nicknameSource?: string | null;
 };
 
 function buildViewerCard(
@@ -80,9 +83,17 @@ function buildViewerCard(
   const factLines = viewerMemories.slice(0, 4).map((m) => m.value);
   const knownLine = factLines.length > 0 ? `Known: ${factLines.join("; ")}` : null;
 
+  // ── Personal addressing ────────────────────────────────────────────────────
+  // preferredName = viewer said "call me X" — use this ALWAYS instead of username
+  // customNickname = AI/streamer assigned a friendly nickname (e.g. "зайчик Іван")
+  const addressName = profile.preferredName || profile.customNickname;
+  const addressLine = addressName
+    ? `ADDRESS AS: "${addressName}" — always use this name/nickname instead of "${viewerName}" when speaking to them`
+    : null;
+
   // Only inject RECALL when there is actually something meaningful to reference
   const hasMeaningfulHistory =
-    profile.totalGifts >= 1 || profile.totalComments >= 5 || viewerMemories.length > 0;
+    profile.totalGifts >= 1 || profile.totalComments >= 5 || viewerMemories.length > 0 || !!addressName;
   const recallLine = hasMeaningfulHistory
     ? `RECALL: ${viewerName} is someone you know — weave ONE relevant detail naturally into your reply.`
     : null;
@@ -91,6 +102,7 @@ function buildViewerCard(
     `=== VIEWER: ${viewerName} ===`,
     headerLine,
     moodLine || null,
+    addressLine,
     knownLine,
     `Last seen: ${lastSeenText}`,
     recallLine,
@@ -454,6 +466,66 @@ export async function upsertViewerProfile(opts: {
     if (Math.random() < 0.01) void pruneOldMemories(opts.streamerId);
   } catch (err: unknown) {
     console.error("[MemoryAgent] upsertViewerProfile error:", (err as Error)?.message);
+  }
+}
+
+// ── Save preferred name / nickname to viewer profile ─────────────────────────
+export async function saveViewerNickname(opts: {
+  streamerId: number;
+  tiktokViewerId: string;
+  viewerName: string;
+  preferredName?: string;
+  customNickname?: string;
+  source: "viewer" | "ai" | "streamer";
+}): Promise<void> {
+  try {
+    const updates: Record<string, unknown> = {
+      nicknameSource: opts.source,
+      nicknameAskedAt: new Date(),
+    };
+    if (opts.preferredName) updates.preferredName = opts.preferredName;
+    if (opts.customNickname) updates.customNickname = opts.customNickname;
+
+    const existing = await db.query.agentViewerProfilesTable.findFirst({
+      where: and(
+        eq(viewerProfilesTable.streamerId, opts.streamerId),
+        eq(viewerProfilesTable.tiktokViewerId, opts.tiktokViewerId),
+      ),
+    });
+
+    if (existing) {
+      await db
+        .update(viewerProfilesTable)
+        .set(updates as any)
+        .where(eq(viewerProfilesTable.id, existing.id));
+      console.log(
+        `[Nickname] 💾 saved | viewer=${opts.viewerName} | preferredName="${opts.preferredName ?? ""}" | source=${opts.source}`,
+      );
+    }
+  } catch (err: unknown) {
+    console.error("[Nickname] saveViewerNickname error:", (err as Error)?.message);
+  }
+}
+
+// ── Check if we should ask this viewer for their preferred name ───────────────
+export async function shouldAskForNickname(opts: {
+  streamerId: number;
+  tiktokViewerId: string;
+  totalComments: number;
+}): Promise<boolean> {
+  if (opts.totalComments < 3) return false;
+  try {
+    const prof = await db.query.agentViewerProfilesTable.findFirst({
+      where: and(
+        eq(viewerProfilesTable.streamerId, opts.streamerId),
+        eq(viewerProfilesTable.tiktokViewerId, opts.tiktokViewerId),
+      ),
+    });
+    if (!prof) return false;
+    const p = prof as any;
+    return !p.preferredName && !p.customNickname;
+  } catch {
+    return false;
   }
 }
 

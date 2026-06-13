@@ -7,8 +7,9 @@ import { runHostAgent } from "./hostAgent";
 import { runModerationAgent } from "./moderationAgent";
 import { getActivePersonality } from "./personalityAgent";
 import { getActiveVoice } from "./voiceAgent";
-import { getMemoryContext, upsertViewerProfile, trackViewerInSession, schedulePruning } from "./memoryAgent";
+import { getMemoryContext, upsertViewerProfile, trackViewerInSession, schedulePruning, saveViewerNickname } from "./memoryAgent";
 import { getViewerContext } from "../lib/agents/memoryAgent";
+import { detectNicknameInMessage } from "./viewerFactExtractor";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
 import type { StrategySuggestion } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
@@ -121,6 +122,9 @@ interface OrchestratorState {
   recentOpeners: Map<number, string[]>;         // last 5 reply openers per session (first 3 words)
   // Real-time engagement tracking:
   recentEventTimes: Map<number, number[]>;      // timestamps of recent processed events per session (for engagement signal)
+  // Nickname system — per-session tracking (cleared on session end):
+  nicknameAskedInSession: Map<number, Set<string>>;   // sessionId → Set<viewerName> already asked this session
+  nicknamePendingResponse: Map<number, Set<string>>;  // sessionId → Set<viewerName> waiting for name answer
 }
 
 const state: OrchestratorState = {
@@ -138,6 +142,8 @@ const state: OrchestratorState = {
   recentReplies: new Map(),
   recentOpeners: new Map(),
   recentEventTimes: new Map(),
+  nicknameAskedInSession: new Map(),
+  nicknamePendingResponse: new Map(),
 };
 
 // ── Anti-repetition helpers ────────────────────────────────────────────────────
@@ -807,6 +813,43 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     }
   }
 
+  // ── Nickname System: detect answer if viewer was previously asked ────────────
+  if (event.type === "comment") {
+    const vNameForNick = event.username ?? "";
+    if (vNameForNick && state.nicknamePendingResponse.get(sessionId)?.has(vNameForNick)) {
+      const commentTxtNick = (event.data.text as string) ?? "";
+      const detected = detectNicknameInMessage(commentTxtNick);
+      if (detected) {
+        void saveViewerNickname({
+          streamerId,
+          tiktokViewerId: viewerId,
+          viewerName: vNameForNick,
+          preferredName: detected.name,
+          source: "viewer",
+        });
+        state.nicknamePendingResponse.get(sessionId)?.delete(vNameForNick);
+        console.log(`[Nickname] ✅ captured | viewer=${vNameForNick} | name="${detected.name}" | changeReq=${detected.isChangeRequest}`);
+      }
+    }
+    // Also detect passive self-identification (even without pending prompt)
+    if (vNameForNick) {
+      const commentTxtPass = (event.data.text as string) ?? "";
+      if (!state.nicknamePendingResponse.get(sessionId)?.has(vNameForNick)) {
+        const passiveDetect = detectNicknameInMessage(commentTxtPass);
+        if (passiveDetect && passiveDetect.isChangeRequest) {
+          void saveViewerNickname({
+            streamerId,
+            tiktokViewerId: viewerId,
+            viewerName: vNameForNick,
+            preferredName: passiveDetect.name,
+            source: "viewer",
+          });
+          console.log(`[Nickname] 🔄 change request | viewer=${vNameForNick} | newName="${passiveDetect.name}"`);
+        }
+      }
+    }
+  }
+
   // ── Moderation Agent ─────────────────────────────────────────────────────────
   if (agentType === "moderation" && state.enabledAgents.has("moderation")) {
     console.log(`[Agent:Moderation] 🛡️ checking content | viewer=${event.username}`);
@@ -890,6 +933,28 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       if (ioRef) ioRef.to(`session:${sessionId}`).emit("emotion:state", { ...emotionState, ...EMOTION_META[emotionState.primary] });
     } catch { /* non-fatal */ }
   }
+  // ── Nickname System: decide whether to ask this viewer for their name ────────
+  let nicknameHint = "";
+  if (event.type === "comment" && state.enabledAgents.has("memory")) {
+    const vName = event.username ?? "";
+    const alreadyAsked = vName ? (state.nicknameAskedInSession.get(sessionId)?.has(vName) ?? false) : true;
+    const isPending    = vName ? (state.nicknamePendingResponse.get(sessionId)?.has(vName) ?? false) : true;
+    if (vName && !alreadyAsked && !isPending) {
+      const profForNick = viewerCtx.profile as any;
+      const noNickname  = profForNick && !profForNick.preferredName && !profForNick.customNickname;
+      const enoughComments = profForNick && (profForNick.totalComments ?? 0) >= 3;
+      // 12% chance per comment — max once per session per viewer
+      if (noNickname && enoughComments && Math.random() < 0.12) {
+        nicknameHint = `[Nickname Prompt] Viewer "${vName}" hasn't told you their preferred name yet. After your reply, CASUALLY ask how they'd like to be addressed — one short question, at the very end, only if it fits the conversation naturally. Examples in Ukrainian: "До речі, як тебе звати?" / "Як краще тебе називати?" / "Маєш улюблене прізвисько?" / "Як тебе називають друзі?" — pick whichever feels most natural.`;
+        if (!state.nicknameAskedInSession.has(sessionId)) state.nicknameAskedInSession.set(sessionId, new Set());
+        state.nicknameAskedInSession.get(sessionId)!.add(vName);
+        if (!state.nicknamePendingResponse.has(sessionId)) state.nicknamePendingResponse.set(sessionId, new Set());
+        state.nicknamePendingResponse.get(sessionId)!.add(vName);
+        console.log(`[Nickname] ❓ will ask | viewer=${vName} | totalComments=${profForNick?.totalComments}`);
+      }
+    }
+  }
+
   // Battle mode locks in competitive emotion
   if (isBattleActive(sessionId) && emotionState.primary !== "competitive") {
     emotionState = applyEmotionalTrigger(sessionId, "battle_start");
@@ -1006,7 +1071,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     ? `[Engagement Signal] Chat is slow right now. Try a new angle — ask a question, provoke a debate, or change your energy completely.`
     : "";
 
-  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint, streamerSpeechCtx, atmosphereCtx, engagementCtx].filter(Boolean).join("\n");
+  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint, streamerSpeechCtx, atmosphereCtx, engagementCtx, nicknameHint].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
   // When multiple viewers sent the same message, give the AI crowd context in
@@ -1312,6 +1377,8 @@ export function clearSessionHistory(sessionId: number): void {
   state.lastStrategySuggestion.delete(sessionId);
   state.recentReplies.delete(sessionId);
   state.recentOpeners.delete(sessionId);
+  state.nicknameAskedInSession.delete(sessionId);
+  state.nicknamePendingResponse.delete(sessionId);
   clearEmotionalState(sessionId);
   clearBehaviorState(sessionId);
   clearMoodState(sessionId);
