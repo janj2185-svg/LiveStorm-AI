@@ -1586,8 +1586,14 @@ export function AiAssistant() {
                 {/* Futuristic stage background */}
                 <StageBackground variant="purple" showRing showScan showGrid showCorners />
 
-                {/* Avatar — only rendered when explicitly enabled */}
-                {avatarConfig?.avatarEnabled ? (
+                {/* Avatar — only when explicitly enabled AND user has provided their own URL.
+                    Built-in /avatars/* paths (storm-*.vrm etc.) never auto-render. */}
+                {(() => {
+                  const customUrl = rpmAvatarUrl ?? uploadedVrmUrl ??
+                    (avatarConfig?.avatarUrl && !avatarConfig.avatarUrl.startsWith("/avatars/")
+                      ? avatarConfig.avatarUrl : null);
+                  return avatarConfig?.avatarEnabled && !!customUrl;
+                })() ? (
                   <AvatarStage
                     avatarKey={avatarConfig?.avatarKey ?? "marcus"}
                     accentColor={accentColor}
