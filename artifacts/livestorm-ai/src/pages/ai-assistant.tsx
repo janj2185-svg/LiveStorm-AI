@@ -1108,7 +1108,7 @@ export function AiAssistant() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-[calc(100vh-4.5rem)] flex flex-col gap-2 overflow-hidden overflow-x-hidden">
+    <div className="h-[calc(100vh-4.5rem)] flex flex-col gap-2 overflow-hidden">
 
       {/* ── Connection error banner ── */}
       {isSessionActive && effectiveMode === "error" && effectiveError && (
@@ -1121,16 +1121,127 @@ export function AiAssistant() {
         </div>
       )}
 
+      {/* ══════════════ AI COMMAND STATUS BAR ══════════════ */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+        {/* AI persona chip */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <div className="relative">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 flex items-center justify-center text-xs font-black text-white shadow-lg shadow-violet-500/30">
+              AI
+            </div>
+            <span className={cn(
+              "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0d0d12]",
+              isSessionActive && connected ? "bg-emerald-400" : isSessionActive ? "bg-yellow-400 animate-pulse" : "bg-white/20",
+            )} />
+          </div>
+          <div className="leading-tight">
+            <p className="text-sm font-bold text-white">{personaName}</p>
+            <p className="text-[10px] text-muted-foreground/50">AI Co-Host</p>
+          </div>
+        </div>
+
+        <div className="w-px h-6 bg-white/10 flex-shrink-0" />
+
+        {/* Status pills */}
+        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden flex-wrap">
+          <div className={cn(
+            "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border flex-shrink-0",
+            isSessionActive && connected
+              ? "border-green-500/30 bg-green-500/10 text-green-300"
+              : isSessionActive
+              ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-300 animate-pulse"
+              : "border-white/10 bg-white/5 text-white/30",
+          )}>
+            <span className={cn("w-1.5 h-1.5 rounded-full",
+              isSessionActive && connected ? "bg-green-400 animate-pulse"
+              : isSessionActive ? "bg-yellow-400" : "bg-white/20",
+            )} />
+            {isSessionActive && connected ? t("ai_online_badge") : isSessionActive ? t("ai_connecting_badge") : t("ai_offline_badge")}
+          </div>
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-violet-500/25 bg-violet-500/10 text-violet-300 flex-shrink-0">
+            <Sparkles className="h-3 w-3" />
+            <span className="capitalize">{config?.personalityType ?? "friendly"}</span>
+          </div>
+          {ttsMode !== "off" && (
+            <div className={cn(
+              "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border flex-shrink-0",
+              ttsPlaybackState === "speaking"
+                ? "border-purple-500/40 bg-purple-500/15 text-purple-300"
+                : "border-blue-500/25 bg-blue-500/10 text-blue-300",
+            )}>
+              {ttsPlaybackState === "speaking"
+                ? <Mic className="h-3 w-3 animate-pulse" />
+                : <Volume2 className="h-3 w-3" />}
+              <span>
+                {ttsPlaybackState === "speaking"
+                  ? t("ai_speaking")
+                  : (() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return p?.label ?? ttsVoice; })()}
+              </span>
+            </div>
+          )}
+          {config?.autoReplyEnabled && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-emerald-500/25 bg-emerald-500/10 text-emerald-300 flex-shrink-0">
+              <Bot className="h-3 w-3" />
+              {t("ai_auto_reply_badge")}
+            </div>
+          )}
+          {battleOn && isSessionActive && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-red-500/40 bg-red-500/15 text-red-300 flex-shrink-0">
+              <Swords className="h-3 w-3" />
+              BATTLE · {battleElapsed}
+            </div>
+          )}
+          <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-white/10 bg-white/5 text-white/40 flex-shrink-0">
+            <span className="text-xs leading-none">{ANIMATION_EMOJI[animState]}</span>
+            <span className="capitalize">{ANIMATION_LABELS[animState]}</span>
+          </div>
+        </div>
+
+        {/* Stream control */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isSessionActive && effectiveMode === "real" && tiktokUsername && (
+            <span className="text-[11px] text-emerald-300/80 font-mono hidden md:inline">@{tiktokUsername}</span>
+          )}
+          {isSessionActive && (
+            <span className="flex items-center gap-1 text-[10px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
+              <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />LIVE
+            </span>
+          )}
+          {!isSessionActive ? (
+            <Button
+              size="sm"
+              className="h-8 px-4 text-xs font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20"
+              disabled={startSession.isPending}
+              onClick={() => startSession.mutate(undefined)}
+            >
+              {startSession.isPending
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <><Play className="h-3.5 w-3.5 mr-1.5" />{t("ai_go_live")}</>}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-3 text-xs font-bold border-red-500/30 text-red-400 hover:bg-red-500/10"
+              disabled={endSession.isPending}
+              onClick={() => endSession.mutate(undefined)}
+            >
+              {endSession.isPending
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <><Square className="h-3.5 w-3.5 mr-1.5" />{t("ai_end_stream")}</>}
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* ── Mobile panel switcher ── */}
       {isMobile && (
-        <div className="flex-shrink-0 flex items-center gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.07] mx-0">
+        <div className="flex-shrink-0 flex items-center gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.07]">
           <button
             onClick={() => setMobilePanelTab("control")}
             className={cn(
               "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
-              mobilePanelTab === "control"
-                ? "bg-purple-600 text-white shadow-sm"
-                : "text-muted-foreground/50 hover:text-white/70",
+              mobilePanelTab === "control" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/50 hover:text-white/70",
             )}
           >
             <Zap className="h-3.5 w-3.5" />Control
@@ -1139,9 +1250,7 @@ export function AiAssistant() {
             onClick={() => setMobilePanelTab("chat")}
             className={cn(
               "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
-              mobilePanelTab === "chat"
-                ? "bg-purple-600 text-white shadow-sm"
-                : "text-muted-foreground/50 hover:text-white/70",
+              mobilePanelTab === "chat" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/50 hover:text-white/70",
             )}
           >
             <MessageCircle className="h-3.5 w-3.5" />Chat
@@ -1149,272 +1258,132 @@ export function AiAssistant() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          3-COLUMN LAYOUT: Settings | Avatar | Chat
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div className={cn("flex-1 min-h-0 gap-3 min-w-0", isMobile ? "overflow-hidden" : "grid grid-cols-[260px_1fr_360px]")}>
+      {/* ════════════════════════════════════════════════════════════════════
+          COMMAND CENTER · LEFT: Personality · CENTER: Avatar · RIGHT: Voice + Feed
+      ════════════════════════════════════════════════════════════════════ */}
+      <div className={cn(
+        "flex-1 min-h-0 gap-3 min-w-0",
+        isMobile ? "overflow-hidden" : "grid grid-cols-[280px_1fr_310px]",
+      )}>
 
-        {/* ═══════════════ LEFT: Settings ═══════════════ */}
+        {/* ═══════════ LEFT: PERSONALITY + BATTLE + SETTINGS ═══════════ */}
         <div className={cn(
-          "flex flex-col gap-2 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-white/10",
-          isMobile ? (mobilePanelTab === "control" ? "flex" : "hidden") : "pr-0.5",
+          "flex flex-col gap-2 min-h-0",
+          isMobile ? (mobilePanelTab === "control" ? "flex overflow-y-auto" : "hidden") : "overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 pr-0.5",
         )}>
 
-          {/* ── Unified AI Control Panel ── */}
+          {/* Personality Engine */}
           <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
-
-            {/* Header — AI persona */}
-            <div className="flex items-center gap-2.5 px-3 py-3 border-b border-white/[0.05]">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-lg shadow-purple-500/20">
-                AI
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white truncate">{personaName}</p>
-                <p className="text-[10px] text-muted-foreground/50">{t("nav_ai_assistant")}</p>
-              </div>
-              <div className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border",
-                isSessionActive && connected
-                  ? "border-green-500/30 bg-green-500/10 text-green-300"
-                  : isSessionActive
-                  ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-300"
-                  : "border-white/10 bg-white/5 text-white/30",
-              )}>
-                <span className={cn("w-1.5 h-1.5 rounded-full",
-                  isSessionActive && connected ? "bg-green-400 animate-pulse"
-                  : isSessionActive ? "bg-yellow-400 animate-pulse"
-                  : "bg-white/20",
-                )} />
-                {isSessionActive && connected ? t("ai_online_badge") : isSessionActive ? t("ai_connecting_badge") : t("ai_offline_badge")}
-              </div>
+            <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-400/70">Personality Engine</span>
             </div>
-
-            {/* Mode quick-select — hidden on mobile */}
-            {!isMobile && <div className="px-3 pt-2.5 pb-3 border-b border-white/[0.05]">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">{t("ai_mode_label")}</p>
-              <div className="grid grid-cols-3 gap-1">
-                <button
-                  onClick={() => updateConfig.mutate({ operatingMode: "autopilot", tone: "professional" })}
-                  className={cn(
-                    "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-[10px] font-semibold transition-all",
-                    config?.tone === "professional"
-                      ? "border-blue-500/40 bg-blue-500/15 text-blue-300"
-                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                  )}
-                >
-                  <Zap className="h-3.5 w-3.5" />
-                  <span>{t("ai_mode_pro")}</span>
-                </button>
-                <button
-                  onClick={() => updateConfig.mutate({ operatingMode: "semi-auto", tone: "friendly" })}
-                  className={cn(
-                    "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-[10px] font-semibold transition-all",
-                    config?.tone === "friendly"
-                      ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                  )}
-                >
-                  <Bot className="h-3.5 w-3.5" />
-                  <span>{t("ai_mode_assistant")}</span>
-                </button>
-                <button
-                  onClick={() => handleTtsModeChange(ttsMode === "off" ? "openai" : "off")}
-                  className={cn(
-                    "flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-[10px] font-semibold transition-all",
-                    ttsMode !== "off"
-                      ? "border-purple-500/40 bg-purple-500/15 text-purple-300"
-                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                  )}
-                >
-                  {ttsMode !== "off" ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-                  <span>{t("ai_mode_voice")}</span>
-                </button>
-              </div>
-            </div>}
-
-            {/* Stream control — compact on mobile, full on desktop */}
-            {isMobile ? (
-              /* ── Mobile: single compact row ── */
-              <div className="px-3 py-2.5 flex items-center gap-2 border-t border-white/[0.05]">
-                {effectiveMode === "real" ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-                ) : effectiveMode === "error" ? (
-                  <WifiOff className="h-4 w-4 text-red-400 flex-shrink-0" />
-                ) : (
-                  <Radio className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-white truncate">
-                    {!isSessionActive ? t("ai_ready_live")
-                      : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
-                      : t("ai_demo_mode_label")}
-                  </p>
-                </div>
-                {isSessionActive && (
-                  <span className="flex items-center gap-1 text-[9px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-1.5 py-0.5 flex-shrink-0">
-                    <span className="w-1 h-1 bg-red-400 rounded-full animate-pulse" />LIVE
-                  </span>
-                )}
-                {!isSessionActive ? (
-                  <Button
-                    size="sm"
-                    className="h-8 px-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 flex-shrink-0"
-                    disabled={startSession.isPending}
-                    onClick={() => startSession.mutate(undefined)}
-                  >
-                    {startSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Play className="h-3 w-3 mr-1" />{t("ai_go_live")}</>}
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 px-3 text-xs font-bold border-red-500/30 text-red-400 hover:bg-red-500/10 flex-shrink-0"
-                    disabled={endSession.isPending}
-                    onClick={() => endSession.mutate(undefined)}
-                  >
-                    {endSession.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Square className="h-3 w-3 mr-1" />{t("ai_end_stream")}</>}
-                  </Button>
-                )}
-              </div>
-            ) : (
-              /* ── Desktop: full layout ── */
-              <div className="px-3 py-3">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <Radio className="h-3.5 w-3.5 text-red-400" />
-                    <span className="text-xs font-bold text-white/80">{t("ai_stream_control")}</span>
-                  </div>
-                  {isSessionActive && (
-                    <span className="flex items-center gap-1 text-[10px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
-                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />LIVE
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-3">
-                  {effectiveMode === "real" ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
-                  ) : effectiveMode === "error" ? (
-                    <WifiOff className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
-                  ) : (
-                    <Server className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium">
-                      {!isSessionActive ? t("ai_ready_live")
-                        : effectiveMode === "real" ? `@${tiktokUsername ?? "connected"}`
-                        : t("ai_demo_mode_label")}
-                    </p>
-                    {isSessionActive && activeSessionId && (
-                      <p className="text-[10px] text-muted-foreground/50">{t("ai_session_num")}{activeSessionId}</p>
+            <div className="p-2.5 grid grid-cols-2 gap-1.5">
+              {PERSONALITY_OPTIONS.map((p) => {
+                const isActive = (config?.personalityType ?? "friendly") === p.value;
+                return (
+                  <button
+                    key={p.value}
+                    onClick={() => updateConfig.mutate({ personalityType: p.value })}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border transition-all text-center",
+                      isActive
+                        ? "border-violet-500/50 bg-violet-500/15 shadow-lg shadow-violet-500/10"
+                        : "border-white/[0.06] bg-white/[0.02] hover:border-violet-500/25 hover:bg-violet-500/5",
                     )}
-                  </div>
-                </div>
-                {!isSessionActive ? (
-                  <Button
-                    className="w-full h-9 text-sm font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-500/20 disabled:opacity-40"
-                    disabled={startSession.isPending}
-                    onClick={() => startSession.mutate(undefined)}
                   >
-                    {startSession.isPending
-                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />{t("dash_starting")}</>
-                      : <><Play className="h-3.5 w-3.5 mr-2" />{t("ai_go_live")}</>}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full h-9 text-sm font-bold border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-40"
-                    disabled={endSession.isPending}
-                    onClick={() => endSession.mutate(undefined)}
-                  >
-                    {endSession.isPending
-                      ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />{t("dash_ending")}</>
-                      : <><Square className="h-3.5 w-3.5 mr-2" />{t("ai_end_stream")}</>}
-                  </Button>
-                )}
-                <p className="text-[10px] text-muted-foreground/35 text-center mt-2">
-                  {t("ai_advanced_setup_in")}{" "}
-                  <Link href="/dashboard">
-                    <span className="text-violet-400/70 hover:text-violet-400 transition-colors cursor-pointer">Dashboard</span>
-                  </Link>
-                </p>
-              </div>
-            )}
+                    <span className="text-xl leading-none">{p.emoji}</span>
+                    <span className={cn("text-[10px] font-bold leading-tight", isActive ? "text-violet-300" : "text-white/60")}>{p.label}</span>
+                    {isActive && <span className="w-1 h-1 rounded-full bg-violet-400" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* ── Battle Mode ── */}
-          <div className="mx-3 my-1 rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden flex-shrink-0">
-            {/* Header row — compact on mobile */}
+          {/* Intensity Mode */}
+          <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
+            <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
+              <Zap className="h-3.5 w-3.5 text-orange-400" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-orange-400/70">Intensity Mode</span>
+            </div>
+            <div className="p-2.5 grid grid-cols-2 gap-1.5">
+              {INTENSITY_MODES.map((m) => {
+                const isActive = (config?.intensityMode ?? "streamer") === m.value;
+                return (
+                  <button
+                    key={m.value}
+                    onClick={() => updateConfig.mutate({ intensityMode: m.value })}
+                    title={m.desc}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border transition-all text-center",
+                      isActive
+                        ? "border-orange-500/50 bg-orange-500/15 shadow-lg shadow-orange-500/10"
+                        : "border-white/[0.06] bg-white/[0.02] hover:border-orange-500/25 hover:bg-orange-500/5",
+                    )}
+                  >
+                    <span className="text-xl leading-none">{m.emoji}</span>
+                    <span className={cn("text-[10px] font-bold leading-tight", isActive ? "text-orange-300" : "text-white/60")}>{m.label}</span>
+                    {isActive && <span className="w-1 h-1 rounded-full bg-orange-400" />}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[9px] text-muted-foreground/40 text-center px-3 pb-2.5">
+              {INTENSITY_MODES.find(m => m.value === (config?.intensityMode ?? "streamer"))?.desc}
+            </p>
+          </div>
+
+          {/* Operating Mode */}
+          <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
+            <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
+              <Bot className="h-3.5 w-3.5 text-cyan-400" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-400/70">Operating Mode</span>
+            </div>
+            <div className="p-2.5 space-y-1">
+              {OPERATING_MODES.map((mode) => {
+                const isActive = (config?.operatingMode ?? "autopilot") === mode.value;
+                return (
+                  <button
+                    key={mode.value}
+                    onClick={() => updateConfig.mutate({ operatingMode: mode.value })}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all text-left",
+                      isActive
+                        ? "border-cyan-500/40 bg-cyan-500/10"
+                        : "border-white/[0.05] hover:border-white/10 hover:bg-white/[0.03]",
+                    )}
+                  >
+                    <span className="text-lg leading-none flex-shrink-0">{mode.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn("text-[11px] font-bold", isActive ? "text-white" : "text-white/60")}>{mode.label}</p>
+                      <p className="text-[9px] text-muted-foreground/40 leading-tight mt-0.5">{mode.desc}</p>
+                    </div>
+                    {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Battle Mode */}
+          <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
             <div
               className={cn("flex items-center gap-2 px-3 py-2.5", isMobile && "cursor-pointer")}
               onClick={isMobile ? () => setMobileBattleOpen(v => !v) : undefined}
             >
-              <Swords className="h-4 w-4 text-red-400 flex-shrink-0" />
-              <span className="text-sm font-bold text-white/90 flex-1">{t("ai_battle_mode")}</span>
-
-              {/* Compact: active badge + start/stop + expand arrow */}
-              {isMobile ? (
-                <div className="flex items-center gap-2">
-                  {battleOn && isSessionActive && (
-                    <span className="flex items-center gap-1 text-[9px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-1.5 py-0.5">
-                      <span className="w-1 h-1 bg-red-400 rounded-full animate-pulse" />ACTIVE
-                    </span>
-                  )}
-                  <button
-                    disabled={battleActivating || !isSessionActive}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (battleActivating) return;
-                      const on = !battleOn;
-                      setBattleOn(on);
-                      setBattleStartTime(on ? Date.now() : null);
-                      setBattleScore(null);
-                      setBattleElapsed("0:00");
-                      if (isSessionActive && activeSessionId) {
-                        setBattleActivating(true);
-                        try {
-                          await authFetch(`/agents/battle/activate`, {
-                            method: "POST",
-                            body: JSON.stringify({ sessionId: activeSessionId, active: on }),
-                          });
-                        } catch (err) {
-                          console.warn(`[BattleMode] ⚠ activate failed:`, err);
-                          setBattleOn(!on);
-                          setBattleStartTime(null);
-                        } finally {
-                          setBattleActivating(false);
-                        }
-                      }
-                    }}
-                    className={cn(
-                      "h-7 px-3 rounded-lg text-[11px] font-bold transition-all border flex items-center gap-1",
-                      battleOn && isSessionActive
-                        ? "bg-red-500/20 border-red-500/40 text-red-300"
-                        : isSessionActive
-                        ? "bg-white/[0.05] border-white/10 text-white/60"
-                        : "border-white/5 text-white/20 cursor-not-allowed",
-                    )}
-                  >
-                    {battleActivating
-                      ? <Loader2 className="h-3 w-3 animate-spin" />
-                      : battleOn && isSessionActive ? t("ai_battle_stop") : t("ai_battle_start")}
-                  </button>
-                  <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground/40 transition-transform", mobileBattleOpen && "rotate-180")} />
-                </div>
-              ) : (
-                <div className={cn(
-                  "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black border",
-                  battleOn && isSessionActive
-                    ? "border-red-500/40 bg-red-500/15 text-red-300"
-                    : "border-white/10 bg-white/5 text-white/25",
-                )}>
-                  {battleOn && isSessionActive && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}
-                  {battleOn && isSessionActive ? t("ai_battle_active").toUpperCase() : t("ai_battle_inactive").toUpperCase()}
-                </div>
+              <Swords className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-red-400/70 flex-1">{t("ai_battle_mode")}</span>
+              {battleOn && isSessionActive && (
+                <span className="flex items-center gap-1 text-[9px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-1.5 py-0.5">
+                  <span className="w-1 h-1 bg-red-400 rounded-full animate-pulse" />ACTIVE
+                </span>
+              )}
+              {isMobile && (
+                <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground/40 transition-transform", mobileBattleOpen && "rotate-180")} />
               )}
             </div>
-
-            {/* Desktop: Big toggle button */}
-            {!isMobile && (
+            {(!isMobile || mobileBattleOpen) && (
               <div className="px-3 pb-3">
                 <button
                   disabled={battleActivating || !isSessionActive}
@@ -1433,7 +1402,7 @@ export function AiAssistant() {
                           body: JSON.stringify({ sessionId: activeSessionId, active: on }),
                         });
                       } catch (err) {
-                        console.warn(`[BattleMode] ⚠ activate failed:`, err);
+                        console.warn(`[BattleMode] activate failed:`, err);
                         setBattleOn(!on);
                         setBattleStartTime(null);
                       } finally {
@@ -1442,11 +1411,11 @@ export function AiAssistant() {
                     }
                   }}
                   className={cn(
-                    "w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border",
+                    "w-full py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border",
                     battleOn && isSessionActive
                       ? "bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30"
                       : isSessionActive
-                      ? "bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/[0.08] hover:border-white/20"
+                      ? "bg-white/[0.04] border-white/10 text-white/60 hover:bg-white/[0.08] hover:border-white/20"
                       : "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed",
                   )}
                 >
@@ -1458,215 +1427,40 @@ export function AiAssistant() {
                     ? <><Swords className="h-4 w-4" />{t("ai_battle_start")}</>
                     : <span className="text-xs">{t("ai_start_live_first")}</span>}
                 </button>
-              </div>
-            )}
-
-            {/* Live battle stats — shown when active (always on desktop, expandable on mobile) */}
-            {battleOn && isSessionActive && (!isMobile || mobileBattleOpen) && (
-              <div className="border-t border-red-500/10 bg-red-500/[0.03] px-3 py-2.5 space-y-2">
-                {/* Compact score row */}
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 py-1.5 flex items-center justify-center gap-1.5">
-                    <span className="text-[9px] text-emerald-400/60 uppercase font-bold">Us</span>
-                    <span className="text-lg font-black text-emerald-400 leading-none tabular-nums">{battleScore?.us ?? 0}</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Swords className="h-3 w-3 text-red-400/40" />
-                  </div>
-                  <div className="flex-1 rounded-lg bg-red-500/10 border border-red-500/20 py-1.5 flex items-center justify-center gap-1.5">
-                    <span className="text-[9px] text-red-400/60 uppercase font-bold">Them</span>
-                    <span className="text-lg font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</span>
-                  </div>
-                  <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center min-w-[44px]">
-                    <p className="text-[8px] text-muted-foreground/40 uppercase">Time</p>
-                    <p className="text-xs font-black text-white/80 font-mono">{battleElapsed}</p>
-                  </div>
-                </div>
-                {/* Last AI reply */}
-                {lastSpokenText && (
-                  <div className="rounded-lg bg-black/20 px-2.5 py-1.5">
-                    <p className="text-[10px] text-white/60 line-clamp-1">{lastSpokenText}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Mobile: inactive state note */}
-            {isMobile && !battleOn && mobileBattleOpen && !isSessionActive && (
-              <div className="px-3 pb-2.5">
-                <p className="text-[10px] text-muted-foreground/40 text-center">Start a session to use Battle Mode</p>
-              </div>
-            )}
-          </div>
-
-          {/* ── Voice Control ── */}
-          <div className={cn("border-t border-white/[0.06]", isMobile ? "px-3 py-2.5" : "px-3 py-3")}>
-
-            {isMobile ? (
-              /* ── Mobile: compact voice row ── */
-              <div className="space-y-2">
-                {/* Row 1: icon + voice name + TTS toggle */}
-                <div className="flex items-center gap-2">
-                  {ttsPlaybackState === "speaking"
-                    ? <Volume2 className="h-4 w-4 text-emerald-400 animate-pulse flex-shrink-0" />
-                    : ttsMode === "off"
-                    ? <VolumeX className="h-4 w-4 text-red-400/70 flex-shrink-0" />
-                    : <Volume2 className="h-4 w-4 text-blue-400 flex-shrink-0" />}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-white/90 truncate">
-                      {ttsMode !== "off"
-                        ? (() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return `${p?.emoji ?? "🎙️"} ${p?.label ?? resolveVoiceLabel(ttsVoice)}`; })()
-                        : "Voice OFF"}
-                    </p>
-                    {ttsPlaybackState === "speaking" && (
-                      <p className="text-[9px] text-emerald-400/80 font-bold">▶ Speaking…</p>
-                    )}
-                  </div>
-                  {/* TTS ON/OFF pill */}
-                  <div className="flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08] flex-shrink-0">
-                    <button
-                      onClick={() => handleTtsModeChange("off")}
-                      className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold transition-all", ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50")}
-                    >OFF</button>
-                    <button
-                      onClick={() => handleTtsModeChange("openai")}
-                      className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold transition-all", ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50")}
-                    >ON</button>
-                  </div>
-                </div>
-
-                {/* Row 2: Change Voice + Test buttons */}
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={() => setVoicePickerOpen(true)}
-                    className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg border border-white/10 bg-white/[0.04] text-[11px] font-bold text-white/70 hover:bg-white/[0.07] transition-all"
-                  >
-                    <SlidersHorizontal className="h-3 w-3" />{t("ai_change_voice")}
-                  </button>
-                  <button
-                    onClick={() => handleVoicePreview()}
-                    disabled={!!isVoicePreviewing || ttsMode === "off"}
-                    className="flex items-center justify-center gap-1 h-8 px-3 rounded-lg border border-white/10 bg-white/[0.04] text-[11px] font-bold text-white/60 hover:bg-white/[0.07] transition-all disabled:opacity-30"
-                  >
-                    {isVoicePreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
-                  </button>
-                </div>
-
-                {/* Enable Voice Output (autoplay unlock) — only when needed */}
-                {!isAudioUnlocked && ttsMode !== "off" && (
-                  <button
-                    onClick={unlockAudio}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all"
-                  >
-                    <Volume2 className="h-3.5 w-3.5" />{t("ai_voice_enable_output")}
-                  </button>
-                )}
-
-                {/* TTS error */}
-                {lastTtsError && ttsMode !== "off" && (
-                  <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0" />
-                    <p className="text-[10px] text-amber-300/90 line-clamp-1">{lastTtsError}</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* ── Desktop: compact layout + Change Voice sheet ── */
-              <>
-                {/* Header: icon + Voice label + ON/OFF toggle */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    {ttsPlaybackState === "speaking"
-                      ? <Volume2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
-                      : ttsMode === "off"
-                      ? <VolumeX className="h-3.5 w-3.5 text-red-400/70" />
-                      : <Volume2 className="h-3.5 w-3.5 text-blue-400" />}
-                    <span className="text-xs font-bold text-white/80">{t("ai_mode_voice")}</span>
-                  </div>
-                  <div className="flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08]">
-                    <button onClick={() => handleTtsModeChange("off")} className={cn("px-3 py-0.5 rounded-full text-[10px] font-bold transition-all", ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}>OFF</button>
-                    <button onClick={() => handleTtsModeChange("openai")} className={cn("px-3 py-0.5 rounded-full text-[10px] font-bold transition-all", ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}>ON</button>
-                  </div>
-                </div>
-
-                {/* Current voice + playback badge + preview + change */}
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", ttsMode !== "off" ? "bg-emerald-400" : "bg-red-400/50")} />
-                  <span className="text-[11px] text-white/70 flex-1 truncate">
-                    {ttsMode !== "off"
-                      ? (() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return `${p?.emoji ?? "🎙️"} ${p?.label ?? resolveVoiceLabel(ttsVoice)}`; })()
-                      : <span className="text-muted-foreground/50">{t("ai_voice_disabled")}</span>}
-                  </span>
-                  <div className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0",
-                    ttsPlaybackState === "speaking" ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/25 animate-pulse"
-                    : ttsPlaybackState === "queued" ? "text-blue-300 bg-blue-500/15 border-blue-500/25"
-                    : ttsPlaybackState === "error" ? "text-red-300 bg-red-500/15 border-red-500/25"
-                    : "text-muted-foreground/40 bg-white/5 border-white/10",
-                  )}>
-                    {ttsPlaybackState === "speaking" ? t("ai_voice_tts_speaking")
-                      : ttsPlaybackState === "queued" ? `Q(${ttsQueueLength})`
-                      : ttsPlaybackState === "finished" ? t("ai_voice_tts_done")
-                      : ttsPlaybackState === "error" ? t("ai_voice_tts_err")
-                      : t("ai_voice_tts_idle")}
-                  </div>
-                  <button
-                    onClick={() => handleVoicePreview()}
-                    disabled={!!isVoicePreviewing || ttsMode === "off"}
-                    className="h-6 w-6 flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.07] transition-all disabled:opacity-30"
-                  >
-                    {isVoicePreviewing ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Play className="h-2.5 w-2.5" />}
-                  </button>
-                  <button
-                    onClick={() => setVoicePickerOpen(true)}
-                    className="h-6 w-6 flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.07] transition-all"
-                    title={t("ai_voice_change")}
-                  >
-                    <SlidersHorizontal className="h-2.5 w-2.5" />
-                  </button>
-                </div>
-
-                {/* Avatar-gender suggestion banner */}
-                {config?.personaGender && config.personaGender !== "neutral" && (() => {
-                  const suggested = config.personaGender === "female" ? "female" : "male";
-                  const selectedProfile = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice);
-                  if (selectedProfile?.gender === suggested) return null;
-                  return (
-                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 mb-2">
-                      <span className="text-base">{suggested === "female" ? "♀️" : "♂️"}</span>
-                      <p className="text-[10px] text-purple-300/80 leading-tight">
-                        {suggested === "female" ? t("ai_female_avatar_hint") : t("ai_male_avatar_hint")}
-                      </p>
+                {battleOn && isSessionActive && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 py-1.5 flex items-center justify-center gap-1.5">
+                      <span className="text-[9px] text-emerald-400/60 uppercase font-bold">Us</span>
+                      <span className="text-lg font-black text-emerald-400 leading-none tabular-nums">{battleScore?.us ?? 0}</span>
                     </div>
-                  );
-                })()}
-
-                {/* Enable Voice Output (autoplay unlock) */}
-                {!isAudioUnlocked && ttsMode !== "off" && (
-                  <button onClick={unlockAudio} className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all">
-                    <Volume2 className="h-3.5 w-3.5" />{t("ai_voice_enable_output")}
-                  </button>
-                )}
-
-                {/* Last spoken */}
-                {lastSpokenText && ttsMode !== "off" && (
-                  <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] mb-1.5">
-                    <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
-                    <p className="text-[10px] text-white/60 line-clamp-1 leading-relaxed">{lastSpokenText.length > 80 ? lastSpokenText.slice(0, 80) + "…" : lastSpokenText}</p>
+                    <Swords className="h-3 w-3 text-red-400/40 flex-shrink-0" />
+                    <div className="flex-1 rounded-lg bg-red-500/10 border border-red-500/20 py-1.5 flex items-center justify-center gap-1.5">
+                      <span className="text-[9px] text-red-400/60 uppercase font-bold">Them</span>
+                      <span className="text-lg font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</span>
+                    </div>
+                    <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center min-w-[44px]">
+                      <p className="text-[8px] text-muted-foreground/40 uppercase">Time</p>
+                      <p className="text-xs font-black text-white/80 font-mono">{battleElapsed}</p>
+                    </div>
                   </div>
                 )}
-
-                {/* TTS error */}
-                {lastTtsError && ttsMode !== "off" && (
-                  <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-amber-300/90 line-clamp-1 leading-tight">{lastTtsError}</p>
-                  </div>
-                )}
-              </>
+              </div>
             )}
           </div>
 
-          {/* ── Co-Host Voice Panel ── */}
+          {/* Avatar Settings shortcut */}
+          <button
+            onClick={() => setAvatarSheetOpen(true)}
+            className="flex-shrink-0 w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] hover:bg-white/[0.04] hover:border-violet-500/25 transition-all"
+          >
+            <div className="flex items-center gap-2">
+              <Boxes className="h-3.5 w-3.5 text-violet-400" />
+              <span className="text-[11px] font-bold text-white/70">{t("ai_avatar_settings_title")}</span>
+            </div>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
+          </button>
+
+          {/* Co-Host Panel */}
           <div className="flex-shrink-0">
             <CoHostPanel
               sendStreamerSpeech={sendStreamerSpeech}
@@ -1684,579 +1478,492 @@ export function AiAssistant() {
             />
           </div>
 
-          {/* ── Settings sections — hidden on mobile (use Advanced Settings) ── */}
-
-          {!isMobile && <SidebarSection isOpen={expandedSections.has("persona")} onToggle={() => toggleSection("persona")} title={t("ai_section_persona")} icon={<Sparkles className="h-4 w-4 text-purple-400" />}>
-            {configLoading ? (
-              <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}</div>
-            ) : (
-              <>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">{t("ai_field_ai_name")}</Label>
-                  <Input
-                    key={config?.personaName}
-                    defaultValue={config?.personaName}
-                    placeholder="Storm"
-                    className="bg-background/50 border-white/10 h-8 text-sm"
-                    onBlur={(e) => {
-                      if (e.target.value.trim() && e.target.value !== config?.personaName)
-                        updateConfig.mutate({ personaName: e.target.value.trim() });
-                    }}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">{t("ai_field_tone")}</Label>
-                  <Select value={config?.tone ?? "hype"} onValueChange={(v) => updateConfig.mutate({ tone: v })}>
-                    <SelectTrigger className="bg-background/50 border-white/10 h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {TONE_OPTIONS.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          <span>{t.label}</span>
-                          <span className="text-xs text-muted-foreground ml-2">{t.desc}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">{t("ai_field_personality")}</Label>
-                  <div className="grid grid-cols-3 gap-1">
-                    {PERSONALITY_OPTIONS.map((p) => (
-                      <button
-                        key={p.value}
-                        onClick={() => updateConfig.mutate({ personalityType: p.value })}
-                        className={cn(
-                          "flex flex-col items-center justify-center py-1.5 px-1 rounded-md border text-xs transition-all",
-                          (config?.personalityType ?? "friendly") === p.value
-                            ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
-                            : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                        )}
-                      >
-                        <span className="text-base leading-none mb-0.5">{p.emoji}</span>
-                        <span className="font-medium text-[10px]">{p.label}</span>
-                      </button>
+          {/* Advanced Settings (desktop only) */}
+          {!isMobile && (
+            <div className="flex-shrink-0 rounded-xl border border-white/[0.07] overflow-hidden">
+              <button
+                onClick={() => setAdvancedOpen(v => !v)}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/50" />
+                <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">{t("ai_advanced_settings")}</span>
+                <ChevronDown className={cn("h-3 w-3 text-muted-foreground/35 transition-transform duration-200", advancedOpen && "rotate-180")} />
+              </button>
+              {advancedOpen && (
+                <div className="border-t border-white/[0.06]">
+                  <SidebarSection isOpen={expandedSections.has("persona")} onToggle={() => toggleSection("persona")} title={t("ai_section_persona")} icon={<Sparkles className="h-4 w-4 text-purple-400" />}>
+                    {configLoading ? (
+                      <div className="space-y-2">{[1, 2].map(i => <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />)}</div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">{t("ai_field_ai_name")}</Label>
+                          <Input
+                            key={config?.personaName}
+                            defaultValue={config?.personaName}
+                            placeholder="Storm"
+                            className="bg-background/50 border-white/10 h-8 text-sm"
+                            onBlur={(e) => {
+                              if (e.target.value.trim() && e.target.value !== config?.personaName)
+                                updateConfig.mutate({ personaName: e.target.value.trim() });
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm text-muted-foreground">{t("ai_auto_reply")}</Label>
+                          <Switch checked={config?.autoReplyEnabled ?? false} onCheckedChange={v => updateConfig.mutate({ autoReplyEnabled: v })} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                            <Shield className="h-3.5 w-3.5 text-blue-400" />{t("ai_spam_protection")}
+                          </Label>
+                          <Switch checked={config?.spamProtectionEnabled ?? true} onCheckedChange={v => updateConfig.mutate({ spamProtectionEnabled: v })} />
+                        </div>
+                      </div>
+                    )}
+                  </SidebarSection>
+                  <SidebarSection isOpen={expandedSections.has("announcements")} onToggle={() => toggleSection("announcements")} title={t("ai_announcements")} icon={<Zap className="h-4 w-4 text-yellow-400" />}>
+                    {([
+                      { key: "announceGifts", labelKey: "ai_gift_alerts" as const, icon: "🎁" },
+                      { key: "announceLevelUp", labelKey: "ai_follow_alerts" as const, icon: "💚" },
+                      { key: "announceBossKill", labelKey: "ai_boss_kills" as const, icon: "💀" },
+                    ] as const).map(item => (
+                      <div key={item.key} className="flex items-center justify-between">
+                        <Label className="text-sm text-muted-foreground flex items-center gap-1.5"><span>{item.icon}</span>{t(item.labelKey)}</Label>
+                        <Switch checked={(config?.[item.key] as boolean) ?? false} onCheckedChange={v => updateConfig.mutate({ [item.key]: v })} />
+                      </div>
                     ))}
+                  </SidebarSection>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>{/* /LEFT */}
+
+
+        {/* ═══════════ CENTER: AVATAR STAGE ═══════════ */}
+        {!isMobile && (
+          <div className="flex flex-col min-h-0 gap-2 py-1">
+
+            {/* 9:16 portrait frame */}
+            <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+              <div className="relative h-full aspect-[9/16] max-w-full rounded-2xl overflow-hidden bg-black/20 flex-shrink-0">
+                <AvatarStage
+                  avatarKey={avatarConfig?.avatarKey ?? "marcus"}
+                  accentColor={accentColor}
+                  scale={avatarConfig?.scale ?? 1.0}
+                  positionY={avatarConfig?.positionY ?? -0.8}
+                  lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
+                  avatarEnabled={avatarConfig?.avatarEnabled ?? true}
+                  avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? `${import.meta.env.BASE_URL}avatars/storm-default.vrm`}
+                  animationState={animState}
+                  mouthOpenAmount={mouthOpen}
+                  expressionIntensity={expressionIntensity}
+                  backgroundGradient={getBackgroundGradient(selectedBackground)}
+                  isSpeaking={isSpeaking}
+                  personaName={personaName}
+                  onOpenSettings={() => setAvatarSheetOpen(true)}
+                  showDebug={showAvatarDebug}
+                  showLogo={true}
+                  className="absolute inset-0 w-full h-full"
+                />
+
+                {/* Top-left: status badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
+                  <div className={cn(
+                    "flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm",
+                    isSessionActive && connected
+                      ? "border-green-500/40 text-green-300 bg-green-500/20"
+                      : isSessionActive
+                      ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/20 animate-pulse"
+                      : "border-white/15 text-white/50 bg-black/30",
+                  )}>
+                    <span className={cn("w-1.5 h-1.5 rounded-full",
+                      isSessionActive && connected ? "bg-green-400 animate-pulse"
+                      : isSessionActive ? "bg-yellow-400" : "bg-white/30",
+                    )} />
+                    {isSessionActive && connected ? t("ai_connected_badge") : isSessionActive ? t("ai_connecting_badge") : t("ai_offline_badge")}
+                  </div>
+                  {isSpeaking && (
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-purple-500/40 text-purple-300 bg-purple-500/20">
+                      <Mic className="h-3 w-3 animate-pulse" />{t("ai_speaking")}
+                    </div>
+                  )}
+                  {animState === "thinking" && (
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-blue-500/40 text-blue-300 bg-blue-500/20">
+                      <span className="flex gap-0.5 items-center">
+                        {[0, 150, 300].map(d => (
+                          <span key={d} className="h-1 w-1 rounded-full bg-blue-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
+                        ))}
+                      </span>
+                      {t("ai_thinking")}
+                    </div>
+                  )}
+                </div>
+
+                {/* Top-right: LIVE / DEMO */}
+                <div className="absolute top-3 right-3 pointer-events-none">
+                  {isSessionActive && (
+                    <div className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black border backdrop-blur-sm",
+                      effectiveMode === "real"
+                        ? "border-red-500/50 text-red-300 bg-red-600/30"
+                        : "border-orange-500/40 text-orange-300 bg-orange-500/20",
+                    )}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                      {effectiveMode === "real" ? "LIVE" : "DEMO"}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom-left: persona + anim state */}
+                <div className="absolute bottom-3 left-3 pointer-events-none">
+                  <div className="px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-white/10">
+                    <p className="text-xs font-bold text-white">{personaName}</p>
+                    <p className="text-[10px] text-white/50 capitalize">{ANIMATION_LABELS[animState]}</p>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">{t("ai_intensity_mode")}</Label>
-                  <div className="grid grid-cols-2 gap-1">
-                    {INTENSITY_MODES.map((m) => (
-                      <button
-                        key={m.value}
-                        onClick={() => updateConfig.mutate({ intensityMode: m.value })}
-                        title={m.desc}
-                        className={cn(
-                          "flex flex-col items-center justify-center py-2 px-1 rounded-md border text-xs transition-all",
-                          (config?.intensityMode ?? "streamer") === m.value
-                            ? "border-orange-500/50 bg-orange-500/10 text-orange-300"
-                            : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                        )}
-                      >
-                        <span className="text-base leading-none mb-0.5">{m.emoji}</span>
-                        <span className="font-medium text-[10px]">{m.label}</span>
-                      </button>
-                    ))}
+                {/* Bottom-right: TikTok username */}
+                {effectiveMode === "real" && tiktokUsername && (
+                  <div className="absolute bottom-3 right-3 pointer-events-none px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-emerald-500/25">
+                    <p className="text-[10px] font-semibold text-emerald-300">@{tiktokUsername}</p>
                   </div>
-                  <p className="text-[9px] text-muted-foreground/50 text-center">
-                    {INTENSITY_MODES.find(m => m.value === (config?.intensityMode ?? "streamer"))?.desc}
+                )}
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-4 gap-2 flex-shrink-0">
+              {[
+                { labelKey: "ai_stat_viewers" as const, value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20" },
+                { labelKey: "ai_stat_gifts" as const, value: stats.totalGifts, icon: Gift, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+                { labelKey: "ai_stat_followers" as const, value: stats.totalFollows, icon: Users, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
+                { labelKey: "ai_stat_replies" as const, value: aiAnnouncements?.length ?? 0, icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+              ].map(({ labelKey, value, icon: Icon, color, bg }) => (
+                <div key={labelKey} className={cn("rounded-2xl border p-4 flex flex-col items-center gap-1.5 transition-all duration-300", bg)}>
+                  <Icon className={cn("h-4 w-4", color)} />
+                  <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-muted-foreground/30")}>
+                    {isSessionActive ? value.toLocaleString() : "—"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/60 font-semibold">{t(labelKey)}</span>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}{/* /CENTER */}
+
+
+        {/* ═══════════ RIGHT: VOICE + RECOGNITION + FEED ═══════════ */}
+        <div className={cn(
+          "flex flex-col gap-2 min-h-0",
+          isMobile ? (mobilePanelTab === "chat" ? "flex overflow-y-auto" : "hidden") : "overflow-y-auto scrollbar-thin scrollbar-thumb-white/10",
+        )}>
+
+          {/* Voice Center */}
+          <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
+            <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
+              <Volume2 className="h-3.5 w-3.5 text-blue-400" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-400/70">Voice Center</span>
+              <div className="ml-auto flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08]">
+                <button
+                  onClick={() => handleTtsModeChange("off")}
+                  className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
+                    ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}
+                >OFF</button>
+                <button
+                  onClick={() => handleTtsModeChange("openai")}
+                  className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
+                    ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}
+                >ON</button>
+              </div>
+            </div>
+            <div className="p-2.5 space-y-2">
+              {/* Current voice row */}
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <span className="text-xl leading-none flex-shrink-0">
+                  {(() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return p?.emoji ?? "🎙️"; })()}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-white/90 truncate">
+                    {ttsMode !== "off"
+                      ? (() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return p?.label ?? resolveVoiceLabel(ttsVoice); })()
+                      : "Voice OFF"}
+                  </p>
+                  <p className={cn("text-[10px] font-bold",
+                    ttsPlaybackState === "speaking" ? "text-purple-400 animate-pulse"
+                    : ttsPlaybackState === "queued" ? "text-blue-400"
+                    : "text-muted-foreground/40",
+                  )}>
+                    {ttsPlaybackState === "speaking" ? "▶ " + t("ai_voice_tts_speaking")
+                      : ttsPlaybackState === "queued" ? `Queued (${ttsQueueLength})`
+                      : t("ai_voice_tts_idle")}
                   </p>
                 </div>
-              </>
-            )}
-          </SidebarSection>}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => handleVoicePreview()}
+                    disabled={!!isVoicePreviewing || ttsMode === "off"}
+                    className="h-7 w-7 flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.07] transition-all disabled:opacity-30"
+                  >
+                    {isVoicePreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                  </button>
+                  <button
+                    onClick={() => setVoicePickerOpen(true)}
+                    className="h-7 w-7 flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.07] transition-all"
+                  >
+                    <SlidersHorizontal className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
 
-          {/* ── Advanced Settings collapsible ── */}
-          <div className="rounded-xl border border-white/[0.07] overflow-hidden flex-shrink-0">
-            <button
-              onClick={() => setAdvancedOpen((v) => !v)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/50" />
-              <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">{t("ai_advanced_settings")}</span>
-              <ChevronDown className={cn("h-3 w-3 text-muted-foreground/35 transition-transform duration-200", advancedOpen && "rotate-180")} />
-            </button>
-
-          {advancedOpen && (<div className="border-t border-white/[0.06]">
-          <SidebarSection isOpen={expandedSections.has("gender")} onToggle={() => toggleSection("gender")} title={t("ai_persona_gender")} icon={<Mic className="h-4 w-4 text-purple-400" />}>
-            <div className="grid grid-cols-3 gap-1">
-              {GENDER_OPTIONS.map((g) => (
+              {/* Autoplay unlock */}
+              {!isAudioUnlocked && ttsMode !== "off" && (
                 <button
-                  key={g.value}
-                  onClick={() => updateConfig.mutate({ personaGender: g.value })}
-                  className={cn(
-                    "text-xs py-1.5 px-1 rounded-md border font-medium transition-all text-center",
-                    (config?.personaGender ?? "neutral") === g.value
-                      ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
-                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                  )}
+                  onClick={unlockAudio}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-all"
                 >
-                  <span className="mr-1">{g.emoji}</span>{g.label}
+                  <Volume2 className="h-3.5 w-3.5" />{t("ai_voice_enable_output")}
                 </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-muted-foreground/60 mt-1">{t("ai_gender_hint")}</p>
-          </SidebarSection>
-          <SidebarSection isOpen={expandedSections.has("language")} onToggle={() => toggleSection("language")} title={t("ai_reply_language")} icon={<Globe className="h-4 w-4 text-teal-400" />}>
-            <div className="grid grid-cols-1 gap-1">
-              {LANGUAGE_OPTIONS.map((lang) => (
-                <button
-                  key={lang.value}
-                  onClick={() => updateConfig.mutate({ replyLanguage: lang.value })}
-                  className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm transition-all text-left",
-                    config?.replyLanguage === lang.value
-                      ? "border-teal-500/50 bg-teal-500/10 text-teal-300"
-                      : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                  )}
-                >
-                  <span className="text-base">{lang.flag}</span>
-                  <span className="text-xs font-medium">{lang.label}</span>
-                </button>
-              ))}
-            </div>
-            {config?.replyLanguage === "auto" && (
-              <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  {t("ai_uncertain_lang")}
-                </p>
-                <div className="grid grid-cols-1 gap-1">
-                  {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
-                    <button
-                      key={lang.value}
-                      onClick={() => updateConfig.mutate({ defaultLanguage: lang.value })}
-                      className={cn(
-                        "flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm transition-all text-left",
-                        (config?.defaultLanguage ?? "uk") === lang.value
-                          ? "border-purple-500/50 bg-purple-500/10 text-purple-300"
-                          : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                      )}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      <span className="text-xs font-medium">{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </SidebarSection>
+              )}
 
-          <SidebarSection isOpen={expandedSections.has("translation")} onToggle={() => toggleSection("translation")} title={t("ai_chat_translation")} icon={<Languages className="h-4 w-4 text-yellow-400" />}>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <Label className="text-sm text-muted-foreground">{t("ai_translate_live_chat")}</Label>
-              </div>
-              <Switch
-                checked={config?.translateChat ?? false}
-                onCheckedChange={(v) => updateConfig.mutate({ translateChat: v })}
-              />
-            </div>
-            {config?.translateChat && (
-              <div className="mt-2 pt-2 border-t border-white/5 space-y-2">
-                <p className="text-xs text-muted-foreground">{t("ai_translate_into")}</p>
-                <div className="grid grid-cols-1 gap-1">
-                  {LANGUAGE_OPTIONS.filter((l) => l.value !== "auto").map((lang) => (
-                    <button
-                      key={lang.value}
-                      onClick={() => updateConfig.mutate({ translateTargetLang: lang.value })}
-                      className={cn(
-                        "flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm transition-all text-left",
-                        (config?.translateTargetLang ?? "uk") === lang.value
-                          ? "border-yellow-500/50 bg-yellow-500/10 text-yellow-300"
-                          : "border-white/5 text-muted-foreground hover:border-white/10 hover:text-white",
-                      )}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      <span className="text-xs font-medium">{lang.label}</span>
-                    </button>
-                  ))}
+              {/* Last spoken */}
+              {lastSpokenText && ttsMode !== "off" && (
+                <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                  <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
+                  <p className="text-[10px] text-white/60 line-clamp-2 leading-relaxed">{lastSpokenText}</p>
                 </div>
-                <p className="text-[10px] text-muted-foreground/50 pt-1">
-                  Non-Ukrainian messages show 🇺🇦 translation in the live chat feed. Already-Ukrainian messages are skipped. Repeated messages use cached translations.
-                </p>
-              </div>
-            )}
-          </SidebarSection>
+              )}
 
-          <SidebarSection isOpen={expandedSections.has("autoreply")} onToggle={() => toggleSection("autoreply")} title={t("ai_auto_reply_section")} icon={<MessageSquare className="h-4 w-4 text-orange-400" />}>
-            <div className="flex items-center justify-between">
-              <Label className="text-sm text-muted-foreground">{t("ai_reply_to_comments")}</Label>
-              <Switch
-                checked={config?.autoReplyEnabled ?? false}
-                onCheckedChange={(v) => updateConfig.mutate({ autoReplyEnabled: v })}
-              />
-            </div>
-            {config?.autoReplyEnabled && (
-              <div className="space-y-3 pt-1 border-t border-white/5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Shield className="h-3.5 w-3.5 text-blue-400" />
-                    {t("ai_spam_protection")}
-                  </Label>
-                  <Switch
-                    checked={config?.spamProtectionEnabled ?? true}
-                    onCheckedChange={(v) => updateConfig.mutate({ spamProtectionEnabled: v })}
-                  />
+              {/* TTS error */}
+              {lastTtsError && ttsMode !== "off" && (
+                <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-amber-300/90 line-clamp-1 leading-tight">{lastTtsError}</p>
                 </div>
-                {config?.spamProtectionEnabled && (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">{t("ai_cooldown_viewer")}</Label>
-                    <Input
-                      key={config?.spamCooldownSeconds}
-                      type="number"
-                      defaultValue={config?.spamCooldownSeconds ?? 30}
-                      min={5}
-                      max={300}
-                      className="bg-background/50 border-white/10 h-8 text-sm"
-                      onBlur={(e) => {
-                        const val = Math.max(5, Math.min(300, Number(e.target.value)));
-                        if (val !== config?.spamCooldownSeconds) updateConfig.mutate({ spamCooldownSeconds: val });
-                      }}
-                    />
+              )}
+
+              {/* Avatar gender voice suggestion */}
+              {config?.personaGender && config.personaGender !== "neutral" && (() => {
+                const suggested = config.personaGender === "female" ? "female" : "male";
+                const selectedProfile = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice);
+                if (selectedProfile?.gender === suggested) return null;
+                return (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                    <span className="text-base">{suggested === "female" ? "♀️" : "♂️"}</span>
+                    <p className="text-[10px] text-purple-300/80 leading-tight">
+                      {suggested === "female" ? t("ai_female_avatar_hint") : t("ai_male_avatar_hint")}
+                    </p>
                   </div>
-                )}
-              </div>
-            )}
-          </SidebarSection>
-
-          <SidebarSection isOpen={expandedSections.has("announcements")} onToggle={() => toggleSection("announcements")} title={t("ai_announcements")} icon={<Zap className="h-4 w-4 text-yellow-400" />}>
-            {([
-              { key: "announceGifts", labelKey: "ai_gift_alerts" as const, icon: "🎁" },
-              { key: "announceLevelUp", labelKey: "ai_follow_alerts" as const, icon: "💚" },
-              { key: "announceBossKill", labelKey: "ai_boss_kills" as const, icon: "💀" },
-            ] as const).map((item) => (
-              <div key={item.key} className="flex items-center justify-between">
-                <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <span>{item.icon}</span>{t(item.labelKey)}
-                </Label>
-                <Switch
-                  checked={(config?.[item.key] as boolean) ?? false}
-                  onCheckedChange={(v) => updateConfig.mutate({ [item.key]: v })}
-                />
-              </div>
-            ))}
-            <Separator className="bg-white/5" />
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Min gift threshold (coins)</Label>
-              <Input
-                key={config?.announceGiftThreshold}
-                type="number"
-                defaultValue={config?.announceGiftThreshold ?? 100}
-                className="bg-background/50 border-white/10 h-8 text-sm"
-                onBlur={(e) => {
-                  const val = Number(e.target.value);
-                  if (val >= 0 && val !== config?.announceGiftThreshold)
-                    updateConfig.mutate({ announceGiftThreshold: val });
-                }}
-              />
+                );
+              })()}
             </div>
-          </SidebarSection>
+          </div>
 
-          {/* 3D Avatar settings shortcut */}
-          <Card className="bg-card border-white/5 flex-shrink-0 rounded-none border-x-0 border-b-0">
-            <button
-              className="w-full flex items-center justify-between px-4 py-3 text-left"
-              onClick={() => setAvatarSheetOpen(true)}
-            >
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Boxes className="h-4 w-4 text-violet-400" />
-                {t("ai_avatar_settings_title")}
-              </CardTitle>
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-          </Card>
-
-          </div>)}
-          </div>{/* /Advanced Settings */}
-
-        </div>
-
-        {/* ═══════════════ CENTER: Avatar — desktop only ═══════════════ */}
-        {!isMobile && <div className="flex flex-col min-h-0 gap-2 py-2">
-
-          {/* 9:16 portrait frame — scales by height, centers horizontally */}
-          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-            <div className="relative h-full aspect-[9/16] max-w-full rounded-2xl overflow-hidden bg-black/20 flex-shrink-0">
-              <AvatarStage
-                avatarKey={avatarConfig?.avatarKey ?? "marcus"}
-                accentColor={accentColor}
-                scale={avatarConfig?.scale ?? 1.0}
-                positionY={avatarConfig?.positionY ?? -0.8}
-                lightingPreset={avatarConfig?.lightingPreset ?? "studio"}
-                avatarEnabled={avatarConfig?.avatarEnabled ?? true}
-                avatarUrl={rpmAvatarUrl ?? uploadedVrmUrl ?? avatarConfig?.avatarUrl ?? `${import.meta.env.BASE_URL}avatars/storm-default.vrm`}
-                animationState={animState}
-                mouthOpenAmount={mouthOpen}
-                expressionIntensity={expressionIntensity}
-                backgroundGradient={getBackgroundGradient(selectedBackground)}
-                isSpeaking={isSpeaking}
-                personaName={personaName}
-                onOpenSettings={() => setAvatarSheetOpen(true)}
-                showDebug={showAvatarDebug}
-                showLogo={true}
-                className="absolute inset-0 w-full h-full"
-              />
-
-            {/* Top-left: status indicators */}
-            <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-              {/* Connection */}
-              <div className={cn(
-                "flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm",
-                isSessionActive && connected
-                  ? "border-green-500/40 text-green-300 bg-green-500/20"
-                  : isSessionActive
-                  ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/20 animate-pulse"
-                  : "border-white/15 text-white/50 bg-black/30",
-              )}>
-                <span className={cn("w-1.5 h-1.5 rounded-full",
-                  isSessionActive && connected ? "bg-green-400 animate-pulse"
-                  : isSessionActive ? "bg-yellow-400"
-                  : "bg-white/30",
-                )} />
-                {isSessionActive && connected ? t("ai_connected_badge")
-                  : isSessionActive ? t("ai_connecting_badge")
-                  : t("ai_offline_badge")}
-              </div>
-
-              {/* Speaking indicator */}
-              {isSpeaking && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-purple-500/40 text-purple-300 bg-purple-500/20">
-                  <Mic className="h-3 w-3 animate-pulse" />
-                  {t("ai_speaking")}
-                </div>
-              )}
-
-              {/* Thinking indicator — when last event was comment and no reply yet */}
-              {animState === "thinking" && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-blue-500/40 text-blue-300 bg-blue-500/20">
-                  <span className="flex gap-0.5 items-center">
-                    {[0, 150, 300].map((d) => (
-                      <span key={d} className="h-1 w-1 rounded-full bg-blue-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
-                    ))}
-                  </span>
-                  {t("ai_thinking")}
-                </div>
-              )}
-            </div>
-
-            {/* Top-right: LIVE badge */}
-            <div className="absolute top-3 right-3">
-              {isSessionActive ? (
-                <div className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black border backdrop-blur-sm",
-                  effectiveMode === "real"
-                    ? "border-red-500/50 text-red-300 bg-red-600/30"
-                    : "border-orange-500/40 text-orange-300 bg-orange-500/20",
-                )}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                  {effectiveMode === "real" ? "LIVE" : "DEMO"}
-                </div>
-              ) : null}
-            </div>
-
-            {/* Bottom-left: persona name + animation state */}
-            <div className="absolute bottom-3 left-3">
-              <div className="px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-white/10">
-                <p className="text-xs font-bold text-white">{personaName}</p>
-                <p className="text-[10px] text-white/50 capitalize">{ANIMATION_LABELS[animState]}</p>
-              </div>
-            </div>
-
-            {/* Bottom-right: TikTok username */}
-            {effectiveMode === "real" && tiktokUsername && (
-              <div className="absolute bottom-3 right-3 px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-emerald-500/25">
-                <p className="text-[10px] font-semibold text-emerald-300">@{tiktokUsername}</p>
-              </div>
-            )}
-            </div>{/* /9:16 frame */}
-          </div>{/* /centering wrapper */}
-
-          {/* Stats row — below avatar */}
-          <div className="grid grid-cols-4 gap-2 flex-shrink-0">
-            {[
-              { labelKey: "ai_stat_viewers" as const, value: stats.viewerCount, icon: Eye, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20", glow: "shadow-violet-500/10" },
-              { labelKey: "ai_stat_gifts" as const, value: stats.totalGifts, icon: Gift, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", glow: "shadow-amber-500/10" },
-              { labelKey: "ai_stat_followers" as const, value: stats.totalFollows, icon: Users, color: "text-green-400", bg: "bg-green-500/10 border-green-500/20", glow: "shadow-green-500/10" },
-              { labelKey: "ai_stat_replies" as const, value: aiAnnouncements?.length ?? 0, icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-purple-500/10" },
-            ].map(({ labelKey, value, icon: Icon, color, bg, glow }) => (
-              <div key={labelKey} className={cn("rounded-2xl border p-4 flex flex-col items-center gap-1.5 transition-all duration-300 shadow-lg", bg, glow)}>
-                <Icon className={cn("h-4 w-4", color)} />
-                <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-muted-foreground/30")}>
-                  {isSessionActive ? value.toLocaleString() : "—"}
+          {/* Recognition Engine */}
+          <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
+            <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
+              <Users className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400/70">Recognition Engine</span>
+              {(viewerRecognitionEvents?.length ?? 0) > 0 && (
+                <span className="ml-auto text-[9px] font-bold bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 px-1.5 py-0.5 rounded-full">
+                  {viewerRecognitionEvents?.length}
                 </span>
-                <span className="text-[10px] text-muted-foreground/60 font-semibold">{t(labelKey)}</span>
-              </div>
-            ))}
-          </div>
-
-        </div>}
-
-        {/* ═══════════════ RIGHT: Unified Chat ═══════════════ */}
-        <div className={cn("flex flex-col min-h-0", isMobile && mobilePanelTab !== "chat" ? "hidden" : "")}>
-
-          {/* Tab bar */}
-          <div className="flex gap-1 p-1 bg-white/5 rounded-xl mb-2 flex-shrink-0">
-            {[
-              { key: "chat" as const, label: t("ai_tab_chat"), icon: <MessageCircle className="h-3.5 w-3.5" />, badge: isSessionActive ? feedEvents.filter((e) => e.type === "comment").length : null },
-              { key: "events" as const, label: t("ai_tab_events"), icon: <Activity className="h-3.5 w-3.5" />, badge: null },
-              { key: "ai" as const, label: t("ai_tab_ai_activity"), icon: <Sparkles className="h-3.5 w-3.5" />, badge: isSessionActive && (aiAnnouncements?.length ?? 0) > 0 ? aiAnnouncements?.length : null },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setRightTab(tab.key)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-2 py-2 rounded-lg transition-all relative",
-                  rightTab === tab.key
-                    ? "bg-purple-600 text-white shadow"
-                    : "text-muted-foreground hover:text-white hover:bg-white/5",
-                )}
-              >
-                {tab.icon}
-                <span className="hidden sm:inline">{tab.label}</span>
-                {tab.badge !== null && (tab.badge ?? 0) > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-[9px] font-bold flex items-center justify-center text-white">
-                    {(tab.badge ?? 0) > 9 ? "9+" : tab.badge}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content — fills remaining height */}
-          <div className="flex-1 min-h-0 rounded-xl bg-white/[0.03] border border-white/[0.06] overflow-hidden">
-
-            {/* ── CHAT TAB ── */}
-            {rightTab === "chat" && (
-              <div className="h-full flex flex-col">
-                <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="h-3.5 w-3.5 text-purple-400" />
-                    <span className="text-sm font-medium">{t("ai_live_chat_title")}</span>
-                    {feedEvents.length > 0 && (
-                      <span className="text-xs text-muted-foreground/50">{feedEvents.filter((e) => e.type === "comment").length} {t("ai_comments_count")}</span>
-                    )}
+              )}
+            </div>
+            <div className="p-2.5">
+              {!isSessionActive ? (
+                <div className="text-center py-3">
+                  <Users className="h-6 w-6 text-muted-foreground/20 mx-auto mb-2" />
+                  <p className="text-[10px] text-muted-foreground/30">Recognition events appear during live sessions</p>
+                </div>
+              ) : (viewerRecognitionEvents?.length ?? 0) === 0 ? (
+                <div className="text-center py-3">
+                  <div className="flex items-center justify-center gap-1 mb-2">
+                    {[0, 150, 300].map(d => (
+                      <span key={d} className="h-1.5 w-1.5 rounded-full bg-emerald-500/40" style={{ animation: `bounce 1.2s ease infinite ${d}ms` }} />
+                    ))}
                   </div>
-                  {isSessionActive && effectiveMode === "real" && (
-                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3" />
-                      {t("ai_real_tiktok")}
+                  <p className="text-[10px] text-muted-foreground/30">Watching for returning viewers…</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5 max-h-[180px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                  {(viewerRecognitionEvents ?? []).slice(0, 8).map((evt, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-xl bg-white/[0.02] border border-emerald-500/10 hover:border-emerald-500/20 transition-all">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center flex-shrink-0 text-[10px] font-black text-emerald-300">
+                        {evt.viewerName?.charAt(0).toUpperCase() ?? "?"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-[11px] font-bold text-white/90 truncate">{evt.viewerName}</p>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex-shrink-0">{evt.loyaltyTier ?? evt.tier}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/50 truncate">{evt.reason}</p>
+                        {evt.aiLine && (
+                          <p className="text-[10px] text-violet-300/70 italic truncate mt-0.5">"{evt.aiLine}"</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Live Feed (tabs + chat input) */}
+          <div className="flex flex-col min-h-0 flex-1" style={{ minHeight: "320px" }}>
+
+            {/* Tab bar */}
+            <div className="flex gap-1 p-1 bg-white/5 rounded-xl mb-2 flex-shrink-0">
+              {[
+                { key: "chat" as const, label: t("ai_tab_chat"), icon: <MessageCircle className="h-3.5 w-3.5" />, badge: isSessionActive ? feedEvents.filter(e => e.type === "comment").length : null },
+                { key: "events" as const, label: t("ai_tab_events"), icon: <Activity className="h-3.5 w-3.5" />, badge: null },
+                { key: "ai" as const, label: t("ai_tab_ai_activity"), icon: <Sparkles className="h-3.5 w-3.5" />, badge: isSessionActive && (aiAnnouncements?.length ?? 0) > 0 ? aiAnnouncements?.length : null },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setRightTab(tab.key)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-2 py-1.5 rounded-lg transition-all relative",
+                    rightTab === tab.key ? "bg-purple-600 text-white shadow" : "text-muted-foreground hover:text-white hover:bg-white/5",
+                  )}
+                >
+                  {tab.icon}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  {tab.badge !== null && (tab.badge ?? 0) > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-[9px] font-bold flex items-center justify-center text-white">
+                      {(tab.badge ?? 0) > 9 ? "9+" : tab.badge}
                     </span>
                   )}
-                </div>
-                <div className="flex-1 min-h-0">
-                  <UnifiedChatTab
-                    events={feedEvents}
-                    onReply={handleReply}
-                    replyingTo={replyingTo}
-                    sessionId={activeSessionId ?? null}
-                    isActive={isSessionActive}
-                  />
-                </div>
-              </div>
-            )}
+                </button>
+              ))}
+            </div>
 
-            {/* ── EVENTS TAB ── */}
-            {rightTab === "events" && (
-              <div className="h-full flex flex-col">
-                <div className="px-4 py-2.5 border-b border-white/5 flex-shrink-0">
-                  <span className="text-sm font-medium flex items-center gap-2">
-                    <Activity className="h-3.5 w-3.5 text-cyan-400" />
-                    {t("ai_event_log_title")}
-                  </span>
-                </div>
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  <EventsTab events={feedEvents} isActive={isSessionActive} />
-                </div>
-              </div>
-            )}
+            {/* Tab content */}
+            <div className="flex-1 min-h-0 rounded-xl bg-white/[0.03] border border-white/[0.06] overflow-hidden">
 
-            {/* ── AI ACTIVITY TAB ── */}
-            {rightTab === "ai" && (
-              <div className="h-full flex flex-col">
-                <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
-                  <span className="text-sm font-medium flex items-center gap-2">
-                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                    {t("ai_responses_title")}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {ttsMode !== "off" && (
-                      <span className="text-[10px] text-blue-400 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
-                        <Volume2 className="h-2.5 w-2.5" />
-                        {t("ai_voice_on")}
-                      </span>
-                    )}
-                    {config?.autoReplyEnabled && (
-                      <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
-                        <CheckCircle2 className="h-2.5 w-2.5" />
-                        {t("ai_auto_reply_badge")}
+              {rightTab === "chat" && (
+                <div className="h-full flex flex-col">
+                  <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="h-3.5 w-3.5 text-purple-400" />
+                      <span className="text-sm font-medium">{t("ai_live_chat_title")}</span>
+                      {feedEvents.length > 0 && (
+                        <span className="text-xs text-muted-foreground/50">{feedEvents.filter(e => e.type === "comment").length} {t("ai_comments_count")}</span>
+                      )}
+                    </div>
+                    {isSessionActive && effectiveMode === "real" && (
+                      <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />{t("ai_real_tiktok")}
                       </span>
                     )}
                   </div>
+                  <div className="flex-1 min-h-0">
+                    <UnifiedChatTab
+                      events={feedEvents}
+                      onReply={handleReply}
+                      replyingTo={replyingTo}
+                      sessionId={activeSessionId ?? null}
+                      isActive={isSessionActive}
+                    />
+                  </div>
                 </div>
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  <AiActivityTab
-                    events={feedEvents}
-                    ttsMode={ttsMode}
-                    isActive={isSessionActive}
-                  />
+              )}
+
+              {rightTab === "events" && (
+                <div className="h-full flex flex-col">
+                  <div className="px-4 py-2.5 border-b border-white/5 flex-shrink-0">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      <Activity className="h-3.5 w-3.5 text-cyan-400" />{t("ai_event_log_title")}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <EventsTab events={feedEvents} isActive={isSessionActive} />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-          </div>
-
-          {/* AI Strategy chat — compact input below */}
-          <div className="flex-shrink-0 mt-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <p className="text-[10px] text-muted-foreground/40 mb-1.5 flex items-center gap-1">
-              <Bot className="h-3 w-3" />
-              {t("ai_ask_advice")} · {personaName}
-            </p>
-            <div className="flex gap-2">
-              <Input
-                ref={inputRef}
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
-                placeholder={`Ask ${personaName}…`}
-                className="bg-background/50 border-white/10 flex-1 h-8 text-xs"
-                disabled={isChatLoading}
-              />
-              <Button
-                onClick={handleChatSend}
-                disabled={isChatLoading || !chatInput.trim()}
-                className="bg-purple-600 hover:bg-purple-700 h-8 w-8 p-0"
-                size="sm"
-              >
-                {isChatLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-              </Button>
-            </div>
-            {localMessages.length > 0 && (
-              <div className="mt-2 max-h-[120px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 space-y-1.5">
-                {localMessages.slice(-4).map((msg) => (
-                  <div key={msg.id} className={cn("flex gap-2 text-xs", msg.role === "user" ? "justify-end" : "justify-start")}>
-                    <div className={cn(
-                      "max-w-[85%] rounded-xl px-2.5 py-1.5 text-xs leading-relaxed",
-                      msg.role === "user" ? "bg-purple-600 text-white" : "bg-white/5 text-foreground",
-                    )}>
-                      {msg.content === "..." ? (
-                        <span className="flex gap-1 items-center h-4">
-                          {[0, 150, 300].map((d) => (
-                            <span key={d} className="h-1 w-1 rounded-full bg-purple-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
-                          ))}
+              {rightTab === "ai" && (
+                <div className="h-full flex flex-col">
+                  <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-purple-400" />{t("ai_responses_title")}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {ttsMode !== "off" && (
+                        <span className="text-[10px] text-blue-400 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
+                          <Volume2 className="h-2.5 w-2.5" />{t("ai_voice_on")}
                         </span>
-                      ) : msg.content}
+                      )}
+                      {config?.autoReplyEnabled && (
+                        <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
+                          <CheckCircle2 className="h-2.5 w-2.5" />{t("ai_auto_reply_badge")}
+                        </span>
+                      )}
                     </div>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <AiActivityTab events={feedEvents} ttsMode={ttsMode} isActive={isSessionActive} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* AI Strategy chat input */}
+            <div className="flex-shrink-0 mt-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              <p className="text-[10px] text-muted-foreground/40 mb-1.5 flex items-center gap-1">
+                <Bot className="h-3 w-3" />{t("ai_ask_advice")} · {personaName}
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
+                  placeholder={`Ask ${personaName}…`}
+                  className="bg-background/50 border-white/10 flex-1 h-8 text-xs"
+                  disabled={isChatLoading}
+                />
+                <Button
+                  onClick={handleChatSend}
+                  disabled={isChatLoading || !chatInput.trim()}
+                  className="bg-purple-600 hover:bg-purple-700 h-8 w-8 p-0"
+                  size="sm"
+                >
+                  {isChatLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                </Button>
               </div>
-            )}
-          </div>
+              {localMessages.length > 0 && (
+                <div className="mt-2 max-h-[120px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 space-y-1.5">
+                  {localMessages.slice(-4).map(msg => (
+                    <div key={msg.id} className={cn("flex gap-2 text-xs", msg.role === "user" ? "justify-end" : "justify-start")}>
+                      <div className={cn(
+                        "max-w-[85%] rounded-xl px-2.5 py-1.5 text-xs leading-relaxed",
+                        msg.role === "user" ? "bg-purple-600 text-white" : "bg-white/5 text-foreground",
+                      )}>
+                        {msg.content === "..." ? (
+                          <span className="flex gap-1 items-center h-4">
+                            {[0, 150, 300].map(d => (
+                              <span key={d} className="h-1 w-1 rounded-full bg-purple-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
+                            ))}
+                          </span>
+                        ) : msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
 
-        </div>
+          </div>{/* /Live Feed */}
 
-      </div>
+        </div>{/* /RIGHT */}
+
+      </div>{/* /3-col grid */}
+
 
 
       {/* ── Voice Picker Sheet ── */}
