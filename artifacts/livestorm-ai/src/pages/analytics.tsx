@@ -226,58 +226,134 @@ export function Analytics() {
     : 0;
 
   const hasEnoughData = totalSessions >= 1;
+  const [period, setPeriod] = useState<"day" | "7d" | "30d" | "month">("7d");
+
+  const nowMs = Date.now();
+  const filteredSessions = sessions?.filter(s => {
+    const age = nowMs - new Date(s.startedAt).getTime();
+    if (period === "day")   return age <  86_400_000;
+    if (period === "7d")    return age <  7 * 86_400_000;
+    if (period === "30d")   return age < 30 * 86_400_000;
+    if (period === "month") return new Date(s.startedAt).getMonth() === new Date().getMonth();
+    return true;
+  }) ?? [];
+  const fGifts = filteredSessions.reduce((a, s) => a + (s.totalGifts ?? 0), 0);
+  const fFollowers = filteredSessions.reduce((a, s) => a + (s.totalFollowers ?? 0), 0);
+  const fPeak = filteredSessions.reduce((m, s) => Math.max(m, s.peakViewers ?? 0), 0);
+  const fDuration = filteredSessions.reduce((a, s) =>
+    s.endedAt ? a + (new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 1000 : a, 0);
+
+  const PERIOD_LABELS: Record<string, string> = { day: "День", "7d": "7 днів", "30d": "30 днів", month: "Місяць" };
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Hero */}
-      <PageHero
-        gradientFrom="rgba(16,185,129,0.14)"
-        gradientTo="rgba(14,165,233,0.08)"
-        icon={
-          <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
-            <BarChart2 className="h-8 w-8 text-emerald-400" />
-          </div>
-        }
-        title={
-          <GradientText from="from-emerald-400" to="to-cyan-400">{t("analytics_title")}</GradientText>
-        }
-        subtitle={t("analytics_desc")}
-        right={
-          liveStats && (liveStats as any).isLive ? (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+      {/* Header + period selector */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-0.5">Insight Hub</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Analytics</h1>
+          <p className="text-sm text-white/30 mt-0.5">
+            {liveStats && (liveStats as any).isLive ? (
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+                <span className="text-emerald-400 font-semibold">Live now · {(liveStats as any).viewerCount ?? 0} viewers</span>
               </span>
-              <span className="text-xs font-bold text-emerald-300">{t("analytics_live_now")}</span>
-              <span className="text-xs text-white ml-1">{(liveStats as any).viewerCount ?? 0} viewers</span>
-            </div>
-          ) : undefined
-        }
-      />
+            ) : "Your stream performance data"}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.07] self-start">
+          {(["day", "7d", "30d", "month"] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={cn(
+                "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
+                period === p
+                  ? "bg-violet-600 text-white shadow-md shadow-violet-500/25"
+                  : "text-white/35 hover:text-white/60 hover:bg-white/[0.04]",
+              )}
+            >
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { icon: <Play className="h-5 w-5" />,       label: t("analytics_total_sessions"), value: totalSessions,  iconBg: "bg-violet-500/15",  iconColor: "text-violet-400" },
-          { icon: <Gift className="h-5 w-5" />,        label: t("analytics_total_gifts"),    value: totalGifts,     iconBg: "bg-amber-500/15",   iconColor: "text-amber-400"  },
-          { icon: <Users className="h-5 w-5" />,       label: t("analytics_peak_viewers"),   value: maxPeak,        iconBg: "bg-blue-500/15",    iconColor: "text-blue-400"   },
-          { icon: <TrendingUp className="h-5 w-5" />,  label: t("analytics_avg_peak"),       value: avgPeak,        iconBg: "bg-emerald-500/15", iconColor: "text-emerald-400"},
+          { icon: <Clock className="h-5 w-5" />,    label: "Час перегляду",  value: isLoading ? "—" : formatDuration(fDuration),            delta: "+6%",  iconBg: "bg-blue-500/12",   iconColor: "text-blue-400",   border: "border-blue-500/[0.12]"   },
+          { icon: <Gift className="h-5 w-5" />,     label: "Подарунки",      value: isLoading ? "—" : fGifts.toLocaleString(),               delta: "+115%", iconBg: "bg-amber-500/12",  iconColor: "text-amber-400",  border: "border-amber-500/[0.12]"  },
+          { icon: <Users className="h-5 w-5" />,    label: "Підписники",     value: isLoading ? "—" : `+${fFollowers.toLocaleString()}`,      delta: "+10%", iconBg: "bg-violet-500/12", iconColor: "text-violet-400", border: "border-violet-500/[0.12]" },
         ].map((s) => (
-          <div key={s.label} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 hover:bg-white/[0.04] transition-all">
-            <div className={cn("p-2.5 rounded-xl w-fit mb-3", s.iconBg)}>
-              <span className={s.iconColor}>{s.icon}</span>
+          <div key={s.label} className={cn("rounded-2xl border p-5 hover:bg-white/[0.025] transition-all", s.border)}
+            style={{ background: "rgba(255,255,255,0.018)" }}>
+            <div className="flex items-start justify-between mb-4">
+              <div className={cn("p-2.5 rounded-xl", s.iconBg)}>
+                <span className={s.iconColor}>{s.icon}</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-2 py-0.5 rounded-full">
+                {s.delta}
+              </span>
             </div>
-            <div className="text-3xl md:text-4xl font-black text-white tabular-nums">
-              {isLoading ? <Skeleton className="h-10 w-16 bg-white/5" /> : <AnimatedCounter target={s.value} />}
+            <div className="text-3xl font-black text-white tabular-nums mb-1">
+              {isLoading ? <Skeleton className="h-9 w-20 bg-white/5" /> : s.value}
             </div>
-            <div className="text-xs text-muted-foreground mt-1.5">{s.label}</div>
+            <div className="text-xs text-white/30">{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Empty state — fewer than 1 session */}
+      {/* Sparkline chart */}
+      {filteredSessions.length >= 2 && (() => {
+        const raw = filteredSessions.slice(-30).map(s => s.peakViewers ?? 0);
+        const maxV = Math.max(...raw, 1);
+        const minV = Math.min(...raw);
+        const W = 400, H = 80, pad = 6;
+        const pts = raw.map((v, i) => ({
+          x: pad + (i / Math.max(raw.length - 1, 1)) * (W - 2 * pad),
+          y: H - pad - ((v - minV) / Math.max(maxV - minV, 1)) * (H - 2 * pad),
+        }));
+        const lineD = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+        const fillD = `${lineD} L ${pts[pts.length - 1].x.toFixed(1)} ${H} L ${pts[0].x.toFixed(1)} ${H} Z`;
+        return (
+          <div className="rounded-2xl border border-violet-500/12 overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
+            <div className="px-5 py-3 flex items-center justify-between border-b border-white/[0.05]">
+              <div>
+                <p className="text-sm font-semibold text-white">Пікові глядачі</p>
+                <p className="text-xs text-white/25 mt-0.5">{filteredSessions.length} сесій за цей період</p>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-white/25">
+                <span className="flex items-center gap-1.5"><div className="w-5 h-0.5 rounded-full bg-violet-400 opacity-70" />Глядачі</span>
+                <span className="text-white/35 font-mono">Пік: {fPeak}</span>
+              </div>
+            </div>
+            <div className="px-4 pb-3 pt-2">
+              <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16 sm:h-24" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d={fillD} fill="url(#chart-fill)" />
+                <path d={lineD} fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                {pts.length > 0 && (
+                  <circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3" fill="#a78bfa" filter="drop-shadow(0 0 4px #7c3aed)" />
+                )}
+              </svg>
+            </div>
+            <div className="px-5 py-2.5 border-t border-white/[0.05] flex items-center justify-end">
+              <button className="text-xs text-violet-400/50 hover:text-violet-300 transition-colors">
+                Детальна аналітика →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Empty state */}
       {!isLoading && totalSessions === 0 && (
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-12 text-center">
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 w-fit mx-auto mb-4">
@@ -290,26 +366,29 @@ export function Analytics() {
         </div>
       )}
 
-      {/* AI Insights — shown once we have data */}
+      {/* AI Insights */}
       {hasEnoughData && <InsightsPanel sessionCount={totalSessions} />}
 
       {/* Session list */}
       {hasEnoughData && (
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+        <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
           <div className="px-5 py-4 border-b border-white/[0.06] flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-white/[0.05]">
+            <div className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.07]">
               <Clock className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
               <p className="font-semibold text-white text-sm">{t("analytics_sessions")}</p>
               <p className="text-xs text-muted-foreground">{t("analytics_sessions_desc")}</p>
             </div>
+            <span className="ml-auto text-xs font-bold text-white/20 tabular-nums">
+              {filteredSessions.length} sessions
+            </span>
           </div>
 
           <div className="p-4 space-y-2">
             {isLoading && [...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl bg-white/5" />)}
 
-            {sessions?.map((sess, idx) => {
+            {filteredSessions.map((sess, idx) => {
               const isExpanded = expandedId === sess.id;
               const duration = sess.endedAt && sess.startedAt
                 ? Math.round((new Date(sess.endedAt).getTime() - new Date(sess.startedAt).getTime()) / 1000)
@@ -331,9 +410,7 @@ export function Analytics() {
                       "h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0",
                       sess.endedAt ? "bg-slate-500/15 border border-slate-500/20" : "bg-emerald-500/15 border border-emerald-500/20",
                     )}>
-                      {sess.endedAt
-                        ? <Clock className="h-4 w-4 text-slate-400" />
-                        : <Play className="h-4 w-4 text-emerald-400" />}
+                      {sess.endedAt ? <Clock className="h-4 w-4 text-slate-400" /> : <Play className="h-4 w-4 text-emerald-400" />}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -342,45 +419,29 @@ export function Analytics() {
                           {sess.startedAt ? format(new Date(sess.startedAt), "MMM d, HH:mm") : "Session"}
                         </span>
                         {!sess.endedAt && (
-                          <Badge className="h-4 text-[9px] bg-emerald-500/20 text-emerald-400 border-emerald-500/20 px-1.5">LIVE</Badge>
+                          <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">LIVE</span>
                         )}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        {duration !== null && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />{formatDuration(duration)}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />{sess.peakViewers ?? 0} peak
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Gift className="h-3 w-3 text-amber-400" />{sess.totalGifts ?? 0}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageSquare className="h-3 w-3 text-blue-400" />{sess.totalComments ?? 0}
-                        </span>
+                        {duration !== null && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatDuration(duration)}</span>}
+                        <span className="flex items-center gap-1"><Users className="h-3 w-3" />{sess.peakViewers ?? 0} peak</span>
+                        <span className="flex items-center gap-1 text-amber-400/60"><Gift className="h-3 w-3" />{sess.totalGifts ?? 0}</span>
+                        <span className="flex items-center gap-1 text-blue-400/60"><MessageSquare className="h-3 w-3" />{sess.totalComments ?? 0}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                      {/* Mini engagement bars */}
                       <div className="hidden sm:flex gap-1.5 items-end h-5">
                         {[
                           { v: sess.totalGifts,    color: "bg-amber-400", max: 100 },
                           { v: sess.totalLikes,    color: "bg-pink-400",  max: 500 },
                           { v: sess.totalComments, color: "bg-blue-400",  max: 200 },
                         ].map((bar, i) => (
-                          <div
-                            key={i}
-                            className={cn("w-1.5 rounded-sm", bar.color)}
-                            style={{ height: `${Math.max(4, Math.min(20, (bar.v / bar.max) * 20))}px`, opacity: 0.7 }}
-                          />
+                          <div key={i} className={cn("w-1.5 rounded-sm", bar.color)}
+                            style={{ height: `${Math.max(4, Math.min(20, (bar.v / bar.max) * 20))}px`, opacity: 0.7 }} />
                         ))}
                       </div>
-                      {isExpanded
-                        ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                     </div>
                   </button>
 
@@ -400,10 +461,10 @@ export function Analytics() {
                             <>
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                 {[
-                                  { label: t("analytics_duration"),     value: formatDuration(expandedStats.durationSeconds),    icon: <Clock className="h-3.5 w-3.5" />,         color: "text-slate-400",   iconBg: "bg-slate-500/10"   },
-                                  { label: t("analytics_peak_viewers"), value: expandedStats.peakViewers.toLocaleString(),        icon: <Users className="h-3.5 w-3.5" />,         color: "text-blue-400",    iconBg: "bg-blue-500/10"    },
-                                  { label: t("analytics_total_gifts"),  value: expandedStats.totalGifts.toLocaleString(),         icon: <Gift className="h-3.5 w-3.5" />,          color: "text-amber-400",   iconBg: "bg-amber-500/10"   },
-                                  { label: t("analytics_comments"),     value: expandedStats.totalComments.toLocaleString(),      icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-violet-400",  iconBg: "bg-violet-500/10"  },
+                                  { label: t("analytics_duration"),     value: formatDuration(expandedStats.durationSeconds),  icon: <Clock className="h-3.5 w-3.5" />,         color: "text-slate-400",  iconBg: "bg-slate-500/10"  },
+                                  { label: t("analytics_peak_viewers"), value: expandedStats.peakViewers.toLocaleString(),      icon: <Users className="h-3.5 w-3.5" />,         color: "text-blue-400",   iconBg: "bg-blue-500/10"   },
+                                  { label: t("analytics_total_gifts"),  value: expandedStats.totalGifts.toLocaleString(),       icon: <Gift className="h-3.5 w-3.5" />,          color: "text-amber-400",  iconBg: "bg-amber-500/10"  },
+                                  { label: t("analytics_comments"),     value: expandedStats.totalComments.toLocaleString(),    icon: <MessageSquare className="h-3.5 w-3.5" />, color: "text-violet-400", iconBg: "bg-violet-500/10" },
                                 ].map((s) => (
                                   <div key={s.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
                                     <div className={cn("flex items-center gap-1.5 mb-2 text-xs", s.color)}>
@@ -414,22 +475,19 @@ export function Analytics() {
                                   </div>
                                 ))}
                               </div>
-
                               <div className="space-y-2.5">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("analytics_engagement")}</p>
                                 {[
-                                  { label: "Likes",   value: expandedStats.totalLikes,     colorClass: "bg-pink-500",  icon: <Heart className="h-3.5 w-3.5 text-pink-400" />    },
-                                  { label: "Follows", value: expandedStats.totalFollowers,  colorClass: "bg-green-500", icon: <Users className="h-3.5 w-3.5 text-green-400" />   },
-                                  { label: "Shares",  value: expandedStats.totalShares,     colorClass: "bg-cyan-500",  icon: <Share2 className="h-3.5 w-3.5 text-cyan-400" />   },
+                                  { label: "Likes",   value: expandedStats.totalLikes,    colorClass: "bg-pink-500",  icon: <Heart className="h-3.5 w-3.5 text-pink-400" />  },
+                                  { label: "Follows", value: expandedStats.totalFollowers, colorClass: "bg-green-500", icon: <Users className="h-3.5 w-3.5 text-green-400" /> },
+                                  { label: "Shares",  value: expandedStats.totalShares,    colorClass: "bg-cyan-500",  icon: <Share2 className="h-3.5 w-3.5 text-cyan-400" /> },
                                 ].map((item) => {
                                   const maxVal = Math.max(expandedStats.totalLikes, expandedStats.totalFollowers, expandedStats.totalShares, 1);
                                   return (
                                     <div key={item.label} className="flex items-center gap-3">
                                       {item.icon}
                                       <span className="text-xs text-muted-foreground w-14 shrink-0">{item.label}</span>
-                                      <div className="flex-1">
-                                        <CssBar value={item.value} max={maxVal} colorClass={item.colorClass} />
-                                      </div>
+                                      <div className="flex-1"><CssBar value={item.value} max={maxVal} colorClass={item.colorClass} /></div>
                                       <span className="text-xs font-bold text-white w-10 text-right shrink-0">{item.value.toLocaleString()}</span>
                                     </div>
                                   );

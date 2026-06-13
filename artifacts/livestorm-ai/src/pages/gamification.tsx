@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { PageHero, GradientText, RankBadge, ProgressRing, AnimatedCounter } from "@/components/ui/premium";
+import { RankBadge, ProgressRing, AnimatedCounter } from "@/components/ui/premium";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   trophy: Trophy, star: Star, medal: Medal, zap: Zap, gift: Gift,
@@ -420,29 +420,24 @@ export function Gamification() {
       )}
 
       <div className="space-y-5 max-w-6xl mx-auto">
-        {/* Hero */}
-        <PageHero
-          gradientFrom="rgba(234,179,8,0.14)"
-          gradientTo="rgba(124,58,237,0.08)"
-          icon={
-            <div className="p-3 rounded-2xl bg-yellow-500/15 border border-yellow-500/20 shadow-lg shadow-yellow-500/10">
-              <Trophy className="h-8 w-8 text-yellow-400" />
+
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-yellow-400/50 mb-0.5">XP System</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Gamification</h1>
+            <p className="text-sm text-white/30 mt-0.5">Viewer XP · Levels · Achievements · Lucky Drops</p>
+          </div>
+          {sessionId ? (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
+              </span>
+              <span className="text-xs font-bold text-green-300">LIVE</span>
             </div>
-          }
-          title={<span>Gamification <GradientText from="from-yellow-400" to="to-violet-400">Hub</GradientText></span>}
-          subtitle="Viewer XP, levels, leaderboards, achievements & lucky drops — all in real time."
-          right={
-            sessionId ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
-                </span>
-                <span className="text-xs font-bold text-green-300">LIVE</span>
-              </div>
-            ) : undefined
-          }
-        />
+          ) : null}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 

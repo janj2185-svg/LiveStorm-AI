@@ -422,24 +422,14 @@ export function Settings() {
   ];
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      <PageHero
-        gradientFrom="rgba(124,58,237,0.12)"
-        gradientTo="rgba(14,165,233,0.06)"
-        icon={
-          <div className="p-3 rounded-2xl bg-primary/15 border border-primary/20 shadow-lg shadow-primary/10">
-            <SettingsIcon className="h-8 w-8 text-primary" />
-          </div>
-        }
-        title={
-          <span>
-            Account{" "}
-            <GradientText from="from-violet-400" to="to-cyan-400">{t("settings_title")}</GradientText>
-          </span>
-        }
-        subtitle={t("settings_desc")}
-        right={
-          user?.role === "owner" ? (
+    <div className="max-w-5xl mx-auto">
+
+      {/* Page header */}
+      <div className="mb-5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-0.5">Account</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Settings</h1>
+          {user?.role === "owner" ? (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40">
               <KeyRound className="h-4 w-4 text-amber-300" />
               <span className="text-xs font-bold text-amber-200">Owner</span>
@@ -449,29 +439,66 @@ export function Settings() {
               <Crown className="h-4 w-4 text-amber-400" />
               <span className="text-xs font-bold text-amber-300 capitalize">{user.plan}</span>
             </div>
-          ) : undefined
-        }
-      />
-
-      {/* Tabs — horizontal scroll on mobile */}
-      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/8 overflow-x-auto scrollbar-none w-full sm:w-fit">
-        {TABS.map((tb) => (
-          <button
-            key={tb.id}
-            onClick={() => setTab(tb.id)}
-            className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              tab === tb.id
-                ? "bg-primary/20 text-primary shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-            }`}
-          >
-            <span className="flex items-center gap-1.5 whitespace-nowrap">
-              {tb.icon}
-              {tb.label}
-            </span>
-          </button>
-        ))}
+          ) : null}
+        </div>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5 items-start">
+
+        {/* Left sidebar nav */}
+        <div className="lg:sticky lg:top-4 space-y-0.5">
+          {([
+            { id: "profile",  icon: <User className="h-4 w-4" />,       label: "Загальні",    sub: "Profile & TikTok"    },
+            { id: "language", icon: <Globe className="h-4 w-4" />,      label: "Мова",         sub: "UI & AI language"    },
+            { id: "billing",  icon: <CreditCard className="h-4 w-4" />, label: "Білінг",       sub: "Plan & subscription" },
+            { id: "obs",      icon: <Monitor className="h-4 w-4" />,    label: "OBS Overlays", sub: "Browser sources"     },
+          ] as { id: SettingsTab; icon: React.ReactNode; label: string; sub: string }[]).map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all border",
+                tab === item.id
+                  ? "bg-violet-500/15 border-violet-500/20 text-white"
+                  : "border-transparent text-white/40 hover:text-white/70 hover:bg-white/[0.04]",
+              )}
+            >
+              <span className={cn(
+                "shrink-0 p-1.5 rounded-lg transition-colors",
+                tab === item.id ? "bg-violet-500/20 text-violet-300" : "bg-white/[0.04] text-white/30",
+              )}>
+                {item.icon}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-sm font-semibold truncate", tab === item.id ? "text-white" : "text-white/50")}>{item.label}</p>
+                <p className="text-[10px] text-white/20 truncate">{item.sub}</p>
+              </div>
+              {tab === item.id && <div className="w-1 h-4 rounded-full bg-violet-400 shrink-0" />}
+            </button>
+          ))}
+
+          <div className="pt-3 mt-2 border-t border-white/[0.06] space-y-0.5">
+            {[
+              { label: "Сповіщення", emoji: "🔔", soon: true  },
+              { label: "Інтеграції", emoji: "🔌", soon: true  },
+              { label: "Безпека",    emoji: "🛡️", soon: false },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={!item.soon ? () => setTab("profile") : undefined}
+                disabled={item.soon}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all text-white/20 hover:text-white/35 hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <span className="text-base shrink-0">{item.emoji}</span>
+                <p className="text-sm font-medium flex-1">{item.label}</p>
+                {item.soon && <span className="text-[9px] text-white/15 border border-white/10 px-1.5 py-0.5 rounded-full">soon</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div className="min-w-0 space-y-4">
 
       {/* Profile Tab */}
       {tab === "profile" && (
@@ -822,6 +849,9 @@ export function Settings() {
 
       {/* OBS Overlays Tab */}
       {tab === "obs" && <ObsTab authToken={authToken} />}
+
+        </div>
+      </div>
     </div>
   );
 }
