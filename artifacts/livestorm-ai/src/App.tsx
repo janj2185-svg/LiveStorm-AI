@@ -38,6 +38,7 @@ import { ObsGoals } from "@/pages/obs/goals";
 import { ObsLeaderboard } from "@/pages/obs/leaderboard";
 import { ObsBossBattle } from "@/pages/obs/boss-battle";
 import { ObsActivityFeed } from "@/pages/obs/activity-feed";
+import { StormPass } from "@/pages/storm-pass";
 
 const queryClient = new QueryClient();
 
@@ -293,6 +294,10 @@ function AppRoutes() {
       </Route>
       <Route path="/admin">
         <ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>
+      </Route>
+
+      <Route path="/pass/:streamerId/:viewerId">
+        <StormPass />
       </Route>
 
       <Route>
