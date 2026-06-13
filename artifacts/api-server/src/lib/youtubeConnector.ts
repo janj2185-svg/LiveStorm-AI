@@ -39,7 +39,7 @@ function makeYtEvent(
   username: string | undefined,
   data: Record<string, unknown>,
 ): TikTokEvent {
-  return { type, sessionId, username, data, timestamp: Date.now() };
+  return { type, platform: "youtube", sessionId, username, data, timestamp: Date.now() };
 }
 
 function createOAuthClient(): OAuth2Client {

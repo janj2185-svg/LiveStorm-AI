@@ -4,6 +4,7 @@ import { ingestLiveEvent } from "./socketServer";
 export interface TikTokEvent {
   source?: string;
   type: "comment" | "gift" | "like" | "follow" | "share" | "viewerCount" | "silence_filler" | "streamer_speech";
+  platform?: "tiktok" | "youtube";
   sessionId: number;
   userId?: string;
   username?: string;
@@ -94,6 +95,7 @@ export function startSimulator(_io: SocketServer, sessionId: number, _roomId: st
       viewerCount = Math.max(5, viewerCount + delta);
       await ingestLiveEvent({
         type: "viewerCount",
+        platform: "tiktok",
         sessionId,
         data: { count: viewerCount },
         timestamp: Date.now(),
@@ -104,6 +106,7 @@ export function startSimulator(_io: SocketServer, sessionId: number, _roomId: st
       const user = randomUser();
       await ingestLiveEvent({
         type: "comment",
+        platform: "tiktok",
         sessionId,
         username: user.username,
         data: { text: randomComment() },
@@ -114,6 +117,7 @@ export function startSimulator(_io: SocketServer, sessionId: number, _roomId: st
       const gift = randomGift();
       await ingestLiveEvent({
         type: "gift",
+        platform: "tiktok",
         sessionId,
         username: user.username,
         data: { giftName: gift.name, coins: gift.coins, count: 1 },
@@ -123,6 +127,7 @@ export function startSimulator(_io: SocketServer, sessionId: number, _roomId: st
       const user = randomUser();
       await ingestLiveEvent({
         type: "like",
+        platform: "tiktok",
         sessionId,
         username: user.username,
         data: { likeCount: Math.floor(Math.random() * 20) + 1 },
@@ -132,6 +137,7 @@ export function startSimulator(_io: SocketServer, sessionId: number, _roomId: st
       const user = randomUser();
       await ingestLiveEvent({
         type: "follow",
+        platform: "tiktok",
         sessionId,
         username: user.username,
         data: {},
@@ -141,6 +147,7 @@ export function startSimulator(_io: SocketServer, sessionId: number, _roomId: st
       const user = randomUser();
       await ingestLiveEvent({
         type: "share",
+        platform: "tiktok",
         sessionId,
         username: user.username,
         data: {},

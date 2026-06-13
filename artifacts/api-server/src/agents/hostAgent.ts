@@ -96,6 +96,12 @@ export async function runHostAgent(opts: {
   const { event, personaName, personality, memoryContext, replyLanguage, defaultLanguage, conversationHistory, emotionState, behaviorCtx, recentReplies, personaGender, forceAlternative, intensityMode } = opts;
   const viewerName = event.username ?? "someone";
 
+  // Platform context: let the host know which platform this viewer is on so it can
+  // personalise greetings ("Thanks for the Super Chat on YouTube!") or just be aware.
+  const platform = event.platform ?? "tiktok";
+  const platformLabel = platform === "youtube" ? " [from YouTube]" : " [from TikTok]";
+  const platformName  = platform === "youtube" ? "YouTube" : "TikTok";
+
   let userPrompt = "";
   let emotion: HostAgentResult["emotion"] = "neutral";
   // Streamer speech intent — set inside case "streamer_speech", used for token budget + anti-repeat skip
@@ -112,15 +118,17 @@ export async function runHostAgent(opts: {
         coins >= 500  ? "MASSIVE gift — wow" :
         coins >= 100  ? "generous gift — that's real support" :
         coins >= 20   ? "nice gift" : "";
+      // For YouTube Super Chats, use the platform-specific term in the tier hint
+      const giftDisplay = platform === "youtube" && giftName === "Super Chat" ? "Super Chat" : giftName;
       userPrompt = coins > 0
-        ? `${viewerName} just sent ${giftName} — ${coins} coins.${giftTier ? ` [${giftTier}]` : ""}`
-        : `${viewerName} just sent ${giftName}.`;
+        ? `${viewerName}${platformLabel} just sent ${giftDisplay} — ${coins} coins.${giftTier ? ` [${giftTier}]` : ""} [You may naturally mention it's from ${platformName} if it adds warmth]`
+        : `${viewerName}${platformLabel} just sent ${giftDisplay}.`;
       emotion = "grateful";
       await storeMemory({
         streamerId: opts.streamerId,
         memoryType: "viewer",
         key:        `${viewerName}_last_gift`,
-        value:      `${viewerName} sent ${giftName} (${coins} coins)`,
+        value:      `${viewerName} sent ${giftName} (${coins} coins) via ${platformName}`,
         viewerName,
         importance: 4,
       });
@@ -128,7 +136,7 @@ export async function runHostAgent(opts: {
     }
 
     case "follow": {
-      userPrompt = `${viewerName} just followed. [React with genuine energy — a new member of the community just showed up]`;
+      userPrompt = `${viewerName}${platformLabel} just followed. [React with genuine energy — a new member of the community just showed up]`;
       emotion    = "excited";
       break;
     }
@@ -139,13 +147,13 @@ export async function runHostAgent(opts: {
       const nameHint = viewerName && viewerName !== "someone"
         ? ` [Feel free to address ${viewerName} by name naturally — makes it personal. If the comment invites it, ask them something back.]`
         : "";
-      userPrompt = `${viewerName}: "${comment}"${nameHint}`;
+      userPrompt = `${viewerName}${platformLabel}: "${comment}"${nameHint}`;
       emotion    = "neutral";
       break;
     }
 
     case "share": {
-      userPrompt = `${viewerName} just shared the stream with their friends. [That grows the community — acknowledge it]`;
+      userPrompt = `${viewerName}${platformLabel} just shared the stream with their friends. [That grows the community — acknowledge it]`;
       emotion    = "hype";
       break;
     }

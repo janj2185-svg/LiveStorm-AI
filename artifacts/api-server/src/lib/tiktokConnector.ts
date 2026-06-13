@@ -111,7 +111,7 @@ function makeEvent(
   username: string | undefined,
   data: Record<string, unknown>,
 ): TikTokEvent {
-  return { type, sessionId, username, data, timestamp: Date.now() };
+  return { type, platform: "tiktok", sessionId, username, data, timestamp: Date.now() };
 }
 
 // ── Real connector ────────────────────────────────────────────────────────────
