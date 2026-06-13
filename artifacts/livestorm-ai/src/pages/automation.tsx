@@ -22,7 +22,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Zap, Trash2, Plus, Settings2, ShieldAlert, Activity, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
-import { PageHero, GradientText } from "@/components/ui/premium";
 
 const EVENT_TYPES = ["gift", "comment", "like", "follow", "share", "viewerCount"];
 const ACTION_TYPES = [
@@ -133,29 +132,19 @@ export function Automation() {
 
   return (
     <div className="space-y-5">
-      <PageHero
-        gradientFrom="rgba(124,58,237,0.14)"
-        gradientTo="rgba(6,182,212,0.06)"
-        icon={
-          <div className="p-3 rounded-2xl bg-primary/15 border border-primary/20 shadow-lg shadow-primary/10">
-            <Zap className="h-8 w-8 text-primary" />
-          </div>
-        }
-        title={
-          <span>
-            Automation{" "}
-            <GradientText from="from-violet-400" to="to-cyan-400">Triggers</GradientText>
-          </span>
-        }
-        subtitle="Build rules to react to live events automatically."
-        right={
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-primary hover:bg-primary/90 text-white font-bold">
-                <Plus className="h-4 w-4" />
-                New Trigger
-              </Button>
-            </DialogTrigger>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">EVENT AUTOMATION</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Automation</h1>
+          <p className="text-white/40 text-sm mt-1">Build rules to react to live events automatically.</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 bg-primary hover:bg-primary/90 text-white font-bold shrink-0">
+              <Plus className="h-4 w-4" />
+              New Trigger
+            </Button>
+          </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
               <DialogHeader>
                 <DialogTitle>Create Automation Trigger</DialogTitle>
@@ -294,8 +283,7 @@ export function Automation() {
               </div>
             </DialogContent>
           </Dialog>
-        }
-      />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">

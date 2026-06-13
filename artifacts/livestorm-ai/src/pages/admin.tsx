@@ -69,16 +69,19 @@ export function Admin() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-red-400" />
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-400/50 mb-1">SYSTEM CONTROL</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Admin Panel</h1>
+          <p className="text-white/40 text-sm mt-1">Platform management, users, subscriptions, and logs.</p>
+        </div>
         {isOwner ? (
-          <Badge className="gap-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 font-bold">
+          <Badge className="gap-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 font-bold shrink-0 px-3 py-1.5">
             <KeyRound className="h-3 w-3" />
-            Owner
+            Owner Access
           </Badge>
         ) : (
-          <Badge variant="outline" className="text-red-400 border-red-400/40">Admin</Badge>
+          <Badge variant="outline" className="text-red-400 border-red-400/40 shrink-0 px-3 py-1.5">Admin</Badge>
         )}
       </div>
 

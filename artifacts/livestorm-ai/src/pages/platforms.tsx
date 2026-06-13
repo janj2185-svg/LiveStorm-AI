@@ -8,7 +8,6 @@ import {
   CheckCircle2, Clock, Plug, ExternalLink, Zap, ChevronRight,
   Globe, Sparkles, Radio,
 } from "lucide-react";
-import { PageHero, GradientText } from "@/components/ui/premium";
 import { cn } from "@/lib/utils";
 
 interface IntegrationData {
@@ -210,28 +209,17 @@ export function Platforms() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <PageHero
-        gradientFrom="rgba(14,165,233,0.12)"
-        gradientTo="rgba(124,58,237,0.06)"
-        icon={
-          <div className="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
-            <Globe className="h-8 w-8 text-cyan-400" />
-          </div>
-        }
-        title={
-          <span>
-            Streaming{" "}
-            <GradientText from="from-cyan-400" to="to-violet-400">Platforms</GradientText>
-          </span>
-        }
-        subtitle="Connect to external live streaming platforms or go live natively. TikTok LIVE is active — more are on the roadmap."
-        right={
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20">
-            <Radio className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-bold text-primary">Stage 1 Active</span>
-          </div>
-        }
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-400/50 mb-1">STREAMING PLATFORMS</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Platforms</h1>
+          <p className="text-white/40 text-sm mt-1">Connect to live streaming platforms. TikTok LIVE is active — more on the roadmap.</p>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 shrink-0">
+          <Radio className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-bold text-primary">Stage 1 Active</span>
+        </div>
+      </div>
 
       {/* Roadmap stages */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

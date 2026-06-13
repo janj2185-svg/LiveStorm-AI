@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Check, Zap, Sparkles, Crown, Star, ArrowLeft, X } from "lucide-react";
+import { Check, Zap, Sparkles, Crown, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -196,155 +195,141 @@ export function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </Link>
-
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-            Choose Your Plan
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-6">
-            Unlock powerful features to grow your TikTok LIVE stream and engage your viewers.
-          </p>
-
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Label htmlFor="yearly-toggle" className={!yearly ? "text-foreground font-medium" : "text-muted-foreground"}>
-              Monthly
-            </Label>
+    <div className="space-y-8 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">SUBSCRIPTION</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Choose Your Plan</h1>
+          <p className="text-white/40 text-sm mt-1">Unlock powerful features to grow your TikTok LIVE stream.</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.07] rounded-xl px-3 py-2">
+            <span className={yearly ? "text-white/40 text-sm" : "text-white text-sm font-medium"}>Monthly</span>
             <Switch id="yearly-toggle" checked={yearly} onCheckedChange={setYearly} />
-            <Label htmlFor="yearly-toggle" className={yearly ? "text-foreground font-medium" : "text-muted-foreground"}>
-              Yearly
-            </Label>
-            {yearly && (
-              <Badge className="bg-green-600/20 text-green-400 border border-green-500/30 text-xs">
-                Save ~20%
-              </Badge>
-            )}
+            <span className={yearly ? "text-white text-sm font-medium" : "text-white/40 text-sm"}>Yearly</span>
+            {yearly && <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px]">−20%</Badge>}
           </div>
-
           {currentPlan !== "free" && (
-            <Button variant="outline" size="sm" className="mt-3" onClick={handleManageBilling} disabled={loading === "portal"}>
+            <Button variant="outline" size="sm" className="border-white/10 hover:border-primary/30 text-xs" onClick={handleManageBilling} disabled={loading === "portal"}>
               {loading === "portal" ? "Loading..." : "Manage Billing"}
             </Button>
           )}
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          {PLANS.map((plan) => {
-            const Icon = plan.icon;
-            const isCurrent = currentPlan === plan.id;
-            const currentLevel = PLAN_LEVELS[currentPlan] ?? 0;
-            const planLevel = PLAN_LEVELS[plan.id] ?? 0;
-            const isUpgrade = planLevel > currentLevel;
-            const isDowngrade = planLevel < currentLevel && plan.id !== "free";
-            const displayPrice = yearly ? plan.yearlyPrice : plan.monthlyPrice;
+      {/* Plans grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {PLANS.map((plan) => {
+          const Icon = plan.icon;
+          const isCurrent = currentPlan === plan.id;
+          const currentLevel = PLAN_LEVELS[currentPlan] ?? 0;
+          const planLevel = PLAN_LEVELS[plan.id] ?? 0;
+          const isUpgrade = planLevel > currentLevel;
+          const isDowngrade = planLevel < currentLevel && plan.id !== "free";
+          const displayPrice = yearly ? plan.yearlyPrice : plan.monthlyPrice;
+          const isPopular = plan.badge === "Most Popular";
 
-            return (
-              <Card
-                key={plan.id}
-                className={`relative bg-card border-2 ${plan.cardClass} transition-all duration-300 flex flex-col ${
-                  isCurrent ? "ring-2 ring-primary/40" : ""
-                } ${plan.badge === "Most Popular" ? "md:scale-[1.02]" : ""}`}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className={`text-white px-3 py-1 text-xs font-semibold ${
-                      plan.badge === "Most Popular" ? "bg-purple-600" :
-                      plan.badge === "Best Value" ? "bg-amber-600" : "bg-pink-600"
-                    }`}>
-                      {plan.badge}
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="pb-4">
-                  <div className="p-2 rounded-lg w-fit bg-white/5 mb-3">
-                    <Icon className={`h-6 w-6 ${plan.iconColor}`} />
-                  </div>
-                  <CardTitle className="text-xl flex items-center gap-2 flex-wrap">
-                    {plan.name}
-                    {isCurrent && (
-                      <Badge variant="outline" className="text-xs border-primary/40 text-primary">
-                        Current
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription className="text-sm">{plan.description}</CardDescription>
-                  <div className="mt-3">
-                    {displayPrice === 0 ? (
-                      <span className="text-3xl font-bold">Free</span>
-                    ) : (
-                      <div>
-                        <span className="text-3xl font-bold">€{displayPrice}</span>
-                        <span className="text-base font-normal text-muted-foreground">/mo</span>
-                        {yearly && <p className="text-xs text-muted-foreground mt-0.5">Billed annually</p>}
-                      </div>
-                    )}
-                    {plan.trialDays > 0 && !isCurrent && (
-                      <p className="text-xs text-green-400 mt-1 font-medium">
-                        {plan.trialDays}-day free trial
-                      </p>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-col flex-1 gap-4">
-                  <div className="space-y-1.5 flex-1">
-                    {plan.features.map((feat) => (
-                      <div key={feat} className="flex items-start gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                        <span>{feat}</span>
-                      </div>
-                    ))}
-                    {plan.unavailable.map((feat) => (
-                      <div key={feat} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <X className="h-4 w-4 text-muted-foreground/50 mt-0.5 shrink-0" />
-                        <span className="line-through">{feat}</span>
-                      </div>
-                    ))}
-                  </div>
+          return (
+            <div
+              key={plan.id}
+              className={`relative rounded-2xl border flex flex-col transition-all duration-300 ${
+                isCurrent
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_30px_rgba(124,58,237,0.15)]"
+                  : isPopular
+                    ? "bg-white/[0.06] border-violet-500/40 shadow-[0_0_20px_rgba(124,58,237,0.08)]"
+                    : "bg-white/[0.04] border-white/[0.07] hover:border-white/15"
+              }`}
+            >
+              {plan.badge && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className={`text-white px-3 py-1 text-[10px] font-bold rounded-full ${
+                    plan.badge === "Most Popular" ? "bg-violet-600" :
+                    plan.badge === "Best Value"   ? "bg-amber-600"  : "bg-pink-600"
+                  }`}>
+                    {plan.badge}
+                  </span>
+                </div>
+              )}
 
-                  <Button
-                    className={`w-full mt-auto ${
-                      isCurrent
-                        ? "bg-white/10 text-muted-foreground cursor-default"
-                        : isUpgrade
-                          ? "bg-primary hover:bg-primary/90 text-white"
-                          : isDowngrade
-                            ? "bg-white/10 text-muted-foreground hover:bg-white/15"
-                            : "bg-white/10 text-muted-foreground cursor-default"
-                    }`}
-                    disabled={isCurrent || plan.id === "free" || loading !== null}
-                    onClick={() => handleUpgrade(plan)}
-                  >
-                    {loading === plan.id
-                      ? "Redirecting..."
-                      : isCurrent
-                        ? "Current Plan"
-                        : plan.id === "free"
-                          ? "Free Forever"
-                          : isUpgrade
-                            ? plan.trialDays > 0
-                              ? `Start ${plan.trialDays}-Day Trial`
-                              : `Upgrade to ${plan.name}`
-                            : `Switch to ${plan.name}`}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+              <div className="p-5 flex-1 flex flex-col">
+                {/* Plan header */}
+                <div className="flex items-start justify-between gap-2 mb-4">
+                  <div className={`p-2 rounded-xl bg-white/[0.06]`}>
+                    <Icon className={`h-5 w-5 ${plan.iconColor}`} />
+                  </div>
+                  {isCurrent && (
+                    <span className="text-[10px] font-bold text-primary bg-primary/15 border border-primary/30 rounded-full px-2 py-0.5">
+                      Current
+                    </span>
+                  )}
+                </div>
 
-        <div className="mt-12 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            Payments securely processed by Stripe. Cancel anytime.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            All prices in EUR · VAT may apply · Yearly plans save ~20%
-          </p>
-        </div>
+                <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+                <p className="text-xs text-white/40 mt-0.5 mb-4">{plan.description}</p>
+
+                {/* Price */}
+                <div className="mb-5">
+                  {displayPrice === 0 ? (
+                    <span className="text-3xl font-black text-white">Free</span>
+                  ) : (
+                    <div>
+                      <span className="text-3xl font-black text-white">€{displayPrice}</span>
+                      <span className="text-sm text-white/40">/mo</span>
+                      {yearly && <p className="text-[10px] text-white/30 mt-0.5">Billed annually</p>}
+                    </div>
+                  )}
+                  {plan.trialDays > 0 && !isCurrent && (
+                    <p className="text-[11px] text-green-400 mt-1 font-medium">{plan.trialDays}-day free trial</p>
+                  )}
+                </div>
+
+                {/* Features */}
+                <div className="space-y-1.5 flex-1">
+                  {plan.features.map((feat) => (
+                    <div key={feat} className="flex items-start gap-2 text-sm">
+                      <Check className="h-3.5 w-3.5 text-green-400 mt-0.5 shrink-0" />
+                      <span className="text-white/70">{feat}</span>
+                    </div>
+                  ))}
+                  {plan.unavailable.map((feat) => (
+                    <div key={feat} className="flex items-start gap-2 text-sm text-white/25">
+                      <X className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span className="line-through">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <Button
+                  className={`w-full mt-5 font-bold ${
+                    isCurrent
+                      ? "bg-white/[0.06] text-white/30 cursor-default border border-white/[0.07]"
+                      : isUpgrade
+                        ? "bg-primary hover:bg-primary/90 text-white"
+                        : "bg-white/[0.06] text-white/40 hover:bg-white/10 border border-white/[0.07]"
+                  }`}
+                  disabled={isCurrent || plan.id === "free" || loading !== null}
+                  onClick={() => handleUpgrade(plan)}
+                >
+                  {loading === plan.id
+                    ? "Redirecting..."
+                    : isCurrent   ? "Current Plan"
+                    : plan.id === "free" ? "Free Forever"
+                    : isUpgrade
+                      ? plan.trialDays > 0 ? `Start ${plan.trialDays}-Day Trial` : `Upgrade to ${plan.name}`
+                      : `Switch to ${plan.name}`}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer note */}
+      <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
+        <p className="text-sm text-white/35">Payments securely processed by Stripe · Cancel anytime</p>
+        <p className="text-xs text-white/20 mt-1">All prices in EUR · VAT may apply · Yearly plans save ~20%</p>
       </div>
     </div>
   );

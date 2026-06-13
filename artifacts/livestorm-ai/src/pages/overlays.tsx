@@ -7,7 +7,6 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, MonitorPlay, Loader2, RefreshCw, AlertCircle, Bell, Target, Trophy, Sword, Activity } from "lucide-react";
 import { useAuth } from "@clerk/react";
-import { PageHero, GradientText } from "@/components/ui/premium";
 import { cn } from "@/lib/utils";
 
 interface ObsTokenResponse {
@@ -186,23 +185,14 @@ export function Overlays() {
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto">
-      <PageHero
-        gradientFrom="rgba(124,58,237,0.14)"
-        gradientTo="rgba(6,182,212,0.08)"
-        icon={
-          <div className="p-3 rounded-2xl bg-primary/15 border border-primary/20 shadow-lg shadow-primary/10">
-            <MonitorPlay className="h-8 w-8 text-primary" />
-          </div>
-        }
-        title={
-          <span>
-            OBS{" "}
-            <GradientText from="from-violet-400" to="to-cyan-400">Overlays</GradientText>
-          </span>
-        }
-        subtitle="Browser source URLs for your stream overlays. Add them to OBS as Browser Sources."
-        right={
-          loading ? (
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-400/50 mb-1">OBS INTEGRATION</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Overlays</h1>
+          <p className="text-white/40 text-sm mt-1">Browser source URLs for your stream overlays. Add them to OBS as Browser Sources.</p>
+        </div>
+        <div className="shrink-0">
+          {loading ? (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
               <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
               <span className="text-xs text-muted-foreground">Generating token…</span>
@@ -218,9 +208,9 @@ export function Overlays() {
               <span className="text-xs text-red-300">{error}</span>
               <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={fetchToken}>Retry</Button>
             </div>
-          ) : null
-        }
-      />
+          ) : null}
+        </div>
+      </div>
 
       {/* How-to banner */}
       <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5 flex items-start gap-4">

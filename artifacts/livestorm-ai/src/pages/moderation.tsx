@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { PageHero, GradientText } from "@/components/ui/premium";
 
 const RULE_META: Record<string, { name: string; icon: React.ComponentType<{ className?: string }>; severity: string; description: string }> = {
   hate_speech: { name: "Hate Speech", icon: Ban,          severity: "high",   description: "Block messages containing hate speech or slurs" },
@@ -85,43 +84,32 @@ export function Moderation() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
-      <PageHero
-        gradientFrom="rgba(124,58,237,0.14)"
-        gradientTo="rgba(239,68,68,0.06)"
-        icon={
-          <div className="p-3 rounded-2xl bg-primary/15 border border-primary/20 shadow-lg shadow-primary/10">
-            <ShieldAlert className="h-8 w-8 text-primary" />
-          </div>
-        }
-        title={
-          <span>
-            Stream{" "}
-            <GradientText from="from-violet-400" to="to-red-400">Moderation</GradientText>
-          </span>
-        }
-        subtitle="Protect your stream from harmful content automatically."
-        right={
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {isActive ? (
-              <Badge className="bg-green-500/15 text-green-400 border-green-500/20 border gap-1.5 px-3 py-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
-                Moderation Active
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-muted-foreground border-white/10">
-                <Clock className="h-3 w-3" />
-                No Active Stream
-              </Badge>
-            )}
-            <Link href="/ai-assistant">
-              <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:border-primary/30 text-xs">
-                AI Assistant Settings
-                <ChevronRight className="h-3 w-3" />
-              </Button>
-            </Link>
-          </div>
-        }
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">CONTENT SAFETY</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Moderation</h1>
+          <p className="text-white/40 text-sm mt-1">Protect your stream from harmful content automatically.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+          {isActive ? (
+            <Badge className="bg-green-500/15 text-green-400 border-green-500/20 border gap-1.5 px-3 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+              Moderation Active
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-muted-foreground border-white/10">
+              <Clock className="h-3 w-3" />
+              No Active Stream
+            </Badge>
+          )}
+          <Link href="/ai-assistant">
+            <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:border-primary/30 text-xs">
+              AI Assistant Settings
+              <ChevronRight className="h-3 w-3" />
+            </Button>
+          </Link>
+        </div>
+      </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

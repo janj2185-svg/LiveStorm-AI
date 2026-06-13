@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Bot, BarChart2,
   Settings as SettingsIcon, LogOut,
   MoreHorizontal, X, Monitor, Film, Gift, Users,
-  ShieldCheck, PanelLeftClose, PanelLeftOpen, Menu, ChevronLeft,
+  ShieldCheck, PanelLeftClose, PanelLeftOpen, Menu, ChevronLeft, Swords,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,13 +21,14 @@ interface SimpleNavItem {
 }
 
 const SIDEBAR_ITEMS: SimpleNavItem[] = [
-  { label: "Dashboard",   href: "/dashboard",    icon: LayoutDashboard },
-  { label: "Live Studio", href: "/live-control", icon: Monitor },
-  { label: "Scenes",      href: "/live-studio",  icon: Film },
-  { label: "Gifts",       href: "/gamification", icon: Gift },
-  { label: "Community",   href: "/universe",     icon: Users },
-  { label: "AI Storm",    href: "/ai-assistant", icon: Bot },
-  { label: "Storm Pass",  href: "/storm-pass",   icon: ShieldCheck },
+  { label: "Dashboard",    href: "/dashboard",    icon: LayoutDashboard },
+  { label: "Live Studio",  href: "/live-studio",  icon: Monitor },
+  { label: "Scenes",       href: "/live-control", icon: Film },
+  { label: "Gifts",        href: "/gamification", icon: Gift },
+  { label: "Community",    href: "/universe",     icon: Users },
+  { label: "AI Storm",     href: "/ai-assistant", icon: Bot },
+  { label: "Storm Pass",   href: "/pass",         icon: ShieldCheck },
+  { label: "Boss Battle",  href: "/boss-battle",  icon: Swords },
 ];
 
 const SIDEBAR_BOTTOM: SimpleNavItem[] = [
