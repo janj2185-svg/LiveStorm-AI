@@ -39,3 +39,4 @@
 - [agents router missing from index](agents-router-missing.md) — agents.ts was never imported in routes/index.ts; all /agents/* routes (voices, personality, battle, memories, learning) returned 404. Always verify new route files are added to routes/index.ts.
 - [Whisper SR architecture](whisper-sr-architecture.md) — useWhisperMic.ts mirrors UseStreamerMicReturn; CoHostPanel calls BOTH hooks always (React rules), selects via useWhisper state; clearTranscripts required in interface; HMR shows "more hooks" error on hot-replace — transient, clears on page refresh.
 - [CoHostPanel dual-hook pattern](cohostpanel-dual-hook.md) — to switch between two mic hooks without conditional hook calls: always call both, assign `const mic = flag ? hookA : hookB`; only one is ever `.enable()`d at a time so no double getUserMedia.
+- [Camera Phase 2 MediaPipe wiring](camera-phase2-mediapipe.md) — FaceLandmarker→avatar expressions; blink conflict fix; WASM CDN; TTS priority.

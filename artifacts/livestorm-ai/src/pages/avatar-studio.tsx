@@ -6,6 +6,7 @@ import {
   MousePointer2, Check, Camera,
 } from "lucide-react";
 import { CameraPreview } from "@/components/avatar/CameraPreview";
+import type { FaceTrackingData } from "@/lib/faceExpressionMapper";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetAvatarConfig,
@@ -201,6 +202,11 @@ export function AvatarStudio() {
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarStats, setAvatarStats]       = useState<RendererStats | null>(null);
   const [cameraExpanded, setCameraExpanded] = useState(false);
+  const [faceTrackingData, setFaceTrackingData] = useState<FaceTrackingData | null>(null);
+
+  const handleTrackingData = useCallback((data: FaceTrackingData | null) => {
+    setFaceTrackingData(data);
+  }, []);
 
   // Sync from saved config on first load
   useEffect(() => {
@@ -511,7 +517,7 @@ export function AvatarStudio() {
               <div className="flex items-center gap-2">
                 <Camera className="h-3.5 w-3.5 text-violet-400" />
                 <div className="text-left">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Phase 1</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Phase 2</p>
                   <p className="text-sm font-black text-white">Camera</p>
                 </div>
               </div>
@@ -520,7 +526,7 @@ export function AvatarStudio() {
 
             {cameraExpanded && (
               <div className="px-3 py-3">
-                <CameraPreview />
+                <CameraPreview onTrackingData={handleTrackingData} />
               </div>
             )}
           </div>
@@ -564,8 +570,16 @@ export function AvatarStudio() {
                 lightingPreset={lightingPreset}
                 avatarEnabled
                 avatarUrl={avatarUrl}
-                animationState={animState}
-                mouthOpenAmount={0}
+                animationState={
+                  faceTrackingData?.faceDetected
+                    ? faceTrackingData.avatarState
+                    : animState
+                }
+                mouthOpenAmount={
+                  faceTrackingData?.faceDetected
+                    ? faceTrackingData.mouthOpenValue
+                    : 0
+                }
                 expressionIntensity={0.85}
                 backgroundGradient={getBackgroundGradient(backgroundId)}
                 isSpeaking={false}
@@ -576,6 +590,11 @@ export function AvatarStudio() {
                 cameraZ={2.0}
                 className="w-full h-full"
                 onStats={setAvatarStats}
+                externalBlink={
+                  faceTrackingData?.faceDetected
+                    ? { left: faceTrackingData.blinkLeft, right: faceTrackingData.blinkRight }
+                    : null
+                }
               />
             </motion.div>
           </div>

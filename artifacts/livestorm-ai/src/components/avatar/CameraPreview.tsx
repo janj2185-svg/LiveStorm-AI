@@ -1,6 +1,11 @@
-import { useEffect, useRef } from "react";
-import { Camera, CameraOff, RefreshCw, FlipHorizontal, AlertTriangle, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Camera, CameraOff, RefreshCw, FlipHorizontal,
+  AlertTriangle, CheckCircle2, Clock, XCircle, ScanFace,
+} from "lucide-react";
 import { useCamera } from "@/hooks/useCamera";
+import { useFaceTracking } from "@/hooks/useFaceTracking";
+import type { FaceTrackingData } from "@/lib/faceExpressionMapper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +26,25 @@ function PermissionBadge({ state }: { state: string }) {
   );
 }
 
-export function CameraPreview() {
+const EXPRESSION_EMOJI: Record<string, string> = {
+  neutral:   "😐",
+  smile:     "😊",
+  talking:   "🗣️",
+  surprised: "😲",
+  focused:   "🤔",
+};
+
+export interface CameraPreviewProps {
+  onTrackingData?: (data: FaceTrackingData | null) => void;
+}
+
+export function CameraPreview({ onTrackingData }: CameraPreviewProps) {
   const cam = useCamera();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [trackingEnabled, setTrackingEnabled] = useState(false);
+
+  const { trackingData, isReady, isTracking, error: trackingError } =
+    useFaceTracking(videoRef, cam.active && trackingEnabled);
 
   // Wire stream → <video> srcObject
   useEffect(() => {
@@ -37,15 +58,26 @@ export function CameraPreview() {
     }
   }, [cam.stream]);
 
+  // Emit tracking data to parent
+  useEffect(() => {
+    onTrackingData?.(trackingEnabled && cam.active ? trackingData : null);
+  }, [trackingData, trackingEnabled, cam.active, onTrackingData]);
+
+  // When camera stops, disable tracking too
+  useEffect(() => {
+    if (!cam.active) setTrackingEnabled(false);
+  }, [cam.active]);
+
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
     cam.selectDevice(id);
     if (cam.active) {
-      // Auto-restart with new device
       void cam.stop();
       setTimeout(() => void cam.start(), 100);
     }
   };
+
+  const td = trackingEnabled && cam.active ? trackingData : null;
 
   return (
     <div className="space-y-3">
@@ -84,8 +116,22 @@ export function CameraPreview() {
                 </span>
               </div>
             )}
+            {/* Face detected badge */}
+            {td && (
+              <div className={cn(
+                "absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold",
+                td.faceDetected
+                  ? "bg-violet-500/20 border-violet-500/40 text-violet-300"
+                  : "bg-black/60 border-white/10 text-white/30",
+              )}>
+                <ScanFace className="h-2.5 w-2.5" />
+                {td.faceDetected
+                  ? `${EXPRESSION_EMOJI[td.expression] ?? ""}  ${td.expression}`
+                  : "No face"}
+              </div>
+            )}
             {/* Mirror label */}
-            {cam.mirrored && (
+            {cam.mirrored && !td && (
               <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-black/60 border border-white/[0.08]">
                 <span className="text-[9px] text-white/40 font-medium">Mirrored</span>
               </div>
@@ -140,7 +186,7 @@ export function CameraPreview() {
         </p>
       )}
 
-      {/* Controls */}
+      {/* Camera controls */}
       <div className="grid grid-cols-2 gap-1.5">
         {!cam.active ? (
           <Button
@@ -190,6 +236,54 @@ export function CameraPreview() {
         </Button>
       </div>
 
+      {/* Face Tracking toggle */}
+      {cam.active && (
+        <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] p-2.5 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <ScanFace className={cn("h-3.5 w-3.5", trackingEnabled ? "text-violet-400" : "text-white/30")} />
+              <span className="text-[10px] font-bold text-white/70">Face Tracking</span>
+            </div>
+            <button
+              onClick={() => setTrackingEnabled((v) => !v)}
+              className={cn(
+                "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
+                trackingEnabled ? "bg-violet-600" : "bg-white/10",
+              )}
+            >
+              <span className={cn(
+                "inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform",
+                trackingEnabled ? "translate-x-3.5" : "translate-x-0.5",
+              )} />
+            </button>
+          </div>
+
+          {trackingEnabled && (
+            <div className="flex items-center gap-1.5">
+              {!isReady ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                  <span className="text-[9px] text-amber-400/70">Loading MediaPipe model…</span>
+                </>
+              ) : isTracking ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                  <span className="text-[9px] text-emerald-400/70">Tracking active · 15fps</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 flex-shrink-0" />
+                  <span className="text-[9px] text-white/30">Initializing…</span>
+                </>
+              )}
+              {trackingError && (
+                <span className="text-[9px] text-red-400/70 truncate">{trackingError}</span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Diagnostics */}
       <div className="rounded-lg bg-black/30 border border-white/[0.05] p-2 space-y-1">
         <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/30 mb-1.5">Diagnostics</p>
@@ -209,11 +303,68 @@ export function CameraPreview() {
             </span>
           </div>
         ))}
+
+        {/* Face tracking diagnostics — only when active */}
+        {trackingEnabled && cam.active && (
+          <>
+            <div className="border-t border-white/[0.05] mt-1.5 pt-1.5">
+              <p className="text-[8px] font-bold uppercase tracking-widest text-violet-400/40 mb-1">Face Tracking</p>
+            </div>
+            {[
+              {
+                key: "MediaPipe",
+                val: isReady ? "ready" : "loading",
+                ok: isReady,
+              },
+              {
+                key: "Face detected",
+                val: td?.faceDetected ? "YES" : "NO",
+                ok: td?.faceDetected ?? false,
+              },
+              {
+                key: "Confidence",
+                val: td?.faceDetected ? td.confidence.toFixed(2) : "—",
+                ok: (td?.confidence ?? 0) > 0.7,
+              },
+              {
+                key: "Expression",
+                val: td?.faceDetected
+                  ? `${EXPRESSION_EMOJI[td.expression] ?? ""} ${td.expression}`
+                  : "—",
+                ok: td?.faceDetected ?? false,
+              },
+              {
+                key: "Mouth open",
+                val: td?.faceDetected ? td.mouthOpenValue.toFixed(2) : "—",
+                ok: true,
+              },
+              {
+                key: "Blink L/R",
+                val: td?.faceDetected
+                  ? `${td.blinkLeft.toFixed(2)} / ${td.blinkRight.toFixed(2)}`
+                  : "—",
+                ok: true,
+              },
+              {
+                key: "Avatar state",
+                val: td?.faceDetected ? td.avatarState : "—",
+                ok: td?.faceDetected ?? false,
+              },
+            ].map(({ key, val, ok }) => (
+              <div key={key} className="flex items-center justify-between">
+                <span className="text-[9px] text-muted-foreground/40 font-mono">{key}</span>
+                <span className={cn("text-[9px] font-mono font-bold", ok ? "text-violet-300/80" : "text-muted-foreground/40")}>
+                  {val}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       {/* Phase label */}
       <p className="text-[8px] text-muted-foreground/25 text-center">
-        Phase 1 — Preview only · Avatar tracking not connected
+        Phase 2 — Face tracking · All processing local · No data sent to server
       </p>
 
     </div>

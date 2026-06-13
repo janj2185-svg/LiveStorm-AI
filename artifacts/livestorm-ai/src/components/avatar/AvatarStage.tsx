@@ -32,6 +32,7 @@ export interface AvatarStageProps {
   cameraFov?: number;
   cameraY?: number;
   cameraZ?: number;
+  externalBlink?: { left: number; right: number } | null;
 }
 
 const BAR_BASES = [0.40, 0.70, 1.00, 0.85, 0.60, 0.90, 0.50];
@@ -167,6 +168,7 @@ export function AvatarStage({
   cameraFov,
   cameraY,
   cameraZ,
+  externalBlink,
 }: AvatarStageProps) {
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -223,6 +225,7 @@ export function AvatarStage({
         cameraFov={cameraFov}
         cameraY={cameraY}
         cameraZ={cameraZ}
+        externalBlink={externalBlink}
       />
 
       {/* Logo overlay — top center (only when explicitly requested AND avatar is loaded) */}

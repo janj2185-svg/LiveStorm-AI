@@ -100,6 +100,7 @@ export interface AvatarCanvasProps {
   backgroundGradient?: string;
   enableZoom?: boolean;
   enableRotate?: boolean;
+  externalBlink?: { left: number; right: number } | null;
 }
 
 type VRMState =
@@ -368,6 +369,7 @@ function VRMAvatarView({
   animationState,
   mouthOpenRef,
   expressionIntensityRef,
+  externalBlink,
 }: {
   vrm: VRM;
   accentColor: string;
@@ -375,10 +377,13 @@ function VRMAvatarView({
   animationState: AnimationState;
   mouthOpenRef: React.MutableRefObject<number>;
   expressionIntensityRef: React.MutableRefObject<number>;
+  externalBlink?: { left: number; right: number } | null;
 }) {
   const tinted = useRef(false);
   const animRef = useRef(animationState);
   animRef.current = animationState;
+  const externalBlinkRef = useRef(externalBlink ?? null);
+  externalBlinkRef.current = externalBlink ?? null;
 
   const leftArmZRef = useRef(0.30);
   const rightArmZRef = useRef(-0.30);
@@ -452,12 +457,19 @@ function VRMAvatarView({
     if (leftArm)  { leftArm.rotation.z  = leftArmZRef.current  + Math.sin(t * swayFreq)           * swayBase; leftArm.rotation.x  = leftArmXRef.current; }
     if (rightArm) { rightArm.rotation.z = rightArmZRef.current + Math.sin(t * swayFreq + Math.PI) * swayBase; rightArm.rotation.x = rightArmXRef.current; }
 
-    // Blink
-    const blinkPhase = t % 3.8;
-    const blinkVal = blinkPhase > 3.62 ? Math.max(0, 1 - (blinkPhase - 3.62) * 26) : 0;
-    vrm.expressionManager?.setValue("blink",      blinkVal);
-    vrm.expressionManager?.setValue("blinkLeft",  blinkVal);
-    vrm.expressionManager?.setValue("blinkRight", blinkVal);
+    // Blink — face tracking overrides auto-timer when active
+    const extBlink = externalBlinkRef.current;
+    if (extBlink !== null) {
+      vrm.expressionManager?.setValue("blinkLeft",  extBlink.left);
+      vrm.expressionManager?.setValue("blinkRight", extBlink.right);
+      vrm.expressionManager?.setValue("blink", (extBlink.left + extBlink.right) / 2);
+    } else {
+      const blinkPhase = t % 3.8;
+      const blinkVal = blinkPhase > 3.62 ? Math.max(0, 1 - (blinkPhase - 3.62) * 26) : 0;
+      vrm.expressionManager?.setValue("blink",      blinkVal);
+      vrm.expressionManager?.setValue("blinkLeft",  blinkVal);
+      vrm.expressionManager?.setValue("blinkRight", blinkVal);
+    }
 
     // Eye look-around — slow organic saccades
     const eyeLookX = Math.sin(t * 0.37) * 0.4 + Math.sin(t * 1.1) * 0.15;
@@ -501,15 +513,19 @@ function RPMAvatarView({
   animationState,
   mouthOpenRef,
   expressionIntensityRef,
+  externalBlink,
 }: {
   scene: THREE.Group;
   morphTargets: string[];
   animationState: AnimationState;
   mouthOpenRef: React.MutableRefObject<number>;
   expressionIntensityRef: React.MutableRefObject<number>;
+  externalBlink?: { left: number; right: number } | null;
 }) {
   const animRef = useRef(animationState);
   animRef.current = animationState;
+  const externalBlinkRef = useRef(externalBlink ?? null);
+  externalBlinkRef.current = externalBlink ?? null;
 
   // Map ARKit morph target names to indices per mesh
   const morphMapRef = useRef<Map<THREE.Mesh, Record<string, number>>>(new Map());
@@ -610,20 +626,26 @@ function RPMAvatarView({
     if (leftUpperArm)  leftUpperArm.rotation.z  = leftArmZRef.current;
     if (rightUpperArm) rightUpperArm.rotation.z = rightArmZRef.current;
 
-    // Blink
-    blinkTimer.current += delta;
-    if (blinkPhaseRef.current === 0 && blinkTimer.current >= nextBlink.current) {
-      blinkPhaseRef.current = 1; blinkTimer.current = 0;
-    } else if (blinkPhaseRef.current === 1) {
-      const v = Math.min(1, blinkTimer.current / 0.08);
-      setMorph("eyeBlinkLeft", v); setMorph("eyeBlinkRight", v);
-      if (blinkTimer.current >= 0.08) { blinkPhaseRef.current = 2; blinkTimer.current = 0; }
-    } else if (blinkPhaseRef.current === 2) {
-      const v = 1 - Math.min(1, blinkTimer.current / 0.10);
-      setMorph("eyeBlinkLeft", v); setMorph("eyeBlinkRight", v);
-      if (blinkTimer.current >= 0.10) {
-        blinkPhaseRef.current = 0; blinkTimer.current = 0;
-        nextBlink.current = 2.2 + Math.random() * 3.2;
+    // Blink — face tracking overrides auto-timer when active
+    const extBlinkRPM = externalBlinkRef.current;
+    if (extBlinkRPM !== null) {
+      setMorph("eyeBlinkLeft",  extBlinkRPM.left);
+      setMorph("eyeBlinkRight", extBlinkRPM.right);
+    } else {
+      blinkTimer.current += delta;
+      if (blinkPhaseRef.current === 0 && blinkTimer.current >= nextBlink.current) {
+        blinkPhaseRef.current = 1; blinkTimer.current = 0;
+      } else if (blinkPhaseRef.current === 1) {
+        const v = Math.min(1, blinkTimer.current / 0.08);
+        setMorph("eyeBlinkLeft", v); setMorph("eyeBlinkRight", v);
+        if (blinkTimer.current >= 0.08) { blinkPhaseRef.current = 2; blinkTimer.current = 0; }
+      } else if (blinkPhaseRef.current === 2) {
+        const v = 1 - Math.min(1, blinkTimer.current / 0.10);
+        setMorph("eyeBlinkLeft", v); setMorph("eyeBlinkRight", v);
+        if (blinkTimer.current >= 0.10) {
+          blinkPhaseRef.current = 0; blinkTimer.current = 0;
+          nextBlink.current = 2.2 + Math.random() * 3.2;
+        }
       }
     }
 
@@ -796,7 +818,7 @@ function AvatarScene({
   avatarKey, accentColor, scale, positionY, lightingPreset,
   effectiveVrmUrl, rpmUrl, quality, onStats, onQualityDecline,
   animationState, mouthOpenRef, expressionIntensityRef,
-  enableZoom, enableRotate,
+  enableZoom, enableRotate, externalBlink,
 }: {
   avatarKey: string; accentColor: string; scale: number; positionY: number;
   lightingPreset: string; effectiveVrmUrl: string | null | undefined;
@@ -805,6 +827,7 @@ function AvatarScene({
   animationState: AnimationState; mouthOpenRef: React.MutableRefObject<number>;
   expressionIntensityRef: React.MutableRefObject<number>;
   enableZoom?: boolean; enableRotate?: boolean;
+  externalBlink?: { left: number; right: number } | null;
 }) {
   const vrmState = useVRMLoader(rpmUrl ? null : effectiveVrmUrl);
   const glbState = useGLBLoader(rpmUrl ?? null);
@@ -830,6 +853,7 @@ function AvatarScene({
             animationState={animationState}
             mouthOpenRef={mouthOpenRef}
             expressionIntensityRef={expressionIntensityRef}
+            externalBlink={externalBlink}
           />
         ) : !rpmUrl && vrmState.status === "loaded" ? (
           <VRMAvatarView
@@ -839,6 +863,7 @@ function AvatarScene({
             animationState={animationState}
             mouthOpenRef={mouthOpenRef}
             expressionIntensityRef={expressionIntensityRef}
+            externalBlink={externalBlink}
           />
         ) : !isLoading ? (
           <EmptyAvatarPlaceholder />
@@ -883,6 +908,7 @@ export function AvatarCanvas({
   animationState = "idle", mouthOpenAmount = 0, expressionIntensity = 0.8,
   backgroundGradient, enableZoom, enableRotate,
   cameraFov = 36, cameraY = 1.2, cameraZ = 2.4,
+  externalBlink,
 }: AvatarCanvasProps) {
   const [stats, setStats] = useState<RendererStats>({
     geometries: 0, textures: 0, triangles: 0, drawCalls: 0, fps: 60, quality: "high",
@@ -991,6 +1017,7 @@ export function AvatarCanvas({
               expressionIntensityRef={expressionIntensityRef}
               enableZoom={enableZoom}
               enableRotate={enableRotate}
+              externalBlink={externalBlink}
             />
           </Suspense>
         </Canvas>
