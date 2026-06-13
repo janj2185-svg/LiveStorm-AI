@@ -15,6 +15,7 @@ import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CoHostPanel } from "@/components/CoHostPanel";
+import { StageBackground } from "@/components/StageBackground";
 
 const LS_BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
@@ -392,54 +393,65 @@ export function LiveStudio() {
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
 
-      {/* ── Header + Status ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/20">
-            <Video className="h-5 w-5 text-cyan-400" />
+      {/* ── Stage Hero Banner ────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl border border-cyan-500/22 shadow-lg shadow-cyan-500/[0.08] h-[88px]">
+        <StageBackground variant="studio" showRing={false} showScan showGrid showCorners />
+        <div className="relative h-full flex items-center gap-4 px-5">
+          <div className="p-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 shadow shadow-cyan-500/20">
+            <Video className="h-5 w-5 text-cyan-300" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">Live Studio</h1>
-            <p className="text-[11px] text-muted-foreground/60">
+            <h1 className="text-lg font-black text-white tracking-tight">Live Studio</h1>
+            <p className="text-[11px] text-cyan-300/70 font-medium">
               {tiktokUsername ? `@${tiktokUsername}` : "No active session"}
               {effectiveMode === "real" ? " · Real LIVE" : effectiveMode === "demo" ? " · Demo" : ""}
             </p>
           </div>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <ConnectionBadge connected={connected} isActive={!!isActive} effectiveMode={effectiveMode} tiktokError={tiktokError} />
-          {isActive && (
-            <button
-              onClick={showQr}
-              title={qrActive ? "Натисни щоб сховати QR" : "Показати Storm Pass QR на стрімі"}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all",
-                qrActive
-                  ? "bg-violet-500/20 border-violet-500/50 text-violet-300 animate-pulse"
-                  : "bg-white/5 border-white/10 text-muted-foreground hover:border-violet-500/40 hover:text-white/70",
-              )}
-            >
-              <QrCode className="h-3 w-3" />
-              {qrActive ? `QR ${qrCountdown}s` : "QR Pass"}
-            </button>
-          )}
-          {isActive ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              </span>
-              <span className="text-[11px] font-bold text-emerald-300">LIVE</span>
-            </div>
-          ) : (
-            <Link href="/dashboard">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer">
-                <Radio className="h-3 w-3 text-muted-foreground" />
-                <span className="text-[11px] font-semibold text-muted-foreground">Go Live →</span>
+          <div className="ml-auto flex items-center gap-2">
+            {isActive ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 shadow shadow-emerald-500/10">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+                <span className="text-[11px] font-black text-emerald-300 tracking-widest">LIVE</span>
               </div>
-            </Link>
-          )}
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                <Radio className="h-3 w-3 text-muted-foreground/50" />
+                <span className="text-[11px] font-semibold text-muted-foreground/60">OFFLINE</span>
+              </div>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* ── Connection bar ───────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 flex-wrap justify-end">
+        <ConnectionBadge connected={connected} isActive={!!isActive} effectiveMode={effectiveMode} tiktokError={tiktokError} />
+        {isActive && (
+          <button
+            onClick={showQr}
+            title={qrActive ? "Hide QR" : "Show Storm Pass QR on stream"}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all",
+              qrActive
+                ? "bg-violet-500/20 border-violet-500/50 text-violet-300 animate-pulse"
+                : "bg-white/5 border-white/10 text-muted-foreground hover:border-violet-500/40 hover:text-white/70",
+            )}
+          >
+            <QrCode className="h-3 w-3" />
+            {qrActive ? `QR ${qrCountdown}s` : "QR Pass"}
+          </button>
+        )}
+        {!isActive && (
+          <Link href="/dashboard">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer">
+              <Radio className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[11px] font-semibold text-muted-foreground">Go Live →</span>
+            </div>
+          </Link>
+        )}
       </div>
 
       {/* ── ENABLE VOICE — cannot-miss banner ───────────────────────────── */}

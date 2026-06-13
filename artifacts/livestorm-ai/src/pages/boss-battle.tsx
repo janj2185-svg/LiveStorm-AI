@@ -17,6 +17,7 @@ import { io, type Socket } from "socket.io-client";
 import { useAuth } from "@clerk/react";
 import { cn } from "@/lib/utils";
 import { PageHero, PulsingDot, AnimatedCounter } from "@/components/ui/premium";
+import { StageBackground } from "@/components/StageBackground";
 import { motion, AnimatePresence } from "framer-motion";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
@@ -178,27 +179,13 @@ export function BossBattle() {
           {/* ── Boss Arena ── */}
           <div className={cn(
             "lg:col-span-2 relative rounded-2xl border overflow-hidden",
-            "border-red-500/28 shadow-2xl shadow-red-500/[0.12]",
+            "border-red-500/35 shadow-2xl shadow-red-500/[0.20]",
             shake && "animate-[shake_0.3s_ease-in-out]",
-          )} style={{
-            background: "linear-gradient(180deg,rgba(127,29,29,.22) 0%,rgba(154,52,18,.08) 50%,rgba(0,0,0,0) 100%)",
-          }}>
+          )}>
             <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }`}</style>
 
-            {/* Decorative backgrounds */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-30"
-                style={{ background: "radial-gradient(ellipse,rgba(239,68,68,.25) 0%,transparent 70%)" }} />
-              <div className="absolute inset-0" style={{
-                backgroundImage: "linear-gradient(rgba(239,68,68,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(239,68,68,.025) 1px,transparent 1px)",
-                backgroundSize: "40px 40px",
-              }} />
-              {/* Corner brackets */}
-              <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-red-500/30 rounded-tl-lg" />
-              <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-red-500/30 rounded-tr-lg" />
-              <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-red-500/30 rounded-bl-lg" />
-              <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-red-500/30 rounded-br-lg" />
-            </div>
+            {/* Futuristic stage background */}
+            <StageBackground variant="battle" showRing={true} showScan={true} showGrid={true} showCorners={true} />
 
             {/* Boss display */}
             <div className="relative flex flex-col items-center pt-10 pb-5 px-6">

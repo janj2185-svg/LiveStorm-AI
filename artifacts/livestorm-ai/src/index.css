@@ -242,6 +242,32 @@
   }
 }
 
+/* ─── STAGE BACKGROUND ANIMATIONS ───────────────────────────────────────── */
+@keyframes stage-ring-pulse {
+  0%, 100% { opacity: 0.50; }
+  50%       { opacity: 1; }
+}
+
+@keyframes stage-scan {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes neon-breathe {
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="stage-ring-pulse"],
+  [style*="stage-scan"],
+  [style*="neon-breathe"] {
+    animation: none !important;
+  }
+}
+
 /* ─── GLASSMORPHISM UTILITIES ────────────────────────────────────────────── */
 @layer components {
   /* Dark glass card — floats above the animated background */

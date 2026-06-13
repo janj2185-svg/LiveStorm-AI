@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { AnimatedCounter, PulsingDot, RankBadge, GradientText } from "@/components/ui/premium";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { StageBackground } from "@/components/StageBackground";
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -568,24 +569,17 @@ export function Dashboard() {
         <div className={cn(
           "relative overflow-hidden rounded-2xl border",
           isActive
-            ? "border-green-500/20 shadow-lg shadow-green-500/[0.06]"
-            : "border-violet-500/18 shadow-lg shadow-violet-500/[0.05]",
-        )} style={{
-          background: isActive
-            ? "linear-gradient(135deg,rgba(22,163,74,.10) 0%,rgba(8,145,178,.04) 50%,rgba(124,58,237,.06) 100%)"
-            : "linear-gradient(135deg,rgba(124,58,237,.12) 0%,rgba(109,40,217,.07) 50%,rgba(14,165,233,.04) 100%)",
-        }}>
-          {/* Decorative bg */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-25"
-              style={{ background: "radial-gradient(circle,rgba(139,92,246,.35) 0%,transparent 70%)" }} />
-            <div className="absolute -bottom-16 -left-8 w-56 h-56 rounded-full opacity-15"
-              style={{ background: "radial-gradient(circle,rgba(6,182,212,.4) 0%,transparent 70%)" }} />
-            <div className="absolute inset-0" style={{
-              backgroundImage: "linear-gradient(rgba(139,92,246,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.03) 1px,transparent 1px)",
-              backgroundSize: "48px 48px",
-            }} />
-          </div>
+            ? "border-green-500/25 shadow-lg shadow-green-500/[0.10]"
+            : "border-violet-500/25 shadow-lg shadow-violet-500/[0.10]",
+        )}>
+          {/* Futuristic stage background */}
+          <StageBackground
+            variant={isActive ? "studio" : "dashboard"}
+            showRing={false}
+            showScan={true}
+            showGrid={true}
+            showCorners={true}
+          />
 
           <div className="relative p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

@@ -55,6 +55,7 @@ import { useLiveSessionContext, type TtsMode, type LiveEvent } from "@/contexts/
 import { CoHostPanel } from "@/components/CoHostPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarStage } from "@/components/avatar/AvatarStage";
+import { StageBackground } from "@/components/StageBackground";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 
@@ -1047,6 +1048,7 @@ export function AiAssistant() {
   // All collapsed by default (secondary tools, not primary focus)
   const isMobile = useIsMobile();
   const [mobilePanelTab, setMobilePanelTab] = useState<"control" | "chat">("control");
+  const [stageAspect, setStageAspect] = useState<"9/16" | "16/9">("9/16");
   const [voicePickerOpen, setVoicePickerOpen] = useState(false);
   const [mobileBattleOpen, setMobileBattleOpen] = useState(false);
 
@@ -1546,9 +1548,36 @@ export function AiAssistant() {
         {!isMobile && (
           <div className="flex flex-col min-h-0 gap-2 py-1">
 
-            {/* 9:16 portrait frame */}
+            {/* Aspect ratio toggle */}
+            <div className="flex-shrink-0 flex items-center justify-center gap-1 p-0.5 bg-white/[0.04] rounded-xl border border-white/[0.07] self-center">
+              <button
+                onClick={() => setStageAspect("9/16")}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold transition-all",
+                  stageAspect === "9/16" ? "bg-violet-600 text-white shadow" : "text-muted-foreground/50 hover:text-white/70",
+                )}
+              >
+                <span className="w-2 h-3.5 border border-current rounded-[2px] inline-block mr-0.5" />9:16
+              </button>
+              <button
+                onClick={() => setStageAspect("16/9")}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold transition-all",
+                  stageAspect === "16/9" ? "bg-violet-600 text-white shadow" : "text-muted-foreground/50 hover:text-white/70",
+                )}
+              >
+                <span className="w-4 h-2.5 border border-current rounded-[2px] inline-block mr-0.5" />16:9
+              </button>
+            </div>
+
+            {/* Stage frame */}
             <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-              <div className="relative h-full aspect-[9/16] max-w-full rounded-2xl overflow-hidden bg-black/20 flex-shrink-0">
+              <div className={cn(
+                "relative rounded-2xl overflow-hidden flex-shrink-0",
+                stageAspect === "9/16" ? "h-full aspect-[9/16] max-w-full" : "w-full aspect-[16/9] max-h-full",
+              )}>
+                {/* Futuristic stage background */}
+                <StageBackground variant="purple" showRing showScan showGrid showCorners />
                 <AvatarStage
                   avatarKey={avatarConfig?.avatarKey ?? "marcus"}
                   accentColor={accentColor}
