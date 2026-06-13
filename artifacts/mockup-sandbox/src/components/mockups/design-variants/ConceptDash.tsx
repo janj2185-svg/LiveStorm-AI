@@ -171,46 +171,6 @@ export function ConceptDash() {
           </div>
         </div>
 
-        {/* BOTTOM */}
-        <div className="cd-bottom">
-          <div className="cd-bottom-card">
-            <div className="cd-bottom-card-title">Топ подарунки</div>
-            <div className="cd-gifts-row">
-              {TOP_GIFTS.map((g) => (
-                <div key={g.name} className="cd-gift-item">
-                  <div className="cd-gift-emoji">{g.emoji}</div>
-                  <div className="cd-gift-name">{g.name}</div>
-                  <div className="cd-gift-coins">✦ {g.coins}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="cd-bottom-card">
-            <div className="cd-bottom-card-title">Швидкі дії</div>
-            <div className="cd-actions-list">
-              <div className="cd-action-item">🎬 Запустити сцену</div>
-              <div className="cd-action-item">🎁 Ефекти подарунків</div>
-              <div className="cd-action-item">🤖 AI Talk</div>
-              <div className="cd-action-item">⚙️ Налаштування бота</div>
-            </div>
-          </div>
-
-          <div className="cd-bottom-card">
-            <div className="cd-bottom-card-title">Storm Pass</div>
-            <div className="cd-pass-content">
-              <div className="cd-pass-badge">⭐</div>
-              <div className="cd-pass-info">
-                <div className="cd-pass-level">Level 24</div>
-                <div className="cd-pass-xp-bar">
-                  <div className="cd-pass-xp-fill" style={{ width: "88%" }} />
-                </div>
-                <div className="cd-pass-xp-text">2,660 / 3,000 XP</div>
-              </div>
-              <div className="cd-pass-coins">💰 12,450</div>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
