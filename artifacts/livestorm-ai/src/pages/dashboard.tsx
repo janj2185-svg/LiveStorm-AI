@@ -575,31 +575,16 @@ export function Dashboard() {
               : "border-violet-500/30 shadow-2xl shadow-violet-500/[0.15]",
           )}
           style={{
-            backgroundImage: "url('/dash-bg.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            background: "linear-gradient(135deg, rgba(15,5,40,1) 0%, rgba(30,10,70,0.95) 40%, rgba(10,5,50,0.98) 100%)",
             minHeight: 320,
           }}
         >
-          {/* Dark overlay — light enough to let bg show through */}
+          {/* Subtle grid */}
+          <div className="absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.5) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+          {/* Purple radial glow */}
           <div className="absolute inset-0"
-            style={{ background: "rgba(5,2,20,0.48)" }} />
-          {/* Purple tint */}
-          <div className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 60% 100% at 70% 50%, rgba(120,60,240,0.30) 0%, transparent 70%)" }} />
-          {/* Storm AI girl avatar — right side */}
-          <img
-            src="/storm-girl.png"
-            alt="Storm AI"
-            className="absolute bottom-0 right-0 pointer-events-none select-none"
-            style={{
-              height: "100%",
-              maxHeight: 360,
-              objectFit: "contain",
-              objectPosition: "bottom right",
-              filter: "drop-shadow(0 0 40px rgba(139,92,246,0.6)) drop-shadow(0 0 80px rgba(103,232,249,0.3))",
-            }}
-          />
+            style={{ background: "radial-gradient(ellipse 60% 100% at 65% 50%, rgba(139,92,246,0.22) 0%, transparent 70%)" }} />
 
           {/* Live badge top-right */}
           {isActive && (

@@ -26,39 +26,22 @@ export function ConceptDash() {
     <div
       className="cd-root"
       style={{
-        backgroundImage: "url('/__mockup/dash-bg.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        background: "linear-gradient(135deg, #0f0528 0%, #1e0a46 40%, #0a0532 100%)",
       }}
     >
-      {/* Dark overlay — light enough to let bg show through */}
+      {/* Subtle grid */}
       <div className="absolute inset-0 pointer-events-none"
         style={{
-          background: "rgba(5, 2, 20, 0.48)",
+          backgroundImage: "linear-gradient(rgba(139,92,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.05) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
           zIndex: 0,
         }}
       />
-      {/* Purple tint */}
+      {/* Purple radial glow */}
       <div className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 60% 90% at 65% 50%, rgba(120,60,240,0.30) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 55% 90% at 65% 50%, rgba(139,92,246,0.20) 0%, transparent 70%)",
           zIndex: 0,
-        }}
-      />
-      {/* Storm AI Girl Avatar */}
-      <img
-        src="/__mockup/storm-girl.png"
-        alt="Storm AI"
-        style={{
-          position: "absolute",
-          bottom: 0,
-          right: 180,
-          height: "96%",
-          objectFit: "contain",
-          objectPosition: "bottom",
-          filter: "drop-shadow(0 0 40px rgba(139,92,246,0.7)) drop-shadow(0 0 80px rgba(103,232,249,0.3))",
-          zIndex: 1,
-          pointerEvents: "none",
         }}
       />
 
