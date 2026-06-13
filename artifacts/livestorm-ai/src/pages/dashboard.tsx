@@ -546,6 +546,8 @@ export function Dashboard() {
   const isActive = activeSessionRes?.active;
   const eventCount = events.filter((e) => e.type !== "viewerCount").length;
 
+  const isOwner = profile?.role === "owner";
+
   const primaryStats = [
     { label: "Viewers",  value: stats.viewerCount,   icon: Eye,          iconBg: "bg-green-500/15",  iconColor: "text-green-400",  accent: "border-green-500/20" },
     { label: "Likes",    value: stats.totalLikes,    icon: Heart,        iconBg: "bg-pink-500/15",   iconColor: "text-pink-400",   accent: "border-pink-500/20" },
@@ -554,30 +556,141 @@ export function Dashboard() {
   ];
 
   const secondaryStats = [
-    { label: "Comments", value: stats.totalComments, icon: MessageSquare, iconBg: "bg-blue-500/15",   iconColor: "text-blue-400",   accent: "border-blue-500/20" },
-    { label: "Shares",   value: stats.totalShares,   icon: Share,         iconBg: "bg-cyan-500/15",   iconColor: "text-cyan-400",   accent: "border-cyan-500/20" },
+    { label: "Comments", value: stats.totalComments, icon: MessageSquare, iconBg: "bg-blue-500/15",  iconColor: "text-blue-400",  accent: "border-blue-500/20" },
+    { label: "Shares",   value: stats.totalShares,   icon: Share,         iconBg: "bg-cyan-500/15",  iconColor: "text-cyan-400",  accent: "border-cyan-500/20" },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-[1400px]">
 
-      {/* Command strip */}
+      {/* ── Hero / Command Banner ── */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <CommandStrip
-          isActive={!!isActive}
-          connected={connected}
-          username={profile.tiktokUsername}
-          duration={duration}
-          formatDuration={formatDuration}
-          onStart={handleStartSession}
-          onEnd={handleEndSession}
-          onReset={handleForceStop}
-          startPending={startSession.isPending}
-          endPending={endSession.isPending}
-          resetPending={forceStop.isPending}
-          isOwner={profile?.role === "owner"}
-          eventCount={eventCount}
-        />
+        <div className={cn(
+          "relative overflow-hidden rounded-2xl border",
+          isActive
+            ? "border-green-500/20 shadow-lg shadow-green-500/[0.06]"
+            : "border-violet-500/18 shadow-lg shadow-violet-500/[0.05]",
+        )} style={{
+          background: isActive
+            ? "linear-gradient(135deg,rgba(22,163,74,.10) 0%,rgba(8,145,178,.04) 50%,rgba(124,58,237,.06) 100%)"
+            : "linear-gradient(135deg,rgba(124,58,237,.12) 0%,rgba(109,40,217,.07) 50%,rgba(14,165,233,.04) 100%)",
+        }}>
+          {/* Decorative bg */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-25"
+              style={{ background: "radial-gradient(circle,rgba(139,92,246,.35) 0%,transparent 70%)" }} />
+            <div className="absolute -bottom-16 -left-8 w-56 h-56 rounded-full opacity-15"
+              style={{ background: "radial-gradient(circle,rgba(6,182,212,.4) 0%,transparent 70%)" }} />
+            <div className="absolute inset-0" style={{
+              backgroundImage: "linear-gradient(rgba(139,92,246,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.03) 1px,transparent 1px)",
+              backgroundSize: "48px 48px",
+            }} />
+          </div>
+
+          <div className="relative p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Left: status + identity */}
+              <div className="flex items-center gap-4 min-w-0">
+                <div className={cn(
+                  "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-lg",
+                  isActive
+                    ? "bg-green-500/15 border-green-500/25 shadow-green-500/15"
+                    : "bg-violet-500/12 border-violet-500/22 shadow-violet-500/10",
+                )}>
+                  {isActive
+                    ? <Radio className="h-5 w-5 text-green-400" />
+                    : <PlugZap className="h-5 w-5 text-violet-400" />
+                  }
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    {isActive ? (
+                      <><PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
+                        <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>
+                          {connected ? "Live Now" : "Reconnecting…"}
+                        </span>
+                        <span className="text-xs text-white/35 font-mono tabular-nums">{formatDuration(duration)}</span>
+                      </>
+                    ) : (
+                      <><span className="h-2 w-2 rounded-full bg-slate-500 inline-block flex-shrink-0" />
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Offline</span>
+                      </>
+                    )}
+                  </div>
+                  <p className="font-black text-white text-lg sm:text-xl leading-tight truncate">
+                    {isActive
+                      ? `@${profile.tiktokUsername}`
+                      : <span>Ready to <GradientText from="from-violet-400" to="to-cyan-400">Go Live</GradientText></span>
+                    }
+                  </p>
+                  <p className="text-xs text-white/40 mt-0.5 truncate">
+                    {isActive
+                      ? `${eventCount} events captured · AI Storm active`
+                      : `@${profile.tiktokUsername} · Start a session to begin`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: controls */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {isOwner && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/28 text-xs font-bold text-amber-200">
+                    <KeyRound className="h-3.5 w-3.5" /> Owner
+                  </div>
+                )}
+                {connected
+                  ? <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400"><Wifi className="h-3 w-3" /> Connected</div>
+                  : <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400"><WifiOff className="h-3 w-3" /> Disconnected</div>
+                }
+                {isActive ? (
+                  <Button variant="destructive" onClick={handleEndSession} disabled={endSession.isPending}
+                    className="font-bold gap-2 shadow-lg shadow-red-500/20 h-10 flex-1 sm:flex-none">
+                    <Square className="h-3.5 w-3.5" fill="currentColor" />
+                    {endSession.isPending ? "Ending…" : "End Stream"}
+                  </Button>
+                ) : (
+                  <Button onClick={handleStartSession} disabled={startSession.isPending}
+                    className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-bold gap-2 px-5 shadow-lg shadow-violet-500/25 h-10 flex-1 sm:flex-none">
+                    <PlayCircle className="h-4 w-4" />
+                    {startSession.isPending ? "Starting…" : "Go Live"}
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={handleForceStop} disabled={forceStop.isPending}
+                  className="gap-1.5 text-xs text-white/38 border-white/10 hover:border-red-500/30 hover:text-red-400 h-10 px-3"
+                  title="Force-clears any stuck session.">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{forceStop.isPending ? "…" : "Reset"}</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Live quick stats row */}
+            {isActive && (
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4 pt-4 border-t border-white/[0.07]">
+                {[
+                  { label: "Viewers",  icon: Eye,          value: stats.viewerCount,   color: "text-green-400" },
+                  { label: "Comments", icon: MessageSquare,value: stats.totalComments, color: "text-blue-400" },
+                  { label: "Gifts",    icon: Gift,         value: stats.totalGifts,    color: "text-amber-400" },
+                  { label: "Follows",  icon: UserPlus,     value: stats.totalFollows,  color: "text-violet-400" },
+                  { label: "Likes",    icon: Heart,        value: stats.totalLikes,    color: "text-pink-400" },
+                ].map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={s.label} className="text-center">
+                      <div className="flex items-center justify-center gap-1 mb-0.5">
+                        <Icon className={cn("h-3 w-3 flex-shrink-0", s.color)} />
+                        <span className="text-[9px] sm:text-[10px] text-white/38 uppercase tracking-wider truncate">{s.label}</span>
+                      </div>
+                      <p className={cn("text-base sm:text-lg font-black tabular-nums", s.color)}>
+                        <AnimatedCounter target={s.value} />
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       </motion.div>
 
       {/* Primary stat cards */}

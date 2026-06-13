@@ -1,0 +1,96 @@
+I attached visual references for the new LiveStorm AI interface.
+
+Goal:
+Redesign LiveStorm UI to match the attached futuristic light-purple / 2050 style.
+
+Important:
+Do not copy the images 1:1.
+Use them as design direction.
+
+Core style:
+- futuristic but clean
+- light-purple / glassmorphism
+- not too dark
+- not too bright
+- rounded panels
+- holographic / animated background feeling
+- Storm avatar as the main visual center
+- fewer buttons, less clutter
+- premium product feeling
+
+Main sections to redesign:
+1. Dashboard
+2. Live Studio
+3. Scenes
+4. Gifts
+5. Events
+6. Community
+7. AI Storm
+8. Storm Pass
+9. Analytics
+10. Settings
+11. Battle Arena / TikTok Battle
+
+Priority:
+Start with Dashboard + Live Studio + Battle Arena first.
+
+Dashboard requirements:
+- large Storm avatar in the center
+- LIVE status
+- viewers / chat / gifts counters
+- active scene card
+- Storm Pass card
+- recent events
+- recognition moments
+- quick actions
+
+Live Studio requirements:
+- bigger stream preview
+- live chat
+- event feed
+- stream controls
+- TikTok / YouTube status
+- voice / AI controls
+- OBS-friendly layout
+
+Battle Arena / TikTok Battle requirements:
+- VS layout
+- streamer left, opponent right
+- score bar in center
+- battle timer
+- top gifters
+- battle gifts
+- special effects
+- chat/event log
+- gift animations prepared for future integration
+
+Very important:
+- UI must be responsive for desktop and mobile.
+- Keep multi-user support.
+- Do not hardcode jan85oks or any username.
+- Do not break existing TikTok, YouTube, Storm Pass, Recognition Engine or OBS logic.
+- Redesign UI only first.
+- If backend changes are needed, explain before changing.
+
+Implementation plan:
+1. Audit existing layout/components.
+2. Create reusable design system components:
+   - GlassCard
+   - StatCard
+   - AvatarStage
+   - EventCard
+   - GiftCard
+   - SceneCard
+   - BattleScoreBar
+3. Redesign Dashboard.
+4. Redesign Live Studio.
+5. Create or redesign Battle Arena.
+6. Run TypeScript check.
+7. Show screenshots before final answer.
+
+Final answer:
+LIVESTORM_UI_REDESIGN_READY
+
+or
+
+LIVESTORM_UI_REDESIGN_BLOCKED — exact blocker.

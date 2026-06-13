@@ -264,18 +264,24 @@ export function AvatarStudio() {
         <div className="flex flex-col min-h-0 overflow-y-auto gap-2 pr-0.5 scrollbar-thin scrollbar-thumb-white/10">
 
           {/* Panel card */}
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden flex-shrink-0">
+          <div className="rounded-2xl border border-violet-500/15 overflow-hidden flex-shrink-0 shadow-lg shadow-violet-500/[0.06]"
+            style={{ background: "linear-gradient(180deg,rgba(124,58,237,.06) 0%,rgba(0,0,0,0) 100%)" }}>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-3 border-b border-white/[0.06]">
+            <div className="flex items-center justify-between px-3 py-3 border-b border-violet-500/10">
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">3D Editor</p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-violet-400/40">3D Editor</p>
                 <p className="text-sm font-black text-white">Avatar Studio</p>
               </div>
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                isLoading ? "bg-amber-400 animate-pulse" : "bg-emerald-400",
-              )} />
+              <div className="flex items-center gap-1.5">
+                <div className={cn(
+                  "w-2 h-2 rounded-full shadow-[0_0_6px_currentColor]",
+                  isLoading ? "bg-amber-400 animate-pulse text-amber-400" : "bg-emerald-400 text-emerald-400",
+                )} />
+                <span className={cn("text-[8px] font-bold uppercase tracking-wider", isLoading ? "text-amber-400/60" : "text-emerald-400/60")}>
+                  {isLoading ? "Loading" : "Ready"}
+                </span>
+              </div>
             </div>
 
             {/* ── Avatar source ── */}
@@ -533,35 +539,77 @@ export function AvatarStudio() {
 
         </div>
 
-        {/* ═══════════════ RIGHT: 9:16 portrait preview ═══════════════ */}
+        {/* ═══════════════ RIGHT: premium avatar stage ═══════════════ */}
         <div className="flex flex-col min-h-0 pt-2 gap-2 overflow-hidden">
 
-          {/* 3D / 2D indicator header */}
+          {/* Stage header bar */}
           <div className="flex-shrink-0 flex items-center justify-between px-1">
-            <span className="text-[10px] text-muted-foreground/50 font-medium">
-              {PRESENTER_SLOTS[avatarKey]?.name ?? "Avatar"}
-            </span>
-            {avatarUrl ? (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] text-emerald-400 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                3D READY
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-violet-400 shadow-[0_0_6px_rgba(167,139,250,.8)]" />
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.12em]">
+                {PRESENTER_SLOTS[avatarKey]?.name ?? "Avatar"} · Live Stage
               </span>
-            ) : (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[9px] text-amber-400/80 font-semibold">
-                2D PREVIEW ONLY
-              </span>
-            )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              {avatarUrl ? (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] text-emerald-400 font-bold shadow-[0_0_8px_rgba(52,211,153,.15)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> 3D ACTIVE
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/12 border border-violet-500/22 text-[9px] text-violet-300/70 font-semibold">
+                  2D PREVIEW
+                </span>
+              )}
+              <span className="px-1.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.07] text-[9px] text-white/25 font-mono">9:16</span>
+            </div>
           </div>
 
-          {/* Portrait frame — 9:16 centered, fills available height */}
+          {/* ── Portrait frame — premium stage container ── */}
           <div className="flex-1 min-h-0 flex justify-center items-start overflow-hidden">
             <motion.div
               className="h-full relative"
               style={{ aspectRatio: "9/16" }}
-              initial={{ opacity: 0, scale: 0.97 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
+              {/* Outer glow ring */}
+              <div className="absolute -inset-[1px] rounded-2xl pointer-events-none"
+                style={{
+                  background: `linear-gradient(135deg, ${accentColor}30, rgba(6,182,212,.12), ${accentColor}18)`,
+                  boxShadow: `0 0 40px ${accentColor}20, inset 0 0 0 1px ${accentColor}22`,
+                }}
+              />
+
+              {/* Ambient backdrop glow */}
+              <div className="absolute -inset-4 rounded-3xl pointer-events-none blur-2xl opacity-30"
+                style={{ background: `radial-gradient(ellipse at center, ${accentColor}40 0%, transparent 70%)` }}
+              />
+
+              {/* Corner bracket decorations */}
+              <div className="absolute inset-0 pointer-events-none z-10">
+                {/* Top-left */}
+                <div className="absolute top-2 left-2 w-5 h-5 border-t-[1.5px] border-l-[1.5px] rounded-tl-lg"
+                  style={{ borderColor: `${accentColor}80` }} />
+                {/* Top-right */}
+                <div className="absolute top-2 right-2 w-5 h-5 border-t-[1.5px] border-r-[1.5px] rounded-tr-lg"
+                  style={{ borderColor: `${accentColor}80` }} />
+                {/* Bottom-left */}
+                <div className="absolute bottom-2 left-2 w-5 h-5 border-b-[1.5px] border-l-[1.5px] rounded-bl-lg"
+                  style={{ borderColor: `${accentColor}80` }} />
+                {/* Bottom-right */}
+                <div className="absolute bottom-2 right-2 w-5 h-5 border-b-[1.5px] border-r-[1.5px] rounded-br-lg"
+                  style={{ borderColor: `${accentColor}80` }} />
+
+                {/* Scan-line overlay */}
+                <div className="absolute inset-0 rounded-2xl pointer-events-none opacity-[0.015]"
+                  style={{
+                    backgroundImage: "repeating-linear-gradient(0deg,rgba(255,255,255,1) 0px,rgba(255,255,255,1) 1px,transparent 1px,transparent 4px)",
+                  }}
+                />
+              </div>
+
+              {/* Avatar canvas */}
               <AvatarStage
                 avatarKey={avatarKey}
                 accentColor={accentColor}
@@ -588,7 +636,7 @@ export function AvatarStudio() {
                 cameraFov={38}
                 cameraY={1.0}
                 cameraZ={2.0}
-                className="w-full h-full"
+                className="w-full h-full rounded-2xl"
                 onStats={setAvatarStats}
                 externalBlink={
                   faceTrackingData?.faceDetected
@@ -601,34 +649,40 @@ export function AvatarStudio() {
 
           {/* QA Stats bar */}
           {avatarUrl && avatarStats && (
-            <div className="flex-shrink-0 grid grid-cols-4 gap-1 px-1">
+            <div className="flex-shrink-0 grid grid-cols-4 gap-1.5 px-1">
               {[
-                { label: "FPS", value: String(avatarStats.fps) },
-                { label: "Tris", value: avatarStats.triangles >= 1000 ? `${(avatarStats.triangles / 1000).toFixed(0)}k` : String(avatarStats.triangles) },
+                { label: "FPS",   value: String(avatarStats.fps) },
+                { label: "Tris",  value: avatarStats.triangles >= 1000 ? `${(avatarStats.triangles / 1000).toFixed(0)}k` : String(avatarStats.triangles) },
                 { label: "Draws", value: String(avatarStats.drawCalls) },
-                { label: "VRM", value: `${(11 * 1024 / 1024).toFixed(0)} MB` },
+                { label: "VRM",   value: `${(11 * 1024 / 1024).toFixed(0)} MB` },
               ].map(({ label, value }) => (
-                <div key={label} className="rounded-lg bg-black/40 border border-white/[0.05] px-2 py-1.5 text-center">
-                  <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wide">{label}</p>
-                  <p className="text-[11px] font-bold text-white/80 font-mono">{value}</p>
+                <div key={label} className="rounded-xl bg-black/50 border border-white/[0.06] px-2 py-2 text-center">
+                  <p className="text-[7px] text-white/25 uppercase tracking-wider mb-0.5">{label}</p>
+                  <p className="text-[11px] font-black text-white/70 font-mono">{value}</p>
                 </div>
               ))}
             </div>
           )}
 
-          {/* System checks row */}
-          {avatarUrl && (
-            <div className="flex-shrink-0 flex items-center gap-2 px-1 text-[9px]">
-              <span className="text-emerald-400">✓ Blink</span>
-              <span className="text-emerald-400">✓ Lip Sync</span>
-              <span className="text-emerald-400">✓ Idle Anim</span>
-              <span className="text-emerald-400">✓ VRM 1.0</span>
+          {/* System checks + drag hint */}
+          <div className="flex-shrink-0 flex items-center justify-between px-1">
+            {avatarUrl ? (
+              <div className="flex items-center gap-2 text-[9px]">
+                <span className="text-emerald-400/70">✓ Blink</span>
+                <span className="text-emerald-400/70">✓ Lip Sync</span>
+                <span className="text-emerald-400/70">✓ Idle Anim</span>
+                <span className="text-emerald-400/70">✓ VRM 1.0</span>
+              </div>
+            ) : <div />}
+            <div className="flex items-center gap-1 text-[9px] text-white/20">
+              <MousePointer2 className="h-2.5 w-2.5" />
+              <span>Drag · Scroll</span>
             </div>
-          )}
+          </div>
 
-          {/* Animation test strip */}
-          <div className="flex-shrink-0 space-y-1.5 pb-1">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+          {/* Animation strip */}
+          <div className="flex-shrink-0 pb-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {PREVIEW_ANIMATIONS.map((anim) => (
                 <button
                   key={anim}
@@ -636,8 +690,8 @@ export function AvatarStudio() {
                   className={cn(
                     "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[10px] font-semibold whitespace-nowrap transition-all flex-shrink-0",
                     animState === anim
-                      ? "border-violet-500/50 bg-violet-500/15 text-violet-300"
-                      : "border-white/[0.07] text-muted-foreground/60 hover:border-white/15 hover:text-white",
+                      ? "border-violet-500/50 bg-violet-500/15 text-violet-300 shadow-[0_0_8px_rgba(167,139,250,.2)]"
+                      : "border-white/[0.06] text-white/35 hover:border-white/15 hover:text-white/70",
                   )}
                 >
                   <span>{ANIMATION_EMOJI[anim]}</span>
@@ -645,12 +699,7 @@ export function AvatarStudio() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground/30">
-              <MousePointer2 className="h-3 w-3" />
-              <span>Drag to rotate · Scroll to zoom</span>
-            </div>
           </div>
-
         </div>
       </div>
 

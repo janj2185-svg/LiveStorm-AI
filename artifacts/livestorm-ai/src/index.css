@@ -63,26 +63,26 @@
 
 /* ─── DARK AI THEME (default) ───────────────────────────────────────────── */
 :root {
-  /* Deep dark navy — the animated canvas replaces the background visually */
-  --background: 230 42% 4%;
-  --foreground: 214 32% 91%;
+  /* Rich dark purple — futuristic 2050 aesthetic */
+  --background: 245 52% 6%;
+  --foreground: 214 30% 92%;
 
-  --card: 228 38% 7%;
-  --card-foreground: 214 32% 91%;
-  --card-border: 222 35% 16%;
+  --card: 244 48% 8%;
+  --card-foreground: 214 30% 92%;
+  --card-border: 244 42% 15%;
 
-  --popover: 228 38% 7%;
-  --popover-foreground: 214 32% 91%;
-  --popover-border: 222 35% 16%;
+  --popover: 244 48% 8%;
+  --popover-foreground: 214 30% 92%;
+  --popover-border: 244 42% 15%;
 
-  --primary: 263 70% 57%;
+  --primary: 263 72% 62%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 228 35% 12%;
-  --secondary-foreground: 214 32% 91%;
+  --secondary: 244 44% 13%;
+  --secondary-foreground: 214 30% 92%;
 
-  --muted: 228 35% 11%;
-  --muted-foreground: 215 20% 52%;
+  --muted: 244 44% 11%;
+  --muted-foreground: 244 18% 55%;
 
   --accent: 192 91% 43%;
   --accent-foreground: 0 0% 100%;
@@ -90,19 +90,19 @@
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 222 35% 16%;
-  --input: 228 35% 11%;
-  --ring: 263 70% 57%;
+  --border: 244 40% 15%;
+  --input: 244 44% 11%;
+  --ring: 263 72% 62%;
 
-  /* Sidebar — slightly deeper than content */
-  --sidebar: 232 45% 3%;
-  --sidebar-foreground: 214 32% 91%;
-  --sidebar-border: 225 35% 12%;
-  --sidebar-primary: 263 70% 57%;
+  /* Sidebar — deepest purple */
+  --sidebar: 242 65% 3.5%;
+  --sidebar-foreground: 214 30% 92%;
+  --sidebar-border: 244 52% 9%;
+  --sidebar-primary: 263 72% 62%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 228 38% 7%;
-  --sidebar-accent-foreground: 214 32% 91%;
-  --sidebar-ring: 263 70% 57%;
+  --sidebar-accent: 244 52% 7%;
+  --sidebar-accent-foreground: 214 30% 92%;
+  --sidebar-ring: 263 72% 62%;
 
   --radius: 0.75rem;
   --app-font-sans: 'Inter', sans-serif;
