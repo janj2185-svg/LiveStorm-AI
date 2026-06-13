@@ -59,8 +59,17 @@ function isSafeMemory(key: string): boolean {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function formatLastSeen(lastSeen: Date): string {
-  const ms   = Date.now() - lastSeen.getTime();
+// Drizzle returns timestamp columns as strings when queried without mode:"date".
+// Defensively coerce anything to a real Date so .getTime() never crashes.
+function toDate(v: Date | string | number | undefined | null): Date {
+  if (!v) return new Date(0);
+  if (v instanceof Date) return v;
+  const d = new Date(v as string | number);
+  return isNaN(d.getTime()) ? new Date(0) : d;
+}
+
+function formatLastSeen(lastSeen: Date | string): string {
+  const ms   = Date.now() - toDate(lastSeen).getTime();
   const days = Math.floor(ms / 86_400_000);
   const hrs  = Math.floor(ms / 3_600_000);
   if (days >= 1) return `${days}d ago`;
@@ -74,7 +83,7 @@ function getGlobalCooldownMs(): number {
 // ── Tier classification ────────────────────────────────────────────────────────
 // absent_* always overrides engagement-based tiers.
 export function classifyRecognitionTier(profile: RecognitionProfile): RecognitionTier {
-  const daysSinceLast = (Date.now() - profile.lastSeen.getTime()) / 86_400_000;
+  const daysSinceLast = (Date.now() - toDate(profile.lastSeen).getTime()) / 86_400_000;
   if (daysSinceLast >= 30) return "absent_30d";
   if (daysSinceLast >= 7)  return "absent_7d";
 
@@ -100,7 +109,7 @@ function deriveTitleHint(profile: RecognitionProfile): string | null {
   const tags          = (profile.personalityTags ?? "").split(",").map((t) => t.trim()).filter(Boolean);
   const streak        = profile.streakDays   ?? 0;
   const gifts         = profile.totalGifts   ?? 0;
-  const daysSinceFirst = Math.floor((Date.now() - profile.firstSeen.getTime()) / 86_400_000);
+  const daysSinceFirst = Math.floor((Date.now() - toDate(profile.firstSeen).getTime()) / 86_400_000);
 
   if (streak >= 30)                   return "Eternal Flame 🔥";
   if (gifts  >= 50)                   return "Storm Patron ⚡";
@@ -233,8 +242,8 @@ export function buildRecognitionInjection(opts: {
   const loyaltyTier    = computeRecognitionLoyaltyTier(profile);
   const titleHint      = deriveTitleHint(profile);
   const lastSeenLabel  = formatLastSeen(profile.lastSeen);
-  const daysSinceLast  = Math.floor((Date.now() - profile.lastSeen.getTime())  / 86_400_000);
-  const daysSinceFirst = Math.floor((Date.now() - profile.firstSeen.getTime()) / 86_400_000);
+  const daysSinceLast  = Math.floor((Date.now() - toDate(profile.lastSeen).getTime())  / 86_400_000);
+  const daysSinceFirst = Math.floor((Date.now() - toDate(profile.firstSeen).getTime()) / 86_400_000);
 
   const reason =
     tier === "absent_30d" ? `absent ${daysSinceLast}d` :

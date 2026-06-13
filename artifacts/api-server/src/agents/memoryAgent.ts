@@ -80,7 +80,11 @@ function buildViewerCard(
   if (profile.typicalHour != null) moodParts.push(`Visits: ~${profile.typicalHour}:00`);
   const moodLine = moodParts.join(" · ");
 
-  const factLines = viewerMemories.slice(0, 4).map((m) => m.value);
+  const PRIVATE_KEYS_VC = ["phone","email","address","age","salary","income","private","contact","password","home_address","location_home"];
+  const factLines = viewerMemories
+    .filter((m) => !PRIVATE_KEYS_VC.some((k) => m.key.toLowerCase().includes(k)))
+    .slice(0, 4)
+    .map((m) => m.value);
   const knownLine = factLines.length > 0 ? `Known: ${factLines.join("; ")}` : null;
 
   // ── Personal addressing ────────────────────────────────────────────────────
@@ -537,6 +541,63 @@ export async function getViewerProfile(streamerId: number, tiktokViewerId: strin
       eq(viewerProfilesTable.tiktokViewerId, tiktokViewerId),
     ),
   });
+}
+
+// ── Full profile + keyed memories for the Recognition Engine ─────────────────
+// getViewerContext (lib) returns a minimal profile without firstSeen/lastSeen,
+// and memories as string[] without keys. Recognition Engine needs both.
+export async function getViewerContextForRecognition(
+  streamerId: number,
+  viewerName: string,
+): Promise<{
+  profile: {
+    firstSeen:       Date | string;
+    lastSeen:        Date | string;
+    totalGifts:      number;
+    totalComments:   number;
+    vipLevel:        string;
+    streakDays:      number;
+    totalCoinsSpent: number;
+    personalityTags: string;
+  } | null;
+  memories: Array<{ key: string; value: string }>;
+}> {
+  try {
+    const [profile, mems] = await Promise.all([
+      db.query.agentViewerProfilesTable.findFirst({
+        where: and(
+          eq(viewerProfilesTable.streamerId, streamerId),
+          eq(viewerProfilesTable.viewerName, viewerName),
+        ),
+      }),
+      db.query.aiMemoriesTable.findMany({
+        where: and(
+          eq(aiMemoriesTable.streamerId, streamerId),
+          eq(aiMemoriesTable.viewerName, viewerName),
+          eq(aiMemoriesTable.memoryType, "viewer"),
+        ),
+        orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
+        limit: 8,
+      }),
+    ]);
+    return {
+      profile: profile
+        ? {
+            firstSeen:       profile.firstSeen,
+            lastSeen:        profile.lastSeen,
+            totalGifts:      profile.totalGifts,
+            totalComments:   profile.totalComments,
+            vipLevel:        profile.vipLevel,
+            streakDays:      profile.streakDays,
+            totalCoinsSpent: profile.totalCoinsSpent,
+            personalityTags: profile.personalityTags ?? "",
+          }
+        : null,
+      memories: mems.map((m) => ({ key: m.key, value: m.value })),
+    };
+  } catch {
+    return { profile: null, memories: [] };
+  }
 }
 
 // ── List memories for a streamer ──────────────────────────────────────────────

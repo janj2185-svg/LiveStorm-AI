@@ -8,7 +8,7 @@ import { runHostAgent } from "./hostAgent";
 import { runModerationAgent } from "./moderationAgent";
 import { getActivePersonality } from "./personalityAgent";
 import { getActiveVoice } from "./voiceAgent";
-import { getMemoryContext, upsertViewerProfile, trackViewerInSession, schedulePruning, saveViewerNickname } from "./memoryAgent";
+import { getMemoryContext, upsertViewerProfile, trackViewerInSession, schedulePruning, saveViewerNickname, getViewerContextForRecognition } from "./memoryAgent";
 import { getViewerContext } from "../lib/agents/memoryAgent";
 import { detectNicknameInMessage } from "./viewerFactExtractor";
 import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion, scoreResponse } from "./strategyAgent";
@@ -946,6 +946,12 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   let recognitionMeta: ReturnType<typeof buildRecognitionInjection> | null = null;
   let recognitionPrompt = "";
   if (event.type === "comment" && event.username && state.enabledAgents.has("memory")) {
+    // Use getViewerContextForRecognition which returns the full DB profile
+    // (firstSeen, lastSeen, streakDays, etc.) and keyed memories — both
+    // required by the recognition engine. viewerCtx (from lib memoryAgent) only
+    // has a minimal profile without date fields, and memories as string[].
+    const recCtx = await getViewerContextForRecognition(streamerId, event.username)
+      .catch(() => ({ profile: null, memories: [] as Array<{ key: string; value: string }> }));
     const recState: RecognitionState = {
       recognitionSeenInSession:    state.recognitionSeenInSession,
       lastGlobalRecognitionAt:     state.lastGlobalRecognitionAt,
@@ -954,8 +960,8 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     const recResult = buildRecognitionInjection({
       sessionId,
       viewerName:    event.username,
-      profile:       viewerCtx.profile as any,
-      memories:      (viewerCtx.memories ?? []) as Array<{ key: string; value: string }>,
+      profile:       recCtx.profile as any,
+      memories:      recCtx.memories,
       hasViewerCard,
       state:         recState,
     });
