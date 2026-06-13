@@ -78,6 +78,20 @@ httpServer.listen(port, (err?: Error) => {
     ALTER TABLE agent_viewer_profiles ADD COLUMN IF NOT EXISTS nickname_asked_at TIMESTAMPTZ;
   `).catch((err) => logger.warn({ msg: String(err?.message) }, "Nickname column migration skipped"));
 
+  // Storm Pass discovery tracking
+  db.execute(sql`
+    CREATE TABLE IF NOT EXISTS storm_pass_events (
+      id          SERIAL PRIMARY KEY,
+      event_type  TEXT        NOT NULL,
+      streamer_id INTEGER,
+      viewer_id   TEXT,
+      metadata    JSONB,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS storm_pass_events_streamer_idx ON storm_pass_events (streamer_id);
+    CREATE INDEX IF NOT EXISTS storm_pass_events_type_idx     ON storm_pass_events (event_type, created_at DESC);
+  `).catch((err) => logger.warn({ msg: String(err?.message) }, "Storm Pass events table migration skipped"));
+
   // Stripe (non-fatal — gracefully skips if not connected)
   initStripe().catch((err) =>
     logger.warn({ msg: err?.message }, "Stripe init error"),

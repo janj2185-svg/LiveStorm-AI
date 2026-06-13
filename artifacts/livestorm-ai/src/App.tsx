@@ -39,6 +39,8 @@ import { ObsLeaderboard } from "@/pages/obs/leaderboard";
 import { ObsBossBattle } from "@/pages/obs/boss-battle";
 import { ObsActivityFeed } from "@/pages/obs/activity-feed";
 import { StormPass } from "@/pages/storm-pass";
+import { PassEntry } from "@/pages/pass-entry";
+import { ObsStormPassQR } from "@/pages/obs/storm-pass-qr";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +114,7 @@ function ObsRoutes() {
       <Route path="/obs/leaderboard" component={ObsLeaderboard} />
       <Route path="/obs/boss-battle" component={ObsBossBattle} />
       <Route path="/obs/activity-feed" component={ObsActivityFeed} />
+      <Route path="/obs/storm-pass-qr" component={ObsStormPassQR} />
       <Route>
         <div style={{ padding: "32px", color: "#fff", fontFamily: "sans-serif" }}>
           <h1>OBS Overlay Not Found</h1>
@@ -294,6 +297,10 @@ function AppRoutes() {
       </Route>
       <Route path="/admin">
         <ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>
+      </Route>
+
+      <Route path="/pass">
+        <PassEntry />
       </Route>
 
       <Route path="/pass/:streamerId/:viewerId">

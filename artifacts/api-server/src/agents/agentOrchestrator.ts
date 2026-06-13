@@ -1,4 +1,5 @@
 import type { Server as SocketServer } from "socket.io";
+import { getIO } from "../lib/socketServer";
 import { db, aiAgentsTable, aiAgentTasksTable, aiPersonaConfigsTable, agentViewerProfilesTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import type { TikTokEvent } from "../lib/tiktokSimulator";
@@ -303,6 +304,20 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
     state.queue.sort((a, b) => a.priority - b.priority || a.enqueuedAt - b.enqueuedAt);
     console.log(`[Orchestrator] 🎙️ streamer speech | P1+bypass | session=${event.sessionId} | "${text.slice(0, 60)}"`);
     return;
+  }
+
+  // ── Storm Pass chat command: !pass / pass / storm pass ──────────────────────
+  // Viewer asks for Storm Pass → show QR overlay, skip AI reply entirely.
+  if (event.type === "comment") {
+    const cmdRaw = ((event.data as any).text ?? "").trim();
+    if (/^[!/]?(storm\s*pass|stormpass|my\s*pass|pass)$/i.test(cmdRaw)) {
+      getIO()?.to(`session:${event.sessionId}`).emit("stormpass:show_qr", {
+        duration:     20,
+        streamerSlug: "",
+      });
+      console.log(`[StormPass] QR triggered via chat command "${cmdRaw}" from ${(event.data as any).viewerName ?? "?"}`);
+      return;
+    }
   }
 
   // ── Silence filler: bypass all pre-filters, enqueue directly at P6 ──────────

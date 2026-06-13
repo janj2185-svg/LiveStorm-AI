@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@clerk/react";
 import { useLiveSessionContext, type LiveEvent } from "@/contexts/LiveSessionContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +9,14 @@ import {
   AlertTriangle, Radio, Bot, Wifi, WifiOff,
   MessageCircle, Gift, Heart, UserPlus, Eye, Gem,
   ArrowDown, Share2, Sparkles, Zap, Trophy, TrendingUp,
-  Volume2, VolumeX, ChevronDown, ChevronUp,
+  Volume2, VolumeX, ChevronDown, ChevronUp, QrCode,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CoHostPanel } from "@/components/CoHostPanel";
+
+const LS_BASE = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
 // ── Comment feed ──────────────────────────────────────────────────────────────
 
@@ -351,7 +354,39 @@ export function LiveStudio() {
   } = useLiveSessionContext();
   const effectiveMode = tiktokMode ?? sessionMode;
   const [eventLogOpen, setEventLogOpen] = useState(false);
-  const [mobileTab, setMobileTab] = useState<"cohost" | "comments">("cohost");
+  const [mobileTab,    setMobileTab]    = useState<"cohost" | "comments">("cohost");
+  const { getToken }                    = useAuth();
+  const [qrActive,     setQrActive]     = useState(false);
+  const [qrCountdown,  setQrCountdown]  = useState(0);
+  const qrTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  async function showQr() {
+    if (qrActive) {
+      const tok = await getToken();
+      fetch(`${LS_BASE}/api/stormpass/qr/hide`, {
+        method: "POST", headers: { Authorization: `Bearer ${tok ?? ""}` },
+      }).catch(() => {});
+      if (qrTimerRef.current) { clearInterval(qrTimerRef.current); qrTimerRef.current = null; }
+      setQrActive(false); setQrCountdown(0);
+      return;
+    }
+    try {
+      const tok = await getToken();
+      const r = await fetch(`${LS_BASE}/api/stormpass/qr/show`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok ?? ""}` },
+        body:    JSON.stringify({ duration: 20 }),
+      });
+      if (!r.ok) return;
+      setQrActive(true); setQrCountdown(20);
+      if (qrTimerRef.current) clearInterval(qrTimerRef.current);
+      let rem = 20;
+      qrTimerRef.current = setInterval(() => {
+        rem -= 1; setQrCountdown(rem);
+        if (rem <= 0) { clearInterval(qrTimerRef.current!); qrTimerRef.current = null; setQrActive(false); }
+      }, 1000);
+    } catch { /* ignore */ }
+  }
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
@@ -372,6 +407,21 @@ export function LiveStudio() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <ConnectionBadge connected={connected} isActive={!!isActive} effectiveMode={effectiveMode} tiktokError={tiktokError} />
+          {isActive && (
+            <button
+              onClick={showQr}
+              title={qrActive ? "Натисни щоб сховати QR" : "Показати Storm Pass QR на стрімі"}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all",
+                qrActive
+                  ? "bg-violet-500/20 border-violet-500/50 text-violet-300 animate-pulse"
+                  : "bg-white/5 border-white/10 text-muted-foreground hover:border-violet-500/40 hover:text-white/70",
+              )}
+            >
+              <QrCode className="h-3 w-3" />
+              {qrActive ? `QR ${qrCountdown}s` : "QR Pass"}
+            </button>
+          )}
           {isActive ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
               <span className="relative flex h-1.5 w-1.5">

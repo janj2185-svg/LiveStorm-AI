@@ -6,8 +6,13 @@ import {
   viewerXpEventsTable,
   viewerAchievementsTable,
   achievementsTable,
+  streamersTable,
+  sessionsTable,
+  usersTable,
 } from "@workspace/db";
-import { eq, and, or, sum, count, desc, sql } from "drizzle-orm";
+import { eq, and, or, sum, count, desc, sql, isNull } from "drizzle-orm";
+import { getIO } from "../lib/socketServer";
+import { requireAuth, getOrCreateUser } from "./users";
 
 const router = Router();
 
@@ -76,6 +81,29 @@ function factIcon(key: string): string {
   if (key.includes("vip"))            return "⭐";
   return "💡";
 }
+
+// ── GET /storm-pass/streamer/:slug ───────────────────────────────────────────
+// Public: lookup streamerId by TikTok username — MUST be registered before /:streamerId/:viewerId
+router.get("/storm-pass/streamer/:slug", async (req, res) => {
+  try {
+    const slug = req.params.slug.trim().replace(/^@/, "").toLowerCase();
+    if (!slug) return res.status(400).json({ error: "Missing slug" });
+
+    const row = await db
+      .select({ streamerId: streamersTable.id, tiktokUsername: usersTable.tiktokUsername })
+      .from(usersTable)
+      .innerJoin(streamersTable, eq(streamersTable.userId, usersTable.id))
+      .where(sql`LOWER(${usersTable.tiktokUsername}) = ${slug}`)
+      .limit(1)
+      .then(r => r[0] ?? null);
+
+    if (!row) return res.status(404).json({ error: "Streamer not found" });
+    return res.json({ streamerId: row.streamerId, tiktokUsername: row.tiktokUsername });
+  } catch (err: unknown) {
+    console.error("[StormPass:streamer] error:", (err as Error)?.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // ── GET /api/storm-pass/:streamerId/:viewerId ─────────────────────────────────
 // Public endpoint — safe viewer data only. No auth required.
@@ -233,4 +261,150 @@ router.get("/storm-pass/:streamerId/:viewerId", async (req, res) => {
   }
 });
 
+// ── GET /storm-pass/search?streamer=slug&viewer=name ──────────────────────────
+// Public: find viewer's profile — returns { streamerId, viewerName } for navigation
+router.get("/storm-pass/search", async (req, res) => {
+  try {
+    const slug    = ((req.query.streamer as string) ?? "").trim().replace(/^@/, "").toLowerCase();
+    const viewer  = ((req.query.viewer  as string) ?? "").trim();
+    if (!slug || !viewer) return res.status(400).json({ error: "Missing streamer or viewer" });
+
+    const streamerRow = await db
+      .select({ streamerId: streamersTable.id })
+      .from(usersTable)
+      .innerJoin(streamersTable, eq(streamersTable.userId, usersTable.id))
+      .where(sql`LOWER(${usersTable.tiktokUsername}) = ${slug}`)
+      .limit(1)
+      .then(r => r[0] ?? null);
+
+    if (!streamerRow) return res.status(404).json({ error: "Streamer not found" });
+
+    const profile = await db
+      .select({ viewerName: agentViewerProfilesTable.viewerName, tiktokViewerId: agentViewerProfilesTable.tiktokViewerId })
+      .from(agentViewerProfilesTable)
+      .where(and(
+        eq(agentViewerProfilesTable.streamerId, streamerRow.streamerId),
+        or(
+          eq(agentViewerProfilesTable.viewerName, viewer),
+          eq(agentViewerProfilesTable.tiktokViewerId, viewer),
+        ),
+      ))
+      .orderBy(desc(agentViewerProfilesTable.totalComments))
+      .limit(1)
+      .then(r => r[0] ?? null);
+
+    if (!profile) return res.status(404).json({ error: "Viewer not found" });
+
+    await db.execute(sql`
+      INSERT INTO storm_pass_events (event_type, streamer_id, viewer_id, metadata, created_at)
+      VALUES ('pass_found', ${streamerRow.streamerId}, ${profile.viewerName}, ${JSON.stringify({ slug, viewer })}::jsonb, NOW())
+    `).catch(() => {});
+
+    return res.json({ streamerId: streamerRow.streamerId, viewerName: profile.viewerName, tiktokViewerId: profile.tiktokViewerId });
+  } catch (err: unknown) {
+    console.error("[StormPass:search] error:", (err as Error)?.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── POST /stormpass/qr/show ───────────────────────────────────────────────────
+// Protected: emit stormpass:show_qr to the streamer's active session room
+router.post("/stormpass/qr/show", requireAuth, async (req: any, res: any) => {
+  try {
+    const user    = await getOrCreateUser(req.clerkUserId);
+    const streamer = await db
+      .select({ id: streamersTable.id, userId: streamersTable.userId })
+      .from(streamersTable)
+      .where(eq(streamersTable.userId, user.id))
+      .limit(1)
+      .then(r => r[0] ?? null);
+    if (!streamer) return res.status(404).json({ error: "Streamer not found" });
+
+    const activeSession = await db
+      .select({ id: sessionsTable.id })
+      .from(sessionsTable)
+      .where(and(eq(sessionsTable.streamerId, streamer.id), isNull(sessionsTable.endedAt)))
+      .orderBy(desc(sessionsTable.startedAt))
+      .limit(1)
+      .then(r => r[0] ?? null);
+    if (!activeSession) return res.status(400).json({ error: "No active LIVE session. Go live first." });
+
+    const streamerSlug = await db
+      .select({ tiktokUsername: usersTable.tiktokUsername })
+      .from(usersTable)
+      .where(eq(usersTable.id, user.id))
+      .limit(1)
+      .then(r => r[0]?.tiktokUsername ?? "");
+
+    const duration = Math.min(60, Math.max(5, Number(req.body?.duration) || 20));
+    const io       = getIO();
+    if (!io) return res.status(503).json({ error: "Socket server not ready" });
+
+    io.to(`session:${activeSession.id}`).emit("stormpass:show_qr", { duration, streamerSlug });
+    console.log(`[StormPass] QR shown — session=${activeSession.id} slug=${streamerSlug} duration=${duration}s`);
+
+    await db.execute(sql`
+      INSERT INTO storm_pass_events (event_type, streamer_id, metadata, created_at)
+      VALUES ('qr_shown', ${streamer.id}, ${JSON.stringify({ duration, streamerSlug, trigger: 'studio' })}::jsonb, NOW())
+    `).catch(() => {});
+
+    return res.json({ ok: true, duration, streamerSlug, sessionId: activeSession.id });
+  } catch (err: unknown) {
+    console.error("[StormPass:qr/show] error:", (err as Error)?.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── POST /stormpass/qr/hide ───────────────────────────────────────────────────
+// Protected: immediately hide the QR overlay
+router.post("/stormpass/qr/hide", requireAuth, async (req: any, res: any) => {
+  try {
+    const user    = await getOrCreateUser(req.clerkUserId);
+    const streamer = await db
+      .select({ id: streamersTable.id })
+      .from(streamersTable)
+      .where(eq(streamersTable.userId, user.id))
+      .limit(1)
+      .then(r => r[0] ?? null);
+    if (!streamer) return res.status(404).json({ error: "Streamer not found" });
+
+    const activeSession = await db
+      .select({ id: sessionsTable.id })
+      .from(sessionsTable)
+      .where(and(eq(sessionsTable.streamerId, streamer.id), isNull(sessionsTable.endedAt)))
+      .orderBy(desc(sessionsTable.startedAt))
+      .limit(1)
+      .then(r => r[0] ?? null);
+
+    if (activeSession) {
+      getIO()?.to(`session:${activeSession.id}`).emit("stormpass:hide_qr");
+    }
+    return res.json({ ok: true });
+  } catch (err: unknown) {
+    console.error("[StormPass:qr/hide] error:", (err as Error)?.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── POST /stormpass/log ───────────────────────────────────────────────────────
+// Public: lightweight tracking for discovery funnel
+router.post("/stormpass/log", async (req, res) => {
+  const ALLOWED = ["page_opened", "qr_shown", "search_attempted", "pass_found", "pass_not_found"];
+  const eventType = ((req.body?.eventType) as string) ?? "";
+  if (!ALLOWED.includes(eventType)) return res.json({ ok: true });
+
+  await db.execute(sql`
+    INSERT INTO storm_pass_events (event_type, viewer_id, metadata, created_at)
+    VALUES (
+      ${eventType},
+      ${(req.body?.viewerName as string) ?? null},
+      ${JSON.stringify(req.body)}::jsonb,
+      NOW()
+    )
+  `).catch(() => {});
+
+  return res.json({ ok: true });
+});
+
 export default router;
+
