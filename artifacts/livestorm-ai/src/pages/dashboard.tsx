@@ -646,24 +646,6 @@ export function Dashboard() {
                 )}
               </div>
 
-              {/* Greeting */}
-              <div className="mb-5">
-                <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow-lg">
-                  {isActive ? (
-                    <>AI Storm активна<br /><span className="text-violet-300">@{profile.tiktokUsername}</span></>
-                  ) : (
-                    <>Привіт, {profile.tiktokUsername ? profile.tiktokUsername.split("_")[0] : "Стрімер"}! 👋<br />
-                      <span className="text-violet-300">Storm готовий до стріму</span>
-                    </>
-                  )}
-                </h1>
-                <p className="text-sm text-white/55 mt-1.5">
-                  {isActive
-                    ? `${eventCount} подій захоплено · AI Storm онлайн`
-                    : `@${profile.tiktokUsername} · Погнали!`}
-                </p>
-              </div>
-
               {/* CTA buttons */}
               <div className="flex items-center gap-3 flex-wrap">
                 {isActive ? (

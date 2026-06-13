@@ -112,8 +112,6 @@ export function ConceptDash() {
 
           {/* Left CTA */}
           <div className="cd-hero-left">
-            <h1 className="cd-greeting">Добрий вечір,<br />Jan! 👋</h1>
-            <p className="cd-hero-sub">Storm готовий до стріму. Погнали!</p>
             <button className="cd-btn-start">⚡ Почати стрім</button>
             <button className="cd-btn-test">Тест стріму</button>
           </div>
