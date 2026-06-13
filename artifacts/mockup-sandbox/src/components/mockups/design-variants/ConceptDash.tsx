@@ -116,59 +116,6 @@ export function ConceptDash() {
             <button className="cd-btn-test">Тест стріму</button>
           </div>
 
-          {/* Center — art shows through */}
-          <div className="cd-hero-center" />
-
-          {/* Right panel */}
-          <div className="cd-hero-right">
-            <div className="cd-status-card">
-              <div className="cd-live-indicator">
-                <div className="cd-live-dot" />
-                <span>LIVE</span>
-                <span className="cd-live-time">02:47:32</span>
-              </div>
-              <div className="cd-status-label">Стрім тривае</div>
-              <div className="cd-waveform">
-                {Array.from({ length: 18 }).map((_, i) => (
-                  <div key={i} className="cd-wave-bar"
-                    style={{
-                      height: `${6 + Math.abs(Math.sin(i * 0.7)) * 14 + (i % 3) * 3}px`,
-                      animationDelay: `${i * 0.07}s`,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="cd-mood-card">
-              <div className="cd-card-title">AI Mood</div>
-              <div className="cd-mood-row">
-                <span className="cd-mood-emoji">😊</span>
-                <div className="cd-mood-info">
-                  <div className="cd-mood-state">Happy</div>
-                  <div className="cd-mood-bar-wrap">
-                    <div className="cd-mood-bar" style={{ width: "72%" }} />
-                  </div>
-                </div>
-              </div>
-              <div className="cd-mood-row" style={{ marginTop: 8 }}>
-                <span className="cd-mood-emoji">⚡</span>
-                <div className="cd-mood-info">
-                  <div className="cd-mood-state">Energy</div>
-                  <div className="cd-mood-bar-wrap">
-                    <div className="cd-mood-bar energy" style={{ width: "88%" }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="cd-event-card">
-              <div className="cd-card-title">Активна подія</div>
-              <div className="cd-event-name">GALAXY B…</div>
-              <div className="cd-event-time">⏱ 02:15:16</div>
-              <div className="cd-event-hint">Всі подарунки події</div>
-            </div>
-          </div>
         </div>
 
       </main>
