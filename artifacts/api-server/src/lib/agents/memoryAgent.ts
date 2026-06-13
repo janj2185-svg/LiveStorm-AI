@@ -100,12 +100,21 @@ export async function getViewerContext(
     const memoryStrings = memories.map(m => m.value);
 
     let contextSummary = "";
+    // When the main memory agent returns a Viewer Card (starts with "=== VIEWER:"),
+    // this lib agent's summary is skipped in the orchestrator to avoid duplication.
+    // We still build it here as a fallback for non-orchestrator callers.
     if (profile) {
       const parts: string[] = [];
-      if (profile.totalGifts > 0) parts.push(`sent ${profile.totalGifts} coins total`);
-      if (profile.totalComments > 5) parts.push(`regular commenter (${profile.totalComments} comments)`);
+      if (profile.totalGifts > 0) parts.push(`${profile.totalGifts} gifts`);
+      if (profile.totalComments > 5) parts.push(`${profile.totalComments} comments`);
       if (profile.vipLevel !== "none") parts.push(`${profile.vipLevel} VIP`);
-      if (profile.totalFollows > 0) parts.push("has followed");
+      if ((profile as any).personalityTags) {
+        const tags = (profile as any).personalityTags as string;
+        if (tags) parts.push(`tags: ${tags}`);
+      }
+      if ((profile as any).mood && (profile as any).mood !== "neutral") {
+        parts.push(`mood: ${(profile as any).mood}`);
+      }
       if (profile.notes) parts.push(`note: ${profile.notes}`);
       const timeSinceFirst = Date.now() - new Date(profile.firstSeen).getTime();
       const isNew = timeSinceFirst < 5 * 60 * 1000;

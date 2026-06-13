@@ -277,7 +277,9 @@ export async function runHostAgent(opts: {
   const systemPrompt = buildPersonalityPrompt(personality, personaName, emotionState, intensityMode as any);
 
   const emotionSection = emotionState ? getEmotionPromptContext(emotionState) : "";
-  const memorySection  = memoryContext ? `\nMemory context:\n${memoryContext}` : "";
+  // memoryContext now contains either a structured Viewer Card (=== VIEWER: ===)
+  // or flat memory lines. Inject as-is — the card carries its own RECALL instruction.
+  const memorySection = memoryContext ? `\n${memoryContext}` : "";
 
   // ── Gender-aware self-reference instruction ──────────────────────────────────
   let genderSection = "";
@@ -381,11 +383,11 @@ Always reply in ${streamerLangName}. This is the stream's primary language.
     ? `NATURAL OPENER OPTION: You MAY start with a natural filler like "${speechFillers[Math.floor(Math.random() * speechFillers.length)]}" if it fits the moment — but only if it genuinely sounds right in the reply language. Don't force it.`
     : "";
 
-  // ── Viewer recognition signal — explicit cue when we have history with this person ──
-  // The memory context already contains the data; this signal tells Storm to USE it
-  // in a natural, human way (not a formal acknowledgement).
-  const hasViewerHistory = event.type === "comment" && memoryContext.includes(`[Viewer:${viewerName}]`);
-  const recognitionSignal = hasViewerHistory
+  // Viewer Card already contains the RECALL instruction — no separate signal needed.
+  // Legacy flat-memory recognition signal kept for non-card contexts.
+  const hasViewerCard = memoryContext.includes("=== VIEWER:");
+  const hasLegacyHistory = !hasViewerCard && event.type === "comment" && memoryContext.includes(`[Viewer:${viewerName}]`);
+  const recognitionSignal = hasLegacyHistory
     ? `[Viewer Recognition Signal] You have real history with ${viewerName} — it's in your memory above. Reference it naturally. Don't be formal: say "welcome back", call out how long they've been around, mention a past gift, or just show you KNOW them. Real streamers remember their regulars.`
     : "";
 

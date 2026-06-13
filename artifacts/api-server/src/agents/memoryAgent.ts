@@ -1,11 +1,22 @@
 import { db, aiMemoriesTable, agentViewerProfilesTable as viewerProfilesTable } from "@workspace/db";
 import { eq, and, desc, sql, lt, lte } from "drizzle-orm";
+import {
+  detectTextTags,
+  detectStatsTags,
+  mergeTagsString,
+  isToxicComment,
+  tagsToMood,
+  parseTags,
+} from "./viewerPersonalityTagger";
+import { hasPersonalFactSignal, extractViewerFacts } from "./viewerFactExtractor";
 
-const memoryCache = new Map<number, { memories: string[]; ts: number }>();
+// ── Caches ────────────────────────────────────────────────────────────────────
+// Only generic (global/stream/joke/preference) memories are cached per streamerId.
+// Viewer-specific cards are always fetched fresh (fast indexed queries).
+const genericMemoryCache = new Map<number, { memories: string[]; ts: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
 // In-memory: track which viewers have been seen in each session (for return-visitor detection)
-// Key: `${sessionId}:${viewerName}` → whether they appeared earlier in THIS session
 const sessionViewersSeen = new Map<number, Set<string>>();
 
 export function trackViewerInSession(sessionId: number, viewerName: string): "first_time" | "returning" {
@@ -20,7 +31,102 @@ export function clearSessionViewers(sessionId: number): void {
   sessionViewersSeen.delete(sessionId);
 }
 
-// Derive a human-readable recognition tag from the viewer's profile history
+// ── Viewer Card builder ───────────────────────────────────────────────────────
+
+function formatTimeAgo(ms: number): string {
+  const h = ms / (1000 * 60 * 60);
+  if (h < 1) return "just now";
+  if (h < 24) return `${Math.round(h)}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+}
+
+type ViewerCardProfile = {
+  firstSeen: Date;
+  lastSeen: Date;
+  totalGifts: number;
+  totalComments: number;
+  personalityTags: string;
+  mood: string;
+  typicalHour: number | null;
+  totalCoinsSpent: number;
+};
+
+function buildViewerCard(
+  viewerName: string,
+  profile: ViewerCardProfile,
+  viewerMemories: Array<{ key: string; value: string }>,
+): string {
+  const now = Date.now();
+  const daysSinceFirst = Math.max(0, Math.floor((now - profile.firstSeen.getTime()) / (1000 * 60 * 60 * 24)));
+  const lastSeenText = formatTimeAgo(now - profile.lastSeen.getTime());
+
+  const isLegend = profile.totalGifts >= 10 || profile.totalComments >= 50;
+  const isLoyal =
+    !isLegend &&
+    (profile.totalComments >= 30 || (profile.totalGifts >= 2 && profile.totalComments >= 10));
+  const isRegular =
+    !isLoyal && !isLegend && (profile.totalComments >= 15 || profile.totalGifts >= 2);
+  const relationshipLabel = isLegend ? "legend" : isLoyal ? "loyal" : isRegular ? "regular" : "returning";
+
+  const tags = parseTags(profile.personalityTags);
+  const tagStr = tags.length > 0 ? " · " + tags.join(" · ") : "";
+  const headerLine = `${daysSinceFirst}d · ${profile.totalGifts} gifts · ${profile.totalComments} comments · ${relationshipLabel}${tagStr}`;
+
+  const moodParts: string[] = [];
+  if (profile.mood && profile.mood !== "neutral") moodParts.push(`Mood: ${profile.mood}`);
+  if (profile.typicalHour != null) moodParts.push(`Visits: ~${profile.typicalHour}:00`);
+  const moodLine = moodParts.join(" · ");
+
+  const factLines = viewerMemories.slice(0, 4).map((m) => m.value);
+  const knownLine = factLines.length > 0 ? `Known: ${factLines.join("; ")}` : null;
+
+  return [
+    `=== VIEWER: ${viewerName} ===`,
+    headerLine,
+    moodLine || null,
+    knownLine,
+    `Last seen: ${lastSeenText}`,
+    `RECALL: ${viewerName} is someone you know — weave ONE relevant detail naturally into your reply.`,
+    `===`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function buildViewerCardForContext(
+  streamerId: number,
+  viewerName: string,
+): Promise<string | null> {
+  try {
+    const profile = await db.query.agentViewerProfilesTable.findFirst({
+      where: and(
+        eq(viewerProfilesTable.streamerId, streamerId),
+        eq(viewerProfilesTable.viewerName, viewerName),
+      ),
+    });
+    if (!profile) return null;
+
+    const viewerMems = await db.query.aiMemoriesTable.findMany({
+      where: and(
+        eq(aiMemoriesTable.streamerId, streamerId),
+        eq(aiMemoriesTable.viewerName, viewerName),
+        eq(aiMemoriesTable.memoryType, "viewer"),
+      ),
+      orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
+      limit: 4,
+    });
+
+    return buildViewerCard(
+      viewerName,
+      profile,
+      viewerMems.map((m) => ({ key: m.key, value: m.value })),
+    );
+  } catch {
+    return null;
+  }
+}
+
+// ── Derive a recognition tag (legacy — kept for backward compat) ─────────────
 export function getViewerRecognitionTag(profile: {
   firstSeen: Date;
   lastSeen: Date;
@@ -29,23 +135,24 @@ export function getViewerRecognitionTag(profile: {
   vipLevel: string;
 }): string | null {
   const now = Date.now();
-  const msSinceFirst = now - profile.firstSeen.getTime();
-  const daysSinceFirst = msSinceFirst / (1000 * 60 * 60 * 24);
+  const daysSinceFirst = (now - profile.firstSeen.getTime()) / (1000 * 60 * 60 * 24);
   const hoursSinceLast = (now - profile.lastSeen.getTime()) / (1000 * 60 * 60);
-  const isReturning = hoursSinceLast < 24 && daysSinceFirst > 0.01; // seen before, within 24h
+  const isReturning = hoursSinceLast < 24 && daysSinceFirst > 0.01;
   const isRegular = profile.totalComments >= 15 || profile.totalGifts >= 2;
-  const isLegend  = profile.totalGifts >= 10 || profile.totalComments >= 50;
-
-  if (isLegend)    return `legendary_regular: ${Math.round(daysSinceFirst)}d member, ${profile.totalGifts} gifts, ${profile.totalComments} comments — treat like a legend of the stream`;
-  if (isRegular && isReturning) return `loyal_viewer: back again after ${Math.round(hoursSinceLast)}h, ${profile.totalComments} total comments — they keep showing up`;
-  if (isRegular)   return `regular_viewer: ${profile.totalComments} comments over ${Math.round(daysSinceFirst)}d — familiar face`;
-  if (isReturning) return `returning_viewer: was here ${Math.round(hoursSinceLast)}h ago — came back`;
+  const isLegend = profile.totalGifts >= 10 || profile.totalComments >= 50;
+  if (isLegend)
+    return `legendary_regular: ${Math.round(daysSinceFirst)}d member, ${profile.totalGifts} gifts, ${profile.totalComments} comments`;
+  if (isRegular && isReturning)
+    return `loyal_viewer: back after ${Math.round(hoursSinceLast)}h, ${profile.totalComments} total comments`;
+  if (isRegular) return `regular_viewer: ${profile.totalComments} comments over ${Math.round(daysSinceFirst)}d`;
+  if (isReturning) return `returning_viewer: was here ${Math.round(hoursSinceLast)}h ago`;
   return null;
 }
 
+// ── Memory pruning ───────────────────────────────────────────────────────────
 export async function pruneOldMemories(streamerId: number): Promise<void> {
   try {
-    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // 14 days
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
     const result = await db
       .delete(aiMemoriesTable)
       .where(
@@ -57,14 +164,15 @@ export async function pruneOldMemories(streamerId: number): Promise<void> {
       );
     const count = (result as unknown as { rowCount?: number })?.rowCount ?? 0;
     if (count > 0) {
-      console.log(`[MemoryAgent] 🧹 pruned ${count} stale low-importance memories for streamer=${streamerId}`);
-      memoryCache.delete(streamerId);
+      console.log(`[MemoryAgent] 🧹 pruned ${count} stale memories | streamer=${streamerId}`);
+      genericMemoryCache.delete(streamerId);
     }
   } catch (err) {
     console.error("[MemoryAgent] prune error:", (err as Error)?.message);
   }
 }
 
+// ── Store a single memory ─────────────────────────────────────────────────────
 export async function storeMemory(opts: {
   streamerId: number;
   memoryType: "viewer" | "stream" | "global" | "joke" | "preference";
@@ -82,7 +190,6 @@ export async function storeMemory(opts: {
         ...(opts.viewerName ? [eq(aiMemoriesTable.viewerName, opts.viewerName)] : []),
       ),
     });
-
     if (existing) {
       await db
         .update(aiMemoriesTable)
@@ -99,106 +206,77 @@ export async function storeMemory(opts: {
         importance: opts.importance ?? 3,
       });
     }
-    memoryCache.delete(opts.streamerId);
+    genericMemoryCache.delete(opts.streamerId);
   } catch (err: unknown) {
     console.error("[MemoryAgent] storeMemory error:", (err as Error)?.message);
   }
 }
 
+// ── Get memory context (Viewer Card + generic memories) ──────────────────────
 export async function getMemoryContext(streamerId: number, viewerName?: string): Promise<string> {
-  try {
-    const cached = memoryCache.get(streamerId);
-    if (cached && Date.now() - cached.ts < CACHE_TTL) {
-      return cached.memories.slice(0, 8).join("\n");
-    }
+  const sections: string[] = [];
 
-    const global = await db.query.aiMemoriesTable.findMany({
-      where: and(
-        eq(aiMemoriesTable.streamerId, streamerId),
-        eq(aiMemoriesTable.memoryType, "global"),
-      ),
-      orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
-      limit: 5,
-    });
-
-    const streamMem = await db.query.aiMemoriesTable.findMany({
-      where: and(
-        eq(aiMemoriesTable.streamerId, streamerId),
-        eq(aiMemoriesTable.memoryType, "stream"),
-      ),
-      orderBy: [desc(aiMemoriesTable.lastAccessed)],
-      limit: 3,
-    });
-
-    // Also pull joke and preference memories for richer character context
-    const jokeMem = await db.query.aiMemoriesTable.findMany({
-      where: and(
-        eq(aiMemoriesTable.streamerId, streamerId),
-        eq(aiMemoriesTable.memoryType, "joke"),
-      ),
-      orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
-      limit: 3,
-    });
-
-    const prefMem = await db.query.aiMemoriesTable.findMany({
-      where: and(
-        eq(aiMemoriesTable.streamerId, streamerId),
-        eq(aiMemoriesTable.memoryType, "preference"),
-      ),
-      orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
-      limit: 3,
-    });
-
-    const lines: string[] = [];
-    for (const m of global)   lines.push(`[Global] ${m.key}: ${m.value}`);
-    for (const m of streamMem) lines.push(`[Stream] ${m.key}: ${m.value}`);
-    for (const m of jokeMem)  lines.push(`[Joke] ${m.key}: ${m.value}`);
-    for (const m of prefMem)  lines.push(`[Preference] ${m.key}: ${m.value}`);
-
-    if (viewerName) {
-      // VIP status + return-visitor recognition from viewer profile
-      try {
-        const profile = await db.query.agentViewerProfilesTable.findFirst({
-          where: and(
-            eq(viewerProfilesTable.streamerId, streamerId),
-            eq(viewerProfilesTable.viewerName, viewerName),
-          ),
-        });
-        if (profile) {
-          if (profile.vipLevel !== "none") {
-            lines.push(`[Viewer:${viewerName}] vip_status: ${viewerName} is a ${profile.vipLevel} viewer (${profile.totalGifts} gifts, ${profile.totalComments} comments). Treat them with extra respect.`);
-          }
-          const recognitionTag = getViewerRecognitionTag(profile);
-          if (recognitionTag) {
-            lines.push(`[Viewer:${viewerName}] recognition: ${recognitionTag}`);
-          }
-        }
-      } catch {}
-
-      const viewerMem = await db.query.aiMemoriesTable.findMany({
-        where: and(
-          eq(aiMemoriesTable.streamerId, streamerId),
-          eq(aiMemoriesTable.viewerName, viewerName),
-        ),
-        orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
-        limit: 3,
-      });
-      for (const m of viewerMem) lines.push(`[Viewer:${viewerName}] ${m.key}: ${m.value}`);
-    }
-
-    memoryCache.set(streamerId, { memories: lines, ts: Date.now() });
-    return lines.join("\n");
-  } catch {
-    return "";
+  // 1. Viewer Card — always fresh (per-viewer, no cache)
+  if (viewerName) {
+    const card = await buildViewerCardForContext(streamerId, viewerName);
+    if (card) sections.push(card);
   }
+
+  // 2. Generic memories — cached per streamerId
+  try {
+    const cached = genericMemoryCache.get(streamerId);
+    let genericLines: string[];
+    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+      genericLines = cached.memories;
+    } else {
+      const [global, streamMem, jokeMem, prefMem] = await Promise.all([
+        db.query.aiMemoriesTable.findMany({
+          where: and(eq(aiMemoriesTable.streamerId, streamerId), eq(aiMemoriesTable.memoryType, "global")),
+          orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
+          limit: 5,
+        }),
+        db.query.aiMemoriesTable.findMany({
+          where: and(eq(aiMemoriesTable.streamerId, streamerId), eq(aiMemoriesTable.memoryType, "stream")),
+          orderBy: [desc(aiMemoriesTable.lastAccessed)],
+          limit: 3,
+        }),
+        db.query.aiMemoriesTable.findMany({
+          where: and(eq(aiMemoriesTable.streamerId, streamerId), eq(aiMemoriesTable.memoryType, "joke")),
+          orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
+          limit: 3,
+        }),
+        db.query.aiMemoriesTable.findMany({
+          where: and(eq(aiMemoriesTable.streamerId, streamerId), eq(aiMemoriesTable.memoryType, "preference")),
+          orderBy: [desc(aiMemoriesTable.importance), desc(aiMemoriesTable.lastAccessed)],
+          limit: 3,
+        }),
+      ]);
+      genericLines = [
+        ...global.map((m) => `[Global] ${m.key}: ${m.value}`),
+        ...streamMem.map((m) => `[Stream] ${m.key}: ${m.value}`),
+        ...jokeMem.map((m) => `[Joke] ${m.key}: ${m.value}`),
+        ...prefMem.map((m) => `[Preference] ${m.key}: ${m.value}`),
+      ];
+      genericMemoryCache.set(streamerId, { memories: genericLines, ts: Date.now() });
+    }
+    if (genericLines.length > 0) sections.push(genericLines.join("\n"));
+  } catch {
+    // Non-fatal
+  }
+
+  return sections.join("\n");
 }
 
+// ── Upsert viewer profile with personality tagging + fact extraction ──────────
 export async function upsertViewerProfile(opts: {
   streamerId: number;
   tiktokViewerId: string;
   viewerName: string;
   eventType: "comment" | "gift" | "follow" | "like";
   coins?: number;
+  commentText?: string;
+  giftName?: string;
+  sessionId?: number;
 }): Promise<void> {
   try {
     const existing = await db.query.agentViewerProfilesTable.findFirst({
@@ -209,41 +287,15 @@ export async function upsertViewerProfile(opts: {
     });
 
     const now = new Date();
+    const currentHour = now.getHours();
 
-    if (existing) {
-      const updates: Record<string, unknown> = { lastSeen: now, viewerName: opts.viewerName };
-      if (opts.eventType === "comment") updates.totalComments = sql`${viewerProfilesTable.totalComments} + 1`;
-      if (opts.eventType === "gift") updates.totalGifts = sql`${viewerProfilesTable.totalGifts} + 1`;
-      if (opts.eventType === "follow") updates.totalFollows = sql`${viewerProfilesTable.totalFollows} + 1`;
-      if (opts.eventType === "like") updates.totalLikes = sql`${viewerProfilesTable.totalLikes} + 1`;
+    if (!existing) {
+      // New viewer
+      const textTags = opts.commentText ? detectTextTags(opts.commentText) : [];
+      const initialMood = opts.commentText
+        ? (tagsToMood(textTags, isToxicComment(opts.commentText)) ?? "neutral")
+        : "neutral";
 
-      const totalGifts = opts.eventType === "gift" ? (existing.totalGifts + 1) : existing.totalGifts;
-      const totalComments = opts.eventType === "comment" ? (existing.totalComments + 1) : existing.totalComments;
-      let vipLevel = existing.vipLevel;
-      if (totalGifts >= 10) vipLevel = "vip";
-      else if (totalGifts >= 3) vipLevel = "gifter";
-      else if (totalComments >= 20) vipLevel = "regular";
-      updates.vipLevel = vipLevel;
-
-      await db.update(viewerProfilesTable).set(updates as any).where(eq(viewerProfilesTable.id, existing.id));
-
-      if (totalGifts >= 3 && existing.vipLevel === "none") {
-        await storeMemory({
-          streamerId: opts.streamerId,
-          memoryType: "viewer",
-          key: `${opts.viewerName}_vip`,
-          value: `${opts.viewerName} is a gifter with ${totalGifts} gifts. Treat them as VIP.`,
-          viewerName: opts.viewerName,
-          tiktokViewerId: opts.tiktokViewerId,
-          importance: 4,
-        });
-      }
-
-      // Occasionally prune stale low-importance memories (1% chance per update)
-      if (Math.random() < 0.01) {
-        void pruneOldMemories(opts.streamerId);
-      }
-    } else {
       await db.insert(viewerProfilesTable).values({
         streamerId: opts.streamerId,
         tiktokViewerId: opts.tiktokViewerId,
@@ -252,18 +304,143 @@ export async function upsertViewerProfile(opts: {
         totalComments: opts.eventType === "comment" ? 1 : 0,
         totalFollows: opts.eventType === "follow" ? 1 : 0,
         totalLikes: opts.eventType === "like" ? 1 : 0,
+        totalCoinsSpent: opts.eventType === "gift" ? (opts.coins ?? 0) : 0,
         vipLevel: "none",
+        personalityTags: textTags.join(","),
+        mood: initialMood,
+        typicalHour: currentHour,
+        streakDays: 1,
+        lastGiftName: opts.giftName ?? null,
         firstSeen: now,
         lastSeen: now,
       });
+      return;
     }
+
+    // ── Build updates ─────────────────────────────────────────────────────────
+    const updates: Record<string, unknown> = { lastSeen: now, viewerName: opts.viewerName };
+
+    // Event counters
+    if (opts.eventType === "comment") updates.totalComments = sql`${viewerProfilesTable.totalComments} + 1`;
+    if (opts.eventType === "gift")   updates.totalGifts   = sql`${viewerProfilesTable.totalGifts} + 1`;
+    if (opts.eventType === "follow") updates.totalFollows = sql`${viewerProfilesTable.totalFollows} + 1`;
+    if (opts.eventType === "like")   updates.totalLikes   = sql`${viewerProfilesTable.totalLikes} + 1`;
+
+    // Coins spent
+    if (opts.eventType === "gift" && opts.coins) {
+      updates.totalCoinsSpent = sql`${viewerProfilesTable.totalCoinsSpent} + ${opts.coins}`;
+    }
+
+    // Last gift name
+    if (opts.eventType === "gift" && opts.giftName) {
+      updates.lastGiftName = opts.giftName;
+    }
+
+    // VIP level
+    const totalGifts = opts.eventType === "gift" ? existing.totalGifts + 1 : existing.totalGifts;
+    const totalComments = opts.eventType === "comment" ? existing.totalComments + 1 : existing.totalComments;
+    const totalCoinsSpent = existing.totalCoinsSpent + (opts.eventType === "gift" ? (opts.coins ?? 0) : 0);
+    let vipLevel = existing.vipLevel;
+    if (totalGifts >= 10) vipLevel = "vip";
+    else if (totalGifts >= 3) vipLevel = "gifter";
+    else if (totalComments >= 20) vipLevel = "regular";
+    updates.vipLevel = vipLevel;
+
+    // ── Personality tagging ───────────────────────────────────────────────────
+    let newTagsStr = existing.personalityTags ?? "";
+    if (opts.commentText) {
+      const textTags = detectTextTags(opts.commentText);
+      if (textTags.length > 0) {
+        newTagsStr = mergeTagsString(newTagsStr, textTags);
+      }
+      // Mood (ephemeral, updated each comment — does NOT persist negative long-term)
+      const toxic = isToxicComment(opts.commentText);
+      const moodUpdate = tagsToMood(textTags, toxic);
+      if (moodUpdate) updates.mood = moodUpdate;
+    }
+    // Stats-based tags
+    const statsTags = detectStatsTags({ totalComments, totalGifts, totalCoinsSpent });
+    if (statsTags.length > 0) {
+      newTagsStr = mergeTagsString(newTagsStr, statsTags);
+    }
+    updates.personalityTags = newTagsStr;
+
+    // ── Typical hour (rolling weighted average) ───────────────────────────────
+    const existingHour = existing.typicalHour;
+    updates.typicalHour =
+      existingHour != null
+        ? Math.round(existingHour * 0.7 + currentHour * 0.3)
+        : currentHour;
+
+    // ── Streak days ───────────────────────────────────────────────────────────
+    const hoursSinceLast = (now.getTime() - existing.lastSeen.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceLast >= 20 && hoursSinceLast <= 48) {
+      updates.streakDays = (existing.streakDays ?? 0) + 1;
+    } else if (hoursSinceLast > 48) {
+      updates.streakDays = 1;
+    }
+
+    await db.update(viewerProfilesTable).set(updates as any).where(eq(viewerProfilesTable.id, existing.id));
+
+    // ── VIP promotion memory (first time hitting gifter threshold) ────────────
+    if (totalGifts >= 3 && existing.vipLevel === "none") {
+      void storeMemory({
+        streamerId: opts.streamerId,
+        memoryType: "viewer",
+        key: `${opts.viewerName}_vip`,
+        value: `${opts.viewerName} is a gifter with ${totalGifts} gifts. Treat them as VIP.`,
+        viewerName: opts.viewerName,
+        tiktokViewerId: opts.tiktokViewerId,
+        importance: 4,
+      });
+    }
+
+    // ── GPT fact extraction (fire-and-forget, only on comments with signal) ───
+    if (opts.commentText && opts.eventType === "comment" && hasPersonalFactSignal(opts.commentText)) {
+      const existingViewerMems = await db.query.aiMemoriesTable.findMany({
+        where: and(
+          eq(aiMemoriesTable.streamerId, opts.streamerId),
+          eq(aiMemoriesTable.viewerName, opts.viewerName),
+          eq(aiMemoriesTable.memoryType, "viewer"),
+        ),
+        orderBy: [desc(aiMemoriesTable.lastAccessed)],
+        limit: 10,
+      });
+      const existingKeys = existingViewerMems.map((m) => m.key);
+
+      void (async () => {
+        const facts = await extractViewerFacts({
+          text: opts.commentText!,
+          viewerName: opts.viewerName,
+          streamerId: opts.streamerId,
+          existingFactKeys: existingKeys,
+        });
+        if (facts && facts.length > 0) {
+          for (const fact of facts) {
+            await storeMemory({
+              streamerId: opts.streamerId,
+              memoryType: "viewer",
+              key: `${opts.viewerName}_${fact.key}`,
+              value: fact.value,
+              viewerName: opts.viewerName,
+              tiktokViewerId: opts.tiktokViewerId,
+              importance: 3,
+            });
+          }
+        }
+      })();
+    }
+
+    // Occasional prune
+    if (Math.random() < 0.01) void pruneOldMemories(opts.streamerId);
   } catch (err: unknown) {
     console.error("[MemoryAgent] upsertViewerProfile error:", (err as Error)?.message);
   }
 }
 
+// ── Get raw viewer profile ────────────────────────────────────────────────────
 export async function getViewerProfile(streamerId: number, tiktokViewerId: string) {
-  return db.query.viewerProfilesTable.findFirst({
+  return db.query.agentViewerProfilesTable.findFirst({
     where: and(
       eq(viewerProfilesTable.streamerId, streamerId),
       eq(viewerProfilesTable.tiktokViewerId, tiktokViewerId),
@@ -271,6 +448,7 @@ export async function getViewerProfile(streamerId: number, tiktokViewerId: strin
   });
 }
 
+// ── List memories for a streamer ──────────────────────────────────────────────
 export async function listMemories(streamerId: number, memoryType?: string, limit = 50) {
   const where = memoryType
     ? and(eq(aiMemoriesTable.streamerId, streamerId), eq(aiMemoriesTable.memoryType, memoryType))
@@ -283,24 +461,17 @@ export async function listMemories(streamerId: number, memoryType?: string, limi
 }
 
 // ── Scheduled background pruning ─────────────────────────────────────────────
-// Called at startup (after 30s delay) and every 24h by initOrchestrator.
-// Queries all distinct streamers that have memories and prunes stale entries.
 export async function schedulePruning(): Promise<void> {
   const startTs = Date.now();
   try {
-    const rows = await db
-      .selectDistinct({ id: aiMemoriesTable.streamerId })
-      .from(aiMemoriesTable);
-
+    const rows = await db.selectDistinct({ id: aiMemoriesTable.streamerId }).from(aiMemoriesTable);
     let pruned = 0;
     for (const { id } of rows) {
       await pruneOldMemories(id);
       pruned++;
     }
-
-    const elapsed = Date.now() - startTs;
     console.log(
-      `[MemoryAgent] 🗓️ scheduled pruning complete | ${pruned} streamer(s) processed | ${elapsed}ms`,
+      `[MemoryAgent] 🗓️ scheduled pruning | ${pruned} streamer(s) | ${Date.now() - startTs}ms`,
     );
   } catch (err) {
     console.error("[MemoryAgent] schedulePruning error:", (err as Error)?.message);

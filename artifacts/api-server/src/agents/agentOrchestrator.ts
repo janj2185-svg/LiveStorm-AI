@@ -799,6 +799,10 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
         tiktokViewerId: viewerId,
         viewerName: event.username ?? "Unknown",
         eventType: eventTypeForProfile,
+        commentText: event.type === "comment" ? ((event.data.text as string) ?? undefined) : undefined,
+        coins: event.type === "gift" ? ((event.data.coins as number) ?? undefined) : undefined,
+        giftName: event.type === "gift" ? ((event.data.giftName as string) ?? undefined) : undefined,
+        sessionId,
       });
     }
   }
@@ -843,8 +847,12 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
       : Promise.resolve({ profile: null, memories: [], contextSummary: "" }),
   ]);
 
-  // Merge: viewer profile summary (from lib agent) prepended to free-form memories
-  const memoryCtx = [viewerCtx.contextSummary, rawMemoryCtx].filter(Boolean).join("\n");
+  // When rawMemoryCtx contains a Viewer Card (=== VIEWER: ===), it already has
+  // all relevant context — skip the lib agent's flat summary to avoid duplication.
+  const hasViewerCard = rawMemoryCtx.startsWith("=== VIEWER:");
+  const memoryCtx = hasViewerCard
+    ? rawMemoryCtx
+    : [viewerCtx.contextSummary, rawMemoryCtx].filter(Boolean).join("\n");
   if (memoryCtx) {
     console.log(`[Agent:Memory] 🧠 context loaded | ${memoryCtx.length} chars (profile=${viewerCtx.contextSummary.length} + mem=${rawMemoryCtx.length}) | viewer=${event.username}`);
   } else {

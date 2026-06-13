@@ -61,6 +61,12 @@ export const agentViewerProfilesTable = pgTable("agent_viewer_profiles", {
   lastSeen: timestamp("last_seen").notNull().defaultNow(),
   firstSeen: timestamp("first_seen").notNull().defaultNow(),
   notes: text("notes"),
+  mood: text("mood").notNull().default("neutral"),
+  personalityTags: text("personality_tags").notNull().default(""),
+  typicalHour: integer("typical_hour"),
+  streakDays: integer("streak_days").notNull().default(0),
+  totalCoinsSpent: integer("total_coins_spent").notNull().default(0),
+  lastGiftName: text("last_gift_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
