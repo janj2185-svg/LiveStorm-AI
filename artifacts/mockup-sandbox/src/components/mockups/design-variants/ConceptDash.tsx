@@ -110,12 +110,6 @@ export function ConceptDash() {
         {/* HERO — transparent so background art shows */}
         <div className="cd-hero">
 
-          {/* Left CTA */}
-          <div className="cd-hero-left">
-            <button className="cd-btn-start">⚡ Почати стрім</button>
-            <button className="cd-btn-test">Тест стріму</button>
-          </div>
-
         </div>
 
       </main>
