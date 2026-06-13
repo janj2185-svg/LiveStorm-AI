@@ -50,6 +50,8 @@ import {
   getMoodPromptContext,
   getMoodBehaviorModifiers,
 } from "./moodEngine";
+import { buildRecognitionInjection, markRecognitionFired, clearRecognitionState } from "./recognitionEngine";
+import type { RecognitionState } from "./recognitionEngine";
 
 const MAX_QUEUE_SIZE         = 40;   // hard cap — evict oldest P6 items first
 const QUEUE_PRUNE_THRESHOLD  = 25;   // start pruning when queue exceeds this depth
@@ -126,6 +128,10 @@ interface OrchestratorState {
   // Nickname system — per-session tracking (cleared on session end):
   nicknameAskedInSession: Map<number, Set<string>>;   // sessionId → Set<viewerName> already asked this session
   nicknamePendingResponse: Map<number, Set<string>>;  // sessionId → Set<viewerName> waiting for name answer
+  // Recognition Engine:
+  recognitionSeenInSession:    Map<number, Set<string>>;  // sessionId → Set<viewerName> — max once per session
+  lastGlobalRecognitionAt:     Map<number, number>;        // sessionId → timestamp — global 3-5min cooldown
+  recognitionWindowTimestamps: Map<number, number[]>;      // sessionId → timestamps of last N recognitions
 }
 
 const state: OrchestratorState = {
@@ -145,6 +151,9 @@ const state: OrchestratorState = {
   recentEventTimes: new Map(),
   nicknameAskedInSession: new Map(),
   nicknamePendingResponse: new Map(),
+  recognitionSeenInSession:    new Map(),
+  lastGlobalRecognitionAt:     new Map(),
+  recognitionWindowTimestamps: new Map(),
 };
 
 // ── Anti-repetition helpers ────────────────────────────────────────────────────
@@ -933,6 +942,37 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     console.log(`[Agent:Memory] 🧠 no prior context for viewer=${event.username}`);
   }
 
+  // ── Recognition Engine ────────────────────────────────────────────────────────
+  let recognitionMeta: ReturnType<typeof buildRecognitionInjection> | null = null;
+  let recognitionPrompt = "";
+  if (event.type === "comment" && event.username && state.enabledAgents.has("memory")) {
+    const recState: RecognitionState = {
+      recognitionSeenInSession:    state.recognitionSeenInSession,
+      lastGlobalRecognitionAt:     state.lastGlobalRecognitionAt,
+      recognitionWindowTimestamps: state.recognitionWindowTimestamps,
+    };
+    const recResult = buildRecognitionInjection({
+      sessionId,
+      viewerName:    event.username,
+      profile:       viewerCtx.profile as any,
+      memories:      (viewerCtx.memories ?? []) as Array<{ key: string; value: string }>,
+      hasViewerCard,
+      state:         recState,
+    });
+    if (recResult.triggered) {
+      recognitionMeta   = recResult;
+      recognitionPrompt = recResult.prompt;
+      markRecognitionFired(sessionId, event.username, recState);
+      console.log(
+        `[Recognition] 🔔 TRIGGERED | viewer=${event.username} | tier=${recResult.tier}` +
+        ` | loyaltyTier=${recResult.loyaltyTier} | lastSeen=${recResult.lastSeenLabel}` +
+        ` | memories=${recResult.memoriesUsed} | reason=${recResult.reason}`,
+      );
+    } else {
+      console.log(`[Recognition] ⏭️ SKIPPED | viewer=${event.username} | tier=${recResult.tier} | reason=${recResult.skipReason}`);
+    }
+  }
+
   const history = state.conversationHistory.get(sessionId) ?? [];
   const conversationHistory = history.length > 0
     ? history.slice(-5).map((h) => `@${h.viewer}: "${h.comment}" → AI: "${h.reply}"`).join("\n")
@@ -1098,7 +1138,7 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     ? `[Engagement Signal] Chat is slow right now. Try a new angle — ask a question, provoke a debate, or change your energy completely.`
     : "";
 
-  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint, streamerSpeechCtx, atmosphereCtx, engagementCtx, nicknameHint].filter(Boolean).join("\n");
+  const behaviorCtx = [moodCtx, fatigueCtx, aftermathCtx, behaviorHints, commentDepthHint, strategyHint, streamerSpeechCtx, atmosphereCtx, engagementCtx, nicknameHint, recognitionPrompt].filter(Boolean).join("\n");
 
   // ── Host Agent: generate main AI reply ──────────────────────────────────────
   // When multiple viewers sent the same message, give the AI crowd context in
@@ -1227,6 +1267,19 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     viewerName: event.username,
     personality: personality.modeKey,
   });
+
+  if (recognitionMeta) {
+    io.to(roomId).emit("viewer:recognition", {
+      viewerName:  event.username,
+      tier:        recognitionMeta.tier,
+      loyaltyTier: recognitionMeta.loyaltyTier,
+      title:       recognitionMeta.title,
+      triggeredAt: Date.now(),
+      reason:      recognitionMeta.reason,
+      aiLine:      spokenText.slice(0, 150),
+    });
+    console.log(`[Recognition] 💬 final AI line | viewer=${event.username} | "${spokenText.slice(0, 80)}"`);
+  }
 
   await logTask({
     sessionId,
@@ -1406,6 +1459,11 @@ export function clearSessionHistory(sessionId: number): void {
   state.recentOpeners.delete(sessionId);
   state.nicknameAskedInSession.delete(sessionId);
   state.nicknamePendingResponse.delete(sessionId);
+  clearRecognitionState(sessionId, {
+    recognitionSeenInSession:    state.recognitionSeenInSession,
+    lastGlobalRecognitionAt:     state.lastGlobalRecognitionAt,
+    recognitionWindowTimestamps: state.recognitionWindowTimestamps,
+  });
   clearEmotionalState(sessionId);
   clearBehaviorState(sessionId);
   clearMoodState(sessionId);

@@ -34,6 +34,7 @@ export type {
   AutomationFiredEvent,
   AiAnnouncementEvent,
   ModerationFlaggedEvent,
+  ViewerRecognitionEvent,
   TikTokStatusEvent,
   XpAwardedEvent,
   LevelUpEvent,

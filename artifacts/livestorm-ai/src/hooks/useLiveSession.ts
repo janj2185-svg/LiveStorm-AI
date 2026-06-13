@@ -42,6 +42,16 @@ export interface ModerationFlaggedEvent {
   timestamp: number;
 }
 
+export interface ViewerRecognitionEvent {
+  viewerName:  string;
+  tier:        string;
+  loyaltyTier: string;
+  title:       string;
+  triggeredAt: number;
+  reason:      string;
+  aiLine?:     string;
+}
+
 export interface TikTokStatusEvent {
   mode: ConnectionMode;
   error?: string;
@@ -482,6 +492,7 @@ export function useLiveSession(
   const [automationsFired, setAutomationsFired] = useState<AutomationFiredEvent[]>([]);
   const [aiAnnouncements, setAiAnnouncements] = useState<AiAnnouncementEvent[]>([]);
   const [flaggedComments, setFlaggedComments] = useState<ModerationFlaggedEvent[]>([]);
+  const [viewerRecognitionEvents, setViewerRecognitionEvents] = useState<ViewerRecognitionEvent[]>([]);
   const [recentXpAwards, setRecentXpAwards] = useState<XpAwardedEvent[]>([]);
   const [achievementUnlocks, setAchievementUnlocks] = useState<AchievementUnlockEvent[]>([]);
   const [luckyDrops, setLuckyDrops] = useState<LuckyDropEvent[]>([]);
@@ -878,6 +889,11 @@ export function useLiveSession(
         );
       });
 
+      socket.on("viewer:recognition", (payload: Omit<ViewerRecognitionEvent, never>) => {
+        setViewerRecognitionEvents((prev) => [payload, ...prev].slice(0, 20));
+        console.log(`[Recognition:UI] ⚡ ${payload.viewerName} | tier=${payload.tier} | ${payload.reason}`);
+      });
+
       socket.on("ai:announcement", (payload: Omit<AiAnnouncementEvent, "timestamp">) => {
         const ts = Date.now();
         setAiAnnouncements((prev) => [{ ...payload, timestamp: ts }, ...prev].slice(0, 30));
@@ -1051,5 +1067,6 @@ export function useLiveSession(
     unlockAudio: unlockAudioCallback,
     replayTts,
     coHostLatency,
+    viewerRecognitionEvents,
   };
 }

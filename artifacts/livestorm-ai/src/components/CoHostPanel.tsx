@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useStreamerMic } from "@/hooks/useStreamerMic";
 import { useWhisperMic }  from "@/hooks/useWhisperMic";
-import type { AiAnnouncementEvent } from "@/hooks/useLiveSession";
+import type { AiAnnouncementEvent, ViewerRecognitionEvent } from "@/hooks/useLiveSession";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 export interface CoHostPanelProps {
@@ -25,6 +25,7 @@ export interface CoHostPanelProps {
   sessionId: number | undefined;
   isSessionActive: boolean;
   aiAnnouncements: AiAnnouncementEvent[];
+  viewerRecognitionEvents?: ViewerRecognitionEvent[];
   ttsModeLive?: string;
   defaultLang?: string;
   activeVoiceName?: string | null;
@@ -81,6 +82,7 @@ export function CoHostPanel({
   sessionId,
   isSessionActive,
   aiAnnouncements,
+  viewerRecognitionEvents = [],
   ttsModeLive,
   defaultLang = "uk-UA",
   activeVoiceName,
@@ -366,6 +368,39 @@ export function CoHostPanel({
             )}
           </div>
         </div>
+
+        {/* ─── RECOGNITION FEED ─────────────────────────────────────────────── */}
+        {viewerRecognitionEvents.length > 0 && (
+          <div className="space-y-1.5">
+            <span className="text-[9px] font-semibold uppercase tracking-widest text-purple-400/60 flex items-center gap-1">
+              <Zap className="h-2.5 w-2.5" />Recognition moments
+            </span>
+            {viewerRecognitionEvents.slice(0, 3).map((ev, i) => (
+              <div
+                key={`${ev.viewerName}-${ev.triggeredAt}-${i}`}
+                className="flex items-start gap-2 rounded-lg bg-purple-500/8 border border-purple-500/18 px-2.5 py-2"
+              >
+                <span className="text-base leading-none mt-0.5">⚡</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-semibold text-purple-200">{ev.viewerName}</span>
+                    <span className="text-[9px] text-purple-400/70 uppercase tracking-wide border border-purple-500/20 rounded px-1">
+                      {ev.loyaltyTier}
+                    </span>
+                    {ev.title && ev.title !== "Storm Newcomer" && (
+                      <span className="text-[9px] text-purple-300/60">{ev.title}</span>
+                    )}
+                  </div>
+                  {ev.aiLine && (
+                    <p className="text-[10px] text-purple-100/70 leading-snug mt-0.5 line-clamp-1 italic">
+                      "{ev.aiLine}"
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ─── INLINE WARNINGS ──────────────────────────────────────────────── */}
 

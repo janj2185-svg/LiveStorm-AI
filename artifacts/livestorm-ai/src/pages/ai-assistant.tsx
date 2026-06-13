@@ -762,7 +762,7 @@ export function AiAssistant() {
   // ── Session + Live events ─────────────────────────────────────────────────
   const { events, stats, flaggedComments, connected, setTtsMode, setTtsVoice, setTtsVolume, setTtsSpeed,
     tiktokMode, tiktokError: socketError, tiktokUsername,
-    aiAnnouncements, luckyDrops, achievementUnlocks,
+    aiAnnouncements, viewerRecognitionEvents, luckyDrops, achievementUnlocks,
     activeSessionRes, isActive: isSessionActive, activeSessionId, sessionMode,
     sendStreamerSpeech, ttsModeLive, activeVoiceName,
     isAudioUnlocked, unlockAudio, openaiTtsOk,
@@ -1673,6 +1673,7 @@ export function AiAssistant() {
               sessionId={activeSessionId}
               isSessionActive={!!isSessionActive}
               aiAnnouncements={aiAnnouncements ?? []}
+              viewerRecognitionEvents={viewerRecognitionEvents ?? []}
               ttsModeLive={ttsModeLive ?? "off"}
               activeVoiceName={activeVoiceName ?? null}
               isAudioUnlocked={isAudioUnlocked ?? false}
