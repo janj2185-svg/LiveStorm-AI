@@ -68,15 +68,6 @@ export function ConceptDash() {
           ))}
         </nav>
 
-        <div className="cd-sidebar-user">
-          <div className="cd-user-avatar">J</div>
-          <div>
-            <div className="cd-user-name">Jan Streamer</div>
-            <div className="cd-user-level">
-              Level 24 <span className="cd-pro-badge">PRO</span>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* ── MAIN ── */}
