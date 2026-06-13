@@ -2,6 +2,8 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Zap, Shield, Trophy, Users, Play, Crown } from "lucide-react";
+import { StageBackground } from "@/components/StageBackground";
+import { LiveStormStage } from "@/components/LiveStormStage";
 
 export function Home() {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -32,7 +34,15 @@ export function Home() {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-32 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background -z-10" />
+        {/* Stage background layers */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <StageBackground variant="purple" showRing showScan showGrid showCorners />
+          <LiveStormStage />
+          {/* Fade content overlay so text stays readable */}
+          <div className="absolute inset-0" style={{
+            background: "radial-gradient(ellipse 80% 60% at 50% 40%, transparent 0%, rgba(6,4,20,0.50) 60%, rgba(6,4,20,0.85) 100%)",
+          }} />
+        </div>
         
         <div className="container mx-auto text-center">
           <motion.div

@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { StageBackground } from "@/components/StageBackground";
+import { LiveStormStage } from "@/components/LiveStormStage";
 
 const PLAN_META: Record<string, { label: string; color: string; icon: any }> = {
   free:       { label: "Free",       color: "border-slate-500/30 bg-slate-500/10 text-slate-300",  icon: null },
@@ -76,8 +78,18 @@ export function Profile() {
         </Button>
       </div>
 
-      {/* Identity card */}
-      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/[0.07] p-5">
+      {/* Identity card with LiveStorm stage hero header */}
+      <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
+        {/* Stage banner */}
+        <div className="relative overflow-hidden" style={{ height: 160 }}>
+          <StageBackground variant="purple" showRing={false} showScan showGrid showCorners />
+          <LiveStormStage />
+          {/* Gradient overlay so content below is readable */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(to bottom, transparent 60%, rgba(6,4,20,0.95) 100%)",
+          }} />
+        </div>
+        <div className="bg-white/[0.025] backdrop-blur-sm p-5 -mt-1">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <Avatar className="h-20 w-20 border-2 border-primary/30 ring-4 ring-primary/10">
             <AvatarImage src={profile?.avatarUrl ?? undefined} />
@@ -115,6 +127,7 @@ export function Profile() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
 

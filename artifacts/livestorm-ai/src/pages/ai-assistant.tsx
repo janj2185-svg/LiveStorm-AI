@@ -56,7 +56,7 @@ import { CoHostPanel } from "@/components/CoHostPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarStage } from "@/components/avatar/AvatarStage";
 import { StageBackground } from "@/components/StageBackground";
-import { LiveStormStage } from "@/components/LiveStormStage";
+import { BroadcastStage } from "@/components/BroadcastStage";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 
@@ -1614,8 +1614,8 @@ export function AiAssistant() {
                     className="absolute inset-0 w-full h-full"
                   />
                 ) : (
-                  /* Futuristic live stage — default state, no character */
-                  <LiveStormStage />
+                  /* Broadcast stage — real streaming studio feel */
+                  <BroadcastStage />
                 )}
 
                 {/* Top-left: status badges */}

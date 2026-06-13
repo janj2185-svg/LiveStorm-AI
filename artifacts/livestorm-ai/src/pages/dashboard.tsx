@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedCounter, PulsingDot, RankBadge, GradientText } from "@/components/ui/premium";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { StageBackground } from "@/components/StageBackground";
+import { LiveStormStage } from "@/components/LiveStormStage";
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -580,6 +581,8 @@ export function Dashboard() {
             showGrid={true}
             showCorners={true}
           />
+          {/* LiveStorm brand stage visual */}
+          <LiveStormStage />
 
           <div className="relative p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

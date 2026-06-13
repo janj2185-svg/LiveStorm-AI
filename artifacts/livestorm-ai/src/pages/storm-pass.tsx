@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { ProgressRing } from "@/components/ui/premium";
+import { StageBackground } from "@/components/StageBackground";
+import { LiveStormStage } from "@/components/LiveStormStage";
 
 const BASE_URL = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
@@ -222,8 +224,20 @@ function StormPassCard({ data }: { data: StormPassData }) {
       {/* Main card */}
       <div className={`w-full max-w-lg rounded-2xl border-2 ${tier.border} shadow-2xl ${tier.glow} bg-[#0d1120] overflow-hidden`}>
 
-        {/* Hero section */}
-        <div className={`bg-gradient-to-br ${tier.gradient} p-6 flex items-center gap-5`}>
+        {/* Hero section — LiveStorm Stage banner */}
+        <div className="relative overflow-hidden">
+          {/* Stage background layers */}
+          <div className="absolute inset-0">
+            <StageBackground variant="purple" showRing={false} showScan showGrid showCorners={false} />
+            <LiveStormStage />
+            <div className="absolute inset-0" style={{
+              background: `linear-gradient(135deg, ${tier.gradient.replace("from-", "rgba(0,0,0,0.55) 0%, ").replace(" to-transparent", "transparent 100%")})`,
+            }} />
+            <div className="absolute inset-0" style={{
+              background: "linear-gradient(to bottom, transparent 0%, rgba(13,17,32,0.88) 100%)",
+            }} />
+          </div>
+          <div className={`relative p-6 flex items-center gap-5`}>
           {/* Level ring */}
           <div className="relative flex-shrink-0">
             <ProgressRing value={isNaN(data.xpProgress) ? 0 : Math.max(0, Math.min(100, data.xpProgress))} size={88} strokeWidth={7} colorClass={tier.strokeClass}>
@@ -245,6 +259,7 @@ function StormPassCard({ data }: { data: StormPassData }) {
               <span className="text-slate-300 text-sm font-medium">{data.title}</span>
             </div>
             <div className="mt-1 text-slate-500 text-xs">{data.levelTitle}</div>
+          </div>
           </div>
         </div>
 
