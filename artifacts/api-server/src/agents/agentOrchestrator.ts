@@ -850,6 +850,10 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   // When rawMemoryCtx contains a Viewer Card (=== VIEWER: ===), it already has
   // all relevant context — skip the lib agent's flat summary to avoid duplication.
   const hasViewerCard = rawMemoryCtx.startsWith("=== VIEWER:");
+  console.log(`[Agent:Memory] 🃏 hasViewerCard=${hasViewerCard} | rawCtx=${rawMemoryCtx.length}c | libCtx=${viewerCtx.contextSummary.length}c | viewer=${event.username}`);
+  if (hasViewerCard) {
+    console.log(`[Agent:Memory] 🃏 card-preview: ${rawMemoryCtx.slice(0, 160).replace(/\n/g, " | ")}`);
+  }
   const memoryCtx = hasViewerCard
     ? rawMemoryCtx
     : [viewerCtx.contextSummary, rawMemoryCtx].filter(Boolean).join("\n");

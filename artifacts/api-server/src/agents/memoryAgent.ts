@@ -80,13 +80,20 @@ function buildViewerCard(
   const factLines = viewerMemories.slice(0, 4).map((m) => m.value);
   const knownLine = factLines.length > 0 ? `Known: ${factLines.join("; ")}` : null;
 
+  // Only inject RECALL when there is actually something meaningful to reference
+  const hasMeaningfulHistory =
+    profile.totalGifts >= 1 || profile.totalComments >= 5 || viewerMemories.length > 0;
+  const recallLine = hasMeaningfulHistory
+    ? `RECALL: ${viewerName} is someone you know — weave ONE relevant detail naturally into your reply.`
+    : null;
+
   return [
     `=== VIEWER: ${viewerName} ===`,
     headerLine,
     moodLine || null,
     knownLine,
     `Last seen: ${lastSeenText}`,
-    `RECALL: ${viewerName} is someone you know — weave ONE relevant detail naturally into your reply.`,
+    recallLine,
     `===`,
   ]
     .filter(Boolean)
@@ -104,7 +111,10 @@ async function buildViewerCardForContext(
         eq(viewerProfilesTable.viewerName, viewerName),
       ),
     });
-    if (!profile) return null;
+    if (!profile) {
+      console.log(`[ViewerCard] 🚫 no profile for viewer=${viewerName}`);
+      return null;
+    }
 
     const viewerMems = await db.query.aiMemoriesTable.findMany({
       where: and(
@@ -116,11 +126,17 @@ async function buildViewerCardForContext(
       limit: 4,
     });
 
-    return buildViewerCard(
+    const card = buildViewerCard(
       viewerName,
       profile,
       viewerMems.map((m) => ({ key: m.key, value: m.value })),
     );
+    const tags = parseTags(profile.personalityTags ?? "");
+    console.log(
+      `[ViewerCard] ✅ built | viewer=${viewerName} | tags=[${tags.join(",")}] | facts=${viewerMems.length} | mood=${profile.mood} | chars=${card.length}`,
+    );
+    console.log(`[ViewerCard:content]\n${card}`);
+    return card;
   } catch {
     return null;
   }
@@ -350,6 +366,7 @@ export async function upsertViewerProfile(opts: {
     let newTagsStr = existing.personalityTags ?? "";
     if (opts.commentText) {
       const textTags = detectTextTags(opts.commentText);
+      console.log(`[PersonalityTagger] viewer=${opts.viewerName} | textTags=[${textTags.join(",")}] | existing=[${newTagsStr}]`);
       if (textTags.length > 0) {
         newTagsStr = mergeTagsString(newTagsStr, textTags);
       }
@@ -396,7 +413,9 @@ export async function upsertViewerProfile(opts: {
     }
 
     // ── GPT fact extraction (fire-and-forget, only on comments with signal) ───
-    if (opts.commentText && opts.eventType === "comment" && hasPersonalFactSignal(opts.commentText)) {
+    const signalDetected = opts.commentText && opts.eventType === "comment" && hasPersonalFactSignal(opts.commentText);
+    console.log(`[ViewerFacts:signal] viewer=${opts.viewerName} | text="${(opts.commentText ?? "").slice(0, 40)}" | signal=${!!signalDetected}`);
+    if (signalDetected) {
       const existingViewerMems = await db.query.aiMemoriesTable.findMany({
         where: and(
           eq(aiMemoriesTable.streamerId, opts.streamerId),
