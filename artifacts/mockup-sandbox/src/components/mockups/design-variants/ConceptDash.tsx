@@ -21,20 +21,45 @@ const TOP_GIFTS = [
   { name: "Rose", coins: 100, emoji: "🌹" },
 ];
 
-const BG = "/__mockup/dashboard-concept.png";
-
 export function ConceptDash() {
   return (
     <div
       className="cd-root"
       style={{
-        backgroundImage: `url('${BG}')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center top",
+        background: "linear-gradient(135deg, #0f0528 0%, #1e0a46 40%, #0a0532 100%)",
       }}
     >
-      {/* Dark scrim — keeps sidebar + bottom cards readable */}
-      <div className="cd-scrim" />
+      {/* Subtle grid */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: "linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+          zIndex: 0,
+        }}
+      />
+      {/* Purple glow center-right */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 55% 90% at 72% 50%, rgba(139,92,246,0.22) 0%, transparent 70%)",
+          zIndex: 0,
+        }}
+      />
+      {/* Storm AI Girl Avatar */}
+      <img
+        src="/__mockup/storm-girl.png"
+        alt="Storm AI"
+        style={{
+          position: "absolute",
+          bottom: 0,
+          right: 180,
+          height: "96%",
+          objectFit: "contain",
+          objectPosition: "bottom",
+          filter: "drop-shadow(0 0 40px rgba(139,92,246,0.7)) drop-shadow(0 0 80px rgba(103,232,249,0.3))",
+          zIndex: 1,
+          pointerEvents: "none",
+        }}
+      />
 
       {/* ── SIDEBAR ── */}
       <aside className="cd-sidebar">

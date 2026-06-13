@@ -565,127 +565,159 @@ export function Dashboard() {
   return (
     <div className="space-y-4 max-w-[1400px]">
 
-      {/* ── Hero / Command Banner ── */}
+      {/* ── Hero / Storm AI Banner ── */}
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <div className={cn(
-          "relative overflow-hidden rounded-2xl border",
-          isActive
-            ? "border-green-500/25 shadow-lg shadow-green-500/[0.10]"
-            : "border-violet-500/25 shadow-lg shadow-violet-500/[0.10]",
-        )}>
-          {/* Futuristic stage background */}
-          <StageBackground
-            variant={isActive ? "studio" : "dashboard"}
-            showRing={false}
-            showScan={true}
-            showGrid={true}
-            showCorners={true}
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-2xl border",
+            isActive
+              ? "border-green-500/30 shadow-2xl shadow-green-500/[0.15]"
+              : "border-violet-500/30 shadow-2xl shadow-violet-500/[0.15]",
+          )}
+          style={{
+            background: "linear-gradient(135deg, rgba(15,5,40,1) 0%, rgba(30,10,70,0.95) 40%, rgba(10,5,50,0.98) 100%)",
+            minHeight: 320,
+          }}
+        >
+          {/* Subtle grid overlay */}
+          <div className="absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.5) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+          {/* Purple radial glow center-right */}
+          <div className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 60% 100% at 70% 50%, rgba(139,92,246,0.25) 0%, transparent 70%)" }} />
+          {/* Storm AI girl avatar — right side */}
+          <img
+            src="/storm-girl.png"
+            alt="Storm AI"
+            className="absolute bottom-0 right-0 pointer-events-none select-none"
+            style={{
+              height: "100%",
+              maxHeight: 360,
+              objectFit: "contain",
+              objectPosition: "bottom right",
+              filter: "drop-shadow(0 0 40px rgba(139,92,246,0.6)) drop-shadow(0 0 80px rgba(103,232,249,0.3))",
+            }}
           />
-          {/* LiveStorm brand stage visual */}
-          <LiveStormStage />
 
-          <div className="relative p-5 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              {/* Left: status + identity */}
-              <div className="flex items-center gap-4 min-w-0">
-                <div className={cn(
-                  "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-lg",
-                  isActive
-                    ? "bg-green-500/15 border-green-500/25 shadow-green-500/15"
-                    : "bg-violet-500/12 border-violet-500/22 shadow-violet-500/10",
-                )}>
-                  {isActive
-                    ? <Radio className="h-5 w-5 text-green-400" />
-                    : <PlugZap className="h-5 w-5 text-violet-400" />
-                  }
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    {isActive ? (
-                      <><PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
-                        <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>
-                          {connected ? "Live Now" : "Reconnecting…"}
-                        </span>
-                        <span className="text-xs text-white/35 font-mono tabular-nums">{formatDuration(duration)}</span>
-                      </>
-                    ) : (
-                      <><span className="h-2 w-2 rounded-full bg-slate-500 inline-block flex-shrink-0" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Offline</span>
-                      </>
-                    )}
-                  </div>
-                  <p className="font-black text-white text-lg sm:text-xl leading-tight truncate">
-                    {isActive
-                      ? `@${profile.tiktokUsername}`
-                      : <span>Ready to <GradientText from="from-violet-400" to="to-cyan-400">Go Live</GradientText></span>
-                    }
-                  </p>
-                  <p className="text-xs text-white/40 mt-0.5 truncate">
-                    {isActive
-                      ? `${eventCount} events captured · AI Storm active`
-                      : `@${profile.tiktokUsername} · Start a session to begin`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: controls */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {isOwner && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/28 text-xs font-bold text-amber-200">
-                    <KeyRound className="h-3.5 w-3.5" /> Owner
-                  </div>
-                )}
-                {connected
-                  ? <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400"><Wifi className="h-3 w-3" /> Connected</div>
-                  : <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400"><WifiOff className="h-3 w-3" /> Disconnected</div>
-                }
-                {isActive ? (
-                  <Button variant="destructive" onClick={handleEndSession} disabled={endSession.isPending}
-                    className="font-bold gap-2 shadow-lg shadow-red-500/20 h-10 flex-1 sm:flex-none">
-                    <Square className="h-3.5 w-3.5" fill="currentColor" />
-                    {endSession.isPending ? "Ending…" : "End Stream"}
-                  </Button>
-                ) : (
-                  <Button onClick={handleStartSession} disabled={startSession.isPending}
-                    className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-bold gap-2 px-5 shadow-lg shadow-violet-500/25 h-10 flex-1 sm:flex-none">
-                    <PlayCircle className="h-4 w-4" />
-                    {startSession.isPending ? "Starting…" : "Go Live"}
-                  </Button>
-                )}
-                <Button variant="outline" size="sm" onClick={handleForceStop} disabled={forceStop.isPending}
-                  className="gap-1.5 text-xs text-white/38 border-white/10 hover:border-red-500/30 hover:text-red-400 h-10 px-3"
-                  title="Force-clears any stuck session.">
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{forceStop.isPending ? "…" : "Reset"}</span>
-                </Button>
-              </div>
+          {/* Live badge top-right */}
+          {isActive && (
+            <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600/90 backdrop-blur-sm border border-red-400/30 shadow-lg shadow-red-500/30 z-10">
+              <PulsingDot color={connected ? "bg-white" : "bg-amber-300"} />
+              <span className="text-xs font-black tracking-widest text-white uppercase">Live</span>
+              <span className="text-xs font-mono text-white/80 tabular-nums">{formatDuration(duration)}</span>
             </div>
+          )}
 
-            {/* Live quick stats row */}
+          {/* Content */}
+          <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-between" style={{ minHeight: 320 }}>
+
+            {/* Top stats row — visible during live */}
             {isActive && (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4 pt-4 border-t border-white/[0.07]">
+              <div className="flex items-center gap-4 mb-4 flex-wrap">
                 {[
-                  { label: "Viewers",  icon: Eye,          value: stats.viewerCount,   color: "text-green-400" },
-                  { label: "Comments", icon: MessageSquare,value: stats.totalComments, color: "text-blue-400" },
-                  { label: "Gifts",    icon: Gift,         value: stats.totalGifts,    color: "text-amber-400" },
-                  { label: "Follows",  icon: UserPlus,     value: stats.totalFollows,  color: "text-violet-400" },
-                  { label: "Likes",    icon: Heart,        value: stats.totalLikes,    color: "text-pink-400" },
+                  { label: "Viewers",  icon: Eye,          value: stats.viewerCount,   color: "text-green-300" },
+                  { label: "Gifts",    icon: Gift,         value: stats.totalGifts,    color: "text-amber-300" },
+                  { label: "Likes",    icon: Heart,        value: stats.totalLikes,    color: "text-pink-300" },
+                  { label: "Follows",  icon: UserPlus,     value: stats.totalFollows,  color: "text-violet-300" },
+                  { label: "Comments", icon: MessageSquare,value: stats.totalComments, color: "text-blue-300" },
                 ].map((s) => {
                   const Icon = s.icon;
                   return (
-                    <div key={s.label} className="text-center">
-                      <div className="flex items-center justify-center gap-1 mb-0.5">
-                        <Icon className={cn("h-3 w-3 flex-shrink-0", s.color)} />
-                        <span className="text-[9px] sm:text-[10px] text-white/38 uppercase tracking-wider truncate">{s.label}</span>
-                      </div>
-                      <p className={cn("text-base sm:text-lg font-black tabular-nums", s.color)}>
+                    <div key={s.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10">
+                      <Icon className={cn("h-3.5 w-3.5 flex-shrink-0", s.color)} />
+                      <span className={cn("text-sm font-black tabular-nums", s.color)}>
                         <AnimatedCounter target={s.value} />
-                      </p>
+                      </span>
+                      <span className="text-[10px] text-white/40 uppercase tracking-wide">{s.label}</span>
                     </div>
                   );
                 })}
               </div>
             )}
+
+            {/* Main content: greeting + CTA */}
+            <div className="flex-1 flex flex-col justify-end pb-2">
+              {/* Status chip */}
+              <div className="flex items-center gap-2 mb-3">
+                {isActive ? (
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/30 backdrop-blur-sm">
+                    <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
+                    <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
+                      {connected ? "З'єднано" : "Перепідключення…"}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/8 border border-white/12 backdrop-blur-sm">
+                    <span className="h-2 w-2 rounded-full bg-slate-400 inline-block" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Офлайн</span>
+                  </div>
+                )}
+                {isOwner && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 backdrop-blur-sm text-xs font-bold text-amber-200">
+                    <KeyRound className="h-3 w-3" /> Owner
+                  </div>
+                )}
+              </div>
+
+              {/* Greeting */}
+              <div className="mb-5">
+                <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow-lg">
+                  {isActive ? (
+                    <>AI Storm активна<br /><span className="text-violet-300">@{profile.tiktokUsername}</span></>
+                  ) : (
+                    <>Привіт, {profile.tiktokUsername ? profile.tiktokUsername.split("_")[0] : "Стрімер"}! 👋<br />
+                      <span className="text-violet-300">Storm готовий до стріму</span>
+                    </>
+                  )}
+                </h1>
+                <p className="text-sm text-white/55 mt-1.5">
+                  {isActive
+                    ? `${eventCount} подій захоплено · AI Storm онлайн`
+                    : `@${profile.tiktokUsername} · Погнали!`}
+                </p>
+              </div>
+
+              {/* CTA buttons */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {isActive ? (
+                  <Button
+                    variant="destructive"
+                    onClick={handleEndSession}
+                    disabled={endSession.isPending}
+                    className="font-black gap-2 px-7 h-12 text-base shadow-xl shadow-red-500/30 rounded-xl"
+                  >
+                    <Square className="h-4 w-4" fill="currentColor" />
+                    {endSession.isPending ? "Завершуємо…" : "Завершити стрім"}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleStartSession}
+                    disabled={startSession.isPending}
+                    className="font-black gap-2 px-8 h-12 text-base rounded-xl shadow-xl shadow-violet-500/40"
+                    style={{
+                      background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%)",
+                    }}
+                  >
+                    <Zap className="h-4 w-4" />
+                    {startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={handleForceStop}
+                  disabled={forceStop.isPending}
+                  className="gap-2 h-12 px-5 text-sm font-semibold border-white/20 bg-white/8 hover:bg-white/12 hover:border-white/30 text-white/70 backdrop-blur-sm rounded-xl"
+                  title="Force-clears any stuck session."
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {forceStop.isPending ? "…" : "Тест стріму"}
+                </Button>
+                {connected
+                  ? <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/12 border border-green-500/20 text-xs font-medium text-green-300 backdrop-blur-sm"><Wifi className="h-3 w-3" /> Підключено</div>
+                  : <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/12 border border-red-500/20 text-xs font-medium text-red-300 backdrop-blur-sm"><WifiOff className="h-3 w-3" /> Відключено</div>
+                }
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
