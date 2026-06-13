@@ -56,6 +56,7 @@ import { CoHostPanel } from "@/components/CoHostPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarStage } from "@/components/avatar/AvatarStage";
 import { StageBackground } from "@/components/StageBackground";
+import { LiveStormStage } from "@/components/LiveStormStage";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 
@@ -1601,21 +1602,8 @@ export function AiAssistant() {
                     className="absolute inset-0 w-full h-full"
                   />
                 ) : (
-                  /* Empty stage — shown until user enables avatar in settings */
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none select-none">
-                    <div className="flex flex-col items-center gap-4 text-center px-6">
-                      <div className="relative">
-                        <div className="absolute inset-0 rounded-full blur-xl opacity-50" style={{ background: "radial-gradient(circle,rgba(139,92,246,0.5),transparent)" }} />
-                        <div className="relative w-20 h-20 rounded-full bg-violet-500/[0.08] border-2 border-dashed border-violet-400/30 flex items-center justify-center">
-                          <Upload className="h-7 w-7 text-violet-400/50" />
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-white/55 tracking-wide">STAGE READY</p>
-                        <p className="text-[11px] text-white/25 mt-1 leading-snug max-w-[140px]">Enable & upload your avatar in Settings → Avatar</p>
-                      </div>
-                    </div>
-                  </div>
+                  /* Futuristic live stage — default state, no character */
+                  <LiveStormStage />
                 )}
 
                 {/* Top-left: status badges */}
