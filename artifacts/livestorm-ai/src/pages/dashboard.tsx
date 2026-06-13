@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,7 +24,7 @@ import {
   Users, Gift, Heart, UserPlus, MessageSquare, Zap, Activity,
   PlayCircle, Square, Clock, Share, Bot, RefreshCw, Radio,
   PlugZap, TrendingUp, Trophy as TrophyIcon,
-  KeyRound, Wifi, WifiOff, Eye, ChevronRight,
+  KeyRound, Wifi, WifiOff, Eye, ChevronRight, Youtube, Unlink, ExternalLink,
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -314,6 +314,87 @@ export function Dashboard() {
   const [ttsOn, setTtsOn] = useState(() => {
     try { return (localStorage.getItem("ttsMode") ?? "off") !== "off"; } catch { return false; }
   });
+
+  // ── YouTube state ──────────────────────────────────────────────────────────
+  const [ytStatus, setYtStatus] = useState<{
+    configured: boolean;
+    connected: boolean;
+    channelName: string | null;
+    channelId: string | null;
+    connector: { active: boolean; liveChatId: string | null } | null;
+  } | null>(null);
+  const [ytLoading, setYtLoading] = useState(false);
+
+  const fetchYtStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/youtube/status", { credentials: "include" });
+      if (res.ok) setYtStatus(await res.json());
+    } catch {}
+  }, []);
+
+  useEffect(() => { void fetchYtStatus(); }, [fetchYtStatus]);
+
+  // Handle OAuth return params (?youtube_connected=1 or ?youtube_error=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("youtube_connected") === "1") {
+      toast({ title: "YouTube Connected!", description: "Your channel is now linked to LiveStorm AI." });
+      void fetchYtStatus();
+      window.history.replaceState({}, "", "/");
+    } else if (params.get("youtube_error")) {
+      toast({ title: "YouTube Error", description: params.get("youtube_error")!, variant: "destructive" });
+      window.history.replaceState({}, "", "/");
+    }
+  }, [fetchYtStatus, toast]);
+
+  const handleConnectYoutube = async () => {
+    setYtLoading(true);
+    try {
+      const res = await fetch("/api/youtube/auth-url", { credentials: "include" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast({ title: "YouTube Setup Required", description: data.error, variant: "destructive" });
+        return;
+      }
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setYtLoading(false);
+    }
+  };
+
+  const handleDisconnectYoutube = async () => {
+    setYtLoading(true);
+    try {
+      await fetch("/api/youtube/disconnect", { method: "POST", credentials: "include" });
+      toast({ title: "YouTube Disconnected" });
+      void fetchYtStatus();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setYtLoading(false);
+    }
+  };
+
+  const handleStartYoutube = async () => {
+    setYtLoading(true);
+    try {
+      const res = await fetch("/api/youtube/start-session", { method: "POST", credentials: "include" });
+      const data = await res.json();
+      if (res.ok) {
+        toast({ title: "YouTube Live Started", description: "Polling for live chat events." });
+        void fetchYtStatus();
+      } else {
+        toast({ title: "Failed", description: data.error, variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setYtLoading(false);
+    }
+  };
 
   const [duration, setDuration] = useState(0);
   useEffect(() => {
@@ -788,6 +869,107 @@ export function Dashboard() {
                     </Link>
                   </motion.div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* YouTube Live card */}
+          {ytStatus !== null && (
+            <div className={cn(
+              "rounded-2xl border overflow-hidden transition-all duration-300",
+              ytStatus.connector?.active
+                ? "border-red-500/25 shadow-lg shadow-red-500/[0.06]"
+                : ytStatus.connected
+                ? "border-red-500/15"
+                : "border-white/[0.07]",
+            )}
+              style={{
+                background: ytStatus.connector?.active
+                  ? "linear-gradient(135deg, rgba(239,68,68,0.09) 0%, rgba(220,38,38,0.04) 100%)"
+                  : "rgba(255,255,255,0.01)",
+              }}
+            >
+              <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2.5">
+                <div className={cn("p-1.5 rounded-lg", ytStatus.connected ? "bg-red-500/15" : "bg-white/[0.05]")}>
+                  <Youtube className={cn("h-3.5 w-3.5", ytStatus.connected ? "text-red-400" : "text-muted-foreground/50")} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-bold text-white/80">YouTube Live</span>
+                  {ytStatus.connected && ytStatus.channelName && (
+                    <p className="text-[10px] text-muted-foreground/50 truncate">{ytStatus.channelName}</p>
+                  )}
+                </div>
+                {ytStatus.connector?.active && (
+                  <div className="flex items-center gap-1">
+                    <PulsingDot color="bg-red-400" size="h-1.5 w-1.5" />
+                    <span className="text-[9px] font-bold text-red-400 uppercase">Live</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 space-y-2">
+                {!ytStatus.configured ? (
+                  <div className="text-center py-2">
+                    <p className="text-[11px] text-muted-foreground/60 mb-2">
+                      Set <code className="text-violet-400 text-[10px]">GOOGLE_CLIENT_ID</code>,{" "}
+                      <code className="text-violet-400 text-[10px]">GOOGLE_CLIENT_SECRET</code> &amp;{" "}
+                      <code className="text-violet-400 text-[10px]">YOUTUBE_REDIRECT_URI</code> to enable.
+                    </p>
+                    <a
+                      href="https://console.cloud.google.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] text-violet-400 hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3" /> Google Cloud Console
+                    </a>
+                  </div>
+                ) : ytStatus.connected ? (
+                  <>
+                    {ytStatus.connector?.liveChatId ? (
+                      <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/15">
+                        <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
+                        <span className="text-[11px] text-red-300 font-medium flex-1 truncate">
+                          Chat connected
+                        </span>
+                      </div>
+                    ) : isActive ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full h-8 text-xs gap-1.5 border-red-500/20 text-red-400 hover:bg-red-500/10"
+                        onClick={handleStartYoutube}
+                        disabled={ytLoading}
+                      >
+                        <Youtube className="h-3 w-3" />
+                        {ytLoading ? "Connecting…" : "Connect YouTube Chat"}
+                      </Button>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground/50 text-center py-1">
+                        Start a live session to connect YouTube chat
+                      </p>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full h-7 text-[11px] gap-1.5 text-muted-foreground/50 hover:text-red-400"
+                      onClick={handleDisconnectYoutube}
+                      disabled={ytLoading}
+                    >
+                      <Unlink className="h-3 w-3" /> Disconnect
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="w-full h-9 text-xs gap-2 bg-red-600 hover:bg-red-500 text-white font-bold shadow-lg shadow-red-500/20"
+                    onClick={handleConnectYoutube}
+                    disabled={ytLoading}
+                  >
+                    <Youtube className="h-3.5 w-3.5" />
+                    {ytLoading ? "Opening…" : "Connect YouTube"}
+                  </Button>
+                )}
               </div>
             </div>
           )}

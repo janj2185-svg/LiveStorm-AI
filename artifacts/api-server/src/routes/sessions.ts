@@ -13,6 +13,7 @@ import {
 } from "../lib/tiktokConnector";
 import { triggerLearningAgent } from "../agents/agentOrchestrator";
 import { clearSessionMetrics } from "../agents/strategyAgent";
+import { startYouTubeConnector, stopYouTubeConnector } from "../lib/youtubeConnector";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 async function clearStreamerLiveFlag(streamerId: number) {
@@ -118,6 +119,16 @@ router.post("/sessions/start", requireAuth, async (req: any, res: any) => {
       actualMode = await startTikTokConnection(io, tiktokUsername, session.id, user.id, demoMode);
     }
 
+    // Auto-start YouTube connector if user has linked their YouTube account
+    const ytRow = await db.query.usersTable.findFirst({
+      where: eq(usersTable.id, user.id),
+      columns: { youtubeAccessToken: true, youtubeRefreshToken: true },
+    });
+    if (ytRow?.youtubeAccessToken && io) {
+      startYouTubeConnector(io, session.id, user.id, ytRow.youtubeAccessToken, ytRow.youtubeRefreshToken ?? "")
+        .catch((err: Error) => console.error(`[YouTube] Auto-start failed for session ${session.id}: ${err.message}`));
+    }
+
     res.json({
       sessionId: session.id,
       streamerId: streamer.id,
@@ -151,6 +162,7 @@ router.post("/sessions/force-stop", requireAuth, async (req: any, res: any) => {
 
     if (openSession) {
       stopTikTokConnection(openSession.id);
+      stopYouTubeConnector(openSession.id);
       await db
         .update(sessionsTable)
         .set({ endedAt: new Date() })
@@ -198,6 +210,7 @@ router.post("/sessions/end", requireAuth, async (req: any, res: any) => {
     }
 
     stopTikTokConnection(activeSession.id);
+    stopYouTubeConnector(activeSession.id);
 
     const [ended] = await db
       .update(sessionsTable)

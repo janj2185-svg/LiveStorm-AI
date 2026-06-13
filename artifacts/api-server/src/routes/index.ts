@@ -24,6 +24,7 @@ import devRouter from "./dev";
 import analyticsRouter from "./analytics";
 import emotionRouter from "./emotion";
 import micRouter from "./mic";
+import youtubeRouter from "./youtube";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,6 @@ router.use(devRouter);
 router.use(analyticsRouter);
 router.use(emotionRouter);
 router.use(micRouter);
+router.use(youtubeRouter);
 
 export default router;

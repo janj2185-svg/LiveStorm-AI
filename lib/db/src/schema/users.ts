@@ -13,6 +13,10 @@ export const usersTable = pgTable("users", {
   plan: text("plan").notNull().default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   uiLanguage: text("ui_language").notNull().default("en"),
+  youtubeAccessToken: text("youtube_access_token"),
+  youtubeRefreshToken: text("youtube_refresh_token"),
+  youtubeChannelId: text("youtube_channel_id"),
+  youtubeChannelName: text("youtube_channel_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
