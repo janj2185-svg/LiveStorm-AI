@@ -1266,7 +1266,7 @@ export function AiAssistant() {
       ════════════════════════════════════════════════════════════════════ */}
       <div className={cn(
         "flex-1 min-h-0 gap-3 min-w-0",
-        isMobile ? "overflow-hidden" : "grid grid-cols-[280px_1fr_310px]",
+        isMobile ? "overflow-hidden" : "grid grid-cols-[248px_1fr_292px]",
       )}>
 
         {/* ═══════════ LEFT: PERSONALITY + BATTLE + SETTINGS ═══════════ */}
@@ -1550,24 +1550,30 @@ export function AiAssistant() {
           <div className="flex flex-col min-h-0 gap-2 py-1">
 
             {/* Aspect ratio toggle */}
-            <div className="flex-shrink-0 flex items-center justify-center gap-1 p-0.5 bg-white/[0.04] rounded-xl border border-white/[0.07] self-center">
+            <div className="flex-shrink-0 flex items-center justify-center gap-2 self-center">
               <button
                 onClick={() => setStageAspect("9/16")}
                 className={cn(
-                  "flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold transition-all",
-                  stageAspect === "9/16" ? "bg-violet-600 text-white shadow" : "text-muted-foreground/50 hover:text-white/70",
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
+                  stageAspect === "9/16"
+                    ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-500/30"
+                    : "text-white/40 border-white/[0.10] hover:text-white/70 hover:border-violet-500/40 bg-white/[0.03]",
                 )}
               >
-                <span className="w-2 h-3.5 border border-current rounded-[2px] inline-block mr-0.5" />9:16
+                <span className="w-3 h-5 border-2 border-current rounded-[3px] inline-block flex-shrink-0" />
+                9:16 TikTok
               </button>
               <button
                 onClick={() => setStageAspect("16/9")}
                 className={cn(
-                  "flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold transition-all",
-                  stageAspect === "16/9" ? "bg-violet-600 text-white shadow" : "text-muted-foreground/50 hover:text-white/70",
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
+                  stageAspect === "16/9"
+                    ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-500/30"
+                    : "text-white/40 border-white/[0.10] hover:text-white/70 hover:border-violet-500/40 bg-white/[0.03]",
                 )}
               >
-                <span className="w-4 h-2.5 border border-current rounded-[2px] inline-block mr-0.5" />16:9
+                <span className="w-6 h-4 border-2 border-current rounded-[3px] inline-block flex-shrink-0" />
+                16:9 YouTube
               </button>
             </div>
 

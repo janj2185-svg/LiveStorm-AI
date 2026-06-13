@@ -310,6 +310,12 @@
   }
 }
 
+/* ─── WAVEFORM BAR ANIMATION ─────────────────────────────────────────────── */
+@keyframes waveform-bar {
+  0%, 100% { transform: scaleY(0.20); opacity: 0.35; }
+  50%      { transform: scaleY(1.00); opacity: 1.00; }
+}
+
 /* ─── RANGE INPUT STYLING ────────────────────────────────────────────────── */
 input[type="range"] {
   @apply accent-primary;
