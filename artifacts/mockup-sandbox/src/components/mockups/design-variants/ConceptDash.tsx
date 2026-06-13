@@ -21,34 +21,26 @@ const TOP_GIFTS = [
   { name: "Rose", coins: 100, emoji: "🌹" },
 ];
 
+const BG = "/__mockup/dashboard-concept.png";
+
 export function ConceptDash() {
   return (
-    <div className="cd-root">
-      {/* Animated background */}
-      <div className="cd-bg">
-        <div className="cd-bg-gradient" />
-        <div className="cd-bg-glow-1" />
-        <div className="cd-bg-glow-2" />
-        <div className="cd-bg-glow-3" />
-        {/* Stars */}
-        {Array.from({ length: 40 }).map((_, i) => (
-          <div key={i} className="cd-star" style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 60}%`,
-            width: `${Math.random() * 2 + 1}px`,
-            height: `${Math.random() * 2 + 1}px`,
-            animationDelay: `${Math.random() * 3}s`,
-            animationDuration: `${2 + Math.random() * 3}s`,
-          }} />
-        ))}
-      </div>
+    <div
+      className="cd-root"
+      style={{
+        backgroundImage: `url('${BG}')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+      }}
+    >
+      {/* Dark scrim — keeps sidebar + bottom cards readable */}
+      <div className="cd-scrim" />
 
-      {/* SIDEBAR */}
+      {/* ── SIDEBAR ── */}
       <aside className="cd-sidebar">
-        {/* Logo */}
         <div className="cd-logo">
           <div className="cd-logo-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" />
             </svg>
           </div>
@@ -58,7 +50,6 @@ export function ConceptDash() {
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="cd-nav">
           {NAV.map((item) => (
             <div key={item.label} className={`cd-nav-item ${item.active ? "active" : ""}`}>
@@ -68,19 +59,21 @@ export function ConceptDash() {
           ))}
         </nav>
 
-        {/* User */}
         <div className="cd-sidebar-user">
           <div className="cd-user-avatar">J</div>
           <div>
             <div className="cd-user-name">Jan Streamer</div>
-            <div className="cd-user-level">Level 24 <span className="cd-pro-badge">PRO</span></div>
+            <div className="cd-user-level">
+              Level 24 <span className="cd-pro-badge">PRO</span>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* ── MAIN ── */}
       <main className="cd-main">
-        {/* Top bar */}
+
+        {/* TOP BAR */}
         <div className="cd-topbar">
           <div className="cd-topbar-stats">
             {[
@@ -100,16 +93,15 @@ export function ConceptDash() {
               Server: Online
             </div>
             <div className="cd-topbar-icons">
-              <span>🔔</span>
-              <span>⚙️</span>
-              <span>👤</span>
+              <span>🔔</span><span>⚙️</span><span>👤</span>
             </div>
           </div>
         </div>
 
-        {/* Hero area */}
+        {/* HERO — transparent so background art shows */}
         <div className="cd-hero">
-          {/* Left text */}
+
+          {/* Left CTA */}
           <div className="cd-hero-left">
             <h1 className="cd-greeting">Добрий вечір,<br />Jan! 👋</h1>
             <p className="cd-hero-sub">Storm готовий до стріму. Погнали!</p>
@@ -117,61 +109,11 @@ export function ConceptDash() {
             <button className="cd-btn-test">Тест стріму</button>
           </div>
 
-          {/* Center — AI character */}
-          <div className="cd-hero-center">
-            {/* Glowing platform rings */}
-            <div className="cd-platform">
-              <div className="cd-ring cd-ring-1" />
-              <div className="cd-ring cd-ring-2" />
-              <div className="cd-ring cd-ring-3" />
-              <div className="cd-platform-glow" />
-            </div>
-            {/* Character silhouette */}
-            <div className="cd-character">
-              <div className="cd-char-body">
-                {/* AI host head */}
-                <div className="cd-char-head">
-                  <div className="cd-char-face" />
-                  <div className="cd-char-hair" />
-                  <div className="cd-char-hair-side" />
-                </div>
-                {/* Body */}
-                <div className="cd-char-torso">
-                  <div className="cd-char-badge">STORM</div>
-                </div>
-                {/* Mic stand */}
-                <div className="cd-mic-stand">
-                  <div className="cd-mic-head" />
-                  <div className="cd-mic-pole" />
-                </div>
-              </div>
-            </div>
-            {/* Black cat companion */}
-            <div className="cd-cat">
-              <div className="cd-cat-body">
-                <div className="cd-cat-head">
-                  <div className="cd-cat-ear cd-cat-ear-l" />
-                  <div className="cd-cat-ear cd-cat-ear-r" />
-                  <div className="cd-cat-eyes" />
-                </div>
-                <div className="cd-cat-torso" />
-                <div className="cd-cat-tail" />
-                <div className="cd-cat-glow" />
-              </div>
-            </div>
-            {/* Floating city silhouette */}
-            <div className="cd-city">
-              <div className="cd-city-buildings" />
-              <div className="cd-city-glow" />
-              {/* Floating ships */}
-              <div className="cd-ship cd-ship-1" />
-              <div className="cd-ship cd-ship-2" />
-            </div>
-          </div>
+          {/* Center — art shows through */}
+          <div className="cd-hero-center" />
 
           {/* Right panel */}
           <div className="cd-hero-right">
-            {/* Stream status */}
             <div className="cd-status-card">
               <div className="cd-live-indicator">
                 <div className="cd-live-dot" />
@@ -180,16 +122,17 @@ export function ConceptDash() {
               </div>
               <div className="cd-status-label">Стрім тривае</div>
               <div className="cd-waveform">
-                {Array.from({ length: 16 }).map((_, i) => (
-                  <div key={i} className="cd-wave-bar" style={{
-                    height: `${8 + Math.sin(i * 0.9) * 10 + Math.random() * 8}px`,
-                    animationDelay: `${i * 0.08}s`,
-                  }} />
+                {Array.from({ length: 18 }).map((_, i) => (
+                  <div key={i} className="cd-wave-bar"
+                    style={{
+                      height: `${6 + Math.abs(Math.sin(i * 0.7)) * 14 + (i % 3) * 3}px`,
+                      animationDelay: `${i * 0.07}s`,
+                    }}
+                  />
                 ))}
               </div>
             </div>
 
-            {/* AI Mood */}
             <div className="cd-mood-card">
               <div className="cd-card-title">AI Mood</div>
               <div className="cd-mood-row">
@@ -212,7 +155,6 @@ export function ConceptDash() {
               </div>
             </div>
 
-            {/* Active event */}
             <div className="cd-event-card">
               <div className="cd-card-title">Активна подія</div>
               <div className="cd-event-name">GALAXY B…</div>
@@ -222,9 +164,8 @@ export function ConceptDash() {
           </div>
         </div>
 
-        {/* Bottom cards */}
+        {/* BOTTOM */}
         <div className="cd-bottom">
-          {/* Top Gifts */}
           <div className="cd-bottom-card">
             <div className="cd-bottom-card-title">Топ подарунки</div>
             <div className="cd-gifts-row">
@@ -238,7 +179,6 @@ export function ConceptDash() {
             </div>
           </div>
 
-          {/* Quick Actions */}
           <div className="cd-bottom-card">
             <div className="cd-bottom-card-title">Швидкі дії</div>
             <div className="cd-actions-list">
@@ -249,7 +189,6 @@ export function ConceptDash() {
             </div>
           </div>
 
-          {/* Storm Pass */}
           <div className="cd-bottom-card">
             <div className="cd-bottom-card-title">Storm Pass</div>
             <div className="cd-pass-content">
