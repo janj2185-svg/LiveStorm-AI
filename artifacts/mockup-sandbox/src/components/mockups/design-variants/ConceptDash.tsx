@@ -26,21 +26,22 @@ export function ConceptDash() {
     <div
       className="cd-root"
       style={{
-        background: "linear-gradient(135deg, #0f0528 0%, #1e0a46 40%, #0a0532 100%)",
+        backgroundImage: "url('/__mockup/dash-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
-      {/* Subtle grid */}
+      {/* Dark overlay — light enough to let bg show through */}
       <div className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: "linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
+          background: "rgba(5, 2, 20, 0.48)",
           zIndex: 0,
         }}
       />
-      {/* Purple glow center-right */}
+      {/* Purple tint */}
       <div className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 55% 90% at 72% 50%, rgba(139,92,246,0.22) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse 60% 90% at 65% 50%, rgba(120,60,240,0.30) 0%, transparent 70%)",
           zIndex: 0,
         }}
       />
