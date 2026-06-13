@@ -421,14 +421,14 @@ export function Gamification() {
 
       <div className="space-y-5 max-w-6xl mx-auto">
 
-        {/* Header */}
+        {/* ── HEADER ── */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-yellow-400/50 mb-0.5">XP System</p>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Gamification</h1>
             <p className="text-sm text-white/30 mt-0.5">Viewer XP · Levels · Achievements · Lucky Drops</p>
           </div>
-          {sessionId ? (
+          {sessionId && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
@@ -436,7 +436,27 @@ export function Gamification() {
               </span>
               <span className="text-xs font-bold text-green-300">LIVE</span>
             </div>
-          ) : null}
+          )}
+        </div>
+
+        {/* ── QUICK STATS ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: "Your Level",    value: myLevel,                           icon: <Star className="w-4 h-4" />,    iconBg: "bg-violet-500/15", color: "text-violet-300", suffix: ""         },
+            { label: "Total XP",      value: myXp,                              icon: <Zap className="w-4 h-4" />,     iconBg: "bg-yellow-500/15", color: "text-yellow-300", suffix: ""         },
+            { label: "Coins",         value: myStats?.totalCoins ?? 0,          icon: <Crown className="w-4 h-4" />,   iconBg: "bg-amber-500/15",  color: "text-amber-300",  suffix: ""         },
+            { label: "Achievements",  value: (achievements ?? []).filter(a => a.unlocked).length, icon: <Medal className="w-4 h-4" />, iconBg: "bg-cyan-500/15", color: "text-cyan-300", suffix: `/${achievements?.length ?? "…"}` },
+          ].map((s) => (
+            <div key={s.label} className="rounded-2xl border border-white/[0.06] p-4 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
+              <div className={cn("p-1.5 rounded-lg w-fit mb-2.5", s.iconBg)}>
+                <span className={s.color}>{s.icon}</span>
+              </div>
+              <p className="text-xl font-black text-white tabular-nums">
+                <AnimatedCounter target={s.value} /><span className="text-sm text-white/30">{s.suffix}</span>
+              </p>
+              <p className="text-[10px] text-white/25 mt-0.5 uppercase tracking-wider">{s.label}</p>
+            </div>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -444,48 +464,54 @@ export function Gamification() {
           {/* ── LEFT COLUMN ── */}
           <div className="md:col-span-2 space-y-5">
 
-            {/* Your Progression */}
-            <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/[0.07] to-transparent overflow-hidden shadow-lg shadow-violet-500/5 relative">
-              <div className="absolute right-0 top-0 w-40 h-40 bg-violet-500/10 blur-3xl pointer-events-none rounded-full" />
+            {/* YOUR PROGRESSION */}
+            <div className="rounded-2xl border border-violet-500/25 relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(14,165,233,0.04) 100%)" }}>
+              <div className="absolute right-0 top-0 w-48 h-48 bg-violet-500/10 blur-3xl pointer-events-none rounded-full" />
+              <div className="absolute left-1/2 bottom-0 w-32 h-32 bg-cyan-500/8 blur-3xl pointer-events-none rounded-full" />
               <div className="relative p-5">
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="p-2 rounded-lg bg-yellow-500/15">
-                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-yellow-500/15">
+                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    </div>
+                    <span className="font-semibold text-white text-sm">Your Progression</span>
                   </div>
-                  <span className="font-semibold text-white">Your Progression</span>
+                  {myRank && (
+                    <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/25">
+                      Rank #{myRank}
+                    </span>
+                  )}
                 </div>
                 {loadingMe ? (
-                  <Skeleton className="h-20 w-full bg-white/5" />
+                  <Skeleton className="h-24 w-full bg-white/5 rounded-xl" />
                 ) : (
-                  <div className="flex items-center gap-6">
-                    <ProgressRing value={xpProgress} max={100} size={88} strokeWidth={7} colorClass="stroke-violet-500">
+                  <div className="flex items-center gap-5">
+                    <ProgressRing value={xpProgress} max={100} size={92} strokeWidth={6} colorClass="stroke-violet-500">
                       <div className="text-center">
-                        <div className="text-base font-black text-white leading-none">{myLevel}</div>
-                        <div className="text-[9px] text-muted-foreground">LVL</div>
+                        <div className="text-lg font-black text-white leading-none">{myLevel}</div>
+                        <div className="text-[9px] text-white/30 uppercase tracking-wider">LVL</div>
                       </div>
                     </ProgressRing>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-end justify-between mb-1.5">
-                        <div>
-                          <span className="text-3xl font-black text-white">Lv. {myLevel}</span>
-                          <span className="text-sm text-violet-300 ml-2">{getLevelTitle(myLevel)}</span>
-                        </div>
-                        {myRank && (
-                          <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
-                            Rank #{myRank}
-                          </span>
-                        )}
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-3xl font-black text-white">Lv.{myLevel}</span>
+                        <span className="text-sm font-semibold text-violet-300">{getLevelTitle(myLevel)}</span>
                       </div>
-                      <div className="relative h-3 rounded-full overflow-hidden bg-white/[0.06] border border-white/[0.06] mb-2">
-                        <div
-                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 transition-all duration-700"
-                          style={{ width: `${xpProgress}%`, boxShadow: "0 0 10px rgba(139,92,246,0.5)" }}
+                      <div className="relative h-2.5 rounded-full overflow-hidden bg-white/[0.07] mb-2">
+                        <motion.div
+                          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-600 to-cyan-400"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${xpProgress}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          style={{ boxShadow: "0 0 12px rgba(139,92,246,0.6)" }}
                         />
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="text-violet-300 font-medium">{myXp.toLocaleString()} / {nextLevelXp.toLocaleString()} XP</span>
-                        <span>🪙 {(myStats?.totalCoins ?? 0).toLocaleString()}</span>
-                        <span>🎁 {myStats?.totalGifts ?? 0}</span>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-xs font-semibold text-violet-300">{myXp.toLocaleString()} / {nextLevelXp.toLocaleString()} XP</span>
+                        <span className="text-xs text-white/30">·</span>
+                        <span className="text-xs text-amber-300">🪙 {(myStats?.totalCoins ?? 0).toLocaleString()}</span>
+                        <span className="text-xs text-white/30">·</span>
+                        <span className="text-xs text-pink-300">🎁 {myStats?.totalGifts ?? 0} gifts</span>
                       </div>
                     </div>
                   </div>
@@ -493,68 +519,75 @@ export function Gamification() {
               </div>
             </div>
 
-            {/* Real-time XP Feed */}
+            {/* LIVE XP FEED */}
             {sessionId && recentXpAwards.length > 0 && (
-              <div className="rounded-2xl border border-green-500/15 bg-gradient-to-b from-green-500/[0.04] to-transparent overflow-hidden">
-                <div className="px-4 py-3.5 border-b border-green-500/10 flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-yellow-500/15">
+              <div className="rounded-2xl border border-green-500/15 overflow-hidden" style={{ background: "rgba(34,197,94,0.03)" }}>
+                <div className="px-4 py-3 border-b border-green-500/10 flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-yellow-500/15">
                     <Zap className="w-4 h-4 text-yellow-400" />
                   </div>
                   <span className="font-semibold text-white text-sm">Live XP Feed</span>
-                  <span className="ml-auto flex items-center gap-1.5 text-xs text-green-400 font-bold">
+                  <span className="ml-auto flex items-center gap-1.5 text-[10px] text-green-400 font-bold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                     LIVE
                   </span>
                 </div>
-                <div className="divide-y divide-white/[0.03] max-h-44 overflow-y-auto">
-                  {recentXpAwards.slice(0, 12).map((award, i) => (
-                    <div key={i} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
-                      <span className="text-xs text-muted-foreground shrink-0 w-20">
-                        {EVENT_TYPE_LABELS[award.eventType] ?? award.eventType}
-                      </span>
-                      <span
-                        className="text-white text-sm truncate flex-1 cursor-pointer hover:text-violet-300 transition-colors"
-                        onClick={() => setFanProfile({ tiktokViewerId: award.tiktokViewerId, viewerName: award.viewerName })}
+                <div className="divide-y divide-white/[0.03] max-h-48 overflow-y-auto">
+                  <AnimatePresence>
+                    {recentXpAwards.slice(0, 12).map((award, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.02] transition-colors"
                       >
-                        {award.viewerName}
-                      </span>
-                      <div className="flex items-center gap-2.5 shrink-0">
-                        <span className="text-violet-400 font-black text-sm">+{award.xp} XP</span>
-                        {award.coins > 0 && <span className="text-yellow-400 text-xs font-bold">+{award.coins}🪙</span>}
-                        <span className="text-xs text-muted-foreground/60 bg-white/[0.04] px-1.5 py-0.5 rounded-full">Lv.{award.level}</span>
-                      </div>
-                    </div>
-                  ))}
+                        <span className="text-xs text-white/30 shrink-0 w-[72px] truncate">
+                          {EVENT_TYPE_LABELS[award.eventType] ?? award.eventType}
+                        </span>
+                        <span
+                          className="text-white/70 text-xs truncate flex-1 cursor-pointer hover:text-violet-300 transition-colors"
+                          onClick={() => setFanProfile({ tiktokViewerId: award.tiktokViewerId, viewerName: award.viewerName })}
+                        >
+                          {award.viewerName}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-violet-400 font-black text-xs">+{award.xp} XP</span>
+                          {award.coins > 0 && <span className="text-yellow-400/80 text-[10px] font-bold">+{award.coins}🪙</span>}
+                          <span className="text-[10px] text-white/20 bg-white/[0.04] px-1.5 py-0.5 rounded-full tabular-nums">Lv{award.level}</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               </div>
             )}
 
-            {/* Achievements */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-              <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+            {/* ACHIEVEMENTS */}
+            <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
+              <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-lg bg-cyan-500/15">
                     <Medal className="w-4 h-4 text-cyan-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-white text-sm">Achievements</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-white/30">
                       {achievements
                         ? `${achievements.filter(a => a.unlocked).length} / ${achievements.length} unlocked`
                         : "Loading…"}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-1 bg-white/[0.04] rounded-lg p-1">
+                <div className="flex gap-1 p-1 rounded-lg bg-white/[0.04] border border-white/[0.06]">
                   {(["all", "unlocked", "locked"] as const).map((f) => (
                     <button
                       key={f}
                       onClick={() => setAchFilter(f)}
                       className={cn(
-                        "text-xs px-3 py-1 rounded-md font-medium capitalize transition-all",
+                        "text-xs px-3 py-1.5 rounded-md font-medium capitalize transition-all",
                         achFilter === f
                           ? "bg-violet-500/20 text-violet-300"
-                          : "text-muted-foreground hover:text-white",
+                          : "text-white/30 hover:text-white/60",
                       )}
                     >
                       {f}
@@ -568,7 +601,7 @@ export function Gamification() {
                     {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl bg-white/5" />)}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-96 overflow-y-auto pr-1">
                     {filteredAch.map((ach) => {
                       const Icon = ICON_MAP[ach.iconType] ?? Trophy;
                       return (
@@ -576,33 +609,38 @@ export function Gamification() {
                           key={ach.key}
                           layout
                           className={cn(
-                            "flex items-center gap-3 p-3.5 rounded-xl border transition-all",
+                            "flex items-center gap-3 p-3 rounded-xl border transition-all relative overflow-hidden",
                             ach.unlocked
-                              ? "border-violet-500/25 bg-violet-500/[0.06] hover:bg-violet-500/[0.1]"
-                              : "border-white/[0.05] bg-white/[0.01] opacity-40 grayscale",
+                              ? "border-violet-500/25 bg-violet-500/[0.07] hover:bg-violet-500/[0.12]"
+                              : "border-white/[0.04] bg-white/[0.01] opacity-35 grayscale",
                           )}
                         >
+                          {ach.unlocked && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-transparent pointer-events-none" />
+                          )}
                           <div className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                            ach.unlocked ? "bg-violet-500/20 border border-violet-500/25" : "bg-white/[0.05]",
+                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative",
+                            ach.unlocked
+                              ? "bg-violet-500/20 border border-violet-500/30 shadow-md shadow-violet-500/15"
+                              : "bg-white/[0.04] border border-white/[0.06]",
                           )}>
-                            <Icon className={cn("w-5 h-5", ach.unlocked ? "text-violet-400" : "text-muted-foreground/30")} />
+                            <Icon className={cn("w-4 h-4", ach.unlocked ? "text-violet-300" : "text-white/20")} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-sm font-bold text-white truncate">{ach.name}</p>
-                              {ach.unlocked && <span className="text-[10px] text-violet-400 bg-violet-500/15 px-1.5 py-0.5 rounded-full shrink-0">✓</span>}
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <p className="text-xs font-bold text-white truncate">{ach.name}</p>
+                              {ach.unlocked && <span className="text-[9px] text-violet-400 bg-violet-500/20 px-1 py-0.5 rounded shrink-0">✓</span>}
                             </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{ach.description}</p>
-                            <p className="text-xs text-yellow-500/80 mt-0.5">+{ach.xpReward} XP · +{ach.coinReward} coins</p>
+                            <p className="text-[10px] text-white/30 truncate">{ach.description}</p>
+                            <p className="text-[10px] text-yellow-400/60 mt-0.5">+{ach.xpReward} XP · +{ach.coinReward}🪙</p>
                           </div>
                         </motion.div>
                       );
                     })}
                     {filteredAch.length === 0 && (
-                      <div className="col-span-2 text-center text-muted-foreground py-10">
-                        <Medal className="w-10 h-10 mx-auto mb-2 opacity-15" />
-                        No achievements in this category yet.
+                      <div className="col-span-2 text-center py-10">
+                        <Medal className="w-10 h-10 mx-auto mb-2 text-white/10" />
+                        <p className="text-sm text-white/25">No achievements in this category yet.</p>
                       </div>
                     )}
                   </div>
@@ -614,107 +652,150 @@ export function Gamification() {
           {/* ── RIGHT COLUMN ── */}
           <div className="space-y-4">
 
-            {/* Daily Reward */}
-            <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/[0.06] to-transparent overflow-hidden">
-              <div className="px-4 py-3.5 border-b border-cyan-500/10 text-center">
-                <p className="font-semibold text-white text-sm">Daily Bonus</p>
-                <p className="text-xs text-muted-foreground">Claim 100 coins every day</p>
+            {/* DAILY REWARD CHEST */}
+            <div className="rounded-2xl border overflow-hidden relative" style={{
+              background: "linear-gradient(160deg, rgba(14,165,233,0.08) 0%, rgba(6,182,212,0.04) 100%)",
+              borderColor: claimStatus?.alreadyClaimed ? "rgba(255,255,255,0.07)" : "rgba(14,165,233,0.25)",
+            }}>
+              {!claimStatus?.alreadyClaimed && (
+                <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
+              )}
+              <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+                <Gift className={cn("w-4 h-4 shrink-0", claimStatus?.alreadyClaimed ? "text-white/20" : "text-cyan-400")} />
+                <div className="flex-1">
+                  <p className="font-semibold text-white text-sm">Щоденний бонус</p>
+                  <p className="text-[10px] text-white/25">+100 монет кожен день</p>
+                </div>
               </div>
               <div className="p-5 flex flex-col items-center gap-4">
                 <div className={cn(
-                  "w-20 h-20 rounded-2xl border-2 border-dashed flex items-center justify-center transition-all",
+                  "relative w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-500",
                   claimStatus?.alreadyClaimed
-                    ? "bg-white/[0.03] border-white/10"
-                    : "bg-cyan-500/15 border-cyan-400/40 shadow-lg shadow-cyan-500/10",
-                  !claimStatus?.alreadyClaimed && "animate-[pulse_3s_ease-in-out_infinite]",
+                    ? "bg-white/[0.03] border-2 border-dashed border-white/10"
+                    : "border-2 border-cyan-400/40 bg-cyan-500/10",
                 )}>
-                  <Gift className={cn("w-9 h-9", claimStatus?.alreadyClaimed ? "text-muted-foreground/40" : "text-cyan-400")} />
-                </div>
-                <Button
-                  className={cn(
-                    "w-full font-bold",
-                    !claimStatus?.alreadyClaimed && "bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/20",
+                  {!claimStatus?.alreadyClaimed && (
+                    <>
+                      <div className="absolute inset-0 rounded-2xl bg-cyan-500/10 animate-pulse" />
+                      <div className="absolute -inset-1 rounded-2xl border border-cyan-400/20 animate-ping" style={{ animationDuration: "3s" }} />
+                    </>
                   )}
-                  onClick={handleClaim}
-                  disabled={claimStatus?.alreadyClaimed || claimMutation.isPending}
-                  variant={claimStatus?.alreadyClaimed ? "outline" : "default"}
-                  size="sm"
-                >
-                  {claimStatus?.alreadyClaimed ? "✓ Claimed Today" : claimMutation.isPending ? "Claiming…" : "🪙 Claim +100 Coins"}
-                </Button>
-                {claimStatus?.alreadyClaimed && (
-                  <p className="text-xs text-muted-foreground text-center">Resets at midnight UTC</p>
+                  <Gift className={cn("w-9 h-9 relative z-10", claimStatus?.alreadyClaimed ? "text-white/20" : "text-cyan-300")} />
+                </div>
+                {claimStatus?.alreadyClaimed ? (
+                  <div className="text-center space-y-1">
+                    <p className="text-sm font-bold text-white/40">✓ Вже отримано</p>
+                    <p className="text-[10px] text-white/20">Скидається о опівночі UTC</p>
+                  </div>
+                ) : (
+                  <Button
+                    className="w-full font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 shadow-lg shadow-cyan-500/25 border-0"
+                    onClick={handleClaim}
+                    disabled={claimMutation.isPending}
+                    size="sm"
+                  >
+                    {claimMutation.isPending ? "Claiming…" : "🪙 Отримати +100 монет"}
+                  </Button>
                 )}
               </div>
             </div>
 
-            {/* Lucky Drops */}
-            <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-yellow-500/[0.05] to-transparent overflow-hidden">
-              <div className="px-4 py-3.5 border-b border-yellow-500/10 flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-yellow-500/15">
+            {/* LUCKY DROPS */}
+            <div className="rounded-2xl border border-yellow-500/20 overflow-hidden" style={{ background: "rgba(234,179,8,0.04)" }}>
+              <div className="px-4 py-3 border-b border-yellow-500/10 flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-yellow-500/15">
                   <Sparkles className="w-4 h-4 text-yellow-400" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="font-semibold text-white text-sm">Lucky Drops</p>
-                  <p className="text-xs text-muted-foreground">Random rewards for active viewers</p>
+                  <p className="text-[10px] text-white/25">Рандомні нагороди для глядачів</p>
                 </div>
               </div>
               <div className="p-4 space-y-3">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 font-bold"
+                  className="w-full border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/10 font-bold hover:border-yellow-400/50 transition-all"
                   onClick={handleTriggerDrop}
                   disabled={triggerDrop.isPending}
                 >
-                  {triggerDrop.isPending ? "Firing…" : "🎰 Fire Lucky Drop Now"}
+                  {triggerDrop.isPending ? "Firing…" : "🎰 Запустити Drop зараз"}
                 </Button>
-                <p className="text-[10px] text-muted-foreground text-center">
-                  Auto-fires every ~50 events · Large gifts trigger early
-                </p>
-                <div className="space-y-2">
-                  {(luckyDropHistory ?? []).slice(0, 5).map((drop: any) => {
+                <p className="text-[10px] text-white/20 text-center">Авто-спрацьовує кожні ~50 подій</p>
+
+                {/* Tier legend */}
+                <div className="flex items-center gap-2 flex-wrap justify-center pt-1">
+                  {[
+                    { name: "Common",    from: "from-slate-400",  to: "to-slate-500"  },
+                    { name: "Rare",      from: "from-blue-400",   to: "to-cyan-500"   },
+                    { name: "Epic",      from: "from-purple-400", to: "to-violet-500" },
+                    { name: "Legendary", from: "from-yellow-400", to: "to-amber-500"  },
+                  ].map((tier) => (
+                    <div key={tier.name} className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${tier.from} ${tier.to} shrink-0`} />
+                      <span className="text-[9px] text-white/25">{tier.name}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Drop history */}
+                <div className="space-y-1.5">
+                  {(luckyDropHistory ?? []).slice(0, 5).map((drop: any, i: number) => {
                     const gradClass = getDropColor(drop.dropName);
+                    const isLegendary = drop.dropName.includes("Legendary");
                     return (
-                      <div key={drop.id} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                        <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradClass} shrink-0`} />
+                      <motion.div
+                        key={drop.id}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className={cn(
+                          "flex items-center gap-2.5 p-2.5 rounded-xl border transition-all",
+                          isLegendary
+                            ? "border-yellow-500/25 bg-yellow-500/[0.06]"
+                            : "border-white/[0.05] bg-white/[0.02]",
+                        )}
+                      >
+                        <div className={`w-2.5 h-2.5 rounded-full bg-gradient-to-r ${gradClass} shrink-0 shadow-sm`}
+                          style={{ boxShadow: isLegendary ? "0 0 6px rgba(251,191,36,0.5)" : undefined }} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-white truncate">{drop.winnerName ?? "—"}</p>
-                          <p className="text-[10px] text-muted-foreground">{drop.dropName}</p>
+                          <p className="text-[10px] text-white/30 truncate">{drop.dropName}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-xs font-bold text-violet-400">+{drop.xpReward}</p>
+                          <p className="text-[10px] font-bold text-violet-400">+{drop.xpReward} XP</p>
                           <p className="text-[10px] text-yellow-400">+{drop.coinReward}🪙</p>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                   {(!luckyDropHistory || luckyDropHistory.length === 0) && (
-                    <p className="text-xs text-muted-foreground text-center py-3">
-                      No drops yet. Start streaming to activate!
-                    </p>
+                    <div className="text-center py-5">
+                      <Sparkles className="w-8 h-8 mx-auto mb-2 text-white/10" />
+                      <p className="text-xs text-white/20">Drops з'являться під час стриму</p>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Leaderboard */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+            {/* LEADERBOARD */}
+            <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
               <div className="px-4 py-3.5 border-b border-white/[0.06]">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="p-2 rounded-lg bg-amber-500/15">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-1.5 rounded-lg bg-amber-500/15">
                     <Trophy className="w-4 h-4 text-amber-400" />
                   </div>
                   <span className="font-semibold text-white text-sm">Leaderboard</span>
                 </div>
-                <div className="flex gap-1 bg-white/[0.04] rounded-lg p-1 mb-2">
+                <div className="flex gap-1 p-1 rounded-lg bg-white/[0.04] border border-white/[0.05] mb-2">
                   {(["viewers", "streamers"] as LbTab[]).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setLbTab(tab)}
                       className={cn(
-                        "flex-1 text-xs py-1 rounded-md font-medium capitalize transition-all",
-                        lbTab === tab ? "bg-amber-500/20 text-amber-300" : "text-muted-foreground hover:text-white",
+                        "flex-1 text-xs py-1.5 rounded-md font-semibold capitalize transition-all",
+                        lbTab === tab ? "bg-amber-500/20 text-amber-300" : "text-white/25 hover:text-white/60",
                       )}
                     >
                       {tab}
@@ -722,16 +803,16 @@ export function Gamification() {
                   ))}
                 </div>
                 {lbTab === "viewers" && (
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap">
                     {(["daily", "weekly", "all-time"] as LbPeriod[]).map((p) => (
                       <button
                         key={p}
                         onClick={() => setLbPeriod(p)}
                         className={cn(
-                          "text-[10px] px-2 py-0.5 rounded-full border transition-colors capitalize",
+                          "text-[10px] px-2.5 py-1 rounded-full border transition-all capitalize font-medium",
                           lbPeriod === p
-                            ? "bg-violet-500/15 border-violet-500/40 text-violet-300"
-                            : "border-white/10 text-muted-foreground hover:text-white",
+                            ? "bg-violet-500/20 border-violet-500/40 text-violet-300"
+                            : "border-white/[0.08] text-white/25 hover:text-white/50",
                         )}
                       >
                         {p}
@@ -740,51 +821,61 @@ export function Gamification() {
                   </div>
                 )}
               </div>
-              <div className="p-3 space-y-1.5 max-h-80 overflow-y-auto">
+              <div className="p-2.5 space-y-1 max-h-80 overflow-y-auto">
                 {lbTab === "viewers" ? (
                   loadingLb
                     ? [...Array(5)].map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-xl bg-white/5" />)
-                    : (leaderboard ?? []).slice(0, 10).map((entry) => (
+                    : (leaderboard ?? []).slice(0, 10).map((entry, i) => (
                         <button
                           key={entry.tiktokViewerId}
                           onClick={() => setFanProfile({ tiktokViewerId: entry.tiktokViewerId, viewerName: entry.viewerName })}
-                          className="w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-white/[0.05] bg-white/[0.01] hover:border-violet-500/25 hover:bg-violet-500/[0.05] transition-all text-left group"
+                          className="w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-white/[0.04] hover:border-violet-500/25 hover:bg-violet-500/[0.06] transition-all text-left group"
                         >
-                          <RankBadge rank={entry.rank} />
-                          <div className="w-6 h-6 rounded-lg bg-violet-500/15 border border-violet-500/15 flex items-center justify-center text-[10px] font-black text-violet-300 shrink-0">
+                          <div className="w-6 text-center shrink-0">
+                            {i === 0 ? <span className="text-sm">🥇</span> : i === 1 ? <span className="text-sm">🥈</span> : i === 2 ? <span className="text-sm">🥉</span> : <span className="text-[10px] text-white/25 tabular-nums">#{i + 1}</span>}
+                          </div>
+                          <div className="w-6 h-6 rounded-lg bg-violet-500/15 border border-violet-500/15 flex items-center justify-center text-[10px] font-black text-violet-300 shrink-0 tabular-nums">
                             {entry.level}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs text-white truncate group-hover:text-violet-300 transition-colors">{entry.viewerName}</p>
+                            <p className="text-xs text-white/80 truncate group-hover:text-violet-300 transition-colors font-medium">{entry.viewerName}</p>
+                            {entry.totalGifts > 0 && <p className="text-[10px] text-white/20 truncate">{entry.totalGifts} gifts</p>}
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="text-xs font-black text-violet-400">{entry.totalXp.toLocaleString()}</p>
-                            {entry.totalGifts > 0 && <p className="text-[10px] text-muted-foreground">{entry.totalGifts} gifts</p>}
+                            <p className="text-xs font-black text-violet-400 tabular-nums">{entry.totalXp.toLocaleString()}</p>
+                            <p className="text-[9px] text-white/20">XP</p>
                           </div>
-                          <ChevronRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                         </button>
                       ))
                 ) : (
                   loadingSlb
                     ? [...Array(5)].map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-xl bg-white/5" />)
-                    : (streamerLb ?? []).slice(0, 8).map((entry) => (
-                        <div key={entry.streamerId} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-white/[0.05] bg-white/[0.01]">
-                          <RankBadge rank={entry.rank} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-white truncate">{entry.streamerName}</p>
-                            <p className="text-[10px] text-muted-foreground">{entry.uniqueViewers} viewers · {entry.totalGiftsReceived} gifts</p>
+                    : (streamerLb ?? []).slice(0, 8).map((entry, i) => (
+                        <div key={entry.streamerId} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-white/[0.04] bg-white/[0.01]">
+                          <div className="w-6 text-center shrink-0">
+                            {i === 0 ? <span className="text-sm">🥇</span> : i === 1 ? <span className="text-sm">🥈</span> : i === 2 ? <span className="text-sm">🥉</span> : <span className="text-[10px] text-white/25">#{i + 1}</span>}
                           </div>
-                          <span className="text-xs font-black text-cyan-400 shrink-0">{entry.totalXpAwarded.toLocaleString()}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-white/80 truncate font-medium">{entry.streamerName}</p>
+                            <p className="text-[10px] text-white/25">{entry.uniqueViewers} viewers · {entry.totalGiftsReceived} gifts</p>
+                          </div>
+                          <span className="text-xs font-black text-cyan-400 shrink-0 tabular-nums">{entry.totalXpAwarded.toLocaleString()}</span>
                         </div>
                       ))
                 )}
                 {lbTab === "viewers" && (!leaderboard || leaderboard.length === 0) && !loadingLb && (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    {streamerId ? "No viewers ranked yet. Go live to earn XP!" : "Start streaming to see viewer rankings."}
-                  </p>
+                  <div className="py-8 text-center">
+                    <Trophy className="w-8 h-8 mx-auto mb-2 text-white/10" />
+                    <p className="text-xs text-white/25">
+                      {streamerId ? "No viewers ranked yet. Go live to earn XP!" : "Start streaming to see rankings."}
+                    </p>
+                  </div>
                 )}
                 {lbTab === "streamers" && (!streamerLb || streamerLb.length === 0) && !loadingSlb && (
-                  <p className="text-sm text-muted-foreground text-center py-6">No streamers ranked yet.</p>
+                  <div className="py-8 text-center">
+                    <Trophy className="w-8 h-8 mx-auto mb-2 text-white/10" />
+                    <p className="text-xs text-white/25">No streamers ranked yet.</p>
+                  </div>
                 )}
               </div>
             </div>
