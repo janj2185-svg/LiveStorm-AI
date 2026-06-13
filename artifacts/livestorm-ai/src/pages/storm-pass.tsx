@@ -49,41 +49,45 @@ interface StormPassData {
 // ── Tier config ───────────────────────────────────────────────────────────────
 const TIER_CONFIG = {
   bronze: {
-    label:    "Bronze",
-    emoji:    "🥉",
-    border:   "border-amber-700",
-    glow:     "shadow-amber-700/30",
-    ring:     "#92400e",
-    badge:    "bg-amber-950 text-amber-400 border border-amber-700",
-    gradient: "from-amber-950/40 to-transparent",
+    label:       "Bronze",
+    emoji:       "🥉",
+    border:      "border-amber-700",
+    glow:        "shadow-amber-700/30",
+    ring:        "#b45309",
+    strokeClass: "stroke-amber-600",
+    badge:       "bg-amber-950 text-amber-400 border border-amber-700",
+    gradient:    "from-amber-950/40 to-transparent",
   },
   silver: {
-    label:    "Silver",
-    emoji:    "🥈",
-    border:   "border-slate-400",
-    glow:     "shadow-slate-400/30",
-    ring:     "#94a3b8",
-    badge:    "bg-slate-800 text-slate-300 border border-slate-500",
-    gradient: "from-slate-800/40 to-transparent",
+    label:       "Silver",
+    emoji:       "🥈",
+    border:      "border-slate-400",
+    glow:        "shadow-slate-400/30",
+    ring:        "#94a3b8",
+    strokeClass: "stroke-slate-400",
+    badge:       "bg-slate-800 text-slate-300 border border-slate-500",
+    gradient:    "from-slate-800/40 to-transparent",
   },
   gold: {
-    label:    "Gold",
-    emoji:    "🥇",
-    border:   "border-yellow-500",
-    glow:     "shadow-yellow-500/30",
-    ring:     "#eab308",
-    badge:    "bg-yellow-950 text-yellow-400 border border-yellow-600",
-    gradient: "from-yellow-950/40 to-transparent",
+    label:       "Gold",
+    emoji:       "🥇",
+    border:      "border-yellow-500",
+    glow:        "shadow-yellow-500/30",
+    ring:        "#eab308",
+    strokeClass: "stroke-yellow-500",
+    badge:       "bg-yellow-950 text-yellow-400 border border-yellow-600",
+    gradient:    "from-yellow-950/40 to-transparent",
   },
   legend: {
-    label:    "Legend",
-    emoji:    "💜",
-    border:   "border-violet-500",
-    glow:     "shadow-violet-500/40",
-    ring:     "#a855f7",
-    badge:    "bg-violet-950 text-violet-300 border border-violet-500",
-    gradient: "from-violet-950/40 to-transparent",
-    pulse:    true,
+    label:       "Legend",
+    emoji:       "💜",
+    border:      "border-violet-500",
+    glow:        "shadow-violet-500/40",
+    ring:        "#a855f7",
+    strokeClass: "stroke-violet-500",
+    badge:       "bg-violet-950 text-violet-300 border border-violet-500",
+    gradient:    "from-violet-950/40 to-transparent",
+    pulse:       true,
   },
 } as const;
 
@@ -197,7 +201,7 @@ function StormPassCard({ data }: { data: StormPassData }) {
         <div className={`bg-gradient-to-br ${tier.gradient} p-6 flex items-center gap-5`}>
           {/* Level ring */}
           <div className="relative flex-shrink-0">
-            <ProgressRing progress={isNaN(data.xpProgress) ? 0 : Math.max(0, Math.min(100, data.xpProgress))} size={88} strokeWidth={7} color={ringColor}>
+            <ProgressRing value={isNaN(data.xpProgress) ? 0 : Math.max(0, Math.min(100, data.xpProgress))} size={88} strokeWidth={7} colorClass={tier.strokeClass}>
               <div className="text-center">
                 <div className="text-white font-black text-lg leading-none">{data.level}</div>
                 <div className="text-slate-400 text-[10px] leading-none mt-0.5">LVL</div>
