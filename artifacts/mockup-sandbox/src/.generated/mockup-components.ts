@@ -4,5 +4,9 @@ export const modules: ModuleMap = {
   "./components/mockups/design-variants/ConceptDash.tsx": () => import("../components/mockups/design-variants/ConceptDash.tsx"),
   "./components/mockups/design-variants/CyberNeon.tsx": () => import("../components/mockups/design-variants/CyberNeon.tsx"),
   "./components/mockups/design-variants/IceAurora.tsx": () => import("../components/mockups/design-variants/IceAurora.tsx"),
-  "./components/mockups/design-variants/PlasmaStorm.tsx": () => import("../components/mockups/design-variants/PlasmaStorm.tsx")
+  "./components/mockups/design-variants/PlasmaStorm.tsx": () => import("../components/mockups/design-variants/PlasmaStorm.tsx"),
+  "./components/mockups/font-compare/Inter.tsx": () => import("../components/mockups/font-compare/Inter.tsx"),
+  "./components/mockups/font-compare/Outfit.tsx": () => import("../components/mockups/font-compare/Outfit.tsx"),
+  "./components/mockups/font-compare/Sora.tsx": () => import("../components/mockups/font-compare/Sora.tsx"),
+  "./components/mockups/font-compare/SpaceGrotesk.tsx": () => import("../components/mockups/font-compare/SpaceGrotesk.tsx")
 };
