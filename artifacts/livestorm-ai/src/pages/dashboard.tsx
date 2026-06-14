@@ -563,6 +563,15 @@ export function Dashboard() {
   ];
 
   return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/dashboard-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
     <div className="space-y-4 max-w-[1400px]">
 
       {/* ── Hero / Storm AI Banner ── */}
@@ -1122,6 +1131,7 @@ export function Dashboard() {
           )}
         </motion.div>
       </div>
+    </div>
     </div>
   );
 }
