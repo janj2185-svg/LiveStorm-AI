@@ -585,7 +585,7 @@ export function Dashboard() {
         <div
           className={cn("relative overflow-hidden rounded-2xl border")}
           style={{
-            minHeight: 160,
+            minHeight: 72,
             borderColor: isActive ? "rgba(34,197,94,0.30)" : "rgba(109,40,217,0.25)",
             boxShadow: isActive
               ? "0 0 0 1px rgba(34,197,94,0.07), 0 24px 70px rgba(0,0,0,0.6), 0 0 50px rgba(34,197,94,0.07)"
@@ -693,10 +693,10 @@ export function Dashboard() {
           <div className="absolute bottom-3 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] rounded-br pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
 
           {/* ── CONTENT ── */}
-          <div className="relative z-10 flex flex-col items-start justify-center text-left px-7 py-4" style={{ minHeight: 160 }}>
+          <div className="relative z-10 flex flex-col items-start justify-center text-left px-7 py-0" style={{ minHeight: 72 }}>
 
             {/* ─── LOGO + BRAND — centered ─── */}
-            <div className="w-full flex flex-col items-center mb-3 pt-3">
+            <div className="w-full flex flex-col items-center mb-1 pt-0">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
