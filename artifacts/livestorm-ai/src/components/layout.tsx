@@ -83,7 +83,7 @@ function SidebarNavItem({
           collapsed ? "px-0 justify-center" : "gap-3 px-3",
           active
             ? "bg-primary/22 border border-primary/40 text-white"
-            : "border border-transparent text-white/58 hover:text-white/88 hover:bg-white/[0.08]",
+            : "border border-transparent text-white/72 hover:text-white/95 hover:bg-white/[0.08]",
         )}
         style={active ? {
           boxShadow: "0 0 0 1px rgba(124,58,237,0.12), 0 2px 12px rgba(124,58,237,0.18)",
@@ -95,7 +95,7 @@ function SidebarNavItem({
         <Icon className={cn(
           "flex-shrink-0 transition-colors duration-200",
           collapsed ? "h-[18px] w-[18px]" : "h-[15px] w-[15px]",
-          active ? "text-primary" : "text-white/45",
+          active ? "text-primary" : "text-white/62",
         )} />
         {!collapsed && (
           <span className="text-[12.5px] font-semibold whitespace-nowrap flex-1 leading-none tracking-[-0.01em]">
@@ -221,7 +221,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {/* Tablet collapse button */}
           {!sidebarCollapsed && (
             <button
-              className="lg:hidden flex items-center justify-center w-7 h-7 rounded-lg text-white/25 hover:text-white/55 hover:bg-white/[0.07] transition-colors flex-shrink-0"
+              className="lg:hidden flex items-center justify-center w-7 h-7 rounded-lg text-white/42 hover:text-white/70 hover:bg-white/[0.07] transition-colors flex-shrink-0"
               onClick={() => setTabletExpanded(false)}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -229,7 +229,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
           {sidebarCollapsed && (
             <button
-              className="lg:hidden absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-white/25 hover:text-white/55 hover:bg-white/[0.07] transition-colors"
+              className="lg:hidden absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-white/42 hover:text-white/70 hover:bg-white/[0.07] transition-colors"
               onClick={() => setTabletExpanded(true)}
             >
               <Menu className="h-3.5 w-3.5" />
@@ -271,7 +271,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             onClick={toggleDesktopCollapse}
             className={cn(
               "w-full flex items-center rounded-lg p-2 transition-colors",
-              "text-white/22 hover:text-white/50 hover:bg-white/[0.05]",
+              "text-white/40 hover:text-white/65 hover:bg-white/[0.05]",
               desktopCollapsed ? "justify-center" : "gap-2.5 px-3",
             )}
             title={desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -300,11 +300,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <>
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <p className="text-[12px] font-semibold text-white/85 truncate leading-none">{user.fullName || "Creator"}</p>
-                    <p className="text-[10px] text-white/28 truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
+                    <p className="text-[10px] text-white/48 truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
                   </div>
                   <Button
                     variant="ghost" size="icon"
-                    className="h-7 w-7 text-white/22 hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
+                    className="h-7 w-7 text-white/40 hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
                     onClick={() => signOut({ redirectUrl: basePath || "/" })}
                     data-testid="button-logout"
                     title={t("sign_out")}
@@ -344,7 +344,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Desktop top bar */}
         <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/[0.06] bg-black/15 backdrop-blur-sm sticky top-0 z-20">
-          <h1 className="text-[13px] font-semibold text-white/50 tracking-wide">{currentLabel}</h1>
+          <h1 className="text-[13px] font-semibold text-white/75 tracking-wide">{currentLabel}</h1>
           <div className="hidden lg:flex items-center gap-1 text-[10px] text-white/12 font-mono">
             <kbd className="border border-white/[0.08] rounded px-1 py-0.5">⌘1</kbd>
             <span>–</span>
@@ -384,7 +384,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link key={item.href} href={item.href} className="flex-1">
                 <div className={cn(
                   "flex flex-col items-center justify-center gap-1 h-full w-full relative transition-all active:opacity-60",
-                  active ? "text-primary" : "text-white/38",
+                  active ? "text-primary" : "text-white/58",
                 )}>
                   {active && (
                     <span className="absolute top-0 inset-x-0 flex justify-center">
@@ -399,7 +399,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
           <button
             onClick={() => setMoreOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-white/38 active:opacity-60 transition-opacity"
+            className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-white/58 active:opacity-60 transition-opacity"
           >
             <MoreHorizontal className="h-5 w-5" />
             <span className="text-[10px] font-semibold leading-none">{t("nav_more")}</span>
@@ -418,7 +418,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="px-4 pb-8">
               <div className="flex items-center justify-between py-3 mb-3 border-b border-white/[0.06]">
                 <h3 className="text-sm font-bold text-white">{t("nav_navigation")}</h3>
-                <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-white/40 hover:bg-white/[0.06]">
+                <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-white/60 hover:bg-white/[0.06]">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -434,7 +434,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         "flex flex-col items-center gap-2 p-4 rounded-xl border min-h-[80px] justify-center transition-all active:scale-95",
                         active
                           ? "bg-primary/20 border-primary/30 text-white"
-                          : "bg-white/[0.04] border-white/[0.06] text-white/40",
+                          : "bg-white/[0.04] border-white/[0.06] text-white/62",
                       )}
                     >
                       <Icon className={cn("h-5 w-5", active && "text-primary")} />

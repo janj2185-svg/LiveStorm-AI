@@ -82,7 +82,7 @@
   --secondary-foreground: 214 30% 92%;
 
   --muted: 244 44% 11%;
-  --muted-foreground: 244 18% 68%;
+  --muted-foreground: 244 18% 78%;
 
   --accent: 192 91% 43%;
   --accent-foreground: 0 0% 100%;
@@ -124,7 +124,7 @@
   --secondary: 225 38% 13%;
   --secondary-foreground: 214 32% 91%;
   --muted: 225 38% 12%;
-  --muted-foreground: 215 20% 52%;
+  --muted-foreground: 215 20% 70%;
   --accent: 192 91% 43%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 62.8% 30.6%;
@@ -433,7 +433,7 @@ input[type="range"] {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    color: rgba(255, 255, 255, 0.52);
+    color: rgba(255, 255, 255, 0.72);
   }
 
   /* Large stat / number display */
@@ -448,7 +448,7 @@ input[type="range"] {
 
   /* Helper — dim secondary text at a readable level */
   .ls-muted {
-    color: rgba(255, 255, 255, 0.48);
+    color: rgba(255, 255, 255, 0.68);
     font-size: 0.75rem;
   }
 }
@@ -487,9 +487,16 @@ input[type="range"] {
 }
 
 /* ─── GLOBAL READABILITY OVERRIDES ──────────────────────────────────────── */
+
+/* Text shadow for readability over animated backgrounds */
+main p, main span, main h1, main h2, main h3, main h4, main li,
+main label, main td, main th {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
 /* Lift invisible placeholder text */
 ::placeholder {
-  color: rgba(255, 255, 255, 0.32) !important;
+  color: rgba(255, 255, 255, 0.40) !important;
 }
 
 /* Selection highlight */
