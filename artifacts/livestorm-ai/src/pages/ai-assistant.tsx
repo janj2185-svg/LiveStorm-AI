@@ -1111,7 +1111,14 @@ export function AiAssistant() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-[calc(100vh-4.5rem)] flex flex-col gap-2 overflow-hidden">
+    <div
+      className="h-[calc(100vh-4.5rem)] flex flex-col gap-2 overflow-hidden"
+      style={{
+        backgroundImage: "url('/ai-storm-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
 
       {/* ── Connection error banner ── */}
       {isSessionActive && effectiveMode === "error" && effectiveError && (
