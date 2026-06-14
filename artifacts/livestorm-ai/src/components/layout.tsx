@@ -209,7 +209,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="font-black text-[14px] tracking-tight text-white leading-none whitespace-nowrap" style={{ fontFamily: "'Sora', sans-serif" }}>
+              <p className="font-bold text-[14px] tracking-tight text-white leading-none whitespace-nowrap">
                 LiveStorm <span className="text-primary">AI</span>
               </p>
               <p className="text-[7.5px] text-white/35 mt-1 tracking-[0.20em] font-bold whitespace-nowrap uppercase">
@@ -300,7 +300,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <>
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <p className="text-[12px] font-semibold text-white/85 truncate leading-none">{user.fullName || "Creator"}</p>
-                    <p className="text-[9px] text-white/28 truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
+                    <p className="text-[10px] text-white/28 truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
                   </div>
                   <Button
                     variant="ghost" size="icon"
@@ -392,7 +392,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </span>
                   )}
                   <Icon className="h-5 w-5" />
-                  <span className="text-[9px] font-semibold leading-none">{t(item.labelKey)}</span>
+                  <span className="text-[10px] font-semibold leading-none">{t(item.labelKey)}</span>
                 </div>
               </Link>
             );
@@ -402,7 +402,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-white/38 active:opacity-60 transition-opacity"
           >
             <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[9px] font-semibold leading-none">{t("nav_more")}</span>
+            <span className="text-[10px] font-semibold leading-none">{t("nav_more")}</span>
           </button>
         </div>
       </nav>
