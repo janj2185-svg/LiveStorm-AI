@@ -65,7 +65,7 @@ export function Universe() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative"
       style={{
         backgroundImage: "url('/community-bg.png')",
         backgroundSize: "cover",
@@ -73,14 +73,16 @@ export function Universe() {
         backgroundAttachment: "fixed",
       }}
     >
-    <div className="space-y-5 max-w-6xl mx-auto">
+      {/* Dark overlay so text is readable over any background image */}
+      <div className="absolute inset-0 bg-[#080012]/72 pointer-events-none" />
+    <div className="relative space-y-5 max-w-6xl mx-auto">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-400/50 mb-0.5">Social Hub</p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-400/80 mb-0.5">Social Hub</p>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Community</h1>
-          <p className="text-sm text-white/68 mt-0.5">
+          <p className="text-sm text-white/85 mt-0.5">
             {(rankings ?? []).length} streamers · {(alliances ?? []).filter(a => a.status === "accepted").length} alliances active
           </p>
         </div>
@@ -88,7 +90,7 @@ export function Universe() {
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
             <Trophy className="h-5 w-5 text-yellow-400" />
             <div>
-              <p className="text-[10px] text-white/70">Your Rank</p>
+              <p className="text-xs text-white/85">Your Rank</p>
               <p className="text-xl font-black text-yellow-400">#{myRank}</p>
             </div>
           </div>
@@ -107,10 +109,10 @@ export function Universe() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
+              "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap",
               activeTab === tab.id
                 ? "bg-violet-600 text-white shadow-md shadow-violet-500/20"
-                : "text-white/58 hover:text-white/78 hover:bg-white/[0.04]",
+                : "text-white/75 hover:text-white/95 hover:bg-white/[0.06]",
             )}
           >
             {tab.icon}{tab.label}
@@ -130,7 +132,7 @@ export function Universe() {
               </div>
               <div>
                 <p className="ls-section">Топ підписників</p>
-                <p className="text-[10px] text-white/70">Ranked by stream activity</p>
+                <p className="text-xs text-white/82">Ranked by stream activity</p>
               </div>
             </div>
             <div className="p-3 space-y-2">
@@ -160,12 +162,12 @@ export function Universe() {
                         )}
                       >
                         <span className="text-sm font-black w-6 text-center shrink-0">
-                          {medals[i] ?? <span className="text-white/45 text-xs">#{i + 1}</span>}
+                          {medals[i] ?? <span className="text-white/72 text-xs font-bold">#{i + 1}</span>}
                         </span>
                         <div className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-sm shrink-0">🏰</div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-white truncate">{r.kingdomName}</p>
-                          <p className="text-[10px] text-white/55 truncate">{r.streamerName}</p>
+                          <p className="text-xs text-white/75 truncate">{r.streamerName}</p>
                         </div>
                         <p className="text-xs font-black text-yellow-400 shrink-0">🪙 {r.gold.toLocaleString()}</p>
                       </motion.div>
@@ -183,7 +185,7 @@ export function Universe() {
                 <p className="ls-section">🌌 World Progress</p>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-white/72">Kingdoms active</p>
+                <p className="text-sm text-white/85">Kingdoms active</p>
                 <span className="text-cyan-400 font-black tabular-nums">{totalKingdoms}/10</span>
               </div>
               <div className="relative h-2 rounded-full overflow-hidden bg-white/[0.06] mb-1">
@@ -192,7 +194,7 @@ export function Universe() {
                   style={{ width: `${worldProgress}%`, boxShadow: "0 0 8px rgba(14,165,233,0.5)" }}
                 />
               </div>
-              <p className="text-[10px] text-white/68">{totalKingdoms} / 10 needed for next Universe tier</p>
+              <p className="text-xs text-white/80">{totalKingdoms} / 10 needed for next Universe tier</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -207,7 +209,7 @@ export function Universe() {
                     <span className={s.color}>{s.icon}</span>
                   </div>
                   <p className="text-lg font-black text-white tabular-nums"><AnimatedCounter target={s.value} /></p>
-                  <p className="text-[10px] text-white/70 mt-0.5">{s.label}</p>
+                  <p className="text-xs text-white/82 mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -221,7 +223,7 @@ export function Universe() {
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
               </span>
               <p className="ls-section">Онлайн зараз</p>
-              <span className="ml-auto text-[10px] text-emerald-400 font-bold tabular-nums">
+              <span className="ml-auto text-xs text-emerald-400 font-bold tabular-nums">
                 {(rankings ?? []).length} active
               </span>
             </div>
@@ -229,7 +231,7 @@ export function Universe() {
               {(rankings ?? []).length === 0 ? (
                 <div className="py-10 text-center">
                   <Users className="w-10 h-10 mx-auto mb-3 text-white/10" />
-                  <p className="text-xs text-white/55">Nobody online yet</p>
+                  <p className="text-sm text-white/75">Nobody online yet</p>
                 </div>
               ) : (rankings ?? []).slice(0, 8).map((r, i) => (
                 <motion.div
@@ -246,8 +248,8 @@ export function Universe() {
                     <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0a0a14]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-white/80 truncate">{r.streamerName}</p>
-                    <p className="text-[10px] text-white/52 truncate">Lv.{r.level} · 🪙{r.gold.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-white/92 truncate">{r.streamerName}</p>
+                    <p className="text-xs text-white/75 truncate">Lv.{r.level} · 🪙{r.gold.toLocaleString()}</p>
                   </div>
                   <Star className="h-3 w-3 text-yellow-400/40 shrink-0" />
                 </motion.div>
@@ -263,11 +265,11 @@ export function Universe() {
           <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-b from-violet-500/[0.06] to-transparent overflow-hidden">
             <div className="px-5 py-4 border-b border-violet-500/15">
               <p className="ls-section">Запросити союз</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Введи ID стрімера для пакту.</p>
+              <p className="text-sm text-white/80 mt-0.5">Введи ID стрімера для пакту.</p>
             </div>
             <div className="p-5 space-y-4">
               <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <p className="text-xs text-muted-foreground">Your Streamer ID</p>
+                <p className="text-sm text-white/72">Your Streamer ID</p>
                 <p className="font-mono font-black text-violet-400 text-lg">{streamer?.id ?? "—"}</p>
               </div>
               <Input
@@ -284,19 +286,19 @@ export function Universe() {
               >
                 {createMutation.isPending ? "Sending…" : "⚔️ Request Alliance"}
               </Button>
-              <p className="text-xs text-muted-foreground text-center">Share your ID with allies so they can find you.</p>
+              <p className="text-sm text-white/72 text-center">Share your ID with allies so they can find you.</p>
             </div>
           </div>
 
           <div className="lg:col-span-2 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Твої союзи</p>
+            <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Твої союзи</p>
             {loadingAlliances
               ? [...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl bg-white/5" />)
               : (alliances ?? []).length === 0
               ? (
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] py-12 text-center">
                   <Shield className="w-12 h-12 mx-auto mb-3 opacity-15 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Ще немає союзів.</p>
+                  <p className="text-sm text-white/78">Ще немає союзів.</p>
                 </div>
               )
               : (alliances ?? []).map((a) => {
@@ -314,7 +316,7 @@ export function Universe() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white">{partnerName}</p>
-                        <p className="text-xs text-muted-foreground">{isRequester ? "You requested this" : "They requested this"}</p>
+                        <p className="text-sm text-white/72">{isRequester ? "You requested this" : "They requested this"}</p>
                       </div>
                       <Badge className={cn("shrink-0 border text-xs", statusStyles[a.status] ?? "bg-muted")}>{a.status}</Badge>
                       {a.status === "pending" && !isRequester && (
@@ -348,21 +350,21 @@ export function Universe() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white truncate">{k.name}</p>
-                  <p className="text-xs text-muted-foreground">Level {k.level} Kingdom</p>
+                  <p className="text-sm text-white/78">Level {k.level} Kingdom</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-2 rounded-lg bg-yellow-500/[0.07] border border-yellow-500/15">
                   <p className="text-yellow-400 font-bold text-sm">{k.gold.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground">🪙 Gold</p>
+                  <p className="text-xs text-white/78">🪙 Gold</p>
                 </div>
                 <div className="p-2 rounded-lg bg-green-500/[0.07] border border-green-500/15">
                   <p className="text-green-400 font-bold text-sm">{k.wood.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground">🌲 Wood</p>
+                  <p className="text-xs text-white/78">🌲 Wood</p>
                 </div>
                 <div className="p-2 rounded-lg bg-slate-500/[0.07] border border-slate-500/15">
                   <p className="text-slate-300 font-bold text-sm">{k.stone.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground">🪨 Stone</p>
+                  <p className="text-xs text-white/78">🪨 Stone</p>
                 </div>
               </div>
             </motion.div>
@@ -370,7 +372,7 @@ export function Universe() {
           {(!kingdoms || kingdoms.length === 0) && (
             <div className="col-span-3 text-center py-14">
               <Globe className="w-12 h-12 mx-auto mb-3 text-white/10" />
-              <p className="text-sm text-white/55">No kingdoms discovered yet.</p>
+              <p className="text-sm text-white/78">No kingdoms discovered yet.</p>
             </div>
           )}
         </div>
@@ -383,7 +385,7 @@ export function Universe() {
             <Swords className="h-10 w-10 text-violet-400/60" />
           </div>
           <p className="text-lg font-bold text-white mb-2">Бесіди — Coming Soon</p>
-          <p className="text-sm text-white/62 max-w-sm mx-auto">
+          <p className="text-sm text-white/85 max-w-sm mx-auto">
             Community chat and direct messaging between streamers will be available in a future update.
           </p>
         </div>
