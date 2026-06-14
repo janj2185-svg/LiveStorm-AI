@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 @layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
@@ -105,7 +105,7 @@
   --sidebar-ring: 263 72% 62%;
 
   --radius: 0.75rem;
-  --app-font-sans: 'Sora', sans-serif;
+  --app-font-sans: 'Space Grotesk', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
 }
 
