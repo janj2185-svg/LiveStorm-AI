@@ -692,10 +692,11 @@ export function Dashboard() {
           <div className="absolute bottom-3 left-3 w-4 h-4 border-b-[1.5px] border-l-[1.5px] rounded-bl pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
           <div className="absolute bottom-3 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] rounded-br pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
 
-          {/* ── CENTERED CONTENT ── */}
+          {/* ── CONTENT ── */}
           <div className="relative z-10 flex flex-col items-start justify-center text-left px-7 py-7" style={{ minHeight: 210 }}>
 
-            {/* ─── LOGO ORB — centered ─── */}
+            {/* ─── LOGO + BRAND — centered ─── */}
+            <div className="w-full flex flex-col items-center mb-4 pt-5">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -778,6 +779,7 @@ export function Dashboard() {
                 LiveStorm AI
               </h1>
             </motion.div>
+            </div>
 
             {/* ─── WELCOME + USERNAME ─── */}
             <motion.p
