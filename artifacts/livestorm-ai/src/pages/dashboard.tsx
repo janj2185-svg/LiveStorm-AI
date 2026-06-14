@@ -701,7 +701,7 @@ export function Dashboard() {
           }} />
 
           {/* ── BANNER — 3-column grid ── */}
-          <div className="relative z-10 grid items-start px-6 pt-5" style={{ minHeight: 140, gridTemplateColumns: "1fr auto 1fr" }}>
+          <div className="relative z-10 grid items-center px-6" style={{ minHeight: 140, gridTemplateColumns: "1fr auto 1fr" }}>
 
             {/* ─── LOGO ORB ─── */}
             {/* ── LEFT: status + welcome ── */}
