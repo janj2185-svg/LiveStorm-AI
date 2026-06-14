@@ -88,7 +88,7 @@ export function Moderation() {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">CONTENT SAFETY</p>
           <h1 className="text-3xl font-black text-white tracking-tight">Moderation</h1>
-          <p className="text-white/40 text-sm mt-1">Protect your stream from harmful content automatically.</p>
+          <p className="text-white/70 text-sm mt-1">Protect your stream from harmful content automatically.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
           {isActive ? (

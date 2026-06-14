@@ -477,13 +477,13 @@ export function Settings() {
             >
               <span className={cn(
                 "shrink-0 p-1.5 rounded-lg transition-colors",
-                tab === item.id ? "bg-violet-500/22 text-violet-300" : "bg-white/[0.06] text-white/55",
+                tab === item.id ? "bg-violet-500/22 text-violet-300" : "bg-white/[0.06] text-white/72",
               )}>
                 {item.icon}
               </span>
               <div className="min-w-0 flex-1">
                 <p className={cn("text-sm font-semibold truncate", tab === item.id ? "text-white" : "text-white/75")}>{item.label}</p>
-                <p className="text-[10px] text-white/42 truncate">{item.sub}</p>
+                <p className="text-[10px] text-white/62 truncate">{item.sub}</p>
               </div>
               {tab === item.id && <div className="w-1 h-4 rounded-full bg-violet-400 shrink-0" />}
             </button>
@@ -499,11 +499,11 @@ export function Settings() {
                 key={item.label}
                 onClick={!item.soon ? () => setTab("profile") : undefined}
                 disabled={item.soon}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all text-white/20 hover:text-white/35 hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all text-white/45 hover:text-white/65 hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <span className="text-base shrink-0">{item.emoji}</span>
                 <p className="text-sm font-medium flex-1">{item.label}</p>
-                {item.soon && <span className="text-[9px] text-white/15 border border-white/10 px-1.5 py-0.5 rounded-full">soon</span>}
+                {item.soon && <span className="text-[9px] text-white/42 border border-white/20 px-1.5 py-0.5 rounded-full">soon</span>}
               </button>
             ))}
           </div>

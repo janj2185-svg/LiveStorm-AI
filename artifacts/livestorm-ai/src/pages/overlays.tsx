@@ -189,7 +189,7 @@ export function Overlays() {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-400/50 mb-1">OBS INTEGRATION</p>
           <h1 className="text-3xl font-black text-white tracking-tight">Overlays</h1>
-          <p className="text-white/40 text-sm mt-1">Browser source URLs for your stream overlays. Add them to OBS as Browser Sources.</p>
+          <p className="text-white/70 text-sm mt-1">Browser source URLs for your stream overlays. Add them to OBS as Browser Sources.</p>
         </div>
         <div className="shrink-0">
           {loading ? (

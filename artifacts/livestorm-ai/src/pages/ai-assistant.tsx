@@ -671,7 +671,7 @@ function AiActivityTab({
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <Sparkles className="h-7 w-7 text-purple-400/20 mb-2 animate-pulse" />
         <p className="text-xs text-muted-foreground/60">Waiting for AI to respond…</p>
-        <p className="text-[10px] text-white/48 mt-1">
+        <p className="text-[10px] text-white/68 mt-1">
           AI replies appear here with full diagnostic info
         </p>
       </div>
@@ -719,9 +719,9 @@ function AiActivityTab({
 
               {/* TTS status */}
               <div className="flex items-center gap-1.5 ml-1">
-                <CornerDownRight className="h-3 w-3 text-white/38 flex-shrink-0" />
+                <CornerDownRight className="h-3 w-3 text-white/58 flex-shrink-0" />
                 {ttsMode === "off" ? (
-                  <span className="text-[10px] text-white/48 flex items-center gap-1">
+                  <span className="text-[10px] text-white/68 flex items-center gap-1">
                     <VolumeX className="h-2.5 w-2.5" />
                     TTS off
                   </span>
@@ -1160,7 +1160,7 @@ export function AiAssistant() {
               ? "border-green-500/30 bg-green-500/10 text-green-300"
               : isSessionActive
               ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-300 animate-pulse"
-              : "border-white/10 bg-white/5 text-white/30",
+              : "border-white/10 bg-white/5 text-white/52",
           )}>
             <span className={cn("w-1.5 h-1.5 rounded-full",
               isSessionActive && connected ? "bg-green-400 animate-pulse"
@@ -1201,7 +1201,7 @@ export function AiAssistant() {
               BATTLE · {battleElapsed}
             </div>
           )}
-          <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-white/10 bg-white/5 text-white/40 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-white/10 bg-white/5 text-white/62 flex-shrink-0">
             <span className="text-xs leading-none">{ANIMATION_EMOJI[animState]}</span>
             <span className="capitalize">{ANIMATION_LABELS[animState]}</span>
           </div>
@@ -1339,7 +1339,7 @@ export function AiAssistant() {
                 );
               })}
             </div>
-            <p className="text-[9px] text-white/48 text-center px-3 pb-2.5">
+            <p className="text-[9px] text-white/68 text-center px-3 pb-2.5">
               {INTENSITY_MODES.find(m => m.value === (config?.intensityMode ?? "streamer"))?.desc}
             </p>
           </div>
@@ -1367,7 +1367,7 @@ export function AiAssistant() {
                     <span className="text-lg leading-none flex-shrink-0">{mode.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <p className={cn("text-[11px] font-bold", isActive ? "text-white" : "text-white/60")}>{mode.label}</p>
-                      <p className="text-[9px] text-white/48 leading-tight mt-0.5">{mode.desc}</p>
+                      <p className="text-[9px] text-white/68 leading-tight mt-0.5">{mode.desc}</p>
                     </div>
                     {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />}
                   </button>
@@ -1390,7 +1390,7 @@ export function AiAssistant() {
                 </span>
               )}
               {isMobile && (
-                <ChevronDown className={cn("h-3.5 w-3.5 text-white/45 transition-transform", mobileBattleOpen && "rotate-180")} />
+                <ChevronDown className={cn("h-3.5 w-3.5 text-white/65 transition-transform", mobileBattleOpen && "rotate-180")} />
               )}
             </div>
             {(!isMobile || mobileBattleOpen) && (
@@ -1426,7 +1426,7 @@ export function AiAssistant() {
                       ? "bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30"
                       : isSessionActive
                       ? "bg-white/[0.04] border-white/10 text-white/60 hover:bg-white/[0.08] hover:border-white/20"
-                      : "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed",
+                      : "bg-white/[0.02] border-white/5 text-white/35 cursor-not-allowed",
                   )}
                 >
                   {battleActivating
@@ -1449,7 +1449,7 @@ export function AiAssistant() {
                       <span className="text-lg font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</span>
                     </div>
                     <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center min-w-[44px]">
-                      <p className="text-[8px] text-white/50 uppercase">Time</p>
+                      <p className="text-[8px] text-white/70 uppercase">Time</p>
                       <p className="text-xs font-black text-white/80 font-mono">{battleElapsed}</p>
                     </div>
                   </div>
@@ -1497,7 +1497,7 @@ export function AiAssistant() {
               >
                 <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/50" />
                 <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">{t("ai_advanced_settings")}</span>
-                <ChevronDown className={cn("h-3 w-3 text-white/42 transition-transform duration-200", advancedOpen && "rotate-180")} />
+                <ChevronDown className={cn("h-3 w-3 text-white/62 transition-transform duration-200", advancedOpen && "rotate-180")} />
               </button>
               {advancedOpen && (
                 <div className="border-t border-white/[0.06]">
@@ -1564,7 +1564,7 @@ export function AiAssistant() {
                   "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
                   stageAspect === "9/16"
                     ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-500/30"
-                    : "text-white/40 border-white/[0.10] hover:text-white/70 hover:border-violet-500/40 bg-white/[0.03]",
+                    : "text-white/62 border-white/[0.10] hover:text-white/85 hover:border-violet-500/40 bg-white/[0.03]",
                 )}
               >
                 <span className="w-3 h-5 border-2 border-current rounded-[3px] inline-block flex-shrink-0" />
@@ -1576,7 +1576,7 @@ export function AiAssistant() {
                   "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
                   stageAspect === "16/9"
                     ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-500/30"
-                    : "text-white/40 border-white/[0.10] hover:text-white/70 hover:border-violet-500/40 bg-white/[0.03]",
+                    : "text-white/62 border-white/[0.10] hover:text-white/85 hover:border-violet-500/40 bg-white/[0.03]",
                 )}
               >
                 <span className="w-6 h-4 border-2 border-current rounded-[3px] inline-block flex-shrink-0" />
@@ -1633,7 +1633,7 @@ export function AiAssistant() {
                       ? "border-green-500/40 text-green-300 bg-green-500/20"
                       : isSessionActive
                       ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/20 animate-pulse"
-                      : "border-white/15 text-white/50 bg-black/30",
+                      : "border-white/15 text-white/70 bg-black/30",
                   )}>
                     <span className={cn("w-1.5 h-1.5 rounded-full",
                       isSessionActive && connected ? "bg-green-400 animate-pulse"
@@ -1677,7 +1677,7 @@ export function AiAssistant() {
                 <div className="absolute bottom-3 left-3 pointer-events-none">
                   <div className="px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-white/10">
                     <p className="text-xs font-bold text-white">{personaName}</p>
-                    <p className="text-[10px] text-white/50 capitalize">{ANIMATION_LABELS[animState]}</p>
+                    <p className="text-[10px] text-white/70 capitalize">{ANIMATION_LABELS[animState]}</p>
                   </div>
                 </div>
 
@@ -1700,7 +1700,7 @@ export function AiAssistant() {
               ].map(({ labelKey, value, icon: Icon, color, bg }) => (
                 <div key={labelKey} className={cn("rounded-2xl border p-4 flex flex-col items-center gap-1.5 transition-all duration-300", bg)}>
                   <Icon className={cn("h-4 w-4", color)} />
-                  <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-white/42")}>
+                  <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-white/65")}>
                     {isSessionActive ? value.toLocaleString() : "—"}
                   </span>
                   <span className="text-[10px] text-muted-foreground/60 font-semibold">{t(labelKey)}</span>
@@ -1751,7 +1751,7 @@ export function AiAssistant() {
                   <p className={cn("text-[10px] font-bold",
                     ttsPlaybackState === "speaking" ? "text-purple-400 animate-pulse"
                     : ttsPlaybackState === "queued" ? "text-blue-400"
-                    : "text-white/50",
+                    : "text-white/70",
                   )}>
                     {ttsPlaybackState === "speaking" ? "▶ " + t("ai_voice_tts_speaking")
                       : ttsPlaybackState === "queued" ? `Queued (${ttsQueueLength})`
@@ -1788,7 +1788,7 @@ export function AiAssistant() {
               {/* Last spoken */}
               {lastSpokenText && ttsMode !== "off" && (
                 <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                  <p className="text-[9px] text-white/50 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
+                  <p className="text-[9px] text-white/70 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
                   <p className="text-[10px] text-white/60 line-clamp-2 leading-relaxed">{lastSpokenText}</p>
                 </div>
               )}
@@ -1832,8 +1832,8 @@ export function AiAssistant() {
             <div className="p-2.5">
               {!isSessionActive ? (
                 <div className="text-center py-3">
-                  <Users className="h-6 w-6 text-white/35 mx-auto mb-2" />
-                  <p className="text-[10px] text-white/42">Recognition events appear during live sessions</p>
+                  <Users className="h-6 w-6 text-white/55 mx-auto mb-2" />
+                  <p className="text-[10px] text-white/62">Recognition events appear during live sessions</p>
                 </div>
               ) : (viewerRecognitionEvents?.length ?? 0) === 0 ? (
                 <div className="text-center py-3">
@@ -1842,7 +1842,7 @@ export function AiAssistant() {
                       <span key={d} className="h-1.5 w-1.5 rounded-full bg-emerald-500/40" style={{ animation: `bounce 1.2s ease infinite ${d}ms` }} />
                     ))}
                   </div>
-                  <p className="text-[10px] text-white/42">Watching for returning viewers…</p>
+                  <p className="text-[10px] text-white/62">Watching for returning viewers…</p>
                 </div>
               ) : (
                 <div className="space-y-1.5 max-h-[180px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">

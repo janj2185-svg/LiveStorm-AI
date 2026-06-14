@@ -68,7 +68,7 @@ export function Profile() {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">CREATOR IDENTITY</p>
           <h1 className="text-3xl font-black text-white tracking-tight">Profile</h1>
-          <p className="text-white/40 text-sm mt-1">Your creator identity and all-time stats.</p>
+          <p className="text-white/70 text-sm mt-1">Your creator identity and all-time stats.</p>
         </div>
         <Button variant="outline" size="sm" className="border-white/10 hover:border-primary/30 shrink-0" asChild>
           <Link href="/settings">
@@ -108,7 +108,7 @@ export function Profile() {
                 {planMeta.label}
               </Badge>
             </div>
-            <p className="text-sm text-white/40">{profile?.email}</p>
+            <p className="text-sm text-white/68">{profile?.email}</p>
             {profile?.tiktokUsername ? (
               <a
                 href={`https://www.tiktok.com/@${profile.tiktokUsername}`}
@@ -133,7 +133,7 @@ export function Profile() {
 
       {/* Stats grid */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/25 mb-3">ALL-TIME STATS</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/65 mb-3">ALL-TIME STATS</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             { icon: Video,        label: "Sessions",      value: totalSessions,                  color: "text-blue-400",   bg: "bg-blue-500/10" },
@@ -141,14 +141,14 @@ export function Profile() {
             { icon: Users,        label: "Peak Viewers",  value: peakViewers.toLocaleString(),   color: "text-green-400",  bg: "bg-green-500/10" },
             { icon: Zap,          label: "Likes",         value: totalLikes.toLocaleString(),    color: "text-pink-400",   bg: "bg-pink-500/10" },
             { icon: Trophy,       label: "Followers",     value: totalFollowers.toLocaleString(), color: "text-violet-400", bg: "bg-violet-500/10" },
-            { icon: CalendarDays, label: "Member Since",  value: profile?.createdAt ? format(new Date(profile.createdAt as string), "MMM yyyy") : "—", color: "text-white/50", bg: "bg-white/5" },
+            { icon: CalendarDays, label: "Member Since",  value: profile?.createdAt ? format(new Date(profile.createdAt as string), "MMM yyyy") : "—", color: "text-white/72", bg: "bg-white/5" },
           ].map(({ icon: Icon, label, value, color, bg }) => (
             <div key={label} className="rounded-2xl bg-white/[0.04] border border-white/[0.07] p-4 flex items-center gap-3">
               <div className={cn("p-2 rounded-xl shrink-0", bg)}>
                 <Icon className={cn("h-4 w-4", color)} />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-white/40 leading-none mb-1">{label}</p>
+                <p className="text-xs text-white/65 leading-none mb-1">{label}</p>
                 <p className="text-lg font-bold text-white leading-tight truncate">{value}</p>
               </div>
             </div>
@@ -158,12 +158,12 @@ export function Profile() {
 
       {/* Recent sessions */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/25 mb-3">RECENT SESSIONS</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/65 mb-3">RECENT SESSIONS</p>
         {sessions.length === 0 ? (
           <div className="rounded-2xl bg-white/[0.04] border border-white/[0.07] p-8 text-center">
             <Video className="h-10 w-10 text-white/20 mx-auto mb-3" />
             <p className="font-medium text-white">No sessions yet</p>
-            <p className="text-sm text-white/40 mt-1 mb-4">Go live to start building your creator stats.</p>
+            <p className="text-sm text-white/70 mt-1 mb-4">Go live to start building your creator stats.</p>
             <Button asChild size="sm" className="bg-primary hover:bg-primary/90">
               <Link href="/live-studio">Go to Live Studio</Link>
             </Button>
@@ -179,12 +179,12 @@ export function Profile() {
                       <p className="text-sm font-medium text-white">
                         {session.endedAt ? "Ended session" : "Active session"}
                       </p>
-                      <p className="text-xs text-white/40">
+                      <p className="text-xs text-white/65">
                         {session.startedAt ? format(new Date(session.startedAt), "MMM d, yyyy · h:mm a") : "—"}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-white/40">
+                  <div className="flex items-center gap-4 text-xs text-white/65">
                     <span className="flex items-center gap-1">
                       <Gift className="h-3 w-3 text-amber-400" />
                       {(session.totalGifts ?? 0).toLocaleString()}
@@ -204,7 +204,7 @@ export function Profile() {
       {/* Platform connections */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/25">CONNECTED PLATFORMS</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/65">CONNECTED PLATFORMS</p>
           <Link href="/platforms" className="text-xs text-primary hover:underline">Manage →</Link>
         </div>
         <div className="rounded-2xl bg-white/[0.04] border border-white/[0.07] p-4">
@@ -217,7 +217,7 @@ export function Profile() {
               </div>
               <div>
                 <p className="text-sm font-medium text-white">TikTok LIVE</p>
-                <p className="text-xs text-white/40">{profile?.tiktokUsername ? `@${profile.tiktokUsername}` : "Not connected"}</p>
+                <p className="text-xs text-white/65">{profile?.tiktokUsername ? `@${profile.tiktokUsername}` : "Not connected"}</p>
               </div>
             </div>
             {profile?.tiktokUsername ? (

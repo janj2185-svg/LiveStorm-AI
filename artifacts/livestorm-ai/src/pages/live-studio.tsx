@@ -157,8 +157,8 @@ function StatsBar({ stats, isActive }: { stats: { viewerCount: number; totalLike
     <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/6 flex-wrap">
       {tiles.map(({ label, value, icon: Icon, color }) => (
         <div key={label} className="flex items-center gap-1.5 min-w-fit">
-          <Icon className={cn("h-3 w-3", isActive ? color : "text-white/15")} />
-          <span className={cn("text-xs font-bold tabular-nums", isActive ? "text-white" : "text-white/20")}>
+          <Icon className={cn("h-3 w-3", isActive ? color : "text-white/30")} />
+          <span className={cn("text-xs font-bold tabular-nums", isActive ? "text-white" : "text-white/45")}>
             {isActive ? value.toLocaleString() : "—"}
           </span>
           <span className="text-[10px] text-white/48">{label}</span>

@@ -101,7 +101,7 @@ const COLOR_MAP: Record<string, { bg: string; border: string; icon: string; text
   violet: { bg: "bg-violet-500/10", border: "border-violet-500/20", icon: "text-violet-400", text: "text-violet-300" },
   purple: { bg: "bg-purple-500/10", border: "border-purple-500/20", icon: "text-purple-400", text: "text-purple-300" },
   cyan:   { bg: "bg-cyan-500/10",   border: "border-cyan-500/20",   icon: "text-cyan-400",   text: "text-cyan-300" },
-  slate:  { bg: "bg-white/[0.04]",  border: "border-white/[0.08]",  icon: "text-white/50",   text: "text-white/40" },
+  slate:  { bg: "bg-white/[0.04]",  border: "border-white/[0.08]",  icon: "text-white/70",   text: "text-white/65" },
 };
 
 export function LiveControl() {
@@ -185,7 +185,7 @@ export function LiveControl() {
                       ? `Streaming as @${profile?.tiktokUsername}`
                       : "Ready to stream"}
                   </p>
-                  <p className="text-xs text-white/40 mt-0.5 truncate">
+                  <p className="text-xs text-white/65 mt-0.5 truncate">
                     {profile?.tiktokUsername
                       ? `TikTok: @${profile.tiktokUsername} · ${isActive ? "Session active" : "Session inactive"}`
                       : "No TikTok account connected"}
@@ -226,7 +226,7 @@ export function LiveControl() {
                     )}>
                       <div className="flex items-center gap-1.5">
                         <Icon className={cn("h-3.5 w-3.5", s.color)} />
-                        <span className="text-[10px] text-white/45 uppercase tracking-wider font-medium">{s.label}</span>
+                        <span className="text-[10px] text-white/68 uppercase tracking-wider font-medium">{s.label}</span>
                       </div>
                       <p className={cn("text-xl font-black tabular-nums", s.color)}>{s.value.toLocaleString()}</p>
                     </div>
@@ -263,7 +263,7 @@ export function LiveControl() {
                 >
                   <Icon className={cn("h-6 w-6 mb-3", c.icon)} />
                   <p className="text-sm font-bold text-white mb-0.5">{action.label}</p>
-                  <p className="text-[11px] text-white/40">{action.desc}</p>
+                  <p className="text-[11px] text-white/65">{action.desc}</p>
                   <div className="flex items-center gap-1 mt-3">
                     <ArrowRight className={cn("h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform", c.text)} />
                     <span className={cn("text-[10px] font-semibold", c.text)}>Open</span>
@@ -277,7 +277,7 @@ export function LiveControl() {
 
       {/* ── Sub-pages Grid ── */}
       <div>
-        <p className="text-[11px] font-bold text-white/52 uppercase tracking-[0.14em] mb-3">Studio Sections</p>
+        <p className="text-[11px] font-bold text-white/72 uppercase tracking-[0.14em] mb-3">Studio Sections</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {SUB_PAGES.map((page, i) => {
             const Icon = page.icon;
@@ -312,9 +312,9 @@ export function LiveControl() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-white/40 leading-snug">{page.desc}</p>
+                      <p className="text-xs text-white/65 leading-snug">{page.desc}</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-white/42 group-hover:text-white/70 flex-shrink-0 mt-0.5 transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-white/62 group-hover:text-white/82 flex-shrink-0 mt-0.5 transition-colors" />
                   </div>
                 </Link>
               </motion.div>
@@ -332,7 +332,7 @@ export function LiveControl() {
         <GlassCard className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Monitor className="h-4 w-4 text-white/40" />
-            <span className="text-[11px] font-bold text-white/40 uppercase tracking-[0.12em]">Platform Status</span>
+            <span className="text-[11px] font-bold text-white/65 uppercase tracking-[0.12em]">Platform Status</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
@@ -348,7 +348,7 @@ export function LiveControl() {
                 )} />
                 <div>
                   <p className="text-xs font-semibold text-white">{item.label}</p>
-                  <p className={cn("text-[10px] font-medium", item.ok ? "text-green-400/80" : "text-white/30")}>{item.status}</p>
+                  <p className={cn("text-[10px] font-medium", item.ok ? "text-green-400/80" : "text-white/55")}>{item.status}</p>
                 </div>
               </div>
             ))}

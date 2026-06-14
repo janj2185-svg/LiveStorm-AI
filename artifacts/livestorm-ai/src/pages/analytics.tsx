@@ -263,7 +263,7 @@ export function Analytics() {
         <div>
           <p className="ls-eyebrow text-primary/70 mb-1">{t("analytics_insight_hub")}</p>
           <h1 className="ls-title text-2xl sm:text-3xl tracking-tight">{t("nav_analytics")}</h1>
-          <p className="text-sm text-white/50 mt-0.5">
+          <p className="text-sm text-white/72 mt-0.5">
             {liveStats && (liveStats as any).isLive ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
@@ -281,7 +281,7 @@ export function Analytics() {
                 "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
                 period === p
                   ? "bg-violet-600 text-white shadow-md shadow-violet-500/25"
-                  : "text-white/52 hover:text-white/80 hover:bg-white/[0.05]",
+                  : "text-white/70 hover:text-white/90 hover:bg-white/[0.05]",
               )}
             >
               {PERIOD_LABELS[p]}
@@ -334,9 +334,9 @@ export function Analytics() {
                 <p className="ls-section">Пікові глядачі</p>
                 <p className="ls-muted mt-0.5">{filteredSessions.length} сесій за цей період</p>
               </div>
-              <div className="flex items-center gap-3 text-xs text-white/48">
+              <div className="flex items-center gap-3 text-xs text-white/68">
                 <span className="flex items-center gap-1.5"><div className="w-5 h-0.5 rounded-full bg-violet-400 opacity-70" />Глядачі</span>
-                <span className="text-white/55 font-mono">Пік: {fPeak}</span>
+                <span className="text-white/72 font-mono">Пік: {fPeak}</span>
               </div>
             </div>
             <div className="px-4 pb-3 pt-2">
@@ -390,7 +390,7 @@ export function Analytics() {
               <p className="ls-section">{t("analytics_sessions")}</p>
               <p className="text-xs text-muted-foreground">{t("analytics_sessions_desc")}</p>
             </div>
-            <span className="ml-auto text-xs font-bold text-white/45 tabular-nums">
+            <span className="ml-auto text-xs font-bold text-white/68 tabular-nums">
               {filteredSessions.length} sessions
             </span>
           </div>

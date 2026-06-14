@@ -201,13 +201,13 @@ export function Pricing() {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">SUBSCRIPTION</p>
           <h1 className="text-3xl font-black text-white tracking-tight">Choose Your Plan</h1>
-          <p className="text-white/40 text-sm mt-1">Unlock powerful features to grow your TikTok LIVE stream.</p>
+          <p className="text-white/70 text-sm mt-1">Unlock powerful features to grow your TikTok LIVE stream.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.07] rounded-xl px-3 py-2">
-            <span className={yearly ? "text-white/40 text-sm" : "text-white text-sm font-medium"}>Monthly</span>
+            <span className={yearly ? "text-white/62 text-sm" : "text-white text-sm font-medium"}>Monthly</span>
             <Switch id="yearly-toggle" checked={yearly} onCheckedChange={setYearly} />
-            <span className={yearly ? "text-white text-sm font-medium" : "text-white/40 text-sm"}>Yearly</span>
+            <span className={yearly ? "text-white text-sm font-medium" : "text-white/62 text-sm"}>Yearly</span>
             {yearly && <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px]">−20%</Badge>}
           </div>
           {currentPlan !== "free" && (
@@ -266,7 +266,7 @@ export function Pricing() {
                 </div>
 
                 <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                <p className="text-xs text-white/40 mt-0.5 mb-4">{plan.description}</p>
+                <p className="text-xs text-white/65 mt-0.5 mb-4">{plan.description}</p>
 
                 {/* Price */}
                 <div className="mb-5">
@@ -275,8 +275,8 @@ export function Pricing() {
                   ) : (
                     <div>
                       <span className="text-3xl font-black text-white">€{displayPrice}</span>
-                      <span className="text-sm text-white/40">/mo</span>
-                      {yearly && <p className="text-[10px] text-white/52 mt-0.5">Billed annually</p>}
+                      <span className="text-sm text-white/65">/mo</span>
+                      {yearly && <p className="text-[10px] text-white/72 mt-0.5">Billed annually</p>}
                     </div>
                   )}
                   {plan.trialDays > 0 && !isCurrent && (
@@ -293,7 +293,7 @@ export function Pricing() {
                     </div>
                   ))}
                   {plan.unavailable.map((feat) => (
-                    <div key={feat} className="flex items-start gap-2 text-sm text-white/52">
+                    <div key={feat} className="flex items-start gap-2 text-sm text-white/72">
                       <X className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                       <span className="line-through">{feat}</span>
                     </div>
@@ -304,10 +304,10 @@ export function Pricing() {
                 <Button
                   className={`w-full mt-5 font-bold ${
                     isCurrent
-                      ? "bg-white/[0.06] text-white/52 cursor-default border border-white/[0.07]"
+                      ? "bg-white/[0.06] text-white/72 cursor-default border border-white/[0.07]"
                       : isUpgrade
                         ? "bg-primary hover:bg-primary/90 text-white"
-                        : "bg-white/[0.06] text-white/40 hover:bg-white/10 border border-white/[0.07]"
+                        : "bg-white/[0.06] text-white/65 hover:bg-white/10 border border-white/[0.07]"
                   }`}
                   disabled={isCurrent || plan.id === "free" || loading !== null}
                   onClick={() => handleUpgrade(plan)}
@@ -328,8 +328,8 @@ export function Pricing() {
 
       {/* Footer note */}
       <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
-        <p className="text-sm text-white/55">Payments securely processed by Stripe · Cancel anytime</p>
-        <p className="text-xs text-white/45 mt-1">All prices in EUR · VAT may apply · Yearly plans save ~20%</p>
+        <p className="text-sm text-white/75">Payments securely processed by Stripe · Cancel anytime</p>
+        <p className="text-xs text-white/68 mt-1">All prices in EUR · VAT may apply · Yearly plans save ~20%</p>
       </div>
     </div>
   );

@@ -136,7 +136,7 @@ export function Automation() {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">EVENT AUTOMATION</p>
           <h1 className="text-3xl font-black text-white tracking-tight">Automation</h1>
-          <p className="text-white/40 text-sm mt-1">Build rules to react to live events automatically.</p>
+          <p className="text-white/70 text-sm mt-1">Build rules to react to live events automatically.</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
