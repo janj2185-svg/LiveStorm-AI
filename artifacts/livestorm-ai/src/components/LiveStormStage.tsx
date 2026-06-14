@@ -287,99 +287,126 @@ export const LiveStormStage = memo(function LiveStormStage() {
       </div>
 
       {/* ── Central branding ─────────────────────────────────────────────── */}
-      <div className="absolute left-0 right-0 flex flex-col items-center" style={{ top: "8%" }}>
+      <div className="absolute left-0 right-0 flex flex-col items-center" style={{ top: "6%" }}>
 
-        {/* Hero glow halo — brighter & wider */}
+        {/* Spotlight cone from top */}
         <div className="absolute" style={{
-          width: 260, height: 260,
-          top: -80, left: "50%", transform: "translateX(-50%)",
-          background: "radial-gradient(circle, rgba(139,92,246,0.70) 0%, rgba(99,102,241,0.35) 40%, transparent 72%)",
-          filter: "blur(28px)",
+          width: 180, height: "100%",
+          top: 0, left: "50%", transform: "translateX(-50%)",
+          background: "linear-gradient(to bottom, rgba(139,92,246,0.22) 0%, rgba(139,92,246,0.06) 60%, transparent 100%)",
+          clipPath: "polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)",
+          filter: "blur(6px)",
+        }} />
+
+        {/* Hero glow halo — very wide, deep purple */}
+        <div className="absolute" style={{
+          width: 320, height: 320,
+          top: -100, left: "50%", transform: "translateX(-50%)",
+          background: "radial-gradient(circle, rgba(139,92,246,0.85) 0%, rgba(99,102,241,0.40) 35%, transparent 68%)",
+          filter: "blur(32px)",
           animation: "neon-breathe 6s ease-in-out infinite",
         }} />
 
-        {/* Lightning bolt — larger + stronger glow */}
-        <div className="relative">
+        {/* Dark backdrop pill behind logo — makes it cut through scene */}
+        <div className="absolute" style={{
+          width: 240, height: 140,
+          top: -10, left: "50%", transform: "translateX(-50%)",
+          background: "radial-gradient(ellipse 60% 70%, rgba(6,2,20,0.75) 0%, transparent 100%)",
+          filter: "blur(12px)",
+        }} />
+
+        {/* Lightning bolt — even larger */}
+        <div className="relative" style={{ zIndex: 3 }}>
           <div className="absolute inset-0 rounded-full" style={{
-            width: 120, height: 120,
-            top: -18, left: -18,
-            background: "radial-gradient(circle, rgba(139,92,246,0.95) 0%, rgba(192,132,252,0.35) 50%, transparent 70%)",
-            filter: "blur(18px)",
+            width: 140, height: 140,
+            top: -22, left: -22,
+            background: "radial-gradient(circle, rgba(167,92,246,1) 0%, rgba(192,132,252,0.50) 45%, transparent 70%)",
+            filter: "blur(20px)",
+            animation: "neon-breathe 4s ease-in-out infinite",
           }} />
-          <svg width="84" height="84" viewBox="0 0 24 24" fill="none" className="relative">
+          <svg width="96" height="96" viewBox="0 0 24 24" fill="none" className="relative">
             <path
               d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
-              fill="rgba(220,170,255,1)"
+              fill="rgba(240,200,255,1)"
               style={{
                 filter:
-                  "drop-shadow(0 0 8px rgba(192,132,252,1)) " +
-                  "drop-shadow(0 0 20px rgba(139,92,246,1)) " +
-                  "drop-shadow(0 0 40px rgba(139,92,246,0.8)) " +
-                  "drop-shadow(0 0 70px rgba(139,92,246,0.45))",
+                  "drop-shadow(0 0 6px rgba(255,255,255,0.9)) " +
+                  "drop-shadow(0 0 14px rgba(192,132,252,1)) " +
+                  "drop-shadow(0 0 30px rgba(139,92,246,1)) " +
+                  "drop-shadow(0 0 60px rgba(139,92,246,0.70)) " +
+                  "drop-shadow(0 0 100px rgba(139,92,246,0.35))",
               }}
             />
           </svg>
         </div>
 
-        {/* Wordmark — brighter, slightly larger */}
-        <div className="text-center mt-2">
+        {/* Wordmark — bold white with purple halo */}
+        <div className="text-center mt-2" style={{ zIndex: 3, position: "relative" }}>
           <p
-            className="font-black tracking-[0.22em] uppercase"
+            className="font-black tracking-[0.24em] uppercase"
             style={{
-              fontSize: 22,
+              fontSize: 24,
               color: "rgba(255,255,255,1)",
               textShadow:
-                "0 0 12px rgba(255,255,255,0.9), " +
-                "0 0 25px rgba(192,132,252,1), " +
-                "0 0 50px rgba(139,92,246,0.85), " +
-                "0 0 90px rgba(139,92,246,0.45)",
+                "0 0 8px rgba(255,255,255,1), " +
+                "0 0 20px rgba(255,255,255,0.7), " +
+                "0 0 35px rgba(192,132,252,1), " +
+                "0 0 65px rgba(139,92,246,0.90), " +
+                "0 0 110px rgba(139,92,246,0.50)",
             }}
           >
             LiveStorm AI
           </p>
           <p
-            className="font-bold tracking-[0.48em] uppercase mt-1"
+            className="font-bold tracking-[0.50em] uppercase mt-1"
             style={{
-              fontSize: 11,
-              color: "rgba(103,232,249,1)",
+              fontSize: 12,
+              color: "rgba(150,240,255,1)",
               textShadow:
-                "0 0 10px rgba(103,232,249,1), " +
-                "0 0 25px rgba(103,232,249,0.75), " +
-                "0 0 50px rgba(103,232,249,0.40)",
+                "0 0 8px rgba(103,232,249,1), " +
+                "0 0 20px rgba(103,232,249,0.90), " +
+                "0 0 40px rgba(103,232,249,0.55), " +
+                "0 0 70px rgba(103,232,249,0.30)",
             }}
           >
             STREAMING STAGE
           </p>
         </div>
 
-        {/* Decorative divider — brighter lines */}
-        <div className="flex items-center gap-3 mt-3">
+        {/* Decorative divider */}
+        <div className="flex items-center gap-3 mt-3" style={{ zIndex: 3, position: "relative" }}>
           <div style={{
-            width: 64, height: 1.5,
-            background: "linear-gradient(to right, transparent, rgba(167,139,250,1))",
-            boxShadow: "0 0 6px rgba(167,139,250,0.6)",
+            width: 72, height: 2,
+            background: "linear-gradient(to right, transparent, rgba(192,132,252,1))",
+            boxShadow: "0 0 8px rgba(192,132,252,0.8), 0 0 16px rgba(192,132,252,0.4)",
           }} />
           <div style={{
-            width: 7, height: 7, borderRadius: "50%",
-            background: "rgba(220,170,255,1)",
-            boxShadow: "0 0 10px rgba(192,132,252,1), 0 0 24px rgba(192,132,252,0.7), 0 0 40px rgba(192,132,252,0.35)",
+            width: 8, height: 8, borderRadius: "50%",
+            background: "rgba(255,255,255,1)",
+            boxShadow:
+              "0 0 6px rgba(255,255,255,1), " +
+              "0 0 14px rgba(192,132,252,1), " +
+              "0 0 28px rgba(192,132,252,0.8), " +
+              "0 0 50px rgba(192,132,252,0.45)",
             animation: "neon-breathe 2.5s ease-in-out infinite",
           }} />
           <div style={{
-            width: 64, height: 1.5,
-            background: "linear-gradient(to left, transparent, rgba(167,139,250,1))",
-            boxShadow: "0 0 6px rgba(167,139,250,0.6)",
+            width: 72, height: 2,
+            background: "linear-gradient(to left, transparent, rgba(192,132,252,1))",
+            boxShadow: "0 0 8px rgba(192,132,252,0.8), 0 0 16px rgba(192,132,252,0.4)",
           }} />
         </div>
 
-        {/* Status hint — more visible */}
+        {/* Status hint */}
         <p
-          className="font-semibold tracking-[0.3em] uppercase mt-2"
+          className="font-bold tracking-[0.32em] uppercase mt-2"
           style={{
             fontSize: 9,
-            color: "rgba(192,132,252,0.80)",
-            textShadow: "0 0 10px rgba(192,132,252,0.6)",
-            letterSpacing: "0.3em",
+            color: "rgba(192,132,252,0.95)",
+            textShadow: "0 0 12px rgba(192,132,252,0.8), 0 0 24px rgba(192,132,252,0.4)",
+            letterSpacing: "0.32em",
+            position: "relative",
+            zIndex: 3,
           }}
         >
           Upload avatar to activate
