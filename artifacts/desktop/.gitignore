@@ -1,0 +1,13 @@
+# Build output — never commit packaged binaries
+dist-desktop/
+*.AppImage
+*.dmg
+*.exe
+*.deb
+*.rpm
+
+# Local env
+.env
+
+# Editor
+.DS_Store

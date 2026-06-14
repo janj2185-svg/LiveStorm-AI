@@ -1,0 +1,20 @@
+{
+  "name": "@workspace/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LiveStorm AI — Desktop App (Electron wrapper)",
+  "main": "electron/main.js",
+  "author": "LiveStorm AI",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "pack": "electron-builder --dir --config electron-builder.yml",
+    "build:desktop": "electron-builder --config electron-builder.yml",
+    "build:desktop:win": "electron-builder --win --config electron-builder.yml",
+    "build:desktop:mac": "electron-builder --mac --config electron-builder.yml",
+    "build:desktop:linux": "electron-builder --linux --config electron-builder.yml"
+  },
+  "devDependencies": {
+    "electron": "^32.2.7",
+    "electron-builder": "^24.13.3"
+  }
+}
