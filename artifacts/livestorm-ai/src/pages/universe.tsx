@@ -88,7 +88,7 @@ export function Universe() {
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
             <Trophy className="h-5 w-5 text-yellow-400" />
             <div>
-              <p className="text-[10px] text-white/30">Your Rank</p>
+              <p className="text-[10px] text-white/50">Your Rank</p>
               <p className="text-xl font-black text-yellow-400">#{myRank}</p>
             </div>
           </div>
@@ -130,7 +130,7 @@ export function Universe() {
               </div>
               <div>
                 <p className="font-semibold text-white text-sm">Топ підписників</p>
-                <p className="text-[10px] text-white/25">Ranked by stream activity</p>
+                <p className="text-[10px] text-white/50">Ranked by stream activity</p>
               </div>
             </div>
             <div className="p-3 space-y-2">
@@ -140,7 +140,7 @@ export function Universe() {
                 ? (
                   <div className="py-10 text-center">
                     <Trophy className="w-10 h-10 mx-auto mb-3 text-white/10" />
-                    <p className="text-sm text-white/25">No rankings yet</p>
+                    <p className="text-sm text-white/52">No rankings yet</p>
                   </div>
                 )
                 : (rankings ?? []).slice(0, 10).map((r, i) => {
@@ -183,7 +183,7 @@ export function Universe() {
                 <p className="font-semibold text-white text-sm">🌌 World Progress</p>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-white/30">Kingdoms active</p>
+                <p className="text-xs text-white/52">Kingdoms active</p>
                 <span className="text-cyan-400 font-black tabular-nums">{totalKingdoms}/10</span>
               </div>
               <div className="relative h-2 rounded-full overflow-hidden bg-white/[0.06] mb-1">
@@ -192,7 +192,7 @@ export function Universe() {
                   style={{ width: `${worldProgress}%`, boxShadow: "0 0 8px rgba(14,165,233,0.5)" }}
                 />
               </div>
-              <p className="text-[10px] text-white/20">{totalKingdoms} / 10 needed for next Universe tier</p>
+              <p className="text-[10px] text-white/45">{totalKingdoms} / 10 needed for next Universe tier</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -207,7 +207,7 @@ export function Universe() {
                     <span className={s.color}>{s.icon}</span>
                   </div>
                   <p className="text-lg font-black text-white tabular-nums"><AnimatedCounter target={s.value} /></p>
-                  <p className="text-[10px] text-white/25 mt-0.5">{s.label}</p>
+                  <p className="text-[10px] text-white/50 mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>

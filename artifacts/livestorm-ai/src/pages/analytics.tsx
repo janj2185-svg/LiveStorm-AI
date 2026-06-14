@@ -263,7 +263,7 @@ export function Analytics() {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-0.5">{t("analytics_insight_hub")}</p>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{t("nav_analytics")}</h1>
-          <p className="text-sm text-white/30 mt-0.5">
+          <p className="text-sm text-white/50 mt-0.5">
             {liveStats && (liveStats as any).isLive ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
@@ -281,7 +281,7 @@ export function Analytics() {
                 "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
                 period === p
                   ? "bg-violet-600 text-white shadow-md shadow-violet-500/25"
-                  : "text-white/35 hover:text-white/60 hover:bg-white/[0.04]",
+                  : "text-white/52 hover:text-white/80 hover:bg-white/[0.05]",
               )}
             >
               {PERIOD_LABELS[p]}
@@ -310,7 +310,7 @@ export function Analytics() {
             <div className="text-3xl font-black text-white tabular-nums mb-1">
               {isLoading ? <Skeleton className="h-9 w-20 bg-white/5" /> : s.value}
             </div>
-            <div className="text-xs text-white/30">{s.label}</div>
+            <div className="text-xs text-white/55 font-medium">{s.label}</div>
           </div>
         ))}
       </div>
@@ -332,11 +332,11 @@ export function Analytics() {
             <div className="px-5 py-3 flex items-center justify-between border-b border-white/[0.05]">
               <div>
                 <p className="text-sm font-semibold text-white">Пікові глядачі</p>
-                <p className="text-xs text-white/25 mt-0.5">{filteredSessions.length} сесій за цей період</p>
+                <p className="text-xs text-white/48 mt-0.5">{filteredSessions.length} сесій за цей період</p>
               </div>
-              <div className="flex items-center gap-3 text-xs text-white/25">
+              <div className="flex items-center gap-3 text-xs text-white/48">
                 <span className="flex items-center gap-1.5"><div className="w-5 h-0.5 rounded-full bg-violet-400 opacity-70" />Глядачі</span>
-                <span className="text-white/35 font-mono">Пік: {fPeak}</span>
+                <span className="text-white/55 font-mono">Пік: {fPeak}</span>
               </div>
             </div>
             <div className="px-4 pb-3 pt-2">
@@ -390,7 +390,7 @@ export function Analytics() {
               <p className="font-semibold text-white text-sm">{t("analytics_sessions")}</p>
               <p className="text-xs text-muted-foreground">{t("analytics_sessions_desc")}</p>
             </div>
-            <span className="ml-auto text-xs font-bold text-white/20 tabular-nums">
+            <span className="ml-auto text-xs font-bold text-white/45 tabular-nums">
               {filteredSessions.length} sessions
             </span>
           </div>

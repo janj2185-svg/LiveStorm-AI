@@ -671,7 +671,7 @@ function AiActivityTab({
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <Sparkles className="h-7 w-7 text-purple-400/20 mb-2 animate-pulse" />
         <p className="text-xs text-muted-foreground/60">Waiting for AI to respond…</p>
-        <p className="text-[10px] text-muted-foreground/40 mt-1">
+        <p className="text-[10px] text-white/48 mt-1">
           AI replies appear here with full diagnostic info
         </p>
       </div>
@@ -719,9 +719,9 @@ function AiActivityTab({
 
               {/* TTS status */}
               <div className="flex items-center gap-1.5 ml-1">
-                <CornerDownRight className="h-3 w-3 text-muted-foreground/30 flex-shrink-0" />
+                <CornerDownRight className="h-3 w-3 text-white/38 flex-shrink-0" />
                 {ttsMode === "off" ? (
-                  <span className="text-[10px] text-muted-foreground/40 flex items-center gap-1">
+                  <span className="text-[10px] text-white/48 flex items-center gap-1">
                     <VolumeX className="h-2.5 w-2.5" />
                     TTS off
                   </span>
@@ -1251,7 +1251,7 @@ export function AiAssistant() {
             onClick={() => setMobilePanelTab("control")}
             className={cn(
               "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
-              mobilePanelTab === "control" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/50 hover:text-white/70",
+              mobilePanelTab === "control" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/65 hover:text-white/70",
             )}
           >
             <Zap className="h-3.5 w-3.5" />Control
@@ -1260,7 +1260,7 @@ export function AiAssistant() {
             onClick={() => setMobilePanelTab("chat")}
             className={cn(
               "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
-              mobilePanelTab === "chat" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/50 hover:text-white/70",
+              mobilePanelTab === "chat" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/65 hover:text-white/70",
             )}
           >
             <MessageCircle className="h-3.5 w-3.5" />Chat
@@ -1339,7 +1339,7 @@ export function AiAssistant() {
                 );
               })}
             </div>
-            <p className="text-[9px] text-muted-foreground/40 text-center px-3 pb-2.5">
+            <p className="text-[9px] text-white/48 text-center px-3 pb-2.5">
               {INTENSITY_MODES.find(m => m.value === (config?.intensityMode ?? "streamer"))?.desc}
             </p>
           </div>
@@ -1367,7 +1367,7 @@ export function AiAssistant() {
                     <span className="text-lg leading-none flex-shrink-0">{mode.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <p className={cn("text-[11px] font-bold", isActive ? "text-white" : "text-white/60")}>{mode.label}</p>
-                      <p className="text-[9px] text-muted-foreground/40 leading-tight mt-0.5">{mode.desc}</p>
+                      <p className="text-[9px] text-white/48 leading-tight mt-0.5">{mode.desc}</p>
                     </div>
                     {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />}
                   </button>
@@ -1390,7 +1390,7 @@ export function AiAssistant() {
                 </span>
               )}
               {isMobile && (
-                <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground/40 transition-transform", mobileBattleOpen && "rotate-180")} />
+                <ChevronDown className={cn("h-3.5 w-3.5 text-white/45 transition-transform", mobileBattleOpen && "rotate-180")} />
               )}
             </div>
             {(!isMobile || mobileBattleOpen) && (
@@ -1449,7 +1449,7 @@ export function AiAssistant() {
                       <span className="text-lg font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</span>
                     </div>
                     <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center min-w-[44px]">
-                      <p className="text-[8px] text-muted-foreground/40 uppercase">Time</p>
+                      <p className="text-[8px] text-white/50 uppercase">Time</p>
                       <p className="text-xs font-black text-white/80 font-mono">{battleElapsed}</p>
                     </div>
                   </div>
@@ -1467,7 +1467,7 @@ export function AiAssistant() {
               <Boxes className="h-3.5 w-3.5 text-violet-400" />
               <span className="text-[11px] font-bold text-white/70">{t("ai_avatar_settings_title")}</span>
             </div>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
+            <ChevronRight className="h-3.5 w-3.5 text-white/45" />
           </button>
 
           {/* Co-Host Panel */}
@@ -1497,7 +1497,7 @@ export function AiAssistant() {
               >
                 <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/50" />
                 <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">{t("ai_advanced_settings")}</span>
-                <ChevronDown className={cn("h-3 w-3 text-muted-foreground/35 transition-transform duration-200", advancedOpen && "rotate-180")} />
+                <ChevronDown className={cn("h-3 w-3 text-white/42 transition-transform duration-200", advancedOpen && "rotate-180")} />
               </button>
               {advancedOpen && (
                 <div className="border-t border-white/[0.06]">
@@ -1700,7 +1700,7 @@ export function AiAssistant() {
               ].map(({ labelKey, value, icon: Icon, color, bg }) => (
                 <div key={labelKey} className={cn("rounded-2xl border p-4 flex flex-col items-center gap-1.5 transition-all duration-300", bg)}>
                   <Icon className={cn("h-4 w-4", color)} />
-                  <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-muted-foreground/30")}>
+                  <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-white/42")}>
                     {isSessionActive ? value.toLocaleString() : "—"}
                   </span>
                   <span className="text-[10px] text-muted-foreground/60 font-semibold">{t(labelKey)}</span>
@@ -1727,12 +1727,12 @@ export function AiAssistant() {
                 <button
                   onClick={() => handleTtsModeChange("off")}
                   className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                    ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}
+                    ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/65 hover:text-white/60")}
                 >OFF</button>
                 <button
                   onClick={() => handleTtsModeChange("openai")}
                   className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                    ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/50 hover:text-white/60")}
+                    ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/65 hover:text-white/60")}
                 >ON</button>
               </div>
             </div>
@@ -1751,7 +1751,7 @@ export function AiAssistant() {
                   <p className={cn("text-[10px] font-bold",
                     ttsPlaybackState === "speaking" ? "text-purple-400 animate-pulse"
                     : ttsPlaybackState === "queued" ? "text-blue-400"
-                    : "text-muted-foreground/40",
+                    : "text-white/50",
                   )}>
                     {ttsPlaybackState === "speaking" ? "▶ " + t("ai_voice_tts_speaking")
                       : ttsPlaybackState === "queued" ? `Queued (${ttsQueueLength})`
@@ -1788,7 +1788,7 @@ export function AiAssistant() {
               {/* Last spoken */}
               {lastSpokenText && ttsMode !== "off" && (
                 <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                  <p className="text-[9px] text-muted-foreground/40 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
+                  <p className="text-[9px] text-white/50 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
                   <p className="text-[10px] text-white/60 line-clamp-2 leading-relaxed">{lastSpokenText}</p>
                 </div>
               )}
@@ -1832,8 +1832,8 @@ export function AiAssistant() {
             <div className="p-2.5">
               {!isSessionActive ? (
                 <div className="text-center py-3">
-                  <Users className="h-6 w-6 text-muted-foreground/20 mx-auto mb-2" />
-                  <p className="text-[10px] text-muted-foreground/30">Recognition events appear during live sessions</p>
+                  <Users className="h-6 w-6 text-white/35 mx-auto mb-2" />
+                  <p className="text-[10px] text-white/42">Recognition events appear during live sessions</p>
                 </div>
               ) : (viewerRecognitionEvents?.length ?? 0) === 0 ? (
                 <div className="text-center py-3">
@@ -1842,7 +1842,7 @@ export function AiAssistant() {
                       <span key={d} className="h-1.5 w-1.5 rounded-full bg-emerald-500/40" style={{ animation: `bounce 1.2s ease infinite ${d}ms` }} />
                     ))}
                   </div>
-                  <p className="text-[10px] text-muted-foreground/30">Watching for returning viewers…</p>
+                  <p className="text-[10px] text-white/42">Watching for returning viewers…</p>
                 </div>
               ) : (
                 <div className="space-y-1.5 max-h-[180px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
@@ -1856,7 +1856,7 @@ export function AiAssistant() {
                           <p className="text-[11px] font-bold text-white/90 truncate">{evt.viewerName}</p>
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex-shrink-0">{evt.loyaltyTier ?? evt.tier}</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground/50 truncate">{evt.reason}</p>
+                        <p className="text-[10px] text-muted-foreground/65 truncate">{evt.reason}</p>
                         {evt.aiLine && (
                           <p className="text-[10px] text-violet-300/70 italic truncate mt-0.5">"{evt.aiLine}"</p>
                         )}
@@ -1969,7 +1969,7 @@ export function AiAssistant() {
 
             {/* AI Strategy chat input */}
             <div className="flex-shrink-0 mt-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <p className="text-[10px] text-muted-foreground/40 mb-1.5 flex items-center gap-1">
+              <p className="text-[10px] text-muted-foreground/65 mb-1.5 flex items-center gap-1">
                 <Bot className="h-3 w-3" />{t("ai_ask_advice")} · {personaName}
               </p>
               <div className="flex gap-2">
@@ -2034,7 +2034,7 @@ export function AiAssistant() {
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
               <div>
-                <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♂ {t("ai_male_voices")}</p>
+                <p className="text-[9px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♂ {t("ai_male_voices")}</p>
                 <div className="space-y-1.5">
                   {MALE_VOICE_PROFILES.map((v) => {
                     const isSelected = ttsVoice === v.value;
@@ -2046,11 +2046,11 @@ export function AiAssistant() {
                             <span className="text-lg flex-shrink-0 leading-none">{v.emoji}</span>
                             <div className="flex-1 min-w-0">
                               <div className={cn("text-xs font-semibold leading-tight truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</div>
-                              <div className="text-[10px] text-muted-foreground/50 leading-tight">{v.desc}</div>
+                              <div className="text-[10px] text-muted-foreground/65 leading-tight">{v.desc}</div>
                             </div>
                             {isSelected && <CheckCircle2 className="h-4 w-4 text-blue-400 flex-shrink-0" />}
                           </button>
-                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-blue-500/30 text-blue-400/70 hover:text-blue-300" : "border-white/10 text-muted-foreground/40 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-blue-500/30 text-blue-400/70 hover:text-blue-300" : "border-white/10 text-muted-foreground/65 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
                             {isPreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                           </button>
                         </div>
@@ -2060,7 +2060,7 @@ export function AiAssistant() {
                 </div>
               </div>
               <div>
-                <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♀ {t("ai_female_voices")}</p>
+                <p className="text-[9px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♀ {t("ai_female_voices")}</p>
                 <div className="space-y-1.5">
                   {FEMALE_VOICE_PROFILES.map((v) => {
                     const isSelected = ttsVoice === v.value;
@@ -2072,11 +2072,11 @@ export function AiAssistant() {
                             <span className="text-lg flex-shrink-0 leading-none">{v.emoji}</span>
                             <div className="flex-1 min-w-0">
                               <div className={cn("text-xs font-semibold leading-tight truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</div>
-                              <div className="text-[10px] text-muted-foreground/50 leading-tight">{v.desc}</div>
+                              <div className="text-[10px] text-muted-foreground/65 leading-tight">{v.desc}</div>
                             </div>
                             {isSelected && <CheckCircle2 className="h-4 w-4 text-pink-400 flex-shrink-0" />}
                           </button>
-                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-pink-500/30 text-pink-400/70 hover:text-pink-300" : "border-white/10 text-muted-foreground/40 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-pink-500/30 text-pink-400/70 hover:text-pink-300" : "border-white/10 text-muted-foreground/65 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
                             {isPreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                           </button>
                         </div>
@@ -2460,7 +2460,7 @@ export function AiAssistant() {
 
             {/* Male Voices */}
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♂ Male Voices</p>
+              <p className="text-[10px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♂ Male Voices</p>
               <div className="space-y-1.5">
                 {MALE_VOICE_PROFILES.map((v) => {
                   const isSelected = ttsVoice === v.value;
@@ -2473,7 +2473,7 @@ export function AiAssistant() {
                       <span className="text-xl flex-shrink-0">{v.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-sm font-semibold truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</p>
-                        <p className="text-[10px] text-muted-foreground/50 truncate">{v.desc}</p>
+                        <p className="text-[10px] text-muted-foreground/65 truncate">{v.desc}</p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
@@ -2503,7 +2503,7 @@ export function AiAssistant() {
 
             {/* Female Voices */}
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2">♀ Female Voices</p>
+              <p className="text-[10px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♀ Female Voices</p>
               <div className="space-y-1.5">
                 {FEMALE_VOICE_PROFILES.map((v) => {
                   const isSelected = ttsVoice === v.value;
@@ -2516,7 +2516,7 @@ export function AiAssistant() {
                       <span className="text-xl flex-shrink-0">{v.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-sm font-semibold truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</p>
-                        <p className="text-[10px] text-muted-foreground/50 truncate">{v.desc}</p>
+                        <p className="text-[10px] text-muted-foreground/65 truncate">{v.desc}</p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button

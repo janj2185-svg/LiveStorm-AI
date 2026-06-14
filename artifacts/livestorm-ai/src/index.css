@@ -398,3 +398,102 @@ input[type="range"] {
   [style*="bg-breathe"], [style*="ray-spin"],
   [style*="data-pulse"], [style*="particle-drift"] { animation: none !important; }
 }
+
+/* ─── DESIGN SYSTEM: TYPOGRAPHY SCALE ───────────────────────────────────── */
+@layer components {
+  /* Eyebrow label — tiny uppercase label above a title */
+  .ls-eyebrow {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    color: hsl(var(--muted-foreground));
+    line-height: 1;
+  }
+
+  /* Page-level title */
+  .ls-title {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    color: #fff;
+    line-height: 1.15;
+  }
+
+  /* Section heading inside a card or panel */
+  .ls-section {
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: rgba(255, 255, 255, 0.90);
+  }
+
+  /* Card-level label / small heading */
+  .ls-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.52);
+  }
+
+  /* Large stat / number display */
+  .ls-stat {
+    font-size: 1.75rem;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    color: #fff;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Helper — dim secondary text at a readable level */
+  .ls-muted {
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 0.75rem;
+  }
+}
+
+/* ─── DESIGN SYSTEM: CARD PATTERNS ──────────────────────────────────────── */
+@layer components {
+  /* Standard interactive glass card */
+  .ls-card {
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.025);
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .ls-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.13);
+  }
+
+  /* Elevated card — for stats, featured content */
+  .ls-card-elevated {
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.032);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+
+  /* Icon container for card headers */
+  .ls-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.625rem;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+  }
+}
+
+/* ─── GLOBAL READABILITY OVERRIDES ──────────────────────────────────────── */
+/* Lift invisible placeholder text */
+::placeholder {
+  color: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* Selection highlight */
+::selection {
+  background: hsl(var(--primary) / 0.35);
+  color: #fff;
+}

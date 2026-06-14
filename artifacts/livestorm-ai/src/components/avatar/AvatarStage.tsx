@@ -283,7 +283,7 @@ export function AvatarStage({
               />
               <span className="text-xs font-black text-white/90 tracking-wide">{slot.name}</span>
             </div>
-            <p className="text-[9px] text-white/35 leading-snug pl-3">{slot.tagline}</p>
+            <p className="text-[9px] text-white/55 leading-snug pl-3">{slot.tagline}</p>
           </div>
         </div>
       )}
@@ -295,7 +295,7 @@ export function AvatarStage({
               <Upload className="h-6 w-6 text-violet-400/35" />
             </div>
             <p className="text-sm font-bold text-white/40">No 3D Avatar</p>
-            <p className="text-[11px] text-white/20 leading-snug max-w-[130px]">Import a VRM or GLB file</p>
+            <p className="text-[11px] text-white/48 leading-snug max-w-[130px]">Import a VRM or GLB file</p>
           </div>
         </div>
       )}
@@ -325,7 +325,7 @@ export function AvatarStage({
         {hasAvatar && onOpenSettings && (
           <button
             onClick={onOpenSettings}
-            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/30 hover:text-white/70"
+            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/52 hover:text-white/80"
             title="Avatar settings"
           >
             <Settings2 className="h-3.5 w-3.5" />

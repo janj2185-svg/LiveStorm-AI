@@ -62,7 +62,7 @@ export function LiveControlDiagnostics() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">{t("nav_live_control")}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/65">{t("nav_live_control")}</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-500/15 border border-slate-500/20 text-slate-400 font-semibold">{t("diag_diagnostics")}</span>
             </div>
             <h1 className="text-xl font-black text-white">{t("diag_connection_health")}</h1>

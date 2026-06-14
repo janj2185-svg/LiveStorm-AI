@@ -276,7 +276,7 @@ export function Pricing() {
                     <div>
                       <span className="text-3xl font-black text-white">€{displayPrice}</span>
                       <span className="text-sm text-white/40">/mo</span>
-                      {yearly && <p className="text-[10px] text-white/30 mt-0.5">Billed annually</p>}
+                      {yearly && <p className="text-[10px] text-white/52 mt-0.5">Billed annually</p>}
                     </div>
                   )}
                   {plan.trialDays > 0 && !isCurrent && (
@@ -293,7 +293,7 @@ export function Pricing() {
                     </div>
                   ))}
                   {plan.unavailable.map((feat) => (
-                    <div key={feat} className="flex items-start gap-2 text-sm text-white/25">
+                    <div key={feat} className="flex items-start gap-2 text-sm text-white/52">
                       <X className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                       <span className="line-through">{feat}</span>
                     </div>
@@ -304,7 +304,7 @@ export function Pricing() {
                 <Button
                   className={`w-full mt-5 font-bold ${
                     isCurrent
-                      ? "bg-white/[0.06] text-white/30 cursor-default border border-white/[0.07]"
+                      ? "bg-white/[0.06] text-white/52 cursor-default border border-white/[0.07]"
                       : isUpgrade
                         ? "bg-primary hover:bg-primary/90 text-white"
                         : "bg-white/[0.06] text-white/40 hover:bg-white/10 border border-white/[0.07]"
@@ -328,8 +328,8 @@ export function Pricing() {
 
       {/* Footer note */}
       <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
-        <p className="text-sm text-white/35">Payments securely processed by Stripe · Cancel anytime</p>
-        <p className="text-xs text-white/20 mt-1">All prices in EUR · VAT may apply · Yearly plans save ~20%</p>
+        <p className="text-sm text-white/55">Payments securely processed by Stripe · Cancel anytime</p>
+        <p className="text-xs text-white/45 mt-1">All prices in EUR · VAT may apply · Yearly plans save ~20%</p>
       </div>
     </div>
   );

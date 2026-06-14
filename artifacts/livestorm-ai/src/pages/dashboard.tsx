@@ -106,7 +106,7 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
           {" "}
           <span className="text-muted-foreground/80">{desc}</span>
         </p>
-        <span className="text-[10px] text-muted-foreground/50 font-mono mt-0.5 block">
+        <span className="text-[10px] text-muted-foreground/65 font-mono mt-0.5 block">
           {format(new Date(event.timestamp), "HH:mm:ss")}
         </span>
       </div>
@@ -222,7 +222,7 @@ function CommandStrip({
                   <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>
                     {connected ? t("dash_status_live_now") : t("dash_status_reconnecting")}
                   </span>
-                  <span className="text-xs text-muted-foreground/40 font-mono tabular-nums">
+                  <span className="text-xs text-muted-foreground font-mono tabular-nums opacity-60">
                     {formatDuration(duration)}
                   </span>
                 </>
@@ -238,7 +238,7 @@ function CommandStrip({
                 <span>{t("dash_ready_to")} <GradientText from="from-violet-400" to="to-cyan-400">{t("dash_go_live")}</GradientText></span>
               )}
             </p>
-            <p className="text-xs text-muted-foreground/50 mt-0.5 truncate">
+            <p className="text-xs text-muted-foreground/65 mt-0.5 truncate">
               {isActive ? `${eventCount} ${t("dash_events_captured")}` : `@${username} · ${t("dash_start_session_prompt")}`}
             </p>
           </div>
@@ -923,7 +923,7 @@ export function Dashboard() {
                     <span className="text-[10px] text-violet-400 font-semibold">Live</span>
                   </div>
                 )}
-                <span className="text-xs text-muted-foreground/50 tabular-nums bg-white/[0.04] px-2.5 py-1 rounded-full">
+                <span className="text-xs text-muted-foreground/65 tabular-nums bg-white/[0.04] px-2.5 py-1 rounded-full">
                   {eventCount} events
                 </span>
               </div>
@@ -936,7 +936,7 @@ export function Dashboard() {
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-semibold">Waiting for broadcast</p>
-                    <p className="text-xs text-muted-foreground/50 mt-1.5">Start a live session to see events here</p>
+                    <p className="text-xs text-muted-foreground/65 mt-1.5">Start a live session to see events here</p>
                   </div>
                 </div>
               ) : (
@@ -1115,7 +1115,7 @@ export function Dashboard() {
                           <p className="text-sm font-semibold text-white/90 group-hover:text-white">{link.label}</p>
                           <p className="text-[11px] text-muted-foreground/55">{link.desc}</p>
                         </div>
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/25 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/55 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
                       </div>
                     </Link>
                   </motion.div>
@@ -1147,7 +1147,7 @@ export function Dashboard() {
                 <div className="flex-1 min-w-0">
                   <span className="text-xs font-bold text-white/80">YouTube Live</span>
                   {ytStatus.connected && ytStatus.channelName && (
-                    <p className="text-[10px] text-muted-foreground/50 truncate">{ytStatus.channelName}</p>
+                    <p className="text-[10px] text-muted-foreground/65 truncate">{ytStatus.channelName}</p>
                   )}
                 </div>
                 {ytStatus.connector?.active && (
@@ -1204,14 +1204,14 @@ export function Dashboard() {
                         {ytLoading ? t("dash_yt_connecting") : t("dash_yt_connect_chat")}
                       </Button>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground/50 text-center py-1">
+                      <p className="text-[11px] text-muted-foreground/65 text-center py-1">
                         {t("dash_yt_start_session")}
                       </p>
                     )}
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="w-full h-7 text-[11px] gap-1.5 text-muted-foreground/50 hover:text-red-400"
+                      className="w-full h-7 text-[11px] gap-1.5 text-muted-foreground/65 hover:text-red-400"
                       onClick={handleDisconnectYoutube}
                       disabled={ytLoading}
                     >
@@ -1241,7 +1241,7 @@ export function Dashboard() {
                   <Clock className="h-3.5 w-3.5 text-blue-400" />
                 </div>
                 <span className="text-xs font-bold text-white/80">Recent Sessions</span>
-                <span className="ml-auto text-[10px] text-muted-foreground/40">{sessions.length} total</span>
+                <span className="ml-auto text-[10px] text-white/42 font-medium">{sessions.length} total</span>
               </div>
               <div className="p-2 space-y-1">
                 {sessions.slice(0, 3).map((s: any) => (
@@ -1251,7 +1251,7 @@ export function Dashboard() {
                       {formatDistanceToNow(new Date(s.startedAt), { addSuffix: true })}
                     </span>
                     {s.endedAt && (
-                      <span className="text-[10px] text-muted-foreground/40 font-mono">
+                      <span className="text-[10px] text-white/45 font-mono">
                         {Math.floor((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 60000)}m
                       </span>
                     )}

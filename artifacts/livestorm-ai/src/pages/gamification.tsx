@@ -183,7 +183,7 @@ function FanProfileModal({ tiktokViewerId, viewerName, streamerId, onClose }: Fa
           <div className="flex items-start justify-between px-5 py-4 border-b border-white/[0.06]">
             <div>
               <p className="text-lg font-bold text-white">{viewerName}</p>
-              <p className="text-xs font-mono text-muted-foreground/50 truncate max-w-[200px]">{tiktokViewerId}</p>
+              <p className="text-xs font-mono text-muted-foreground/65 truncate max-w-[200px]">{tiktokViewerId}</p>
             </div>
             <button onClick={onClose} className="text-muted-foreground hover:text-white mt-1">
               <X className="w-4 h-4" />
@@ -434,7 +434,7 @@ export function Gamification() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-yellow-400/50 mb-0.5">XP System</p>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Gamification</h1>
-            <p className="text-sm text-white/30 mt-0.5">Viewer XP · Levels · Achievements · Lucky Drops</p>
+            <p className="text-sm text-white/52 mt-0.5">Viewer XP · Levels · Achievements · Lucky Drops</p>
           </div>
           {sessionId && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
@@ -460,9 +460,9 @@ export function Gamification() {
                 <span className={s.color}>{s.icon}</span>
               </div>
               <p className="text-xl font-black text-white tabular-nums">
-                <AnimatedCounter target={s.value} /><span className="text-sm text-white/30">{s.suffix}</span>
+                <AnimatedCounter target={s.value} /><span className="text-sm text-white/50">{s.suffix}</span>
               </p>
-              <p className="text-[10px] text-white/25 mt-0.5 uppercase tracking-wider">{s.label}</p>
+              <p className="text-[10px] text-white/50 mt-0.5 uppercase tracking-wider">{s.label}</p>
             </div>
           ))}
         </div>
@@ -497,7 +497,7 @@ export function Gamification() {
                     <ProgressRing value={xpProgress} max={100} size={92} strokeWidth={6} colorClass="stroke-violet-500">
                       <div className="text-center">
                         <div className="text-lg font-black text-white leading-none">{myLevel}</div>
-                        <div className="text-[9px] text-white/30 uppercase tracking-wider">LVL</div>
+                        <div className="text-[9px] text-white/48 uppercase tracking-wider">LVL</div>
                       </div>
                     </ProgressRing>
                     <div className="flex-1 min-w-0">
@@ -561,7 +561,7 @@ export function Gamification() {
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-violet-400 font-black text-xs">+{award.xp} XP</span>
                           {award.coins > 0 && <span className="text-yellow-400/80 text-[10px] font-bold">+{award.coins}🪙</span>}
-                          <span className="text-[10px] text-white/20 bg-white/[0.04] px-1.5 py-0.5 rounded-full tabular-nums">Lv{award.level}</span>
+                          <span className="text-[10px] text-white/48 bg-white/[0.04] px-1.5 py-0.5 rounded-full tabular-nums">Lv{award.level}</span>
                         </div>
                       </motion.div>
                     ))}
@@ -672,7 +672,7 @@ export function Gamification() {
                 <Gift className={cn("w-4 h-4 shrink-0", claimStatus?.alreadyClaimed ? "text-white/20" : "text-cyan-400")} />
                 <div className="flex-1">
                   <p className="font-semibold text-white text-sm">Щоденний бонус</p>
-                  <p className="text-[10px] text-white/25">+100 монет кожен день</p>
+                  <p className="text-[10px] text-white/50">+100 монет кожен день</p>
                 </div>
               </div>
               <div className="p-5 flex flex-col items-center gap-4">
@@ -693,7 +693,7 @@ export function Gamification() {
                 {claimStatus?.alreadyClaimed ? (
                   <div className="text-center space-y-1">
                     <p className="text-sm font-bold text-white/40">✓ Вже отримано</p>
-                    <p className="text-[10px] text-white/20">Скидається о опівночі UTC</p>
+                    <p className="text-[10px] text-white/48">Скидається о опівночі UTC</p>
                   </div>
                 ) : (
                   <Button
@@ -716,7 +716,7 @@ export function Gamification() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-white text-sm">Lucky Drops</p>
-                  <p className="text-[10px] text-white/25">Рандомні нагороди для глядачів</p>
+                  <p className="text-[10px] text-white/50">Рандомні нагороди для глядачів</p>
                 </div>
               </div>
               <div className="p-4 space-y-3">
@@ -729,7 +729,7 @@ export function Gamification() {
                 >
                   {triggerDrop.isPending ? "Firing…" : "🎰 Запустити Drop зараз"}
                 </Button>
-                <p className="text-[10px] text-white/20 text-center">Авто-спрацьовує кожні ~50 подій</p>
+                <p className="text-[10px] text-white/48 text-center">Авто-спрацьовує кожні ~50 подій</p>
 
                 {/* Tier legend */}
                 <div className="flex items-center gap-2 flex-wrap justify-center pt-1">

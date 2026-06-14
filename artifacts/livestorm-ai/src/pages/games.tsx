@@ -135,7 +135,7 @@ export function Games() {
 
       {/* Game Modes */}
       <div>
-        <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-3">{t("games_game_modes")}</p>
+        <p className="text-[11px] font-semibold text-muted-foreground/65 uppercase tracking-[0.12em] mb-3">{t("games_game_modes")}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {GAME_MODES.map((game, i) => {
             const Icon = game.icon;
@@ -170,7 +170,7 @@ export function Games() {
                           {game.stats.map((stat) => (
                             <span
                               key={stat}
-                              className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.07] text-muted-foreground/40"
+                              className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.07] text-muted-foreground/65"
                             >
                               {stat}
                             </span>
@@ -221,7 +221,7 @@ export function Games() {
                           ))}
                         </div>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-muted-foreground/70 flex-shrink-0 mt-1 transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/58 group-hover:text-muted-foreground/70 flex-shrink-0 mt-1 transition-colors" />
                     </div>
                   </div>
                 </Link>

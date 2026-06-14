@@ -102,7 +102,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
                         <span className="text-xs font-bold text-blue-300 truncate">
                           {e.username ?? "Unknown"}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/50 flex-shrink-0">
+                        <span className="text-[10px] text-muted-foreground/65 flex-shrink-0">
                           {formatDistanceToNow(new Date(e.timestamp), { addSuffix: true })}
                         </span>
                       </div>
@@ -161,7 +161,7 @@ function StatsBar({ stats, isActive }: { stats: { viewerCount: number; totalLike
           <span className={cn("text-xs font-bold tabular-nums", isActive ? "text-white" : "text-white/20")}>
             {isActive ? value.toLocaleString() : "—"}
           </span>
-          <span className="text-[10px] text-muted-foreground/40">{label}</span>
+          <span className="text-[10px] text-white/48">{label}</span>
           <span className="w-px h-3 bg-white/[0.06] mx-1 last:hidden" />
         </div>
       ))}
@@ -491,7 +491,7 @@ export function LiveStudio() {
       {/* ── Voice is off warning ──────────────────────────────────────────── */}
       {ttsModeLive === "off" && isActive && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/8">
-          <VolumeX className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+          <VolumeX className="h-4 w-4 text-muted-foreground/65 flex-shrink-0" />
           <p className="text-xs text-muted-foreground/70 flex-1">
             Storm's voice is disabled — AI can hear you but won't speak back.
           </p>
@@ -517,7 +517,7 @@ export function LiveStudio() {
           onClick={() => setMobileTab("cohost")}
           className={cn(
             "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all",
-            mobileTab === "cohost" ? "bg-cyan-600 text-white" : "text-muted-foreground/50 hover:text-white/70",
+            mobileTab === "cohost" ? "bg-cyan-600 text-white" : "text-muted-foreground/65 hover:text-white/70",
           )}
         >
           <Bot className="h-3.5 w-3.5" />Co-Host
@@ -526,7 +526,7 @@ export function LiveStudio() {
           onClick={() => setMobileTab("comments")}
           className={cn(
             "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all",
-            mobileTab === "comments" ? "bg-cyan-600 text-white" : "text-muted-foreground/50 hover:text-white/70",
+            mobileTab === "comments" ? "bg-cyan-600 text-white" : "text-muted-foreground/65 hover:text-white/70",
           )}
         >
           <MessageCircle className="h-3.5 w-3.5" />Comments
@@ -579,9 +579,9 @@ export function LiveStudio() {
           <Activity className="h-4 w-4 text-muted-foreground/50" />
           <span className="text-sm font-semibold text-white/70">Event Log</span>
           {events.length > 0 && (
-            <span className="text-[10px] text-muted-foreground/40">{events.length} events</span>
+            <span className="text-[10px] text-white/48">{events.length} events</span>
           )}
-          <span className="ml-auto text-muted-foreground/40">
+          <span className="ml-auto text-white/48">
             {eventLogOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </span>
         </button>

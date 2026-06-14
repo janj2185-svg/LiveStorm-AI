@@ -168,7 +168,7 @@ export function Moderation() {
                   return (
                     <div key={rule.ruleKey} className="flex items-center gap-4 px-5 py-3.5">
                       <div className={cn("p-2 rounded-xl flex-shrink-0", rule.isActive ? sev.bg : "bg-white/5")}>
-                        <Icon className={cn("h-4 w-4", rule.isActive ? sev.text : "text-muted-foreground/40")} />
+                        <Icon className={cn("h-4 w-4", rule.isActive ? sev.text : "text-muted-foreground/65")} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">

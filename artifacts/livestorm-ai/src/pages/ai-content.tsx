@@ -201,7 +201,7 @@ function HistoryCard({
             <div className="mt-2 space-y-1.5">
               {contentItems.map((text, i) => (
                 <div key={i} className="flex items-start gap-2 group">
-                  <span className="text-[10px] font-bold text-muted-foreground/40 w-4 flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground/65 w-4 flex-shrink-0 mt-0.5">{i + 1}</span>
                   <p className="flex-1 text-xs text-foreground/80 leading-relaxed">{text}</p>
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                     <CopyButton text={text} />
@@ -236,7 +236,7 @@ function HistoryGroup({
         <span className={cn("text-xs font-bold uppercase tracking-wider", ctInfo.color)}>
           {type}
         </span>
-        <span className="text-[10px] text-muted-foreground/40 ml-auto">{items.length}</span>
+        <span className="text-[10px] text-muted-foreground/65 ml-auto">{items.length}</span>
       </div>
       {items.map((item) => (
         <HistoryCard key={item.id} item={item} onDelete={onDelete} />
@@ -687,11 +687,11 @@ export function AiContent() {
                   ) : groupedHistory.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                       <div className="p-3 rounded-xl bg-white/5 border border-white/8">
-                        <History className="h-6 w-6 text-muted-foreground/40" />
+                        <History className="h-6 w-6 text-muted-foreground/65" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground/60">No saved content yet</p>
-                        <p className="text-xs text-muted-foreground/40 mt-1">Generate content and click Save to keep it here</p>
+                        <p className="text-xs text-muted-foreground/65 mt-1">Generate content and click Save to keep it here</p>
                       </div>
                     </div>
                   ) : (

@@ -73,7 +73,7 @@ const ACCENT_SWATCHES = [
 
 function ControlLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">
+    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/65 mb-2">
       {children}
     </p>
   );
@@ -104,7 +104,7 @@ function AvatarPresetLibrary({
         className="w-full flex items-center justify-between"
       >
         <ControlLabel>Preset Library ({AVATAR_PRESETS.length} Characters)</ControlLabel>
-        <span className="text-[9px] text-muted-foreground/40 mb-2">{expanded ? "▲" : "▼"}</span>
+        <span className="text-[9px] text-muted-foreground/65 mb-2">{expanded ? "▲" : "▼"}</span>
       </button>
 
       {expanded && (
@@ -315,7 +315,7 @@ export function AvatarStudio() {
               </div>
               {/* Slot mode notice */}
               {!avatarUrl && (
-                <p className="text-[9px] text-muted-foreground/50 text-center mb-2 leading-tight">
+                <p className="text-[9px] text-muted-foreground/65 text-center mb-2 leading-tight">
                   {PRESENTER_SLOTS[avatarKey]?.vrmPath
                     ? "3D avatar loaded — animations & lip sync active."
                     : "Portrait only — no 3D VRM. Import below or pick Marcus / Kai for 3D."}
@@ -375,7 +375,7 @@ export function AvatarStudio() {
                   <ZoomIn className="h-3 w-3 text-muted-foreground" />
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground/40 text-center mt-1.5">{scale.toFixed(2)}×</p>
+              <p className="text-[10px] text-muted-foreground/65 text-center mt-1.5">{scale.toFixed(2)}×</p>
             </ControlBlock>
 
             {/* ── Position Y ── */}
@@ -402,7 +402,7 @@ export function AvatarStudio() {
                   <ArrowUp className="h-3 w-3 text-muted-foreground" />
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground/40 text-center mt-1.5">{positionY.toFixed(2)}</p>
+              <p className="text-[10px] text-muted-foreground/65 text-center mt-1.5">{positionY.toFixed(2)}</p>
             </ControlBlock>
 
             {/* ── Lighting ── */}
@@ -507,7 +507,7 @@ export function AvatarStudio() {
                   )}
                 </Button>
               </div>
-              <p className="text-[9px] text-muted-foreground/35 text-center mt-2">
+              <p className="text-[9px] text-muted-foreground/60 text-center mt-2">
                 Saved settings apply to AI Assistant live sessions
               </p>
             </ControlBlock>
@@ -523,11 +523,11 @@ export function AvatarStudio() {
               <div className="flex items-center gap-2">
                 <Camera className="h-3.5 w-3.5 text-violet-400" />
                 <div className="text-left">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">Phase 2</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/65">Phase 2</p>
                   <p className="text-sm font-black text-white">Camera</p>
                 </div>
               </div>
-              <span className="text-[9px] text-muted-foreground/40">{cameraExpanded ? "▲" : "▼"}</span>
+              <span className="text-[9px] text-muted-foreground/65">{cameraExpanded ? "▲" : "▼"}</span>
             </button>
 
             {cameraExpanded && (

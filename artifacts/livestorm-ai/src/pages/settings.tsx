@@ -471,19 +471,19 @@ export function Settings() {
               className={cn(
                 "w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all border",
                 tab === item.id
-                  ? "bg-violet-500/15 border-violet-500/20 text-white"
-                  : "border-transparent text-white/40 hover:text-white/70 hover:bg-white/[0.04]",
+                  ? "bg-violet-500/15 border-violet-500/25 text-white"
+                  : "border-transparent text-white/70 hover:text-white hover:bg-white/[0.05] hover:border-white/[0.06]",
               )}
             >
               <span className={cn(
                 "shrink-0 p-1.5 rounded-lg transition-colors",
-                tab === item.id ? "bg-violet-500/20 text-violet-300" : "bg-white/[0.04] text-white/30",
+                tab === item.id ? "bg-violet-500/22 text-violet-300" : "bg-white/[0.06] text-white/55",
               )}>
                 {item.icon}
               </span>
               <div className="min-w-0 flex-1">
-                <p className={cn("text-sm font-semibold truncate", tab === item.id ? "text-white" : "text-white/50")}>{item.label}</p>
-                <p className="text-[10px] text-white/20 truncate">{item.sub}</p>
+                <p className={cn("text-sm font-semibold truncate", tab === item.id ? "text-white" : "text-white/75")}>{item.label}</p>
+                <p className="text-[10px] text-white/42 truncate">{item.sub}</p>
               </div>
               {tab === item.id && <div className="w-1 h-4 rounded-full bg-violet-400 shrink-0" />}
             </button>

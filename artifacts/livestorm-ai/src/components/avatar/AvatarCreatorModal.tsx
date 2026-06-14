@@ -242,7 +242,7 @@ function ReadyPlayerMeTab({
           <label className="text-xs font-medium text-white/70">Your RPM Subdomain</label>
           <div className="flex gap-2">
             <div className="flex-1 flex items-center bg-white/5 border border-white/10 rounded-lg overflow-hidden focus-within:border-blue-500/50 transition-all">
-              <span className="text-[11px] text-white/30 pl-3 pr-0.5 whitespace-nowrap flex-shrink-0">https://</span>
+              <span className="text-[11px] text-white/50 pl-3 pr-0.5 whitespace-nowrap flex-shrink-0">https://</span>
               <Input
                 className="border-0 bg-transparent h-9 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 px-1"
                 placeholder="your-subdomain"
@@ -250,7 +250,7 @@ function ReadyPlayerMeTab({
                 onChange={(e) => { setInputValue(e.target.value); setInputError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleSubdomainSubmit()}
               />
-              <span className="text-[11px] text-white/30 pr-3 pl-0.5 whitespace-nowrap flex-shrink-0">.readyplayer.me</span>
+              <span className="text-[11px] text-white/50 pr-3 pl-0.5 whitespace-nowrap flex-shrink-0">.readyplayer.me</span>
             </div>
             <Button size="sm" className="h-9 px-4 bg-blue-600 hover:bg-blue-500 gap-1.5 flex-shrink-0"
               onClick={handleSubdomainSubmit} disabled={!inputValue.trim()}>
@@ -287,7 +287,7 @@ function ReadyPlayerMeTab({
           <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px]">ARKit Lip Sync</Badge>
         </div>
         <button onClick={handleReset}
-          className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors">
+          className="flex items-center gap-1 text-[10px] text-white/52 hover:text-white/80 transition-colors">
           <Settings2 className="h-3 w-3" />
           {subdomain}.readyplayer.me
         </button>
@@ -443,7 +443,7 @@ function WizardSteps({ step }: { step: number }) {
               "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all",
               step > i ? "bg-emerald-500 border-emerald-500 text-white"
                 : step === i ? "bg-rose-600 border-rose-500 text-white"
-                : "bg-white/5 border-white/10 text-white/30",
+                : "bg-white/5 border-white/10 text-white/50",
             )}>
               {step > i ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
             </div>
@@ -589,12 +589,12 @@ export function AvatarCreatorModal({
             >
               <div className="flex items-center gap-2">
                 <Settings2 className="h-3.5 w-3.5 text-white/25" />
-                <span className="text-[11px] text-white/35 font-medium">
+                <span className="text-[11px] text-white/58 font-medium">
                   Advanced — Ready Player Me / Upload VRM or GLB
                 </span>
               </div>
               <ChevronDown className={cn(
-                "h-3.5 w-3.5 text-white/20 transition-transform duration-200",
+                "h-3.5 w-3.5 text-white/42 transition-transform duration-200",
                 advancedOpen && "rotate-180",
               )} />
             </button>

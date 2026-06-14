@@ -277,7 +277,7 @@ export function LiveControl() {
 
       {/* ── Sub-pages Grid ── */}
       <div>
-        <p className="text-[11px] font-bold text-white/30 uppercase tracking-[0.14em] mb-3">Studio Sections</p>
+        <p className="text-[11px] font-bold text-white/52 uppercase tracking-[0.14em] mb-3">Studio Sections</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {SUB_PAGES.map((page, i) => {
             const Icon = page.icon;
@@ -314,7 +314,7 @@ export function LiveControl() {
                       </div>
                       <p className="text-xs text-white/40 leading-snug">{page.desc}</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 flex-shrink-0 mt-0.5 transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-white/42 group-hover:text-white/70 flex-shrink-0 mt-0.5 transition-colors" />
                   </div>
                 </Link>
               </motion.div>
