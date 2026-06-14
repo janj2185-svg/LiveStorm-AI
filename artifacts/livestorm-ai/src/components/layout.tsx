@@ -16,25 +16,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 interface SimpleNavItem {
-  label: string;
+  labelKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const SIDEBAR_ITEMS: SimpleNavItem[] = [
-  { label: "Dashboard",    href: "/dashboard",    icon: LayoutDashboard },
-  { label: "Live Studio",  href: "/live-studio",  icon: Monitor },
-  { label: "Scenes",       href: "/live-control", icon: Film },
-  { label: "Gifts",        href: "/gamification", icon: Gift },
-  { label: "Community",    href: "/universe",     icon: Users },
-  { label: "AI Storm",     href: "/ai-assistant", icon: Bot },
-  { label: "Storm Pass",   href: "/pass",         icon: ShieldCheck },
-  { label: "Boss Battle",  href: "/boss-battle",  icon: Swords },
+  { labelKey: "nav_dashboard",   href: "/dashboard",    icon: LayoutDashboard },
+  { labelKey: "nav_live_studio", href: "/live-studio",  icon: Monitor },
+  { labelKey: "nav_scenes",      href: "/live-control", icon: Film },
+  { labelKey: "nav_gifts",       href: "/gamification", icon: Gift },
+  { labelKey: "nav_community",   href: "/universe",     icon: Users },
+  { labelKey: "nav_ai_storm",    href: "/ai-assistant", icon: Bot },
+  { labelKey: "nav_storm_pass",  href: "/pass",         icon: ShieldCheck },
+  { labelKey: "nav_boss_battle", href: "/boss-battle",  icon: Swords },
 ];
 
 const SIDEBAR_BOTTOM: SimpleNavItem[] = [
-  { label: "Analytics",  href: "/analytics",  icon: BarChart2 },
-  { label: "Settings",   href: "/settings",   icon: SettingsIcon },
+  { labelKey: "nav_analytics", href: "/analytics", icon: BarChart2 },
+  { labelKey: "nav_settings",  href: "/settings",  icon: SettingsIcon },
 ];
 
 const ALL_NAV = [...SIDEBAR_ITEMS, ...SIDEBAR_BOTTOM];
@@ -61,40 +61,49 @@ function routeVariant(path: string): BgVariant {
 }
 
 function SidebarNavItem({
-  item, location, collapsed, onClick,
+  item, location, collapsed, onClick, t,
 }: {
   item: SimpleNavItem;
   location: string;
   collapsed: boolean;
   onClick?: () => void;
+  t: (k: string) => string;
 }) {
   const active = isNavActive(item.href, location);
   const Icon = item.icon;
+  const label = t(item.labelKey);
   return (
     <Link href={item.href} className="block" onClick={onClick}>
       <div
         data-testid={`link-${item.href.replace(/\//g, "")}`}
-        title={collapsed ? item.label : undefined}
+        title={collapsed ? label : undefined}
         className={cn(
-          "relative flex items-center rounded-xl cursor-pointer transition-all duration-150 min-h-[40px]",
+          "relative flex items-center rounded-xl cursor-pointer min-h-[40px]",
+          "transition-all duration-200",
           collapsed ? "px-0 justify-center" : "gap-3 px-3",
           active
-            ? "bg-primary/20 border border-primary/28 text-white shadow-sm"
-            : "border border-transparent text-white/42 hover:text-white/75 hover:bg-white/[0.07]",
+            ? "bg-primary/22 border border-primary/40 text-white"
+            : "border border-transparent text-white/58 hover:text-white/88 hover:bg-white/[0.08]",
         )}
+        style={active ? {
+          boxShadow: "0 0 0 1px rgba(124,58,237,0.12), 0 2px 12px rgba(124,58,237,0.18)",
+        } : undefined}
       >
+        {active && !collapsed && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 rounded-r-full bg-primary" />
+        )}
         <Icon className={cn(
-          "flex-shrink-0 transition-colors",
-          collapsed ? "h-[18px] w-[18px]" : "h-[16px] w-[16px]",
-          active ? "text-primary" : "text-white/38",
+          "flex-shrink-0 transition-colors duration-200",
+          collapsed ? "h-[18px] w-[18px]" : "h-[15px] w-[15px]",
+          active ? "text-primary" : "text-white/45",
         )} />
         {!collapsed && (
-          <span className="text-[13px] font-medium whitespace-nowrap flex-1 leading-none">
-            {item.label}
+          <span className="text-[12.5px] font-semibold whitespace-nowrap flex-1 leading-none tracking-[-0.01em]">
+            {label}
           </span>
         )}
         {!collapsed && active && (
-          <div className="w-1.5 h-1.5 rounded-full bg-primary/70 flex-shrink-0" />
+          <div className="w-1.5 h-1.5 rounded-full bg-primary/80 flex-shrink-0" style={{ boxShadow: "0 0 6px rgba(139,92,246,0.8)" }} />
         )}
       </div>
     </Link>
@@ -159,7 +168,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const mainMl   = desktopCollapsed ? "lg:ml-[72px]" : "lg:ml-[236px]";
 
   const currentItem  = ALL_NAV.find((i) => isNavActive(i.href, relPath));
-  const currentLabel = currentItem?.label ?? "Dashboard";
+  const currentLabel = currentItem ? t(currentItem.labelKey) : t("nav_dashboard");
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -193,18 +202,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
           sidebarCollapsed ? "justify-center px-3" : "px-4",
         )}>
           <div className={cn(
-            "w-9 h-9 rounded-xl bg-gradient-to-br from-primary/40 to-cyan-500/20 flex items-center justify-center",
-            "border border-primary/35 shadow-lg shadow-primary/20 flex-shrink-0",
-          )}>
-            <img src={`${basePath}/logo.svg`} alt="LiveStorm AI" className="h-5 w-5" />
+            "w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/50 to-cyan-500/25 flex items-center justify-center",
+            "border border-primary/40 shadow-lg flex-shrink-0",
+          )} style={{ boxShadow: "0 0 20px rgba(124,58,237,0.30), 0 4px 12px rgba(0,0,0,0.4)" }}>
+            <img src={`${basePath}/logo.svg`} alt="LiveStorm AI" className="h-7 w-7" />
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="font-black text-[13px] tracking-tight text-white leading-none whitespace-nowrap">
+              <p className="font-black text-[14px] tracking-tight text-white leading-none whitespace-nowrap" style={{ fontFamily: "'Sora', sans-serif" }}>
                 LiveStorm <span className="text-primary">AI</span>
               </p>
-              <p className="text-[8px] text-white/22 mt-0.5 tracking-[0.22em] font-bold whitespace-nowrap uppercase">
-                Next Gen Streaming
+              <p className="text-[7.5px] text-white/35 mt-1 tracking-[0.20em] font-bold whitespace-nowrap uppercase">
+                AI Live Streaming Platform
               </p>
             </div>
           )}
@@ -237,6 +246,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               location={relPath}
               collapsed={sidebarCollapsed}
               onClick={() => setTabletExpanded(false)}
+              t={t}
             />
           ))}
 
@@ -250,6 +260,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               location={relPath}
               collapsed={sidebarCollapsed}
               onClick={() => setTabletExpanded(false)}
+              t={t}
             />
           ))}
         </nav>
@@ -267,7 +278,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             {desktopCollapsed
               ? <PanelLeftOpen className="h-4 w-4" />
-              : <><PanelLeftClose className="h-4 w-4 flex-shrink-0" /><span className="text-[11px] font-medium">Collapse</span></>
+              : <><PanelLeftClose className="h-4 w-4 flex-shrink-0" /><span className="text-[11px] font-semibold">{t("nav_collapse")}</span></>
             }
           </button>
         </div>
@@ -381,7 +392,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </span>
                   )}
                   <Icon className="h-5 w-5" />
-                  <span className="text-[9px] font-medium leading-none">{item.label}</span>
+                  <span className="text-[9px] font-semibold leading-none">{t(item.labelKey)}</span>
                 </div>
               </Link>
             );
@@ -391,7 +402,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-white/38 active:opacity-60 transition-opacity"
           >
             <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[9px] font-medium leading-none">More</span>
+            <span className="text-[9px] font-semibold leading-none">{t("nav_more")}</span>
           </button>
         </div>
       </nav>
@@ -406,7 +417,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="px-4 pb-8">
               <div className="flex items-center justify-between py-3 mb-3 border-b border-white/[0.06]">
-                <h3 className="text-sm font-bold text-white">Navigation</h3>
+                <h3 className="text-sm font-bold text-white">{t("nav_navigation")}</h3>
                 <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-white/40 hover:bg-white/[0.06]">
                   <X className="h-4 w-4" />
                 </button>
@@ -427,7 +438,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       )}
                     >
                       <Icon className={cn("h-5 w-5", active && "text-primary")} />
-                      <span className="text-[10px] font-medium text-center leading-tight">{item.label}</span>
+                      <span className="text-[10px] font-semibold text-center leading-tight">{t(item.labelKey)}</span>
                     </button>
                   );
                 })}

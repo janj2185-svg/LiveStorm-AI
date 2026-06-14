@@ -700,8 +700,24 @@ export function Dashboard() {
             animation: "shimmer-slide 3s ease-in-out infinite",
           }} />
 
+          {/* ── PARTICLES ── */}
+          {[...Array(22)].map((_, i) => (
+            <div key={i} className="absolute pointer-events-none rounded-full" style={{
+              width:  i % 3 === 0 ? 2 : 1.5,
+              height: i % 3 === 0 ? 2 : 1.5,
+              left: `${(i * 5.17 + 3.5) % 94}%`,
+              top:  `${(i * 7.31 + 6.2) % 88}%`,
+              background: i % 4 === 0 ? "rgba(139,92,246,0.85)"
+                        : i % 4 === 1 ? "rgba(6,182,212,0.75)"
+                        : i % 4 === 2 ? "rgba(217,70,239,0.65)"
+                        : "rgba(255,255,255,0.45)",
+              animation: `float-dot ${8 + (i % 6)}s ease-in-out ${(i * 0.38) % 4}s infinite`,
+              boxShadow: i % 3 === 0 ? (i % 4 === 0 ? "0 0 5px rgba(139,92,246,0.9)" : i % 4 === 1 ? "0 0 5px rgba(6,182,212,0.9)" : "0 0 4px rgba(217,70,239,0.8)") : "none",
+            }} />
+          ))}
+
           {/* ── BANNER — 3-column grid ── */}
-          <div className="relative z-10 grid items-center px-6" style={{ minHeight: 140, gridTemplateColumns: "1fr auto 1fr" }}>
+          <div className="relative z-10 grid items-center px-6" style={{ minHeight: 140, gridTemplateColumns: "1fr auto 1fr", fontFamily: "'Inter', sans-serif" }}>
 
             {/* ─── LOGO ORB ─── */}
             {/* ── LEFT: status + welcome ── */}

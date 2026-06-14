@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
 @layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
@@ -67,13 +67,13 @@
   --background: 245 52% 6%;
   --foreground: 214 30% 92%;
 
-  --card: 244 48% 8%;
+  --card: 244 48% 10%;
   --card-foreground: 214 30% 92%;
-  --card-border: 244 42% 15%;
+  --card-border: 244 42% 22%;
 
   --popover: 244 48% 8%;
   --popover-foreground: 214 30% 92%;
-  --popover-border: 244 42% 15%;
+  --popover-border: 244 42% 22%;
 
   --primary: 263 72% 62%;
   --primary-foreground: 0 0% 100%;
@@ -82,7 +82,7 @@
   --secondary-foreground: 214 30% 92%;
 
   --muted: 244 44% 11%;
-  --muted-foreground: 244 18% 55%;
+  --muted-foreground: 244 18% 68%;
 
   --accent: 192 91% 43%;
   --accent-foreground: 0 0% 100%;
@@ -105,7 +105,7 @@
   --sidebar-ring: 263 72% 62%;
 
   --radius: 0.75rem;
-  --app-font-sans: 'Inter', sans-serif;
+  --app-font-sans: 'Sora', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
 }
 
