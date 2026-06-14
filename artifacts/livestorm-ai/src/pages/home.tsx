@@ -111,13 +111,14 @@ export function Home() {
       <section id="features" className="py-24 px-4 bg-black/40 border-y border-white/5">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Command Your Audience</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="ls-eyebrow text-primary mb-4">Platform Features</p>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-5 tracking-tight">Command Your Audience</h2>
+            <p className="text-white/65 max-w-2xl mx-auto text-base leading-relaxed">
               A complete mission control center for your TikTok LIVE streams. Every tool you need to maximize engagement and revenue.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: Trophy,
@@ -141,13 +142,13 @@ export function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-2xl bg-card border border-white/5 hover:border-primary/50 transition-colors group"
+                className="ls-card-elevated p-8 hover:border-primary/40 transition-all duration-200 group cursor-default"
               >
-                <div className="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="ls-icon-wrap h-12 w-12 mb-6 group-hover:scale-110 transition-transform">
                   <feat.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">{feat.title}</h3>
-                <p className="text-muted-foreground">{feat.desc}</p>
+                <h3 className="ls-section text-base mb-3">{feat.title}</h3>
+                <p className="text-white/62 text-sm leading-relaxed">{feat.desc}</p>
               </motion.div>
             ))}
           </div>

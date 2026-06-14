@@ -129,7 +129,7 @@ export function Universe() {
                 <Trophy className="w-4 h-4 text-yellow-400" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm">Топ підписників</p>
+                <p className="ls-section">Топ підписників</p>
                 <p className="text-[10px] text-white/50">Ranked by stream activity</p>
               </div>
             </div>
@@ -180,7 +180,7 @@ export function Universe() {
             <div className="rounded-2xl border border-cyan-500/12 p-5" style={{ background: "rgba(14,165,233,0.04)" }}>
               <div className="flex items-center gap-2.5 mb-3">
                 <Globe className="h-4 w-4 text-cyan-400" />
-                <p className="font-semibold text-white text-sm">🌌 World Progress</p>
+                <p className="ls-section">🌌 World Progress</p>
               </div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-white/52">Kingdoms active</p>
@@ -220,7 +220,7 @@ export function Universe() {
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
               </span>
-              <p className="font-semibold text-white text-sm">Онлайн зараз</p>
+              <p className="ls-section">Онлайн зараз</p>
               <span className="ml-auto text-[10px] text-emerald-400 font-bold tabular-nums">
                 {(rankings ?? []).length} active
               </span>
@@ -262,7 +262,7 @@ export function Universe() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-b from-violet-500/[0.06] to-transparent overflow-hidden">
             <div className="px-5 py-4 border-b border-violet-500/15">
-              <p className="font-semibold text-white text-sm">Запросити союз</p>
+              <p className="ls-section">Запросити союз</p>
               <p className="text-xs text-muted-foreground mt-0.5">Введи ID стрімера для пакту.</p>
             </div>
             <div className="p-5 space-y-4">

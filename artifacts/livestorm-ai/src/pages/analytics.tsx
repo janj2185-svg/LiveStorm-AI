@@ -113,7 +113,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
             <Star className="h-4 w-4 text-violet-400" />
           </div>
           <div>
-            <p className="font-semibold text-white text-sm">{t("analytics_ai_tips")}</p>
+            <p className="ls-section">{t("analytics_ai_tips")}</p>
             {data?.fromCache && data.cachedAt && (
               <p className="text-[10px] text-muted-foreground/50">
                 Generated {format(new Date(data.cachedAt), "MMM d · HH:mm")}
@@ -261,8 +261,8 @@ export function Analytics() {
       {/* Header + period selector */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-0.5">{t("analytics_insight_hub")}</p>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{t("nav_analytics")}</h1>
+          <p className="ls-eyebrow text-primary/70 mb-1">{t("analytics_insight_hub")}</p>
+          <h1 className="ls-title text-2xl sm:text-3xl tracking-tight">{t("nav_analytics")}</h1>
           <p className="text-sm text-white/50 mt-0.5">
             {liveStats && (liveStats as any).isLive ? (
               <span className="flex items-center gap-1.5">
@@ -307,10 +307,10 @@ export function Analytics() {
                 {s.delta}
               </span>
             </div>
-            <div className="text-3xl font-black text-white tabular-nums mb-1">
+            <div className="ls-stat text-3xl mb-1">
               {isLoading ? <Skeleton className="h-9 w-20 bg-white/5" /> : s.value}
             </div>
-            <div className="text-xs text-white/55 font-medium">{s.label}</div>
+            <div className="ls-label">{s.label}</div>
           </div>
         ))}
       </div>
@@ -331,8 +331,8 @@ export function Analytics() {
           <div className="rounded-2xl border border-violet-500/12 overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
             <div className="px-5 py-3 flex items-center justify-between border-b border-white/[0.05]">
               <div>
-                <p className="text-sm font-semibold text-white">Пікові глядачі</p>
-                <p className="text-xs text-white/48 mt-0.5">{filteredSessions.length} сесій за цей період</p>
+                <p className="ls-section">Пікові глядачі</p>
+                <p className="ls-muted mt-0.5">{filteredSessions.length} сесій за цей період</p>
               </div>
               <div className="flex items-center gap-3 text-xs text-white/48">
                 <span className="flex items-center gap-1.5"><div className="w-5 h-0.5 rounded-full bg-violet-400 opacity-70" />Глядачі</span>
@@ -387,7 +387,7 @@ export function Analytics() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
-              <p className="font-semibold text-white text-sm">{t("analytics_sessions")}</p>
+              <p className="ls-section">{t("analytics_sessions")}</p>
               <p className="text-xs text-muted-foreground">{t("analytics_sessions_desc")}</p>
             </div>
             <span className="ml-auto text-xs font-bold text-white/45 tabular-nums">

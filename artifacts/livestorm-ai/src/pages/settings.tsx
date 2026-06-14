@@ -808,7 +808,7 @@ export function Settings() {
 
               <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
                 <div className="px-6 py-4 border-b border-white/5">
-                  <p className="text-sm font-semibold text-white">What's included in your plan</p>
+                  <p className="ls-section">What's included in your plan</p>
                 </div>
                 <div className="p-6">
                   <div className="space-y-2 text-sm">

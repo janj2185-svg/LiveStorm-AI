@@ -52,7 +52,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
   return (
     <div className="flex flex-col h-full min-h-0 rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden">
       <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between flex-none">
-        <span className="flex items-center gap-2 text-sm font-semibold text-white">
+        <span className="flex items-center gap-2 ls-section">
           <MessageCircle className="h-4 w-4 text-blue-400" />
           Comments
         </span>

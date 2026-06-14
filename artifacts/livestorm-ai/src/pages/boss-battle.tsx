@@ -347,7 +347,7 @@ export function BossBattle() {
               </div>
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">{t("boss_arena")}</p>
-                <p className="font-bold text-white text-sm">{t("boss_spawn")}</p>
+                <p className="ls-section">{t("boss_spawn")}</p>
               </div>
             </div>
 
@@ -422,7 +422,7 @@ export function BossBattle() {
               </div>
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-white/48">{t("boss_guide")}</p>
-                <p className="font-bold text-white text-sm">{t("boss_how_works")}</p>
+                <p className="ls-section">{t("boss_how_works")}</p>
               </div>
             </div>
             <div className="p-5 space-y-5">
@@ -439,7 +439,7 @@ export function BossBattle() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[9px] font-black text-white/45 font-mono">{item.num}</span>
-                      <p className="text-sm font-bold text-white">{item.title}</p>
+                      <p className="ls-section">{item.title}</p>
                     </div>
                     <p className="text-xs text-white/58 leading-relaxed">{item.desc}</p>
                   </div>

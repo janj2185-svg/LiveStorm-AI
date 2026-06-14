@@ -155,10 +155,10 @@ function StatCard({
             </span>
           )}
         </div>
-        <div className="text-[26px] font-black text-white tabular-nums leading-none mb-1.5">
+        <div className="ls-stat text-[26px] leading-none mb-1.5">
           {doAnimate ? <AnimatedCounter target={value} /> : value.toLocaleString()}
         </div>
-        <p className="text-xs text-muted-foreground/60 font-medium">{label}</p>
+        <p className="ls-label">{label}</p>
       </div>
     </div>
   );
@@ -873,10 +873,10 @@ export function Dashboard() {
                   <s.icon className={cn("h-4 w-4", s.iconColor)} />
                 </div>
                 <div>
-                  <div className="text-xl font-black text-white tabular-nums">
+                  <div className="ls-stat text-xl leading-none mb-0.5">
                     {isActive ? <AnimatedCounter target={s.value} /> : s.value.toLocaleString()}
                   </div>
-                  <p className="text-[11px] text-muted-foreground/60">{s.label}</p>
+                  <p className="ls-label">{s.label}</p>
                 </div>
               </div>
             </div>
@@ -912,7 +912,7 @@ export function Dashboard() {
                   <Activity className={cn("h-4 w-4", isActive ? "text-violet-400" : "text-muted-foreground")} />
                 </div>
                 <div>
-                  <p className="font-semibold text-white text-sm">Live Activity</p>
+                  <p className="ls-section">Live Activity</p>
                   <p className="text-[10px] text-muted-foreground/50">{isActive ? "Real-time events" : "Session not started"}</p>
                 </div>
               </div>

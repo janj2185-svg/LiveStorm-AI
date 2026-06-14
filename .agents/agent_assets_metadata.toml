@@ -358,7 +358,7 @@ title = "tiktok host profile angle"
 id = "rQq6SBMxLh4UMtFxW18dE"
 uri = "file://screenshots/desktop-dashboard.jpg"
 type = "image"
-title = "Dashboard — Desktop"
+title = "ДО — Dashboard (10 червня, старий стан)"
 
 [[outputs]]
 id = "HKvpHOQELP3ikmj7qe-AP"
@@ -418,7 +418,7 @@ title = "Analytics — Mobile"
 id = "srxbCS1nXS214pyAYCb_H"
 uri = "file://screenshots/desktop-gamification.jpg"
 type = "image"
-title = "Gamification — Desktop"
+title = "ДО — Gamification (10 червня, старий стан)"
 
 [[outputs]]
 id = "UHyDYK18uHQ3ScLkgcZpD"
@@ -845,3 +845,9 @@ id = "VBWSBSY4EcTqauAIYBP45"
 uri = "file://attached_assets/avatars/female_8_profile.png"
 type = "image"
 title = "F8 — Profile Angle"
+
+[[outputs]]
+id = "YYjDpRi9eknqYFo5trCy2"
+uri = "file://screenshots/after-home-full.jpg"
+type = "image"
+title = "ПІСЛЯ — Головна сторінка повністю (сьогодні)"

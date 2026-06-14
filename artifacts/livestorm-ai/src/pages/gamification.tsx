@@ -455,14 +455,14 @@ export function Gamification() {
             { label: "Coins",         value: myStats?.totalCoins ?? 0,          icon: <Crown className="w-4 h-4" />,   iconBg: "bg-amber-500/15",  color: "text-amber-300",  suffix: ""         },
             { label: "Achievements",  value: (achievements ?? []).filter(a => a.unlocked).length, icon: <Medal className="w-4 h-4" />, iconBg: "bg-cyan-500/15", color: "text-cyan-300", suffix: `/${achievements?.length ?? "…"}` },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-white/[0.06] p-4 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
-              <div className={cn("p-1.5 rounded-lg w-fit mb-2.5", s.iconBg)}>
+            <div key={s.label} className="ls-card-elevated p-4 relative overflow-hidden">
+              <div className={cn("ls-icon-wrap p-1.5 w-9 h-9 mb-2.5", s.iconBg)}>
                 <span className={s.color}>{s.icon}</span>
               </div>
-              <p className="text-xl font-black text-white tabular-nums">
+              <p className="ls-stat text-xl">
                 <AnimatedCounter target={s.value} /><span className="text-sm text-white/50">{s.suffix}</span>
               </p>
-              <p className="text-[10px] text-white/50 mt-0.5 uppercase tracking-wider">{s.label}</p>
+              <p className="ls-label mt-0.5">{s.label}</p>
             </div>
           ))}
         </div>
@@ -482,7 +482,7 @@ export function Gamification() {
                     <div className="p-2 rounded-lg bg-yellow-500/15">
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     </div>
-                    <span className="font-semibold text-white text-sm">Your Progression</span>
+                    <span className="ls-section">Your Progression</span>
                   </div>
                   {myRank && (
                     <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/25">
@@ -534,7 +534,7 @@ export function Gamification() {
                   <div className="p-1.5 rounded-lg bg-yellow-500/15">
                     <Zap className="w-4 h-4 text-yellow-400" />
                   </div>
-                  <span className="font-semibold text-white text-sm">Live XP Feed</span>
+                  <span className="ls-section">Live XP Feed</span>
                   <span className="ml-auto flex items-center gap-1.5 text-[10px] text-green-400 font-bold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                     LIVE
@@ -578,7 +578,7 @@ export function Gamification() {
                     <Medal className="w-4 h-4 text-cyan-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">Achievements</p>
+                    <p className="ls-section">Achievements</p>
                     <p className="text-[10px] text-white/30">
                       {achievements
                         ? `${achievements.filter(a => a.unlocked).length} / ${achievements.length} unlocked`
@@ -671,7 +671,7 @@ export function Gamification() {
               <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
                 <Gift className={cn("w-4 h-4 shrink-0", claimStatus?.alreadyClaimed ? "text-white/20" : "text-cyan-400")} />
                 <div className="flex-1">
-                  <p className="font-semibold text-white text-sm">Щоденний бонус</p>
+                  <p className="ls-section">Щоденний бонус</p>
                   <p className="text-[10px] text-white/50">+100 монет кожен день</p>
                 </div>
               </div>
@@ -715,7 +715,7 @@ export function Gamification() {
                   <Sparkles className="w-4 h-4 text-yellow-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-white text-sm">Lucky Drops</p>
+                  <p className="ls-section">Lucky Drops</p>
                   <p className="text-[10px] text-white/50">Рандомні нагороди для глядачів</p>
                 </div>
               </div>
@@ -794,7 +794,7 @@ export function Gamification() {
                   <div className="p-1.5 rounded-lg bg-amber-500/15">
                     <Trophy className="w-4 h-4 text-amber-400" />
                   </div>
-                  <span className="font-semibold text-white text-sm">Leaderboard</span>
+                  <span className="ls-section">Leaderboard</span>
                 </div>
                 <div className="flex gap-1 p-1 rounded-lg bg-white/[0.04] border border-white/[0.05] mb-2">
                   {(["viewers", "streamers"] as LbTab[]).map((tab) => (
