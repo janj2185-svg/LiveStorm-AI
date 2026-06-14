@@ -26,7 +26,9 @@ export function ConceptDash() {
     <div
       className="cd-root"
       style={{
-        background: "linear-gradient(135deg, #0f0528 0%, #1e0a46 40%, #0a0532 100%)",
+        backgroundImage: "url('/dash-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
       {/* Subtle grid */}
