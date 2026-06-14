@@ -585,43 +585,50 @@ export function Dashboard() {
         <div
           className={cn("relative overflow-hidden rounded-2xl border")}
           style={{
-            minHeight: 240,
-            borderColor: isActive ? "rgba(34,197,94,0.28)" : "rgba(109,40,217,0.22)",
+            minHeight: 300,
+            borderColor: isActive ? "rgba(34,197,94,0.30)" : "rgba(109,40,217,0.25)",
             boxShadow: isActive
-              ? "0 0 0 1px rgba(34,197,94,0.06), 0 20px 60px rgba(0,0,0,0.55), 0 0 40px rgba(34,197,94,0.06)"
-              : "0 0 0 1px rgba(124,58,237,0.05), 0 20px 60px rgba(0,0,0,0.55), 0 0 60px rgba(109,40,217,0.08)",
+              ? "0 0 0 1px rgba(34,197,94,0.07), 0 24px 70px rgba(0,0,0,0.6), 0 0 50px rgba(34,197,94,0.07)"
+              : "0 0 0 1px rgba(124,58,237,0.06), 0 24px 70px rgba(0,0,0,0.6), 0 0 80px rgba(109,40,217,0.12)",
           }}
         >
           {/* ── BASE ── */}
           <div className="absolute inset-0" style={{
-            background: "linear-gradient(135deg, #07001a 0%, #0d0230 45%, #040014 80%, #000008 100%)",
+            background: "linear-gradient(135deg, #08001e 0%, #0f0335 45%, #050016 80%, #000009 100%)",
+          }} />
+
+          {/* ── CENTRAL RADIAL BLOOM ── */}
+          <div className="absolute pointer-events-none" style={{
+            top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+            width: 600, height: 600, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(109,40,217,0.28) 0%, rgba(124,58,237,0.10) 35%, transparent 65%)",
+            animation: "holo-pulse 5s ease-in-out infinite",
           }} />
 
           {/* ── ORBS ── */}
           <div className="absolute pointer-events-none" style={{
-            top: -100, left: -60, width: 480, height: 480, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(109,40,217,0.48) 0%, rgba(124,58,237,0.16) 38%, transparent 68%)",
+            top: -120, left: -80, width: 520, height: 520, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(109,40,217,0.52) 0%, rgba(124,58,237,0.18) 38%, transparent 68%)",
             animation: "aiFloat1 20s ease-in-out infinite",
           }} />
           <div className="absolute pointer-events-none" style={{
-            bottom: -80, right: -50, width: 400, height: 400, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(6,182,212,0.32) 0%, rgba(8,145,178,0.10) 42%, transparent 68%)",
+            bottom: -90, right: -60, width: 440, height: 440, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(6,182,212,0.36) 0%, rgba(8,145,178,0.12) 42%, transparent 68%)",
             animation: "aiFloat2 25s ease-in-out infinite",
           }} />
           <div className="absolute pointer-events-none" style={{
-            top: "10%", right: "28%", width: 300, height: 300, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(168,85,247,0.28) 0%, transparent 62%)",
+            top: "5%", right: "5%", width: 320, height: 320, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(168,85,247,0.32) 0%, transparent 62%)",
             animation: "aiFloat3 15s ease-in-out infinite",
           }} />
           <div className="absolute pointer-events-none" style={{
-            bottom: -40, left: "40%", width: 260, height: 260, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 65%)",
+            bottom: -50, left: "10%", width: 280, height: 280, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99,102,241,0.26) 0%, transparent 65%)",
             animation: "aiFloat4 18s ease-in-out infinite",
           }} />
-          {/* Magenta accent — far right */}
           <div className="absolute pointer-events-none" style={{
-            top: -30, right: -30, width: 220, height: 220, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(217,70,239,0.20) 0%, transparent 65%)",
+            top: -40, right: "35%", width: 240, height: 240, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(217,70,239,0.24) 0%, transparent 65%)",
             animation: "aiFloat5 13s ease-in-out infinite",
           }} />
 
@@ -685,298 +692,221 @@ export function Dashboard() {
           <div className="absolute bottom-3 left-3 w-4 h-4 border-b-[1.5px] border-l-[1.5px] rounded-bl pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
           <div className="absolute bottom-3 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] rounded-br pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
 
-          {/* ── TWO-COLUMN CONTENT ── */}
-          <div className="relative z-10 flex items-stretch" style={{ minHeight: 240 }}>
+          {/* ── CENTERED CONTENT ── */}
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-10" style={{ minHeight: 300 }}>
 
-            {/* ─── LEFT: Identity + CTA ─── */}
-            <div className="flex-1 p-5 sm:p-6 flex flex-col justify-between min-w-0">
-
-              {/* TOP ROW: logo + brand + status */}
-              <div className="flex items-center gap-3 mb-4">
-                {/* Logo orb */}
-                <div className="relative flex-shrink-0">
-                  <div className="absolute -inset-2.5 rounded-full border border-violet-400/25 pointer-events-none"
-                    style={{ animation: "orbit-cw 8s linear infinite" }}>
-                    <div className="absolute top-[3px] right-[3px] w-[4px] h-[4px] rounded-full bg-violet-400"
-                      style={{ boxShadow: "0 0 7px rgba(139,92,246,1), 0 0 14px rgba(139,92,246,0.5)" }} />
-                  </div>
-                  <div className="absolute -inset-4 rounded-full border border-cyan-400/12 pointer-events-none"
-                    style={{ animation: "orbit-ccw 13s linear infinite" }}>
-                    <div className="absolute bottom-[4px] left-[4px] w-[3px] h-[3px] rounded-full bg-cyan-400"
-                      style={{ boxShadow: "0 0 6px rgba(6,182,212,1)" }} />
-                  </div>
-                  <div className="w-[46px] h-[46px] rounded-xl flex items-center justify-center border border-violet-400/40 relative flex-shrink-0"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(109,40,217,0.85) 0%, rgba(6,182,212,0.5) 100%)",
-                      boxShadow: "0 0 20px rgba(124,58,237,0.6), 0 0 50px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.22)",
-                      animation: "holo-glow 4s ease-in-out infinite",
-                    }}>
-                    <Zap className="h-5 w-5 text-white" style={{ filter: "drop-shadow(0 0 8px rgba(196,165,255,1))" }} />
-                  </div>
-                  <div className="absolute -inset-1.5 rounded-xl pointer-events-none" style={{
-                    background: "radial-gradient(circle, rgba(124,58,237,0.35) 0%, transparent 70%)",
-                    animation: "holo-pulse 4s ease-in-out infinite", filter: "blur(6px)",
-                  }} />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[9px] font-black tracking-[0.35em] uppercase text-white/30">LiveStorm</span>
-                    <span className="text-[8px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded"
-                      style={{ background: "rgba(124,58,237,0.25)", border: "1px solid rgba(124,58,237,0.35)", color: "rgba(196,165,255,0.95)" }}>AI</span>
-                    {isOwner && (
-                      <span className="flex items-center gap-1 text-[8px] font-black text-amber-400 uppercase tracking-wider px-1.5 py-0.5 rounded"
-                        style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.22)" }}>
-                        <KeyRound className="h-2 w-2" /> Owner
-                      </span>
-                    )}
-                    {isActive ? (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-                        style={{ background: "rgba(34,197,94,0.13)", border: "1px solid rgba(34,197,94,0.28)" }}>
-                        <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
-                        <span className={cn("text-[9px] font-black uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
-                          {connected ? "Live" : "Reconnect"} · {formatDuration(duration)}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-600 inline-block" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Offline</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+            {/* ─── LOGO ORB — centered ─── */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="relative flex-shrink-0 mb-5"
+            >
+              {/* Outer pulsing rings (decorative) */}
+              <div className="absolute pointer-events-none" style={{
+                top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+                width: 160, height: 160, borderRadius: "50%",
+                border: "1px solid rgba(139,92,246,0.14)",
+                animation: "holo-pulse 3s ease-in-out infinite",
+              }} />
+              <div className="absolute pointer-events-none" style={{
+                top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+                width: 120, height: 120, borderRadius: "50%",
+                border: "1px solid rgba(139,92,246,0.20)",
+                animation: "holo-pulse 3s ease-in-out 0.6s infinite",
+              }} />
+              <div className="absolute pointer-events-none" style={{
+                top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+                width: 88, height: 88, borderRadius: "50%",
+                border: "1px solid rgba(6,182,212,0.22)",
+                animation: "holo-pulse 3s ease-in-out 1.2s infinite",
+              }} />
+              {/* Orbit ring 1 */}
+              <div className="absolute -inset-6 rounded-full border border-violet-400/30 pointer-events-none"
+                style={{ animation: "orbit-cw 7s linear infinite" }}>
+                <div className="absolute top-[4px] right-[4px] w-[5px] h-[5px] rounded-full bg-violet-400"
+                  style={{ boxShadow: "0 0 8px rgba(139,92,246,1), 0 0 16px rgba(139,92,246,0.5)" }} />
               </div>
-
-              {/* WELCOME + NAME */}
-              <div className="mb-4">
-                <motion.p
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.1 }}
-                  className="text-[10px] font-bold uppercase tracking-[0.35em] mb-1"
-                  style={{ color: "rgba(255,255,255,0.25)" }}
-                >
-                  Welcome back
-                </motion.p>
-                <motion.h1
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.55, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                  className="font-black leading-[0.9] tracking-tight mb-2"
-                  style={{
-                    fontSize: "clamp(28px, 4vw, 44px)",
-                    background: "linear-gradient(105deg, #ffffff 0%, #e9d5ff 22%, #a78bfa 48%, #818cf8 68%, #67e8f9 100%)",
-                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                    backgroundClip: "text", backgroundSize: "200% 100%",
-                    animation: "gradient-x 6s ease-in-out infinite",
-                  }}
-                >
-                  {user?.firstName || "Creator"}
-                </motion.h1>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.25 }}
-                  className="text-[11px] font-medium"
-                  style={{ color: "rgba(255,255,255,0.28)" }}
-                >
-                  Power your TikTok LIVE with AI
-                </motion.p>
+              {/* Orbit ring 2 (counter) */}
+              <div className="absolute -inset-9 rounded-full border border-cyan-400/18 pointer-events-none"
+                style={{ animation: "orbit-ccw 11s linear infinite" }}>
+                <div className="absolute bottom-[6px] left-[6px] w-[4px] h-[4px] rounded-full bg-cyan-400"
+                  style={{ boxShadow: "0 0 6px rgba(6,182,212,1), 0 0 12px rgba(6,182,212,0.5)" }} />
               </div>
+              {/* Orbit ring 3 */}
+              <div className="absolute -inset-11 rounded-full border border-fuchsia-400/12 pointer-events-none"
+                style={{ animation: "orbit-cw 18s linear infinite" }}>
+                <div className="absolute top-[8px] left-[8px] w-[3px] h-[3px] rounded-full bg-fuchsia-400"
+                  style={{ boxShadow: "0 0 5px rgba(217,70,239,1)" }} />
+              </div>
+              {/* Core orb */}
+              <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center relative"
+                style={{
+                  background: "linear-gradient(135deg, rgba(109,40,217,0.90) 0%, rgba(139,92,246,0.70) 50%, rgba(6,182,212,0.55) 100%)",
+                  border: "1px solid rgba(196,165,255,0.40)",
+                  boxShadow: "0 0 30px rgba(124,58,237,0.65), 0 0 70px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.25)",
+                  animation: "holo-glow 4s ease-in-out infinite",
+                }}>
+                <Zap className="h-8 w-8 text-white" style={{ filter: "drop-shadow(0 0 12px rgba(255,255,255,0.9))" }} />
+              </div>
+              {/* Bloom behind orb */}
+              <div className="absolute -inset-3 rounded-2xl pointer-events-none" style={{
+                background: "radial-gradient(circle, rgba(124,58,237,0.45) 0%, transparent 70%)",
+                filter: "blur(10px)", animation: "holo-pulse 4s ease-in-out infinite",
+              }} />
+            </motion.div>
 
-              {/* LIVE STATS (inline when active) */}
-              {isActive && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                  className="flex items-center gap-1.5 mb-3 flex-wrap"
-                >
-                  {[
-                    { icon: Eye,           value: stats.viewerCount,   c: "#86efac", bg: "rgba(34,197,94,0.09)",  bd: "rgba(34,197,94,0.22)" },
-                    { icon: Gift,          value: stats.totalGifts,    c: "#fcd34d", bg: "rgba(245,158,11,0.09)", bd: "rgba(245,158,11,0.22)" },
-                    { icon: Heart,         value: stats.totalLikes,    c: "#f9a8d4", bg: "rgba(236,72,153,0.09)", bd: "rgba(236,72,153,0.22)" },
-                    { icon: UserPlus,      value: stats.totalFollows,  c: "#c4b5fd", bg: "rgba(139,92,246,0.09)", bd: "rgba(139,92,246,0.22)" },
-                    { icon: MessageSquare, value: stats.totalComments, c: "#93c5fd", bg: "rgba(59,130,246,0.09)",  bd: "rgba(59,130,246,0.22)" },
-                  ].map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                      <div key={i} className="flex items-center gap-1 px-2 py-1.5 rounded-lg backdrop-blur-sm"
-                        style={{ background: s.bg, border: `1px solid ${s.bd}` }}>
-                        <Icon className="h-3 w-3 flex-shrink-0" style={{ color: s.c }} />
-                        <span className="text-xs font-black tabular-nums" style={{ color: s.c }}>
-                          <AnimatedCounter target={s.value} />
-                        </span>
-                      </div>
-                    );
-                  })}
-                </motion.div>
+            {/* ─── BRAND NAME ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              className="mb-2"
+            >
+              <h1
+                className="font-black tracking-tight leading-none"
+                style={{
+                  fontSize: "clamp(36px, 5vw, 56px)",
+                  background: "linear-gradient(100deg, #ffffff 0%, #f0e6ff 20%, #c4b5fd 42%, #a78bfa 58%, #67e8f9 80%, #ffffff 100%)",
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  backgroundClip: "text", backgroundSize: "200% 100%",
+                  animation: "gradient-x 5s ease-in-out infinite",
+                  textShadow: "none",
+                  filter: "drop-shadow(0 0 20px rgba(139,92,246,0.35))",
+                }}
+              >
+                LiveStorm AI
+              </h1>
+            </motion.div>
+
+            {/* ─── WELCOME + USERNAME ─── */}
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.2 }}
+              className="text-base font-semibold mb-4"
+              style={{ color: "rgba(255,255,255,0.62)", letterSpacing: "0.02em" }}
+            >
+              Welcome back,{" "}
+              <span className="font-black" style={{ color: "rgba(255,255,255,0.88)" }}>
+                {user?.firstName || "Creator"}
+              </span>
+            </motion.p>
+
+            {/* ─── STATUS CHIPS ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.26 }}
+              className="flex items-center justify-center gap-2 flex-wrap mb-5"
+            >
+              {isActive ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                  style={{ background: "rgba(34,197,94,0.13)", border: "1px solid rgba(34,197,94,0.30)" }}>
+                  <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
+                  <span className={cn("text-[11px] font-black uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
+                    {connected ? "Live" : "Reconnecting"} · {formatDuration(duration)}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" />
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Offline</span>
+                </div>
               )}
+              {isOwner && (
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-black text-amber-300 uppercase tracking-wider"
+                  style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}>
+                  <KeyRound className="h-2.5 w-2.5" /> Owner
+                </div>
+              )}
+            </motion.div>
 
-              {/* CTA BUTTONS */}
+            {/* ─── LIVE STATS (when active) ─── */}
+            {isActive && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-                className="flex items-center gap-2 flex-wrap"
+                transition={{ duration: 0.4, delay: 0.22 }}
+                className="flex items-center justify-center gap-1.5 mb-5 flex-wrap"
               >
-                {isActive ? (
-                  <Button
-                    variant="destructive"
-                    onClick={handleEndSession}
-                    disabled={endSession.isPending}
-                    className="font-black gap-2 px-5 h-9 text-xs shadow-lg shadow-red-500/25 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]"
-                  >
-                    <Square className="h-3.5 w-3.5" fill="currentColor" />
-                    {endSession.isPending ? "Завершуємо…" : "Завершити стрім"}
-                  </Button>
-                ) : (
-                  <div className="relative">
-                    <div className="absolute -inset-0.5 rounded-lg pointer-events-none" style={{
-                      background: "linear-gradient(135deg, rgba(109,40,217,0.7), rgba(91,33,182,0.6))",
-                      filter: "blur(7px)", animation: "holo-pulse 2.5s ease-in-out infinite",
-                    }} />
-                    <Button
-                      onClick={handleStartSession}
-                      disabled={startSession.isPending}
-                      className="relative font-black gap-1.5 px-6 h-9 text-xs rounded-lg overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]"
-                      style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)" }}
-                    >
-                      <div className="absolute inset-0 pointer-events-none" style={{
-                        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)",
-                        animation: "shimmer-slide 2.8s ease-in-out infinite",
-                      }} />
-                      <Zap className="h-3.5 w-3.5 relative z-10" style={{ filter: "drop-shadow(0 0 5px rgba(255,255,255,0.7))" }} />
-                      <span className="relative z-10">{startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}</span>
-                    </Button>
-                  </div>
-                )}
+                {[
+                  { icon: Eye,           value: stats.viewerCount,   c: "#86efac", bg: "rgba(34,197,94,0.09)",  bd: "rgba(34,197,94,0.22)",  label: "Viewers"  },
+                  { icon: Gift,          value: stats.totalGifts,    c: "#fcd34d", bg: "rgba(245,158,11,0.09)", bd: "rgba(245,158,11,0.22)", label: "Gifts"    },
+                  { icon: Heart,         value: stats.totalLikes,    c: "#f9a8d4", bg: "rgba(236,72,153,0.09)", bd: "rgba(236,72,153,0.22)", label: "Likes"    },
+                  { icon: UserPlus,      value: stats.totalFollows,  c: "#c4b5fd", bg: "rgba(139,92,246,0.09)", bd: "rgba(139,92,246,0.22)", label: "Follows"  },
+                  { icon: MessageSquare, value: stats.totalComments, c: "#93c5fd", bg: "rgba(59,130,246,0.09)", bd: "rgba(59,130,246,0.22)", label: "Comments" },
+                ].map((s, i) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl backdrop-blur-sm"
+                      style={{ background: s.bg, border: `1px solid ${s.bd}` }}>
+                      <Icon className="h-3 w-3 flex-shrink-0" style={{ color: s.c }} />
+                      <span className="text-xs font-black tabular-nums" style={{ color: s.c }}>
+                        <AnimatedCounter target={s.value} />
+                      </span>
+                      <span className="text-[9px] uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</span>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
+
+            {/* ─── CTA BUTTONS ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.32 }}
+              className="flex items-center justify-center gap-2.5 flex-wrap"
+            >
+              {isActive ? (
                 <Button
-                  variant="outline"
-                  onClick={handleForceStop}
-                  disabled={forceStop.isPending}
-                  className="gap-1.5 h-9 px-4 text-xs font-semibold border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/18 text-white/40 backdrop-blur-sm rounded-lg transition-all duration-200"
-                  title="Force-clears any stuck session."
+                  variant="destructive"
+                  onClick={handleEndSession}
+                  disabled={endSession.isPending}
+                  className="font-black gap-2 px-6 h-10 text-sm shadow-lg shadow-red-500/25 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]"
                 >
-                  <RefreshCw className="h-3 w-3" />
-                  {forceStop.isPending ? "…" : "Тест"}
+                  <Square className="h-3.5 w-3.5" fill="currentColor" />
+                  {endSession.isPending ? "Завершуємо…" : "Завершити стрім"}
                 </Button>
-                {isActive && (connected
-                  ? <span className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-green-300" style={{ background: "rgba(34,197,94,0.09)", border: "1px solid rgba(34,197,94,0.18)" }}><Wifi className="h-3 w-3" /> Підключено</span>
-                  : <span className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-red-300" style={{ background: "rgba(239,68,68,0.09)", border: "1px solid rgba(239,68,68,0.18)" }}><WifiOff className="h-3 w-3" /> Відключено</span>
-                )}
-              </motion.div>
-            </div>
-
-            {/* ─── VERTICAL DIVIDER ─── */}
-            <div className="w-px flex-shrink-0 my-5" style={{
-              background: "linear-gradient(to bottom, transparent, rgba(139,92,246,0.35), rgba(6,182,212,0.25), transparent)",
-            }} />
-
-            {/* ─── RIGHT: Studio panel ─── */}
-            <div className="w-[188px] sm:w-[210px] flex-shrink-0 p-5 sm:p-6 flex flex-col justify-between">
-
-              {/* Panel header */}
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-[1px] flex-1" style={{ background: "linear-gradient(to right, rgba(139,92,246,0.5), transparent)" }} />
-                <span className="text-[8px] font-black uppercase tracking-[0.35em] text-white/20">Studio</span>
-                <div className="h-[1px] flex-1" style={{ background: "linear-gradient(to left, rgba(6,182,212,0.4), transparent)" }} />
-              </div>
-
-              {/* Stat rows */}
-              <div className="space-y-2 flex-1">
-                {/* Sessions */}
-                <motion.div
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.18 }}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 group cursor-default"
-                  style={{ background: "rgba(139,92,246,0.07)", border: "1px solid rgba(139,92,246,0.12)" }}
-                >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(139,92,246,0.18)", border: "1px solid rgba(139,92,246,0.25)" }}>
-                    <PlayCircle className="h-3.5 w-3.5 text-violet-300" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-white tabular-nums leading-none">{sessions?.length ?? 0}</p>
-                    <p className="text-[9px] text-white/28 mt-0.5">Стрімів всього</p>
-                  </div>
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-500/50 flex-shrink-0" />
-                </motion.div>
-
-                {/* Events this session */}
-                <motion.div
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.24 }}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 cursor-default"
-                  style={{ background: "rgba(6,182,212,0.07)", border: "1px solid rgba(6,182,212,0.12)" }}
-                >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(6,182,212,0.18)", border: "1px solid rgba(6,182,212,0.25)" }}>
-                    <Activity className="h-3.5 w-3.5 text-cyan-300" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-white tabular-nums leading-none">{eventCount}</p>
-                    <p className="text-[9px] text-white/28 mt-0.5">Подій у сесії</p>
-                  </div>
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: isActive ? "#22c55e" : "rgba(6,182,212,0.4)", boxShadow: isActive ? "0 0 6px #22c55e" : "none",
-                      animation: isActive ? "holo-pulse 1.5s ease-in-out infinite" : "none" }} />
-                </motion.div>
-
-                {/* AI mode */}
-                <motion.div
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.30 }}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 cursor-default"
-                  style={{ background: "rgba(168,85,247,0.07)", border: "1px solid rgba(168,85,247,0.12)" }}
-                >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(168,85,247,0.18)", border: "1px solid rgba(168,85,247,0.25)" }}>
-                    <Bot className="h-3.5 w-3.5 text-purple-300" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-black text-white leading-none truncate">AI Host</p>
-                    <p className="text-[9px] text-white/28 mt-0.5">Autopilot mode</p>
-                  </div>
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-500/50 flex-shrink-0" />
-                </motion.div>
-              </div>
-
-              {/* Quick nav */}
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.36 }}
-                className="flex gap-1.5 mt-3"
+              ) : (
+                <div className="relative">
+                  <div className="absolute -inset-1 rounded-xl pointer-events-none" style={{
+                    background: "linear-gradient(135deg, rgba(109,40,217,0.7), rgba(91,33,182,0.6))",
+                    filter: "blur(10px)", animation: "holo-pulse 2.5s ease-in-out infinite",
+                  }} />
+                  <Button
+                    onClick={handleStartSession}
+                    disabled={startSession.isPending}
+                    className="relative font-black gap-2 px-8 h-10 text-sm rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]"
+                    style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%)" }}
+                  >
+                    <div className="absolute inset-0 pointer-events-none" style={{
+                      background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)",
+                      animation: "shimmer-slide 2.8s ease-in-out infinite",
+                    }} />
+                    <Zap className="h-4 w-4 relative z-10" style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.8))" }} />
+                    <span className="relative z-10">{startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}</span>
+                  </Button>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                onClick={handleForceStop}
+                disabled={forceStop.isPending}
+                className="gap-2 h-10 px-5 text-sm font-semibold border-white/12 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 text-white/50 backdrop-blur-sm rounded-xl transition-all duration-200"
+                title="Force-clears any stuck session."
               >
-                <Link href="/live-studio" className="flex-1">
-                  <div className="flex flex-col items-center gap-1 py-2 rounded-lg text-center transition-all duration-200 cursor-pointer hover:scale-[1.03]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <Radio className="h-3 w-3 text-violet-400" />
-                    <span className="text-[8px] font-bold text-white/35 uppercase tracking-wider">Studio</span>
-                  </div>
-                </Link>
-                <Link href="/analytics" className="flex-1">
-                  <div className="flex flex-col items-center gap-1 py-2 rounded-lg text-center transition-all duration-200 cursor-pointer hover:scale-[1.03]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <TrendingUp className="h-3 w-3 text-cyan-400" />
-                    <span className="text-[8px] font-bold text-white/35 uppercase tracking-wider">Stats</span>
-                  </div>
-                </Link>
-                <Link href="/boss-battle" className="flex-1">
-                  <div className="flex flex-col items-center gap-1 py-2 rounded-lg text-center transition-all duration-200 cursor-pointer hover:scale-[1.03]"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <TrophyIcon className="h-3 w-3 text-amber-400" />
-                    <span className="text-[8px] font-bold text-white/35 uppercase tracking-wider">Battle</span>
-                  </div>
-                </Link>
-              </motion.div>
-            </div>
+                <RefreshCw className="h-3.5 w-3.5" />
+                {forceStop.isPending ? "…" : "Тест"}
+              </Button>
+              {isActive && (connected
+                ? <span className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-green-300" style={{ background: "rgba(34,197,94,0.09)", border: "1px solid rgba(34,197,94,0.20)" }}><Wifi className="h-3 w-3" /> Підключено</span>
+                : <span className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-300" style={{ background: "rgba(239,68,68,0.09)", border: "1px solid rgba(239,68,68,0.20)" }}><WifiOff className="h-3 w-3" /> Відключено</span>
+              )}
+            </motion.div>
+
           </div>
         </div>
       </motion.div>
