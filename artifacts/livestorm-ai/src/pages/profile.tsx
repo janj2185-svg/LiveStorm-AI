@@ -91,9 +91,9 @@ export function Profile() {
         </div>
         <div className="bg-white/[0.025] backdrop-blur-sm p-5 -mt-1">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          <Avatar className="h-20 w-20 border-2 border-primary/30 ring-4 ring-primary/10">
+          <Avatar className="h-20 w-20 border-2 border-primary/70 ring-4 ring-primary/30" style={{ boxShadow: "0 0 18px rgba(139,92,246,0.45)" }}>
             <AvatarImage src={profile?.avatarUrl ?? undefined} />
-            <AvatarFallback className="text-2xl font-bold bg-primary/20 text-primary">
+            <AvatarFallback className="text-2xl font-bold bg-primary/40 text-white">
               {(profile?.displayName ?? profile?.email ?? "?").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
