@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/react";
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -549,6 +550,7 @@ export function Dashboard() {
   const eventCount = events.filter((e) => e.type !== "viewerCount").length;
 
   const isOwner = profile?.role === "owner";
+  const { user } = useUser();
 
   const primaryStats = [
     { label: "Viewers",  value: stats.viewerCount,   icon: Eye,          iconBg: "bg-green-500/15",  iconColor: "text-green-400",  accent: "border-green-500/20" },
@@ -574,28 +576,45 @@ export function Dashboard() {
     >
     <div className="space-y-4 max-w-[1400px]">
 
-      {/* ── Hero / Storm AI Banner ── */}
-      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      {/* ── Animated Hero Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div
           className={cn(
             "relative overflow-hidden rounded-2xl border",
             isActive
-              ? "border-green-500/30 shadow-2xl shadow-green-500/[0.15]"
-              : "border-violet-500/30 shadow-2xl shadow-violet-500/[0.15]",
+              ? "border-green-500/25 shadow-2xl shadow-green-500/[0.10]"
+              : "border-violet-500/25 shadow-2xl shadow-violet-500/[0.10]",
           )}
           style={{
-            background: "linear-gradient(135deg, rgba(15,5,40,1) 0%, rgba(30,10,70,0.95) 40%, rgba(10,5,50,0.98) 100%)",
-            minHeight: 320,
+            background: "linear-gradient(135deg, rgba(6,2,18,0.97) 0%, rgba(18,5,45,0.95) 45%, rgba(4,2,22,0.98) 100%)",
+            minHeight: 260,
           }}
         >
-          {/* Subtle grid */}
-          <div className="absolute inset-0 opacity-[0.04]"
-            style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.5) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-          {/* Purple radial glow */}
-          <div className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 60% 100% at 65% 50%, rgba(139,92,246,0.22) 0%, transparent 70%)" }} />
+          {/* Fine grid */}
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.8) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
-          {/* Live badge top-right */}
+          {/* Animated orb — top-right */}
+          <div className="absolute -top-32 -right-16 w-[520px] h-[520px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(124,58,237,0.28) 0%, transparent 65%)", animation: "aiFloat2 18s ease-in-out infinite" }} />
+
+          {/* Animated orb — bottom-left */}
+          <div className="absolute -bottom-24 -left-8 w-[400px] h-[400px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(6,182,212,0.18) 0%, transparent 65%)", animation: "aiFloat1 24s ease-in-out infinite" }} />
+
+          {/* Top shimmer line */}
+          <div className="absolute top-0 inset-x-0 h-[1px]"
+            style={{ background: "linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.7) 25%, rgba(6,182,212,0.7) 60%, transparent 100%)", animation: "neon-breathe 4s ease-in-out infinite" }} />
+
+          {/* Scan line */}
+          <div className="absolute left-0 right-0 h-[1px] opacity-0 pointer-events-none"
+            style={{ background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent)", animation: "stage-scan 8s linear infinite" }} />
+
+          {/* Live badge */}
           {isActive && (
             <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600/90 backdrop-blur-sm border border-red-400/30 shadow-lg shadow-red-500/30 z-10">
               <PulsingDot color={connected ? "bg-white" : "bg-amber-300"} />
@@ -604,22 +623,69 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* Content */}
-          <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-between" style={{ minHeight: 320 }}>
+          <div className="relative z-10 p-6 sm:p-8" style={{ minHeight: 260 }}>
 
-            {/* Top stats row — visible during live */}
+            {/* ── Welcome row ── */}
+            <div className="flex items-start justify-between mb-5">
+              <div className="flex items-center gap-4">
+                {/* Glowing logo orb */}
+                <div className="relative flex-shrink-0">
+                  <div
+                    className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center border border-violet-500/40"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(124,58,237,0.6) 0%, rgba(6,182,212,0.35) 100%)",
+                      animation: "holo-glow 4s ease-in-out infinite",
+                    }}
+                  >
+                    <Zap className="h-6 w-6 text-violet-200" />
+                  </div>
+                  <div
+                    className="absolute -inset-[3px] rounded-2xl opacity-25 blur-md pointer-events-none"
+                    style={{ background: "linear-gradient(135deg, #7c3aed, #06b6d4)", animation: "holo-pulse 4s ease-in-out infinite" }}
+                  />
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold text-white/35 uppercase tracking-[0.22em] mb-0.5">Welcome back</p>
+                  <h2 className="text-2xl sm:text-[28px] font-black text-white leading-none tracking-tight">
+                    {user?.firstName || "Creator"}
+                    <span className="text-violet-400 ml-1">⚡</span>
+                  </h2>
+                  <p className="text-[13px] text-white/38 mt-1.5 font-medium tracking-tight">
+                    Power your stream with LiveStorm AI
+                  </p>
+                </div>
+              </div>
+
+              {/* Status chips — top-right (hidden when live badge shown) */}
+              {!isActive && (
+                <div className="hidden sm:flex flex-col items-end gap-1.5 flex-shrink-0">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] backdrop-blur-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-500 inline-block" />
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Offline</span>
+                  </div>
+                  {isOwner && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/25 backdrop-blur-sm text-[11px] font-bold text-amber-300">
+                      <KeyRound className="h-3 w-3" /> Owner
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── Live stats row ── */}
             {isActive && (
-              <div className="flex items-center gap-4 mb-4 flex-wrap">
+              <div className="flex items-center gap-2.5 mb-5 flex-wrap">
                 {[
-                  { label: "Viewers",  icon: Eye,          value: stats.viewerCount,   color: "text-green-300" },
-                  { label: "Gifts",    icon: Gift,         value: stats.totalGifts,    color: "text-amber-300" },
-                  { label: "Likes",    icon: Heart,        value: stats.totalLikes,    color: "text-pink-300" },
-                  { label: "Follows",  icon: UserPlus,     value: stats.totalFollows,  color: "text-violet-300" },
-                  { label: "Comments", icon: MessageSquare,value: stats.totalComments, color: "text-blue-300" },
+                  { label: "Viewers",  icon: Eye,           value: stats.viewerCount,   color: "text-green-300",  border: "border-green-500/20",  bg: "bg-green-500/10" },
+                  { label: "Gifts",    icon: Gift,          value: stats.totalGifts,    color: "text-amber-300",  border: "border-amber-500/20",  bg: "bg-amber-500/10" },
+                  { label: "Likes",    icon: Heart,         value: stats.totalLikes,    color: "text-pink-300",   border: "border-pink-500/20",   bg: "bg-pink-500/10" },
+                  { label: "Follows",  icon: UserPlus,      value: stats.totalFollows,  color: "text-violet-300", border: "border-violet-500/20", bg: "bg-violet-500/10" },
+                  { label: "Comments", icon: MessageSquare, value: stats.totalComments, color: "text-blue-300",   border: "border-blue-500/20",   bg: "bg-blue-500/10" },
                 ].map((s) => {
                   const Icon = s.icon;
                   return (
-                    <div key={s.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10">
+                    <div key={s.label} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl border backdrop-blur-sm", s.bg, s.border)}>
                       <Icon className={cn("h-3.5 w-3.5 flex-shrink-0", s.color)} />
                       <span className={cn("text-sm font-black tabular-nums", s.color)}>
                         <AnimatedCounter target={s.value} />
@@ -631,70 +697,43 @@ export function Dashboard() {
               </div>
             )}
 
-            {/* Main content: greeting + CTA */}
-            <div className="flex-1 flex flex-col justify-end pb-2">
-              {/* Status chip */}
-              <div className="flex items-center gap-2 mb-3">
-                {isActive ? (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/30 backdrop-blur-sm">
-                    <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
-                    <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
-                      {connected ? "З'єднано" : "Перепідключення…"}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/8 border border-white/12 backdrop-blur-sm">
-                    <span className="h-2 w-2 rounded-full bg-slate-400 inline-block" />
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Офлайн</span>
-                  </div>
-                )}
-                {isOwner && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 backdrop-blur-sm text-xs font-bold text-amber-200">
-                    <KeyRound className="h-3 w-3" /> Owner
-                  </div>
-                )}
-              </div>
-
-              {/* CTA buttons */}
-              <div className="flex items-center gap-3 flex-wrap">
-                {isActive ? (
-                  <Button
-                    variant="destructive"
-                    onClick={handleEndSession}
-                    disabled={endSession.isPending}
-                    className="font-black gap-2 px-7 h-12 text-base shadow-xl shadow-red-500/30 rounded-xl"
-                  >
-                    <Square className="h-4 w-4" fill="currentColor" />
-                    {endSession.isPending ? "Завершуємо…" : "Завершити стрім"}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleStartSession}
-                    disabled={startSession.isPending}
-                    className="font-black gap-2 px-8 h-12 text-base rounded-xl shadow-xl shadow-violet-500/40"
-                    style={{
-                      background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%)",
-                    }}
-                  >
-                    <Zap className="h-4 w-4" />
-                    {startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}
-                  </Button>
-                )}
+            {/* ── CTA row ── */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {isActive ? (
                 <Button
-                  variant="outline"
-                  onClick={handleForceStop}
-                  disabled={forceStop.isPending}
-                  className="gap-2 h-12 px-5 text-sm font-semibold border-white/20 bg-white/8 hover:bg-white/12 hover:border-white/30 text-white/70 backdrop-blur-sm rounded-xl"
-                  title="Force-clears any stuck session."
+                  variant="destructive"
+                  onClick={handleEndSession}
+                  disabled={endSession.isPending}
+                  className="font-black gap-2 px-7 h-11 text-sm shadow-xl shadow-red-500/30 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  {forceStop.isPending ? "…" : "Тест стріму"}
+                  <Square className="h-4 w-4" fill="currentColor" />
+                  {endSession.isPending ? "Завершуємо…" : "Завершити стрім"}
                 </Button>
-                {connected
-                  ? <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/12 border border-green-500/20 text-xs font-medium text-green-300 backdrop-blur-sm"><Wifi className="h-3 w-3" /> Підключено</div>
-                  : <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/12 border border-red-500/20 text-xs font-medium text-red-300 backdrop-blur-sm"><WifiOff className="h-3 w-3" /> Відключено</div>
-                }
-              </div>
+              ) : (
+                <Button
+                  onClick={handleStartSession}
+                  disabled={startSession.isPending}
+                  className="font-black gap-2 px-8 h-11 text-sm rounded-xl shadow-xl shadow-violet-500/35 transition-all duration-200 hover:scale-[1.02] hover:shadow-violet-500/55 active:scale-[0.98]"
+                  style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%)" }}
+                >
+                  <Zap className="h-4 w-4" />
+                  {startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={handleForceStop}
+                disabled={forceStop.isPending}
+                className="gap-2 h-11 px-5 text-sm font-semibold border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 text-white/55 backdrop-blur-sm rounded-xl transition-all duration-200"
+                title="Force-clears any stuck session."
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                {forceStop.isPending ? "…" : "Тест стріму"}
+              </Button>
+              {isActive && (connected
+                ? <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 border border-green-500/15 text-xs font-medium text-green-300 backdrop-blur-sm"><Wifi className="h-3 w-3" /> Підключено</div>
+                : <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/15 text-xs font-medium text-red-300 backdrop-blur-sm"><WifiOff className="h-3 w-3" /> Відключено</div>
+              )}
             </div>
           </div>
         </div>

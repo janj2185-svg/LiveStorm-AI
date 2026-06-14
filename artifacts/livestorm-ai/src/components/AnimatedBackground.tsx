@@ -2,7 +2,8 @@ import { useEffect, useRef, memo } from "react";
 
 export type BgVariant =
   | "default" | "ai" | "dashboard" | "gamification"
-  | "gaming"  | "universe" | "content" | "studio" | "moderation";
+  | "gaming"  | "universe" | "content" | "studio" | "moderation"
+  | "analytics" | "battle" | "pass" | "scenes";
 
 interface OrbCfg {
   color: string;
@@ -13,97 +14,135 @@ interface OrbCfg {
 }
 
 interface VCfg {
-  n: number;        // particle count
-  dist: number;     // max connection distance
-  spd: number;      // speed
-  lA: number;       // line alpha multiplier
-  dA: number;       // dot alpha multiplier
-  rgb: [number, number, number][];  // color palette
+  n: number;
+  dist: number;
+  spd: number;
+  lA: number;
+  dA: number;
+  rgb: [number, number, number][];
   orbs: OrbCfg[];
-  pulses?: boolean; // synapse pulse rings (AI variant)
+  pulses?: boolean;
 }
 
 const V: Record<BgVariant, VCfg> = {
   default: {
-    n: 52, dist: 130, spd: 0.30, lA: 0.22, dA: 0.68,
+    n: 40, dist: 130, spd: 0.22, lA: 0.10, dA: 0.30,
     rgb: [[139,92,246],[6,182,212],[99,102,241]],
     orbs: [
-      { color:"#8b5cf6", cx:"8%",  cy:"10%", size:580, opacity:0.22, dur:14, anim:"aiFloat1" },
-      { color:"#06b6d4", cx:"88%", cy:"78%", size:500, opacity:0.17, dur:19, anim:"aiFloat2" },
-      { color:"#6366f1", cx:"65%", cy:"15%", size:400, opacity:0.13, dur:23, anim:"aiFloat3" },
+      { color:"#8b5cf6", cx:"8%",  cy:"10%", size:600, opacity:0.10, dur:14, anim:"aiFloat1" },
+      { color:"#06b6d4", cx:"88%", cy:"78%", size:520, opacity:0.08, dur:19, anim:"aiFloat2" },
+      { color:"#6366f1", cx:"65%", cy:"15%", size:420, opacity:0.06, dur:23, anim:"aiFloat3" },
     ],
   },
   dashboard: {
-    n: 60, dist: 135, spd: 0.32, lA: 0.26, dA: 0.74,
+    n: 45, dist: 135, spd: 0.24, lA: 0.12, dA: 0.34,
     rgb: [[139,92,246],[6,182,212],[99,102,241]],
     orbs: [
-      { color:"#8b5cf6", cx:"5%",  cy:"8%",  size:640, opacity:0.28, dur:15, anim:"aiFloat1" },
-      { color:"#0ea5e9", cx:"90%", cy:"85%", size:560, opacity:0.22, dur:21, anim:"aiFloat2" },
-      { color:"#a855f7", cx:"68%", cy:"18%", size:440, opacity:0.16, dur:13, anim:"aiFloat3" },
-      { color:"#06b6d4", cx:"35%", cy:"92%", size:360, opacity:0.12, dur:17, delay:3, anim:"aiFloat4" },
+      { color:"#8b5cf6", cx:"5%",  cy:"8%",  size:660, opacity:0.12, dur:15, anim:"aiFloat1" },
+      { color:"#0ea5e9", cx:"90%", cy:"85%", size:580, opacity:0.09, dur:21, anim:"aiFloat2" },
+      { color:"#a855f7", cx:"68%", cy:"18%", size:460, opacity:0.07, dur:13, anim:"aiFloat3" },
+      { color:"#06b6d4", cx:"35%", cy:"92%", size:380, opacity:0.05, dur:17, delay:3, anim:"aiFloat4" },
     ],
   },
   ai: {
-    n: 100, dist: 165, spd: 0.50, lA: 0.32, dA: 0.88, pulses: true,
+    n: 70, dist: 160, spd: 0.38, lA: 0.15, dA: 0.40, pulses: true,
     rgb: [[139,92,246],[6,182,212],[99,102,241],[168,85,247],[20,184,166]],
     orbs: [
-      { color:"#8b5cf6", cx:"14%", cy:"18%", size:720, opacity:0.30, dur:10, anim:"aiFloat1" },
-      { color:"#06b6d4", cx:"82%", cy:"72%", size:660, opacity:0.26, dur:13, anim:"aiFloat2" },
-      { color:"#a855f7", cx:"55%", cy:"6%",  size:520, opacity:0.22, dur:17, anim:"aiFloat3" },
-      { color:"#0891b2", cx:"16%", cy:"84%", size:460, opacity:0.18, dur:22, delay:4, anim:"aiFloat4" },
-      { color:"#6366f1", cx:"88%", cy:"26%", size:380, opacity:0.15, dur:9,  delay:6, anim:"aiFloat5" },
+      { color:"#8b5cf6", cx:"14%", cy:"18%", size:740, opacity:0.13, dur:10, anim:"aiFloat1" },
+      { color:"#06b6d4", cx:"82%", cy:"72%", size:680, opacity:0.11, dur:13, anim:"aiFloat2" },
+      { color:"#a855f7", cx:"55%", cy:"6%",  size:540, opacity:0.09, dur:17, anim:"aiFloat3" },
+      { color:"#0891b2", cx:"16%", cy:"84%", size:480, opacity:0.07, dur:22, delay:4, anim:"aiFloat4" },
+      { color:"#6366f1", cx:"88%", cy:"26%", size:400, opacity:0.06, dur:9,  delay:6, anim:"aiFloat5" },
     ],
   },
   gamification: {
-    n: 62, dist: 132, spd: 0.40, lA: 0.26, dA: 0.72,
+    n: 45, dist: 130, spd: 0.30, lA: 0.12, dA: 0.32,
     rgb: [[251,191,36],[239,68,68],[139,92,246]],
     orbs: [
-      { color:"#f59e0b", cx:"10%", cy:"14%", size:580, opacity:0.24, dur:12, anim:"aiFloat1" },
-      { color:"#7c3aed", cx:"85%", cy:"82%", size:520, opacity:0.20, dur:16, anim:"aiFloat2" },
-      { color:"#ef4444", cx:"58%", cy:"8%",  size:420, opacity:0.16, dur:19, anim:"aiFloat3" },
+      { color:"#f59e0b", cx:"10%", cy:"14%", size:600, opacity:0.11, dur:12, anim:"aiFloat1" },
+      { color:"#7c3aed", cx:"85%", cy:"82%", size:540, opacity:0.09, dur:16, anim:"aiFloat2" },
+      { color:"#ef4444", cx:"58%", cy:"8%",  size:440, opacity:0.07, dur:19, anim:"aiFloat3" },
     ],
   },
   gaming: {
-    n: 70, dist: 145, spd: 0.52, lA: 0.28, dA: 0.78,
+    n: 50, dist: 140, spd: 0.40, lA: 0.13, dA: 0.35,
     rgb: [[239,68,68],[234,179,8],[139,92,246]],
     orbs: [
-      { color:"#ef4444", cx:"12%", cy:"20%", size:580, opacity:0.26, dur:10, anim:"aiFloat1" },
-      { color:"#eab308", cx:"82%", cy:"75%", size:520, opacity:0.22, dur:14, anim:"aiFloat2" },
-      { color:"#7c3aed", cx:"50%", cy:"5%",  size:440, opacity:0.18, dur:18, anim:"aiFloat3" },
+      { color:"#ef4444", cx:"12%", cy:"20%", size:600, opacity:0.12, dur:10, anim:"aiFloat1" },
+      { color:"#eab308", cx:"82%", cy:"75%", size:540, opacity:0.10, dur:14, anim:"aiFloat2" },
+      { color:"#7c3aed", cx:"50%", cy:"5%",  size:460, opacity:0.07, dur:18, anim:"aiFloat3" },
     ],
   },
   universe: {
-    n: 76, dist: 155, spd: 0.24, lA: 0.20, dA: 0.65,
+    n: 55, dist: 150, spd: 0.18, lA: 0.09, dA: 0.30,
     rgb: [[99,102,241],[168,85,247],[16,185,129]],
     orbs: [
-      { color:"#6366f1", cx:"10%", cy:"14%", size:680, opacity:0.24, dur:22, anim:"aiFloat1" },
-      { color:"#a855f7", cx:"85%", cy:"82%", size:580, opacity:0.20, dur:27, anim:"aiFloat2" },
-      { color:"#10b981", cx:"55%", cy:"9%",  size:480, opacity:0.16, dur:19, anim:"aiFloat3" },
+      { color:"#6366f1", cx:"10%", cy:"14%", size:700, opacity:0.11, dur:22, anim:"aiFloat1" },
+      { color:"#a855f7", cx:"85%", cy:"82%", size:600, opacity:0.09, dur:27, anim:"aiFloat2" },
+      { color:"#10b981", cx:"55%", cy:"9%",  size:500, opacity:0.07, dur:19, anim:"aiFloat3" },
     ],
   },
   content: {
-    n: 48, dist: 115, spd: 0.26, lA: 0.18, dA: 0.56,
+    n: 35, dist: 115, spd: 0.20, lA: 0.08, dA: 0.26,
     rgb: [[16,185,129],[6,182,212],[59,130,246]],
     orbs: [
-      { color:"#10b981", cx:"8%",  cy:"10%", size:550, opacity:0.22, dur:16, anim:"aiFloat1" },
-      { color:"#06b6d4", cx:"88%", cy:"82%", size:490, opacity:0.18, dur:20, anim:"aiFloat2" },
+      { color:"#10b981", cx:"8%",  cy:"10%", size:570, opacity:0.10, dur:16, anim:"aiFloat1" },
+      { color:"#06b6d4", cx:"88%", cy:"82%", size:510, opacity:0.08, dur:20, anim:"aiFloat2" },
     ],
   },
   studio: {
-    n: 60, dist: 135, spd: 0.38, lA: 0.24, dA: 0.70,
+    n: 45, dist: 132, spd: 0.28, lA: 0.11, dA: 0.32,
     rgb: [[249,115,22],[239,68,68],[139,92,246]],
     orbs: [
-      { color:"#f97316", cx:"10%", cy:"12%", size:600, opacity:0.24, dur:13, anim:"aiFloat1" },
-      { color:"#ef4444", cx:"85%", cy:"80%", size:540, opacity:0.20, dur:18, anim:"aiFloat2" },
-      { color:"#8b5cf6", cx:"62%", cy:"10%", size:440, opacity:0.15, dur:22, anim:"aiFloat3" },
+      { color:"#f97316", cx:"10%", cy:"12%", size:620, opacity:0.11, dur:13, anim:"aiFloat1" },
+      { color:"#ef4444", cx:"85%", cy:"80%", size:560, opacity:0.09, dur:18, anim:"aiFloat2" },
+      { color:"#8b5cf6", cx:"62%", cy:"10%", size:460, opacity:0.06, dur:22, anim:"aiFloat3" },
     ],
   },
   moderation: {
-    n: 52, dist: 122, spd: 0.30, lA: 0.20, dA: 0.62,
+    n: 38, dist: 120, spd: 0.22, lA: 0.09, dA: 0.28,
     rgb: [[239,68,68],[251,191,36],[139,92,246]],
     orbs: [
-      { color:"#ef4444", cx:"8%",  cy:"12%", size:560, opacity:0.22, dur:14, anim:"aiFloat1" },
-      { color:"#7c3aed", cx:"88%", cy:"80%", size:500, opacity:0.18, dur:20, anim:"aiFloat2" },
+      { color:"#ef4444", cx:"8%",  cy:"12%", size:580, opacity:0.10, dur:14, anim:"aiFloat1" },
+      { color:"#7c3aed", cx:"88%", cy:"80%", size:520, opacity:0.08, dur:20, anim:"aiFloat2" },
+    ],
+  },
+  analytics: {
+    n: 55, dist: 145, spd: 0.26, lA: 0.13, dA: 0.36,
+    rgb: [[6,182,212],[59,130,246],[16,185,129]],
+    orbs: [
+      { color:"#06b6d4", cx:"8%",  cy:"15%", size:620, opacity:0.12, dur:18, anim:"aiFloat1" },
+      { color:"#3b82f6", cx:"88%", cy:"78%", size:560, opacity:0.10, dur:24, anim:"aiFloat2" },
+      { color:"#10b981", cx:"50%", cy:"6%",  size:440, opacity:0.07, dur:15, anim:"aiFloat3" },
+      { color:"#0891b2", cx:"72%", cy:"88%", size:360, opacity:0.05, dur:20, delay:5, anim:"aiFloat4" },
+    ],
+  },
+  battle: {
+    n: 60, dist: 145, spd: 0.45, lA: 0.16, dA: 0.42,
+    rgb: [[239,68,68],[234,179,8],[249,115,22]],
+    orbs: [
+      { color:"#ef4444", cx:"15%", cy:"20%", size:640, opacity:0.14, dur:8,  anim:"aiFloat1" },
+      { color:"#f59e0b", cx:"82%", cy:"70%", size:580, opacity:0.12, dur:11, anim:"aiFloat2" },
+      { color:"#f97316", cx:"50%", cy:"5%",  size:480, opacity:0.09, dur:14, anim:"aiFloat3" },
+      { color:"#dc2626", cx:"25%", cy:"85%", size:380, opacity:0.06, dur:18, delay:3, anim:"aiFloat4" },
+    ],
+  },
+  pass: {
+    n: 35, dist: 120, spd: 0.16, lA: 0.08, dA: 0.26,
+    rgb: [[168,85,247],[234,179,8],[139,92,246]],
+    orbs: [
+      { color:"#a855f7", cx:"20%", cy:"15%", size:700, opacity:0.13, dur:20, anim:"aiFloat1" },
+      { color:"#eab308", cx:"80%", cy:"80%", size:580, opacity:0.10, dur:26, anim:"aiFloat2" },
+      { color:"#7c3aed", cx:"60%", cy:"10%", size:480, opacity:0.08, dur:17, anim:"aiFloat3" },
+    ],
+  },
+  scenes: {
+    n: 48, dist: 132, spd: 0.30, lA: 0.12, dA: 0.33,
+    rgb: [[6,182,212],[99,102,241],[16,185,129]],
+    orbs: [
+      { color:"#06b6d4", cx:"10%", cy:"12%", size:620, opacity:0.12, dur:13, anim:"aiFloat1" },
+      { color:"#6366f1", cx:"85%", cy:"80%", size:560, opacity:0.09, dur:18, anim:"aiFloat2" },
+      { color:"#10b981", cx:"55%", cy:"8%",  size:440, opacity:0.06, dur:22, anim:"aiFloat3" },
     ],
   },
 };
@@ -186,7 +225,6 @@ export const AnimatedBackground = memo(function AnimatedBackground({
       const { w, h, particles, pulses } = state;
       ctx!.clearRect(0, 0, w, h);
 
-      // — Move particles —
       for (const p of particles) {
         p.x += p.vx; p.y += p.vy; p.pulse += 0.025;
         if (p.x < 0)  { p.x = 0;  p.vx *= -1; }
@@ -195,35 +233,33 @@ export const AnimatedBackground = memo(function AnimatedBackground({
         if (p.y > h)  { p.y = h;  p.vy *= -1; }
       }
 
-      // — Synapse pulse rings (AI variant only) —
       if (cfg.pulses) {
         state.pulseTimer++;
-        if (state.pulseTimer % 18 === 0 && particles.length > 0) {
+        if (state.pulseTimer % 24 === 0 && particles.length > 0) {
           const p = particles[Math.floor(Math.random() * particles.length)];
           pulses.push({
             x: p.x, y: p.y,
-            r: p.r, maxR: 60 + Math.random() * 50,
-            alpha: 0.55,
+            r: p.r, maxR: 70 + Math.random() * 50,
+            alpha: 0.35,
             rgb: cfg.rgb[p.ci],
           });
         }
         for (let i = pulses.length - 1; i >= 0; i--) {
           const pu = pulses[i];
-          pu.r     += 1.8;
-          pu.alpha -= 0.018;
+          pu.r     += 1.5;
+          pu.alpha -= 0.014;
           if (pu.alpha <= 0) { pulses.splice(i, 1); continue; }
           const [r, g, b] = pu.rgb;
           ctx!.beginPath();
           ctx!.arc(pu.x, pu.y, pu.r, 0, Math.PI * 2);
           ctx!.strokeStyle = `rgba(${r},${g},${b},${pu.alpha.toFixed(3)})`;
-          ctx!.lineWidth = 1.2;
+          ctx!.lineWidth = 1.0;
           ctx!.stroke();
         }
       }
 
-      // — Connection lines —
       const d2max = cfg.dist * cfg.dist;
-      ctx!.lineWidth = 0.7;
+      ctx!.lineWidth = 0.6;
       for (let i = 0; i < particles.length; i++) {
         const a = particles[i];
         const [ar, ag, ab] = cfg.rgb[a.ci];
@@ -243,18 +279,15 @@ export const AnimatedBackground = memo(function AnimatedBackground({
         }
       }
 
-      // — Particles —
       for (const p of particles) {
         const [r, g, b] = cfg.rgb[p.ci];
-        const alpha = (0.30 + 0.22 * Math.sin(p.pulse)) * cfg.dA;
-        // Soft glow halo
+        const alpha = (0.20 + 0.15 * Math.sin(p.pulse)) * cfg.dA;
         if (p.r > 1.2) {
           ctx!.beginPath();
-          ctx!.arc(p.x, p.y, p.r * 5, 0, Math.PI * 2);
-          ctx!.fillStyle = `rgba(${r},${g},${b},${(alpha * 0.12).toFixed(3)})`;
+          ctx!.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
+          ctx!.fillStyle = `rgba(${r},${g},${b},${(alpha * 0.10).toFixed(3)})`;
           ctx!.fill();
         }
-        // Core dot
         ctx!.beginPath();
         ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx!.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
@@ -277,21 +310,9 @@ export const AnimatedBackground = memo(function AnimatedBackground({
       aria-hidden="true"
       style={{
         position: "fixed", inset: 0,
-        zIndex: 0, pointerEvents: "none", overflow: "hidden",
+        zIndex: 2, pointerEvents: "none", overflow: "hidden",
       }}
     >
-      {/* ── Deep gradient base ── */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background:
-          "linear-gradient(135deg," +
-          "hsl(230,42%,4%) 0%," +
-          "hsl(244,38%,6%) 40%," +
-          "hsl(220,45%,5%) 70%," +
-          "hsl(260,35%,4%) 100%)",
-      }} />
-
-      {/* ── Floating radial orbs ── */}
       {cfg.orbs.map((orb, i) => (
         <div
           key={i}
@@ -309,29 +330,10 @@ export const AnimatedBackground = memo(function AnimatedBackground({
           }}
         />
       ))}
-
-      {/* ── Neural network canvas ── */}
       <canvas
         ref={canvasRef}
         style={{ position: "absolute", inset: 0 }}
       />
-
-      {/* ── Subtle grid for depth ── */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage:
-          "linear-gradient(rgba(139,92,246,0.035) 1px,transparent 1px)," +
-          "linear-gradient(90deg,rgba(139,92,246,0.035) 1px,transparent 1px)",
-        backgroundSize: "80px 80px",
-      }} />
-
-      {/* ── Vignette edge darkening ── */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background:
-          "radial-gradient(ellipse 80% 80% at 50% 50%," +
-          "transparent 40%,rgba(0,0,4,0.55) 100%)",
-      }} />
     </div>
   );
 });

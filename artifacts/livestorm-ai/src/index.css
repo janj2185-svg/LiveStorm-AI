@@ -337,3 +337,64 @@ input[type="range"] {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
+
+/* ─── PREMIUM HOVER ANIMATIONS ──────────────────────────────────────────── */
+
+/* Lift card on hover — use on interactive cards */
+.hover-lift {
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.22s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.35),
+    0 2px 8px rgba(0,0,0,0.20),
+    0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+
+/* Subtle scale — for icon buttons, avatars */
+.hover-scale {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hover-scale:hover  { transform: scale(1.05); }
+.hover-scale:active { transform: scale(0.97); }
+
+/* Glow border on hover */
+.hover-glow-primary {
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.hover-glow-primary:hover {
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.4), 0 0 20px hsl(var(--primary) / 0.15);
+  border-color: hsl(var(--primary) / 0.45);
+}
+
+/* ─── PAGE BACKGROUND SHIMMER ────────────────────────────────────────────── */
+@keyframes bg-breathe {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.88; }
+}
+
+@keyframes ray-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes data-pulse {
+  0%, 100% { transform: scaleX(1);   opacity: 0.6; }
+  50%      { transform: scaleX(1.04); opacity: 1; }
+}
+
+@keyframes particle-drift {
+  0%   { transform: translateY(0)   translateX(0);   opacity: 0; }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.7; }
+  100% { transform: translateY(-60px) translateX(20px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift, .hover-scale, .hover-glow-primary { transition: none !important; }
+  [style*="bg-breathe"], [style*="ray-spin"],
+  [style*="data-pulse"], [style*="particle-drift"] { animation: none !important; }
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -46,10 +47,14 @@ function isNavActive(href: string, location: string): boolean {
 function routeVariant(path: string): BgVariant {
   if (path.startsWith("/ai-assistant") || path.startsWith("/avatar-studio")) return "ai";
   if (path.startsWith("/dashboard") || path === "/" || path === "") return "dashboard";
-  if (path.startsWith("/gamification") || path.startsWith("/boss-battle") || path.startsWith("/games")) return "gamification";
+  if (path.startsWith("/boss-battle")) return "battle";
+  if (path.startsWith("/gamification") || path.startsWith("/games")) return "gamification";
   if (path.startsWith("/mini-games")) return "gaming";
   if (path.startsWith("/universe") || path.startsWith("/kingdom")) return "universe";
-  if (path.startsWith("/live-studio") || path.startsWith("/overlays") || path.startsWith("/automation") || path.startsWith("/live-control")) return "studio";
+  if (path.startsWith("/live-studio") || path.startsWith("/overlays") || path.startsWith("/automation")) return "studio";
+  if (path.startsWith("/live-control")) return "scenes";
+  if (path.startsWith("/analytics")) return "analytics";
+  if (path.startsWith("/pass")) return "pass";
   if (path.startsWith("/ai-content")) return "content";
   if (path.startsWith("/moderation")) return "moderation";
   return "default";
@@ -340,7 +345,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Page content */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 pb-24 md:pb-6">
           <LiveSessionProvider>
-            {children}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={relPath}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </LiveSessionProvider>
         </main>
       </div>
