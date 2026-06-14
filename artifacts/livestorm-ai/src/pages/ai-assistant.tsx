@@ -1520,7 +1520,7 @@ export function AiAssistant() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm text-white/88">{t("ai_auto_reply")}</Label>
+                          <Label className="text-sm text-white/88">{t("ai_auto_reply_badge")}</Label>
                           <Switch checked={config?.autoReplyEnabled ?? false} onCheckedChange={v => updateConfig.mutate({ autoReplyEnabled: v })} />
                         </div>
                         <div className="flex items-center justify-between">

@@ -198,7 +198,7 @@ export function checkSilentSessions(): Array<{ sessionId: number; state: Emotion
         lastUpdatedAt:      now,
         lastTrigger:        "getting restless",
         history: [
-          { emotion: "frustrated", intensity: 5, trigger: "getting restless", ts: now },
+          { emotion: "frustrated" as EmotionType, intensity: 5, trigger: "getting restless", ts: now },
           ...currentState.history,
         ].slice(0, 10),
       };
@@ -221,7 +221,7 @@ export function checkSilentSessions(): Array<{ sessionId: number; state: Emotion
         lastUpdatedAt:      now,
         lastTrigger:        "quiet moment",
         history: [
-          { emotion: "curious", intensity: 4, trigger: "quiet moment", ts: now },
+          { emotion: "curious" as EmotionType, intensity: 4, trigger: "quiet moment", ts: now },
           ...currentState.history,
         ].slice(0, 10),
       };

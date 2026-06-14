@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, sessionsTable, streamersTable } from "@workspace/db";
+import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { requireAuth } from "./users";
 import { getEmotionalState, EMOTION_META } from "../agents/emotionEngine";
@@ -8,11 +8,16 @@ const router = Router();
 
 router.get("/emotion/state", requireAuth, async (req: any, res: any) => {
   try {
-    const userId = req.auth?.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    const clerkId = req.auth?.userId;
+    if (!clerkId) return res.status(401).json({ error: "Unauthorized" });
+
+    const user = await db.query.usersTable.findFirst({
+      where: eq(usersTable.clerkId, clerkId),
+    });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const streamer = await db.query.streamersTable.findFirst({
-      where: eq(streamersTable.clerkUserId, userId),
+      where: eq(streamersTable.userId, user.id),
     });
     if (!streamer) return res.status(404).json({ error: "Streamer not found" });
 

@@ -168,7 +168,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const mainMl   = desktopCollapsed ? "lg:ml-[72px]" : "lg:ml-[236px]";
 
   const currentItem  = ALL_NAV.find((i) => isNavActive(i.href, relPath));
-  const currentLabel = currentItem ? t(currentItem.labelKey) : t("nav_dashboard");
+  const currentLabel = currentItem ? t(currentItem.labelKey as any) : t("nav_dashboard");
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -392,7 +392,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </span>
                   )}
                   <Icon className="h-5 w-5" />
-                  <span className="text-xs font-semibold leading-none">{t(item.labelKey)}</span>
+                  <span className="text-xs font-semibold leading-none">{t(item.labelKey as any)}</span>
                 </div>
               </Link>
             );
@@ -438,7 +438,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       )}
                     >
                       <Icon className={cn("h-5 w-5", active && "text-primary")} />
-                      <span className="text-xs font-semibold text-center leading-tight">{t(item.labelKey)}</span>
+                      <span className="text-xs font-semibold text-center leading-tight">{t(item.labelKey as any)}</span>
                     </button>
                   );
                 })}
