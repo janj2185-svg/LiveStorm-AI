@@ -693,76 +693,47 @@ export function Dashboard() {
           <div className="absolute bottom-3 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] rounded-br pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
 
           {/* ── CONTENT ── */}
-          <div className="relative z-10 flex flex-col items-start justify-center text-left px-7 py-0" style={{ minHeight: 72 }}>
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-7 py-0" style={{ minHeight: 72 }}>
 
-            {/* ─── LOGO + BRAND ─── */}
-            <div className="w-full flex flex-col items-start mb-1 -mt-2">
+            {/* ─── LOGO ORB — absolute center ─── */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="relative flex-shrink-0 mb-4"
+              className="absolute pointer-events-none"
+              style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 5 }}
             >
-              {/* Outer pulsing rings (decorative) */}
-              <div className="absolute pointer-events-none" style={{
-                top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-                width: 160, height: 160, borderRadius: "50%",
-                border: "1px solid rgba(139,92,246,0.14)",
-                animation: "holo-pulse 3s ease-in-out infinite",
-              }} />
-              <div className="absolute pointer-events-none" style={{
-                top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-                width: 120, height: 120, borderRadius: "50%",
-                border: "1px solid rgba(139,92,246,0.20)",
-                animation: "holo-pulse 3s ease-in-out 0.6s infinite",
-              }} />
-              <div className="absolute pointer-events-none" style={{
-                top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-                width: 88, height: 88, borderRadius: "50%",
-                border: "1px solid rgba(6,182,212,0.22)",
-                animation: "holo-pulse 3s ease-in-out 1.2s infinite",
-              }} />
+              {/* Outer pulsing rings */}
+              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 160, height: 160, borderRadius: "50%", border: "1px solid rgba(139,92,246,0.14)", animation: "holo-pulse 3s ease-in-out infinite" }} />
+              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 120, height: 120, borderRadius: "50%", border: "1px solid rgba(139,92,246,0.20)", animation: "holo-pulse 3s ease-in-out 0.6s infinite" }} />
+              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 88, height: 88, borderRadius: "50%", border: "1px solid rgba(6,182,212,0.22)", animation: "holo-pulse 3s ease-in-out 1.2s infinite" }} />
               {/* Orbit ring 1 */}
-              <div className="absolute -inset-6 rounded-full border border-violet-400/30 pointer-events-none"
-                style={{ animation: "orbit-cw 7s linear infinite" }}>
-                <div className="absolute top-[4px] right-[4px] w-[5px] h-[5px] rounded-full bg-violet-400"
-                  style={{ boxShadow: "0 0 8px rgba(139,92,246,1), 0 0 16px rgba(139,92,246,0.5)" }} />
+              <div className="absolute -inset-6 rounded-full border border-violet-400/30" style={{ animation: "orbit-cw 7s linear infinite" }}>
+                <div className="absolute top-[4px] right-[4px] w-[5px] h-[5px] rounded-full bg-violet-400" style={{ boxShadow: "0 0 8px rgba(139,92,246,1), 0 0 16px rgba(139,92,246,0.5)" }} />
               </div>
-              {/* Orbit ring 2 (counter) */}
-              <div className="absolute -inset-9 rounded-full border border-cyan-400/18 pointer-events-none"
-                style={{ animation: "orbit-ccw 11s linear infinite" }}>
-                <div className="absolute bottom-[6px] left-[6px] w-[4px] h-[4px] rounded-full bg-cyan-400"
-                  style={{ boxShadow: "0 0 6px rgba(6,182,212,1), 0 0 12px rgba(6,182,212,0.5)" }} />
+              {/* Orbit ring 2 */}
+              <div className="absolute -inset-9 rounded-full border border-cyan-400/18" style={{ animation: "orbit-ccw 11s linear infinite" }}>
+                <div className="absolute bottom-[6px] left-[6px] w-[4px] h-[4px] rounded-full bg-cyan-400" style={{ boxShadow: "0 0 6px rgba(6,182,212,1), 0 0 12px rgba(6,182,212,0.5)" }} />
               </div>
               {/* Orbit ring 3 */}
-              <div className="absolute -inset-11 rounded-full border border-fuchsia-400/12 pointer-events-none"
-                style={{ animation: "orbit-cw 18s linear infinite" }}>
-                <div className="absolute top-[8px] left-[8px] w-[3px] h-[3px] rounded-full bg-fuchsia-400"
-                  style={{ boxShadow: "0 0 5px rgba(217,70,239,1)" }} />
+              <div className="absolute -inset-11 rounded-full border border-fuchsia-400/12" style={{ animation: "orbit-cw 18s linear infinite" }}>
+                <div className="absolute top-[8px] left-[8px] w-[3px] h-[3px] rounded-full bg-fuchsia-400" style={{ boxShadow: "0 0 5px rgba(217,70,239,1)" }} />
               </div>
               {/* Core orb */}
-              <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center relative"
-                style={{
-                  background: "linear-gradient(135deg, rgba(109,40,217,0.90) 0%, rgba(139,92,246,0.70) 50%, rgba(6,182,212,0.55) 100%)",
-                  border: "1px solid rgba(196,165,255,0.40)",
-                  boxShadow: "0 0 30px rgba(124,58,237,0.65), 0 0 70px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.25)",
-                  animation: "holo-glow 4s ease-in-out infinite",
-                }}>
+              <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center relative pointer-events-auto"
+                style={{ background: "linear-gradient(135deg, rgba(109,40,217,0.90) 0%, rgba(139,92,246,0.70) 50%, rgba(6,182,212,0.55) 100%)", border: "1px solid rgba(196,165,255,0.40)", boxShadow: "0 0 30px rgba(124,58,237,0.65), 0 0 70px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.25)", animation: "holo-glow 4s ease-in-out infinite" }}>
                 <Zap className="h-8 w-8 text-white" style={{ filter: "drop-shadow(0 0 12px rgba(255,255,255,0.9))" }} />
               </div>
-              {/* Bloom behind orb */}
-              <div className="absolute -inset-3 rounded-2xl pointer-events-none" style={{
-                background: "radial-gradient(circle, rgba(124,58,237,0.45) 0%, transparent 70%)",
-                filter: "blur(10px)", animation: "holo-pulse 4s ease-in-out infinite",
-              }} />
+              {/* Bloom */}
+              <div className="absolute -inset-3 rounded-2xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.45) 0%, transparent 70%)", filter: "blur(10px)", animation: "holo-pulse 4s ease-in-out infinite" }} />
             </motion.div>
 
-            {/* ─── BRAND NAME ─── */}
+            {/* ─── BRAND NAME — left ─── */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-2"
+              className="mb-2 -mt-2"
             >
               <h1
                 className="font-black tracking-tight leading-none"
@@ -779,7 +750,6 @@ export function Dashboard() {
                 LiveStorm AI
               </h1>
             </motion.div>
-            </div>
 
             {/* ─── WELCOME + USERNAME ─── */}
             <motion.p
