@@ -709,7 +709,7 @@ export function Dashboard() {
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col gap-1"
+              className="flex flex-col gap-1 self-end pb-5"
             >
               {isActive ? (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
