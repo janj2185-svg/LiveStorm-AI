@@ -579,7 +579,7 @@ export function Gamification() {
                   </div>
                   <div>
                     <p className="ls-section">Achievements</p>
-                    <p className="text-[10px] text-white/55">
+                    <p className="text-[10px] text-white/72">
                       {achievements
                         ? `${achievements.filter(a => a.unlocked).length} / ${achievements.length} unlocked`
                         : "Loading…"}
@@ -595,7 +595,7 @@ export function Gamification() {
                         "text-xs px-3 py-1.5 rounded-md font-medium capitalize transition-all",
                         achFilter === f
                           ? "bg-violet-500/20 text-violet-300"
-                          : "text-white/55 hover:text-white/72",
+                          : "text-white/70 hover:text-white/90",
                       )}
                     >
                       {f}
@@ -639,7 +639,7 @@ export function Gamification() {
                               <p className="text-xs font-bold text-white truncate">{ach.name}</p>
                               {ach.unlocked && <span className="text-[9px] text-violet-400 bg-violet-500/20 px-1 py-0.5 rounded shrink-0">✓</span>}
                             </div>
-                            <p className="text-[10px] text-white/55 truncate">{ach.description}</p>
+                            <p className="text-[10px] text-white/72 truncate">{ach.description}</p>
                             <p className="text-[10px] text-yellow-400/60 mt-0.5">+{ach.xpReward} XP · +{ach.coinReward}🪙</p>
                           </div>
                         </motion.div>
@@ -741,7 +741,7 @@ export function Gamification() {
                   ].map((tier) => (
                     <div key={tier.name} className="flex items-center gap-1">
                       <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${tier.from} ${tier.to} shrink-0`} />
-                      <span className="text-[9px] text-white/48">{tier.name}</span>
+                      <span className="text-[9px] text-white/68">{tier.name}</span>
                     </div>
                   ))}
                 </div>
@@ -768,7 +768,7 @@ export function Gamification() {
                           style={{ boxShadow: isLegendary ? "0 0 6px rgba(251,191,36,0.5)" : undefined }} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-white truncate">{drop.winnerName ?? "—"}</p>
-                          <p className="text-[10px] text-white/55 truncate">{drop.dropName}</p>
+                          <p className="text-[10px] text-white/72 truncate">{drop.dropName}</p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-[10px] font-bold text-violet-400">+{drop.xpReward} XP</p>
@@ -847,11 +847,11 @@ export function Gamification() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-white/80 truncate group-hover:text-violet-300 transition-colors font-medium">{entry.viewerName}</p>
-                            {entry.totalGifts > 0 && <p className="text-[10px] text-white/45 truncate">{entry.totalGifts} gifts</p>}
+                            {entry.totalGifts > 0 && <p className="text-[10px] text-white/65 truncate">{entry.totalGifts} gifts</p>}
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-xs font-black text-violet-400 tabular-nums">{entry.totalXp.toLocaleString()}</p>
-                            <p className="text-[9px] text-white/45">XP</p>
+                            <p className="text-[9px] text-white/65">XP</p>
                           </div>
                         </button>
                       ))
@@ -861,11 +861,11 @@ export function Gamification() {
                     : (streamerLb ?? []).slice(0, 8).map((entry, i) => (
                         <div key={entry.streamerId} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-white/[0.04] bg-white/[0.01]">
                           <div className="w-6 text-center shrink-0">
-                            {i === 0 ? <span className="text-sm">🥇</span> : i === 1 ? <span className="text-sm">🥈</span> : i === 2 ? <span className="text-sm">🥉</span> : <span className="text-[10px] text-white/50">#{i + 1}</span>}
+                            {i === 0 ? <span className="text-sm">🥇</span> : i === 1 ? <span className="text-sm">🥈</span> : i === 2 ? <span className="text-sm">🥉</span> : <span className="text-[10px] text-white/65">#{i + 1}</span>}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-white/80 truncate font-medium">{entry.streamerName}</p>
-                            <p className="text-[10px] text-white/50">{entry.uniqueViewers} viewers · {entry.totalGiftsReceived} gifts</p>
+                            <p className="text-[10px] text-white/68">{entry.uniqueViewers} viewers · {entry.totalGiftsReceived} gifts</p>
                           </div>
                           <span className="text-xs font-black text-cyan-400 shrink-0 tabular-nums">{entry.totalXpAwarded.toLocaleString()}</span>
                         </div>
@@ -874,7 +874,7 @@ export function Gamification() {
                 {lbTab === "viewers" && (!leaderboard || leaderboard.length === 0) && !loadingLb && (
                   <div className="py-8 text-center">
                     <Trophy className="w-8 h-8 mx-auto mb-2 text-white/10" />
-                    <p className="text-xs text-white/55">
+                    <p className="text-xs text-white/72">
                       {streamerId ? "No viewers ranked yet. Go live to earn XP!" : "Start streaming to see rankings."}
                     </p>
                   </div>
@@ -882,7 +882,7 @@ export function Gamification() {
                 {lbTab === "streamers" && (!streamerLb || streamerLb.length === 0) && !loadingSlb && (
                   <div className="py-8 text-center">
                     <Trophy className="w-8 h-8 mx-auto mb-2 text-white/10" />
-                    <p className="text-xs text-white/55">No streamers ranked yet.</p>
+                    <p className="text-xs text-white/72">No streamers ranked yet.</p>
                   </div>
                 )}
               </div>
