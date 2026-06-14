@@ -139,7 +139,7 @@ function num(n: number): string {
 // ── Empty state ───────────────────────────────────────────────────────────────
 function NotFound({ viewerId, streamerSlug }: { viewerId: string; streamerSlug: string }) {
   return (
-    <div className="min-h-screen bg-[#060810] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundImage: "url('/storm-pass-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="text-center max-w-sm">
         <div className="text-6xl mb-5">😶‍🌫️</div>
         <h1 className="text-2xl font-bold text-white mb-3">Storm тебе ще не бачив</h1>
@@ -184,7 +184,7 @@ function NotFound({ viewerId, streamerSlug }: { viewerId: string; streamerSlug: 
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 function Loading() {
   return (
-    <div className="min-h-screen bg-[#060810] flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundImage: "url('/storm-pass-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="text-center">
         <div className="text-5xl animate-pulse mb-4">⚡</div>
         <p className="text-slate-400 text-sm">Завантаження Storm Pass…</p>
@@ -209,7 +209,7 @@ function StormPassCard({ data }: { data: StormPassData }) {
   const displayName = data.preferredName || data.customNickname || data.displayName;
 
   return (
-    <div className="min-h-screen bg-[#060810] py-8 px-4 flex flex-col items-center">
+    <div className="min-h-screen py-8 px-4 flex flex-col items-center" style={{ backgroundImage: "url('/storm-pass-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       {/* Header */}
       <div className="w-full max-w-lg mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
