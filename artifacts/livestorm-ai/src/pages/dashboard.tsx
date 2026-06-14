@@ -701,7 +701,7 @@ export function Dashboard() {
           }} />
 
           {/* ── BANNER — 3-column grid ── */}
-          <div className="relative z-10 grid items-center px-6" style={{ minHeight: 140, gridTemplateColumns: "1fr auto 1fr" }}>
+          <div className="relative z-10 grid items-start px-6 pt-5" style={{ minHeight: 140, gridTemplateColumns: "1fr auto 1fr" }}>
 
             {/* ─── LOGO ORB ─── */}
             {/* ── LEFT: status + welcome ── */}
@@ -709,7 +709,7 @@ export function Dashboard() {
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col gap-1 self-end pb-5"
+              className="flex flex-col gap-1"
             >
               {isActive ? (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
