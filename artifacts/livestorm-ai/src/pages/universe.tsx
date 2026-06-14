@@ -64,6 +64,15 @@ export function Universe() {
   const worldProgress = Math.min(100, (totalKingdoms / 10) * 100);
 
   return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/community-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
     <div className="space-y-5 max-w-6xl mx-auto">
 
       {/* Header */}
@@ -379,6 +388,7 @@ export function Universe() {
           </p>
         </div>
       )}
+    </div>
     </div>
   );
 }
