@@ -246,6 +246,15 @@ export function Analytics() {
   const PERIOD_LABELS: Record<string, string> = { day: "День", "7d": "7 днів", "30d": "30 днів", month: "Місяць" };
 
   return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/analytics-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
     <div className="space-y-5 max-w-5xl mx-auto">
 
       {/* Header + period selector */}
@@ -505,6 +514,7 @@ export function Analytics() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
