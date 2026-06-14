@@ -585,7 +585,7 @@ export function Dashboard() {
         <div
           className={cn("relative overflow-hidden rounded-2xl border")}
           style={{
-            minHeight: 300,
+            minHeight: 210,
             borderColor: isActive ? "rgba(34,197,94,0.30)" : "rgba(109,40,217,0.25)",
             boxShadow: isActive
               ? "0 0 0 1px rgba(34,197,94,0.07), 0 24px 70px rgba(0,0,0,0.6), 0 0 50px rgba(34,197,94,0.07)"
@@ -693,14 +693,14 @@ export function Dashboard() {
           <div className="absolute bottom-3 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] rounded-br pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
 
           {/* ── CENTERED CONTENT ── */}
-          <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-10" style={{ minHeight: 300 }}>
+          <div className="relative z-10 flex flex-col items-start justify-center text-left px-7 py-7" style={{ minHeight: 210 }}>
 
             {/* ─── LOGO ORB — centered ─── */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="relative flex-shrink-0 mb-5"
+              className="relative flex-shrink-0 mb-4"
             >
               {/* Outer pulsing rings (decorative) */}
               <div className="absolute pointer-events-none" style={{
@@ -798,7 +798,7 @@ export function Dashboard() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.26 }}
-              className="flex items-center justify-center gap-2 flex-wrap mb-5"
+              className="flex items-center gap-2 flex-wrap mb-4"
             >
               {isActive ? (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
@@ -829,7 +829,7 @@ export function Dashboard() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.22 }}
-                className="flex items-center justify-center gap-1.5 mb-5 flex-wrap"
+                className="flex items-center gap-1.5 mb-4 flex-wrap"
               >
                 {[
                   { icon: Eye,           value: stats.viewerCount,   c: "#86efac", bg: "rgba(34,197,94,0.09)",  bd: "rgba(34,197,94,0.22)",  label: "Viewers"  },
@@ -858,7 +858,7 @@ export function Dashboard() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.32 }}
-              className="flex items-center justify-center gap-2.5 flex-wrap"
+              className="flex items-center gap-2.5 flex-wrap"
             >
               {isActive ? (
                 <Button
