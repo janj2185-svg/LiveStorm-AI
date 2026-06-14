@@ -34,6 +34,32 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   castle: Shield, axe: Sword, swords: Sword, message: MessageCircle,
 };
 
+// Per-icon-type color palette — icon, bg, border, shadow, card-accent
+const ICON_COLOR_MAP: Record<string, { icon: string; bg: string; border: string; shadow: string; card: string }> = {
+  trophy:   { icon: "text-amber-400",   bg: "bg-amber-500/20",   border: "border-amber-500/35",  shadow: "shadow-amber-500/20",  card: "bg-amber-500/[0.06] border-amber-500/20"   },
+  star:     { icon: "text-yellow-300",  bg: "bg-yellow-500/20",  border: "border-yellow-500/35", shadow: "shadow-yellow-500/20", card: "bg-yellow-500/[0.06] border-yellow-500/20" },
+  medal:    { icon: "text-cyan-400",    bg: "bg-cyan-500/20",    border: "border-cyan-500/35",   shadow: "shadow-cyan-500/20",   card: "bg-cyan-500/[0.06] border-cyan-500/20"     },
+  zap:      { icon: "text-yellow-300",  bg: "bg-yellow-500/20",  border: "border-yellow-400/40", shadow: "shadow-yellow-500/20", card: "bg-yellow-500/[0.06] border-yellow-500/20" },
+  gift:     { icon: "text-pink-400",    bg: "bg-pink-500/20",    border: "border-pink-500/35",   shadow: "shadow-pink-500/20",   card: "bg-pink-500/[0.06] border-pink-500/20"     },
+  heart:    { icon: "text-red-400",     bg: "bg-red-500/20",     border: "border-red-500/35",    shadow: "shadow-red-500/20",    card: "bg-red-500/[0.06] border-red-500/20"       },
+  shield:   { icon: "text-blue-400",    bg: "bg-blue-500/20",    border: "border-blue-500/35",   shadow: "shadow-blue-500/20",   card: "bg-blue-500/[0.06] border-blue-500/20"     },
+  sword:    { icon: "text-slate-300",   bg: "bg-slate-500/20",   border: "border-slate-400/35",  shadow: "shadow-slate-500/15",  card: "bg-slate-500/[0.06] border-slate-400/20"   },
+  axe:      { icon: "text-slate-300",   bg: "bg-slate-500/20",   border: "border-slate-400/35",  shadow: "shadow-slate-500/15",  card: "bg-slate-500/[0.06] border-slate-400/20"   },
+  swords:   { icon: "text-red-300",     bg: "bg-red-500/20",     border: "border-red-500/35",    shadow: "shadow-red-500/20",    card: "bg-red-500/[0.06] border-red-500/20"       },
+  target:   { icon: "text-orange-400",  bg: "bg-orange-500/20",  border: "border-orange-500/35", shadow: "shadow-orange-500/20", card: "bg-orange-500/[0.06] border-orange-500/20" },
+  trending: { icon: "text-green-400",   bg: "bg-green-500/20",   border: "border-green-500/35",  shadow: "shadow-green-500/20",  card: "bg-green-500/[0.06] border-green-500/20"   },
+  users:    { icon: "text-indigo-400",  bg: "bg-indigo-500/20",  border: "border-indigo-500/35", shadow: "shadow-indigo-500/20", card: "bg-indigo-500/[0.06] border-indigo-500/20" },
+  chat:     { icon: "text-sky-400",     bg: "bg-sky-500/20",     border: "border-sky-500/35",    shadow: "shadow-sky-500/20",    card: "bg-sky-500/[0.06] border-sky-500/20"       },
+  message:  { icon: "text-sky-400",     bg: "bg-sky-500/20",     border: "border-sky-500/35",    shadow: "shadow-sky-500/20",    card: "bg-sky-500/[0.06] border-sky-500/20"       },
+  map:      { icon: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/35",shadow: "shadow-emerald-500/20",card: "bg-emerald-500/[0.06] border-emerald-500/20"},
+  brain:    { icon: "text-violet-400",  bg: "bg-violet-500/20",  border: "border-violet-500/35", shadow: "shadow-violet-500/20", card: "bg-violet-500/[0.06] border-violet-500/20" },
+  flame:    { icon: "text-orange-500",  bg: "bg-orange-500/20",  border: "border-orange-500/35", shadow: "shadow-orange-500/20", card: "bg-orange-500/[0.06] border-orange-500/20" },
+  home:     { icon: "text-amber-300",   bg: "bg-amber-500/15",   border: "border-amber-500/30",  shadow: "shadow-amber-500/15",  card: "bg-amber-500/[0.05] border-amber-500/18"   },
+  castle:   { icon: "text-teal-400",    bg: "bg-teal-500/20",    border: "border-teal-500/35",   shadow: "shadow-teal-500/20",   card: "bg-teal-500/[0.06] border-teal-500/20"     },
+  circle:   { icon: "text-white/70",    bg: "bg-white/10",       border: "border-white/20",      shadow: "shadow-white/10",      card: "bg-white/[0.04] border-white/12"           },
+};
+const DEFAULT_COLOR = { icon: "text-violet-300", bg: "bg-violet-500/20", border: "border-violet-500/30", shadow: "shadow-violet-500/15", card: "bg-violet-500/[0.07] border-violet-500/25" };
+
 function xpToLevel(xp: number) {
   return Math.min(100, Math.floor(Math.sqrt(xp / 50)) + 1);
 }
@@ -251,19 +277,23 @@ function FanProfileModal({ tiktokViewerId, viewerName, streamerId, onClose }: Fa
                     <div className="flex flex-wrap gap-1.5">
                       {profile.achievements.slice(0, 8).map((ach: any) => {
                         const Icon = ICON_MAP[ach.iconType] ?? Trophy;
+                        const col = ICON_COLOR_MAP[ach.iconType] ?? DEFAULT_COLOR;
                         return (
                           <div
                             key={ach.key}
                             title={`${ach.name}: ${ach.description}`}
-                            className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/20 flex items-center justify-center cursor-help hover:scale-110 transition-transform"
+                            className={cn(
+                              "w-9 h-9 rounded-xl flex items-center justify-center cursor-help hover:scale-110 transition-transform border shadow-sm",
+                              col.bg, col.border, col.shadow,
+                            )}
                           >
-                            <Icon className="w-4 h-4 text-violet-400" />
+                            <Icon className={cn("w-4 h-4", col.icon)} />
                           </div>
                         );
                       })}
                       {profile.achievements.length > 8 && (
                         <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center">
-                          <span className="text-[10px] text-muted-foreground">+{profile.achievements.length - 8}</span>
+                          <span className="text-xs text-white/65">+{profile.achievements.length - 8}</span>
                         </div>
                       )}
                     </div>
@@ -612,6 +642,7 @@ export function Gamification() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-96 overflow-y-auto pr-1">
                     {filteredAch.map((ach) => {
                       const Icon = ICON_MAP[ach.iconType] ?? Trophy;
+                      const col = ICON_COLOR_MAP[ach.iconType] ?? DEFAULT_COLOR;
                       return (
                         <motion.div
                           key={ach.key}
@@ -619,20 +650,20 @@ export function Gamification() {
                           className={cn(
                             "flex items-center gap-3 p-3 rounded-xl border transition-all relative overflow-hidden",
                             ach.unlocked
-                              ? "border-violet-500/25 bg-violet-500/[0.07] hover:bg-violet-500/[0.12]"
+                              ? col.card
                               : "border-white/[0.04] bg-white/[0.01] opacity-35 grayscale",
                           )}
                         >
                           {ach.unlocked && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-transparent pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-transparent pointer-events-none" />
                           )}
                           <div className={cn(
-                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative",
+                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative border shadow-md",
                             ach.unlocked
-                              ? "bg-violet-500/20 border border-violet-500/30 shadow-md shadow-violet-500/15"
-                              : "bg-white/[0.04] border border-white/[0.06]",
+                              ? cn(col.bg, col.border, col.shadow)
+                              : "bg-white/[0.04] border-white/[0.06]",
                           )}>
-                            <Icon className={cn("w-4 h-4", ach.unlocked ? "text-violet-300" : "text-white/38")} />
+                            <Icon className={cn("w-4 h-4", ach.unlocked ? col.icon : "text-white/38")} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5">
