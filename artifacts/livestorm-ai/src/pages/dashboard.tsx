@@ -585,7 +585,7 @@ export function Dashboard() {
         <div
           className={cn("relative overflow-hidden rounded-2xl border")}
           style={{
-            minHeight: 72,
+            minHeight: 110,
             borderColor: isActive ? "rgba(34,197,94,0.30)" : "rgba(109,40,217,0.25)",
             boxShadow: isActive
               ? "0 0 0 1px rgba(34,197,94,0.07), 0 24px 70px rgba(0,0,0,0.6), 0 0 50px rgba(34,197,94,0.07)"
@@ -701,7 +701,7 @@ export function Dashboard() {
           }} />
 
           {/* ── BANNER — 3-column grid ── */}
-          <div className="relative z-10 grid items-center px-5" style={{ minHeight: 72, gridTemplateColumns: "1fr auto 1fr" }}>
+          <div className="relative z-10 grid items-center px-6" style={{ minHeight: 110, gridTemplateColumns: "1fr auto 1fr" }}>
 
             {/* ─── LOGO ORB ─── */}
             {/* ── LEFT: status + welcome ── */}
