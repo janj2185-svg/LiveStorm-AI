@@ -212,9 +212,21 @@ function StormPassCard({ data }: { data: StormPassData }) {
     <div className="min-h-screen py-8 px-4 flex flex-col items-center" style={{ backgroundImage: "url('/storm-pass-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       {/* Header */}
       <div className="w-full max-w-lg mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-violet-400 text-xl">⚡</span>
-          <span className="text-white font-bold tracking-widest text-sm uppercase">Storm Pass</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm font-medium"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            Назад
+          </button>
+          <div className="w-px h-4 bg-white/15" />
+          <div className="flex items-center gap-2">
+            <span className="text-violet-400 text-xl">⚡</span>
+            <span className="text-white font-bold tracking-widest text-sm uppercase">Storm Pass</span>
+          </div>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${tier.badge} ${(tier as any).pulse ? "animate-pulse" : ""}`}>
           {tier.emoji} {tier.label}
