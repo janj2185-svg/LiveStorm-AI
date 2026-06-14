@@ -230,9 +230,9 @@ const EVENT_COLORS: Record<string, string> = {
 
 function TimeAgo({ ts }: { ts: number }) {
   const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60) return <span className="text-xs text-muted-foreground/50">{diff}s ago</span>;
-  if (diff < 3600) return <span className="text-xs text-muted-foreground/50">{Math.floor(diff / 60)}m ago</span>;
-  return <span className="text-xs text-muted-foreground/50">{Math.floor(diff / 3600)}h ago</span>;
+  if (diff < 60) return <span className="text-xs text-white/62">{diff}s ago</span>;
+  if (diff < 3600) return <span className="text-xs text-white/62">{Math.floor(diff / 60)}m ago</span>;
+  return <span className="text-xs text-white/62">{Math.floor(diff / 3600)}h ago</span>;
 }
 
 function UserAvatar({ username, size = "sm" }: { username?: string; size?: "sm" | "md" }) {
@@ -301,7 +301,7 @@ function GiftCard({ event }: { event: LiveEvent }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-xs font-semibold text-amber-300">@{event.username ?? "unknown"}</span>
-          <Badge className="h-4 px-1.5 text-[10px] bg-amber-500/20 text-amber-300 border-amber-500/30">
+          <Badge className="h-4 px-1.5 text-xs bg-amber-500/20 text-amber-300 border-amber-500/30">
             {coins} coins
           </Badge>
           <TimeAgo ts={event.timestamp} />
@@ -334,7 +334,7 @@ function LikeCard({ event }: { event: LiveEvent }) {
   return (
     <div className="flex gap-2 py-1.5 px-3 items-center opacity-60">
       <Heart className="h-3 w-3 text-pink-400 flex-shrink-0" />
-      <span className="text-xs text-muted-foreground">
+      <span className="text-xs text-white/80">
         <span className="text-pink-300 font-medium">@{event.username ?? "?"}</span> sent {count} like{count !== 1 ? "s" : ""}
       </span>
       <TimeAgo ts={event.timestamp} />
@@ -346,7 +346,7 @@ function ShareCard({ event }: { event: LiveEvent }) {
   return (
     <div className="flex gap-2 py-1.5 px-3 items-center opacity-60">
       <Share2 className="h-3 w-3 text-blue-400 flex-shrink-0" />
-      <span className="text-xs text-muted-foreground">
+      <span className="text-xs text-white/80">
         <span className="text-blue-300 font-medium">@{event.username ?? "?"}</span> shared the stream
       </span>
       <TimeAgo ts={event.timestamp} />
@@ -368,7 +368,7 @@ function AiAnnouncementCard({ event }: { event: LiveEvent }) {
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-xs font-semibold text-purple-300">AI Assistant</span>
           {isReply && attrName && (
-            <span className="text-xs text-muted-foreground/60">↳ @{attrName}</span>
+            <span className="text-xs text-white/65">↳ @{attrName}</span>
           )}
           <TimeAgo ts={event.timestamp} />
         </div>
@@ -402,8 +402,8 @@ function SidebarSection({
           {icon}{title}
         </CardTitle>
         {isOpen
-          ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          ? <ChevronDown className="h-3.5 w-3.5 text-white/62" />
+          : <ChevronRight className="h-3.5 w-3.5 text-white/62" />}
       </button>
       {isOpen && (
         <CardContent className="space-y-3 pb-4 pt-0">
@@ -457,9 +457,9 @@ function UnifiedChatTab({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <Radio className="h-8 w-8 text-white/10 mb-3" />
-        <p className="text-xs text-muted-foreground/60">{t("ai_start_see_chat")}</p>
+        <p className="text-sm text-white/78">{t("ai_start_see_chat")}</p>
         <Link href="/dashboard">
-          <span className="text-[11px] text-violet-400 hover:underline cursor-pointer mt-2 inline-block">
+          <span className="text-xs text-violet-400 hover:underline cursor-pointer mt-2 inline-block">
             {t("ai_go_to_dashboard")}
           </span>
         </Link>
@@ -471,7 +471,7 @@ function UnifiedChatTab({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <MessageCircle className="h-8 w-8 text-white/10 mb-3 animate-pulse" />
-        <p className="text-xs text-muted-foreground/60">{t("ai_waiting_chat")}</p>
+        <p className="text-sm text-white/78">{t("ai_waiting_chat")}</p>
       </div>
     );
   }
@@ -531,7 +531,7 @@ function UnifiedChatTab({
       {isPaused && chatEvents.length > 0 && (
         <button
           onClick={() => { isPausedRef.current = false; setIsPaused(false); bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }}
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[10px] font-bold hover:bg-purple-500/30 transition-colors z-10"
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold hover:bg-purple-500/30 transition-colors z-10"
         >
           <ArrowDown className="h-3 w-3" />
           Jump to latest
@@ -583,10 +583,10 @@ function EventsTab({ events, isActive }: { events: LiveEvent[]; isActive: boolea
             key={value}
             onClick={() => setFilter(value)}
             className={cn(
-              "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
+              "px-2.5 py-1 rounded-lg text-xs font-bold transition-all border",
               filter === value
                 ? "bg-white/10 border-white/20 text-white"
-                : "border-transparent text-muted-foreground/60 hover:text-white hover:bg-white/5",
+                : "border-transparent text-white/62 hover:text-white hover:bg-white/5",
             )}
           >
             {label}
@@ -597,12 +597,12 @@ function EventsTab({ events, isActive }: { events: LiveEvent[]; isActive: boolea
         {!isActive ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6">
             <Activity className="h-7 w-7 text-white/10 mb-2" />
-            <p className="text-xs text-muted-foreground/60">Start a session to see events</p>
+            <p className="text-sm text-white/78">Start a session to see events</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6">
             <Activity className="h-7 w-7 text-white/10 mb-2 animate-pulse" />
-            <p className="text-xs text-muted-foreground/60">No events yet…</p>
+            <p className="text-sm text-white/78">No events yet…</p>
           </div>
         ) : (
           <div className="p-2 space-y-1">
@@ -618,7 +618,7 @@ function EventsTab({ events, isActive }: { events: LiveEvent[]; isActive: boolea
                     transition={{ duration: 0.12 }}
                     className="flex items-start gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors"
                   >
-                    <span className={cn("inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5", colorClass)}>
+                    <span className={cn("inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5", colorClass)}>
                       <Icon className="h-2.5 w-2.5" />
                       {event.type.replace("_", " ").toUpperCase()}
                     </span>
@@ -627,7 +627,7 @@ function EventsTab({ events, isActive }: { events: LiveEvent[]; isActive: boolea
                         @{event.username}
                       </span>
                     )}
-                    <span className="text-[11px] text-slate-400 truncate flex-1 min-w-0">
+                    <span className="text-xs text-slate-300 truncate flex-1 min-w-0">
                       {eventSummary(event)}
                     </span>
                   </motion.div>
@@ -661,7 +661,7 @@ function AiActivityTab({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <Sparkles className="h-7 w-7 text-white/10 mb-2" />
-        <p className="text-xs text-muted-foreground/60">Start a session to see AI activity</p>
+        <p className="text-sm text-white/78">Start a session to see AI activity</p>
       </div>
     );
   }
@@ -670,8 +670,8 @@ function AiActivityTab({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <Sparkles className="h-7 w-7 text-purple-400/20 mb-2 animate-pulse" />
-        <p className="text-xs text-muted-foreground/60">Waiting for AI to respond…</p>
-        <p className="text-[10px] text-white/68 mt-1">
+        <p className="text-sm text-white/78">Waiting for AI to respond…</p>
+        <p className="text-xs text-white/82 mt-1">
           AI replies appear here with full diagnostic info
         </p>
       </div>
@@ -697,7 +697,7 @@ function AiActivityTab({
               {/* Trigger */}
               <div className="flex items-start gap-2">
                 <div className={cn(
-                  "text-[9px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5",
+                  "text-xs font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5",
                   isReply ? "text-blue-400 bg-blue-500/10 border-blue-500/20" : "text-amber-400 bg-amber-500/10 border-amber-500/20",
                 )}>
                   {isReply ? "COMMENT" : annType.toUpperCase().replace("_", " ")}
@@ -712,21 +712,21 @@ function AiActivityTab({
               <div className="flex items-start gap-2 ml-1">
                 <CornerDownRight className="h-3 w-3 text-purple-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-[10px] text-purple-400/70 font-semibold mb-0.5">AI replied</p>
+                  <p className="text-xs text-purple-400 font-semibold mb-0.5">AI replied</p>
                   <p className="text-xs text-foreground/80 leading-relaxed italic">"{text}"</p>
                 </div>
               </div>
 
               {/* TTS status */}
               <div className="flex items-center gap-1.5 ml-1">
-                <CornerDownRight className="h-3 w-3 text-white/58 flex-shrink-0" />
+                <CornerDownRight className="h-3 w-3 text-white/75 flex-shrink-0" />
                 {ttsMode === "off" ? (
-                  <span className="text-[10px] text-white/68 flex items-center gap-1">
+                  <span className="text-xs text-white/82 flex items-center gap-1">
                     <VolumeX className="h-2.5 w-2.5" />
                     TTS off
                   </span>
                 ) : (
-                  <span className="text-[10px] text-emerald-400/70 flex items-center gap-1">
+                  <span className="text-xs text-emerald-400/85 flex items-center gap-1">
                     <Volume2 className="h-2.5 w-2.5" />
                     TTS {ttsMode === "openai" ? "OpenAI" : "Browser"} · played
                   </span>
@@ -1146,7 +1146,7 @@ export function AiAssistant() {
           </div>
           <div className="leading-tight">
             <p className="text-sm font-bold text-white">{personaName}</p>
-            <p className="text-[10px] text-muted-foreground/50">AI Co-Host</p>
+            <p className="text-xs text-white/72">AI Co-Host</p>
           </div>
         </div>
 
@@ -1155,7 +1155,7 @@ export function AiAssistant() {
         {/* Status pills */}
         <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden flex-wrap">
           <div className={cn(
-            "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border flex-shrink-0",
+            "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border flex-shrink-0",
             isSessionActive && connected
               ? "border-green-500/30 bg-green-500/10 text-green-300"
               : isSessionActive
@@ -1168,7 +1168,7 @@ export function AiAssistant() {
             )} />
             {isSessionActive && connected ? t("ai_online_badge") : isSessionActive ? t("ai_connecting_badge") : t("ai_offline_badge")}
           </div>
-          <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-violet-500/25 bg-violet-500/10 text-violet-300 flex-shrink-0">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border border-violet-500/25 bg-violet-500/10 text-violet-300 flex-shrink-0">
             <Sparkles className="h-3 w-3" />
             <span className="capitalize">{config?.personalityType ?? "friendly"}</span>
           </div>
@@ -1190,18 +1190,18 @@ export function AiAssistant() {
             </div>
           )}
           {config?.autoReplyEnabled && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-emerald-500/25 bg-emerald-500/10 text-emerald-300 flex-shrink-0">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border border-emerald-500/25 bg-emerald-500/10 text-emerald-300 flex-shrink-0">
               <Bot className="h-3 w-3" />
               {t("ai_auto_reply_badge")}
             </div>
           )}
           {battleOn && isSessionActive && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-red-500/40 bg-red-500/15 text-red-300 flex-shrink-0">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border border-red-500/40 bg-red-500/15 text-red-300 flex-shrink-0">
               <Swords className="h-3 w-3" />
               BATTLE · {battleElapsed}
             </div>
           )}
-          <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border border-white/10 bg-white/5 text-white/62 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border border-white/10 bg-white/5 text-white/62 flex-shrink-0">
             <span className="text-xs leading-none">{ANIMATION_EMOJI[animState]}</span>
             <span className="capitalize">{ANIMATION_LABELS[animState]}</span>
           </div>
@@ -1210,10 +1210,10 @@ export function AiAssistant() {
         {/* Stream control */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {isSessionActive && effectiveMode === "real" && tiktokUsername && (
-            <span className="text-[11px] text-emerald-300/80 font-mono hidden md:inline">@{tiktokUsername}</span>
+            <span className="text-xs text-emerald-300/90 font-mono hidden md:inline">@{tiktokUsername}</span>
           )}
           {isSessionActive && (
-            <span className="flex items-center gap-1 text-[10px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
+            <span className="flex items-center gap-1 text-xs font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-2 py-0.5">
               <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />LIVE
             </span>
           )}
@@ -1250,8 +1250,8 @@ export function AiAssistant() {
           <button
             onClick={() => setMobilePanelTab("control")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
-              mobilePanelTab === "control" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/65 hover:text-white/70",
+              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all",
+              mobilePanelTab === "control" ? "bg-purple-600 text-white shadow-sm" : "text-white/65 hover:text-white/90",
             )}
           >
             <Zap className="h-3.5 w-3.5" />Control
@@ -1259,8 +1259,8 @@ export function AiAssistant() {
           <button
             onClick={() => setMobilePanelTab("chat")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all",
-              mobilePanelTab === "chat" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground/65 hover:text-white/70",
+              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all",
+              mobilePanelTab === "chat" ? "bg-purple-600 text-white shadow-sm" : "text-white/65 hover:text-white/90",
             )}
           >
             <MessageCircle className="h-3.5 w-3.5" />Chat
@@ -1286,7 +1286,7 @@ export function AiAssistant() {
           <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
             <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-violet-400" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-400/70">Personality Engine</span>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-violet-400">Personality Engine</span>
             </div>
             <div className="p-2.5 grid grid-cols-2 gap-1.5">
               {PERSONALITY_OPTIONS.map((p) => {
@@ -1303,7 +1303,7 @@ export function AiAssistant() {
                     )}
                   >
                     <span className="text-xl leading-none">{p.emoji}</span>
-                    <span className={cn("text-[10px] font-bold leading-tight", isActive ? "text-violet-300" : "text-white/60")}>{p.label}</span>
+                    <span className={cn("text-xs font-bold leading-tight", isActive ? "text-violet-300" : "text-white/85")}>{p.label}</span>
                     {isActive && <span className="w-1 h-1 rounded-full bg-violet-400" />}
                   </button>
                 );
@@ -1315,7 +1315,7 @@ export function AiAssistant() {
           <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
             <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
               <Zap className="h-3.5 w-3.5 text-orange-400" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-orange-400/70">Intensity Mode</span>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-orange-400">Intensity Mode</span>
             </div>
             <div className="p-2.5 grid grid-cols-2 gap-1.5">
               {INTENSITY_MODES.map((m) => {
@@ -1333,13 +1333,13 @@ export function AiAssistant() {
                     )}
                   >
                     <span className="text-xl leading-none">{m.emoji}</span>
-                    <span className={cn("text-[10px] font-bold leading-tight", isActive ? "text-orange-300" : "text-white/60")}>{m.label}</span>
+                    <span className={cn("text-xs font-bold leading-tight", isActive ? "text-orange-300" : "text-white/85")}>{m.label}</span>
                     {isActive && <span className="w-1 h-1 rounded-full bg-orange-400" />}
                   </button>
                 );
               })}
             </div>
-            <p className="text-[9px] text-white/68 text-center px-3 pb-2.5">
+            <p className="text-xs text-white/82 text-center px-3 pb-2.5">
               {INTENSITY_MODES.find(m => m.value === (config?.intensityMode ?? "streamer"))?.desc}
             </p>
           </div>
@@ -1348,7 +1348,7 @@ export function AiAssistant() {
           <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
             <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
               <Bot className="h-3.5 w-3.5 text-cyan-400" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-400/70">Operating Mode</span>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-400">Operating Mode</span>
             </div>
             <div className="p-2.5 space-y-1">
               {OPERATING_MODES.map((mode) => {
@@ -1366,8 +1366,8 @@ export function AiAssistant() {
                   >
                     <span className="text-lg leading-none flex-shrink-0">{mode.emoji}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={cn("text-[11px] font-bold", isActive ? "text-white" : "text-white/60")}>{mode.label}</p>
-                      <p className="text-[9px] text-white/68 leading-tight mt-0.5">{mode.desc}</p>
+                      <p className={cn("text-xs font-bold", isActive ? "text-white" : "text-white/78")}>{mode.label}</p>
+                      <p className="text-xs text-white/82 leading-tight mt-0.5">{mode.desc}</p>
                     </div>
                     {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />}
                   </button>
@@ -1383,9 +1383,9 @@ export function AiAssistant() {
               onClick={isMobile ? () => setMobileBattleOpen(v => !v) : undefined}
             >
               <Swords className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-red-400/70 flex-1">{t("ai_battle_mode")}</span>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-red-400 flex-1">{t("ai_battle_mode")}</span>
               {battleOn && isSessionActive && (
-                <span className="flex items-center gap-1 text-[9px] font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-1.5 py-0.5">
+                <span className="flex items-center gap-1 text-xs font-black text-red-300 bg-red-500/15 border border-red-500/25 rounded-full px-1.5 py-0.5">
                   <span className="w-1 h-1 bg-red-400 rounded-full animate-pulse" />ACTIVE
                 </span>
               )}
@@ -1425,8 +1425,8 @@ export function AiAssistant() {
                     battleOn && isSessionActive
                       ? "bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30"
                       : isSessionActive
-                      ? "bg-white/[0.04] border-white/10 text-white/60 hover:bg-white/[0.08] hover:border-white/20"
-                      : "bg-white/[0.02] border-white/5 text-white/35 cursor-not-allowed",
+                      ? "bg-white/[0.04] border-white/10 text-white/78 hover:bg-white/[0.08] hover:border-white/20"
+                      : "bg-white/[0.02] border-white/5 text-white/48 cursor-not-allowed",
                   )}
                 >
                   {battleActivating
@@ -1440,12 +1440,12 @@ export function AiAssistant() {
                 {battleOn && isSessionActive && (
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 py-1.5 flex items-center justify-center gap-1.5">
-                      <span className="text-[9px] text-emerald-400/60 uppercase font-bold">Us</span>
+                      <span className="text-[10px] text-emerald-400/85 uppercase font-bold">Us</span>
                       <span className="text-lg font-black text-emerald-400 leading-none tabular-nums">{battleScore?.us ?? 0}</span>
                     </div>
                     <Swords className="h-3 w-3 text-red-400/40 flex-shrink-0" />
                     <div className="flex-1 rounded-lg bg-red-500/10 border border-red-500/20 py-1.5 flex items-center justify-center gap-1.5">
-                      <span className="text-[9px] text-red-400/60 uppercase font-bold">Them</span>
+                      <span className="text-[10px] text-red-400/85 uppercase font-bold">Them</span>
                       <span className="text-lg font-black text-red-400 leading-none tabular-nums">{battleScore?.opponent ?? 0}</span>
                     </div>
                     <div className="rounded-lg bg-black/30 px-2 py-1.5 text-center min-w-[44px]">
@@ -1465,9 +1465,9 @@ export function AiAssistant() {
           >
             <div className="flex items-center gap-2">
               <Boxes className="h-3.5 w-3.5 text-violet-400" />
-              <span className="text-[11px] font-bold text-white/70">{t("ai_avatar_settings_title")}</span>
+              <span className="text-xs font-bold text-white/88">{t("ai_avatar_settings_title")}</span>
             </div>
-            <ChevronRight className="h-3.5 w-3.5 text-white/45" />
+            <ChevronRight className="h-3.5 w-3.5 text-white/65" />
           </button>
 
           {/* Co-Host Panel */}
@@ -1495,9 +1495,9 @@ export function AiAssistant() {
                 onClick={() => setAdvancedOpen(v => !v)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-white/[0.03] transition-colors"
               >
-                <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground/50" />
-                <span className="text-[11px] font-semibold text-muted-foreground/60 flex-1 uppercase tracking-wide">{t("ai_advanced_settings")}</span>
-                <ChevronDown className={cn("h-3 w-3 text-white/62 transition-transform duration-200", advancedOpen && "rotate-180")} />
+                <SlidersHorizontal className="h-3.5 w-3.5 text-white/65" />
+                <span className="text-xs font-semibold text-white/72 flex-1 uppercase tracking-wide">{t("ai_advanced_settings")}</span>
+                <ChevronDown className={cn("h-3 w-3 text-white/80 transition-transform duration-200", advancedOpen && "rotate-180")} />
               </button>
               {advancedOpen && (
                 <div className="border-t border-white/[0.06]">
@@ -1507,7 +1507,7 @@ export function AiAssistant() {
                     ) : (
                       <div className="space-y-1.5">
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-muted-foreground">{t("ai_field_ai_name")}</Label>
+                          <Label className="text-xs text-white/80">{t("ai_field_ai_name")}</Label>
                           <Input
                             key={config?.personaName}
                             defaultValue={config?.personaName}
@@ -1520,11 +1520,11 @@ export function AiAssistant() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm text-muted-foreground">{t("ai_auto_reply")}</Label>
+                          <Label className="text-sm text-white/88">{t("ai_auto_reply")}</Label>
                           <Switch checked={config?.autoReplyEnabled ?? false} onCheckedChange={v => updateConfig.mutate({ autoReplyEnabled: v })} />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                          <Label className="text-sm text-white/88 flex items-center gap-1.5">
                             <Shield className="h-3.5 w-3.5 text-blue-400" />{t("ai_spam_protection")}
                           </Label>
                           <Switch checked={config?.spamProtectionEnabled ?? true} onCheckedChange={v => updateConfig.mutate({ spamProtectionEnabled: v })} />
@@ -1539,7 +1539,7 @@ export function AiAssistant() {
                       { key: "announceBossKill", labelKey: "ai_boss_kills" as const, icon: "💀" },
                     ] as const).map(item => (
                       <div key={item.key} className="flex items-center justify-between">
-                        <Label className="text-sm text-muted-foreground flex items-center gap-1.5"><span>{item.icon}</span>{t(item.labelKey)}</Label>
+                        <Label className="text-sm text-white/88 flex items-center gap-1.5"><span>{item.icon}</span>{t(item.labelKey)}</Label>
                         <Switch checked={(config?.[item.key] as boolean) ?? false} onCheckedChange={v => updateConfig.mutate({ [item.key]: v })} />
                       </div>
                     ))}
@@ -1564,7 +1564,7 @@ export function AiAssistant() {
                   "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
                   stageAspect === "9/16"
                     ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-500/30"
-                    : "text-white/62 border-white/[0.10] hover:text-white/85 hover:border-violet-500/40 bg-white/[0.03]",
+                    : "text-white/78 border-white/[0.10] hover:text-white/90 hover:border-violet-500/40 bg-white/[0.03]",
                 )}
               >
                 <span className="w-3 h-5 border-2 border-current rounded-[3px] inline-block flex-shrink-0" />
@@ -1576,7 +1576,7 @@ export function AiAssistant() {
                   "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
                   stageAspect === "16/9"
                     ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-500/30"
-                    : "text-white/62 border-white/[0.10] hover:text-white/85 hover:border-violet-500/40 bg-white/[0.03]",
+                    : "text-white/78 border-white/[0.10] hover:text-white/90 hover:border-violet-500/40 bg-white/[0.03]",
                 )}
               >
                 <span className="w-6 h-4 border-2 border-current rounded-[3px] inline-block flex-shrink-0" />
@@ -1628,7 +1628,7 @@ export function AiAssistant() {
                 {/* Top-left: status badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
                   <div className={cn(
-                    "flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm",
+                    "flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-bold border backdrop-blur-sm",
                     isSessionActive && connected
                       ? "border-green-500/40 text-green-300 bg-green-500/20"
                       : isSessionActive
@@ -1642,12 +1642,12 @@ export function AiAssistant() {
                     {isSessionActive && connected ? t("ai_connected_badge") : isSessionActive ? t("ai_connecting_badge") : t("ai_offline_badge")}
                   </div>
                   {isSpeaking && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-purple-500/40 text-purple-300 bg-purple-500/20">
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-bold border backdrop-blur-sm border-purple-500/40 text-purple-300 bg-purple-500/20">
                       <Mic className="h-3 w-3 animate-pulse" />{t("ai_speaking")}
                     </div>
                   )}
                   {animState === "thinking" && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border backdrop-blur-sm border-blue-500/40 text-blue-300 bg-blue-500/20">
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-bold border backdrop-blur-sm border-blue-500/40 text-blue-300 bg-blue-500/20">
                       <span className="flex gap-0.5 items-center">
                         {[0, 150, 300].map(d => (
                           <span key={d} className="h-1 w-1 rounded-full bg-blue-400" style={{ animation: `bounce 1s ease infinite ${d}ms` }} />
@@ -1662,7 +1662,7 @@ export function AiAssistant() {
                 <div className="absolute top-3 right-3 pointer-events-none">
                   {isSessionActive && (
                     <div className={cn(
-                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black border backdrop-blur-sm",
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black border backdrop-blur-sm",
                       effectiveMode === "real"
                         ? "border-red-500/50 text-red-300 bg-red-600/30"
                         : "border-orange-500/40 text-orange-300 bg-orange-500/20",
@@ -1677,14 +1677,14 @@ export function AiAssistant() {
                 <div className="absolute bottom-3 left-3 pointer-events-none">
                   <div className="px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-white/10">
                     <p className="text-xs font-bold text-white">{personaName}</p>
-                    <p className="text-[10px] text-white/70 capitalize">{ANIMATION_LABELS[animState]}</p>
+                    <p className="text-xs text-white/88 capitalize">{ANIMATION_LABELS[animState]}</p>
                   </div>
                 </div>
 
                 {/* Bottom-right: TikTok username */}
                 {effectiveMode === "real" && tiktokUsername && (
                   <div className="absolute bottom-3 right-3 pointer-events-none px-2.5 py-1.5 rounded-xl bg-black/50 backdrop-blur-sm border border-emerald-500/25">
-                    <p className="text-[10px] font-semibold text-emerald-300">@{tiktokUsername}</p>
+                    <p className="text-xs font-semibold text-emerald-300">@{tiktokUsername}</p>
                   </div>
                 )}
               </div>
@@ -1703,7 +1703,7 @@ export function AiAssistant() {
                   <span className={cn("text-2xl font-black tabular-nums leading-none", isSessionActive ? "text-white" : "text-white/65")}>
                     {isSessionActive ? value.toLocaleString() : "—"}
                   </span>
-                  <span className="text-[10px] text-muted-foreground/60 font-semibold">{t(labelKey)}</span>
+                  <span className="text-xs text-white/80 font-semibold">{t(labelKey)}</span>
                 </div>
               ))}
             </div>
@@ -1722,17 +1722,17 @@ export function AiAssistant() {
           <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
             <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
               <Volume2 className="h-3.5 w-3.5 text-blue-400" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-400/70">Voice Center</span>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-blue-400">Voice Center</span>
               <div className="ml-auto flex items-center gap-0.5 p-0.5 bg-white/5 rounded-full border border-white/[0.08]">
                 <button
                   onClick={() => handleTtsModeChange("off")}
-                  className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                    ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-muted-foreground/65 hover:text-white/60")}
+                  className={cn("px-2.5 py-0.5 rounded-full text-xs font-bold transition-all",
+                    ttsMode === "off" ? "bg-red-500/80 text-white shadow" : "text-white/68 hover:text-white/90")}
                 >OFF</button>
                 <button
                   onClick={() => handleTtsModeChange("openai")}
-                  className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all",
-                    ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-muted-foreground/65 hover:text-white/60")}
+                  className={cn("px-2.5 py-0.5 rounded-full text-xs font-bold transition-all",
+                    ttsMode !== "off" ? "bg-emerald-500/80 text-white shadow" : "text-white/68 hover:text-white/90")}
                 >ON</button>
               </div>
             </div>
@@ -1748,7 +1748,7 @@ export function AiAssistant() {
                       ? (() => { const p = ALL_VOICE_PROFILES.find(p => p.value === ttsVoice); return p?.label ?? resolveVoiceLabel(ttsVoice); })()
                       : "Voice OFF"}
                   </p>
-                  <p className={cn("text-[10px] font-bold",
+                  <p className={cn("text-xs font-bold",
                     ttsPlaybackState === "speaking" ? "text-purple-400 animate-pulse"
                     : ttsPlaybackState === "queued" ? "text-blue-400"
                     : "text-white/70",
@@ -1788,8 +1788,8 @@ export function AiAssistant() {
               {/* Last spoken */}
               {lastSpokenText && ttsMode !== "off" && (
                 <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                  <p className="text-[9px] text-white/70 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
-                  <p className="text-[10px] text-white/60 line-clamp-2 leading-relaxed">{lastSpokenText}</p>
+                  <p className="text-xs text-white/82 uppercase tracking-wide mb-0.5">{t("ai_voice_last_spoken")}</p>
+                  <p className="text-xs text-white/80 line-clamp-2 leading-relaxed">{lastSpokenText}</p>
                 </div>
               )}
 
@@ -1797,7 +1797,7 @@ export function AiAssistant() {
               {lastTtsError && ttsMode !== "off" && (
                 <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
                   <AlertCircle className="h-3 w-3 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-amber-300/90 line-clamp-1 leading-tight">{lastTtsError}</p>
+                  <p className="text-xs text-amber-300 line-clamp-1 leading-tight">{lastTtsError}</p>
                 </div>
               )}
 
@@ -1809,7 +1809,7 @@ export function AiAssistant() {
                 return (
                   <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
                     <span className="text-base">{suggested === "female" ? "♀️" : "♂️"}</span>
-                    <p className="text-[10px] text-purple-300/80 leading-tight">
+                    <p className="text-xs text-purple-300 leading-tight">
                       {suggested === "female" ? t("ai_female_avatar_hint") : t("ai_male_avatar_hint")}
                     </p>
                   </div>
@@ -1822,9 +1822,9 @@ export function AiAssistant() {
           <div className="flex-shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.025] overflow-hidden">
             <div className="px-3 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400/70">Recognition Engine</span>
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-400">Recognition Engine</span>
               {(viewerRecognitionEvents?.length ?? 0) > 0 && (
-                <span className="ml-auto text-[9px] font-bold bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 px-1.5 py-0.5 rounded-full">
+                <span className="ml-auto text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 px-1.5 py-0.5 rounded-full">
                   {viewerRecognitionEvents?.length}
                 </span>
               )}
@@ -1833,7 +1833,7 @@ export function AiAssistant() {
               {!isSessionActive ? (
                 <div className="text-center py-3">
                   <Users className="h-6 w-6 text-white/55 mx-auto mb-2" />
-                  <p className="text-[10px] text-white/62">Recognition events appear during live sessions</p>
+                  <p className="text-xs text-white/80">Recognition events appear during live sessions</p>
                 </div>
               ) : (viewerRecognitionEvents?.length ?? 0) === 0 ? (
                 <div className="text-center py-3">
@@ -1842,23 +1842,23 @@ export function AiAssistant() {
                       <span key={d} className="h-1.5 w-1.5 rounded-full bg-emerald-500/40" style={{ animation: `bounce 1.2s ease infinite ${d}ms` }} />
                     ))}
                   </div>
-                  <p className="text-[10px] text-white/62">Watching for returning viewers…</p>
+                  <p className="text-xs text-white/80">Watching for returning viewers…</p>
                 </div>
               ) : (
                 <div className="space-y-1.5 max-h-[180px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                   {(viewerRecognitionEvents ?? []).slice(0, 8).map((evt, i) => (
                     <div key={i} className="flex items-start gap-2 p-2 rounded-xl bg-white/[0.02] border border-emerald-500/10 hover:border-emerald-500/20 transition-all">
-                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center flex-shrink-0 text-[10px] font-black text-emerald-300">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center flex-shrink-0 text-xs font-black text-emerald-300">
                         {evt.viewerName?.charAt(0).toUpperCase() ?? "?"}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="text-[11px] font-bold text-white/90 truncate">{evt.viewerName}</p>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex-shrink-0">{evt.loyaltyTier ?? evt.tier}</span>
+                          <p className="text-xs font-bold text-white/92 truncate">{evt.viewerName}</p>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex-shrink-0">{evt.loyaltyTier ?? evt.tier}</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground/65 truncate">{evt.reason}</p>
+                        <p className="text-xs text-white/78 truncate">{evt.reason}</p>
                         {evt.aiLine && (
-                          <p className="text-[10px] text-violet-300/70 italic truncate mt-0.5">"{evt.aiLine}"</p>
+                          <p className="text-xs text-violet-300/88 italic truncate mt-0.5">"{evt.aiLine}"</p>
                         )}
                       </div>
                     </div>
@@ -1883,13 +1883,13 @@ export function AiAssistant() {
                   onClick={() => setRightTab(tab.key)}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 text-xs font-medium px-2 py-1.5 rounded-lg transition-all relative",
-                    rightTab === tab.key ? "bg-purple-600 text-white shadow" : "text-muted-foreground hover:text-white hover:bg-white/5",
+                    rightTab === tab.key ? "bg-purple-600 text-white shadow" : "text-white/72 hover:text-white hover:bg-white/5",
                   )}
                 >
                   {tab.icon}
                   <span className="hidden sm:inline">{tab.label}</span>
                   {tab.badge !== null && (tab.badge ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-[9px] font-bold flex items-center justify-center text-white">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-purple-500 text-xs font-bold flex items-center justify-center text-white">
                       {(tab.badge ?? 0) > 9 ? "9+" : tab.badge}
                     </span>
                   )}
@@ -1907,11 +1907,11 @@ export function AiAssistant() {
                       <MessageCircle className="h-3.5 w-3.5 text-purple-400" />
                       <span className="text-sm font-medium">{t("ai_live_chat_title")}</span>
                       {feedEvents.length > 0 && (
-                        <span className="text-xs text-muted-foreground/50">{feedEvents.filter(e => e.type === "comment").length} {t("ai_comments_count")}</span>
+                        <span className="text-xs text-white/72">{feedEvents.filter(e => e.type === "comment").length} {t("ai_comments_count")}</span>
                       )}
                     </div>
                     {isSessionActive && effectiveMode === "real" && (
-                      <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3" />{t("ai_real_tiktok")}
                       </span>
                     )}
@@ -1949,12 +1949,12 @@ export function AiAssistant() {
                     </span>
                     <div className="flex items-center gap-2">
                       {ttsMode !== "off" && (
-                        <span className="text-[10px] text-blue-400 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
+                        <span className="text-xs text-blue-400 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-0.5">
                           <Volume2 className="h-2.5 w-2.5" />{t("ai_voice_on")}
                         </span>
                       )}
                       {config?.autoReplyEnabled && (
-                        <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
+                        <span className="text-xs text-emerald-400 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
                           <CheckCircle2 className="h-2.5 w-2.5" />{t("ai_auto_reply_badge")}
                         </span>
                       )}
@@ -1969,7 +1969,7 @@ export function AiAssistant() {
 
             {/* AI Strategy chat input */}
             <div className="flex-shrink-0 mt-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <p className="text-[10px] text-muted-foreground/65 mb-1.5 flex items-center gap-1">
+              <p className="text-xs text-white/78 mb-1.5 flex items-center gap-1">
                 <Bot className="h-3 w-3" />{t("ai_ask_advice")} · {personaName}
               </p>
               <div className="flex gap-2">
@@ -2034,7 +2034,7 @@ export function AiAssistant() {
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
               <div>
-                <p className="text-[9px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♂ {t("ai_male_voices")}</p>
+                <p className="text-xs font-bold text-white/78 uppercase tracking-widest mb-2">♂ {t("ai_male_voices")}</p>
                 <div className="space-y-1.5">
                   {MALE_VOICE_PROFILES.map((v) => {
                     const isSelected = ttsVoice === v.value;
@@ -2046,11 +2046,11 @@ export function AiAssistant() {
                             <span className="text-lg flex-shrink-0 leading-none">{v.emoji}</span>
                             <div className="flex-1 min-w-0">
                               <div className={cn("text-xs font-semibold leading-tight truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</div>
-                              <div className="text-[10px] text-muted-foreground/65 leading-tight">{v.desc}</div>
+                              <div className="text-xs text-white/72 leading-tight">{v.desc}</div>
                             </div>
                             {isSelected && <CheckCircle2 className="h-4 w-4 text-blue-400 flex-shrink-0" />}
                           </button>
-                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-blue-500/30 text-blue-400/70 hover:text-blue-300" : "border-white/10 text-muted-foreground/65 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-blue-500/30 text-blue-400/70 hover:text-blue-300" : "border-white/10 text-white/62 hover:text-white/90", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
                             {isPreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                           </button>
                         </div>
@@ -2060,7 +2060,7 @@ export function AiAssistant() {
                 </div>
               </div>
               <div>
-                <p className="text-[9px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♀ {t("ai_female_voices")}</p>
+                <p className="text-xs font-bold text-white/78 uppercase tracking-widest mb-2">♀ {t("ai_female_voices")}</p>
                 <div className="space-y-1.5">
                   {FEMALE_VOICE_PROFILES.map((v) => {
                     const isSelected = ttsVoice === v.value;
@@ -2072,11 +2072,11 @@ export function AiAssistant() {
                             <span className="text-lg flex-shrink-0 leading-none">{v.emoji}</span>
                             <div className="flex-1 min-w-0">
                               <div className={cn("text-xs font-semibold leading-tight truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</div>
-                              <div className="text-[10px] text-muted-foreground/65 leading-tight">{v.desc}</div>
+                              <div className="text-xs text-white/72 leading-tight">{v.desc}</div>
                             </div>
                             {isSelected && <CheckCircle2 className="h-4 w-4 text-pink-400 flex-shrink-0" />}
                           </button>
-                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-pink-500/30 text-pink-400/70 hover:text-pink-300" : "border-white/10 text-muted-foreground/65 hover:text-white/60", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
+                          <button onClick={() => handleVoicePreview(v.value, v.speed)} disabled={!!isVoicePreviewing} className={cn("h-7 w-7 rounded-lg border flex items-center justify-center transition-all flex-shrink-0", isSelected ? "border-pink-500/30 text-pink-400/70 hover:text-pink-300" : "border-white/10 text-white/62 hover:text-white/90", !!isVoicePreviewing && "opacity-30 cursor-not-allowed")}>
                             {isPreviewing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                           </button>
                         </div>
@@ -2103,7 +2103,7 @@ export function AiAssistant() {
           <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 flex-shrink-0">
             <div>
               <p className="text-sm font-medium">{t("ai_3d_avatar")}</p>
-              <p className="text-xs text-muted-foreground">{t("ai_show_avatar_stream")}</p>
+              <p className="text-xs text-white/82">{t("ai_show_avatar_stream")}</p>
             </div>
             <Switch
               checked={avatarConfig?.avatarEnabled ?? false}
@@ -2115,7 +2115,7 @@ export function AiAssistant() {
 
           <div className="flex flex-wrap gap-1.5 px-5 py-2.5 border-b border-white/5 flex-shrink-0">
             {["RPM · Avaturn · VRM", "ARKit Lip Sync", "Expressions · Reactions", "TikTok LIVE Ready"].map((b) => (
-              <Badge key={b} variant="outline" className="text-[9px] border-blue-500/30 text-blue-400 bg-blue-500/5">{b}</Badge>
+              <Badge key={b} variant="outline" className="text-[10px] border-blue-500/30 text-blue-400 bg-blue-500/5">{b}</Badge>
             ))}
           </div>
 
@@ -2142,16 +2142,16 @@ export function AiAssistant() {
                           selected
                         />
                         <div className="flex-1 min-w-0">
-                          <Badge className="text-[9px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 mb-1">
+                          <Badge className="text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 mb-1">
                             {rendererLabel(avatarConfig.renderer ?? "rpm")}
                           </Badge>
-                          <p className="text-[10px] text-muted-foreground truncate">
+                          <p className="text-xs text-white/80 truncate">
                             {avatarConfig.avatarUrl.split("?")[0].split("/").pop() ?? "avatar"}
                           </p>
                         </div>
                         <Button
                           size="sm"
-                          className="h-7 text-[11px] bg-violet-600 hover:bg-violet-500 flex-shrink-0"
+                          className="h-7 text-xs bg-violet-600 hover:bg-violet-500 flex-shrink-0"
                           onClick={() => setCreatorModalOpen(true)}
                           disabled={avatarSaving}
                         >
@@ -2161,7 +2161,7 @@ export function AiAssistant() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-[11px] text-muted-foreground">No presenter set. Choose Ready Player Me, Avaturn, or upload a custom VRM.</p>
+                      <p className="text-xs text-white/78">No presenter set. Choose Ready Player Me, Avaturn, or upload a custom VRM.</p>
                       <Button
                         size="sm"
                         className="w-full h-8 text-xs bg-violet-600 hover:bg-violet-500"
@@ -2240,7 +2240,7 @@ export function AiAssistant() {
                     Live Preview
                     <span className="ml-auto flex items-center gap-1 bg-red-600/80 rounded px-1.5 py-0.5">
                       <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
-                      <span className="text-[9px] text-white font-bold">LIVE</span>
+                      <span className="text-[10px] text-white font-bold">LIVE</span>
                     </span>
                   </p>
                   <AvatarCanvas
@@ -2271,8 +2271,8 @@ export function AiAssistant() {
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <Label className="text-[10px] text-muted-foreground">Scale</Label>
-                        <span className="text-[10px] font-mono text-violet-300">{(avatarConfig?.scale ?? 1.0).toFixed(1)}×</span>
+                        <Label className="text-xs text-white/80">Scale</Label>
+                        <span className="text-xs font-mono text-violet-300">{(avatarConfig?.scale ?? 1.0).toFixed(1)}×</span>
                       </div>
                       <input
                         type="range" min="0.5" max="2.0" step="0.1"
@@ -2284,8 +2284,8 @@ export function AiAssistant() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <Label className="text-[10px] text-muted-foreground">Position Y</Label>
-                        <span className="text-[10px] font-mono text-violet-300">{(avatarConfig?.positionY ?? -0.8).toFixed(1)}</span>
+                        <Label className="text-xs text-white/80">Position Y</Label>
+                        <span className="text-xs font-mono text-violet-300">{(avatarConfig?.positionY ?? -0.8).toFixed(1)}</span>
                       </div>
                       <input
                         type="range" min="-2.0" max="1.0" step="0.1"
@@ -2298,7 +2298,7 @@ export function AiAssistant() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Lighting</Label>
+                      <Label className="text-xs text-white/80">Lighting</Label>
                       <Select value={avatarConfig?.lightingPreset ?? "studio"} onValueChange={(v) => saveAvatar({ lightingPreset: v })}>
                         <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10 mt-1"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -2310,7 +2310,7 @@ export function AiAssistant() {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">BG Type</Label>
+                      <Label className="text-xs text-white/80">BG Type</Label>
                       <Select value={avatarConfig?.backgroundType ?? "transparent"} onValueChange={(v) => saveAvatar({ backgroundType: v })}>
                         <SelectTrigger className="h-8 text-xs bg-white/5 border-white/10 mt-1"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -2329,16 +2329,16 @@ export function AiAssistant() {
                   <div className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
                     <Zap className="h-3.5 w-3.5 text-violet-400" />
                     Reactions & Lip Sync
-                    <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/5 ml-1">Live</Badge>
+                    <Badge variant="outline" className="text-xs border-violet-500/30 text-violet-400 bg-violet-500/5 ml-1">Live</Badge>
                   </div>
                   <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-black/30 border border-white/5">
                     <span className="text-xl leading-none">{ANIMATION_EMOJI[animState]}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-white">{ANIMATION_LABELS[animState]}</p>
-                      {lastReaction && <p className="text-[10px] text-muted-foreground/60 truncate">{lastReaction}</p>}
+                      {lastReaction && <p className="text-xs text-white/75 truncate">{lastReaction}</p>}
                     </div>
                     {isSpeaking && (
-                      <div className="flex items-center gap-1 text-[9px] text-violet-400 flex-shrink-0">
+                      <div className="flex items-center gap-1 text-xs text-violet-400 flex-shrink-0">
                         <Mic className="h-2.5 w-2.5 animate-pulse" />
                         <span>lip sync</span>
                       </div>
@@ -2349,7 +2349,7 @@ export function AiAssistant() {
                       <button
                         key={s}
                         onClick={() => machineRef.current.push(s)}
-                        className="text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-violet-500/20 border border-white/10 hover:border-violet-500/40 text-muted-foreground hover:text-violet-300 transition-all"
+                        className="text-xs px-2 py-1 rounded bg-white/5 hover:bg-violet-500/20 border border-white/10 hover:border-violet-500/40 text-white/72 hover:text-violet-300 transition-all"
                       >
                         {ANIMATION_EMOJI[s]} {ANIMATION_LABELS[s]}
                       </button>
@@ -2408,7 +2408,7 @@ export function AiAssistant() {
                         ].map(({ label, val, color }) => (
                           <div key={label} className="text-center p-2 rounded-lg bg-white/5 border border-white/5">
                             <p className={cn("text-[12px] font-mono font-semibold", color)}>{val}</p>
-                            <p className="text-[9px] text-muted-foreground/60 mt-0.5">{label}</p>
+                            <p className="text-xs text-white/72 mt-0.5">{label}</p>
                           </div>
                         ))}
                       </div>
@@ -2417,7 +2417,7 @@ export function AiAssistant() {
                 )}
 
                 {showAvatarDebug && rendererStats && (
-                  <div className="p-3 rounded-lg bg-black/40 border border-white/5 text-[10px] font-mono text-muted-foreground/60 space-y-0.5">
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/5 text-xs font-mono text-white/62 space-y-0.5">
                     <p>debug: avatarUrl={avatarConfig?.avatarUrl?.slice(0, 40)}…</p>
                     <p>renderer={avatarConfig?.renderer} · key={avatarConfig?.avatarKey}</p>
                     <p>tris={rendererStats.triangles} · calls={rendererStats.drawCalls} · q={rendererStats.quality}</p>
@@ -2460,7 +2460,7 @@ export function AiAssistant() {
 
             {/* Male Voices */}
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♂ Male Voices</p>
+              <p className="text-xs font-bold text-white/78 uppercase tracking-widest mb-2">♂ Male Voices</p>
               <div className="space-y-1.5">
                 {MALE_VOICE_PROFILES.map((v) => {
                   const isSelected = ttsVoice === v.value;
@@ -2473,13 +2473,13 @@ export function AiAssistant() {
                       <span className="text-xl flex-shrink-0">{v.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-sm font-semibold truncate", isSelected ? "text-blue-300" : "text-white/85")}>{v.label}</p>
-                        <p className="text-[10px] text-muted-foreground/65 truncate">{v.desc}</p>
+                        <p className="text-xs text-white/72 truncate">{v.desc}</p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
                           onClick={() => handleVoicePreview(v.value, v.speed)}
                           disabled={!!isVoicePreviewing}
-                          className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground/60 hover:text-white disabled:opacity-30"
+                          className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-white/62 hover:text-white disabled:opacity-30"
                         >
                           {isPreviewing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                         </button>
@@ -2503,7 +2503,7 @@ export function AiAssistant() {
 
             {/* Female Voices */}
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground/65 uppercase tracking-widest mb-2">♀ Female Voices</p>
+              <p className="text-xs font-bold text-white/78 uppercase tracking-widest mb-2">♀ Female Voices</p>
               <div className="space-y-1.5">
                 {FEMALE_VOICE_PROFILES.map((v) => {
                   const isSelected = ttsVoice === v.value;
@@ -2516,13 +2516,13 @@ export function AiAssistant() {
                       <span className="text-xl flex-shrink-0">{v.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-sm font-semibold truncate", isSelected ? "text-pink-300" : "text-white/85")}>{v.label}</p>
-                        <p className="text-[10px] text-muted-foreground/65 truncate">{v.desc}</p>
+                        <p className="text-xs text-white/72 truncate">{v.desc}</p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
                           onClick={() => handleVoicePreview(v.value, v.speed)}
                           disabled={!!isVoicePreviewing}
-                          className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground/60 hover:text-white disabled:opacity-30"
+                          className="h-8 w-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-white/62 hover:text-white disabled:opacity-30"
                         >
                           {isPreviewing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                         </button>

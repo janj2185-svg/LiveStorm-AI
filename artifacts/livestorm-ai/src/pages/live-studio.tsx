@@ -57,7 +57,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
           Comments
         </span>
         {isActive && (
-          <span className="text-[10px] text-muted-foreground tabular-nums">{comments.length}</span>
+          <span className="text-xs text-white/78 tabular-nums">{comments.length}</span>
         )}
       </div>
 
@@ -70,12 +70,12 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
           {!isActive ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-6">
               <MessageCircle className="h-8 w-8 text-white/10 mb-3" />
-              <p className="text-xs text-muted-foreground/60">{translations["ls_start_session_comments"] ?? "Start a session to see comments"}</p>
+              <p className="text-sm text-white/78">{translations["ls_start_session_comments"] ?? "Start a session to see comments"}</p>
             </div>
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-6">
               <MessageCircle className="h-8 w-8 text-white/10 mb-3 animate-pulse" />
-              <p className="text-xs text-muted-foreground/60">{translations["ls_waiting_comments"] ?? "Waiting for comments…"}</p>
+              <p className="text-sm text-white/78">{translations["ls_waiting_comments"] ?? "Waiting for comments…"}</p>
             </div>
           ) : (
             <div className="p-3 space-y-1.5">
@@ -92,7 +92,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
                       {e.avatarUrl ? (
                         <img src={e.avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-[10px] font-bold text-blue-300">
+                        <span className="text-xs font-bold text-blue-300">
                           {(e.username ?? "?")[0]?.toUpperCase()}
                         </span>
                       )}
@@ -102,7 +102,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
                         <span className="text-xs font-bold text-blue-300 truncate">
                           {e.username ?? "Unknown"}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/65 flex-shrink-0">
+                        <span className="text-xs text-white/62 flex-shrink-0">
                           {formatDistanceToNow(new Date(e.timestamp), { addSuffix: true })}
                         </span>
                       </div>
@@ -113,7 +113,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
                         const msgId = String(e.data.msgId ?? e.timestamp);
                         const translation = translations[msgId];
                         return translation ? (
-                          <p className="text-[11px] text-yellow-200/65 leading-relaxed mt-1 pt-1 border-t border-white/[0.06] break-words">
+                          <p className="text-xs text-yellow-200/88 leading-relaxed mt-1 pt-1 border-t border-white/[0.06] break-words">
                             🇺🇦 {translation}
                           </p>
                         ) : null;
@@ -130,7 +130,7 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
         {isPaused && comments.length > 0 && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-[10px] font-bold hover:bg-blue-500/30 transition-colors z-10"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-bold hover:bg-blue-500/30 transition-colors z-10"
           >
             <ArrowDown className="h-3 w-3" />
             Jump to latest
@@ -158,10 +158,10 @@ function StatsBar({ stats, isActive }: { stats: { viewerCount: number; totalLike
       {tiles.map(({ label, value, icon: Icon, color }) => (
         <div key={label} className="flex items-center gap-1.5 min-w-fit">
           <Icon className={cn("h-3 w-3", isActive ? color : "text-white/30")} />
-          <span className={cn("text-xs font-bold tabular-nums", isActive ? "text-white" : "text-white/45")}>
+          <span className={cn("text-xs font-bold tabular-nums", isActive ? "text-white" : "text-white/65")}>
             {isActive ? value.toLocaleString() : "—"}
           </span>
-          <span className="text-[10px] text-white/48">{label}</span>
+          <span className="text-xs text-white/75">{label}</span>
           <span className="w-px h-3 bg-white/[0.06] mx-1 last:hidden" />
         </div>
       ))}
@@ -238,10 +238,10 @@ function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean
               key={value}
               onClick={() => setFilter(value)}
               className={cn(
-                "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border",
+                "px-2.5 py-1 rounded-lg text-xs font-bold transition-all border",
                 filter === value
                   ? `bg-white/10 border-white/20 text-white ${color}`
-                  : "border-transparent text-muted-foreground/60 hover:text-muted-foreground hover:bg-white/5",
+                  : "border-transparent text-white/60 hover:text-white/90 hover:bg-white/5",
               )}
             >
               {label}
@@ -254,12 +254,12 @@ function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean
         {!isActive ? (
           <div className="flex flex-col items-center justify-center h-[180px] text-center px-4">
             <Activity className="h-7 w-7 text-white/10 mb-2" />
-            <p className="text-xs text-muted-foreground/60">{t("ls_start_session_events")}</p>
+            <p className="text-sm text-white/78">{t("ls_start_session_events")}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[180px] text-center px-4">
             <Activity className="h-7 w-7 text-white/10 mb-2 animate-pulse" />
-            <p className="text-xs text-muted-foreground/60">
+            <p className="text-sm text-white/78">
               {filter === "all" ? "Waiting for events…" : `No ${filter} events yet`}
             </p>
           </div>
@@ -277,19 +277,19 @@ function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean
                     transition={{ duration: 0.12 }}
                     className="flex items-start gap-2.5 px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors"
                   >
-                    <span className="text-[10px] text-slate-600 flex-shrink-0 tabular-nums pt-0.5">
+                    <span className="text-xs text-slate-400 flex-shrink-0 tabular-nums pt-0.5">
                       {format(new Date(event.timestamp), "HH:mm:ss")}
                     </span>
-                    <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border flex-shrink-0", colorClass)}>
+                    <span className={cn("inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded border flex-shrink-0", colorClass)}>
                       <Icon className="h-2.5 w-2.5" />
                       {event.type.replace("_", " ").toUpperCase()}
                     </span>
                     {event.username && (
-                      <span className="text-xs font-semibold text-white/70 flex-shrink-0 truncate max-w-[80px]">
+                      <span className="text-xs font-semibold text-white/85 flex-shrink-0 truncate max-w-[80px]">
                         {event.username}
                       </span>
                     )}
-                    <span className="text-[11px] text-slate-400 truncate flex-1 min-w-0">
+                    <span className="text-xs text-slate-300 truncate flex-1 min-w-0">
                       {eventSummary(event)}
                     </span>
                   </motion.div>
@@ -415,7 +415,7 @@ export function LiveStudio() {
           </div>
           <div>
             <h1 className="text-lg font-black text-white tracking-tight">Live Studio</h1>
-            <p className="text-[11px] text-cyan-300/70 font-medium">
+            <p className="text-sm text-cyan-300/90 font-medium">
               {tiktokUsername ? `@${tiktokUsername}` : "No active session"}
               {effectiveMode === "real" ? " · Real LIVE" : effectiveMode === "demo" ? " · Demo" : ""}
             </p>
@@ -427,12 +427,12 @@ export function LiveStudio() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
-                <span className="text-[11px] font-black text-emerald-300 tracking-widest">{t("ls_live").toUpperCase()}</span>
+                <span className="text-xs font-black text-emerald-300 tracking-widest">{t("ls_live").toUpperCase()}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-                <Radio className="h-3 w-3 text-muted-foreground/50" />
-                <span className="text-[11px] font-semibold text-muted-foreground/60">{t("dash_status_offline").toUpperCase()}</span>
+                <Radio className="h-3 w-3 text-white/65" />
+                <span className="text-xs font-semibold text-white/75">{t("dash_status_offline").toUpperCase()}</span>
               </div>
             )}
           </div>
@@ -447,10 +447,10 @@ export function LiveStudio() {
             onClick={showQr}
             title={qrActive ? "Hide QR" : "Show Storm Pass QR on stream"}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all",
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-all",
               qrActive
                 ? "bg-violet-500/20 border-violet-500/50 text-violet-300 animate-pulse"
-                : "bg-white/5 border-white/10 text-muted-foreground hover:border-violet-500/40 hover:text-white/70",
+                : "bg-white/5 border-white/10 text-white/68 hover:border-violet-500/40 hover:text-white/90",
             )}
           >
             <QrCode className="h-3 w-3" />
@@ -460,8 +460,8 @@ export function LiveStudio() {
         {!isActive && (
           <Link href="/dashboard">
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer">
-              <Radio className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[11px] font-semibold text-muted-foreground">{t("ls_go_live_btn")}</span>
+              <Radio className="h-3 w-3 text-white/82" />
+              <span className="text-xs font-semibold text-white/80">{t("ls_go_live_btn")}</span>
             </div>
           </Link>
         )}
@@ -480,9 +480,9 @@ export function LiveStudio() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-amber-300">{t("ls_unlock_voice_title")}</p>
-            <p className="text-[11px] text-amber-400/70 mt-0.5">{t("ls_unlock_voice_desc")}</p>
+            <p className="text-xs text-amber-400/88 mt-0.5">{t("ls_unlock_voice_desc")}</p>
           </div>
-          <span className="flex-shrink-0 text-[11px] font-bold bg-amber-500/25 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full animate-pulse">
+          <span className="flex-shrink-0 text-xs font-bold bg-amber-500/25 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full animate-pulse">
             TAP TO UNLOCK
           </span>
         </motion.button>
@@ -491,8 +491,8 @@ export function LiveStudio() {
       {/* ── Voice is off warning ──────────────────────────────────────────── */}
       {ttsModeLive === "off" && isActive && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/8">
-          <VolumeX className="h-4 w-4 text-muted-foreground/65 flex-shrink-0" />
-          <p className="text-xs text-muted-foreground/70 flex-1">
+          <VolumeX className="h-4 w-4 text-white/65 flex-shrink-0" />
+          <p className="text-xs text-white/80 flex-1">
             Storm's voice is disabled — AI can hear you but won't speak back.
           </p>
           <Link href="/ai-assistant">
@@ -517,7 +517,7 @@ export function LiveStudio() {
           onClick={() => setMobileTab("cohost")}
           className={cn(
             "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all",
-            mobileTab === "cohost" ? "bg-cyan-600 text-white" : "text-muted-foreground/65 hover:text-white/70",
+            mobileTab === "cohost" ? "bg-cyan-600 text-white" : "text-white/68 hover:text-white/90",
           )}
         >
           <Bot className="h-3.5 w-3.5" />Co-Host
@@ -526,12 +526,12 @@ export function LiveStudio() {
           onClick={() => setMobileTab("comments")}
           className={cn(
             "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all",
-            mobileTab === "comments" ? "bg-cyan-600 text-white" : "text-muted-foreground/65 hover:text-white/70",
+            mobileTab === "comments" ? "bg-cyan-600 text-white" : "text-white/68 hover:text-white/90",
           )}
         >
           <MessageCircle className="h-3.5 w-3.5" />Comments
           {events.filter(e => e.type === "comment").length > 0 && (
-            <span className="ml-0.5 text-[9px] bg-white/15 rounded-full px-1.5 tabular-nums">
+            <span className="ml-0.5 text-xs bg-white/15 rounded-full px-1.5 tabular-nums">
               {events.filter(e => e.type === "comment").length}
             </span>
           )}
@@ -576,10 +576,10 @@ export function LiveStudio() {
           onClick={() => setEventLogOpen((o) => !o)}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
         >
-          <Activity className="h-4 w-4 text-muted-foreground/50" />
+          <Activity className="h-4 w-4 text-white/65" />
           <span className="text-sm font-semibold text-white/70">Event Log</span>
           {events.length > 0 && (
-            <span className="text-[10px] text-white/48">{events.length} events</span>
+            <span className="text-xs text-white/75">{events.length} events</span>
           )}
           <span className="ml-auto text-white/48">
             {eventLogOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}

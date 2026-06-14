@@ -104,13 +104,13 @@ function EventRow({ event, idx }: { event: LiveEvent; idx: number }) {
         <p className="text-sm leading-snug">
           <span className="font-semibold text-foreground">{event.username || "System"}</span>
           {" "}
-          <span className="text-muted-foreground/80">{desc}</span>
+          <span className="text-white/88">{desc}</span>
         </p>
-        <span className="text-[10px] text-muted-foreground/65 font-mono mt-0.5 block">
+        <span className="text-xs text-white/72 font-mono mt-0.5 block">
           {format(new Date(event.timestamp), "HH:mm:ss")}
         </span>
       </div>
-      <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 border-0 font-semibold flex-shrink-0", cfg.text, cfg.bg)}>
+      <Badge variant="outline" className={cn("text-xs px-1.5 py-0 border-0 font-semibold flex-shrink-0", cfg.text, cfg.bg)}>
         {eventLabel[event.type] ?? cfg.label}
       </Badge>
     </motion.div>
@@ -149,7 +149,7 @@ function StatCard({
             <Icon className={cn("h-[18px] w-[18px]", iconColor)} />
           </div>
           {isActive && value > 0 && (
-            <span className={cn("flex items-center gap-0.5 text-[10px] font-bold", iconColor)}>
+            <span className={cn("flex items-center gap-0.5 text-xs font-bold", iconColor)}>
               <TrendingUp className="h-2.5 w-2.5" />
               {t("dash_live_badge")}
             </span>
@@ -222,7 +222,7 @@ function CommandStrip({
                   <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>
                     {connected ? t("dash_status_live_now") : t("dash_status_reconnecting")}
                   </span>
-                  <span className="text-xs text-muted-foreground font-mono tabular-nums opacity-60">
+                  <span className="text-xs text-white/72 font-mono tabular-nums">
                     {formatDuration(duration)}
                   </span>
                 </>
@@ -238,7 +238,7 @@ function CommandStrip({
                 <span>{t("dash_ready_to")} <GradientText from="from-violet-400" to="to-cyan-400">{t("dash_go_live")}</GradientText></span>
               )}
             </p>
-            <p className="text-xs text-muted-foreground/65 mt-0.5 truncate">
+            <p className="text-xs text-white/78 mt-0.5 truncate">
               {isActive ? `${eventCount} ${t("dash_events_captured")}` : `@${username} · ${t("dash_start_session_prompt")}`}
             </p>
           </div>
@@ -286,7 +286,7 @@ function CommandStrip({
             size="sm"
             onClick={onReset}
             disabled={resetPending}
-            className="gap-1.5 text-xs text-muted-foreground/60 border-white/10 hover:border-red-500/30 hover:text-red-400 h-10 px-3"
+            className="gap-1.5 text-xs text-white/72 border-white/10 hover:border-red-500/30 hover:text-red-400 h-10 px-3"
             title="Force-clears any stuck session."
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -509,14 +509,14 @@ export function Dashboard() {
               <PlugZap className="h-10 w-10 text-violet-400" />
             </div>
             <h2 className="text-2xl font-black text-white">Connect Your TikTok</h2>
-            <p className="text-muted-foreground mt-1.5 text-sm">Enter your TikTok username to start capturing live events.</p>
+            <p className="text-white/82 mt-1.5 text-sm">Enter your TikTok username to start capturing live events.</p>
           </div>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="tiktok-dash-input" className="text-sm font-medium">TikTok Username</Label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">@</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/72 font-medium text-sm">@</span>
                   <Input
                     id="tiktok-dash-input"
                     className="pl-7 bg-white/[0.04] border-white/10 focus:border-violet-500/50"
@@ -731,7 +731,7 @@ export function Dashboard() {
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
                   style={{ background: "rgba(34,197,94,0.13)", border: "1px solid rgba(34,197,94,0.30)" }}>
                   <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
-                  <span className={cn("text-[10px] font-black uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
+                  <span className={cn("text-xs font-black uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
                     {connected ? "Live" : "Reconnecting"} · {formatDuration(duration)}
                   </span>
                 </div>
@@ -739,7 +739,7 @@ export function Dashboard() {
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Offline</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Offline</span>
                 </div>
               )}
               <p className="text-[13px] font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -747,7 +747,7 @@ export function Dashboard() {
                 <span className="font-black" style={{ color: "rgba(255,255,255,0.85)" }}>
                   {profile?.displayName || t("nav_creator")}
                 </span>
-                {isOwner && <span className="ml-1.5 text-[10px] text-amber-400 font-black">✦ Owner</span>}
+                {isOwner && <span className="ml-1.5 text-xs text-amber-400 font-black">✦ Owner</span>}
               </p>
             </motion.div>
 
@@ -820,7 +820,7 @@ export function Dashboard() {
                 </div>
               )}
               {isActive && (
-                <span className={cn("hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black", connected ? "text-green-300" : "text-red-300")}
+                <span className={cn("hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-black", connected ? "text-green-300" : "text-red-300")}
                   style={{ background: connected ? "rgba(34,197,94,0.09)" : "rgba(239,68,68,0.09)", border: `1px solid ${connected ? "rgba(34,197,94,0.22)" : "rgba(239,68,68,0.22)"}` }}>
                   {connected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
                 </span>
@@ -909,34 +909,34 @@ export function Dashboard() {
             <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={cn("p-2 rounded-xl", isActive ? "bg-violet-500/15" : "bg-white/[0.05]")}>
-                  <Activity className={cn("h-4 w-4", isActive ? "text-violet-400" : "text-muted-foreground")} />
+                  <Activity className={cn("h-4 w-4", isActive ? "text-violet-400" : "text-white/62")} />
                 </div>
                 <div>
                   <p className="ls-section">Live Activity</p>
-                  <p className="text-[10px] text-muted-foreground/50">{isActive ? "Real-time events" : "Session not started"}</p>
+                  <p className="text-xs text-white/72">{isActive ? "Real-time events" : "Session not started"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {isActive && (
                   <div className="flex items-center gap-1.5">
                     <PulsingDot color="bg-violet-400" size="h-1.5 w-1.5" />
-                    <span className="text-[10px] text-violet-400 font-semibold">Live</span>
+                    <span className="text-xs text-violet-400 font-semibold">Live</span>
                   </div>
                 )}
-                <span className="text-xs text-muted-foreground/65 tabular-nums bg-white/[0.04] px-2.5 py-1 rounded-full">
+                <span className="text-xs text-white/75 tabular-nums bg-white/[0.05] px-2.5 py-1 rounded-full">
                   {eventCount} events
                 </span>
               </div>
             </div>
             <div className="flex-1 min-h-[440px]">
               {!isActive && events.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-4 p-8">
+                <div className="h-full flex flex-col items-center justify-center text-white/72 gap-4 p-8">
                   <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
                     <Radio className="h-7 w-7 opacity-20" />
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-semibold">Waiting for broadcast</p>
-                    <p className="text-xs text-muted-foreground/65 mt-1.5">Start a live session to see events here</p>
+                    <p className="text-xs text-white/75 mt-1.5">Start a live session to see events here</p>
                   </div>
                 </div>
               ) : (
@@ -975,12 +975,12 @@ export function Dashboard() {
               </div>
               <div>
                 <p className="font-semibold text-white text-sm">Top Supporters</p>
-                <p className="text-[10px] text-muted-foreground/50">Gift leaderboard</p>
+                <p className="text-xs text-white/75">Gift leaderboard</p>
               </div>
             </div>
             <div className="h-[200px] overflow-y-auto">
               {stats.topSupporters.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <div className="h-full flex flex-col items-center justify-center text-white/72 gap-2">
                   <TrophyIcon className="h-8 w-8 opacity-10" />
                   <p className="text-xs">No supporters yet</p>
                 </div>
@@ -1020,11 +1020,11 @@ export function Dashboard() {
                   </div>
                   <div>
                     <p className="font-semibold text-white text-sm">AI Assistant</p>
-                    <p className="text-[10px] text-muted-foreground/50">Active announcements</p>
+                    <p className="text-xs text-white/75">Active announcements</p>
                   </div>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-xs text-muted-foreground/60">🔊 TTS</span>
+                  <span className="text-xs text-white/72">🔊 TTS</span>
                   <input
                     type="checkbox"
                     checked={ttsOn}
@@ -1041,7 +1041,7 @@ export function Dashboard() {
               </div>
               <div className="h-[170px] overflow-y-auto p-3 space-y-2">
                 {aiAnnouncements.length === 0 && flaggedComments.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-xs text-muted-foreground/50">
+                  <div className="h-full flex items-center justify-center text-xs text-white/70">
                     AI announcements will appear here
                   </div>
                 ) : (
@@ -1113,9 +1113,9 @@ export function Dashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white/90 group-hover:text-white">{link.label}</p>
-                          <p className="text-[11px] text-muted-foreground/55">{link.desc}</p>
+                          <p className="text-xs text-white/78">{link.desc}</p>
                         </div>
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/55 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
+                        <ChevronRight className="h-3.5 w-3.5 text-white/55 group-hover:text-white/78 transition-colors flex-shrink-0" />
                       </div>
                     </Link>
                   </motion.div>
@@ -1142,18 +1142,18 @@ export function Dashboard() {
             >
               <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2.5">
                 <div className={cn("p-1.5 rounded-lg", ytStatus.connected ? "bg-red-500/15" : "bg-white/[0.05]")}>
-                  <Youtube className={cn("h-3.5 w-3.5", ytStatus.connected ? "text-red-400" : "text-muted-foreground/50")} />
+                  <Youtube className={cn("h-3.5 w-3.5", ytStatus.connected ? "text-red-400" : "text-white/62")} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-xs font-bold text-white/80">YouTube Live</span>
                   {ytStatus.connected && ytStatus.channelName && (
-                    <p className="text-[10px] text-muted-foreground/65 truncate">{ytStatus.channelName}</p>
+                    <p className="text-xs text-white/80 truncate">{ytStatus.channelName}</p>
                   )}
                 </div>
                 {ytStatus.connector?.active && (
                   <div className="flex items-center gap-1">
                     <PulsingDot color="bg-red-400" size="h-1.5 w-1.5" />
-                    <span className="text-[9px] font-bold text-red-400 uppercase">Live</span>
+                    <span className="text-xs font-bold text-red-400 uppercase">Live</span>
                   </div>
                 )}
               </div>
@@ -1161,16 +1161,16 @@ export function Dashboard() {
               <div className="p-3 space-y-2">
                 {!ytStatus.configured ? (
                   <div className="text-center py-2">
-                    <p className="text-[11px] text-muted-foreground/60 mb-2">
-                      Set <code className="text-violet-400 text-[10px]">GOOGLE_CLIENT_ID</code>,{" "}
-                      <code className="text-violet-400 text-[10px]">GOOGLE_CLIENT_SECRET</code> &amp;{" "}
-                      <code className="text-violet-400 text-[10px]">YOUTUBE_REDIRECT_URI</code> to enable.
+                    <p className="text-xs text-white/78 mb-2">
+                      Set <code className="text-violet-400 text-xs">GOOGLE_CLIENT_ID</code>,{" "}
+                      <code className="text-violet-400 text-xs">GOOGLE_CLIENT_SECRET</code> &amp;{" "}
+                      <code className="text-violet-400 text-xs">YOUTUBE_REDIRECT_URI</code> to enable.
                     </p>
                     <a
                       href="https://console.cloud.google.com/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] text-violet-400 hover:underline"
+                      className="inline-flex items-center gap-1 text-xs text-violet-400 hover:underline"
                     >
                       <ExternalLink className="h-3 w-3" /> Google Cloud Console
                     </a>
@@ -1181,11 +1181,11 @@ export function Dashboard() {
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/15">
                           <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
-                          <span className="text-[11px] text-red-300 font-medium flex-1 truncate">
+                          <span className="text-xs text-red-300 font-medium flex-1 truncate">
                             Chat connected
                           </span>
                           {ytStatus.connector.viewerCount != null && (
-                            <span className="flex items-center gap-1 text-[10px] text-red-300/70 font-semibold">
+                            <span className="flex items-center gap-1 text-xs text-red-300/88 font-semibold">
                               <Eye className="h-2.5 w-2.5" />
                               {ytStatus.connector.viewerCount.toLocaleString()}
                             </span>
@@ -1204,14 +1204,14 @@ export function Dashboard() {
                         {ytLoading ? t("dash_yt_connecting") : t("dash_yt_connect_chat")}
                       </Button>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground/65 text-center py-1">
+                      <p className="text-xs text-white/78 text-center py-1">
                         {t("dash_yt_start_session")}
                       </p>
                     )}
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="w-full h-7 text-[11px] gap-1.5 text-muted-foreground/65 hover:text-red-400"
+                      className="w-full h-7 text-xs gap-1.5 text-white/72 hover:text-red-400"
                       onClick={handleDisconnectYoutube}
                       disabled={ytLoading}
                     >
@@ -1241,17 +1241,17 @@ export function Dashboard() {
                   <Clock className="h-3.5 w-3.5 text-blue-400" />
                 </div>
                 <span className="text-xs font-bold text-white/80">Recent Sessions</span>
-                <span className="ml-auto text-[10px] text-white/42 font-medium">{sessions.length} total</span>
+                <span className="ml-auto text-xs text-white/72 font-medium">{sessions.length} total</span>
               </div>
               <div className="p-2 space-y-1">
                 {sessions.slice(0, 3).map((s: any) => (
                   <div key={s.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
                     <div className="h-1.5 w-1.5 rounded-full bg-violet-500/60 flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground/70 flex-1">
+                    <span className="text-xs text-white/82 flex-1">
                       {formatDistanceToNow(new Date(s.startedAt), { addSuffix: true })}
                     </span>
                     {s.endedAt && (
-                      <span className="text-[10px] text-white/45 font-mono">
+                      <span className="text-xs text-white/68 font-mono">
                         {Math.floor((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 60000)}m
                       </span>
                     )}

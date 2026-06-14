@@ -162,7 +162,7 @@ function ObsTab({ authToken }: { authToken: string | null }) {
     return (
       <div className="rounded-2xl bg-white/[0.04] border border-white/8 p-6 text-center space-y-3">
         <AlertTriangle className="h-8 w-8 text-amber-400 mx-auto" />
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-sm text-white/82">{error}</p>
         <Button variant="outline" size="sm" onClick={loadUrls} className="border-white/10">
           Try again
         </Button>
@@ -178,7 +178,7 @@ function ObsTab({ authToken }: { authToken: string | null }) {
           <Monitor className="h-4 w-4 text-blue-400" />
           <p className="text-sm font-semibold text-blue-300">{t("obs_how_to")}</p>
         </div>
-        <ol className="space-y-1.5 text-sm text-muted-foreground list-decimal list-inside">
+        <ol className="space-y-1.5 text-sm text-white/82 list-decimal list-inside">
           <li>{t("obs_step1")}</li>
           <li>{t("obs_step2")}</li>
           <li>{t("obs_step3")}</li>
@@ -194,7 +194,7 @@ function ObsTab({ authToken }: { authToken: string | null }) {
           </div>
           <div>
             <p className="font-semibold text-white text-sm">{t("obs_browser_sources")}</p>
-            <p className="text-xs text-muted-foreground">{t("obs_copy_url")}</p>
+            <p className="text-xs text-white/78">{t("obs_copy_url")}</p>
           </div>
         </div>
         <div className="divide-y divide-white/5">
@@ -205,11 +205,11 @@ function ObsTab({ authToken }: { authToken: string | null }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-semibold text-white text-sm">{overlay.name}</p>
-                    <span className="text-xs text-muted-foreground bg-white/5 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-white/78 bg-white/5 px-2 py-0.5 rounded-full">
                       {overlay.width} × {overlay.height}px
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">{overlay.description}</p>
+                  <p className="text-xs text-white/82 mb-2">{overlay.description}</p>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <code className="flex-1 text-xs bg-black/30 border border-white/8 rounded-lg px-3 py-2 text-slate-300 font-mono break-all sm:truncate overflow-hidden">
                       {overlay.url}
@@ -248,7 +248,7 @@ function ObsTab({ authToken }: { authToken: string | null }) {
           </div>
           <div>
             <p className="font-semibold text-white text-sm">Security</p>
-            <p className="text-xs text-muted-foreground">Regenerate your token if your overlay URLs were leaked</p>
+            <p className="text-xs text-white/78">Regenerate your token if your overlay URLs were leaked</p>
           </div>
         </div>
         <div className="p-6">
@@ -438,7 +438,7 @@ export function Settings() {
 
       {/* Page header */}
       <div className="mb-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-0.5">Account</p>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-400/88 mb-0.5">Account</p>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Settings</h1>
           {user?.role === "owner" ? (
@@ -477,13 +477,13 @@ export function Settings() {
             >
               <span className={cn(
                 "shrink-0 p-1.5 rounded-lg transition-colors",
-                tab === item.id ? "bg-violet-500/22 text-violet-300" : "bg-white/[0.06] text-white/72",
+                tab === item.id ? "bg-violet-500/22 text-violet-300" : "bg-white/[0.07] text-white/85",
               )}>
                 {item.icon}
               </span>
               <div className="min-w-0 flex-1">
                 <p className={cn("text-sm font-semibold truncate", tab === item.id ? "text-white" : "text-white/75")}>{item.label}</p>
-                <p className="text-[10px] text-white/62 truncate">{item.sub}</p>
+                <p className="text-xs text-white/78 truncate">{item.sub}</p>
               </div>
               {tab === item.id && <div className="w-1 h-4 rounded-full bg-violet-400 shrink-0" />}
             </button>
@@ -499,11 +499,11 @@ export function Settings() {
                 key={item.label}
                 onClick={!item.soon ? () => setTab("profile") : undefined}
                 disabled={item.soon}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all text-white/45 hover:text-white/65 hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all text-white/70 hover:text-white/90 hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <span className="text-base shrink-0">{item.emoji}</span>
                 <p className="text-sm font-medium flex-1">{item.label}</p>
-                {item.soon && <span className="text-[9px] text-white/42 border border-white/20 px-1.5 py-0.5 rounded-full">soon</span>}
+                {item.soon && <span className="text-[10px] text-white/65 border border-white/30 px-1.5 py-0.5 rounded-full">soon</span>}
               </button>
             ))}
           </div>
@@ -522,7 +522,7 @@ export function Settings() {
               </div>
               <div>
                 <p className="font-semibold text-white text-sm">{t("profile_title")}</p>
-                <p className="text-xs text-muted-foreground">{t("profile_desc")}</p>
+                <p className="text-xs text-white/78">{t("profile_desc")}</p>
               </div>
             </div>
             <div className="p-6">
@@ -544,7 +544,7 @@ export function Settings() {
                   <div className="space-y-2 max-w-md">
                     <Label htmlFor="email-readonly" className="text-sm font-medium">{t("profile_email")}</Label>
                     <Input id="email-readonly" value={user?.email || ""} disabled className="bg-background/50 border-border opacity-50" />
-                    <p className="text-xs text-muted-foreground">{t("profile_email_note")}</p>
+                    <p className="text-xs text-white/78">{t("profile_email_note")}</p>
                   </div>
                   <Button type="submit" className="mt-4 bg-primary hover:bg-primary/90" disabled={updateProfile.isPending || isLoading}>
                     {updateProfile.isPending ? t("saving") : t("profile_save")}
@@ -562,7 +562,7 @@ export function Settings() {
               </div>
               <div>
                 <p className="font-semibold text-white text-sm">TikTok Account</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-white/78">
                   Link your TikTok username to connect to your LIVE stream.
                 </p>
               </div>
@@ -622,7 +622,7 @@ export function Settings() {
                       </Button>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-white/78">
                     Enter your TikTok handle without the @. Example: <span className="text-foreground font-medium">yourhandle</span>
                   </p>
                 </div>
@@ -638,7 +638,7 @@ export function Settings() {
               <p className="font-semibold text-white text-sm">{t("security_title")}</p>
             </div>
             <div className="p-6">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/82">
                 {t("security_desc")}{" "}
                 <a href="/sign-in" className="text-primary hover:underline">{t("security_manage")}</a>
               </p>
@@ -657,7 +657,7 @@ export function Settings() {
               </div>
               <div>
                 <p className="font-semibold text-white text-sm">{t("lang_title")}</p>
-                <p className="text-xs text-muted-foreground">{t("lang_desc")}</p>
+                <p className="text-xs text-white/78">{t("lang_desc")}</p>
               </div>
             </div>
             <div className="p-6 space-y-6">
@@ -671,7 +671,7 @@ export function Settings() {
                       className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                         language === lang.code
                           ? "border-primary bg-primary/10 text-primary"
-                          : "border-white/8 hover:border-white/15 hover:bg-white/5 text-muted-foreground hover:text-foreground"
+                          : "border-white/8 hover:border-white/15 hover:bg-white/5 text-white/72 hover:text-foreground"
                       }`}
                     >
                       <span className="text-2xl">{lang.flag}</span>
@@ -688,7 +688,7 @@ export function Settings() {
               <div className="space-y-3 pt-2 border-t border-white/8">
                 <div>
                   <Label className="text-sm font-medium text-foreground">{t("lang_ai_reply")}</Label>
-                  <p className="text-xs text-muted-foreground mt-1">{t("lang_ai_reply_desc")}</p>
+                  <p className="text-xs text-white/78 mt-1">{t("lang_ai_reply_desc")}</p>
                 </div>
                 <div className="grid grid-cols-1 gap-2 max-w-md">
                   {AI_REPLY_LANGUAGES.map((lang) => (
@@ -698,7 +698,7 @@ export function Settings() {
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all text-left ${
                         aiReplyLang === lang.value
                           ? "border-primary bg-primary/10 text-primary"
-                          : "border-white/8 hover:border-white/15 hover:bg-white/5 text-muted-foreground hover:text-foreground"
+                          : "border-white/8 hover:border-white/15 hover:bg-white/5 text-white/72 hover:text-foreground"
                       }`}
                     >
                       <span className="text-lg">{lang.flag}</span>
@@ -742,7 +742,7 @@ export function Settings() {
                       <p className="font-bold text-amber-200">Owner</p>
                       <Badge className="text-xs bg-amber-500/20 border-amber-500/40 text-amber-300 border">Permanent</Badge>
                     </div>
-                    <p className="text-sm text-amber-300/70">No subscription required · No billing · No plan checks</p>
+                    <p className="text-sm text-amber-300/88">No subscription required · No billing · No plan checks</p>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -778,7 +778,7 @@ export function Settings() {
                         <p className="font-bold text-white capitalize">{planMeta.label} Plan</p>
                         <Badge variant="outline" className="text-xs border-white/20">Active</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{planMeta.desc}</p>
+                      <p className="text-sm text-white/82">{planMeta.desc}</p>
                     </div>
                     {(user?.plan === "free" || !user?.plan) && (
                       <Button asChild className="bg-primary hover:bg-primary/90 text-white">
@@ -817,9 +817,9 @@ export function Settings() {
                         <p className="text-green-400">✓ Basic AI Assistant</p>
                         <p className="text-green-400">✓ Basic Boss Battle</p>
                         <p className="text-green-400">✓ Viewer leaderboard</p>
-                        <p className="text-muted-foreground line-through">✕ AI Voice (Pro+)</p>
-                        <p className="text-muted-foreground line-through">✕ Achievements & Lucky Drops (Pro+)</p>
-                        <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
+                        <p className="text-white/55 line-through">✕ AI Voice (Pro+)</p>
+                        <p className="text-white/55 line-through">✕ Achievements & Lucky Drops (Pro+)</p>
+                        <p className="text-white/55 line-through">✕ AI Translator (Creator+)</p>
                       </>
                     )}
                     {user?.plan === "pro" && (
@@ -828,8 +828,8 @@ export function Settings() {
                         <p className="text-green-400">✓ Full XP System & Achievements</p>
                         <p className="text-green-400">✓ Fan Profiles & Leaderboards</p>
                         <p className="text-green-400">✓ 10 automations + OBS Sources</p>
-                        <p className="text-muted-foreground line-through">✕ AI Translator (Creator+)</p>
-                        <p className="text-muted-foreground line-through">✕ Multiple TikTok accounts (Creator+)</p>
+                        <p className="text-white/55 line-through">✕ AI Translator (Creator+)</p>
+                        <p className="text-white/55 line-through">✕ Multiple TikTok accounts (Creator+)</p>
                       </>
                     )}
                     {user?.plan === "creator" && (
@@ -839,7 +839,7 @@ export function Settings() {
                         <p className="text-green-400">✓ Advanced Analytics</p>
                         <p className="text-green-400">✓ Multiple TikTok accounts</p>
                         <p className="text-green-400">✓ Unlimited automations</p>
-                        <p className="text-muted-foreground line-through">✕ 3D AI Host (Studio)</p>
+                        <p className="text-white/55 line-through">✕ 3D AI Host (Studio)</p>
                       </>
                     )}
                     {user?.plan === "studio" && (

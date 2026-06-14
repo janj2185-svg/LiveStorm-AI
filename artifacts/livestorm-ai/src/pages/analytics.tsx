@@ -115,7 +115,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
           <div>
             <p className="ls-section">{t("analytics_ai_tips")}</p>
             {data?.fromCache && data.cachedAt && (
-              <p className="text-[10px] text-muted-foreground/50">
+              <p className="text-xs text-white/70">
                 Generated {format(new Date(data.cachedAt), "MMM d · HH:mm")}
               </p>
             )}
@@ -125,7 +125,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
           <button
             onClick={handleRefresh}
             disabled={isLoading || isRefreshing}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-violet-300 transition-colors px-2.5 py-1.5 rounded-lg border border-white/8 hover:border-violet-400/30 hover:bg-violet-500/10"
+            className="flex items-center gap-1.5 text-xs text-white/72 hover:text-violet-300 transition-colors px-2.5 py-1.5 rounded-lg border border-white/8 hover:border-violet-400/30 hover:bg-violet-500/10"
           >
             <RefreshCw className={cn("h-3 w-3", (isLoading || isRefreshing) && "animate-spin")} />
             Refresh Insights
@@ -154,7 +154,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
           </div>
           <div>
             <p className="text-sm font-semibold text-white mb-1">{t("analytics_not_enough_data")}</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-white/80 leading-relaxed">
               You have {data.sessionCount ?? sessionCount} session{(data.sessionCount ?? 0) === 1 ? "" : "s"} recorded. 
               Run at least 2 streams to unlock AI-powered personalized recommendations based on your real performance.
             </p>
@@ -167,7 +167,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
         <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/5 border border-red-500/10">
           <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-muted-foreground">{t("analytics_failed_recs")}</p>
+            <p className="text-sm text-white/80">{t("analytics_failed_recs")}</p>
           </div>
         </div>
       )}
@@ -178,7 +178,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
           {data.insights.map((tip, i) => (
             <div key={i} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] flex gap-2.5">
               <span className="text-violet-400 font-black text-sm shrink-0 mt-px">{i + 1}.</span>
-              <span className="text-sm text-muted-foreground leading-relaxed">{tip}</span>
+              <span className="text-sm text-white/85 leading-relaxed">{tip}</span>
             </div>
           ))}
         </div>
@@ -263,7 +263,7 @@ export function Analytics() {
         <div>
           <p className="ls-eyebrow text-primary/70 mb-1">{t("analytics_insight_hub")}</p>
           <h1 className="ls-title text-2xl sm:text-3xl tracking-tight">{t("nav_analytics")}</h1>
-          <p className="text-sm text-white/72 mt-0.5">
+          <p className="text-sm text-white/88 mt-0.5">
             {liveStats && (liveStats as any).isLive ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
@@ -281,7 +281,7 @@ export function Analytics() {
                 "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
                 period === p
                   ? "bg-violet-600 text-white shadow-md shadow-violet-500/25"
-                  : "text-white/70 hover:text-white/90 hover:bg-white/[0.05]",
+                  : "text-white/85 hover:text-white/100 hover:bg-white/[0.06]",
               )}
             >
               {PERIOD_LABELS[p]}
@@ -303,7 +303,7 @@ export function Analytics() {
               <div className={cn("p-2.5 rounded-xl", s.iconBg)}>
                 <span className={s.iconColor}>{s.icon}</span>
               </div>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-2 py-0.5 rounded-full">
                 {s.delta}
               </span>
             </div>
@@ -334,7 +334,7 @@ export function Analytics() {
                 <p className="ls-section">Пікові глядачі</p>
                 <p className="ls-muted mt-0.5">{filteredSessions.length} сесій за цей період</p>
               </div>
-              <div className="flex items-center gap-3 text-xs text-white/68">
+              <div className="flex items-center gap-3 text-xs text-white/85">
                 <span className="flex items-center gap-1.5"><div className="w-5 h-0.5 rounded-full bg-violet-400 opacity-70" />Глядачі</span>
                 <span className="text-white/72 font-mono">Пік: {fPeak}</span>
               </div>
@@ -355,7 +355,7 @@ export function Analytics() {
               </svg>
             </div>
             <div className="px-5 py-2.5 border-t border-white/[0.05] flex items-center justify-end">
-              <button className="text-xs text-violet-400/50 hover:text-violet-300 transition-colors">
+              <button className="text-xs text-violet-400/88 hover:text-violet-200 transition-colors">
                 Детальна аналітика →
               </button>
             </div>
@@ -370,7 +370,7 @@ export function Analytics() {
             <Zap className="h-10 w-10 text-emerald-400/60" />
           </div>
           <p className="text-lg font-bold text-white mb-2">{t("analytics_no_streams")}</p>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          <p className="text-sm text-white/82 max-w-sm mx-auto">
             Go live for the first time to start building your analytics. Your viewer counts, gifts, and engagement stats will appear here after your first stream.
           </p>
         </div>
@@ -384,13 +384,13 @@ export function Analytics() {
         <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{ background: "rgba(255,255,255,0.015)" }}>
           <div className="px-5 py-4 border-b border-white/[0.06] flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.07]">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock className="h-4 w-4 text-white/72" />
             </div>
             <div>
               <p className="ls-section">{t("analytics_sessions")}</p>
-              <p className="text-xs text-muted-foreground">{t("analytics_sessions_desc")}</p>
+              <p className="text-sm text-white/78">{t("analytics_sessions_desc")}</p>
             </div>
-            <span className="ml-auto text-xs font-bold text-white/68 tabular-nums">
+            <span className="ml-auto text-sm font-bold text-white/88 tabular-nums">
               {filteredSessions.length} sessions
             </span>
           </div>
@@ -429,14 +429,14 @@ export function Analytics() {
                           {sess.startedAt ? format(new Date(sess.startedAt), "MMM d, HH:mm") : "Session"}
                         </span>
                         {!sess.endedAt && (
-                          <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">LIVE</span>
+                          <span className="text-xs font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">LIVE</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex items-center gap-3 text-xs text-white/78 flex-wrap">
                         {duration !== null && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatDuration(duration)}</span>}
                         <span className="flex items-center gap-1"><Users className="h-3 w-3" />{sess.peakViewers ?? 0} peak</span>
-                        <span className="flex items-center gap-1 text-amber-400/60"><Gift className="h-3 w-3" />{sess.totalGifts ?? 0}</span>
-                        <span className="flex items-center gap-1 text-blue-400/60"><MessageSquare className="h-3 w-3" />{sess.totalComments ?? 0}</span>
+                        <span className="flex items-center gap-1 text-amber-400/88"><Gift className="h-3 w-3" />{sess.totalGifts ?? 0}</span>
+                        <span className="flex items-center gap-1 text-blue-400/88"><MessageSquare className="h-3 w-3" />{sess.totalComments ?? 0}</span>
                       </div>
                     </div>
 
@@ -451,7 +451,7 @@ export function Analytics() {
                             style={{ height: `${Math.max(4, Math.min(20, (bar.v / bar.max) * 20))}px`, opacity: 0.7 }} />
                         ))}
                       </div>
-                      {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      {isExpanded ? <ChevronDown className="h-4 w-4 text-white/72" /> : <ChevronRight className="h-4 w-4 text-white/72" />}
                     </div>
                   </button>
 
@@ -479,14 +479,14 @@ export function Analytics() {
                                   <div key={s.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
                                     <div className={cn("flex items-center gap-1.5 mb-2 text-xs", s.color)}>
                                       <div className={cn("p-1 rounded-md", s.iconBg)}>{s.icon}</div>
-                                      <span className="text-muted-foreground">{s.label}</span>
+                                      <span className="text-white/80">{s.label}</span>
                                     </div>
                                     <p className="text-lg font-black text-white">{s.value}</p>
                                   </div>
                                 ))}
                               </div>
                               <div className="space-y-2.5">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("analytics_engagement")}</p>
+                                <p className="text-xs font-semibold text-white/80 uppercase tracking-wider">{t("analytics_engagement")}</p>
                                 {[
                                   { label: "Likes",   value: expandedStats.totalLikes,    colorClass: "bg-pink-500",  icon: <Heart className="h-3.5 w-3.5 text-pink-400" />  },
                                   { label: "Follows", value: expandedStats.totalFollowers, colorClass: "bg-green-500", icon: <Users className="h-3.5 w-3.5 text-green-400" /> },
@@ -496,7 +496,7 @@ export function Analytics() {
                                   return (
                                     <div key={item.label} className="flex items-center gap-3">
                                       {item.icon}
-                                      <span className="text-xs text-muted-foreground w-14 shrink-0">{item.label}</span>
+                                      <span className="text-xs text-white/80 w-14 shrink-0">{item.label}</span>
                                       <div className="flex-1"><CssBar value={item.value} max={maxVal} colorClass={item.colorClass} /></div>
                                       <span className="text-xs font-bold text-white w-10 text-right shrink-0">{item.value.toLocaleString()}</span>
                                     </div>

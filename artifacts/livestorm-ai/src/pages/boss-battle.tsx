@@ -215,7 +215,7 @@ export function BossBattle() {
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-black text-white text-center mb-1 tracking-tight">{battle.bossName}</h2>
-              <p className="text-sm text-red-300/50 mb-7 flex items-center gap-2">
+              <p className="text-sm text-red-300/90 mb-7 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
                 {t("boss_defeat_msg")}
               </p>
@@ -227,7 +227,7 @@ export function BossBattle() {
                     <Skull className="w-3.5 h-3.5" /> {t("boss_hp_label")}
                   </span>
                   <span className="font-mono font-black text-white text-base tabular-nums">
-                    <AnimatedCounter target={displayHp} /> <span className="text-white/72 text-sm">/ {maxHp.toLocaleString()}</span>
+                    <AnimatedCounter target={displayHp} /> <span className="text-white/90 text-sm">/ {maxHp.toLocaleString()}</span>
                   </span>
                 </div>
                 {/* HP bar */}
@@ -270,7 +270,7 @@ export function BossBattle() {
                     <item.icon className={cn("w-5 h-5", item.color)} />
                   </div>
                   <p className={cn("font-bold text-sm", item.color)}>{item.label}</p>
-                  <p className="text-muted-foreground/60 text-[11px] mt-0.5">{item.dmg}</p>
+                  <p className="text-white/80 text-xs mt-0.5">{item.dmg}</p>
                 </div>
               ))}
             </div>
@@ -285,19 +285,19 @@ export function BossBattle() {
               </div>
               <div>
                 <p className="font-semibold text-white text-sm leading-none">{t("boss_damage_feed")}</p>
-                <p className="text-[10px] text-white/70 mt-0.5">{t("boss_realtime_attacks")}</p>
+                <p className="text-xs text-white/85 mt-0.5">{t("boss_realtime_attacks")}</p>
               </div>
-              <span className="ml-auto text-xs font-bold text-orange-400/70 bg-orange-500/10 border border-orange-500/15 px-2 py-0.5 rounded-full tabular-nums">
+              <span className="ml-auto text-xs font-bold text-orange-400 bg-orange-500/10 border border-orange-500/15 px-2 py-0.5 rounded-full tabular-nums">
                 {allAttacks.length} hits
               </span>
             </div>
             <div className="flex-1 overflow-y-auto max-h-[500px]">
               {allAttacks.length === 0 ? (
-                <div className="h-48 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                <div className="h-48 flex flex-col items-center justify-center text-white/72 gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/15 flex items-center justify-center">
                     <Sword className="w-6 h-6 text-orange-400/40" />
                   </div>
-                  <p className="text-sm text-white/70">{t("boss_waiting_attack")}</p>
+                  <p className="text-sm text-white/88">{t("boss_waiting_attack")}</p>
                 </div>
               ) : (
                 <div className="p-3 space-y-1.5">
@@ -346,7 +346,7 @@ export function BossBattle() {
                 <Skull className="w-4 h-4 text-red-400" />
               </div>
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">{t("boss_arena")}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-red-400/85">{t("boss_arena")}</p>
                 <p className="ls-section">{t("boss_spawn")}</p>
               </div>
             </div>
@@ -354,7 +354,7 @@ export function BossBattle() {
             <div className="relative p-5 space-y-5">
               {/* Preset grid */}
               <div>
-                <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.14em] mb-3">{t("boss_choose_preset")}</p>
+                <p className="text-xs font-bold text-white/88 uppercase tracking-[0.14em] mb-3">{t("boss_choose_preset")}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {BOSS_PRESETS.map((p) => (
                     <button
@@ -369,7 +369,7 @@ export function BossBattle() {
                     >
                       <span className="text-3xl block mb-2" style={{ filter: "drop-shadow(0 0 8px rgba(239,68,68,.4))" }}>{p.emoji}</span>
                       <p className="text-xs font-bold text-white leading-tight">{p.name}</p>
-                      <p className="text-[10px] text-red-300/40 mt-0.5 font-mono">{p.hp.toLocaleString()} HP</p>
+                      <p className="text-xs text-red-300/80 mt-0.5 font-mono">{p.hp.toLocaleString()} HP</p>
                     </button>
                   ))}
                 </div>
@@ -378,18 +378,18 @@ export function BossBattle() {
               {/* Custom overrides */}
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-white/65">{t("boss_custom_name")} <span className="text-white/42">{t("boss_optional")}</span></Label>
+                  <Label className="text-sm text-white/85">{t("boss_custom_name")} <span className="text-white/42">{t("boss_optional")}</span></Label>
                   <Input placeholder={preset.name} value={customName} onChange={(e) => setCustomName(e.target.value)}
                     className="bg-white/[0.04] border-white/10 focus:border-red-500/40 focus:ring-0" />
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-white/65">{t("boss_emoji")}</Label>
+                    <Label className="text-sm text-white/85">{t("boss_emoji")}</Label>
                     <Input placeholder={preset.emoji} value={customEmoji} onChange={(e) => setCustomEmoji(e.target.value)}
                       className="bg-white/[0.04] border-white/10 focus:border-red-500/40 text-xl" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-white/65">{t("boss_max_hp")}</Label>
+                    <Label className="text-sm text-white/85">{t("boss_max_hp")}</Label>
                     <Input type="number" placeholder={String(preset.hp)} value={customHp} onChange={(e) => setCustomHp(e.target.value)}
                       className="bg-white/[0.04] border-white/10 focus:border-red-500/40 font-mono" />
                   </div>
@@ -408,7 +408,7 @@ export function BossBattle() {
               {!sessionId && (
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/8 border border-amber-500/20">
                   <span className="text-amber-400 text-base">⚠️</span>
-                  <p className="text-xs text-amber-400/80">{t("boss_start_session_note")}</p>
+                  <p className="text-xs text-amber-400">{t("boss_start_session_note")}</p>
                 </div>
               )}
             </div>
@@ -421,7 +421,7 @@ export function BossBattle() {
                 <Shield className="w-4 h-4 text-violet-400" />
               </div>
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-white/68">{t("boss_guide")}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-white/85">{t("boss_guide")}</p>
                 <p className="ls-section">{t("boss_how_works")}</p>
               </div>
             </div>
@@ -438,7 +438,7 @@ export function BossBattle() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[9px] font-black text-white/65 font-mono">{item.num}</span>
+                      <span className="text-xs font-black text-white/85 font-mono">{item.num}</span>
                       <p className="ls-section">{item.title}</p>
                     </div>
                     <p className="text-xs text-white/75 leading-relaxed">{item.desc}</p>

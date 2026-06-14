@@ -199,16 +199,16 @@ export function Pricing() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-1">SUBSCRIPTION</p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-400/90 mb-1">SUBSCRIPTION</p>
           <h1 className="text-3xl font-black text-white tracking-tight">Choose Your Plan</h1>
-          <p className="text-white/70 text-sm mt-1">Unlock powerful features to grow your TikTok LIVE stream.</p>
+          <p className="text-white/88 text-sm mt-1">Unlock powerful features to grow your TikTok LIVE stream.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.07] rounded-xl px-3 py-2">
             <span className={yearly ? "text-white/62 text-sm" : "text-white text-sm font-medium"}>Monthly</span>
             <Switch id="yearly-toggle" checked={yearly} onCheckedChange={setYearly} />
-            <span className={yearly ? "text-white text-sm font-medium" : "text-white/62 text-sm"}>Yearly</span>
-            {yearly && <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px]">−20%</Badge>}
+            <span className={yearly ? "text-white text-sm font-medium" : "text-white/78 text-sm"}>Yearly</span>
+            {yearly && <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-xs">−20%</Badge>}
           </div>
           {currentPlan !== "free" && (
             <Button variant="outline" size="sm" className="border-white/10 hover:border-primary/30 text-xs" onClick={handleManageBilling} disabled={loading === "portal"}>
@@ -243,7 +243,7 @@ export function Pricing() {
             >
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className={`text-white px-3 py-1 text-[10px] font-bold rounded-full ${
+                  <span className={`text-white px-3 py-1 text-xs font-bold rounded-full ${
                     plan.badge === "Most Popular" ? "bg-violet-600" :
                     plan.badge === "Best Value"   ? "bg-amber-600"  : "bg-pink-600"
                   }`}>
@@ -259,14 +259,14 @@ export function Pricing() {
                     <Icon className={`h-5 w-5 ${plan.iconColor}`} />
                   </div>
                   {isCurrent && (
-                    <span className="text-[10px] font-bold text-primary bg-primary/15 border border-primary/30 rounded-full px-2 py-0.5">
+                    <span className="text-xs font-bold text-primary bg-primary/15 border border-primary/30 rounded-full px-2 py-0.5">
                       Current
                     </span>
                   )}
                 </div>
 
                 <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                <p className="text-xs text-white/65 mt-0.5 mb-4">{plan.description}</p>
+                <p className="text-sm text-white/82 mt-0.5 mb-4">{plan.description}</p>
 
                 {/* Price */}
                 <div className="mb-5">
@@ -275,12 +275,12 @@ export function Pricing() {
                   ) : (
                     <div>
                       <span className="text-3xl font-black text-white">€{displayPrice}</span>
-                      <span className="text-sm text-white/65">/mo</span>
-                      {yearly && <p className="text-[10px] text-white/72 mt-0.5">Billed annually</p>}
+                      <span className="text-sm text-white/88">/mo</span>
+                      {yearly && <p className="text-xs text-white/88 mt-0.5">Billed annually</p>}
                     </div>
                   )}
                   {plan.trialDays > 0 && !isCurrent && (
-                    <p className="text-[11px] text-green-400 mt-1 font-medium">{plan.trialDays}-day free trial</p>
+                    <p className="text-xs text-green-400 mt-1 font-semibold">{plan.trialDays}-day free trial</p>
                   )}
                 </div>
 
@@ -289,7 +289,7 @@ export function Pricing() {
                   {plan.features.map((feat) => (
                     <div key={feat} className="flex items-start gap-2 text-sm">
                       <Check className="h-3.5 w-3.5 text-green-400 mt-0.5 shrink-0" />
-                      <span className="text-white/70">{feat}</span>
+                      <span className="text-white/88">{feat}</span>
                     </div>
                   ))}
                   {plan.unavailable.map((feat) => (
@@ -328,8 +328,8 @@ export function Pricing() {
 
       {/* Footer note */}
       <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
-        <p className="text-sm text-white/75">Payments securely processed by Stripe · Cancel anytime</p>
-        <p className="text-xs text-white/68 mt-1">All prices in EUR · VAT may apply · Yearly plans save ~20%</p>
+        <p className="text-sm text-white/90">Payments securely processed by Stripe · Cancel anytime</p>
+        <p className="text-xs text-white/82 mt-1">All prices in EUR · VAT may apply · Yearly plans save ~20%</p>
       </div>
     </div>
   );
