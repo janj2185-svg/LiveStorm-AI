@@ -696,7 +696,7 @@ export function Dashboard() {
           <div className="relative z-10 flex flex-col items-start justify-center text-left px-7 py-7" style={{ minHeight: 210 }}>
 
             {/* ─── LOGO + BRAND — centered ─── */}
-            <div className="w-full flex flex-col items-center mb-4 pt-5">
+            <div className="w-full flex flex-col items-center mb-4 pt-10">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
