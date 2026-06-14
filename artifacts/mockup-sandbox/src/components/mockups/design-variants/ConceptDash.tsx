@@ -75,30 +75,6 @@ export function ConceptDash() {
       {/* ── MAIN ── */}
       <main className="cd-main">
 
-        {/* TOP BAR */}
-        <div className="cd-topbar">
-          <div className="cd-topbar-stats">
-            {[
-              { label: "Глядачі", value: "1,243" },
-              { label: "Чат / хв", value: "342" },
-              { label: "Подарунки / хв", value: "87" },
-            ].map((s) => (
-              <div key={s.label} className="cd-top-stat">
-                <div className="cd-top-stat-val">{s.value}</div>
-                <div className="cd-top-stat-lbl">{s.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="cd-topbar-right">
-            <div className="cd-server-status">
-              <span className="cd-server-dot" />
-              Server: Online
-            </div>
-            <div className="cd-topbar-icons">
-              <span>🔔</span><span>⚙️</span><span>👤</span>
-            </div>
-          </div>
-        </div>
 
         {/* HERO — transparent so background art shows */}
         <div className="cd-hero">
