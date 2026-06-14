@@ -692,190 +692,122 @@ export function Dashboard() {
           <div className="absolute bottom-3 left-3 w-4 h-4 border-b-[1.5px] border-l-[1.5px] rounded-bl pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
           <div className="absolute bottom-3 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] rounded-br pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
 
-          {/* ── CONTENT ── */}
-          <div className="relative z-10 flex flex-col items-center justify-center text-center px-7 py-0" style={{ minHeight: 72 }}>
+          {/* ── animated bottom edge glow ── */}
+          <div className="absolute bottom-0 left-0 right-0 h-[1px] pointer-events-none" style={{
+            background: isActive
+              ? "linear-gradient(90deg, transparent 0%, rgba(34,197,94,0.6) 30%, rgba(34,197,94,1) 50%, rgba(34,197,94,0.6) 70%, transparent 100%)"
+              : "linear-gradient(90deg, transparent 0%, rgba(109,40,217,0.6) 30%, rgba(139,92,246,1) 50%, rgba(6,182,212,0.7) 70%, transparent 100%)",
+            animation: "shimmer-slide 3s ease-in-out infinite",
+          }} />
 
-            {/* ─── LOGO ORB — absolute center ─── */}
+          {/* ── BANNER — 3-column grid ── */}
+          <div className="relative z-10 grid items-center px-5" style={{ minHeight: 72, gridTemplateColumns: "1fr auto 1fr" }}>
+
+            {/* ─── LOGO ORB ─── */}
+            {/* ── LEFT: status + welcome ── */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute pointer-events-none"
-              style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 5 }}
-            >
-              {/* Outer pulsing rings */}
-              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 160, height: 160, borderRadius: "50%", border: "1px solid rgba(139,92,246,0.14)", animation: "holo-pulse 3s ease-in-out infinite" }} />
-              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 120, height: 120, borderRadius: "50%", border: "1px solid rgba(139,92,246,0.20)", animation: "holo-pulse 3s ease-in-out 0.6s infinite" }} />
-              <div className="absolute" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 88, height: 88, borderRadius: "50%", border: "1px solid rgba(6,182,212,0.22)", animation: "holo-pulse 3s ease-in-out 1.2s infinite" }} />
-              {/* Orbit ring 1 */}
-              <div className="absolute -inset-6 rounded-full border border-violet-400/30" style={{ animation: "orbit-cw 7s linear infinite" }}>
-                <div className="absolute top-[4px] right-[4px] w-[5px] h-[5px] rounded-full bg-violet-400" style={{ boxShadow: "0 0 8px rgba(139,92,246,1), 0 0 16px rgba(139,92,246,0.5)" }} />
-              </div>
-              {/* Orbit ring 2 */}
-              <div className="absolute -inset-9 rounded-full border border-cyan-400/18" style={{ animation: "orbit-ccw 11s linear infinite" }}>
-                <div className="absolute bottom-[6px] left-[6px] w-[4px] h-[4px] rounded-full bg-cyan-400" style={{ boxShadow: "0 0 6px rgba(6,182,212,1), 0 0 12px rgba(6,182,212,0.5)" }} />
-              </div>
-              {/* Orbit ring 3 */}
-              <div className="absolute -inset-11 rounded-full border border-fuchsia-400/12" style={{ animation: "orbit-cw 18s linear infinite" }}>
-                <div className="absolute top-[8px] left-[8px] w-[3px] h-[3px] rounded-full bg-fuchsia-400" style={{ boxShadow: "0 0 5px rgba(217,70,239,1)" }} />
-              </div>
-              {/* Core orb */}
-              <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center relative pointer-events-auto"
-                style={{ background: "linear-gradient(135deg, rgba(109,40,217,0.90) 0%, rgba(139,92,246,0.70) 50%, rgba(6,182,212,0.55) 100%)", border: "1px solid rgba(196,165,255,0.40)", boxShadow: "0 0 30px rgba(124,58,237,0.65), 0 0 70px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.25)", animation: "holo-glow 4s ease-in-out infinite" }}>
-                <Zap className="h-8 w-8 text-white" style={{ filter: "drop-shadow(0 0 12px rgba(255,255,255,0.9))" }} />
-              </div>
-              {/* Bloom */}
-              <div className="absolute -inset-3 rounded-2xl" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.45) 0%, transparent 70%)", filter: "blur(10px)", animation: "holo-pulse 4s ease-in-out infinite" }} />
-            </motion.div>
-
-            {/* ─── BRAND NAME — left ─── */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-2 -mt-2"
-            >
-              <h1
-                className="font-black tracking-tight leading-none"
-                style={{
-                  fontSize: "clamp(36px, 5vw, 56px)",
-                  background: "linear-gradient(100deg, #ffffff 0%, #f0e6ff 20%, #c4b5fd 42%, #a78bfa 58%, #67e8f9 80%, #ffffff 100%)",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                  backgroundClip: "text", backgroundSize: "200% 100%",
-                  animation: "gradient-x 5s ease-in-out infinite",
-                  textShadow: "none",
-                  filter: "drop-shadow(0 0 20px rgba(139,92,246,0.35))",
-                }}
-              >
-                LiveStorm AI
-              </h1>
-            </motion.div>
-
-            {/* ─── WELCOME + USERNAME ─── */}
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.2 }}
-              className="text-base font-semibold mb-4"
-              style={{ color: "rgba(255,255,255,0.62)", letterSpacing: "0.02em" }}
-            >
-              Welcome back,{" "}
-              <span className="font-black" style={{ color: "rgba(255,255,255,0.88)" }}>
-                {user?.firstName || "Creator"}
-              </span>
-            </motion.p>
-
-            {/* ─── STATUS CHIPS ─── */}
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.26 }}
-              className="flex items-center gap-2 flex-wrap mb-4"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col gap-1"
             >
               {isActive ? (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
                   style={{ background: "rgba(34,197,94,0.13)", border: "1px solid rgba(34,197,94,0.30)" }}>
                   <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
-                  <span className={cn("text-[11px] font-black uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
+                  <span className={cn("text-[10px] font-black uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
                     {connected ? "Live" : "Reconnecting"} · {formatDuration(duration)}
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Offline</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Offline</span>
                 </div>
               )}
-              {isOwner && (
-                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-black text-amber-300 uppercase tracking-wider"
-                  style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}>
-                  <KeyRound className="h-2.5 w-2.5" /> Owner
-                </div>
-              )}
+              <p className="text-[13px] font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
+                Welcome,{" "}
+                <span className="font-black" style={{ color: "rgba(255,255,255,0.85)" }}>
+                  {user?.firstName || "Creator"}
+                </span>
+                {isOwner && <span className="ml-1.5 text-[10px] text-amber-400 font-black">✦ Owner</span>}
+              </p>
             </motion.div>
 
-            {/* ─── LIVE STATS (when active) ─── */}
-            {isActive && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.22 }}
-                className="flex items-center gap-1.5 mb-4 flex-wrap"
-              >
-                {[
-                  { icon: Eye,           value: stats.viewerCount,   c: "#86efac", bg: "rgba(34,197,94,0.09)",  bd: "rgba(34,197,94,0.22)",  label: "Viewers"  },
-                  { icon: Gift,          value: stats.totalGifts,    c: "#fcd34d", bg: "rgba(245,158,11,0.09)", bd: "rgba(245,158,11,0.22)", label: "Gifts"    },
-                  { icon: Heart,         value: stats.totalLikes,    c: "#f9a8d4", bg: "rgba(236,72,153,0.09)", bd: "rgba(236,72,153,0.22)", label: "Likes"    },
-                  { icon: UserPlus,      value: stats.totalFollows,  c: "#c4b5fd", bg: "rgba(139,92,246,0.09)", bd: "rgba(139,92,246,0.22)", label: "Follows"  },
-                  { icon: MessageSquare, value: stats.totalComments, c: "#93c5fd", bg: "rgba(59,130,246,0.09)", bd: "rgba(59,130,246,0.22)", label: "Comments" },
-                ].map((s, i) => {
-                  const Icon = s.icon;
-                  return (
-                    <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl backdrop-blur-sm"
-                      style={{ background: s.bg, border: `1px solid ${s.bd}` }}>
-                      <Icon className="h-3 w-3 flex-shrink-0" style={{ color: s.c }} />
-                      <span className="text-xs font-black tabular-nums" style={{ color: s.c }}>
-                        <AnimatedCounter target={s.value} />
-                      </span>
-                      <span className="text-[9px] uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</span>
-                    </div>
-                  );
-                })}
-              </motion.div>
-            )}
-
-            {/* ─── CTA BUTTONS ─── */}
+            {/* ── CENTER: logo + brand ── */}
             <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.32 }}
-              className="flex items-center gap-2.5 flex-wrap"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-center gap-3"
+            >
+              {/* Orb */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute -inset-2 rounded-xl border border-violet-400/20 pointer-events-none" style={{ animation: "orbit-cw 7s linear infinite" }}>
+                  <div className="absolute top-[2px] right-[2px] w-[4px] h-[4px] rounded-full bg-violet-400" style={{ boxShadow: "0 0 6px rgba(139,92,246,1)" }} />
+                </div>
+                <div className="absolute -inset-4 rounded-xl border border-cyan-400/12 pointer-events-none" style={{ animation: "orbit-ccw 11s linear infinite" }}>
+                  <div className="absolute bottom-[4px] left-[4px] w-[3px] h-[3px] rounded-full bg-cyan-400" style={{ boxShadow: "0 0 4px rgba(6,182,212,1)" }} />
+                </div>
+                <div className="w-[44px] h-[44px] rounded-xl flex items-center justify-center relative"
+                  style={{ background: "linear-gradient(135deg, rgba(109,40,217,0.95) 0%, rgba(139,92,246,0.80) 50%, rgba(6,182,212,0.60) 100%)", border: "1px solid rgba(196,165,255,0.45)", boxShadow: "0 0 24px rgba(124,58,237,0.70), 0 0 60px rgba(124,58,237,0.20), inset 0 1px 0 rgba(255,255,255,0.30)", animation: "holo-glow 4s ease-in-out infinite" }}>
+                  <Zap className="h-5 w-5 text-white" style={{ filter: "drop-shadow(0 0 10px rgba(255,255,255,0.95))" }} />
+                </div>
+                <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ background: "radial-gradient(circle, rgba(124,58,237,0.5) 0%, transparent 70%)", filter: "blur(10px)", animation: "holo-pulse 4s ease-in-out infinite" }} />
+              </div>
+              {/* Brand */}
+              <h1 className="font-black tracking-tight leading-none select-none"
+                style={{
+                  fontSize: "clamp(20px, 3vw, 32px)",
+                  background: "linear-gradient(100deg, #ffffff 0%, #f0e6ff 18%, #c4b5fd 40%, #a78bfa 58%, #67e8f9 78%, #ffffff 100%)",
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  backgroundClip: "text", backgroundSize: "200% 100%",
+                  animation: "gradient-x 5s ease-in-out infinite",
+                  filter: "drop-shadow(0 0 18px rgba(139,92,246,0.45))",
+                  letterSpacing: "-0.01em",
+                }}>
+                LiveStorm AI
+              </h1>
+            </motion.div>
+
+            {/* ── RIGHT: CTA ── */}
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-center justify-end gap-2"
             >
               {isActive ? (
                 <Button
                   variant="destructive"
                   onClick={handleEndSession}
                   disabled={endSession.isPending}
-                  className="font-black gap-2 px-6 h-10 text-sm shadow-lg shadow-red-500/25 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]"
+                  className="font-black gap-2 px-5 h-9 text-sm shadow-lg shadow-red-500/25 rounded-xl transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
                 >
-                  <Square className="h-3.5 w-3.5" fill="currentColor" />
-                  {endSession.isPending ? "Завершуємо…" : "Завершити стрім"}
+                  <Square className="h-3 w-3" fill="currentColor" />
+                  {endSession.isPending ? "…" : "Стоп"}
                 </Button>
               ) : (
                 <div className="relative">
-                  <div className="absolute -inset-1 rounded-xl pointer-events-none" style={{
-                    background: "linear-gradient(135deg, rgba(109,40,217,0.7), rgba(91,33,182,0.6))",
-                    filter: "blur(10px)", animation: "holo-pulse 2.5s ease-in-out infinite",
-                  }} />
+                  <div className="absolute -inset-1 rounded-xl pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(109,40,217,0.8), rgba(6,182,212,0.4))", filter: "blur(10px)", animation: "holo-pulse 2.5s ease-in-out infinite" }} />
                   <Button
                     onClick={handleStartSession}
                     disabled={startSession.isPending}
-                    className="relative font-black gap-2 px-8 h-10 text-sm rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.97]"
-                    style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%)" }}
+                    className="relative font-black gap-2 px-6 h-9 text-sm rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                    style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #0891b2 100%)" }}
                   >
-                    <div className="absolute inset-0 pointer-events-none" style={{
-                      background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)",
-                      animation: "shimmer-slide 2.8s ease-in-out infinite",
-                    }} />
-                    <Zap className="h-4 w-4 relative z-10" style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.8))" }} />
-                    <span className="relative z-10">{startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}</span>
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)", animation: "shimmer-slide 2.8s ease-in-out infinite" }} />
+                    <Zap className="h-4 w-4 relative z-10" style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.9))" }} />
+                    <span className="relative z-10">{startSession.isPending ? "…" : "⚡ Стрім"}</span>
                   </Button>
                 </div>
               )}
-              <Button
-                variant="outline"
-                onClick={handleForceStop}
-                disabled={forceStop.isPending}
-                className="gap-2 h-10 px-5 text-sm font-semibold border-white/12 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 text-white/50 backdrop-blur-sm rounded-xl transition-all duration-200"
-                title="Force-clears any stuck session."
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                {forceStop.isPending ? "…" : "Тест"}
-              </Button>
-              {isActive && (connected
-                ? <span className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-green-300" style={{ background: "rgba(34,197,94,0.09)", border: "1px solid rgba(34,197,94,0.20)" }}><Wifi className="h-3 w-3" /> Підключено</span>
-                : <span className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-300" style={{ background: "rgba(239,68,68,0.09)", border: "1px solid rgba(239,68,68,0.20)" }}><WifiOff className="h-3 w-3" /> Відключено</span>
+              {isActive && (
+                <span className={cn("hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black", connected ? "text-green-300" : "text-red-300")}
+                  style={{ background: connected ? "rgba(34,197,94,0.09)" : "rgba(239,68,68,0.09)", border: `1px solid ${connected ? "rgba(34,197,94,0.22)" : "rgba(239,68,68,0.22)"}` }}>
+                  {connected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                </span>
               )}
             </motion.div>
 
