@@ -713,7 +713,7 @@ export function AiContent() {
                           >
                             {historyLoadingMore
                               ? <><Loader2 className="h-3 w-3 animate-spin" />Loading…</>
-                              : "Load more"}
+                              : t("load_more")}
                           </button>
                         </div>
                       )}

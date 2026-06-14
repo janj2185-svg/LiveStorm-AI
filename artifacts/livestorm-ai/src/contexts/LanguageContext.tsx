@@ -60,8 +60,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const FALLBACK: LanguageContextType = {
+  language: "en",
+  setLanguage: () => {},
+  t: (key) => key,
+  dir: "ltr",
+};
+
 export function useLanguage() {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
-  return ctx;
+  return useContext(LanguageContext) ?? FALLBACK;
 }

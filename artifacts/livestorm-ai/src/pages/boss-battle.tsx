@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   useGetActiveBossBattle,
   useSpawnBossBattle,
@@ -51,6 +52,7 @@ const attackTypeColor: Record<string, { text: string; bg: string }> = {
 };
 
 export function BossBattle() {
+  const { t } = useLanguage();
   const { getToken } = useAuth();
   const { data: streamer } = useGetMyStreamer();
   const { activeSessionId: sessionId } = useLiveSessionContext();
@@ -156,7 +158,7 @@ export function BossBattle() {
           battle?.status === "active" ? (
             <div className="flex items-center gap-2">
               <PulsingDot color="bg-red-400" />
-              <span className="text-xs font-bold uppercase tracking-widest text-red-400">Battle Active</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-red-400">{t("boss_battle_active")}</span>
             </div>
           ) : null
         }
@@ -166,7 +168,7 @@ export function BossBattle() {
           </div>
         }
         title={<span>Boss <span className="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Battle</span></span>}
-        subtitle="Spawn a boss for your viewers to defeat together — live."
+        subtitle={t("boss_subtitle")}
         right={
           battle?.status === "active" ? (
             <Button
@@ -176,7 +178,7 @@ export function BossBattle() {
               className="font-bold shadow-lg shadow-red-500/20"
             >
               <Skull className="w-4 h-4 mr-2" />
-              {endMutation.isPending ? "Ending…" : "Expire Boss"}
+              {endMutation.isPending ? t("boss_ending") : t("boss_expire")}
             </Button>
           ) : undefined
         }
@@ -215,14 +217,14 @@ export function BossBattle() {
               <h2 className="text-2xl sm:text-3xl font-black text-white text-center mb-1 tracking-tight">{battle.bossName}</h2>
               <p className="text-sm text-red-300/50 mb-7 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
-                Defeat it before HP reaches zero!
+                {t("boss_defeat_msg")}
               </p>
 
               {/* HP Bar */}
               <div className="w-full max-w-lg">
                 <div className="flex justify-between items-center text-sm mb-2.5">
                   <span className="flex items-center gap-1.5 text-red-400 font-black text-xs uppercase tracking-widest">
-                    <Skull className="w-3.5 h-3.5" /> Boss HP
+                    <Skull className="w-3.5 h-3.5" /> {t("boss_hp_label")}
                   </span>
                   <span className="font-mono font-black text-white text-base tabular-nums">
                     <AnimatedCounter target={displayHp} /> <span className="text-white/30 text-sm">/ {maxHp.toLocaleString()}</span>
@@ -282,8 +284,8 @@ export function BossBattle() {
                 <Flame className="w-4 h-4 text-orange-400" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm leading-none">Damage Feed</p>
-                <p className="text-[10px] text-white/30 mt-0.5">Real-time attacks</p>
+                <p className="font-semibold text-white text-sm leading-none">{t("boss_damage_feed")}</p>
+                <p className="text-[10px] text-white/30 mt-0.5">{t("boss_realtime_attacks")}</p>
               </div>
               <span className="ml-auto text-xs font-bold text-orange-400/70 bg-orange-500/10 border border-orange-500/15 px-2 py-0.5 rounded-full tabular-nums">
                 {allAttacks.length} hits
@@ -295,7 +297,7 @@ export function BossBattle() {
                   <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/15 flex items-center justify-center">
                     <Sword className="w-6 h-6 text-orange-400/40" />
                   </div>
-                  <p className="text-sm text-white/25">Waiting for viewers to attack…</p>
+                  <p className="text-sm text-white/25">{t("boss_waiting_attack")}</p>
                 </div>
               ) : (
                 <div className="p-3 space-y-1.5">
@@ -344,15 +346,15 @@ export function BossBattle() {
                 <Skull className="w-4 h-4 text-red-400" />
               </div>
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">Arena</p>
-                <p className="font-bold text-white text-sm">Spawn a Boss</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-red-400/50">{t("boss_arena")}</p>
+                <p className="font-bold text-white text-sm">{t("boss_spawn")}</p>
               </div>
             </div>
 
             <div className="relative p-5 space-y-5">
               {/* Preset grid */}
               <div>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.14em] mb-3">Choose Preset</p>
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.14em] mb-3">{t("boss_choose_preset")}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {BOSS_PRESETS.map((p) => (
                     <button
@@ -376,18 +378,18 @@ export function BossBattle() {
               {/* Custom overrides */}
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-white/40">Custom Name <span className="text-white/20">(optional)</span></Label>
+                  <Label className="text-xs text-white/40">{t("boss_custom_name")} <span className="text-white/20">{t("boss_optional")}</span></Label>
                   <Input placeholder={preset.name} value={customName} onChange={(e) => setCustomName(e.target.value)}
                     className="bg-white/[0.04] border-white/10 focus:border-red-500/40 focus:ring-0" />
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-white/40">Emoji</Label>
+                    <Label className="text-xs text-white/40">{t("boss_emoji")}</Label>
                     <Input placeholder={preset.emoji} value={customEmoji} onChange={(e) => setCustomEmoji(e.target.value)}
                       className="bg-white/[0.04] border-white/10 focus:border-red-500/40 text-xl" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-white/40">Max HP</Label>
+                    <Label className="text-xs text-white/40">{t("boss_max_hp")}</Label>
                     <Input type="number" placeholder={String(preset.hp)} value={customHp} onChange={(e) => setCustomHp(e.target.value)}
                       className="bg-white/[0.04] border-white/10 focus:border-red-500/40 font-mono" />
                   </div>
@@ -400,13 +402,13 @@ export function BossBattle() {
                 disabled={spawnMutation.isPending || !streamer}
               >
                 <span className="mr-2 text-lg">{customEmoji || preset.emoji}</span>
-                {spawnMutation.isPending ? "Spawning…" : `Spawn ${customName || preset.name}`}
+                {spawnMutation.isPending ? t("boss_spawning") : `${t("boss_spawn")} ${customName || preset.name}`}
               </Button>
 
               {!sessionId && (
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/8 border border-amber-500/20">
                   <span className="text-amber-400 text-base">⚠️</span>
-                  <p className="text-xs text-amber-400/80">Start a live session to link this battle to your stream.</p>
+                  <p className="text-xs text-amber-400/80">{t("boss_start_session_note")}</p>
                 </div>
               )}
             </div>
@@ -419,8 +421,8 @@ export function BossBattle() {
                 <Shield className="w-4 h-4 text-violet-400" />
               </div>
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-white/25">Guide</p>
-                <p className="font-bold text-white text-sm">How Boss Battle Works</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/25">{t("boss_guide")}</p>
+                <p className="font-bold text-white text-sm">{t("boss_how_works")}</p>
               </div>
             </div>
             <div className="p-5 space-y-5">

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@clerk/react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useLiveSessionContext, type LiveEvent } from "@/contexts/LiveSessionContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -69,12 +70,12 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
           {!isActive ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-6">
               <MessageCircle className="h-8 w-8 text-white/10 mb-3" />
-              <p className="text-xs text-muted-foreground/60">Start a session to see comments</p>
+              <p className="text-xs text-muted-foreground/60">{translations["ls_start_session_comments"] ?? "Start a session to see comments"}</p>
             </div>
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-6">
               <MessageCircle className="h-8 w-8 text-white/10 mb-3 animate-pulse" />
-              <p className="text-xs text-muted-foreground/60">Waiting for comments…</p>
+              <p className="text-xs text-muted-foreground/60">{translations["ls_waiting_comments"] ?? "Waiting for comments…"}</p>
             </div>
           ) : (
             <div className="p-3 space-y-1.5">
@@ -143,12 +144,13 @@ function CommentFeed({ events, isActive, translations }: { events: LiveEvent[]; 
 // ── Stats bar (compact) ───────────────────────────────────────────────────────
 
 function StatsBar({ stats, isActive }: { stats: { viewerCount: number; totalLikes: number; totalFollows: number; totalComments: number; totalGifts: number }; isActive: boolean }) {
+  const { t } = useLanguage();
   const tiles = [
-    { label: "Viewers",  value: stats.viewerCount,   icon: Eye,         color: "text-violet-400" },
-    { label: "Likes",    value: stats.totalLikes,     icon: Heart,       color: "text-pink-400"   },
-    { label: "Follows",  value: stats.totalFollows,   icon: UserPlus,    color: "text-green-400"  },
-    { label: "Comments", value: stats.totalComments,  icon: MessageCircle, color: "text-blue-400" },
-    { label: "Coins",    value: stats.totalGifts,     icon: Gem,         color: "text-amber-400"  },
+    { label: t("ls_stat_viewers"),  value: stats.viewerCount,   icon: Eye,          color: "text-violet-400" },
+    { label: t("ls_stat_likes"),    value: stats.totalLikes,    icon: Heart,        color: "text-pink-400"   },
+    { label: t("ls_stat_follows"),  value: stats.totalFollows,  icon: UserPlus,     color: "text-green-400"  },
+    { label: t("ls_stat_comments"), value: stats.totalComments, icon: MessageCircle, color: "text-blue-400"  },
+    { label: t("ls_stat_coins"),    value: stats.totalGifts,    icon: Gem,          color: "text-amber-400"  },
   ];
 
   return (
@@ -170,15 +172,6 @@ function StatsBar({ stats, isActive }: { stats: { viewerCount: number; totalLike
 // ── Event log ─────────────────────────────────────────────────────────────────
 
 type FilterType = "all" | "comment" | "gift" | "follow" | "like" | "share" | "ai_announcement";
-
-const FILTER_BUTTONS: { label: string; value: FilterType; color: string }[] = [
-  { label: "All",      value: "all",            color: "text-white"    },
-  { label: "Comments", value: "comment",         color: "text-blue-400" },
-  { label: "Gifts",    value: "gift",            color: "text-amber-400"},
-  { label: "Follows",  value: "follow",          color: "text-green-400"},
-  { label: "Likes",    value: "like",            color: "text-pink-400" },
-  { label: "AI",       value: "ai_announcement", color: "text-purple-400"},
-];
 
 const EVENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   comment:              MessageCircle,
@@ -223,14 +216,24 @@ function eventSummary(event: LiveEvent): string {
 }
 
 function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean }) {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<FilterType>("all");
   const filtered = filter === "all" ? events : events.filter((e) => e.type === filter);
+
+  const filterButtons: { label: string; value: FilterType; color: string }[] = [
+    { label: t("ls_filter_all"),      value: "all",            color: "text-white"     },
+    { label: t("ls_filter_comments"), value: "comment",        color: "text-blue-400"  },
+    { label: t("ls_filter_gifts"),    value: "gift",           color: "text-amber-400" },
+    { label: t("ls_filter_follows"),  value: "follow",         color: "text-green-400" },
+    { label: t("ls_filter_likes"),    value: "like",           color: "text-pink-400"  },
+    { label: "AI",                    value: "ai_announcement", color: "text-purple-400"},
+  ];
 
   return (
     <div>
       <div className="px-4 py-2.5 border-b border-white/5 flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">
-          {FILTER_BUTTONS.map(({ label, value, color }) => (
+          {filterButtons.map(({ label, value, color }) => (
             <button
               key={value}
               onClick={() => setFilter(value)}
@@ -251,7 +254,7 @@ function EventLog({ events, isActive }: { events: LiveEvent[]; isActive: boolean
         {!isActive ? (
           <div className="flex flex-col items-center justify-center h-[180px] text-center px-4">
             <Activity className="h-7 w-7 text-white/10 mb-2" />
-            <p className="text-xs text-muted-foreground/60">Start a session to see events</p>
+            <p className="text-xs text-muted-foreground/60">{t("ls_start_session_events")}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[180px] text-center px-4">
@@ -345,6 +348,7 @@ function ConnectionBadge({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function LiveStudio() {
+  const { t } = useLanguage();
   const {
     events, translations, stats, connected, tiktokMode, tiktokError, tiktokUsername,
     isActive, sessionMode,
@@ -423,12 +427,12 @@ export function LiveStudio() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
-                <span className="text-[11px] font-black text-emerald-300 tracking-widest">LIVE</span>
+                <span className="text-[11px] font-black text-emerald-300 tracking-widest">{t("ls_live").toUpperCase()}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08]">
                 <Radio className="h-3 w-3 text-muted-foreground/50" />
-                <span className="text-[11px] font-semibold text-muted-foreground/60">OFFLINE</span>
+                <span className="text-[11px] font-semibold text-muted-foreground/60">{t("dash_status_offline").toUpperCase()}</span>
               </div>
             )}
           </div>
@@ -457,7 +461,7 @@ export function LiveStudio() {
           <Link href="/dashboard">
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer">
               <Radio className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[11px] font-semibold text-muted-foreground">Go Live →</span>
+              <span className="text-[11px] font-semibold text-muted-foreground">{t("ls_go_live_btn")}</span>
             </div>
           </Link>
         )}
@@ -475,8 +479,8 @@ export function LiveStudio() {
             <Volume2 className="h-5 w-5 text-amber-400" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold text-amber-300">Click here to enable Storm's voice</p>
-            <p className="text-[11px] text-amber-400/70 mt-0.5">Browsers block audio until you interact — tap once to unlock. Required each session.</p>
+            <p className="text-sm font-bold text-amber-300">{t("ls_unlock_voice_title")}</p>
+            <p className="text-[11px] text-amber-400/70 mt-0.5">{t("ls_unlock_voice_desc")}</p>
           </div>
           <span className="flex-shrink-0 text-[11px] font-bold bg-amber-500/25 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full animate-pulse">
             TAP TO UNLOCK

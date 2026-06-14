@@ -37,11 +37,12 @@ async function apiFetch(path: string, options?: RequestInit, token?: string) {
   return resp.json();
 }
 
-const profileSchema = z.object({
-  displayName: z.string().min(2, "Display name must be at least 2 characters").max(30),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
+function makeProfileSchema(t: (k: string) => string) {
+  return z.object({
+    displayName: z.string().min(2, t("profile_display_name_min")).max(30),
+  });
+}
+type ProfileFormValues = { displayName: string };
 
 const PLAN_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string; desc: string }> = {
   free:    { label: "Free",    icon: Zap,      color: "text-slate-400", desc: "Basic streaming and gamification features." },
@@ -95,6 +96,7 @@ const OVERLAY_ICONS: Record<string, string> = {
 };
 
 function ObsTab({ authToken }: { authToken: string | null }) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [overlays, setOverlays] = useState<ObsOverlay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,13 +176,13 @@ function ObsTab({ authToken }: { authToken: string | null }) {
       <div className="rounded-2xl bg-blue-500/5 border border-blue-500/20 p-5 space-y-2">
         <div className="flex items-center gap-2 mb-3">
           <Monitor className="h-4 w-4 text-blue-400" />
-          <p className="text-sm font-semibold text-blue-300">How to add overlays to OBS</p>
+          <p className="text-sm font-semibold text-blue-300">{t("obs_how_to")}</p>
         </div>
         <ol className="space-y-1.5 text-sm text-muted-foreground list-decimal list-inside">
-          <li>In OBS Studio, click <span className="text-foreground font-medium">+</span> in the Sources panel and choose <span className="text-foreground font-medium">Browser</span></li>
-          <li>Paste the URL below into the URL field and set the width &amp; height shown</li>
-          <li>Check <span className="text-foreground font-medium">Shutdown source when not visible</span> for best performance</li>
-          <li>Position the browser source over your stream scene</li>
+          <li>{t("obs_step1")}</li>
+          <li>{t("obs_step2")}</li>
+          <li>{t("obs_step3")}</li>
+          <li>{t("obs_step4")}</li>
         </ol>
       </div>
 
@@ -191,8 +193,8 @@ function ObsTab({ authToken }: { authToken: string | null }) {
             <Monitor className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-white text-sm">Browser Source URLs</p>
-            <p className="text-xs text-muted-foreground">Copy any URL into OBS as a Browser Source</p>
+            <p className="font-semibold text-white text-sm">{t("obs_browser_sources")}</p>
+            <p className="text-xs text-muted-foreground">{t("obs_copy_url")}</p>
           </div>
         </div>
         <div className="divide-y divide-white/5">
@@ -291,7 +293,7 @@ function ObsTab({ authToken }: { authToken: string | null }) {
                   ) : (
                     <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                   )}
-                  {regenerating ? "Regenerating…" : "Yes, regenerate"}
+                  {regenerating ? t("regenerating") : t("yes_regenerate")}
                 </Button>
               </div>
             </div>
@@ -329,7 +331,7 @@ export function Settings() {
     if (params.get("tab") === "language") setTab("language");
     if (params.get("tab") === "obs") setTab("obs");
     if (params.get("success") === "1") {
-      toast({ title: "Subscription activated!", description: "Your plan has been upgraded." });
+      toast({ title: t("settings_plan_activated"), description: t("settings_plan_upgraded") });
       queryClient.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
     }
   }, []);
@@ -344,7 +346,7 @@ export function Settings() {
   }, [tab, authToken]);
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(makeProfileSchema(t)),
     defaultValues: { displayName: "" },
   });
 
@@ -608,7 +610,7 @@ export function Settings() {
                       disabled={connectTiktok.isPending || !tiktokInput.trim()}
                       className="bg-primary hover:bg-primary/90 text-white shrink-0"
                     >
-                      {connectTiktok.isPending ? "Saving…" : "Save"}
+                      {connectTiktok.isPending ? t("saving") : t("save")}
                     </Button>
                     {tiktokEditing && (
                       <Button
@@ -616,7 +618,7 @@ export function Settings() {
                         onClick={() => { setTiktokEditing(false); setTiktokInput(""); }}
                         className="shrink-0"
                       >
-                        Cancel
+                        {t("cancel")}
                       </Button>
                     )}
                   </div>

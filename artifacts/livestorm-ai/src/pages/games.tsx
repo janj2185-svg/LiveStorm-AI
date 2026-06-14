@@ -5,88 +5,91 @@ import {
   Zap, Crown, Star, Users, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const GAME_MODES = [
-  {
-    label: "Gamification",
-    desc: "XP system, leaderboards, achievements and viewer level-ups",
-    href: "/gamification",
-    icon: Trophy,
-    iconBg: "bg-amber-500/15",
-    iconColor: "text-amber-400",
-    border: "border-amber-500/20",
-    gradient: "from-amber-500/[0.08] to-orange-500/[0.04]",
-    badge: "XP & Levels",
-    badgeColor: "text-amber-300 bg-amber-500/15 border-amber-500/30",
-    stats: ["Viewer XP", "Level-ups", "Leaderboard"],
-    comingSoon: false,
-  },
-  {
-    label: "Boss Battle",
-    desc: "Spawn epic bosses that viewers defeat together with gifts and likes",
-    href: "/boss-battle",
-    icon: Sword,
-    iconBg: "bg-red-500/15",
-    iconColor: "text-red-400",
-    border: "border-red-500/20",
-    gradient: "from-red-500/[0.08] to-rose-500/[0.04]",
-    badge: "Co-op",
-    badgeColor: "text-red-300 bg-red-500/15 border-red-500/30",
-    stats: ["Boss HP", "Damage Dealt", "Rewards"],
-    comingSoon: true,
-  },
-  {
-    label: "Mini-Games",
-    desc: "Lucky draw, quiz, treasure hunt and spinning wheel mini-games",
-    href: "/mini-games",
-    icon: Gamepad2,
-    iconBg: "bg-cyan-500/15",
-    iconColor: "text-cyan-400",
-    border: "border-cyan-500/20",
-    gradient: "from-cyan-500/[0.08] to-sky-500/[0.04]",
-    badge: "Interactive",
-    badgeColor: "text-cyan-300 bg-cyan-500/15 border-cyan-500/30",
-    stats: ["Lucky Draw", "Quiz", "Treasure Hunt"],
-    comingSoon: true,
-  },
-  {
-    label: "Kingdom",
-    desc: "Build a virtual kingdom that viewers help upgrade with their gifts",
-    href: "/kingdom",
-    icon: Castle,
-    iconBg: "bg-violet-500/15",
-    iconColor: "text-violet-400",
-    border: "border-violet-500/20",
-    gradient: "from-violet-500/[0.08] to-purple-500/[0.04]",
-    badge: "Build",
-    badgeColor: "text-violet-300 bg-violet-500/15 border-violet-500/30",
-    stats: ["Buildings", "Resources", "Upgrades"],
-    comingSoon: true,
-  },
-  {
-    label: "Universe",
-    desc: "Compete with other streamers in the global universe rankings",
-    href: "/universe",
-    icon: Globe,
-    iconBg: "bg-blue-500/15",
-    iconColor: "text-blue-400",
-    border: "border-blue-500/20",
-    gradient: "from-blue-500/[0.08] to-indigo-500/[0.04]",
-    badge: "Global",
-    badgeColor: "text-blue-300 bg-blue-500/15 border-blue-500/30",
-    stats: ["Rankings", "Alliances", "Seasons"],
-    comingSoon: true,
-  },
-];
-
-const FEATURE_HIGHLIGHTS = [
-  { icon: Zap,   label: "Real-time XP",      desc: "Instant viewer engagement rewards", color: "text-yellow-400" },
-  { icon: Crown, label: "Live Leaderboards",  desc: "Top supporters displayed live",     color: "text-amber-400"  },
-  { icon: Star,  label: "Achievements",       desc: "Unlock badges for milestones",      color: "text-violet-400" },
-  { icon: Users, label: "Co-op Events",       desc: "Viewers team up together",          color: "text-cyan-400"   },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function Games() {
+  const { t } = useLanguage();
+
+  const GAME_MODES = [
+    {
+      label: t("games_mode_gamification"),
+      desc: t("games_mode_gamification_desc"),
+      href: "/gamification",
+      icon: Trophy,
+      iconBg: "bg-amber-500/15",
+      iconColor: "text-amber-400",
+      border: "border-amber-500/20",
+      gradient: "from-amber-500/[0.08] to-orange-500/[0.04]",
+      badge: "XP & Levels",
+      badgeColor: "text-amber-300 bg-amber-500/15 border-amber-500/30",
+      stats: ["Viewer XP", "Level-ups", "Leaderboard"],
+      comingSoon: false,
+    },
+    {
+      label: t("games_mode_bossbattle"),
+      desc: t("games_mode_bossbattle_desc"),
+      href: "/boss-battle",
+      icon: Sword,
+      iconBg: "bg-red-500/15",
+      iconColor: "text-red-400",
+      border: "border-red-500/20",
+      gradient: "from-red-500/[0.08] to-rose-500/[0.04]",
+      badge: "Co-op",
+      badgeColor: "text-red-300 bg-red-500/15 border-red-500/30",
+      stats: ["Boss HP", "Damage Dealt", "Rewards"],
+      comingSoon: true,
+    },
+    {
+      label: t("games_mode_minigames"),
+      desc: t("games_mode_minigames_desc"),
+      href: "/mini-games",
+      icon: Gamepad2,
+      iconBg: "bg-cyan-500/15",
+      iconColor: "text-cyan-400",
+      border: "border-cyan-500/20",
+      gradient: "from-cyan-500/[0.08] to-sky-500/[0.04]",
+      badge: "Interactive",
+      badgeColor: "text-cyan-300 bg-cyan-500/15 border-cyan-500/30",
+      stats: ["Lucky Draw", "Quiz", "Treasure Hunt"],
+      comingSoon: true,
+    },
+    {
+      label: t("games_mode_kingdom"),
+      desc: t("games_mode_kingdom_desc"),
+      href: "/kingdom",
+      icon: Castle,
+      iconBg: "bg-violet-500/15",
+      iconColor: "text-violet-400",
+      border: "border-violet-500/20",
+      gradient: "from-violet-500/[0.08] to-purple-500/[0.04]",
+      badge: "Build",
+      badgeColor: "text-violet-300 bg-violet-500/15 border-violet-500/30",
+      stats: ["Buildings", "Resources", "Upgrades"],
+      comingSoon: true,
+    },
+    {
+      label: t("games_mode_universe"),
+      desc: t("games_mode_universe_desc"),
+      href: "/universe",
+      icon: Globe,
+      iconBg: "bg-blue-500/15",
+      iconColor: "text-blue-400",
+      border: "border-blue-500/20",
+      gradient: "from-blue-500/[0.08] to-indigo-500/[0.04]",
+      badge: "Global",
+      badgeColor: "text-blue-300 bg-blue-500/15 border-blue-500/30",
+      stats: ["Rankings", "Alliances", "Seasons"],
+      comingSoon: true,
+    },
+  ];
+
+  const FEATURE_HIGHLIGHTS = [
+    { icon: Zap,   label: t("games_feat_xp"),          desc: t("games_feat_xp_desc"),          color: "text-yellow-400" },
+    { icon: Crown, label: t("games_feat_leaderboard"),  desc: t("games_feat_leaderboard_desc"), color: "text-amber-400"  },
+    { icon: Star,  label: t("games_feat_achievements"), desc: t("games_feat_achievements_desc"), color: "text-violet-400" },
+    { icon: Users, label: t("games_feat_coop"),         desc: t("games_feat_coop_desc"),        color: "text-cyan-400"   },
+  ];
+
   return (
     <div className="space-y-6 max-w-5xl">
 
@@ -104,11 +107,11 @@ export function Games() {
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-400/80">Games Hub</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/25 text-cyan-300 font-semibold">5 Modes</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-400/80">{t("games_title")}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/25 text-cyan-300 font-semibold">{t("games_modes_count")}</span>
               </div>
-              <h1 className="text-xl font-black text-white">Engage Your Viewers</h1>
-              <p className="text-sm text-muted-foreground">Interactive games that turn passive viewers into active participants</p>
+              <h1 className="text-xl font-black text-white">{t("games_engage_title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("games_engage_desc")}</p>
             </div>
           </div>
 
@@ -132,7 +135,7 @@ export function Games() {
 
       {/* Game Modes */}
       <div>
-        <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-3">Game Modes</p>
+        <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-[0.12em] mb-3">{t("games_game_modes")}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {GAME_MODES.map((game, i) => {
             const Icon = game.icon;

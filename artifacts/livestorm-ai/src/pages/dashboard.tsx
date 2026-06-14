@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useUser } from "@clerk/react";
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -221,7 +220,7 @@ function CommandStrip({
                 <>
                   <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
                   <span className={cn("text-xs font-bold uppercase tracking-widest", connected ? "text-green-400" : "text-amber-400")}>
-                    {connected ? "Live Now" : "Reconnecting…"}
+                    {connected ? t("dash_status_live_now") : t("dash_status_reconnecting")}
                   </span>
                   <span className="text-xs text-muted-foreground/40 font-mono tabular-nums">
                     {formatDuration(duration)}
@@ -230,17 +229,17 @@ function CommandStrip({
               ) : (
                 <>
                   <span className="h-2 w-2 rounded-full bg-slate-500 inline-block flex-shrink-0" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Offline</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("dash_status_offline")}</span>
                 </>
               )}
             </div>
             <p className="font-bold text-white text-base leading-tight truncate">
               {isActive ? `@${username}` : (
-                <span>Ready to <GradientText from="from-violet-400" to="to-cyan-400">Go Live</GradientText></span>
+                <span>{t("dash_ready_to")} <GradientText from="from-violet-400" to="to-cyan-400">{t("dash_go_live")}</GradientText></span>
               )}
             </p>
             <p className="text-xs text-muted-foreground/50 mt-0.5 truncate">
-              {isActive ? `${eventCount} events captured` : `@${username} · Start a session to begin`}
+              {isActive ? `${eventCount} ${t("dash_events_captured")}` : `@${username} · ${t("dash_start_session_prompt")}`}
             </p>
           </div>
         </div>
@@ -250,16 +249,16 @@ function CommandStrip({
           {isOwner && (
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/15 border border-amber-500/35">
               <KeyRound className="h-3.5 w-3.5 text-amber-300" />
-              <span className="text-xs font-bold text-amber-200">Owner</span>
+              <span className="text-xs font-bold text-amber-200">{t("dash_owner_badge")}</span>
             </div>
           )}
           {connected ? (
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400">
-              <Wifi className="h-3 w-3" /> Connected
+              <Wifi className="h-3 w-3" /> {t("diag_connected")}
             </div>
           ) : (
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-medium text-red-400">
-              <WifiOff className="h-3 w-3" /> Disconnected
+              <WifiOff className="h-3 w-3" /> {t("diag_disconnected")}
             </div>
           )}
           {isActive ? (
@@ -270,7 +269,7 @@ function CommandStrip({
               className="font-bold gap-2 shadow-lg shadow-red-500/20 h-10 flex-1 sm:flex-none"
             >
               <Square className="h-3.5 w-3.5" fill="currentColor" />
-              {endPending ? "Ending…" : "End Stream"}
+              {endPending ? t("dash_ending") : t("dash_end_session")}
             </Button>
           ) : (
             <Button
@@ -279,7 +278,7 @@ function CommandStrip({
               className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white font-bold gap-2 px-5 shadow-lg shadow-violet-500/25 h-10 flex-1 sm:flex-none"
             >
               <PlayCircle className="h-4 w-4" />
-              {startPending ? "Starting…" : "Go Live"}
+              {startPending ? t("dash_starting") : t("dash_go_live")}
             </Button>
           )}
           <Button
@@ -291,7 +290,7 @@ function CommandStrip({
             title="Force-clears any stuck session."
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{resetPending ? "…" : "Reset"}</span>
+            <span className="hidden sm:inline">{resetPending ? "…" : t("dash_reset")}</span>
           </Button>
         </div>
       </div>
@@ -302,6 +301,7 @@ function CommandStrip({
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: profile } = useGetMyProfile();
@@ -532,7 +532,7 @@ export function Dashboard() {
                   disabled={connectTiktok.isPending || !tiktokInput.trim()}
                   className="bg-violet-600 hover:bg-violet-500 text-white font-bold shrink-0 shadow-lg shadow-violet-500/20"
                 >
-                  {connectTiktok.isPending ? "Saving…" : "Connect"}
+                  {connectTiktok.isPending ? t("dash_connect_saving") : t("dash_connect_btn")}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -550,18 +550,17 @@ export function Dashboard() {
   const eventCount = events.filter((e) => e.type !== "viewerCount").length;
 
   const isOwner = profile?.role === "owner";
-  const { user } = useUser();
 
   const primaryStats = [
-    { label: "Viewers",  value: stats.viewerCount,   icon: Eye,          iconBg: "bg-green-500/15",  iconColor: "text-green-400",  accent: "border-green-500/20" },
-    { label: "Likes",    value: stats.totalLikes,    icon: Heart,        iconBg: "bg-pink-500/15",   iconColor: "text-pink-400",   accent: "border-pink-500/20" },
-    { label: "Gifts",    value: stats.totalGifts,    icon: Gift,         iconBg: "bg-amber-500/15",  iconColor: "text-amber-400",  accent: "border-amber-500/20" },
-    { label: "Follows",  value: stats.totalFollows,  icon: UserPlus,     iconBg: "bg-violet-500/15", iconColor: "text-violet-400", accent: "border-violet-500/20" },
+    { label: t("dash_viewers"),   value: stats.viewerCount,   icon: Eye,          iconBg: "bg-green-500/15",  iconColor: "text-green-400",  accent: "border-green-500/20" },
+    { label: t("dash_likes"),     value: stats.totalLikes,    icon: Heart,        iconBg: "bg-pink-500/15",   iconColor: "text-pink-400",   accent: "border-pink-500/20" },
+    { label: t("dash_gifts"),     value: stats.totalGifts,    icon: Gift,         iconBg: "bg-amber-500/15",  iconColor: "text-amber-400",  accent: "border-amber-500/20" },
+    { label: t("dash_followers"), value: stats.totalFollows,  icon: UserPlus,     iconBg: "bg-violet-500/15", iconColor: "text-violet-400", accent: "border-violet-500/20" },
   ];
 
   const secondaryStats = [
-    { label: "Comments", value: stats.totalComments, icon: MessageSquare, iconBg: "bg-blue-500/15",  iconColor: "text-blue-400",  accent: "border-blue-500/20" },
-    { label: "Shares",   value: stats.totalShares,   icon: Share,         iconBg: "bg-cyan-500/15",  iconColor: "text-cyan-400",  accent: "border-cyan-500/20" },
+    { label: t("dash_stat_comments"), value: stats.totalComments, icon: MessageSquare, iconBg: "bg-blue-500/15",  iconColor: "text-blue-400",  accent: "border-blue-500/20" },
+    { label: t("dash_stat_shares"),   value: stats.totalShares,   icon: Share,         iconBg: "bg-cyan-500/15",  iconColor: "text-cyan-400",  accent: "border-cyan-500/20" },
   ];
 
   return (
@@ -730,7 +729,7 @@ export function Dashboard() {
               <p className="text-[13px] font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
                 Welcome,{" "}
                 <span className="font-black" style={{ color: "rgba(255,255,255,0.85)" }}>
-                  {user?.firstName || "Creator"}
+                  {profile?.displayName || t("nav_creator")}
                 </span>
                 {isOwner && <span className="ml-1.5 text-[10px] text-amber-400 font-black">✦ Owner</span>}
               </p>
@@ -1074,13 +1073,13 @@ export function Dashboard() {
                 <div className="p-1.5 rounded-lg bg-violet-500/10">
                   <Zap className="h-3.5 w-3.5 text-violet-400" />
                 </div>
-                <span className="text-xs font-bold text-white/80 uppercase tracking-widest">Quick Launch</span>
+                <span className="text-xs font-bold text-white/80 uppercase tracking-widest">{t("dash_quick_launch")}</span>
               </div>
               <div className="p-2 space-y-1">
                 {[
-                  { href: "/ai-assistant",  emoji: "🤖", label: "AI Assistant", desc: "Configure your AI persona",   glow: "hover:border-violet-500/20 hover:bg-violet-500/[0.05]" },
-                  { href: "/games",         emoji: "🎮", label: "Games Hub",    desc: "Boss battles, XP & mini-games", glow: "hover:border-cyan-500/20 hover:bg-cyan-500/[0.05]" },
-                  { href: "/live-control",  emoji: "📡", label: "Live Control", desc: "TikTok connection & event feed", glow: "hover:border-green-500/20 hover:bg-green-500/[0.05]" },
+                  { href: "/ai-assistant",  emoji: "🤖", label: t("nav_ai_assistant"),      desc: t("dash_quick_ai_desc"),      glow: "hover:border-violet-500/20 hover:bg-violet-500/[0.05]" },
+                  { href: "/games",         emoji: "🎮", label: t("dash_quick_games_label"), desc: t("dash_quick_games_desc"),   glow: "hover:border-cyan-500/20 hover:bg-cyan-500/[0.05]" },
+                  { href: "/live-control",  emoji: "📡", label: t("nav_live_control"),        desc: t("dash_quick_control_desc"), glow: "hover:border-green-500/20 hover:bg-green-500/[0.05]" },
                 ].map((link, i) => (
                   <motion.div
                     key={link.href}
@@ -1186,11 +1185,11 @@ export function Dashboard() {
                         disabled={ytLoading}
                       >
                         <Youtube className="h-3 w-3" />
-                        {ytLoading ? "Connecting…" : "Connect YouTube Chat"}
+                        {ytLoading ? t("dash_yt_connecting") : t("dash_yt_connect_chat")}
                       </Button>
                     ) : (
                       <p className="text-[11px] text-muted-foreground/50 text-center py-1">
-                        Start a live session to connect YouTube chat
+                        {t("dash_yt_start_session")}
                       </p>
                     )}
                     <Button
@@ -1200,7 +1199,7 @@ export function Dashboard() {
                       onClick={handleDisconnectYoutube}
                       disabled={ytLoading}
                     >
-                      <Unlink className="h-3 w-3" /> Disconnect
+                      <Unlink className="h-3 w-3" /> {t("dash_yt_disconnect")}
                     </Button>
                   </>
                 ) : (
@@ -1211,7 +1210,7 @@ export function Dashboard() {
                     disabled={ytLoading}
                   >
                     <Youtube className="h-3.5 w-3.5" />
-                    {ytLoading ? "Opening…" : "Connect YouTube"}
+                    {ytLoading ? t("dash_yt_opening") : t("dash_yt_connect")}
                   </Button>
                 )}
               </div>

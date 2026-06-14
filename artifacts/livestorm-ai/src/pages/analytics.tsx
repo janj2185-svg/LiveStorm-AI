@@ -82,6 +82,7 @@ type InsightsResponse = {
 
 // ── AI Insights panel ─────────────────────────────────────────────────────────
 function InsightsPanel({ sessionCount }: { sessionCount: number }) {
+  const { t } = useLanguage();
   const { getToken } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -112,7 +113,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
             <Star className="h-4 w-4 text-violet-400" />
           </div>
           <div>
-            <p className="font-semibold text-white text-sm">AI Recommendations</p>
+            <p className="font-semibold text-white text-sm">{t("analytics_ai_tips")}</p>
             {data?.fromCache && data.cachedAt && (
               <p className="text-[10px] text-muted-foreground/50">
                 Generated {format(new Date(data.cachedAt), "MMM d · HH:mm")}
@@ -152,7 +153,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
             <Sparkles className="h-4 w-4 text-amber-400" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-white mb-1">Not enough data yet</p>
+            <p className="text-sm font-semibold text-white mb-1">{t("analytics_not_enough_data")}</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               You have {data.sessionCount ?? sessionCount} session{(data.sessionCount ?? 0) === 1 ? "" : "s"} recorded. 
               Run at least 2 streams to unlock AI-powered personalized recommendations based on your real performance.
@@ -166,7 +167,7 @@ function InsightsPanel({ sessionCount }: { sessionCount: number }) {
         <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/5 border border-red-500/10">
           <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-muted-foreground">Failed to load recommendations. Try refreshing.</p>
+            <p className="text-sm text-muted-foreground">{t("analytics_failed_recs")}</p>
           </div>
         </div>
       )}
@@ -260,8 +261,8 @@ export function Analytics() {
       {/* Header + period selector */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-0.5">Insight Hub</p>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Analytics</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-400/50 mb-0.5">{t("analytics_insight_hub")}</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{t("nav_analytics")}</h1>
           <p className="text-sm text-white/30 mt-0.5">
             {liveStats && (liveStats as any).isLive ? (
               <span className="flex items-center gap-1.5">
@@ -368,7 +369,7 @@ export function Analytics() {
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 w-fit mx-auto mb-4">
             <Zap className="h-10 w-10 text-emerald-400/60" />
           </div>
-          <p className="text-lg font-bold text-white mb-2">No streams yet</p>
+          <p className="text-lg font-bold text-white mb-2">{t("analytics_no_streams")}</p>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Go live for the first time to start building your analytics. Your viewer counts, gifts, and engagement stats will appear here after your first stream.
           </p>
