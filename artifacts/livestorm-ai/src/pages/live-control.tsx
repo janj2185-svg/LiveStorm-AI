@@ -118,6 +118,15 @@ export function LiveControl() {
   ];
 
   return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/scenes-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
     <div className="space-y-5 max-w-5xl">
 
       {/* ── Status Banner ── */}
@@ -346,6 +355,7 @@ export function LiveControl() {
           </div>
         </GlassCard>
       </motion.div>
+    </div>
     </div>
   );
 }
