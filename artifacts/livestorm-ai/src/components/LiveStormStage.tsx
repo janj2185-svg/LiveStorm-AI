@@ -287,130 +287,156 @@ export const LiveStormStage = memo(function LiveStormStage() {
       </div>
 
       {/* ── Central branding ─────────────────────────────────────────────── */}
-      <div className="absolute left-0 right-0 flex flex-col items-center" style={{ top: "6%" }}>
+      <div className="absolute left-0 right-0 flex flex-col items-center" style={{ top: "5%" }}>
 
-        {/* Spotlight cone from top */}
+        {/* Wide prismatic spotlight from top */}
         <div className="absolute" style={{
-          width: 180, height: "100%",
-          top: 0, left: "50%", transform: "translateX(-50%)",
-          background: "linear-gradient(to bottom, rgba(139,92,246,0.22) 0%, rgba(139,92,246,0.06) 60%, transparent 100%)",
-          clipPath: "polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)",
-          filter: "blur(6px)",
-        }} />
-
-        {/* Hero glow halo — very wide, deep purple */}
-        <div className="absolute" style={{
-          width: 320, height: 320,
-          top: -100, left: "50%", transform: "translateX(-50%)",
-          background: "radial-gradient(circle, rgba(139,92,246,0.85) 0%, rgba(99,102,241,0.40) 35%, transparent 68%)",
-          filter: "blur(32px)",
-          animation: "neon-breathe 6s ease-in-out infinite",
-        }} />
-
-        {/* Dark backdrop pill behind logo — makes it cut through scene */}
-        <div className="absolute" style={{
-          width: 240, height: 140,
+          width: 260, height: "110%",
           top: -10, left: "50%", transform: "translateX(-50%)",
-          background: "radial-gradient(ellipse 60% 70%, rgba(6,2,20,0.75) 0%, transparent 100%)",
-          filter: "blur(12px)",
+          background: "linear-gradient(to bottom, rgba(255,220,80,0.18) 0%, rgba(192,132,252,0.12) 45%, transparent 100%)",
+          clipPath: "polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%)",
+          filter: "blur(8px)",
         }} />
 
-        {/* Lightning bolt — even larger */}
-        <div className="relative" style={{ zIndex: 3 }}>
-          <div className="absolute inset-0 rounded-full" style={{
-            width: 140, height: 140,
-            top: -22, left: -22,
-            background: "radial-gradient(circle, rgba(167,92,246,1) 0%, rgba(192,132,252,0.50) 45%, transparent 70%)",
-            filter: "blur(20px)",
+        {/* Outer corona — wide cyan/yellow burst */}
+        <div className="absolute" style={{
+          width: 380, height: 380,
+          top: -140, left: "50%", transform: "translateX(-50%)",
+          background: "radial-gradient(circle, rgba(255,230,80,0.30) 0%, rgba(192,132,252,0.35) 28%, rgba(103,232,249,0.18) 50%, transparent 68%)",
+          filter: "blur(40px)",
+          animation: "neon-breathe 7s ease-in-out infinite",
+        }} />
+
+        {/* Mid halo — intense purple */}
+        <div className="absolute" style={{
+          width: 220, height: 220,
+          top: -65, left: "50%", transform: "translateX(-50%)",
+          background: "radial-gradient(circle, rgba(255,240,120,0.55) 0%, rgba(192,132,252,0.80) 30%, rgba(139,92,246,0.40) 55%, transparent 72%)",
+          filter: "blur(22px)",
+          animation: "neon-breathe 4s ease-in-out 0.5s infinite",
+        }} />
+
+        {/* Dark vignette pill — logo isolation */}
+        <div className="absolute" style={{
+          width: 200, height: 130,
+          top: -5, left: "50%", transform: "translateX(-50%)",
+          background: "radial-gradient(ellipse 55% 65%, rgba(4,1,16,0.80) 0%, transparent 100%)",
+          filter: "blur(10px)",
+        }} />
+
+        {/* ── Lightning bolt — electric yellow-white core ── */}
+        <div className="relative" style={{ zIndex: 4 }}>
+          {/* Pulsing ring orbit */}
+          <div className="absolute" style={{
+            width: 120, height: 120,
+            top: -12, left: -12,
+            borderRadius: "50%",
+            border: "1.5px solid rgba(255,220,80,0.55)",
+            boxShadow: "0 0 12px rgba(255,220,80,0.40), inset 0 0 12px rgba(192,132,252,0.20)",
+            animation: "neon-breathe 3s ease-in-out infinite",
+          }} />
+          {/* Inner ring */}
+          <div className="absolute" style={{
+            width: 108, height: 108,
+            top: -6, left: -6,
+            borderRadius: "50%",
+            border: "1px solid rgba(192,132,252,0.45)",
+            animation: "neon-breathe 3s ease-in-out 1s infinite",
+          }} />
+
+          {/* Bolt glow layer */}
+          <div className="absolute" style={{
+            width: 130, height: 130,
+            top: -17, left: -17,
+            background: "radial-gradient(circle, rgba(255,230,60,0.90) 0%, rgba(192,132,252,0.65) 38%, transparent 65%)",
+            filter: "blur(18px)",
             animation: "neon-breathe 4s ease-in-out infinite",
           }} />
-          <svg width="96" height="96" viewBox="0 0 24 24" fill="none" className="relative">
+
+          {/* SVG bolt — gradient fill: gold core → white → purple edge */}
+          <svg width="96" height="96" viewBox="0 0 24 24" fill="none" className="relative" style={{ zIndex: 5 }}>
+            <defs>
+              <linearGradient id="bolt-grad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stopColor="#fff9c4" />
+                <stop offset="30%"  stopColor="#ffffff" />
+                <stop offset="65%"  stopColor="#e9d5ff" />
+                <stop offset="100%" stopColor="#c084fc" />
+              </linearGradient>
+            </defs>
             <path
               d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
-              fill="rgba(240,200,255,1)"
+              fill="url(#bolt-grad)"
               style={{
                 filter:
-                  "drop-shadow(0 0 6px rgba(255,255,255,0.9)) " +
-                  "drop-shadow(0 0 14px rgba(192,132,252,1)) " +
-                  "drop-shadow(0 0 30px rgba(139,92,246,1)) " +
-                  "drop-shadow(0 0 60px rgba(139,92,246,0.70)) " +
-                  "drop-shadow(0 0 100px rgba(139,92,246,0.35))",
+                  "drop-shadow(0 0 3px rgba(255,255,255,1)) " +
+                  "drop-shadow(0 0 8px rgba(255,240,100,1)) " +
+                  "drop-shadow(0 0 18px rgba(255,200,50,0.95)) " +
+                  "drop-shadow(0 0 35px rgba(192,132,252,1)) " +
+                  "drop-shadow(0 0 70px rgba(139,92,246,0.80))",
               }}
             />
           </svg>
         </div>
 
-        {/* Wordmark — bold white with purple halo */}
-        <div className="text-center mt-2" style={{ zIndex: 3, position: "relative" }}>
+        {/* ── Wordmark — gradient gold→white→cyan ── */}
+        <div className="text-center mt-2" style={{ zIndex: 4, position: "relative" }}>
           <p
-            className="font-black tracking-[0.24em] uppercase"
+            className="font-black uppercase"
             style={{
-              fontSize: 24,
-              color: "rgba(255,255,255,1)",
-              textShadow:
-                "0 0 8px rgba(255,255,255,1), " +
-                "0 0 20px rgba(255,255,255,0.7), " +
-                "0 0 35px rgba(192,132,252,1), " +
-                "0 0 65px rgba(139,92,246,0.90), " +
-                "0 0 110px rgba(139,92,246,0.50)",
+              fontSize: 26,
+              letterSpacing: "0.20em",
+              background: "linear-gradient(90deg, #fde68a 0%, #ffffff 40%, #a78bfa 70%, #67e8f9 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              filter:
+                "drop-shadow(0 0 6px rgba(255,255,255,0.95)) " +
+                "drop-shadow(0 0 18px rgba(253,230,138,0.80)) " +
+                "drop-shadow(0 0 40px rgba(192,132,252,0.70))",
             }}
           >
             LiveStorm AI
           </p>
+
+          {/* Divider */}
+          <div className="flex items-center justify-center gap-2 mt-1.5">
+            <div style={{
+              width: 56, height: 1.5,
+              background: "linear-gradient(to right, transparent, rgba(253,230,138,0.90), rgba(192,132,252,1))",
+              boxShadow: "0 0 6px rgba(253,230,138,0.60), 0 0 14px rgba(192,132,252,0.50)",
+            }} />
+            <div style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: "rgba(255,255,255,1)",
+              boxShadow:
+                "0 0 4px rgba(255,255,255,1), " +
+                "0 0 10px rgba(255,230,80,1), " +
+                "0 0 22px rgba(192,132,252,1), " +
+                "0 0 40px rgba(192,132,252,0.60)",
+              animation: "neon-breathe 2.5s ease-in-out infinite",
+            }} />
+            <div style={{
+              width: 56, height: 1.5,
+              background: "linear-gradient(to left, transparent, rgba(103,232,249,0.90), rgba(167,139,250,1))",
+              boxShadow: "0 0 6px rgba(103,232,249,0.60), 0 0 14px rgba(167,139,250,0.50)",
+            }} />
+          </div>
+
           <p
-            className="font-bold tracking-[0.50em] uppercase mt-1"
+            className="font-bold tracking-[0.48em] uppercase mt-1.5"
             style={{
-              fontSize: 12,
-              color: "rgba(150,240,255,1)",
+              fontSize: 10,
+              color: "rgba(103,232,249,1)",
               textShadow:
-                "0 0 8px rgba(103,232,249,1), " +
-                "0 0 20px rgba(103,232,249,0.90), " +
-                "0 0 40px rgba(103,232,249,0.55), " +
-                "0 0 70px rgba(103,232,249,0.30)",
+                "0 0 6px rgba(103,232,249,1), " +
+                "0 0 16px rgba(103,232,249,0.95), " +
+                "0 0 32px rgba(103,232,249,0.60), " +
+                "0 0 60px rgba(103,232,249,0.30)",
             }}
           >
             STREAMING STAGE
           </p>
         </div>
-
-        {/* Decorative divider */}
-        <div className="flex items-center gap-3 mt-3" style={{ zIndex: 3, position: "relative" }}>
-          <div style={{
-            width: 72, height: 2,
-            background: "linear-gradient(to right, transparent, rgba(192,132,252,1))",
-            boxShadow: "0 0 8px rgba(192,132,252,0.8), 0 0 16px rgba(192,132,252,0.4)",
-          }} />
-          <div style={{
-            width: 8, height: 8, borderRadius: "50%",
-            background: "rgba(255,255,255,1)",
-            boxShadow:
-              "0 0 6px rgba(255,255,255,1), " +
-              "0 0 14px rgba(192,132,252,1), " +
-              "0 0 28px rgba(192,132,252,0.8), " +
-              "0 0 50px rgba(192,132,252,0.45)",
-            animation: "neon-breathe 2.5s ease-in-out infinite",
-          }} />
-          <div style={{
-            width: 72, height: 2,
-            background: "linear-gradient(to left, transparent, rgba(192,132,252,1))",
-            boxShadow: "0 0 8px rgba(192,132,252,0.8), 0 0 16px rgba(192,132,252,0.4)",
-          }} />
-        </div>
-
-        {/* Status hint */}
-        <p
-          className="font-bold tracking-[0.32em] uppercase mt-2"
-          style={{
-            fontSize: 9,
-            color: "rgba(192,132,252,0.95)",
-            textShadow: "0 0 12px rgba(192,132,252,0.8), 0 0 24px rgba(192,132,252,0.4)",
-            letterSpacing: "0.32em",
-            position: "relative",
-            zIndex: 3,
-          }}
-        >
-          Upload avatar to activate
-        </p>
       </div>
 
     </div>
