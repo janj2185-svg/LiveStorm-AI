@@ -11,6 +11,7 @@ const {
   Tray,
 } = require("electron");
 const path = require("path");
+const fs   = require("fs");
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -19,18 +20,41 @@ const APP_PROTOCOL = "livestorm";
 const isDev        = process.env.NODE_ENV === "development" || !app.isPackaged;
 
 /**
- * Web app URL to load:
- *   Dev  → ELECTRON_START_URL env var (set by scripts/dev.js)
- *   Prod → LIVESTORM_APP_URL env var OR baked-in production URL
+ * URL resolution order (first non-empty wins):
+ *   1. ELECTRON_START_URL  env var  (dev launcher)
+ *   2. LIVESTORM_APP_URL   env var  (CI / custom deploy)
+ *   3. config.json next to the .exe (tester-friendly override)
+ *   4. Hard-coded production URL    (default)
  *
- * The desktop app is a "SaaS shell" — it loads the hosted LiveStorm AI
- * web app exactly as a browser would. All API calls, WebSockets, and
- * Clerk auth flow through the same hosted backend.
+ * config.json format:  { "appUrl": "https://your-url.replit.app" }
+ * Place it in the same folder as LiveStorm AI.exe before launching.
  */
-const WEB_URL =
-  process.env.ELECTRON_START_URL ||
-  process.env.LIVESTORM_APP_URL   ||
-  "https://livestorm-ai.replit.app";
+function resolveAppUrl() {
+  if (process.env.ELECTRON_START_URL) return process.env.ELECTRON_START_URL;
+  if (process.env.LIVESTORM_APP_URL)  return process.env.LIVESTORM_APP_URL;
+
+  // Look for config.json next to the executable (packaged) or project root (dev)
+  const configSearchPaths = [
+    path.join(path.dirname(process.execPath), "config.json"),
+    path.join(app.getAppPath(), "..", "config.json"),
+    path.join(__dirname, "..", "config.json"),
+  ];
+  for (const p of configSearchPaths) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(p, "utf-8"));
+      if (cfg.appUrl) {
+        console.log(`[LiveStorm Desktop] URL from config.json: ${cfg.appUrl}`);
+        return cfg.appUrl;
+      }
+    } catch {
+      // file not found or invalid JSON — try next path
+    }
+  }
+
+  return "https://livestorm-ai.replit.app";
+}
+
+const WEB_URL = resolveAppUrl();
 
 // ─── Single-instance lock (Windows/Linux) ────────────────────────────────────
 

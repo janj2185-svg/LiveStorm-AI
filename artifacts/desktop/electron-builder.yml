@@ -14,6 +14,7 @@ files:
   - scripts/**/*
   - resources/**/*
   - package.json
+  - config.json
   - "!node_modules/**"
 
 # ─── Output directory ─────────────────────────────────────────────────────────
