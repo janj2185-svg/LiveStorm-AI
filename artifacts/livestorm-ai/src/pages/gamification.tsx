@@ -406,7 +406,15 @@ export function Gamification() {
   }
 
   return (
-    <>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/gifts-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       {activeDrop && (
         <LuckyDropOverlay {...activeDrop} onDismiss={() => setActiveDrop(null)} />
       )}
@@ -882,6 +890,6 @@ export function Gamification() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
