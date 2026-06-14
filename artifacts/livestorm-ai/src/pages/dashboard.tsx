@@ -576,129 +576,272 @@ export function Dashboard() {
     >
     <div className="space-y-4 max-w-[1400px]">
 
-      {/* ── Animated Hero Header ── */}
+      {/* ── Cinematic Hero ── */}
       <motion.div
-        initial={{ opacity: 0, y: -16 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
       >
         <div
           className={cn(
             "relative overflow-hidden rounded-2xl border",
             isActive
-              ? "border-green-500/25 shadow-2xl shadow-green-500/[0.10]"
-              : "border-violet-500/25 shadow-2xl shadow-violet-500/[0.10]",
+              ? "border-green-500/30 shadow-[0_0_0_1px_rgba(34,197,94,0.08),0_32px_80px_rgba(0,0,0,0.6)]"
+              : "border-violet-500/15 shadow-[0_0_0_1px_rgba(124,58,237,0.06),0_32px_80px_rgba(0,0,0,0.6)]",
           )}
-          style={{
-            background: "linear-gradient(135deg, rgba(6,2,18,0.97) 0%, rgba(18,5,45,0.95) 45%, rgba(4,2,22,0.98) 100%)",
-            minHeight: 260,
-          }}
+          style={{ minHeight: 400 }}
         >
-          {/* Fine grid */}
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.8) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+          {/* ── DEEP BASE ── */}
+          <div className="absolute inset-0" style={{
+            background: "linear-gradient(160deg, #050011 0%, #0c0228 40%, #030014 75%, #000008 100%)",
+          }} />
 
-          {/* Animated orb — top-right */}
-          <div className="absolute -top-32 -right-16 w-[520px] h-[520px] rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(124,58,237,0.28) 0%, transparent 65%)", animation: "aiFloat2 18s ease-in-out infinite" }} />
+          {/* ── LARGE COLOR ORBS ── */}
+          {/* Violet — top-left */}
+          <div className="absolute pointer-events-none" style={{
+            top: -140, left: -80, width: 680, height: 680, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(109,40,217,0.40) 0%, rgba(124,58,237,0.14) 38%, transparent 68%)",
+            animation: "aiFloat1 22s ease-in-out infinite",
+          }} />
+          {/* Cyan — bottom-right */}
+          <div className="absolute pointer-events-none" style={{
+            bottom: -110, right: -90, width: 620, height: 620, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(6,182,212,0.26) 0%, rgba(8,145,178,0.09) 42%, transparent 68%)",
+            animation: "aiFloat2 28s ease-in-out infinite",
+          }} />
+          {/* Purple — center right */}
+          <div className="absolute pointer-events-none" style={{
+            top: "20%", right: "8%", width: 440, height: 440, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(168,85,247,0.22) 0%, transparent 62%)",
+            animation: "aiFloat3 17s ease-in-out infinite",
+          }} />
+          {/* Indigo — top center */}
+          <div className="absolute pointer-events-none" style={{
+            top: -60, left: "38%", width: 360, height: 360, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 65%)",
+            animation: "aiFloat4 24s ease-in-out infinite",
+          }} />
 
-          {/* Animated orb — bottom-left */}
-          <div className="absolute -bottom-24 -left-8 w-[400px] h-[400px] rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(6,182,212,0.18) 0%, transparent 65%)", animation: "aiFloat1 24s ease-in-out infinite" }} />
+          {/* ── LIGHT BEAMS ── */}
+          <div className="absolute pointer-events-none" style={{
+            top: 0, left: "22%", width: 1, height: "80%",
+            background: "linear-gradient(to bottom, rgba(139,92,246,0.7) 0%, rgba(139,92,246,0.25) 55%, transparent 100%)",
+            transform: "rotate(-12deg)", transformOrigin: "top center",
+            animation: "neon-breathe 5.5s ease-in-out infinite",
+          }} />
+          <div className="absolute pointer-events-none" style={{
+            top: 0, right: "28%", width: 1, height: "65%",
+            background: "linear-gradient(to bottom, rgba(6,182,212,0.55) 0%, rgba(6,182,212,0.15) 60%, transparent 100%)",
+            transform: "rotate(10deg)", transformOrigin: "top center",
+            animation: "neon-breathe 7s ease-in-out 1.5s infinite",
+          }} />
+          <div className="absolute pointer-events-none" style={{
+            top: 0, left: "55%", width: 1, height: "50%",
+            background: "linear-gradient(to bottom, rgba(168,85,247,0.4) 0%, transparent 100%)",
+            transform: "rotate(-4deg)", transformOrigin: "top center",
+            animation: "neon-breathe 9s ease-in-out 3s infinite",
+          }} />
 
-          {/* Top shimmer line */}
-          <div className="absolute top-0 inset-x-0 h-[1px]"
-            style={{ background: "linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.7) 25%, rgba(6,182,212,0.7) 60%, transparent 100%)", animation: "neon-breathe 4s ease-in-out infinite" }} />
+          {/* ── GRID ── */}
+          <div className="absolute inset-0 pointer-events-none" style={{
+            backgroundImage: "linear-gradient(rgba(139,92,246,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.055) 1px, transparent 1px)",
+            backgroundSize: "30px 30px",
+          }} />
 
-          {/* Scan line */}
-          <div className="absolute left-0 right-0 h-[1px] opacity-0 pointer-events-none"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent)", animation: "stage-scan 8s linear infinite" }} />
+          {/* ── DIAGONAL SHIMMER SWEEP ── */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div style={{
+              position: "absolute", top: 0, bottom: 0, width: "35%",
+              background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.028) 50%, transparent 100%)",
+              transform: "skewX(-18deg)",
+              animation: "shimmer-slide 6s ease-in-out infinite",
+            }} />
+          </div>
 
-          {/* Live badge */}
+          {/* ── SCAN LINE ── */}
+          <div className="absolute left-0 right-0 h-[1px] pointer-events-none" style={{
+            background: "linear-gradient(90deg, transparent 5%, rgba(139,92,246,0.55) 35%, rgba(6,182,212,0.55) 65%, transparent 95%)",
+            animation: "stage-scan 9s linear infinite",
+            opacity: 0,
+          }} />
+
+          {/* ── TOP EDGE GLOW ── */}
+          <div className="absolute top-0 inset-x-0 h-[1px] pointer-events-none" style={{
+            background: isActive
+              ? "linear-gradient(90deg, transparent 0%, rgba(34,197,94,0.9) 25%, rgba(6,182,212,0.9) 60%, transparent 100%)"
+              : "linear-gradient(90deg, transparent 0%, rgba(109,40,217,1) 20%, rgba(139,92,246,0.9) 50%, rgba(6,182,212,0.9) 75%, transparent 100%)",
+            animation: "neon-breathe 3.5s ease-in-out infinite",
+          }} />
+
+          {/* ── BOTTOM VIGNETTE ── */}
+          <div className="absolute bottom-0 inset-x-0 h-28 pointer-events-none" style={{
+            background: "linear-gradient(to bottom, transparent, rgba(0,0,10,0.45))",
+          }} />
+
+          {/* ── LIVE BADGE ── */}
           {isActive && (
-            <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600/90 backdrop-blur-sm border border-red-400/30 shadow-lg shadow-red-500/30 z-10">
+            <div className="absolute top-5 right-5 z-20 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-600/90 backdrop-blur-md border border-red-400/30 shadow-xl shadow-red-500/40">
               <PulsingDot color={connected ? "bg-white" : "bg-amber-300"} />
               <span className="text-xs font-black tracking-widest text-white uppercase">Live</span>
               <span className="text-xs font-mono text-white/80 tabular-nums">{formatDuration(duration)}</span>
             </div>
           )}
 
-          <div className="relative z-10 p-6 sm:p-8" style={{ minHeight: 260 }}>
+          {/* ── CONTENT ── */}
+          <div className="relative z-10 p-7 sm:p-9 flex flex-col" style={{ minHeight: 400 }}>
 
-            {/* ── Welcome row ── */}
-            <div className="flex items-start justify-between mb-5">
-              <div className="flex items-center gap-4">
-                {/* Glowing logo orb */}
+            {/* TOP BAR: logo mark + status */}
+            <div className="flex items-center justify-between mb-7">
+              <div className="flex items-center gap-3.5">
+                {/* Animated logo orb */}
                 <div className="relative flex-shrink-0">
+                  {/* Orbit ring */}
                   <div
-                    className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center border border-violet-500/40"
+                    className="absolute -inset-3.5 rounded-full border border-violet-400/20 pointer-events-none"
+                    style={{ animation: "orbit-cw 9s linear infinite" }}
+                  >
+                    <div className="absolute top-[4px] right-[4px] w-[5px] h-[5px] rounded-full bg-violet-400"
+                      style={{ boxShadow: "0 0 8px rgba(139,92,246,0.9), 0 0 16px rgba(139,92,246,0.4)" }} />
+                  </div>
+                  {/* Outer glow ring (counter-rotating) */}
+                  <div
+                    className="absolute -inset-5 rounded-full border border-cyan-400/10 pointer-events-none"
+                    style={{ animation: "orbit-ccw 15s linear infinite" }}
+                  >
+                    <div className="absolute bottom-[6px] left-[6px] w-[4px] h-[4px] rounded-full bg-cyan-400"
+                      style={{ boxShadow: "0 0 6px rgba(6,182,212,0.9)" }} />
+                  </div>
+                  {/* Core orb */}
+                  <div
+                    className="w-[58px] h-[58px] rounded-2xl flex items-center justify-center border border-violet-400/35 relative"
                     style={{
-                      background: "linear-gradient(135deg, rgba(124,58,237,0.6) 0%, rgba(6,182,212,0.35) 100%)",
+                      background: "linear-gradient(135deg, rgba(109,40,217,0.75) 0%, rgba(6,182,212,0.45) 100%)",
+                      boxShadow: "0 0 24px rgba(124,58,237,0.5), 0 0 60px rgba(124,58,237,0.18), inset 0 1px 0 rgba(255,255,255,0.2)",
                       animation: "holo-glow 4s ease-in-out infinite",
                     }}
                   >
-                    <Zap className="h-6 w-6 text-violet-200" />
+                    <Zap className="h-7 w-7 text-white" style={{ filter: "drop-shadow(0 0 10px rgba(196,165,255,0.9))" }} />
                   </div>
-                  <div
-                    className="absolute -inset-[3px] rounded-2xl opacity-25 blur-md pointer-events-none"
-                    style={{ background: "linear-gradient(135deg, #7c3aed, #06b6d4)", animation: "holo-pulse 4s ease-in-out infinite" }}
-                  />
+                  {/* Bloom */}
+                  <div className="absolute -inset-2 rounded-2xl pointer-events-none" style={{
+                    background: "radial-gradient(circle, rgba(124,58,237,0.3) 0%, transparent 70%)",
+                    animation: "holo-pulse 4s ease-in-out infinite",
+                    filter: "blur(8px)",
+                  }} />
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-bold text-white/35 uppercase tracking-[0.22em] mb-0.5">Welcome back</p>
-                  <h2 className="text-2xl sm:text-[28px] font-black text-white leading-none tracking-tight">
-                    {user?.firstName || "Creator"}
-                    <span className="text-violet-400 ml-1">⚡</span>
-                  </h2>
-                  <p className="text-[13px] text-white/38 mt-1.5 font-medium tracking-tight">
-                    Power your stream with LiveStorm AI
-                  </p>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[10px] font-bold tracking-[0.32em] uppercase text-white/25">LiveStorm</span>
+                    <span className="text-[9px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-md border"
+                      style={{ background: "rgba(124,58,237,0.2)", borderColor: "rgba(124,58,237,0.3)", color: "rgba(196,165,255,0.9)" }}>AI</span>
+                  </div>
+                  <p className="text-[11px] text-white/18 font-medium">Dashboard · Creator Studio</p>
                 </div>
               </div>
 
-              {/* Status chips — top-right (hidden when live badge shown) */}
-              {!isActive && (
-                <div className="hidden sm:flex flex-col items-end gap-1.5 flex-shrink-0">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] backdrop-blur-sm">
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-500 inline-block" />
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Offline</span>
+              {/* Status + Owner */}
+              <div className="flex flex-col items-end gap-1.5">
+                {isActive ? (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm"
+                    style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)" }}>
+                    <PulsingDot color={connected ? "bg-green-400" : "bg-amber-400"} />
+                    <span className={cn("text-[11px] font-bold uppercase tracking-widest", connected ? "text-green-300" : "text-amber-300")}>
+                      {connected ? "Live" : "Reconnecting"}
+                    </span>
                   </div>
-                  {isOwner && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/25 backdrop-blur-sm text-[11px] font-bold text-amber-300">
-                      <KeyRound className="h-3 w-3" /> Owner
-                    </div>
-                  )}
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm"
+                    style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-600 inline-block" />
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Offline</span>
+                  </div>
+                )}
+                {isOwner && (
+                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-wider"
+                    style={{ background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)" }}>
+                    <KeyRound className="h-2.5 w-2.5" /> Owner
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* ── Live stats row ── */}
+            {/* ── HERO TEXT ── */}
+            <div className="flex-1 flex flex-col justify-center mb-7">
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.12 }}
+                className="text-[11px] font-bold uppercase tracking-[0.32em] mb-2"
+                style={{ color: "rgba(255,255,255,0.28)" }}
+              >
+                Welcome back
+              </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                className="font-black leading-[0.92] tracking-tight mb-4"
+                style={{
+                  fontSize: "clamp(40px, 5.5vw, 60px)",
+                  background: "linear-gradient(105deg, #ffffff 0%, #ddd6fe 28%, #a78bfa 52%, #818cf8 72%, #67e8f9 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  backgroundSize: "200% 100%",
+                  animation: "gradient-x 6s ease-in-out infinite",
+                }}
+              >
+                {user?.firstName || "Creator"}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.28 }}
+                className="text-sm font-medium tracking-wide"
+                style={{ color: "rgba(255,255,255,0.32)", maxWidth: 340 }}
+              >
+                Power your TikTok LIVE with artificial intelligence
+              </motion.p>
+            </div>
+
+            {/* ── LIVE STATS ── */}
             {isActive && (
-              <div className="flex items-center gap-2.5 mb-5 flex-wrap">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.22 }}
+                className="flex items-center gap-2 mb-5 flex-wrap"
+              >
                 {[
-                  { label: "Viewers",  icon: Eye,           value: stats.viewerCount,   color: "text-green-300",  border: "border-green-500/20",  bg: "bg-green-500/10" },
-                  { label: "Gifts",    icon: Gift,          value: stats.totalGifts,    color: "text-amber-300",  border: "border-amber-500/20",  bg: "bg-amber-500/10" },
-                  { label: "Likes",    icon: Heart,         value: stats.totalLikes,    color: "text-pink-300",   border: "border-pink-500/20",   bg: "bg-pink-500/10" },
-                  { label: "Follows",  icon: UserPlus,      value: stats.totalFollows,  color: "text-violet-300", border: "border-violet-500/20", bg: "bg-violet-500/10" },
-                  { label: "Comments", icon: MessageSquare, value: stats.totalComments, color: "text-blue-300",   border: "border-blue-500/20",   bg: "bg-blue-500/10" },
+                  { label: "Viewers",  icon: Eye,           value: stats.viewerCount,   c: "rgba(134,239,172,1)",  bg: "rgba(34,197,94,0.09)",   bd: "rgba(34,197,94,0.20)" },
+                  { label: "Gifts",    icon: Gift,          value: stats.totalGifts,    c: "rgba(252,211,77,1)",   bg: "rgba(245,158,11,0.09)",  bd: "rgba(245,158,11,0.20)" },
+                  { label: "Likes",    icon: Heart,         value: stats.totalLikes,    c: "rgba(249,168,212,1)",  bg: "rgba(236,72,153,0.09)",  bd: "rgba(236,72,153,0.20)" },
+                  { label: "Follows",  icon: UserPlus,      value: stats.totalFollows,  c: "rgba(196,165,255,1)",  bg: "rgba(139,92,246,0.09)",  bd: "rgba(139,92,246,0.20)" },
+                  { label: "Comments", icon: MessageSquare, value: stats.totalComments, c: "rgba(147,197,253,1)",  bg: "rgba(59,130,246,0.09)",  bd: "rgba(59,130,246,0.20)" },
                 ].map((s) => {
                   const Icon = s.icon;
                   return (
-                    <div key={s.label} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl border backdrop-blur-sm", s.bg, s.border)}>
-                      <Icon className={cn("h-3.5 w-3.5 flex-shrink-0", s.color)} />
-                      <span className={cn("text-sm font-black tabular-nums", s.color)}>
+                    <div key={s.label} className="flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm"
+                      style={{ background: s.bg, border: `1px solid ${s.bd}` }}>
+                      <Icon className="h-3.5 w-3.5 flex-shrink-0" style={{ color: s.c }} />
+                      <span className="text-sm font-black tabular-nums" style={{ color: s.c }}>
                         <AnimatedCounter target={s.value} />
                       </span>
-                      <span className="text-[10px] text-white/40 uppercase tracking-wide">{s.label}</span>
+                      <span className="text-[10px] uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</span>
                     </div>
                   );
                 })}
-              </div>
+              </motion.div>
             )}
 
-            {/* ── CTA row ── */}
-            <div className="flex items-center gap-3 flex-wrap">
+            {/* ── CTA BUTTONS ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.38 }}
+              className="flex items-center gap-3 flex-wrap"
+            >
               {isActive ? (
                 <Button
                   variant="destructive"
@@ -710,31 +853,47 @@ export function Dashboard() {
                   {endSession.isPending ? "Завершуємо…" : "Завершити стрім"}
                 </Button>
               ) : (
-                <Button
-                  onClick={handleStartSession}
-                  disabled={startSession.isPending}
-                  className="font-black gap-2 px-8 h-11 text-sm rounded-xl shadow-xl shadow-violet-500/35 transition-all duration-200 hover:scale-[1.02] hover:shadow-violet-500/55 active:scale-[0.98]"
-                  style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%)" }}
-                >
-                  <Zap className="h-4 w-4" />
-                  {startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}
-                </Button>
+                <div className="relative">
+                  {/* Pulsing glow under button */}
+                  <div className="absolute -inset-0.5 rounded-xl pointer-events-none" style={{
+                    background: "linear-gradient(135deg, rgba(109,40,217,0.7), rgba(91,33,182,0.6))",
+                    filter: "blur(8px)",
+                    animation: "holo-pulse 2.5s ease-in-out infinite",
+                  }} />
+                  <Button
+                    onClick={handleStartSession}
+                    disabled={startSession.isPending}
+                    className="relative font-black gap-2 px-8 h-11 text-sm rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 60%, #5b21b6 100%)" }}
+                  >
+                    {/* Shimmer sweep on button */}
+                    <div className="absolute inset-0 pointer-events-none" style={{
+                      background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)",
+                      animation: "shimmer-slide 2.8s ease-in-out infinite",
+                    }} />
+                    <Zap className="h-4 w-4 relative z-10" style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.6))" }} />
+                    <span className="relative z-10">
+                      {startSession.isPending ? "Запускаємо…" : "⚡ Почати стрім"}
+                    </span>
+                  </Button>
+                </div>
               )}
               <Button
                 variant="outline"
                 onClick={handleForceStop}
                 disabled={forceStop.isPending}
-                className="gap-2 h-11 px-5 text-sm font-semibold border-white/15 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/25 text-white/55 backdrop-blur-sm rounded-xl transition-all duration-200"
+                className="gap-2 h-11 px-5 text-sm font-semibold border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/18 text-white/40 backdrop-blur-sm rounded-xl transition-all duration-200"
                 title="Force-clears any stuck session."
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 {forceStop.isPending ? "…" : "Тест стріму"}
               </Button>
               {isActive && (connected
-                ? <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 border border-green-500/15 text-xs font-medium text-green-300 backdrop-blur-sm"><Wifi className="h-3 w-3" /> Підключено</div>
-                : <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/15 text-xs font-medium text-red-300 backdrop-blur-sm"><WifiOff className="h-3 w-3" /> Відключено</div>
+                ? <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-green-300 backdrop-blur-sm" style={{ background: "rgba(34,197,94,0.09)", border: "1px solid rgba(34,197,94,0.15)" }}><Wifi className="h-3 w-3" /> Підключено</div>
+                : <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-red-300 backdrop-blur-sm" style={{ background: "rgba(239,68,68,0.09)", border: "1px solid rgba(239,68,68,0.15)" }}><WifiOff className="h-3 w-3" /> Відключено</div>
               )}
-            </div>
+            </motion.div>
+
           </div>
         </div>
       </motion.div>
