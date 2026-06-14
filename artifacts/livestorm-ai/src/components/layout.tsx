@@ -168,12 +168,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* ── SIDEBAR ── */}
-      <aside className={cn(
-        "hidden md:flex flex-col fixed inset-y-0 left-0 z-50",
-        "bg-sidebar border-r border-sidebar-border/60",
-        "transition-all duration-300 ease-in-out",
-        sidebarW,
-      )}>
+      <aside
+        className={cn(
+          "hidden md:flex flex-col fixed inset-y-0 left-0 z-50",
+          "border-r border-sidebar-border/60",
+          "transition-all duration-300 ease-in-out",
+          sidebarW,
+        )}
+        style={{
+          backgroundImage: "url('/sidebar-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
 
         {/* Brand */}
         <div className={cn(
