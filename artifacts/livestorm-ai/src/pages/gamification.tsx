@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { RankBadge, ProgressRing, AnimatedCounter } from "@/components/ui/premium";
 
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   trophy: Trophy, star: Star, medal: Medal, zap: Zap, gift: Gift,
   heart: Heart, shield: Shield, sword: Sword, target: Target,
   trending: TrendingUp, users: Users, chat: MessageCircle, map: Map,
@@ -34,31 +34,32 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   castle: Shield, axe: Sword, swords: Sword, message: MessageCircle,
 };
 
-// Per-icon-type color palette — icon, bg, border, shadow, card-accent
-const ICON_COLOR_MAP: Record<string, { icon: string; bg: string; border: string; shadow: string; card: string }> = {
-  trophy:   { icon: "text-amber-400",   bg: "bg-amber-500/20",   border: "border-amber-500/35",  shadow: "shadow-amber-500/20",  card: "bg-amber-500/[0.06] border-amber-500/20"   },
-  star:     { icon: "text-yellow-300",  bg: "bg-yellow-500/20",  border: "border-yellow-500/35", shadow: "shadow-yellow-500/20", card: "bg-yellow-500/[0.06] border-yellow-500/20" },
-  medal:    { icon: "text-cyan-400",    bg: "bg-cyan-500/20",    border: "border-cyan-500/35",   shadow: "shadow-cyan-500/20",   card: "bg-cyan-500/[0.06] border-cyan-500/20"     },
-  zap:      { icon: "text-yellow-300",  bg: "bg-yellow-500/20",  border: "border-yellow-400/40", shadow: "shadow-yellow-500/20", card: "bg-yellow-500/[0.06] border-yellow-500/20" },
-  gift:     { icon: "text-pink-400",    bg: "bg-pink-500/20",    border: "border-pink-500/35",   shadow: "shadow-pink-500/20",   card: "bg-pink-500/[0.06] border-pink-500/20"     },
-  heart:    { icon: "text-red-400",     bg: "bg-red-500/20",     border: "border-red-500/35",    shadow: "shadow-red-500/20",    card: "bg-red-500/[0.06] border-red-500/20"       },
-  shield:   { icon: "text-blue-400",    bg: "bg-blue-500/20",    border: "border-blue-500/35",   shadow: "shadow-blue-500/20",   card: "bg-blue-500/[0.06] border-blue-500/20"     },
-  sword:    { icon: "text-slate-300",   bg: "bg-slate-500/20",   border: "border-slate-400/35",  shadow: "shadow-slate-500/15",  card: "bg-slate-500/[0.06] border-slate-400/20"   },
-  axe:      { icon: "text-slate-300",   bg: "bg-slate-500/20",   border: "border-slate-400/35",  shadow: "shadow-slate-500/15",  card: "bg-slate-500/[0.06] border-slate-400/20"   },
-  swords:   { icon: "text-red-300",     bg: "bg-red-500/20",     border: "border-red-500/35",    shadow: "shadow-red-500/20",    card: "bg-red-500/[0.06] border-red-500/20"       },
-  target:   { icon: "text-orange-400",  bg: "bg-orange-500/20",  border: "border-orange-500/35", shadow: "shadow-orange-500/20", card: "bg-orange-500/[0.06] border-orange-500/20" },
-  trending: { icon: "text-green-400",   bg: "bg-green-500/20",   border: "border-green-500/35",  shadow: "shadow-green-500/20",  card: "bg-green-500/[0.06] border-green-500/20"   },
-  users:    { icon: "text-indigo-400",  bg: "bg-indigo-500/20",  border: "border-indigo-500/35", shadow: "shadow-indigo-500/20", card: "bg-indigo-500/[0.06] border-indigo-500/20" },
-  chat:     { icon: "text-sky-400",     bg: "bg-sky-500/20",     border: "border-sky-500/35",    shadow: "shadow-sky-500/20",    card: "bg-sky-500/[0.06] border-sky-500/20"       },
-  message:  { icon: "text-sky-400",     bg: "bg-sky-500/20",     border: "border-sky-500/35",    shadow: "shadow-sky-500/20",    card: "bg-sky-500/[0.06] border-sky-500/20"       },
-  map:      { icon: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/35",shadow: "shadow-emerald-500/20",card: "bg-emerald-500/[0.06] border-emerald-500/20"},
-  brain:    { icon: "text-violet-400",  bg: "bg-violet-500/20",  border: "border-violet-500/35", shadow: "shadow-violet-500/20", card: "bg-violet-500/[0.06] border-violet-500/20" },
-  flame:    { icon: "text-orange-500",  bg: "bg-orange-500/20",  border: "border-orange-500/35", shadow: "shadow-orange-500/20", card: "bg-orange-500/[0.06] border-orange-500/20" },
-  home:     { icon: "text-amber-300",   bg: "bg-amber-500/15",   border: "border-amber-500/30",  shadow: "shadow-amber-500/15",  card: "bg-amber-500/[0.05] border-amber-500/18"   },
-  castle:   { icon: "text-teal-400",    bg: "bg-teal-500/20",    border: "border-teal-500/35",   shadow: "shadow-teal-500/20",   card: "bg-teal-500/[0.06] border-teal-500/20"     },
-  circle:   { icon: "text-white/70",    bg: "bg-white/10",       border: "border-white/20",      shadow: "shadow-white/10",      card: "bg-white/[0.04] border-white/12"           },
+// Per-icon-type color palette using CSS values (bypasses Tailwind JIT purging)
+type IconColor = { icon: string; bg: string; border: string; cardBg: string; cardBorder: string };
+const ICON_COLOR_MAP: Record<string, IconColor> = {
+  trophy:   { icon: "#fbbf24", bg: "rgba(245,158,11,0.18)",  border: "rgba(245,158,11,0.40)",  cardBg: "rgba(245,158,11,0.07)",  cardBorder: "rgba(245,158,11,0.22)" },
+  star:     { icon: "#fde047", bg: "rgba(234,179,8,0.18)",   border: "rgba(234,179,8,0.40)",   cardBg: "rgba(234,179,8,0.07)",   cardBorder: "rgba(234,179,8,0.22)"  },
+  medal:    { icon: "#22d3ee", bg: "rgba(6,182,212,0.18)",   border: "rgba(6,182,212,0.40)",   cardBg: "rgba(6,182,212,0.07)",   cardBorder: "rgba(6,182,212,0.22)"  },
+  zap:      { icon: "#fde047", bg: "rgba(234,179,8,0.18)",   border: "rgba(234,179,8,0.40)",   cardBg: "rgba(234,179,8,0.07)",   cardBorder: "rgba(234,179,8,0.22)"  },
+  gift:     { icon: "#f472b6", bg: "rgba(236,72,153,0.18)",  border: "rgba(236,72,153,0.40)",  cardBg: "rgba(236,72,153,0.07)",  cardBorder: "rgba(236,72,153,0.22)" },
+  heart:    { icon: "#f87171", bg: "rgba(239,68,68,0.18)",   border: "rgba(239,68,68,0.40)",   cardBg: "rgba(239,68,68,0.07)",   cardBorder: "rgba(239,68,68,0.22)"  },
+  shield:   { icon: "#60a5fa", bg: "rgba(59,130,246,0.18)",  border: "rgba(59,130,246,0.40)",  cardBg: "rgba(59,130,246,0.07)",  cardBorder: "rgba(59,130,246,0.22)" },
+  sword:    { icon: "#cbd5e1", bg: "rgba(148,163,184,0.18)", border: "rgba(148,163,184,0.35)", cardBg: "rgba(148,163,184,0.06)", cardBorder: "rgba(148,163,184,0.20)"},
+  axe:      { icon: "#cbd5e1", bg: "rgba(148,163,184,0.18)", border: "rgba(148,163,184,0.35)", cardBg: "rgba(148,163,184,0.06)", cardBorder: "rgba(148,163,184,0.20)"},
+  swords:   { icon: "#fca5a5", bg: "rgba(239,68,68,0.18)",   border: "rgba(239,68,68,0.40)",   cardBg: "rgba(239,68,68,0.07)",   cardBorder: "rgba(239,68,68,0.22)"  },
+  target:   { icon: "#fb923c", bg: "rgba(249,115,22,0.18)",  border: "rgba(249,115,22,0.40)",  cardBg: "rgba(249,115,22,0.07)",  cardBorder: "rgba(249,115,22,0.22)" },
+  trending: { icon: "#4ade80", bg: "rgba(34,197,94,0.18)",   border: "rgba(34,197,94,0.40)",   cardBg: "rgba(34,197,94,0.07)",   cardBorder: "rgba(34,197,94,0.22)"  },
+  users:    { icon: "#818cf8", bg: "rgba(99,102,241,0.18)",  border: "rgba(99,102,241,0.40)",  cardBg: "rgba(99,102,241,0.07)",  cardBorder: "rgba(99,102,241,0.22)" },
+  chat:     { icon: "#38bdf8", bg: "rgba(14,165,233,0.18)",  border: "rgba(14,165,233,0.40)",  cardBg: "rgba(14,165,233,0.07)",  cardBorder: "rgba(14,165,233,0.22)" },
+  message:  { icon: "#38bdf8", bg: "rgba(14,165,233,0.18)",  border: "rgba(14,165,233,0.40)",  cardBg: "rgba(14,165,233,0.07)",  cardBorder: "rgba(14,165,233,0.22)" },
+  map:      { icon: "#34d399", bg: "rgba(16,185,129,0.18)",  border: "rgba(16,185,129,0.40)",  cardBg: "rgba(16,185,129,0.07)",  cardBorder: "rgba(16,185,129,0.22)" },
+  brain:    { icon: "#c084fc", bg: "rgba(168,85,247,0.18)",  border: "rgba(168,85,247,0.40)",  cardBg: "rgba(168,85,247,0.07)",  cardBorder: "rgba(168,85,247,0.22)" },
+  flame:    { icon: "#f97316", bg: "rgba(249,115,22,0.18)",  border: "rgba(249,115,22,0.40)",  cardBg: "rgba(249,115,22,0.07)",  cardBorder: "rgba(249,115,22,0.22)" },
+  home:     { icon: "#fcd34d", bg: "rgba(245,158,11,0.15)",  border: "rgba(245,158,11,0.32)",  cardBg: "rgba(245,158,11,0.05)",  cardBorder: "rgba(245,158,11,0.18)" },
+  castle:   { icon: "#2dd4bf", bg: "rgba(20,184,166,0.18)",  border: "rgba(20,184,166,0.40)",  cardBg: "rgba(20,184,166,0.07)",  cardBorder: "rgba(20,184,166,0.22)" },
+  circle:   { icon: "rgba(255,255,255,0.70)", bg: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.18)", cardBg: "rgba(255,255,255,0.04)", cardBorder: "rgba(255,255,255,0.12)" },
 };
-const DEFAULT_COLOR = { icon: "text-violet-300", bg: "bg-violet-500/20", border: "border-violet-500/30", shadow: "shadow-violet-500/15", card: "bg-violet-500/[0.07] border-violet-500/25" };
+const DEFAULT_COLOR: IconColor = { icon: "#a78bfa", bg: "rgba(139,92,246,0.18)", border: "rgba(139,92,246,0.40)", cardBg: "rgba(139,92,246,0.07)", cardBorder: "rgba(139,92,246,0.25)" };
 
 function xpToLevel(xp: number) {
   return Math.min(100, Math.floor(Math.sqrt(xp / 50)) + 1);
@@ -282,12 +283,10 @@ function FanProfileModal({ tiktokViewerId, viewerName, streamerId, onClose }: Fa
                           <div
                             key={ach.key}
                             title={`${ach.name}: ${ach.description}`}
-                            className={cn(
-                              "w-9 h-9 rounded-xl flex items-center justify-center cursor-help hover:scale-110 transition-transform border shadow-sm",
-                              col.bg, col.border, col.shadow,
-                            )}
+                            className="w-9 h-9 rounded-xl flex items-center justify-center cursor-help hover:scale-110 transition-transform border"
+                            style={{ background: col.bg, borderColor: col.border, boxShadow: `0 2px 8px ${col.bg}` }}
                           >
-                            <Icon className={cn("w-4 h-4", col.icon)} />
+                            <Icon className="w-4 h-4" style={{ color: col.icon }} />
                           </div>
                         );
                       })}
@@ -649,21 +648,31 @@ export function Gamification() {
                           layout
                           className={cn(
                             "flex items-center gap-3 p-3 rounded-xl border transition-all relative overflow-hidden",
-                            ach.unlocked
-                              ? col.card
-                              : "border-white/[0.04] bg-white/[0.01] opacity-35 grayscale",
+                            !ach.unlocked && "opacity-35 grayscale",
                           )}
+                          style={ach.unlocked ? {
+                            background: col.cardBg,
+                            borderColor: col.cardBorder,
+                          } : {
+                            background: "rgba(255,255,255,0.01)",
+                            borderColor: "rgba(255,255,255,0.04)",
+                          }}
                         >
                           {ach.unlocked && (
                             <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-transparent pointer-events-none" />
                           )}
-                          <div className={cn(
-                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative border shadow-md",
-                            ach.unlocked
-                              ? cn(col.bg, col.border, col.shadow)
-                              : "bg-white/[0.04] border-white/[0.06]",
-                          )}>
-                            <Icon className={cn("w-4 h-4", ach.unlocked ? col.icon : "text-white/38")} />
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative border"
+                            style={ach.unlocked ? {
+                              background: col.bg,
+                              borderColor: col.border,
+                              boxShadow: `0 2px 10px ${col.bg}`,
+                            } : {
+                              background: "rgba(255,255,255,0.04)",
+                              borderColor: "rgba(255,255,255,0.06)",
+                            }}
+                          >
+                            <Icon className="w-4 h-4" style={{ color: ach.unlocked ? col.icon : "rgba(255,255,255,0.38)" }} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5">
