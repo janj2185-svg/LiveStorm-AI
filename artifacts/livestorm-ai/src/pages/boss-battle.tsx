@@ -137,6 +137,15 @@ export function BossBattle() {
   const allAttacks = [...liveAttacks, ...(attacks ?? []).slice(0, 30 - liveAttacks.length)];
 
   return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/boss-battle-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
     <div className="space-y-5 max-w-6xl mx-auto">
 
       {/* Hero */}
@@ -438,6 +447,7 @@ export function BossBattle() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
