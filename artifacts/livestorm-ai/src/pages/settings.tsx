@@ -423,6 +423,15 @@ export function Settings() {
   ];
 
   return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/settings-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
     <div className="max-w-5xl mx-auto">
 
       {/* Page header */}
@@ -853,6 +862,7 @@ export function Settings() {
 
         </div>
       </div>
+    </div>
     </div>
   );
 }
