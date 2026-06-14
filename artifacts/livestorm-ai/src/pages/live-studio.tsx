@@ -391,6 +391,15 @@ export function LiveStudio() {
   }
 
   return (
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: "url('/live-studio-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
     <div className="space-y-4 max-w-5xl mx-auto">
 
       {/* ── Stage Hero Banner ────────────────────────────────────────────── */}
@@ -575,6 +584,7 @@ export function LiveStudio() {
         {eventLogOpen && <EventLog events={events} isActive={!!isActive} />}
       </div>
 
+    </div>
     </div>
   );
 }
