@@ -403,68 +403,91 @@ export const LiveStormStage = memo(function LiveStormStage() {
 
         {/* ── Wordmark ── */}
         <div className="text-center mt-2" style={{ zIndex: 4, position: "relative" }}>
-          <p
-            className="font-black uppercase"
-            style={{
-              fontSize: 28,
-              letterSpacing: "0.22em",
-              color: "#ffffff",
-              textShadow:
-                "0 0 4px #fff, " +
-                "0 0 10px #fff, " +
-                "0 0 22px rgba(255,255,255,0.90), " +
-                "0 0 40px rgba(253,230,138,1), " +
-                "0 0 70px rgba(192,132,252,1), " +
-                "0 0 120px rgba(139,92,246,0.70)",
-            }}
-          >
-            LiveStorm{" "}
-            <span style={{
-              color: "#fde68a",
-              textShadow:
-                "0 0 4px #fff, " +
-                "0 0 12px rgba(255,230,80,1), " +
-                "0 0 28px rgba(255,200,30,1), " +
-                "0 0 55px rgba(255,180,0,0.90), " +
-                "0 0 90px rgba(255,160,0,0.55)",
-            }}>AI</span>
-          </p>
 
-          {/* Divider */}
+          {/* Main wordmark row */}
+          <div className="flex items-center justify-center gap-2">
+            {/* "LIVE" — pure white */}
+            <span
+              className="font-black uppercase"
+              style={{
+                fontSize: 30,
+                letterSpacing: "0.12em",
+                color: "#ffffff",
+                textShadow:
+                  "0 0 4px #fff, " +
+                  "0 0 12px #fff, " +
+                  "0 0 28px rgba(255,255,255,0.85), " +
+                  "0 0 55px rgba(200,220,255,0.60)",
+              }}
+            >LIVE</span>
+
+            {/* "STORM" — electric cyan-blue */}
+            <span
+              className="font-black uppercase"
+              style={{
+                fontSize: 30,
+                letterSpacing: "0.12em",
+                color: "#67e8f9",
+                textShadow:
+                  "0 0 4px rgba(103,232,249,1), " +
+                  "0 0 12px rgba(103,232,249,1), " +
+                  "0 0 26px rgba(103,232,249,0.90), " +
+                  "0 0 50px rgba(6,182,212,0.80), " +
+                  "0 0 90px rgba(6,182,212,0.45)",
+              }}
+            >STORM</span>
+
+            {/* "AI" — gold badge pill */}
+            <span
+              className="font-black"
+              style={{
+                fontSize: 13,
+                letterSpacing: "0.08em",
+                color: "#0a0a14",
+                background: "linear-gradient(135deg, #fde68a 0%, #fbbf24 50%, #f59e0b 100%)",
+                borderRadius: 6,
+                padding: "2px 7px",
+                lineHeight: 1.5,
+                boxShadow:
+                  "0 0 8px rgba(251,191,36,0.90), " +
+                  "0 0 20px rgba(251,191,36,0.70), " +
+                  "0 0 40px rgba(245,158,11,0.50), " +
+                  "0 2px 4px rgba(0,0,0,0.40)",
+                position: "relative",
+                top: -2,
+              }}
+            >AI</span>
+          </div>
+
+          {/* Thin accent line below */}
           <div className="flex items-center justify-center gap-2 mt-1.5">
             <div style={{
-              width: 64, height: 2,
-              background: "linear-gradient(to right, transparent, rgba(255,230,80,1), rgba(192,132,252,1))",
-              boxShadow: "0 0 8px rgba(255,230,80,0.80), 0 0 18px rgba(192,132,252,0.70)",
+              width: 50, height: 1.5,
+              background: "linear-gradient(to right, transparent, rgba(255,255,255,0.70), rgba(103,232,249,1))",
+              boxShadow: "0 0 6px rgba(103,232,249,0.70)",
             }} />
             <div style={{
-              width: 8, height: 8, borderRadius: "50%",
-              background: "#ffffff",
-              boxShadow:
-                "0 0 4px #fff, " +
-                "0 0 10px rgba(255,230,80,1), " +
-                "0 0 22px rgba(255,200,30,1), " +
-                "0 0 40px rgba(192,132,252,1), " +
-                "0 0 70px rgba(192,132,252,0.70)",
+              width: 5, height: 5, borderRadius: "50%",
+              background: "#fff",
+              boxShadow: "0 0 4px #fff, 0 0 10px rgba(103,232,249,1), 0 0 22px rgba(192,132,252,0.90)",
               animation: "neon-breathe 2s ease-in-out infinite",
             }} />
             <div style={{
-              width: 64, height: 2,
-              background: "linear-gradient(to left, transparent, rgba(103,232,249,1), rgba(167,139,250,1))",
-              boxShadow: "0 0 8px rgba(103,232,249,0.80), 0 0 18px rgba(167,139,250,0.70)",
+              width: 50, height: 1.5,
+              background: "linear-gradient(to left, transparent, rgba(255,255,255,0.70), rgba(192,132,252,1))",
+              boxShadow: "0 0 6px rgba(192,132,252,0.70)",
             }} />
           </div>
 
           <p
-            className="font-bold tracking-[0.45em] uppercase mt-1.5"
+            className="font-bold tracking-[0.50em] uppercase mt-1.5"
             style={{
-              fontSize: 11,
-              color: "rgba(103,232,249,1)",
+              fontSize: 9,
+              color: "rgba(167,139,250,0.95)",
               textShadow:
-                "0 0 6px rgba(103,232,249,1), " +
-                "0 0 14px rgba(103,232,249,1), " +
-                "0 0 30px rgba(103,232,249,0.75), " +
-                "0 0 55px rgba(103,232,249,0.45)",
+                "0 0 8px rgba(167,139,250,1), " +
+                "0 0 18px rgba(139,92,246,0.80), " +
+                "0 0 35px rgba(139,92,246,0.50)",
             }}
           >
             STREAMING STAGE
