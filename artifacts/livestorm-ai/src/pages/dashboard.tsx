@@ -693,7 +693,7 @@ export function Dashboard() {
           <div className="absolute bottom-3 right-3 w-4 h-4 border-b-[1.5px] border-r-[1.5px] rounded-br pointer-events-none" style={{ borderColor: "rgba(6,182,212,0.45)" }} />
 
           {/* ── CONTENT ── */}
-          <div className="relative z-10 flex flex-col items-start justify-center text-left px-7 py-0" style={{ minHeight: 72 }}>
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-7 py-0" style={{ minHeight: 72 }}>
 
             {/* ─── LOGO + BRAND — centered ─── */}
             <div className="w-full flex flex-col items-center mb-1 pt-0">
