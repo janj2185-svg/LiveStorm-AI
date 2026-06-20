@@ -292,6 +292,14 @@ export function initSocketServer(httpServer: HttpServer) {
             ack(false, "session-not-found");
             return;
           }
+          const streamer = await db.query.streamersTable.findFirst({
+            where: eq(streamersTable.id, session.streamerId),
+          });
+          if (!streamer || streamer.userId !== Number(socket.data.userId)) {
+            console.warn(`[Mic:10] ✗ REJECTED — not authorized | userId=${socket.data.userId} | sid=${sid}`);
+            ack(false, "not-authorized");
+            return;
+          }
           const event = {
             type:      "streamer_speech" as const,
             sessionId: sid,

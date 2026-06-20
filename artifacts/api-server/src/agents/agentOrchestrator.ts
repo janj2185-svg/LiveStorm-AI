@@ -15,11 +15,10 @@ import { trackStreamEvent, generateStrategySuggestion, shouldGenerateSuggestion,
 import type { StrategySuggestion } from "./strategyAgent";
 import { runLearningAgent } from "./learningAgent";
 import { isBattleActive, generateBattleReply, updateBattleScore, initBattleAgent } from "./battleAgent";
-import { generateVoice, fastSpamCheck } from "../lib/aiService";
+import { fastSpamCheck } from "../lib/aiService";
 import {
   applyEmotionalTrigger,
   getEmotionalState,
-  getVoiceSpeedModifier,
   decayAllEmotions,
   checkSilentSessions,
   clearEmotionalState,
@@ -92,6 +91,11 @@ function computeBaseScore(priority: number, eventType: string, viewerContext?: "
     case 4: return 7.0;  // direct question answered
     default: return 5.0; // general chat
   }
+}
+
+function shouldAllowHostReply(config: typeof aiPersonaConfigsTable.$inferSelect, event: TikTokEvent): boolean {
+  if ((event.type as string) === "streamer_speech") return true;
+  return config.operatingMode === "autopilot" || config.autoReplyEnabled;
 }
 
 interface QueueItem {
@@ -905,6 +909,13 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     return;
   }
 
+  if (!shouldAllowHostReply(config, event)) {
+    console.log(
+      `[Orchestrator] ✗ host reply suppressed by AI mode | streamer=${streamerId} | session=${sessionId} | event=${event.type} | operatingMode=${config.operatingMode} | autoReplyEnabled=${config.autoReplyEnabled}`,
+    );
+    return;
+  }
+
   if (!state.enabledAgents.has("host")) return;
 
   // ── Personality Agent ────────────────────────────────────────────────────────
@@ -1057,30 +1068,16 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
         opponentStatement: commentText,
         context: battleResult.context,
       });
-      // Route battle reply through the same TTS voice pipeline with emotion speed modifier
-      const battleRoomSockets = io.sockets.adapter.rooms.get(`session:${sessionId}`)?.size ?? 0;
-      if (config.voiceEnabled && state.enabledAgents.has("voice") && battleRoomSockets > 0) {
-        void (async () => {
-          try {
-            const battleSpeedBoost = getVoiceSpeedModifier(emotionState);
-            const battleSpeed      = Math.min(1.8, Math.max(0.5, (voice.speed ?? 1.0) + battleSpeedBoost));
-            if (Math.abs(battleSpeedBoost) > 0.01) {
-              console.log(`[Agent:Battle] 🎙️ speed adjusted | base=${voice.speed} boost=+${battleSpeedBoost.toFixed(2)} → ${battleSpeed.toFixed(2)}`);
-            }
-            const audioBuffer = await generateVoice(
-              battleResult.suggestedReply!,
-              voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
-              battleSpeed,
-            );
-            if (audioBuffer) {
-              io.to(`session:${sessionId}`).emit("tts:audio", { audio: audioBuffer, text: battleResult.suggestedReply });
-              console.log(`[Agent:Battle] 🔊 TTS battle comeback delivered`);
-            }
-          } catch (e) {
-            console.error("[Agent:Battle] TTS error:", (e as Error)?.message);
-          }
-        })();
-      }
+      io.to(`session:${sessionId}`).emit("ai:announcement", {
+        text: battleResult.suggestedReply,
+        type: "battle_reply",
+        viewerName: event.username,
+        emotion: emotionState.primary,
+        agentType: "battle",
+        pipeline: "orchestrator",
+        streamerLang: config.defaultLanguage ?? "uk",
+      });
+      console.log("[Agent:Battle] 🔊 battle TTS delegated to client ai:announcement pipeline");
       void scoreResponse({ sessionId, streamerId, agentType: "battle", triggerEvent: "comment", aiResponse: battleResult.suggestedReply, score: 8.0 });
       void logTask({ sessionId, streamerId, agentType: "battle", eventType: "comment", priority: item.priority, input: { opponent: commentText.slice(0, 100) }, output: { reply: battleResult.suggestedReply.slice(0, 100) } });
       recordBattleAftermath(sessionId, "win");
@@ -1338,35 +1335,14 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     score: computeBaseScore(item.priority, event.type, _viewerCtx),
   });
 
-  // ── Voice Agent: synthesize TTS (emotion-adjusted speed) ────────────────────
+  // ── Voice Agent: client-side TTS contract ───────────────────────────────────
+  // The browser owns playback after ai:announcement so autoplay unlock, lip-sync,
+  // queueing, and billing are single-sourced in useLiveSession.ts.
   const socketsInRoom = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
   console.log(`[TTSRequested] voiceEnabled=${config.voiceEnabled} | socketsInRoom=${socketsInRoom} | event=${event.type} | voiceKey=${voice.voiceKey}`);
-  if (config.voiceEnabled && state.enabledAgents.has("voice")) {
-    if (socketsInRoom === 0) {
-      console.log(`[Agent:Voice] ⚠️ skipping TTS — no sockets in room ${roomId} (prevents silent billing)`);
-    } else {
-    try {
-      const emotionSpeedBoost = getVoiceSpeedModifier(emotionState);
-      const adjustedSpeed     = Math.min(1.8, Math.max(0.5, (voice.speed ?? 1.0) + emotionSpeedBoost));
-      if (Math.abs(emotionSpeedBoost) > 0.01) {
-        console.log(`[Agent:Voice] 🎙️ speed adjusted by emotion | base=${voice.speed} boost=${emotionSpeedBoost.toFixed(2)} → ${adjustedSpeed.toFixed(2)}`);
-      }
-      console.log(`[Agent:Voice] 🎙️ synthesizing TTS | voiceKey=${voice.voiceKey} speed=${adjustedSpeed.toFixed(2)} | text="${spokenText.slice(0, 50)}..."`);
-      const audioBuffer = await generateVoice(spokenText, voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer", adjustedSpeed);
-      if (audioBuffer) {
-        console.log(`[TTSGenerated] bytes=${audioBuffer.byteLength ?? 0} | event=${event.type} → emitting tts:audio to ${roomId}`);
-        console.log(`[Agent:Voice] ✓ TTS audio generated | ${audioBuffer.byteLength ?? 0} bytes`);
-        io.to(roomId).emit("tts:audio", { audio: audioBuffer, text: spokenText });
-      } else {
-        console.warn(`[TTSGenerated] ✗ audioBuffer is null — generateVoice returned nothing | event=${event.type}`);
-      }
-    } catch (err: unknown) {
-      console.error("[Agent:Voice] ✗ TTS error:", (err as Error)?.message);
-    }
-    }
-  } else {
-    console.log(`[TTSRequested] ⚠️ server TTS skipped — voiceEnabled=${config.voiceEnabled} | voice agent enabled=${state.enabledAgents.has("voice")} → client-side TTS via ai:announcement`);
-  }
+  console.log(
+    `[Agent:Voice] client-side TTS delegated via ai:announcement | voiceEnabled=${config.voiceEnabled} | voiceAgent=${state.enabledAgents.has("voice")} | socketsInRoom=${socketsInRoom}`,
+  );
 
   // ── Strategy Agent: generate suggestions ────────────────────────────────────
   if (state.enabledAgents.has("strategy") && await shouldGenerateSuggestion(sessionId)) {

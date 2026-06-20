@@ -558,6 +558,7 @@ export function LiveStudio() {
             openaiTtsOk={openaiTtsOk}
             lastMicEmit={lastMicEmit}
             lastMicBackendAck={lastMicBackendAck}
+            getToken={getToken}
           />
         </div>
 

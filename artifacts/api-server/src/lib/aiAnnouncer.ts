@@ -1,24 +1,7 @@
 import type { Server as SocketServer } from "socket.io";
 import { db, aiPersonaConfigsTable, aiMessagesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { generateAnnouncement, generateVoice } from "./aiService";
-import { getActiveVoice } from "../agents/voiceAgent";
-
-async function emitTts(io: SocketServer, roomId: string, streamerId: number, text: string): Promise<void> {
-  try {
-    const voice = await getActiveVoice(streamerId);
-    const audioBuffer = await generateVoice(
-      text,
-      voice.voiceKey as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
-      voice.speed,
-    );
-    if (audioBuffer) {
-      io.to(roomId).emit("tts:audio", { audio: audioBuffer, text });
-    }
-  } catch {
-    // TTS failures must never crash the announcement pipeline
-  }
-}
+import { generateAnnouncement } from "./aiService";
 
 async function logAnnouncement(streamerId: number, text: string): Promise<void> {
   try {
@@ -62,7 +45,7 @@ export async function emitAiAutomationAnnouncement(
 
     console.log(`[AI:automation] streamerId=${streamerId} automation="${automationName}" → "${text.slice(0, 60)}"`);
     io.to(roomId).emit("ai:announcement", { text, type: "automation", viewerName: event.viewerName, automationName });
-    await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+    await logAnnouncement(streamerId, text);
     return text;
   } catch {
     return "";
@@ -89,7 +72,7 @@ export async function emitAiGiftAnnouncement(
     if (text) {
       console.log(`[AI:announcer] gift | streamerId=${streamerId} viewer=${viewerName} coins=${coins} → "${text.slice(0, 60)}"`);
       io.to(roomId).emit("ai:announcement", { text, type: "gift", viewerName });
-      await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+      await logAnnouncement(streamerId, text);
     }
   } catch {
     // AI failures must never crash the pipeline
@@ -116,7 +99,7 @@ export async function emitAiLevelUpAnnouncement(
     if (text) {
       console.log(`[AI:announcer] level_up | streamerId=${streamerId} viewer=${viewerName} lvl=${newLevel} → "${text.slice(0, 60)}"`);
       io.to(roomId).emit("ai:announcement", { text, type: "level_up", viewerName });
-      await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+      await logAnnouncement(streamerId, text);
     }
   } catch {
     // AI failures must never crash the pipeline
@@ -143,7 +126,7 @@ export async function emitAiBossDefeatedAnnouncement(
     if (text) {
       console.log(`[AI:announcer] boss_kill | streamerId=${streamerId} boss="${bossName}" killedBy=${killedBy} → "${text.slice(0, 60)}"`);
       io.to(roomId).emit("ai:announcement", { text, type: "boss_defeated", viewerName: killedBy, bossName });
-      await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+      await logAnnouncement(streamerId, text);
     }
   } catch {
     // AI failures must never crash the pipeline
@@ -168,7 +151,7 @@ export async function emitAiShareAnnouncement(
     if (text) {
       console.log(`[AI:announcer] share | streamerId=${streamerId} viewer=${viewerName} → "${text.slice(0, 60)}"`);
       io.to(roomId).emit("ai:announcement", { text, type: "share", viewerName });
-      await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+      await logAnnouncement(streamerId, text);
     }
   } catch {
     // AI failures must never crash the pipeline
@@ -193,7 +176,7 @@ export async function emitAiLikeMilestoneAnnouncement(
     if (text) {
       console.log(`[AI:announcer] like_milestone | streamerId=${streamerId} totalLikes=${totalLikes} → "${text.slice(0, 60)}"`);
       io.to(roomId).emit("ai:announcement", { text, type: "like_milestone" });
-      await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+      await logAnnouncement(streamerId, text);
     }
   } catch {
     // AI failures must never crash the pipeline
@@ -222,7 +205,7 @@ export async function emitAiLuckyDropAnnouncement(
     if (text) {
       console.log(`[AI:announcer] lucky_drop | streamerId=${streamerId} winner=${winnerName} drop="${dropName}" → "${text.slice(0, 60)}"`);
       io.to(roomId).emit("ai:announcement", { text, type: "lucky_drop", viewerName: winnerName, dropName });
-      await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+      await logAnnouncement(streamerId, text);
     }
   } catch {
     // AI failures must never crash the pipeline
@@ -249,7 +232,7 @@ export async function emitAiAchievementAnnouncement(
     if (text) {
       console.log(`[AI:announcer] achievement | streamerId=${streamerId} viewer=${viewerName} achievement="${achievementName}" → "${text.slice(0, 60)}"`);
       io.to(roomId).emit("ai:announcement", { text, type: "achievement", viewerName, achievementName });
-      await Promise.all([logAnnouncement(streamerId, text), emitTts(io, roomId, streamerId, text)]);
+      await logAnnouncement(streamerId, text);
     }
   } catch {
     // AI failures must never crash the pipeline

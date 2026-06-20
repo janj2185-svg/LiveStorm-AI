@@ -767,8 +767,8 @@ export function AiAssistant() {
     aiAnnouncements, viewerRecognitionEvents, luckyDrops, achievementUnlocks,
     activeSessionRes, isActive: isSessionActive, activeSessionId, sessionMode,
     sendStreamerSpeech, ttsModeLive, activeVoiceName,
-    isAudioUnlocked, unlockAudio, openaiTtsOk,
-    lastMicEmit, lastMicBackendAck,
+    isAudioUnlocked, unlockAudio, replayTts, openaiTtsOk,
+    lastMicEmit, lastMicBackendAck, coHostLatency,
   } = useLiveSessionContext();
   const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
   const effectiveMode = tiktokMode ?? (isSessionActive ? "demo" : null);
@@ -912,27 +912,30 @@ export function AiAssistant() {
       const text = (e as CustomEvent<{ text: string }>).detail?.text;
       if (text) setLastSpokenText(text);
     };
-    const handleFallback = () => {
-      setUsingBrowserFallback(true);
-      setLastTtsError("OpenAI TTS unavailable — using browser voice fallback.");
+    const handleTtsOk = () => {
+      setUsingBrowserFallback(false);
+      setLastTtsError(null);
     };
-    const handleTtsError = () => {
+    const handleTtsError = (e: Event) => {
+      const detail = (e as CustomEvent<{ error?: string }>).detail;
+      setUsingBrowserFallback(false);
+      setLastTtsError(detail?.error ?? "OpenAI TTS failed.");
       setTtsPlaybackState("error");
     };
     window.addEventListener("tts:start", handleStart);
     window.addEventListener("tts:end", handleEnd);
     window.addEventListener("tts:queue", handleQueue);
     window.addEventListener("tts:spoken", handleSpoken);
-    window.addEventListener("tts:fallback", handleFallback);
-    window.addEventListener("tts:error", handleTtsError);
+    window.addEventListener("tts:openai:ok", handleTtsOk);
+    window.addEventListener("tts:openai:err", handleTtsError);
     return () => {
       clearTimeout(finishTimerRef.id);
       window.removeEventListener("tts:start", handleStart);
       window.removeEventListener("tts:end", handleEnd);
       window.removeEventListener("tts:queue", handleQueue);
       window.removeEventListener("tts:spoken", handleSpoken);
-      window.removeEventListener("tts:fallback", handleFallback);
-      window.removeEventListener("tts:error", handleTtsError);
+      window.removeEventListener("tts:openai:ok", handleTtsOk);
+      window.removeEventListener("tts:openai:err", handleTtsError);
     };
   }, []);
 
@@ -1482,9 +1485,12 @@ export function AiAssistant() {
               activeVoiceName={activeVoiceName ?? null}
               isAudioUnlocked={isAudioUnlocked ?? false}
               unlockAudio={unlockAudio ?? (() => {})}
+              replayTts={replayTts}
+              coHostLatency={coHostLatency}
               openaiTtsOk={openaiTtsOk ?? null}
               lastMicEmit={lastMicEmit ?? null}
               lastMicBackendAck={lastMicBackendAck ?? null}
+              getToken={getToken}
             />
           </div>
 
