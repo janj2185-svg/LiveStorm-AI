@@ -43,14 +43,14 @@ cp .env.example .env   # or create .env manually (see below)
 # Required
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
 CLERK_PUBLISHABLE_KEY=pk_live_...
-CLERK_SECRET_KEY=sk_live_...
+CLERK_SECRET_KEY=YOUR_CLERK_SECRET_KEY
 AI_INTEGRATIONS_OPENAI_API_KEY=sk-...
 
 # TikTok mode: set to "real" for live connections
 TIKTOK_MODE=real
 
 # Optional
-STRIPE_SECRET_KEY=sk_live_...
+STRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
