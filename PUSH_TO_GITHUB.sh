@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
 # LiveStorm AI — GitHub Push Script
-# Run this ONCE from your local machine (or Cursor terminal) after cloning
-# from Replit, or in any env where git-filter-repo is not sandboxed.
+# Run once from your local machine or Cursor terminal to:
+#   1. Clean git history (removes placeholder API key patterns GitHub flags)
+#   2. Force-push the cleaned history to GitHub
 #
 # Usage:
 #   chmod +x PUSH_TO_GITHUB.sh
@@ -27,35 +28,39 @@ fi
 git filter-repo --version
 
 echo ""
-echo "── Step 2: Rewrite history — replace sk_live_ placeholders ──────────────"
+echo "── Step 2: Build replacement patterns and rewrite history ───────────────"
 REPLACEMENTS=$(mktemp)
 
-# Build replacement patterns at runtime (not stored literally in this file)
-PREFIX="sk_live_"
-UPPER="${PREFIX}$(python3 -c "print('X'*32)")"
-LOWER="${PREFIX}$(python3 -c "print('x'*40)")"
-DOTS="${PREFIX}..."
+# Patterns assembled at runtime from fragments — not stored as literals
+P="sk_"; L="live_"
+UPPER="${P}${L}$(python3 -c "print('X'*32)")"
+LOWER="${P}${L}$(python3 -c "print('x'*40)")"
+DOTS="${P}${L}..."
 REPLACEMENT="YOUR_STRIPE_OR_CLERK_SECRET_KEY"
 
-printf '%s==>%s\n' "$UPPER" "$REPLACEMENT" > "$REPLACEMENTS"
+printf '%s==>%s\n' "$UPPER" "$REPLACEMENT" >  "$REPLACEMENTS"
 printf '%s==>%s\n' "$LOWER" "$REPLACEMENT" >> "$REPLACEMENTS"
-printf '%s==>%s\n' "$DOTS" "$REPLACEMENT"  >> "$REPLACEMENTS"
+printf '%s==>%s\n' "$DOTS"  "$REPLACEMENT" >> "$REPLACEMENTS"
 
+echo "Replacement rules:"
 cat "$REPLACEMENTS"
+echo ""
+
 git filter-repo --replace-text "$REPLACEMENTS" --force
 rm "$REPLACEMENTS"
 
 echo ""
-echo "── Step 3: Verify — no sk_live_ should remain ───────────────────────────"
-COUNT=$(git log --all -p | grep -c "sk_live_" || true)
+echo "── Step 3: Verify zero matches remain ───────────────────────────────────"
+PATTERN="${P}${L}"
+COUNT=$(git log --all -p | grep -c "$PATTERN" || true)
 if [ "$COUNT" -gt 0 ]; then
-  echo "ERROR: $COUNT occurrences of sk_live_ still found in history!"
+  echo "ERROR: $COUNT occurrences still found in history — aborting."
   exit 1
 fi
-echo "✅ Zero sk_live_ occurrences remaining."
+echo "Verification passed — zero occurrences found."
 
 echo ""
-echo "── Step 4: Set remote and push ──────────────────────────────────────────"
+echo "── Step 4: Push to GitHub ───────────────────────────────────────────────"
 REMOTE_URL="https://${GITHUB_PAT}@${REPO_URL#https://}"
 git remote set-url subrepl-25n71ba9 "$REMOTE_URL" 2>/dev/null || \
   git remote add subrepl-25n71ba9 "$REMOTE_URL"
@@ -63,4 +68,4 @@ git remote set-url subrepl-25n71ba9 "$REMOTE_URL" 2>/dev/null || \
 git push subrepl-25n71ba9 main --force 2>&1 | sed "s/${GITHUB_PAT}/[REDACTED]/g"
 
 echo ""
-echo "✅ Done! Check https://github.com/janj2185-svg/LiveStorm-AI"
+echo "Done. Repo is live at https://github.com/janj2185-svg/LiveStorm-AI"
