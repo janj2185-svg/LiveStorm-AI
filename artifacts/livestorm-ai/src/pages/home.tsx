@@ -16,6 +16,11 @@ export function Home() {
             <span className="font-bold text-xl tracking-tight text-white">LiveStorm AI</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/designs">
+              <Button variant="ghost" className="hidden text-muted-foreground hover:text-white sm:inline-flex" data-testid="link-designs">
+                Designs
+              </Button>
+            </Link>
             <Link href="/sign-in">
               <Button variant="ghost" className="text-muted-foreground hover:text-white" data-testid="link-login">
                 Log in

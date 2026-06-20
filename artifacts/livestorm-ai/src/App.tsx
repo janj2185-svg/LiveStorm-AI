@@ -10,6 +10,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Layout } from "@/components/layout";
 import { Home } from "@/pages/home";
+import { Designs } from "@/pages/designs";
 import { Dashboard } from "@/pages/dashboard";
 import { LiveStudio } from "@/pages/live-studio";
 import { Gamification } from "@/pages/gamification";
@@ -199,6 +200,7 @@ function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={HomeRedirect} />
+      <Route path="/designs" component={Designs} />
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       
