@@ -20,6 +20,8 @@ import {
   generateContent,
 } from "../lib/aiService";
 import { getIO } from "../lib/socketServer";
+import { autoReplyForOperatingMode } from "../lib/cohostPolicy";
+import { createInMemoryRateLimit } from "../lib/rateLimit";
 
 const router = Router();
 
@@ -43,6 +45,13 @@ const VALID_OPERATING_MODES = ["assistant", "semi-auto", "autopilot"] as const;
 const VALID_PERSONALITIES = ["funny", "serious", "troll", "motivator", "battle", "friendly", "custom"] as const;
 const VALID_INTENSITY_MODES = ["family_friendly", "streamer", "unfiltered", "savage_battle"] as const;
 const VALID_EMOTIONS = ["neutral", "excited", "calm", "dramatic", "warm"] as const;
+
+const aiVoiceRateLimit = createInMemoryRateLimit({
+  windowMs: 60_000,
+  maxRequests: 60,
+  keyPrefix: "ai_voice",
+  keyGenerator: (req) => req.clerkUserId,
+});
 
 async function getStreamer(clerkId: string) {
   const user = await getOrCreateUser(clerkId);
@@ -125,9 +134,8 @@ router.put("/ai/config", requireAuth, async (req: any, res: any) => {
     }
     if (operatingMode !== undefined && VALID_OPERATING_MODES.includes(operatingMode)) {
       updates.operatingMode = operatingMode;
-      // Sync autoReplyEnabled with operating mode
-      if (operatingMode === "assistant") updates.autoReplyEnabled = false;
-      else if (operatingMode === "autopilot") updates.autoReplyEnabled = true;
+      const syncedAutoReply = autoReplyForOperatingMode(operatingMode);
+      if (syncedAutoReply !== undefined) updates.autoReplyEnabled = syncedAutoReply;
     }
     if (announceGifts !== undefined) updates.announceGifts = Boolean(announceGifts);
     if (announceGiftThreshold !== undefined) updates.announceGiftThreshold = Math.max(0, Number(announceGiftThreshold));
@@ -420,7 +428,7 @@ function resolveToOpenAIVoice(voiceKey: string): OpenAIVoice {
 }
 
 // ── POST /ai/voice ─────────────────────────────────────────────────────────────
-router.post("/ai/voice", requireAuth, async (req: any, res: any) => {
+router.post("/ai/voice", requireAuth, aiVoiceRateLimit, async (req: any, res: any) => {
   try {
     const { text, voice, speed } = req.body;
     if (!text?.trim()) return res.status(400).json({ error: "text is required" });
