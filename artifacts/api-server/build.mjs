@@ -102,6 +102,7 @@ async function buildAll() {
       "knex",
       "typeorm",
       "protobufjs",
+      "tiktok-live-connector",
       "onnxruntime-node",
       "@tensorflow/*",
       "@prisma/client",

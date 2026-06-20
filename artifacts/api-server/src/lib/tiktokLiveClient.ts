@@ -13,12 +13,25 @@
 import { EventEmitter } from "node:events";
 import { createRequire } from "node:module";
 
-// tiktok-live-connector is CommonJS — import via createRequire so esbuild
-// can bundle it into our ESM output without issues.
-const _require = createRequire(import.meta.url);
-const { WebcastPushConnection } = _require("tiktok-live-connector") as {
-  WebcastPushConnection: new (username: string, options?: Record<string, unknown>) => any;
-};
+// tiktok-live-connector is CommonJS and depends on protobufjs which is blocked
+// by Replit's package firewall.  We lazy-load it only when TikTokLiveClient is
+// actually instantiated (i.e. TIKTOK_MODE=real) so that the server starts
+// cleanly in demo mode even when the package is not available at boot time.
+function loadWebcastPushConnection(): new (username: string, options?: Record<string, unknown>) => any {
+  try {
+    const _require = createRequire(import.meta.url);
+    const mod = _require("tiktok-live-connector") as {
+      WebcastPushConnection: new (username: string, options?: Record<string, unknown>) => any;
+    };
+    return mod.WebcastPushConnection;
+  } catch (err) {
+    throw new Error(
+      "tiktok-live-connector is not available in this environment. " +
+      "Set TIKTOK_MODE=demo to use the built-in simulator, or install " +
+      "the package manually. Original error: " + String(err)
+    );
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -235,7 +248,7 @@ export interface TikTokLiveClientOptions {
 export class TikTokLiveClient extends EventEmitter {
   readonly username: string;
   private stopped = false;
-  private currentClient: InstanceType<typeof WebcastPushConnection> | null = null;
+  private currentClient: any | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectDelay = 15_000;
   /** Last WebSocket URL host used — included in DISCONNECT log for traceability. */
@@ -277,6 +290,7 @@ export class TikTokLiveClient extends EventEmitter {
     return new Promise<void>((resolve) => {
       if (this.stopped) { resolve(); return; }
 
+      const WebcastPushConnection = loadWebcastPushConnection();
       const client = new WebcastPushConnection(this.username, {
         processInitialData: false,
         enableExtendedGiftInfo: false,
