@@ -1,39 +1,115 @@
 version: "3.8"
 
+# ══════════════════════════════════════════════════════════════════════════════
+# LiveStorm AI — Docker Compose (VPS / Self-hosted)
+# ══════════════════════════════════════════════════════════════════════════════
+# Usage:
+#   cp .env.production.example .env
+#   nano .env                          # Fill in all secrets
+#   docker compose up -d --build
+#
+# Requires: Docker 24+, Docker Compose v2
+# ══════════════════════════════════════════════════════════════════════════════
+
 services:
-  api:
-    build: .
+
+  # ── PostgreSQL 16 ─────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: livestorm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: livestorm
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: livestormdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-apply schema on first boot (only runs if DB is empty)
+      - ./DATABASE_SCHEMA.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     ports:
-      - "8080:8080"
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U livestorm -d livestormdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API Server ────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: livestorm-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 8080
 
-      # ── TikTok mode ──────────────────────────────────────────────────────────
-      # Set to "real" on your production VPS to connect to actual TikTok LIVE.
-      # Keep "demo" while testing — the built-in simulator generates fake events.
-      TIKTOK_MODE: "${TIKTOK_MODE:-real}"
+      # Database (points to postgres container above)
+      DATABASE_URL: "postgresql://livestorm:${POSTGRES_PASSWORD}@postgres:5432/livestormdb"
 
-      # ── Database ─────────────────────────────────────────────────────────────
-      DATABASE_URL: "${DATABASE_URL}"
-
-      # ── Clerk auth ───────────────────────────────────────────────────────────
+      # Clerk auth
       CLERK_PUBLISHABLE_KEY: "${CLERK_PUBLISHABLE_KEY}"
       CLERK_SECRET_KEY: "${CLERK_SECRET_KEY}"
 
-      # ── OpenAI (via Replit AI Integrations proxy or direct) ──────────────────
-      AI_INTEGRATIONS_OPENAI_BASE_URL: "${AI_INTEGRATIONS_OPENAI_BASE_URL:-https://api.openai.com/v1}"
+      # OpenAI (on VPS: use OpenAI directly, not Replit proxy)
       AI_INTEGRATIONS_OPENAI_API_KEY: "${AI_INTEGRATIONS_OPENAI_API_KEY}"
+      AI_INTEGRATIONS_OPENAI_BASE_URL: "${AI_INTEGRATIONS_OPENAI_BASE_URL:-https://api.openai.com/v1}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
 
-      # ── Stripe (optional) ────────────────────────────────────────────────────
+      # TikTok LIVE
+      TIKTOK_MODE: "${TIKTOK_MODE:-real}"
+      LIVE_PROVIDER: "${LIVE_PROVIDER:-tiktools}"
+      TIKTOOL_API_KEY: "${TIKTOOL_API_KEY}"
+      SIGN_API_KEY: "${SIGN_API_KEY:-}"
+      SIGN_API_URL: "${SIGN_API_URL:-}"
+
+      # Object storage (local filesystem on VPS)
+      PRIVATE_OBJECT_DIR: /data/private
+      PUBLIC_OBJECT_SEARCH_PATHS: /data/public
+
+      # Stripe (optional)
       STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
       STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET:-}"
 
-    restart: unless-stopped
+      # App
+      FRONTEND_URL: "${FRONTEND_URL}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
 
-    # Optional: persist logs
+    volumes:
+      - object_storage:/data
+    ports:
+      - "127.0.0.1:8080:8080"
     logging:
       driver: "json-file"
       options:
         max-size: "20m"
         max-file: "5"
+
+  # ── Nginx (public reverse proxy: HTTPS → api + frontend) ─────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: livestorm-nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # Serve built frontend static files directly from nginx
+      - ./artifacts/livestorm-ai/dist/public:/var/www/livestorm:ro
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  postgres_data:
+    name: livestorm_postgres_data
+  object_storage:
+    name: livestorm_object_storage
+  nginx_logs:
+    name: livestorm_nginx_logs

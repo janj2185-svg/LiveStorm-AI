@@ -54,3 +54,11 @@ Thumbs.db
 .env.local
 .env.production
 .env.*.local
+
+# Large binary backups (use git-lfs or external storage)
+artifacts/livestorm-backup.zip
+*.backup.zip
+
+# Desktop build artifacts
+artifacts/desktop/dist-desktop/
+artifacts/desktop/node_modules/
