@@ -130,13 +130,16 @@ export function useWhisperMic({
   // ── Transcribe blob via Whisper ───────────────────────────────────────────
   const transcribeAudio = useCallback(async (blob: Blob): Promise<string> => {
     const langCode = langRef.current.split("-")[0];
+    const activeSessionId = sessionRef.current;
+    if (!activeSessionId) throw new Error("No active session for transcription");
     let token: string | null = null;
     try { token = (await getTokenRef.current?.()) ?? null; } catch {}
 
-    const headers: Record<string, string> = { "Content-Type": "audio/webm" };
+    const headers: Record<string, string> = { "Content-Type": blob.type || "audio/webm" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}/mic/transcribe?lang=${langCode}`, {
+    const params = new URLSearchParams({ lang: langCode, sessionId: String(activeSessionId) });
+    const res = await fetch(`${API_BASE}/mic/transcribe?${params.toString()}`, {
       method: "POST",
       headers,
       body: blob,
