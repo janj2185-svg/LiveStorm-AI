@@ -51,6 +51,7 @@ import {
 } from "./moodEngine";
 import { buildRecognitionInjection, markRecognitionFired, clearRecognitionState } from "./recognitionEngine";
 import type { RecognitionState } from "./recognitionEngine";
+import { shouldAllowCoHostReply } from "../lib/cohostPolicy";
 
 const MAX_QUEUE_SIZE         = 40;   // hard cap — evict oldest P6 items first
 const QUEUE_PRUNE_THRESHOLD  = 25;   // start pruning when queue exceeds this depth
@@ -91,11 +92,6 @@ function computeBaseScore(priority: number, eventType: string, viewerContext?: "
     case 4: return 7.0;  // direct question answered
     default: return 5.0; // general chat
   }
-}
-
-function shouldAllowHostReply(config: typeof aiPersonaConfigsTable.$inferSelect, event: TikTokEvent): boolean {
-  if ((event.type as string) === "streamer_speech") return true;
-  return config.operatingMode === "autopilot" || config.autoReplyEnabled;
 }
 
 interface QueueItem {
@@ -909,7 +905,12 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
     return;
   }
 
-  if (!shouldAllowHostReply(config, event)) {
+  if (!shouldAllowCoHostReply({
+    operatingMode: config.operatingMode,
+    autoReplyEnabled: config.autoReplyEnabled,
+    eventType: event.type,
+    priority: item.priority,
+  })) {
     console.log(
       `[Orchestrator] ✗ host reply suppressed by AI mode | streamer=${streamerId} | session=${sessionId} | event=${event.type} | operatingMode=${config.operatingMode} | autoReplyEnabled=${config.autoReplyEnabled}`,
     );
