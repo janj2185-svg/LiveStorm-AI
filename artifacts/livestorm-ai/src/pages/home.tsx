@@ -1,306 +1,154 @@
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import {
-  Zap,
-  Play,
-  Trophy,
-  Bot,
-  Activity,
-  Sparkles,
-  Users,
-  Globe,
-  ArrowRight,
-  Heart,
-  Gift,
-} from "lucide-react";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] as const },
-  }),
-};
-
-function Tile({
-  className = "",
-  children,
-  i = 0,
-}: {
-  className?: string;
-  children: React.ReactNode;
-  i?: number;
-}) {
-  return (
-    <motion.div
-      custom={i}
-      variants={fadeUp}
-      initial="hidden"
-      animate="show"
-      className={
-        "relative overflow-hidden rounded-[28px] border border-white/60 bg-white/70 shadow-[0_10px_40px_-12px_rgba(76,29,149,0.25)] backdrop-blur-xl " +
-        className
-      }
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function Orb({ emoji, from, to }: { emoji: string; from: string; to: string }) {
-  return (
-    <div
-      className="flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-lg"
-      style={{
-        background: `linear-gradient(135deg, ${from}, ${to})`,
-        boxShadow: `0 12px 30px -8px ${to}aa`,
-      }}
-    >
-      <span style={{ filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.25))" }}>{emoji}</span>
-    </div>
-  );
-}
+import { Zap, Shield, Trophy, Users, Play, Crown } from "lucide-react";
 
 export function Home() {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden text-slate-900">
-      {/* Vibrant gradient-mesh background */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 12% 10%, #c7b2ff 0%, transparent 60%)," +
-            "radial-gradient(55% 55% at 88% 8%, #9ad7ff 0%, transparent 55%)," +
-            "radial-gradient(60% 60% at 90% 85%, #ffc2ec 0%, transparent 55%)," +
-            "radial-gradient(70% 70% at 8% 92%, #b5c8ff 0%, transparent 60%)," +
-            "linear-gradient(180deg, #f3f1ff 0%, #eef4ff 100%)",
-        }}
-      />
-      <div className="pointer-events-none absolute -left-24 top-24 -z-10 h-72 w-72 rounded-full bg-fuchsia-400/30 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-10 -z-10 h-80 w-80 rounded-full bg-cyan-300/30 blur-3xl" />
-
-      <div className="mx-auto max-w-7xl px-4 pb-16 pt-5 sm:px-6">
-        {/* Nav */}
-        <header className="mb-8 flex items-center justify-between">
+    <div className="min-h-[100dvh] bg-background text-foreground selection:bg-primary/30">
+      {/* Navbar */}
+      <header className="fixed top-0 w-full z-50 border-b border-white/10 bg-background/80 backdrop-blur-md">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30">
-              <Zap className="h-5 w-5 text-white" fill="white" />
-            </div>
-            <span className="text-lg font-extrabold tracking-tight">LiveStorm AI</span>
+            <img src={`${basePath}/logo.svg`} alt="Logo" className="w-8 h-8" />
+            <span className="font-bold text-xl tracking-tight text-white">LiveStorm AI</span>
           </div>
-
-          <nav className="hidden items-center gap-1 rounded-full border border-white/70 bg-white/60 px-2 py-1.5 text-sm font-medium text-slate-600 shadow-sm backdrop-blur-xl md:flex">
-            {["Product", "Features", "Pricing", "Partners"].map((l) => (
-              <span
-                key={l}
-                className="cursor-pointer rounded-full px-3.5 py-1.5 transition-colors hover:bg-white hover:text-slate-900"
-              >
-                {l}
-              </span>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <Link href="/sign-in">
-              <button
-                className="rounded-full px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-900"
-                data-testid="link-login"
-              >
+              <Button variant="ghost" className="text-muted-foreground hover:text-white" data-testid="link-login">
                 Log in
-              </button>
+              </Button>
             </Link>
             <Link href="/sign-up">
-              <button
-                className="rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/30 transition-transform hover:scale-[1.03]"
-                data-testid="link-signup"
-              >
-                Sign up
-              </button>
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(124,58,237,0.4)]" data-testid="link-signup">
+                Get Started
+              </Button>
             </Link>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Bento grid */}
-        <div className="grid grid-cols-12 gap-4">
-          {/* Hero */}
-          <Tile i={0} className="col-span-12 p-8 md:p-10 lg:col-span-7">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white/80 px-3 py-1 text-xs font-semibold text-violet-700">
-              <Sparkles className="h-3.5 w-3.5" /> TikTok LIVE Gamification Platform
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 md:pt-40 md:pb-32 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background -z-10" />
+        
+        <div className="container mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary mb-6 text-sm font-medium">
+              <Zap className="w-4 h-4" />
+              <span>Next-Generation TikTok LIVE Platform</span>
             </div>
-            <h1 className="text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              Turn your stream into
-              <br />
-              <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-cyan-500 bg-clip-text text-transparent">
-                a living game
+            
+            <h1 className="text-5xl md:text-7xl font-black text-white mb-8 leading-tight tracking-tighter">
+              Turn Your Stream Into A <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                Living Game
               </span>
             </h1>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-slate-600">
-              The TikTok LIVE platform that rewards, ranks, and grows your
-              community — XP, gifts, kingdoms, boss battles and an AI co-host.
+            
+            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+              Engage viewers with real-time AI progression, epic overlays, and interactive kingdoms. 
+              Build loyalty through gamification.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/sign-up">
-                <button className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-fuchsia-500/30 transition-transform hover:scale-[1.03]">
-                  Start your adventure
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </button>
+                <Button size="lg" className="w-full sm:w-auto text-lg h-14 px-8 bg-primary hover:bg-primary/90 shadow-[0_0_30px_rgba(124,58,237,0.5)]">
+                  Start Broadcasting Free
+                </Button>
               </Link>
-              <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-5 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-white">
-                <Play className="h-4 w-4 fill-violet-600 text-violet-600" /> Watch demo
-              </button>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg h-14 px-8 border-white/20 hover:bg-white/5">
+                <Play className="w-5 h-5 mr-2" />
+                Watch Demo
+              </Button>
             </div>
-          </Tile>
-
-          {/* Phone / LIVE */}
-          <Tile i={1} className="col-span-12 p-5 sm:col-span-6 lg:col-span-5 lg:row-span-2">
-            <div className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-bold text-white shadow">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> LIVE
-            </div>
-            <div className="relative mx-auto mt-2 h-full min-h-[360px] w-full overflow-hidden rounded-[24px] bg-gradient-to-b from-violet-500 via-fuchsia-500 to-indigo-600 p-4">
-              <div className="absolute inset-0 opacity-30" style={{ background: "radial-gradient(circle at 70% 20%, rgba(255,255,255,.6), transparent 40%)" }} />
-              <div className="relative flex items-center gap-2 text-white">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg backdrop-blur">🎤</div>
-                <div className="leading-tight">
-                  <div className="text-sm font-bold">@novastorm</div>
-                  <div className="text-[11px] text-white/80">2,487 watching</div>
-                </div>
-              </div>
-
-              {/* floating event chips */}
-              <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute left-4 top-24 flex items-center gap-2 rounded-2xl bg-white/95 px-3 py-2 text-xs font-semibold text-slate-800 shadow-lg"
-              >
-                <span className="text-base">⬆️</span> Level Up! <span className="text-violet-600">Lv.24</span>
-              </motion.div>
-              <motion.div
-                animate={{ y: [0, 6, 0] }}
-                transition={{ duration: 3.4, repeat: Infinity }}
-                className="absolute right-4 top-40 flex items-center gap-2 rounded-2xl bg-white/95 px-3 py-2 text-xs font-semibold text-slate-800 shadow-lg"
-              >
-                <Gift className="h-4 w-4 text-fuchsia-500" /> Galaxy Gift ×12
-              </motion.div>
-
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                <div className="rounded-full bg-black/25 px-3 py-2 text-xs text-white backdrop-blur">Add comment…</div>
-                <div className="flex items-center gap-2 text-white">
-                  <Heart className="h-5 w-5 fill-rose-400 text-rose-400" />
-                  <span className="text-xs font-semibold">2.4K</span>
-                </div>
-              </div>
-            </div>
-          </Tile>
-
-          {/* Coins & Rewards */}
-          <Tile i={2} className="col-span-6 p-6 lg:col-span-4">
-            <Orb emoji="🪙" from="#fbbf24" to="#f59e0b" />
-            <h3 className="mt-4 text-lg font-extrabold">Coins &amp; Rewards</h3>
-            <p className="mt-1 text-sm text-slate-600">Every gift, like and comment earns real value.</p>
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700">
-              <Zap className="h-3.5 w-3.5" /> +12,560 this week
-            </div>
-          </Tile>
-
-          {/* Top Supporter */}
-          <Tile i={3} className="col-span-6 p-6 lg:col-span-3">
-            <Orb emoji="🏆" from="#a78bfa" to="#7c3aed" />
-            <h3 className="mt-4 text-lg font-extrabold">Top Supporter</h3>
-            <p className="mt-1 text-sm text-slate-600">Crown your MVP every session.</p>
-          </Tile>
-
-          {/* Kingdom */}
-          <Tile i={4} className="col-span-12 p-6 sm:col-span-6 lg:col-span-4">
-            <div className="flex items-center justify-between">
-              <Orb emoji="🏰" from="#60a5fa" to="#6366f1" />
-              <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">Lv.12</span>
-            </div>
-            <h3 className="mt-4 text-lg font-extrabold">Your Kingdom</h3>
-            <p className="mt-1 text-sm text-slate-600">Viewers build &amp; defend your empire with gifts.</p>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-              <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
-            </div>
-          </Tile>
-
-          {/* Boss Battles */}
-          <Tile i={5} className="col-span-12 p-6 sm:col-span-6 lg:col-span-4">
-            <Orb emoji="🐉" from="#f472b6" to="#a855f7" />
-            <h3 className="mt-4 text-lg font-extrabold">Boss Battles</h3>
-            <p className="mt-1 text-sm text-slate-600">Rally the chat to defeat epic shared bosses.</p>
-            <div className="mt-3">
-              <div className="mb-1 flex justify-between text-xs font-semibold text-slate-500">
-                <span>Shadowfire Drake</span>
-                <span>64%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full w-[64%] rounded-full bg-gradient-to-r from-rose-500 to-fuchsia-500" />
-              </div>
-            </div>
-          </Tile>
-
-          {/* Leaderboard */}
-          <Tile i={6} className="col-span-12 p-6 sm:col-span-6 lg:col-span-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
-              <h3 className="text-lg font-extrabold">Leaderboard</h3>
-            </div>
-            <ul className="space-y-2.5">
-              {[
-                ["🥇", "StarGazer", "245.6K"],
-                ["🥈", "Moonlight", "198.3K"],
-                ["🥉", "DragonSlayer", "156.7K"],
-              ].map(([medal, name, xp]) => (
-                <li key={name} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 font-semibold text-slate-700">
-                    <span>{medal}</span> {name}
-                  </span>
-                  <span className="font-bold text-violet-600">{xp} XP</span>
-                </li>
-              ))}
-            </ul>
-          </Tile>
-
-          {/* AI Co-Host */}
-          <Tile i={7} className="col-span-12 p-6 lg:col-span-8">
-            <div className="flex items-start gap-4">
-              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 text-3xl shadow-lg shadow-cyan-400/40">
-                <Bot className="h-8 w-8 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-extrabold">AI Co-Host</h3>
-                  <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold text-cyan-700">Nova</span>
-                </div>
-                <p className="mt-1 text-sm text-slate-600">
-                  Your smart companion welcomes viewers, hypes gifts, replies in any
-                  language and moderates chat — automatically.
-                </p>
-                <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-slate-900/90 px-3.5 py-2 text-xs font-medium text-white">
-                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-                  "Let's boost the energy! Shall we start a challenge? ⚡"
-                </div>
-              </div>
-            </div>
-          </Tile>
+          </motion.div>
         </div>
+      </section>
 
-        {/* Feature strip */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-full border border-white/60 bg-white/50 px-6 py-4 text-sm font-semibold text-slate-600 backdrop-blur-xl">
-          <span className="flex items-center gap-2"><Activity className="h-4 w-4 text-violet-600" /> Real-time Engagement</span>
-          <span className="flex items-center gap-2"><Trophy className="h-4 w-4 text-amber-500" /> Gamified Rewards</span>
-          <span className="flex items-center gap-2"><Bot className="h-4 w-4 text-cyan-600" /> AI-Powered</span>
-          <span className="flex items-center gap-2"><Users className="h-4 w-4 text-fuchsia-600" /> Community First</span>
-          <span className="flex items-center gap-2"><Globe className="h-4 w-4 text-indigo-600" /> Cross-Platform</span>
+      {/* Dashboard Preview Section */}
+      <section className="py-10 px-4 relative z-10">
+        <div className="container mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="relative rounded-2xl border border-white/10 bg-card/50 p-2 md:p-4 shadow-2xl backdrop-blur-sm overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+            <img 
+              src={`${basePath}/hero-dashboard.png`} 
+              alt="LiveStorm AI Dashboard Preview" 
+              className="w-full h-auto rounded-lg md:rounded-xl shadow-2xl border border-white/5"
+            />
+          </motion.div>
         </div>
+      </section>
 
-        <footer className="mt-10 flex items-center justify-center gap-2 text-sm text-slate-400">
-          <img src={`${basePath}/logo.svg`} alt="LiveStorm AI" className="h-5 w-5 opacity-60" />
-          © {new Date().getFullYear()} LiveStorm AI. All rights reserved.
-        </footer>
-      </div>
+      {/* Features Section */}
+      <section className="py-24 px-4 bg-black/40 border-y border-white/5">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Command Your Audience</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              A complete mission control center for your TikTok LIVE streams. Every tool you need to maximize engagement and revenue.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: Trophy,
+                title: "RPG Gamification",
+                desc: "Viewers earn XP, level up, and unlock achievements just by watching and interacting."
+              },
+              {
+                icon: Crown,
+                title: "Interactive Kingdoms",
+                desc: "Build a digital empire. Viewers contribute resources through likes and gifts to upgrade your kingdom."
+              },
+              {
+                icon: Users,
+                title: "AI Co-Host",
+                desc: "An intelligent chatbot that welcomes viewers, answers FAQs, and hypes up your top supporters."
+              }
+            ].map((feat, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-8 rounded-2xl bg-card border border-white/5 hover:border-primary/50 transition-colors group"
+              >
+                <div className="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <feat.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{feat.title}</h3>
+                <p className="text-muted-foreground">{feat.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 border-t border-white/10 bg-background text-center text-muted-foreground">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <img src={`${basePath}/logo.svg`} alt="Logo" className="w-6 h-6 grayscale opacity-50" />
+            <span className="font-bold text-lg tracking-tight">LiveStorm AI</span>
+          </div>
+          <p>© {new Date().getFullYear()} LiveStorm AI. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }
