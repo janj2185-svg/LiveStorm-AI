@@ -61,50 +61,49 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ─── DARK AI THEME (default) ───────────────────────────────────────────── */
+/* ─── STORM COMPANION COMPOSER THEME (default) ──────────────────────────── */
 :root {
-  /* Rich dark purple — futuristic 2050 aesthetic */
-  --background: 245 52% 6%;
-  --foreground: 214 30% 92%;
+  /* Pearl white, sky blue, soft gold, spatial glass */
+  --background: 204 100% 98%;
+  --foreground: 222 47% 13%;
 
-  --card: 244 48% 10%;
-  --card-foreground: 214 30% 92%;
-  --card-border: 244 42% 22%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 13%;
+  --card-border: 204 64% 88%;
 
-  --popover: 244 48% 8%;
-  --popover-foreground: 214 30% 92%;
-  --popover-border: 244 42% 22%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 13%;
+  --popover-border: 204 64% 88%;
 
-  --primary: 263 72% 62%;
+  --primary: 199 89% 48%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 244 44% 13%;
-  --secondary-foreground: 214 30% 92%;
+  --secondary: 204 100% 96%;
+  --secondary-foreground: 222 47% 18%;
 
-  --muted: 244 44% 11%;
-  --muted-foreground: 244 18% 78%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 18% 42%;
 
-  --accent: 192 91% 43%;
-  --accent-foreground: 0 0% 100%;
+  --accent: 42 94% 58%;
+  --accent-foreground: 222 47% 13%;
 
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 244 40% 15%;
-  --input: 244 44% 11%;
-  --ring: 263 72% 62%;
+  --border: 204 64% 88%;
+  --input: 0 0% 100%;
+  --ring: 199 89% 48%;
 
-  /* Sidebar — deepest purple */
-  --sidebar: 242 65% 3.5%;
-  --sidebar-foreground: 214 30% 92%;
-  --sidebar-border: 244 52% 9%;
-  --sidebar-primary: 263 72% 62%;
+  --sidebar: 204 100% 98%;
+  --sidebar-foreground: 222 47% 13%;
+  --sidebar-border: 204 64% 88%;
+  --sidebar-primary: 199 89% 48%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 244 52% 7%;
-  --sidebar-accent-foreground: 214 30% 92%;
-  --sidebar-ring: 263 72% 62%;
+  --sidebar-accent: 204 100% 96%;
+  --sidebar-accent-foreground: 222 47% 13%;
+  --sidebar-ring: 199 89% 48%;
 
-  --radius: 0.75rem;
+  --radius: 1rem;
   --app-font-sans: 'Space Grotesk', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
 }
@@ -149,6 +148,8 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(224,242,254,0.95) 0%, rgba(248,250,252,0.98) 38%, rgba(255,247,237,0.96) 100%);
   }
 }
 
@@ -270,43 +271,84 @@
 
 /* ─── GLASSMORPHISM UTILITIES ────────────────────────────────────────────── */
 @layer components {
-  /* Dark glass card — floats above the animated background */
+  /* Storm Companion Composer glass card — pearl surface above spatial light */
   .glass-card {
-    background: rgba(12, 20, 48, 0.60);
+    background: rgba(255, 255, 255, 0.68);
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.76);
     box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.40),
-      0 1px 0 rgba(255, 255, 255, 0.06) inset;
+      0 20px 70px rgba(56, 119, 182, 0.14),
+      0 1px 0 rgba(255, 255, 255, 0.88) inset;
   }
 
-  /* Lighter dark glass panel */
+  /* Lighter spatial glass panel */
   .glass-panel {
-    background: rgba(12, 20, 48, 0.42);
+    background: rgba(255, 255, 255, 0.54);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.70);
   }
 
   .premium-shadow {
     box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.30),
-      0 6px 16px rgba(0, 0, 0, 0.25),
-      0 20px 40px rgba(0, 0, 0, 0.20),
-      0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      0 8px 22px rgba(56, 119, 182, 0.08),
+      0 24px 70px rgba(56, 119, 182, 0.14),
+      0 0 0 1px rgba(255, 255, 255, 0.70) inset;
   }
 
   .glow-primary {
     box-shadow:
-      0 0 20px hsl(var(--primary) / 0.35),
-      0 0 50px hsl(var(--primary) / 0.15);
+      0 0 20px hsl(var(--primary) / 0.22),
+      0 0 50px hsl(var(--primary) / 0.12);
   }
 
   .glow-cyan {
     box-shadow:
-      0 0 20px hsl(var(--accent) / 0.35),
-      0 0 50px hsl(var(--accent) / 0.15);
+      0 0 20px rgba(56, 189, 248, 0.26),
+      0 0 50px rgba(251, 191, 36, 0.14);
+  }
+}
+
+/* ─── GLOBAL COMPOSER SKIN BRIDGE ───────────────────────────────────────── */
+@layer utilities {
+  .storm-composer-shell {
+    color: rgb(15 23 42);
+    background:
+      radial-gradient(circle at 50% -10%, rgba(224,242,254,0.98) 0%, rgba(248,250,252,0.98) 38%, rgba(255,247,237,0.96) 100%);
+  }
+
+  .storm-composer-shell .text-white {
+    color: rgb(15 23 42 / var(--tw-text-opacity, 1)) !important;
+  }
+
+  .storm-composer-shell [class*="text-white/"] {
+    color: rgba(15, 23, 42, 0.68) !important;
+  }
+
+  .storm-composer-shell [class*="bg-white/"] {
+    background-color: rgba(255, 255, 255, 0.58) !important;
+  }
+
+  .storm-composer-shell [class*="bg-black/"] {
+    background-color: rgba(255, 255, 255, 0.44) !important;
+  }
+
+  .storm-composer-shell [class*="border-white/"] {
+    border-color: rgba(255, 255, 255, 0.72) !important;
+  }
+
+  .storm-composer-shell input,
+  .storm-composer-shell textarea,
+  .storm-composer-shell select {
+    background-color: rgba(255, 255, 255, 0.72) !important;
+    color: rgb(15 23 42) !important;
+    border-color: rgba(186, 230, 253, 0.86) !important;
+  }
+
+  .storm-composer-shell option {
+    color: rgb(15 23 42);
+    background: white;
   }
 }
 

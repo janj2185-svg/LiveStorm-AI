@@ -26,12 +26,12 @@ interface VCfg {
 
 const V: Record<BgVariant, VCfg> = {
   default: {
-    n: 40, dist: 130, spd: 0.22, lA: 0.07, dA: 0.22,
-    rgb: [[139,92,246],[6,182,212],[99,102,241]],
+    n: 40, dist: 130, spd: 0.22, lA: 0.06, dA: 0.18,
+    rgb: [[56,189,248],[251,191,36],[255,255,255]],
     orbs: [
-      { color:"#8b5cf6", cx:"8%",  cy:"10%", size:600, opacity:0.07, dur:14, anim:"aiFloat1" },
-      { color:"#06b6d4", cx:"88%", cy:"78%", size:520, opacity:0.05, dur:19, anim:"aiFloat2" },
-      { color:"#6366f1", cx:"65%", cy:"15%", size:420, opacity:0.04, dur:23, anim:"aiFloat3" },
+      { color:"#bae6fd", cx:"8%",  cy:"10%", size:640, opacity:0.34, dur:14, anim:"aiFloat1" },
+      { color:"#fde68a", cx:"88%", cy:"78%", size:560, opacity:0.24, dur:19, anim:"aiFloat2" },
+      { color:"#ffffff", cx:"65%", cy:"15%", size:460, opacity:0.30, dur:23, anim:"aiFloat3" },
     ],
   },
   dashboard: {
@@ -310,9 +310,18 @@ export const AnimatedBackground = memo(function AnimatedBackground({
       aria-hidden="true"
       style={{
         position: "fixed", inset: 0,
-        zIndex: 2, pointerEvents: "none", overflow: "hidden",
+        zIndex: 0, pointerEvents: "none", overflow: "hidden",
+        background:
+          "radial-gradient(circle at 50% -10%, rgba(224,242,254,.94) 0%, rgba(248,250,252,.98) 42%, rgba(255,247,237,.92) 100%)",
       }}
     >
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          background:
+            "linear-gradient(120deg, rgba(255,255,255,.66), rgba(186,230,253,.24) 42%, rgba(253,230,138,.20))",
+        }}
+      />
       {cfg.orbs.map((orb, i) => (
         <div
           key={i}
@@ -332,7 +341,7 @@ export const AnimatedBackground = memo(function AnimatedBackground({
       ))}
       <canvas
         ref={canvasRef}
-        style={{ position: "absolute", inset: 0 }}
+        style={{ position: "absolute", inset: 0, opacity: 0.58 }}
       />
     </div>
   );

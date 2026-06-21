@@ -13,19 +13,19 @@ export function GlassCard({
   glow?: "violet" | "cyan" | "green" | "amber" | "red";
 }) {
   const glowMap = {
-    violet: "shadow-lg shadow-violet-500/10 border-violet-500/15",
-    cyan:   "shadow-lg shadow-cyan-500/10 border-cyan-500/15",
-    green:  "shadow-lg shadow-green-500/10 border-green-500/15",
-    amber:  "shadow-lg shadow-amber-500/10 border-amber-500/15",
-    red:    "shadow-lg shadow-red-500/10 border-red-500/15",
+    violet: "shadow-lg shadow-sky-500/10 border-sky-200",
+    cyan:   "shadow-lg shadow-sky-500/10 border-sky-200",
+    green:  "shadow-lg shadow-emerald-500/10 border-emerald-200",
+    amber:  "shadow-lg shadow-amber-500/12 border-amber-200",
+    red:    "shadow-lg shadow-red-500/10 border-red-200",
   };
 
   return (
     <div
       className={cn(
-        "rounded-2xl border backdrop-blur-sm",
-        "bg-white/[0.04] border-white/[0.08]",
-        hover && "hover:bg-white/[0.06] hover:border-white/[0.13] transition-all duration-200 cursor-pointer",
+        "rounded-2xl border backdrop-blur-2xl",
+        "bg-white/64 border-white/75 shadow-[0_20px_70px_rgba(56,119,182,.12)]",
+        hover && "hover:bg-white/78 hover:border-sky-200 transition-all duration-200 cursor-pointer hover:-translate-y-0.5",
         glow && glowMap[glow],
         className,
       )}
@@ -45,9 +45,9 @@ export function GlassPanel({
   return (
     <div
       className={cn(
-        "rounded-2xl border backdrop-blur-md",
-        "bg-white/[0.03] border-white/[0.06]",
-        "shadow-2xl shadow-black/30",
+        "rounded-2xl border backdrop-blur-2xl",
+        "bg-white/56 border-white/75",
+        "shadow-[0_24px_80px_rgba(56,119,182,.12)]",
         className,
       )}
     >
@@ -67,7 +67,7 @@ export function GlassHeader({
     <div
       className={cn(
         "flex items-center justify-between px-5 py-4",
-        "border-b border-white/[0.06]",
+        "border-b border-white/70",
         className,
       )}
     >
@@ -90,12 +90,12 @@ export function StatBubble({
   sublabel?: string;
 }) {
   const colorMap = {
-    violet: { bg: "bg-violet-500/15", text: "text-violet-400", border: "border-violet-500/20" },
-    cyan:   { bg: "bg-cyan-500/15",   text: "text-cyan-400",   border: "border-cyan-500/20" },
-    green:  { bg: "bg-green-500/15",  text: "text-green-400",  border: "border-green-500/20" },
-    amber:  { bg: "bg-amber-500/15",  text: "text-amber-400",  border: "border-amber-500/20" },
-    pink:   { bg: "bg-pink-500/15",   text: "text-pink-400",   border: "border-pink-500/20" },
-    blue:   { bg: "bg-blue-500/15",   text: "text-blue-400",   border: "border-blue-500/20" },
+    violet: { bg: "bg-sky-50",     text: "text-sky-600",     border: "border-sky-200" },
+    cyan:   { bg: "bg-sky-50",     text: "text-sky-600",     border: "border-sky-200" },
+    green:  { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" },
+    amber:  { bg: "bg-amber-50",   text: "text-amber-600",   border: "border-amber-200" },
+    pink:   { bg: "bg-rose-50",    text: "text-rose-600",    border: "border-rose-200" },
+    blue:   { bg: "bg-blue-50",    text: "text-blue-600",    border: "border-blue-200" },
   };
   const c = colorMap[color];
   return (
@@ -104,8 +104,8 @@ export function StatBubble({
         <Icon className={cn("h-4 w-4", c.text)} />
       </div>
       <div>
-        <p className="text-xl font-black text-white tabular-nums leading-none">{typeof value === "number" ? value.toLocaleString() : value}</p>
-        <p className="text-[10px] text-white/40 font-medium mt-0.5">{sublabel ?? label}</p>
+        <p className="text-xl font-black text-slate-950 tabular-nums leading-none">{typeof value === "number" ? value.toLocaleString() : value}</p>
+        <p className="text-[10px] text-slate-500 font-medium mt-0.5">{sublabel ?? label}</p>
       </div>
     </div>
   );
@@ -134,7 +134,7 @@ export function SectionTitle({
 }) {
   return (
     <div className={cn("flex items-center justify-between mb-3", className)}>
-      <h3 className="text-[11px] font-bold text-white/40 uppercase tracking-[0.12em]">{children}</h3>
+      <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.12em]">{children}</h3>
       {action && <div className="flex items-center gap-2">{action}</div>}
     </div>
   );
@@ -150,11 +150,11 @@ export function GradientPill({
   variant?: "violet" | "green" | "amber" | "cyan" | "red";
 }) {
   const v = {
-    violet: "bg-violet-500/15 text-violet-300 border-violet-500/25",
-    green:  "bg-green-500/15 text-green-300 border-green-500/25",
-    amber:  "bg-amber-500/15 text-amber-300 border-amber-500/25",
-    cyan:   "bg-cyan-500/15 text-cyan-300 border-cyan-500/25",
-    red:    "bg-red-500/15 text-red-300 border-red-500/25",
+    violet: "bg-sky-50 text-sky-700 border-sky-200",
+    green:  "bg-emerald-50 text-emerald-700 border-emerald-200",
+    amber:  "bg-amber-50 text-amber-700 border-amber-200",
+    cyan:   "bg-sky-50 text-sky-700 border-sky-200",
+    red:    "bg-red-50 text-red-700 border-red-200",
   };
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", v[variant], className)}>
@@ -175,9 +175,9 @@ export function QuickActionBtn({
   variant?: "default" | "primary" | "danger";
 }) {
   const v = {
-    default: "bg-white/[0.05] border-white/[0.08] text-white/70 hover:bg-white/[0.09] hover:text-white",
-    primary: "bg-violet-600/25 border-violet-500/30 text-violet-300 hover:bg-violet-600/35 hover:text-white",
-    danger:  "bg-red-500/15 border-red-500/25 text-red-400 hover:bg-red-500/25 hover:text-white",
+    default: "bg-white/62 border-white/75 text-slate-600 hover:bg-white/80 hover:text-slate-950",
+    primary: "bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100 hover:text-sky-900",
+    danger:  "bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700",
   };
   return (
     <button
