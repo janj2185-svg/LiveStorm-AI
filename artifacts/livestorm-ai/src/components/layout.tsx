@@ -19,22 +19,24 @@ interface SimpleNavItem {
   labelKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  realm: string;
+  accent: "sky" | "gold" | "rose" | "emerald" | "violet";
 }
 
 const SIDEBAR_ITEMS: SimpleNavItem[] = [
-  { labelKey: "nav_dashboard",   href: "/dashboard",    icon: LayoutDashboard },
-  { labelKey: "nav_live_studio", href: "/live-studio",  icon: Monitor },
-  { labelKey: "nav_scenes",      href: "/live-control", icon: Film },
-  { labelKey: "nav_gifts",       href: "/gamification", icon: Gift },
-  { labelKey: "nav_community",   href: "/universe",     icon: Users },
-  { labelKey: "nav_ai_storm",    href: "/ai-assistant", icon: Bot },
-  { labelKey: "nav_storm_pass",  href: "/pass",         icon: ShieldCheck },
-  { labelKey: "nav_boss_battle", href: "/boss-battle",  icon: Swords },
+  { labelKey: "nav_dashboard",   href: "/dashboard",    icon: LayoutDashboard, realm: "Command Core", accent: "sky" },
+  { labelKey: "nav_live_studio", href: "/live-studio",  icon: Monitor,         realm: "Live Show",    accent: "gold" },
+  { labelKey: "nav_scenes",      href: "/live-control", icon: Film,            realm: "OBS Portal",   accent: "sky" },
+  { labelKey: "nav_gifts",       href: "/gamification", icon: Gift,            realm: "Gift Magic",   accent: "rose" },
+  { labelKey: "nav_community",   href: "/universe",     icon: Users,           realm: "Community",    accent: "emerald" },
+  { labelKey: "nav_ai_storm",    href: "/ai-assistant", icon: Bot,             realm: "AI Host",      accent: "violet" },
+  { labelKey: "nav_storm_pass",  href: "/pass",         icon: ShieldCheck,     realm: "VIP Pass",     accent: "gold" },
+  { labelKey: "nav_boss_battle", href: "/boss-battle",  icon: Swords,          realm: "Battle Arena", accent: "rose" },
 ];
 
 const SIDEBAR_BOTTOM: SimpleNavItem[] = [
-  { labelKey: "nav_analytics", href: "/analytics", icon: BarChart2 },
-  { labelKey: "nav_settings",  href: "/settings",  icon: SettingsIcon },
+  { labelKey: "nav_analytics", href: "/analytics", icon: BarChart2,    realm: "Signal Map", accent: "sky" },
+  { labelKey: "nav_settings",  href: "/settings",  icon: SettingsIcon, realm: "Controls",   accent: "gold" },
 ];
 
 const ALL_NAV = [...SIDEBAR_ITEMS, ...SIDEBAR_BOTTOM];
@@ -72,38 +74,77 @@ function SidebarNavItem({
   const active = isNavActive(item.href, location);
   const Icon = item.icon;
   const label = t(item.labelKey);
+  const accent = {
+    sky:     { ring: "border-sky-200",     glow: "rgba(56,189,248,.24)", text: "text-sky-600",     dot: "bg-sky-400" },
+    gold:    { ring: "border-amber-200",   glow: "rgba(251,191,36,.26)", text: "text-amber-600",   dot: "bg-amber-400" },
+    rose:    { ring: "border-rose-200",    glow: "rgba(244,63,94,.22)",  text: "text-rose-600",    dot: "bg-rose-400" },
+    emerald: { ring: "border-emerald-200", glow: "rgba(16,185,129,.22)", text: "text-emerald-600", dot: "bg-emerald-400" },
+    violet:  { ring: "border-violet-200",  glow: "rgba(139,92,246,.22)", text: "text-violet-600",  dot: "bg-violet-400" },
+  }[item.accent];
   return (
     <Link href={item.href} className="block" onClick={onClick}>
       <div
         data-testid={`link-${item.href.replace(/\//g, "")}`}
         title={collapsed ? label : undefined}
         className={cn(
-          "relative flex items-center rounded-xl cursor-pointer min-h-[40px]",
-          "transition-all duration-200",
-          collapsed ? "px-0 justify-center" : "gap-3 px-3",
+          "group relative flex items-center rounded-2xl cursor-pointer min-h-[48px]",
+          "transition-all duration-300 overflow-hidden",
+          collapsed ? "px-0 justify-center" : "gap-3 px-2.5",
           active
-            ? "bg-primary/30 border border-primary/55 text-white"
-            : "border border-transparent text-white/85 hover:text-white/100 hover:bg-white/[0.10]",
+            ? cn("bg-white/82 border text-slate-950", accent.ring)
+            : "border border-transparent text-slate-600 hover:text-slate-950 hover:bg-white/58",
         )}
         style={active ? {
-          boxShadow: "0 0 0 1px rgba(124,58,237,0.12), 0 2px 12px rgba(124,58,237,0.18)",
+          boxShadow: `0 16px 38px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,.9)`,
         } : undefined}
       >
         {active && !collapsed && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 rounded-r-full bg-primary" />
+          <motion.div
+            layoutId="storm-active-realm"
+            className="absolute inset-0 rounded-2xl"
+            style={{
+              background:
+                "linear-gradient(120deg,rgba(255,255,255,.74),rgba(186,230,253,.34),rgba(253,230,138,.24))",
+              boxShadow: `inset 0 0 0 1px rgba(255,255,255,.7), 0 0 28px ${accent.glow}`,
+            }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+          />
         )}
-        <Icon className={cn(
-          "flex-shrink-0 transition-colors duration-200",
-          collapsed ? "h-[21px] w-[21px]" : "h-[18px] w-[18px]",
-          active ? "text-primary" : "text-white/75",
-        )} />
+        <span
+          className={cn(
+            "relative z-10 grid place-items-center rounded-2xl border bg-white/76 transition-all duration-300",
+            collapsed ? "h-10 w-10" : "h-9 w-9",
+            active ? accent.ring : "border-white/70 group-hover:border-sky-100",
+          )}
+          style={{
+            boxShadow: active
+              ? `0 0 28px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,.9)`
+              : "inset 0 1px 0 rgba(255,255,255,.8)",
+          }}
+        >
+          <Icon className={cn(
+            "transition-colors duration-200",
+            collapsed ? "h-[21px] w-[21px]" : "h-[18px] w-[18px]",
+            active ? accent.text : "text-slate-500",
+          )} />
+        </span>
         {!collapsed && (
-          <span className="text-[14px] font-semibold whitespace-nowrap flex-1 leading-none tracking-[-0.01em]">
-            {label}
+          <span className="relative z-10 flex min-w-0 flex-1 flex-col">
+            <span className="text-[14px] font-black whitespace-nowrap leading-none tracking-[-0.01em]">
+              {label}
+            </span>
+            <span className={cn("mt-1 text-[9px] font-black uppercase tracking-[0.15em]", active ? accent.text : "text-slate-400")}>
+              {item.realm}
+            </span>
           </span>
         )}
         {!collapsed && active && (
-          <div className="w-1.5 h-1.5 rounded-full bg-primary/80 flex-shrink-0" style={{ boxShadow: "0 0 6px rgba(139,92,246,0.8)" }} />
+          <motion.div
+            className={cn("relative z-10 h-2 w-2 flex-shrink-0 rounded-full", accent.dot)}
+            animate={{ scale: [1, 1.45, 1], opacity: [0.72, 1, 0.72] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            style={{ boxShadow: `0 0 12px ${accent.glow}` }}
+          />
         )}
       </div>
     </Link>
@@ -169,14 +210,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const currentItem  = ALL_NAV.find((i) => isNavActive(i.href, relPath));
   const currentLabel = currentItem ? t(currentItem.labelKey as any) : t("nav_dashboard");
+  const currentRealm = currentItem?.realm ?? "Command Core";
+  const CurrentIcon  = currentItem?.icon ?? LayoutDashboard;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="storm-composer-shell min-h-screen bg-background text-foreground flex">
       <AnimatedBackground variant={bgVariant} />
 
       {tabletExpanded && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm hidden md:block lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/18 backdrop-blur-sm hidden md:block lg:hidden"
           onClick={() => setTabletExpanded(false)}
         />
       )}
@@ -185,35 +228,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <aside
         className={cn(
           "hidden md:flex flex-col fixed inset-y-0 left-0 z-50",
-          "border-r border-sidebar-border/60",
+          "border-r border-white/75 shadow-[18px_0_70px_rgba(56,119,182,.10)]",
           "transition-all duration-300 ease-in-out",
           sidebarW,
         )}
         style={{
-          backgroundImage: "url('/sidebar-bg.png')",
+          backgroundImage:
+            "linear-gradient(180deg,rgba(255,255,255,.86),rgba(224,242,254,.66) 46%,rgba(254,243,199,.42))",
           backgroundSize: "cover",
           backgroundPosition: "center",
+          backdropFilter: "blur(28px) saturate(150%)",
         }}
       >
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-1/2 top-20 h-[72%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-sky-200/70 to-transparent" />
+          <div className="absolute -left-16 top-16 h-44 w-44 rounded-full bg-sky-200/35 blur-3xl" />
+          <div className="absolute -right-20 bottom-20 h-52 w-52 rounded-full bg-amber-100/45 blur-3xl" />
+        </div>
 
         {/* Brand */}
         <div className={cn(
-          "flex items-center gap-3 border-b border-sidebar-border/50 min-h-[60px] flex-shrink-0 relative",
+          "flex items-center gap-3 border-b border-white/70 min-h-[76px] flex-shrink-0 relative z-10",
           sidebarCollapsed ? "justify-center px-3" : "px-4",
         )}>
           <div className={cn(
-            "w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/50 to-cyan-500/25 flex items-center justify-center",
-            "border border-primary/40 shadow-lg flex-shrink-0",
-          )} style={{ boxShadow: "0 0 20px rgba(124,58,237,0.30), 0 4px 12px rgba(0,0,0,0.4)" }}>
+            "w-12 h-12 rounded-2xl bg-gradient-to-br from-white via-sky-100 to-amber-100 flex items-center justify-center",
+            "border border-white/80 shadow-lg flex-shrink-0",
+          )} style={{ boxShadow: "0 16px 36px rgba(56,189,248,0.18), inset 0 1px 0 rgba(255,255,255,.9)" }}>
             <img src={`${basePath}/logo.svg`} alt="LiveStorm AI" className="h-7 w-7" />
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="font-bold text-[14px] tracking-tight text-white leading-none whitespace-nowrap">
-                LiveStorm <span className="text-primary">AI</span>
+              <p className="font-black text-[15px] tracking-tight text-slate-950 leading-none whitespace-nowrap">
+                LiveStorm <span className="text-sky-500">AI</span>
               </p>
-              <p className="text-[9px] text-white/60 mt-1 tracking-[0.18em] font-bold whitespace-nowrap uppercase">
-                AI Live Streaming Platform
+              <p className="text-[9px] text-amber-500 mt-1 tracking-[0.18em] font-black whitespace-nowrap uppercase">
+                Storm Companion Universe
               </p>
             </div>
           )}
@@ -221,7 +271,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {/* Tablet collapse button */}
           {!sidebarCollapsed && (
             <button
-              className="lg:hidden flex items-center justify-center w-7 h-7 rounded-lg text-white/65 hover:text-white/90 hover:bg-white/[0.07] transition-colors flex-shrink-0"
+              className="lg:hidden flex items-center justify-center w-7 h-7 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/70 transition-colors flex-shrink-0"
               onClick={() => setTabletExpanded(false)}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -229,7 +279,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
           {sidebarCollapsed && (
             <button
-              className="lg:hidden absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-white/42 hover:text-white/70 hover:bg-white/[0.07] transition-colors"
+              className="lg:hidden absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white/70 transition-colors"
               onClick={() => setTabletExpanded(true)}
             >
               <Menu className="h-3.5 w-3.5" />
@@ -238,7 +288,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 scrollbar-none">
+        <nav className="relative z-10 flex-1 overflow-y-auto py-3 px-2 space-y-1.5 scrollbar-none">
           {SIDEBAR_ITEMS.map((item) => (
             <SidebarNavItem
               key={item.href}
@@ -251,7 +301,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
 
           {/* Divider */}
-          <div className={cn("my-2", sidebarCollapsed ? "mx-3 border-t border-white/[0.05]" : "mx-2 border-t border-white/[0.06]")} />
+          <div className={cn("my-2", sidebarCollapsed ? "mx-3 border-t border-white/65" : "mx-2 border-t border-white/65")} />
 
           {SIDEBAR_BOTTOM.map((item) => (
             <SidebarNavItem
@@ -266,12 +316,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Collapse toggle (desktop only) */}
-        <div className="hidden lg:block border-t border-sidebar-border/30 px-2 py-2 flex-shrink-0">
+        <div className="hidden lg:block border-t border-white/65 px-2 py-2 flex-shrink-0">
           <button
             onClick={toggleDesktopCollapse}
             className={cn(
               "w-full flex items-center rounded-lg p-2 transition-colors",
-              "text-white/60 hover:text-white/85 hover:bg-white/[0.06]",
+              "text-slate-500 hover:text-slate-900 hover:bg-white/70",
               desktopCollapsed ? "justify-center" : "gap-2.5 px-3",
             )}
             title={desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -285,26 +335,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* User card */}
         {user && (
-          <div className="border-t border-sidebar-border/40 px-2 py-2 flex-shrink-0">
+          <div className="border-t border-white/65 px-2 py-2 flex-shrink-0">
             <div className={cn(
-              "flex items-center rounded-xl bg-white/[0.04] border border-white/[0.06] transition-colors",
+              "flex items-center rounded-xl bg-white/62 border border-white/75 shadow-[0_14px_34px_rgba(56,119,182,.10)] transition-colors",
               sidebarCollapsed ? "p-1.5 justify-center" : "gap-2.5 p-2.5",
             )}>
-              <Avatar className="h-8 w-8 border border-primary/25 flex-shrink-0">
+              <Avatar className="h-8 w-8 border border-sky-200 flex-shrink-0">
                 <AvatarImage src={user.imageUrl} />
-                <AvatarFallback className="text-xs bg-primary/25 text-primary font-bold">
+                <AvatarFallback className="text-xs bg-sky-100 text-sky-700 font-bold">
                   {user.firstName?.charAt(0) ?? "U"}
                 </AvatarFallback>
               </Avatar>
               {!sidebarCollapsed && (
                 <>
                   <div className="flex-1 min-w-0 overflow-hidden">
-                    <p className="text-[13px] font-semibold text-white truncate leading-none">{user.fullName || "Creator"}</p>
-                    <p className="text-xs text-white/70 truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
+                    <p className="text-[13px] font-semibold text-slate-900 truncate leading-none">{user.fullName || "Creator"}</p>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">{user.primaryEmailAddress?.emailAddress}</p>
                   </div>
                   <Button
                     variant="ghost" size="icon"
-                    className="h-7 w-7 text-white/60 hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
+                    className="h-7 w-7 text-slate-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
                     onClick={() => signOut({ redirectUrl: basePath || "/" })}
                     data-testid="button-logout"
                     title={t("sign_out")}
@@ -325,31 +375,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
         mainMl,
       )}>
         {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-sidebar-border/50 bg-sidebar/90 backdrop-blur-md sticky top-0 z-30">
+        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/70 bg-white/72 backdrop-blur-2xl sticky top-0 z-30 shadow-[0_12px_38px_rgba(56,119,182,.10)]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/35 to-cyan-500/20 flex items-center justify-center border border-primary/28 flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white via-sky-100 to-amber-100 flex items-center justify-center border border-white/80 flex-shrink-0">
               <img src={`${basePath}/logo.svg`} alt="LiveStorm AI" className="h-5 w-5" />
             </div>
-            <span className="font-black text-[14px] text-white tracking-tight">
-              LiveStorm <span className="text-primary">AI</span>
+            <span className="font-black text-[14px] text-slate-950 tracking-tight">
+              LiveStorm <span className="text-sky-500">AI</span>
             </span>
           </div>
           <button
             onClick={() => setMoreOpen(true)}
-            className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/[0.08] transition-colors"
+            className="p-2 rounded-lg text-slate-500 hover:text-slate-950 hover:bg-white/70 transition-colors"
           >
             <Menu className="h-5 w-5" />
           </button>
         </header>
 
         {/* Desktop top bar */}
-        <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/[0.06] bg-black/15 backdrop-blur-sm sticky top-0 z-20">
-          <h1 className="text-sm font-semibold text-white/92 tracking-wide">{currentLabel}</h1>
-          <div className="hidden lg:flex items-center gap-1 text-[10px] text-white/12 font-mono">
-            <kbd className="border border-white/[0.08] rounded px-1 py-0.5">⌘1</kbd>
+        <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/70 bg-white/54 backdrop-blur-2xl sticky top-0 z-20 shadow-[0_12px_40px_rgba(56,119,182,.08)]">
+          <div className="flex items-center gap-3">
+            <motion.div
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-white/80 bg-white/72 shadow-[0_12px_32px_rgba(56,189,248,.14)]"
+              animate={{ y: [0, -2, 0], boxShadow: ["0 12px 32px rgba(56,189,248,.12)", "0 16px 42px rgba(251,191,36,.18)", "0 12px 32px rgba(56,189,248,.12)"] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <CurrentIcon className="h-5 w-5 text-sky-500" />
+            </motion.div>
+            <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-500">Storm Companion Composer</p>
+            <h1 className="text-sm font-black text-slate-950 tracking-wide">{currentLabel}</h1>
+            </div>
+            <span className="rounded-full border border-sky-100 bg-white/62 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-sky-600">
+              {currentRealm}
+            </span>
+          </div>
+          <div className="hidden lg:flex items-center gap-1 text-[10px] text-slate-300 font-mono">
+            <kbd className="border border-sky-100 bg-white/60 rounded px-1 py-0.5">⌘1</kbd>
             <span>–</span>
-            <kbd className="border border-white/[0.08] rounded px-1 py-0.5">⌘5</kbd>
-            <span className="font-sans ml-0.5 text-white/10">navigate</span>
+            <kbd className="border border-sky-100 bg-white/60 rounded px-1 py-0.5">⌘5</kbd>
+            <span className="font-sans ml-0.5 text-slate-300">navigate</span>
           </div>
         </header>
 
@@ -373,7 +438,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-sidebar/95 backdrop-blur-md border-t border-sidebar-border/50"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/82 backdrop-blur-2xl border-t border-white/75 shadow-[0_-16px_44px_rgba(56,119,182,.10)]"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="flex h-16">
@@ -384,11 +449,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link key={item.href} href={item.href} className="flex-1">
                 <div className={cn(
                   "flex flex-col items-center justify-center gap-1 h-full w-full relative transition-all active:opacity-60",
-                  active ? "text-primary" : "text-white/78",
+                  active ? "text-sky-600" : "text-slate-500",
                 )}>
                   {active && (
                     <span className="absolute top-0 inset-x-0 flex justify-center">
-                      <span className="w-8 h-0.5 rounded-full bg-primary block" />
+                      <span className="w-8 h-0.5 rounded-full bg-amber-400 block" />
                     </span>
                   )}
                   <Icon className="h-5 w-5" />
@@ -399,7 +464,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
           <button
             onClick={() => setMoreOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-white/78 active:opacity-60 transition-opacity"
+            className="flex-1 flex flex-col items-center justify-center gap-1 h-full text-slate-500 active:opacity-60 transition-opacity"
           >
             <MoreHorizontal className="h-5 w-5" />
             <span className="text-xs font-semibold leading-none">{t("nav_more")}</span>
@@ -410,15 +475,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── MOBILE SHEET ── */}
       {moreOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex items-end">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMoreOpen(false)} />
-          <div className="relative w-full bg-sidebar rounded-t-3xl border-t border-sidebar-border shadow-2xl max-h-[80vh] overflow-y-auto">
+          <div className="absolute inset-0 bg-slate-900/22 backdrop-blur-sm" onClick={() => setMoreOpen(false)} />
+          <div className="relative w-full bg-white/88 backdrop-blur-2xl rounded-t-3xl border-t border-white/80 shadow-2xl max-h-[80vh] overflow-y-auto">
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-white/15" />
+              <div className="w-10 h-1 rounded-full bg-slate-200" />
             </div>
             <div className="px-4 pb-8">
-              <div className="flex items-center justify-between py-3 mb-3 border-b border-white/[0.06]">
-                <h3 className="text-sm font-bold text-white">{t("nav_navigation")}</h3>
-                <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-white/60 hover:bg-white/[0.06]">
+              <div className="flex items-center justify-between py-3 mb-3 border-b border-white/70">
+                <h3 className="text-sm font-bold text-slate-950">{t("nav_navigation")}</h3>
+                <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg text-slate-500 hover:bg-white/70">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -433,32 +498,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       className={cn(
                         "flex flex-col items-center gap-2 p-4 rounded-xl border min-h-[80px] justify-center transition-all active:scale-95",
                         active
-                          ? "bg-primary/20 border-primary/30 text-white"
-                          : "bg-white/[0.04] border-white/[0.06] text-white/78",
+                          ? "bg-sky-50 border-sky-200 text-slate-950"
+                          : "bg-white/62 border-white/75 text-slate-600",
                       )}
                     >
-                      <Icon className={cn("h-5 w-5", active && "text-primary")} />
+                      <Icon className={cn("h-5 w-5", active && "text-sky-500")} />
                       <span className="text-xs font-semibold text-center leading-tight">{t(item.labelKey as any)}</span>
                     </button>
                   );
                 })}
               </div>
               {user && (
-                <div className="border-t border-white/[0.06] pt-4">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                    <Avatar className="h-10 w-10 border border-primary/20 flex-shrink-0">
+                <div className="border-t border-white/70 pt-4">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-white/80">
+                    <Avatar className="h-10 w-10 border border-sky-200 flex-shrink-0">
                       <AvatarImage src={user.imageUrl} />
-                      <AvatarFallback className="text-sm bg-primary/25 text-primary font-bold">
+                      <AvatarFallback className="text-sm bg-sky-100 text-sky-700 font-bold">
                         {user.firstName?.charAt(0) ?? "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{user.fullName || "Creator"}</p>
-                      <p className="text-xs text-white/70 truncate">{user.primaryEmailAddress?.emailAddress}</p>
+                      <p className="text-sm font-semibold text-slate-950 truncate">{user.fullName || "Creator"}</p>
+                      <p className="text-xs text-slate-500 truncate">{user.primaryEmailAddress?.emailAddress}</p>
                     </div>
                     <Button
                       variant="ghost" size="icon"
-                      className="h-10 w-10 text-white/35 hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
+                      className="h-10 w-10 text-slate-400 hover:text-red-500 hover:bg-red-50 flex-shrink-0"
                       onClick={() => { signOut({ redirectUrl: basePath || "/" }); setMoreOpen(false); }}
                       title={t("sign_out")}
                     >

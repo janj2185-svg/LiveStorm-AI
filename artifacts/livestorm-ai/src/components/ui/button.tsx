@@ -10,15 +10,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground border border-primary/55 shadow-sm shadow-primary/20 hover:brightness-110 hover:shadow-md hover:shadow-primary/30 active:brightness-95 active:scale-[0.98]",
+          "bg-gradient-to-r from-sky-500 to-sky-400 text-white border border-sky-300 shadow-sm shadow-sky-500/20 hover:brightness-105 hover:shadow-md hover:shadow-sky-500/25 active:brightness-95 active:scale-[0.98]",
         destructive:
           "bg-destructive text-destructive-foreground border border-destructive/40 shadow-sm hover:brightness-110 active:brightness-95 active:scale-[0.98]",
         outline:
-          "border border-white/14 bg-white/[0.04] text-white/80 hover:bg-white/[0.09] hover:border-white/22 hover:text-white active:bg-white/[0.06] active:scale-[0.98]",
+          "border border-white/75 bg-white/58 text-slate-700 hover:bg-white/82 hover:border-sky-200 hover:text-slate-950 active:bg-white/70 active:scale-[0.98]",
         secondary:
-          "bg-white/[0.07] text-white/85 border border-white/[0.09] hover:bg-white/[0.11] hover:text-white active:bg-white/[0.06] active:scale-[0.98]",
+          "bg-white/66 text-slate-700 border border-white/75 hover:bg-white/88 hover:text-slate-950 active:bg-white/70 active:scale-[0.98]",
         ghost:
-          "text-white/65 hover:bg-white/[0.07] hover:text-white active:bg-white/[0.04] active:scale-[0.98]",
+          "text-slate-500 hover:bg-white/64 hover:text-slate-950 active:bg-white/54 active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

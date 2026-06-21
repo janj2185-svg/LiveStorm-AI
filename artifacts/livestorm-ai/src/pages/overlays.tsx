@@ -213,7 +213,7 @@ export function Overlays() {
       </div>
 
       {/* How-to banner */}
-      <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5 flex items-start gap-4">
+      <div className="storm-universe-panel rounded-2xl p-5 flex items-start gap-4">
         <div className="p-2 rounded-xl bg-primary/15 flex-shrink-0">
           <MonitorPlay className="w-5 h-5 text-primary" />
         </div>
@@ -260,7 +260,7 @@ export function Overlays() {
                 key={overlay.id}
                 onClick={() => setActiveOverlay(overlay.id)}
                 className={cn(
-                  "w-full text-left p-4 rounded-xl border transition-all",
+                  "storm-universe-card w-full text-left p-4 rounded-xl border transition-all",
                   activeOverlay === overlay.id
                     ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_rgba(124,58,237,0.15)]"
                     : "bg-white/[0.03] border-white/8 hover:border-white/15 hover:bg-white/[0.05]"
@@ -286,7 +286,7 @@ export function Overlays() {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Configure: {activeWidget.name}
             </p>
-            <div className="rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/8 overflow-hidden">
+            <div className="storm-universe-panel rounded-2xl overflow-hidden">
               <div className="px-5 py-3.5 border-b border-white/5 flex items-center gap-2">
                 {(() => { const Icon = activeWidget.icon; return <Icon className="w-4 h-4" style={{ color: activeWidget.color }} />; })()}
                 <span className="font-semibold text-white text-sm">{activeWidget.name}</span>

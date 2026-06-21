@@ -264,7 +264,7 @@ export function AvatarStudio() {
         <div className="flex flex-col min-h-0 overflow-y-auto gap-2 pr-0.5 scrollbar-thin scrollbar-thumb-white/10">
 
           {/* Panel card */}
-          <div className="rounded-2xl border border-violet-500/15 overflow-hidden flex-shrink-0 shadow-lg shadow-violet-500/[0.06]"
+          <div className="storm-universe-panel rounded-2xl overflow-hidden flex-shrink-0"
             style={{ background: "linear-gradient(180deg,rgba(124,58,237,.06) 0%,rgba(0,0,0,0) 100%)" }}>
 
             {/* Header */}
@@ -515,7 +515,7 @@ export function AvatarStudio() {
           </div>
 
           {/* ── Camera section ──────────────────────────────────────────── */}
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden flex-shrink-0">
+          <div className="storm-universe-panel rounded-2xl overflow-hidden flex-shrink-0">
             <button
               onClick={() => setCameraExpanded((v) => !v)}
               className="w-full flex items-center justify-between px-3 py-3 border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors"
@@ -573,8 +573,8 @@ export function AvatarStudio() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Outer glow ring */}
-              <div className="absolute -inset-[1px] rounded-2xl pointer-events-none"
+              {/* Outer portal glow ring */}
+              <div className="storm-avatar-portal absolute -inset-[1px] rounded-2xl pointer-events-none"
                 style={{
                   background: `linear-gradient(135deg, ${accentColor}30, rgba(6,182,212,.12), ${accentColor}18)`,
                   boxShadow: `0 0 40px ${accentColor}20, inset 0 0 0 1px ${accentColor}22`,
