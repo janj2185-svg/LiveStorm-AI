@@ -610,14 +610,46 @@ function LiveShowCounter({
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="rounded-xl border border-rose-100 bg-rose-50/80 px-2 py-1.5">
           <p className="text-[9px] font-black uppercase tracking-wider text-rose-400">Combo</p>
-          <p className="text-lg font-black leading-none text-rose-700">x12</p>
+          <motion.p
+            className="text-lg font-black leading-none text-rose-700"
+            animate={{ scale: [1, 1.22, 1], color: ["#be123c", "#f97316", "#be123c"] }}
+            transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+          >
+            x12
+          </motion.p>
         </div>
         <div className="rounded-xl border border-sky-100 bg-sky-50/80 px-2 py-1.5">
           <p className="text-[9px] font-black uppercase tracking-wider text-sky-400">Streak</p>
           <p className="text-lg font-black leading-none text-sky-700">0:18</p>
         </div>
       </div>
+      <motion.div
+        className="mt-2 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-center text-[10px] font-black uppercase tracking-[0.14em] text-amber-700"
+        animate={{ opacity: [0.65, 1, 0.65], y: [0, -2, 0] }}
+        transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+      >
+        live gifts +24 / sec
+      </motion.div>
     </motion.div>
+  );
+}
+
+function GiftTrajectoryRails() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20">
+      <motion.div
+        className="absolute left-[11%] top-[58%] h-1 w-[36%] origin-right rounded-full bg-gradient-to-r from-rose-300/0 via-rose-300/75 to-amber-300/0"
+        animate={{ opacity: [0.18, 0.78, 0.18], scaleX: [0.55, 1, 0.55] }}
+        transition={{ duration: 1.35, repeat: Infinity, ease: "easeInOut" }}
+        style={{ transform: "rotate(-13deg)", boxShadow: "0 0 28px rgba(251,113,133,.42)" }}
+      />
+      <motion.div
+        className="absolute right-[10%] top-[34%] h-1 w-[32%] origin-left rounded-full bg-gradient-to-r from-sky-300/0 via-sky-300/80 to-amber-300/0"
+        animate={{ opacity: [0.16, 0.72, 0.16], scaleX: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: 0.35 }}
+        style={{ transform: "rotate(16deg)", boxShadow: "0 0 28px rgba(125,211,252,.42)" }}
+      />
+    </div>
   );
 }
 
@@ -627,19 +659,21 @@ function FlyingGiftLayer() {
       {FLYING_GIFTS.map(({ gift, emoji, fromX, fromY, toX, toY, delay, color }, idx) => (
         <motion.div
           key={gift}
-          className="absolute grid h-10 w-10 place-items-center rounded-2xl border border-white/80 bg-white/82 text-lg font-black shadow-[0_18px_44px_rgba(56,119,182,.20)] backdrop-blur-xl"
-          initial={{ left: fromX, top: fromY, scale: 0.7, opacity: 0, rotate: -18 }}
+          className="absolute flex h-14 min-w-14 items-center justify-center gap-1.5 rounded-2xl border border-white/90 bg-white/90 px-2 text-lg font-black shadow-[0_18px_44px_rgba(56,119,182,.22)] backdrop-blur-xl"
+          initial={{ left: fromX, top: fromY, scale: 0.78, opacity: 0, rotate: -18 }}
           animate={{
             left: [fromX, "32%", toX],
             top: [fromY, idx % 2 ? "34%" : "58%", toY],
-            scale: [0.7, 1.18, 0.22],
-            opacity: [0, 1, 0],
+            scale: [0.78, 1.25, 0.42],
+            opacity: [0, 1, 1, 0],
             rotate: [-18, 16, 38],
           }}
-          transition={{ duration: 3.2, delay, repeat: Infinity, repeatDelay: 1.6, ease: "easeInOut" }}
+          transition={{ duration: 3.4, delay, repeat: Infinity, repeatDelay: 0.65, ease: "easeInOut" }}
           style={{ color, boxShadow: `0 18px 44px rgba(56,119,182,.18), 0 0 28px ${color}` }}
         >
-          {emoji}
+          <Gift className="h-4 w-4" />
+          <span>{emoji}</span>
+          <span className="text-[9px] uppercase tracking-widest opacity-70">to Angie</span>
         </motion.div>
       ))}
     </div>
@@ -652,13 +686,20 @@ function GiftReactionWave() {
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
-          className="absolute left-1/2 top-[50%] rounded-full border border-amber-300/55"
+          className="absolute left-1/2 top-[50%] rounded-full border-2 border-amber-300/65"
           initial={{ width: 120, height: 120, x: "-50%", y: "-50%", opacity: 0 }}
-          animate={{ width: [120, 560], height: [120, 340], opacity: [0, 0.48, 0] }}
-          transition={{ duration: 2.8, delay: i * 0.55, repeat: Infinity, repeatDelay: 1.2, ease: "easeOut" }}
-          style={{ boxShadow: "0 0 48px rgba(245,158,11,.22)" }}
+          animate={{ width: [120, 620], height: [120, 370], opacity: [0, 0.66, 0] }}
+          transition={{ duration: 2.2, delay: i * 0.45, repeat: Infinity, repeatDelay: 0.45, ease: "easeOut" }}
+          style={{ boxShadow: "0 0 58px rgba(245,158,11,.30)" }}
         />
       ))}
+      <motion.div
+        className="absolute left-1/2 top-[62%] -translate-x-1/2 rounded-full border border-amber-200 bg-amber-50/90 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-amber-700 shadow-[0_16px_40px_rgba(245,158,11,.22)]"
+        animate={{ y: [0, -12, 0], opacity: [0.45, 1, 0.45], scale: [0.94, 1.08, 0.94] }}
+        transition={{ duration: 1.45, repeat: Infinity, ease: "easeInOut" }}
+      >
+        gift reaction wave +384
+      </motion.div>
     </div>
   );
 }
@@ -739,12 +780,18 @@ function ChatReactionBursts() {
       {CHAT_REACTIONS.map(({ label, count, className }, idx) => (
         <motion.div
           key={label}
-          className={cn("absolute z-40 rounded-full border px-3 py-1.5 shadow-[0_12px_32px_rgba(56,119,182,.14)] backdrop-blur-xl", className)}
-          animate={{ y: [0, -14, 0], opacity: [0.72, 1, 0.72], scale: [1, 1.06, 1] }}
-          transition={{ duration: 2.8 + idx * 0.25, repeat: Infinity, ease: "easeInOut" }}
+          className={cn("absolute z-40 rounded-full border px-4 py-2 shadow-[0_12px_32px_rgba(56,119,182,.18)] backdrop-blur-xl", className)}
+          animate={{ y: [0, -22, 0], opacity: [0.58, 1, 0.58], scale: [0.92, 1.16, 0.92] }}
+          transition={{ duration: 1.7 + idx * 0.2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="text-sm font-black">{label}</span>
-          <span className="ml-1.5 text-[10px] font-black opacity-60">{count}</span>
+          <span className="text-base font-black">{label}</span>
+          <motion.span
+            className="ml-1.5 text-[11px] font-black opacity-70"
+            animate={{ opacity: [0.55, 1, 0.55] }}
+            transition={{ duration: 0.7, repeat: Infinity }}
+          >
+            +{count}
+          </motion.span>
         </motion.div>
       ))}
     </>
@@ -800,6 +847,7 @@ function ComposerStage({
 
       <CompanionStateRail activeState={activeState} />
       <LiveShowCounter stats={stats} />
+      <GiftTrajectoryRails />
       <FlyingGiftLayer />
       <GiftReactionWave />
       <CommunityGoalStack />
