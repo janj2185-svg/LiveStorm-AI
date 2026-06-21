@@ -36,7 +36,7 @@ function formatDuration(seconds: number) {
 function CssBar({ value, max, colorClass = "bg-violet-500" }: { value: number; max: number; colorClass?: string }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div className="w-full h-2 bg-white/[0.06] rounded-full overflow-hidden">
+    <div className="storm-goal-progress w-full h-2 rounded-full overflow-hidden">
       <div
         className={cn("h-full rounded-full transition-all duration-700", colorClass)}
         style={{ width: `${pct}%` }}
@@ -348,9 +348,16 @@ export function Analytics() {
                   </linearGradient>
                 </defs>
                 <path d={fillD} fill="url(#chart-fill)" />
-                <path d={lineD} fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path className="storm-chart-line" d={lineD} fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 {pts.length > 0 && (
-                  <circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3" fill="#a78bfa" filter="drop-shadow(0 0 4px #7c3aed)" />
+                  <motion.circle
+                    cx={pts[pts.length - 1].x}
+                    cy={pts[pts.length - 1].y}
+                    r="3"
+                    fill="#fbbf24"
+                    animate={{ r: [3, 5, 3], opacity: [0.68, 1, 0.68] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                  />
                 )}
               </svg>
             </div>

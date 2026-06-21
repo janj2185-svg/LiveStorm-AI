@@ -429,7 +429,7 @@ function ComposerChatPanel({
   const visible = comments.length > 0 ? comments : DEMO_CHAT;
 
   return (
-    <div className="h-full min-h-[560px] rounded-[2rem] border border-white/70 bg-white/62 shadow-[0_24px_80px_rgba(56,119,182,.16)] backdrop-blur-2xl overflow-hidden">
+    <div className="storm-universe-panel h-full min-h-[560px] rounded-[2rem] overflow-hidden">
       <div className="px-4 py-4 border-b border-sky-100/80 flex items-center justify-between">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.22em] text-sky-500">Live Chat</p>
@@ -452,7 +452,7 @@ function ComposerChatPanel({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: idx * 0.03 }}
-              className="group rounded-2xl border border-white/80 bg-white/70 p-3 shadow-[0_12px_36px_rgba(59,130,246,.08)]"
+              className="storm-live-message group rounded-2xl border border-white/80 bg-white/70 p-3 shadow-[0_12px_36px_rgba(59,130,246,.08)]"
             >
               <div className="flex items-start gap-2.5">
                 <div className="grid h-9 w-9 flex-none place-items-center rounded-2xl bg-gradient-to-br from-sky-100 via-white to-amber-100 text-sm font-black text-sky-700 shadow-inner">
@@ -585,7 +585,7 @@ function LiveShowCounter({
   const giftTotal = stats.totalGifts || 1847;
   return (
     <motion.div
-      className="absolute left-5 top-5 z-40 w-[210px] rounded-[1.5rem] border border-amber-200/90 bg-white/76 p-3 shadow-[0_22px_60px_rgba(245,158,11,.22)] backdrop-blur-2xl"
+      className="storm-universe-panel absolute left-5 top-5 z-40 w-[210px] rounded-[1.5rem] p-3"
       animate={{ y: [0, -5, 0] }}
       transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
     >
@@ -746,7 +746,7 @@ function CommunityGoalStack() {
                   </span>
                   <span className="text-xs font-black tabular-nums text-slate-500">{pct}%</span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="storm-goal-progress h-2.5 overflow-hidden rounded-full bg-slate-100">
                   <motion.div
                     className={cn("h-full rounded-full bg-gradient-to-r", color)}
                     initial={{ width: "18%" }}
@@ -766,7 +766,7 @@ function CommunityGoalStack() {
 function BattleEnergyPanel() {
   return (
     <motion.div
-      className="absolute bottom-5 right-5 z-40 w-[240px] rounded-[1.35rem] border border-orange-200/90 bg-white/76 p-3 shadow-[0_20px_56px_rgba(249,115,22,.18)] backdrop-blur-2xl"
+      className="storm-universe-panel absolute bottom-5 right-5 z-40 w-[240px] rounded-[1.35rem] p-3"
       animate={{ boxShadow: ["0 20px 56px rgba(249,115,22,.16)", "0 26px 72px rgba(249,115,22,.30)", "0 20px 56px rgba(249,115,22,.16)"] }}
       transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
     >
@@ -849,7 +849,7 @@ function ComposerStage({
   stats: { viewerCount: number; totalLikes: number; totalFollows: number; totalComments: number; totalGifts?: number };
 }) {
   return (
-    <div className="relative min-h-[650px] overflow-hidden rounded-[2.5rem] border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,.92),rgba(224,242,254,.72)_46%,rgba(254,243,199,.58)_100%)] shadow-[0_35px_120px_rgba(56,119,182,.22)]">
+    <div className="storm-universe-panel relative min-h-[650px] overflow-hidden rounded-[2.5rem]">
       <div className="absolute inset-0 opacity-55">
         <StageBackground variant="studio" showRing showScan showGrid={false} showCorners={false} />
       </div>
@@ -910,7 +910,7 @@ function ObsOverlayPanel({
   activeVoiceName?: string | null;
 }) {
   return (
-    <div className="h-full min-h-[560px] rounded-[2rem] border border-white/70 bg-white/60 p-4 shadow-[0_24px_80px_rgba(56,119,182,.16)] backdrop-blur-2xl">
+    <div className="storm-universe-panel h-full min-h-[560px] rounded-[2rem] p-4">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-500">OBS Avatar Overlay</p>
@@ -919,7 +919,7 @@ function ObsOverlayPanel({
         <Monitor className="h-5 w-5 text-sky-500" />
       </div>
 
-      <div className="relative mb-4 overflow-hidden rounded-[1.5rem] border border-sky-100 bg-slate-950 p-3 shadow-inner">
+      <div className="storm-obs-portal relative mb-4 overflow-hidden rounded-[1.5rem] border border-sky-100 p-3 shadow-inner">
         <div className="aspect-video overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_50%_30%,rgba(125,211,252,.38),rgba(15,23,42,.98)_66%)]">
           <div className="absolute inset-5 rounded-2xl border border-sky-300/30" />
           <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-300/20 blur-2xl" />

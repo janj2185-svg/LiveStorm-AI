@@ -355,6 +355,147 @@
     background-image:
       radial-gradient(circle at 50% -10%, rgba(224,242,254,0.96) 0%, rgba(248,250,252,0.98) 42%, rgba(255,247,237,0.94) 100%) !important;
   }
+
+  .storm-composer-shell button,
+  .storm-composer-shell [role="button"] {
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(0);
+  }
+
+  .storm-composer-shell button::after,
+  .storm-composer-shell [role="button"]::after {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background:
+      radial-gradient(circle at var(--storm-x, 50%) var(--storm-y, 50%), rgba(255,255,255,.72), rgba(125,211,252,.28) 20%, transparent 46%);
+    opacity: 0;
+    transform: scale(.72);
+    transition: opacity .28s ease, transform .42s cubic-bezier(.22,1,.36,1);
+    pointer-events: none;
+  }
+
+  .storm-composer-shell button:hover,
+  .storm-composer-shell [role="button"]:hover {
+    box-shadow:
+      0 14px 42px rgba(56,189,248,.14),
+      inset 0 1px 0 rgba(255,255,255,.88);
+  }
+
+  .storm-composer-shell button:active::after,
+  .storm-composer-shell [role="button"]:active::after {
+    opacity: 1;
+    transform: scale(1);
+    transition-duration: .12s;
+  }
+
+  .storm-universe-panel,
+  .storm-composer-shell .rounded-2xl,
+  .storm-composer-shell .rounded-xl {
+    background-blend-mode: screen;
+  }
+
+  .storm-universe-panel {
+    position: relative;
+    border: 1px solid rgba(255,255,255,.78);
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.74), rgba(224,242,254,.44) 48%, rgba(254,243,199,.32));
+    box-shadow:
+      0 24px 90px rgba(56,119,182,.13),
+      inset 0 1px 0 rgba(255,255,255,.92);
+    backdrop-filter: blur(24px) saturate(150%);
+  }
+
+  .storm-universe-panel::before,
+  .storm-universe-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(110deg, transparent 0%, rgba(255,255,255,.72) 28%, transparent 48%);
+    transform: translateX(-120%);
+    animation: storm-glint 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .storm-universe-card {
+    position: relative;
+    transform: translateZ(0);
+    transition:
+      transform .36s cubic-bezier(.22,1,.36,1),
+      box-shadow .36s cubic-bezier(.22,1,.36,1),
+      border-color .36s ease;
+  }
+
+  .storm-universe-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(125,211,252,.72) !important;
+    box-shadow:
+      0 28px 90px rgba(56,119,182,.18),
+      0 0 0 1px rgba(255,255,255,.82) inset;
+  }
+
+  .storm-live-message {
+    animation: storm-message-rise .72s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  .storm-goal-progress {
+    position: relative;
+    overflow: hidden;
+    background: rgba(226,232,240,.78);
+  }
+
+  .storm-goal-progress > * {
+    position: relative;
+    box-shadow: 0 0 22px rgba(56,189,248,.42);
+  }
+
+  .storm-goal-progress > *::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.78), transparent);
+    animation: storm-energy-flow 1.8s linear infinite;
+  }
+
+  .storm-chart-line,
+  .storm-composer-shell svg path[stroke] {
+    filter: drop-shadow(0 0 7px rgba(56,189,248,.45));
+  }
+
+  .storm-avatar-portal {
+    background:
+      radial-gradient(circle at 50% 35%, rgba(255,255,255,.92), rgba(125,211,252,.34) 42%, rgba(251,191,36,.22) 72%, transparent);
+    box-shadow:
+      0 0 90px rgba(56,189,248,.24),
+      inset 0 0 70px rgba(255,255,255,.70);
+  }
+
+  .storm-obs-portal {
+    background:
+      radial-gradient(circle at 50% 35%, rgba(15,23,42,.92), rgba(14,165,233,.38) 62%, rgba(251,191,36,.18));
+    box-shadow:
+      0 24px 80px rgba(15,23,42,.18),
+      inset 0 0 32px rgba(125,211,252,.28);
+  }
+}
+
+@keyframes storm-glint {
+  0%, 48% { transform: translateX(-120%); opacity: 0; }
+  58% { opacity: .82; }
+  72%, 100% { transform: translateX(120%); opacity: 0; }
+}
+
+@keyframes storm-message-rise {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes storm-energy-flow {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(140%); }
 }
 
 /* ─── WAVEFORM BAR ANIMATION ─────────────────────────────────────────────── */

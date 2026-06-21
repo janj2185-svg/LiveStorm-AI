@@ -19,22 +19,24 @@ interface SimpleNavItem {
   labelKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  realm: string;
+  accent: "sky" | "gold" | "rose" | "emerald" | "violet";
 }
 
 const SIDEBAR_ITEMS: SimpleNavItem[] = [
-  { labelKey: "nav_dashboard",   href: "/dashboard",    icon: LayoutDashboard },
-  { labelKey: "nav_live_studio", href: "/live-studio",  icon: Monitor },
-  { labelKey: "nav_scenes",      href: "/live-control", icon: Film },
-  { labelKey: "nav_gifts",       href: "/gamification", icon: Gift },
-  { labelKey: "nav_community",   href: "/universe",     icon: Users },
-  { labelKey: "nav_ai_storm",    href: "/ai-assistant", icon: Bot },
-  { labelKey: "nav_storm_pass",  href: "/pass",         icon: ShieldCheck },
-  { labelKey: "nav_boss_battle", href: "/boss-battle",  icon: Swords },
+  { labelKey: "nav_dashboard",   href: "/dashboard",    icon: LayoutDashboard, realm: "Command Core", accent: "sky" },
+  { labelKey: "nav_live_studio", href: "/live-studio",  icon: Monitor,         realm: "Live Show",    accent: "gold" },
+  { labelKey: "nav_scenes",      href: "/live-control", icon: Film,            realm: "OBS Portal",   accent: "sky" },
+  { labelKey: "nav_gifts",       href: "/gamification", icon: Gift,            realm: "Gift Magic",   accent: "rose" },
+  { labelKey: "nav_community",   href: "/universe",     icon: Users,           realm: "Community",    accent: "emerald" },
+  { labelKey: "nav_ai_storm",    href: "/ai-assistant", icon: Bot,             realm: "AI Host",      accent: "violet" },
+  { labelKey: "nav_storm_pass",  href: "/pass",         icon: ShieldCheck,     realm: "VIP Pass",     accent: "gold" },
+  { labelKey: "nav_boss_battle", href: "/boss-battle",  icon: Swords,          realm: "Battle Arena", accent: "rose" },
 ];
 
 const SIDEBAR_BOTTOM: SimpleNavItem[] = [
-  { labelKey: "nav_analytics", href: "/analytics", icon: BarChart2 },
-  { labelKey: "nav_settings",  href: "/settings",  icon: SettingsIcon },
+  { labelKey: "nav_analytics", href: "/analytics", icon: BarChart2,    realm: "Signal Map", accent: "sky" },
+  { labelKey: "nav_settings",  href: "/settings",  icon: SettingsIcon, realm: "Controls",   accent: "gold" },
 ];
 
 const ALL_NAV = [...SIDEBAR_ITEMS, ...SIDEBAR_BOTTOM];
@@ -72,38 +74,77 @@ function SidebarNavItem({
   const active = isNavActive(item.href, location);
   const Icon = item.icon;
   const label = t(item.labelKey);
+  const accent = {
+    sky:     { ring: "border-sky-200",     glow: "rgba(56,189,248,.24)", text: "text-sky-600",     dot: "bg-sky-400" },
+    gold:    { ring: "border-amber-200",   glow: "rgba(251,191,36,.26)", text: "text-amber-600",   dot: "bg-amber-400" },
+    rose:    { ring: "border-rose-200",    glow: "rgba(244,63,94,.22)",  text: "text-rose-600",    dot: "bg-rose-400" },
+    emerald: { ring: "border-emerald-200", glow: "rgba(16,185,129,.22)", text: "text-emerald-600", dot: "bg-emerald-400" },
+    violet:  { ring: "border-violet-200",  glow: "rgba(139,92,246,.22)", text: "text-violet-600",  dot: "bg-violet-400" },
+  }[item.accent];
   return (
     <Link href={item.href} className="block" onClick={onClick}>
       <div
         data-testid={`link-${item.href.replace(/\//g, "")}`}
         title={collapsed ? label : undefined}
         className={cn(
-          "relative flex items-center rounded-xl cursor-pointer min-h-[40px]",
-          "transition-all duration-200",
-          collapsed ? "px-0 justify-center" : "gap-3 px-3",
+          "group relative flex items-center rounded-2xl cursor-pointer min-h-[48px]",
+          "transition-all duration-300 overflow-hidden",
+          collapsed ? "px-0 justify-center" : "gap-3 px-2.5",
           active
-            ? "bg-white/78 border border-sky-200 text-slate-950 shadow-[0_14px_34px_rgba(56,189,248,.14)]"
-            : "border border-transparent text-slate-600 hover:text-slate-950 hover:bg-white/64",
+            ? cn("bg-white/82 border text-slate-950", accent.ring)
+            : "border border-transparent text-slate-600 hover:text-slate-950 hover:bg-white/58",
         )}
         style={active ? {
-          boxShadow: "0 16px 38px rgba(56,189,248,0.15), inset 0 1px 0 rgba(255,255,255,.9)",
+          boxShadow: `0 16px 38px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,.9)`,
         } : undefined}
       >
         {active && !collapsed && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 rounded-r-full bg-amber-400" />
+          <motion.div
+            layoutId="storm-active-realm"
+            className="absolute inset-0 rounded-2xl"
+            style={{
+              background:
+                "linear-gradient(120deg,rgba(255,255,255,.74),rgba(186,230,253,.34),rgba(253,230,138,.24))",
+              boxShadow: `inset 0 0 0 1px rgba(255,255,255,.7), 0 0 28px ${accent.glow}`,
+            }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+          />
         )}
-        <Icon className={cn(
-          "flex-shrink-0 transition-colors duration-200",
-          collapsed ? "h-[21px] w-[21px]" : "h-[18px] w-[18px]",
-          active ? "text-sky-500" : "text-slate-500",
-        )} />
+        <span
+          className={cn(
+            "relative z-10 grid place-items-center rounded-2xl border bg-white/76 transition-all duration-300",
+            collapsed ? "h-10 w-10" : "h-9 w-9",
+            active ? accent.ring : "border-white/70 group-hover:border-sky-100",
+          )}
+          style={{
+            boxShadow: active
+              ? `0 0 28px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,.9)`
+              : "inset 0 1px 0 rgba(255,255,255,.8)",
+          }}
+        >
+          <Icon className={cn(
+            "transition-colors duration-200",
+            collapsed ? "h-[21px] w-[21px]" : "h-[18px] w-[18px]",
+            active ? accent.text : "text-slate-500",
+          )} />
+        </span>
         {!collapsed && (
-          <span className="text-[14px] font-semibold whitespace-nowrap flex-1 leading-none tracking-[-0.01em]">
-            {label}
+          <span className="relative z-10 flex min-w-0 flex-1 flex-col">
+            <span className="text-[14px] font-black whitespace-nowrap leading-none tracking-[-0.01em]">
+              {label}
+            </span>
+            <span className={cn("mt-1 text-[9px] font-black uppercase tracking-[0.15em]", active ? accent.text : "text-slate-400")}>
+              {item.realm}
+            </span>
           </span>
         )}
         {!collapsed && active && (
-          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" style={{ boxShadow: "0 0 8px rgba(251,191,36,0.8)" }} />
+          <motion.div
+            className={cn("relative z-10 h-2 w-2 flex-shrink-0 rounded-full", accent.dot)}
+            animate={{ scale: [1, 1.45, 1], opacity: [0.72, 1, 0.72] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            style={{ boxShadow: `0 0 12px ${accent.glow}` }}
+          />
         )}
       </div>
     </Link>
@@ -169,6 +210,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const currentItem  = ALL_NAV.find((i) => isNavActive(i.href, relPath));
   const currentLabel = currentItem ? t(currentItem.labelKey as any) : t("nav_dashboard");
+  const currentRealm = currentItem?.realm ?? "Command Core";
+  const CurrentIcon  = currentItem?.icon ?? LayoutDashboard;
 
   return (
     <div className="storm-composer-shell min-h-screen bg-background text-foreground flex">
@@ -197,10 +240,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
           backdropFilter: "blur(28px) saturate(150%)",
         }}
       >
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-1/2 top-20 h-[72%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-sky-200/70 to-transparent" />
+          <div className="absolute -left-16 top-16 h-44 w-44 rounded-full bg-sky-200/35 blur-3xl" />
+          <div className="absolute -right-20 bottom-20 h-52 w-52 rounded-full bg-amber-100/45 blur-3xl" />
+        </div>
 
         {/* Brand */}
         <div className={cn(
-          "flex items-center gap-3 border-b border-white/70 min-h-[68px] flex-shrink-0 relative",
+          "flex items-center gap-3 border-b border-white/70 min-h-[76px] flex-shrink-0 relative z-10",
           sidebarCollapsed ? "justify-center px-3" : "px-4",
         )}>
           <div className={cn(
@@ -215,7 +263,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 LiveStorm <span className="text-sky-500">AI</span>
               </p>
               <p className="text-[9px] text-amber-500 mt-1 tracking-[0.18em] font-black whitespace-nowrap uppercase">
-                Storm Companion Studio
+                Storm Companion Universe
               </p>
             </div>
           )}
@@ -240,7 +288,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 scrollbar-none">
+        <nav className="relative z-10 flex-1 overflow-y-auto py-3 px-2 space-y-1.5 scrollbar-none">
           {SIDEBAR_ITEMS.map((item) => (
             <SidebarNavItem
               key={item.href}
@@ -346,9 +394,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Desktop top bar */}
         <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/70 bg-white/54 backdrop-blur-2xl sticky top-0 z-20 shadow-[0_12px_40px_rgba(56,119,182,.08)]">
-          <div>
+          <div className="flex items-center gap-3">
+            <motion.div
+              className="grid h-10 w-10 place-items-center rounded-2xl border border-white/80 bg-white/72 shadow-[0_12px_32px_rgba(56,189,248,.14)]"
+              animate={{ y: [0, -2, 0], boxShadow: ["0 12px 32px rgba(56,189,248,.12)", "0 16px 42px rgba(251,191,36,.18)", "0 12px 32px rgba(56,189,248,.12)"] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <CurrentIcon className="h-5 w-5 text-sky-500" />
+            </motion.div>
+            <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-500">Storm Companion Composer</p>
             <h1 className="text-sm font-black text-slate-950 tracking-wide">{currentLabel}</h1>
+            </div>
+            <span className="rounded-full border border-sky-100 bg-white/62 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-sky-600">
+              {currentRealm}
+            </span>
           </div>
           <div className="hidden lg:flex items-center gap-1 text-[10px] text-slate-300 font-mono">
             <kbd className="border border-sky-100 bg-white/60 rounded px-1 py-0.5">⌘1</kbd>

@@ -23,7 +23,7 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border backdrop-blur-2xl",
+        "storm-universe-card rounded-2xl border backdrop-blur-2xl overflow-hidden",
         "bg-white/64 border-white/75 shadow-[0_20px_70px_rgba(56,119,182,.12)]",
         hover && "hover:bg-white/78 hover:border-sky-200 transition-all duration-200 cursor-pointer hover:-translate-y-0.5",
         glow && glowMap[glow],
@@ -45,7 +45,7 @@ export function GlassPanel({
   return (
     <div
       className={cn(
-        "rounded-2xl border backdrop-blur-2xl",
+        "storm-universe-panel rounded-2xl border backdrop-blur-2xl overflow-hidden",
         "bg-white/56 border-white/75",
         "shadow-[0_24px_80px_rgba(56,119,182,.12)]",
         className,
