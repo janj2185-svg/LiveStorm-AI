@@ -350,6 +350,11 @@
     color: rgb(15 23 42);
     background: white;
   }
+
+  .storm-composer-shell main > div > div[style*="background-image"] {
+    background-image:
+      radial-gradient(circle at 50% -10%, rgba(224,242,254,0.96) 0%, rgba(248,250,252,0.98) 42%, rgba(255,247,237,0.94) 100%) !important;
+  }
 }
 
 /* ─── WAVEFORM BAR ANIMATION ─────────────────────────────────────────────── */
