@@ -356,6 +356,18 @@
       radial-gradient(circle at 50% -10%, rgba(224,242,254,0.96) 0%, rgba(248,250,252,0.98) 42%, rgba(255,247,237,0.94) 100%) !important;
   }
 
+  .storm-composer-shell [class*="bg-[#080012]"],
+  .storm-composer-shell [class*="bg-[#111114]"],
+  .storm-composer-shell [class*="bg-[#0f172a]"],
+  .storm-composer-shell [class*="bg-slate-950"],
+  .storm-composer-shell [class*="bg-slate-900"] {
+    background-color: rgba(255, 255, 255, 0.48) !important;
+  }
+
+  .storm-composer-shell main > div > div[style*="background-image"] > .absolute.inset-0 {
+    background: radial-gradient(circle at 50% 15%, rgba(255,255,255,.28), transparent 72%) !important;
+  }
+
   .storm-composer-shell button,
   .storm-composer-shell [role="button"] {
     position: relative;
@@ -604,7 +616,7 @@ input[type="range"] {
     font-size: clamp(1.25rem, 3vw, 1.75rem);
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: #fff;
+    color: rgb(15 23 42);
     line-height: 1.15;
   }
 
@@ -613,7 +625,7 @@ input[type="range"] {
     font-size: 0.875rem;
     font-weight: 700;
     letter-spacing: -0.01em;
-    color: rgba(255, 255, 255, 0.90);
+    color: rgba(15, 23, 42, 0.90);
   }
 
   /* Card-level label / small heading */
@@ -621,7 +633,7 @@ input[type="range"] {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(15, 23, 42, 0.58);
   }
 
   /* Large stat / number display */
@@ -629,14 +641,14 @@ input[type="range"] {
     font-size: 1.75rem;
     font-weight: 700;
     letter-spacing: -0.025em;
-    color: #fff;
+    color: rgb(15 23 42);
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
 
   /* Helper — dim secondary text at a readable level */
   .ls-muted {
-    color: rgba(255, 255, 255, 0.68);
+    color: rgba(15, 23, 42, 0.56);
     font-size: 0.75rem;
   }
 }
@@ -646,21 +658,26 @@ input[type="range"] {
   /* Standard interactive glass card */
   .ls-card {
     border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    background: rgba(255, 255, 255, 0.025);
-    transition: background 0.18s ease, border-color 0.18s ease;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.58);
+    box-shadow: 0 18px 54px rgba(56,119,182,.10), inset 0 1px 0 rgba(255,255,255,.86);
+    backdrop-filter: blur(20px) saturate(150%);
+    transition: background 0.24s ease, border-color 0.24s ease, transform 0.24s ease, box-shadow 0.24s ease;
   }
   .ls-card:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.13);
+    background: rgba(255, 255, 255, 0.76);
+    border-color: rgba(125, 211, 252, 0.72);
+    transform: translateY(-2px);
+    box-shadow: 0 24px 74px rgba(56,119,182,.16), inset 0 1px 0 rgba(255,255,255,.92);
   }
 
   /* Elevated card — for stats, featured content */
   .ls-card-elevated {
     border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    background: rgba(255, 255, 255, 0.032);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 1px 0 rgba(255,255,255,0.04) inset;
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    background: linear-gradient(135deg, rgba(255,255,255,.72), rgba(224,242,254,.42), rgba(254,243,199,.28));
+    box-shadow: 0 22px 70px rgba(56,119,182,.13), 0 1px 0 rgba(255,255,255,.9) inset;
+    backdrop-filter: blur(22px) saturate(150%);
   }
 
   /* Icon container for card headers */
@@ -669,8 +686,9 @@ input[type="range"] {
     align-items: center;
     justify-content: center;
     border-radius: 0.625rem;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 10px 28px rgba(56,189,248,.10);
   }
 }
 
@@ -679,12 +697,12 @@ input[type="range"] {
 /* Text shadow for readability over animated backgrounds */
 main p, main span, main h1, main h2, main h3, main h4, main li,
 main label, main td, main th {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  text-shadow: none;
 }
 
 /* Lift invisible placeholder text */
 ::placeholder {
-  color: rgba(255, 255, 255, 0.40) !important;
+  color: rgba(15, 23, 42, 0.38) !important;
 }
 
 /* Selection highlight */
