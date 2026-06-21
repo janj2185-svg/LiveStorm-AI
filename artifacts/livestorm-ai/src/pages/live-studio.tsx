@@ -11,7 +11,7 @@ import {
   MessageCircle, Gift, Heart, UserPlus, Eye, Gem,
   ArrowDown, Share2, Sparkles, Zap, Trophy, TrendingUp,
   Volume2, VolumeX, ChevronDown, ChevronUp, QrCode,
-  Crown, Target, Flame, Monitor, Waves, CircleDot,
+  Crown, Flame, Monitor, Waves, CircleDot,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
@@ -348,10 +348,10 @@ function ConnectionBadge({
 // ── Storm Companion Composer ─────────────────────────────────────────────────
 
 const DEMO_CHAT = [
-  { user: "Mila", text: "Angie, react to the gold comet!", tone: "sky" },
-  { user: "Viktor", text: "VIP just entered the room", tone: "gold" },
-  { user: "Nadia", text: "Battle mode looks premium now", tone: "rose" },
-  { user: "Leo", text: "Goal completed. Celebrate!", tone: "emerald" },
+  { user: "Mila", text: "GIFT COMBO x12! Angie, call it out!", tone: "rose" },
+  { user: "Viktor", text: "VIP Queen_Nova just arrived 🔥", tone: "gold" },
+  { user: "Nadia", text: "Community goal is almost done!", tone: "emerald" },
+  { user: "Leo", text: "Battle energy is spiking — push!", tone: "orange" },
 ];
 
 const COMPANION_STATES = [
@@ -374,6 +374,31 @@ const LIGHT_PARTICLES = [
   { left: "58%", top: "12%", size: 6, delay: 1.7, color: "rgba(147, 197, 253, .75)" },
   { left: "72%", top: "69%", size: 5, delay: 0.6, color: "rgba(252, 211, 77, .65)" },
   { left: "88%", top: "34%", size: 8, delay: 2.8, color: "rgba(255, 255, 255, .78)" },
+];
+
+const FLYING_GIFTS = [
+  { gift: "rose", emoji: "✦", fromX: "-18%", fromY: "72%", toX: "43%", toY: "47%", delay: 0.0, color: "rgba(244,63,94,.92)" },
+  { gift: "gold", emoji: "◆", fromX: "112%", fromY: "18%", toX: "56%", toY: "43%", delay: 0.8, color: "rgba(245,158,11,.92)" },
+  { gift: "star", emoji: "✶", fromX: "4%", fromY: "12%", toX: "48%", toY: "40%", delay: 1.5, color: "rgba(14,165,233,.9)" },
+  { gift: "gem", emoji: "◇", fromX: "108%", fromY: "78%", toX: "54%", toY: "50%", delay: 2.1, color: "rgba(168,85,247,.86)" },
+];
+
+const COMMUNITY_GOALS = [
+  { label: "Unlock AI dance callout", current: 842, target: 1000, icon: Trophy, color: "from-emerald-400 to-sky-400" },
+  { label: "Send 300 roses streak", current: 236, target: 300, icon: Gift, color: "from-rose-400 to-amber-300" },
+];
+
+const CHAT_REACTIONS = [
+  { label: "W", count: 148, className: "left-[6%] top-[42%] text-sky-700 bg-sky-50/90 border-sky-200" },
+  { label: "OMG", count: 92, className: "right-[7%] top-[43%] text-rose-700 bg-rose-50/90 border-rose-200" },
+  { label: "GOAL!", count: 61, className: "left-[22%] bottom-[35%] text-emerald-700 bg-emerald-50/90 border-emerald-200" },
+  { label: "VIP", count: 37, className: "right-[26%] bottom-[34%] text-amber-700 bg-amber-50/90 border-amber-200" },
+];
+
+const VIEWER_CELEBRATIONS = [
+  { name: "Queen_Nova", label: "VIP spotlight", icon: Crown, color: "text-amber-700 bg-amber-50/90 border-amber-200" },
+  { name: "Mila", label: "top gifter streak", icon: Gift, color: "text-rose-700 bg-rose-50/90 border-rose-200" },
+  { name: "Leo", label: "battle booster", icon: Flame, color: "text-orange-700 bg-orange-50/90 border-orange-200" },
 ];
 
 function getComposerStatus({
@@ -552,6 +577,202 @@ function AngieAvatar({ activeState }: { activeState: string }) {
   );
 }
 
+function LiveShowCounter({
+  stats,
+}: {
+  stats: { viewerCount: number; totalLikes: number; totalFollows: number; totalComments: number; totalGifts?: number };
+}) {
+  const giftTotal = stats.totalGifts || 1847;
+  return (
+    <motion.div
+      className="absolute left-5 top-5 z-40 w-[210px] rounded-[1.5rem] border border-amber-200/90 bg-white/76 p-3 shadow-[0_22px_60px_rgba(245,158,11,.22)] backdrop-blur-2xl"
+      animate={{ y: [0, -5, 0] }}
+      transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-500">Live Gift Counter</p>
+          <div className="mt-1 flex items-end gap-2">
+            <motion.span
+              className="text-3xl font-black leading-none text-slate-950"
+              animate={{ scale: [1, 1.06, 1] }}
+              transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {giftTotal.toLocaleString()}
+            </motion.span>
+            <span className="pb-0.5 text-xs font-black text-amber-600">coins</span>
+          </div>
+        </div>
+        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-amber-100 text-amber-600 shadow-inner">
+          <Gift className="h-5 w-5" />
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-rose-100 bg-rose-50/80 px-2 py-1.5">
+          <p className="text-[9px] font-black uppercase tracking-wider text-rose-400">Combo</p>
+          <p className="text-lg font-black leading-none text-rose-700">x12</p>
+        </div>
+        <div className="rounded-xl border border-sky-100 bg-sky-50/80 px-2 py-1.5">
+          <p className="text-[9px] font-black uppercase tracking-wider text-sky-400">Streak</p>
+          <p className="text-lg font-black leading-none text-sky-700">0:18</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function FlyingGiftLayer() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+      {FLYING_GIFTS.map(({ gift, emoji, fromX, fromY, toX, toY, delay, color }, idx) => (
+        <motion.div
+          key={gift}
+          className="absolute grid h-10 w-10 place-items-center rounded-2xl border border-white/80 bg-white/82 text-lg font-black shadow-[0_18px_44px_rgba(56,119,182,.20)] backdrop-blur-xl"
+          initial={{ left: fromX, top: fromY, scale: 0.7, opacity: 0, rotate: -18 }}
+          animate={{
+            left: [fromX, "32%", toX],
+            top: [fromY, idx % 2 ? "34%" : "58%", toY],
+            scale: [0.7, 1.18, 0.22],
+            opacity: [0, 1, 0],
+            rotate: [-18, 16, 38],
+          }}
+          transition={{ duration: 3.2, delay, repeat: Infinity, repeatDelay: 1.6, ease: "easeInOut" }}
+          style={{ color, boxShadow: `0 18px 44px rgba(56,119,182,.18), 0 0 28px ${color}` }}
+        >
+          {emoji}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function GiftReactionWave() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20">
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          className="absolute left-1/2 top-[50%] rounded-full border border-amber-300/55"
+          initial={{ width: 120, height: 120, x: "-50%", y: "-50%", opacity: 0 }}
+          animate={{ width: [120, 560], height: [120, 340], opacity: [0, 0.48, 0] }}
+          transition={{ duration: 2.8, delay: i * 0.55, repeat: Infinity, repeatDelay: 1.2, ease: "easeOut" }}
+          style={{ boxShadow: "0 0 48px rgba(245,158,11,.22)" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function CommunityGoalStack() {
+  return (
+    <div className="absolute bottom-5 left-5 z-40 w-[255px] space-y-2">
+      <div className="rounded-[1.35rem] border border-emerald-200/80 bg-white/76 p-3 shadow-[0_20px_56px_rgba(16,185,129,.16)] backdrop-blur-2xl">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500">Community Goals</p>
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">active</span>
+        </div>
+        <div className="space-y-2.5">
+          {COMMUNITY_GOALS.map(({ label, current, target, icon: Icon, color }) => {
+            const pct = Math.min(100, Math.round((current / target) * 100));
+            return (
+              <div key={label}>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-1.5 text-xs font-black text-slate-700">
+                    <Icon className="h-3.5 w-3.5 flex-none text-emerald-500" />
+                    <span className="truncate">{label}</span>
+                  </span>
+                  <span className="text-xs font-black tabular-nums text-slate-500">{pct}%</span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                  <motion.div
+                    className={cn("h-full rounded-full bg-gradient-to-r", color)}
+                    initial={{ width: "18%" }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BattleEnergyPanel() {
+  return (
+    <motion.div
+      className="absolute bottom-5 right-5 z-40 w-[240px] rounded-[1.35rem] border border-orange-200/90 bg-white/76 p-3 shadow-[0_20px_56px_rgba(249,115,22,.18)] backdrop-blur-2xl"
+      animate={{ boxShadow: ["0 20px 56px rgba(249,115,22,.16)", "0 26px 72px rgba(249,115,22,.30)", "0 20px 56px rgba(249,115,22,.16)"] }}
+      transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <div className="mb-2 flex items-center justify-between">
+        <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
+          <Flame className="h-3.5 w-3.5" />Battle Mode
+        </span>
+        <span className="text-xs font-black text-orange-700">82%</span>
+      </div>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-wider text-sky-500">Team Sky</p>
+          <div className="mt-1 h-2 rounded-full bg-sky-100">
+            <motion.div className="h-full rounded-full bg-sky-400" animate={{ width: ["62%", "72%", "62%"] }} transition={{ duration: 2, repeat: Infinity }} />
+          </div>
+        </div>
+        <span className="rounded-full bg-orange-100 px-2 py-1 text-[10px] font-black text-orange-700">VS</span>
+        <div>
+          <p className="text-right text-[10px] font-black uppercase tracking-wider text-rose-500">Team Gold</p>
+          <div className="mt-1 h-2 rounded-full bg-rose-100">
+            <motion.div className="ml-auto h-full rounded-full bg-amber-400" animate={{ width: ["54%", "68%", "54%"] }} transition={{ duration: 2.4, repeat: Infinity }} />
+          </div>
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] font-bold text-slate-500">AI Host prompt: call the next gift combo.</p>
+    </motion.div>
+  );
+}
+
+function ChatReactionBursts() {
+  return (
+    <>
+      {CHAT_REACTIONS.map(({ label, count, className }, idx) => (
+        <motion.div
+          key={label}
+          className={cn("absolute z-40 rounded-full border px-3 py-1.5 shadow-[0_12px_32px_rgba(56,119,182,.14)] backdrop-blur-xl", className)}
+          animate={{ y: [0, -14, 0], opacity: [0.72, 1, 0.72], scale: [1, 1.06, 1] }}
+          transition={{ duration: 2.8 + idx * 0.25, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <span className="text-sm font-black">{label}</span>
+          <span className="ml-1.5 text-[10px] font-black opacity-60">{count}</span>
+        </motion.div>
+      ))}
+    </>
+  );
+}
+
+function ViewerCelebrationRibbon() {
+  return (
+    <div className="absolute left-1/2 top-[13%] z-40 flex -translate-x-1/2 gap-2">
+      {VIEWER_CELEBRATIONS.map(({ name, label, icon: Icon, color }, idx) => (
+        <motion.div
+          key={name}
+          className={cn("flex items-center gap-2 rounded-full border px-3 py-2 shadow-[0_14px_36px_rgba(56,119,182,.16)] backdrop-blur-2xl", color)}
+          initial={{ opacity: 0, y: -18 }}
+          animate={{ opacity: [0, 1, 1, 0], y: [-18, 0, 0, -10] }}
+          transition={{ duration: 5.4, delay: idx * 1.1, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          <div className="leading-none">
+            <p className="text-[10px] font-black uppercase tracking-[0.13em]">{label}</p>
+            <p className="mt-1 text-xs font-black">{name}</p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 function ComposerStage({
   activeState,
   stats,
@@ -578,6 +799,13 @@ function ComposerStage({
       ))}
 
       <CompanionStateRail activeState={activeState} />
+      <LiveShowCounter stats={stats} />
+      <FlyingGiftLayer />
+      <GiftReactionWave />
+      <CommunityGoalStack />
+      <BattleEnergyPanel />
+      <ChatReactionBursts />
+      <ViewerCelebrationRibbon />
 
       {MOMENT_CUES.map(({ label, value, icon: Icon, className }, idx) => (
         <motion.div
@@ -597,24 +825,6 @@ function ComposerStage({
       ))}
 
       <AngieAvatar activeState={activeState} />
-
-      <div className="absolute bottom-5 left-1/2 z-30 grid w-[86%] -translate-x-1/2 grid-cols-3 gap-2">
-        {[
-          { label: "Viewers", value: stats.viewerCount || 1284, icon: Eye, tone: "text-sky-600" },
-          { label: "Gifts", value: stats.totalGifts || 427, icon: Gift, tone: "text-amber-600" },
-          { label: "Goal", value: "100%", icon: Target, tone: "text-emerald-600" },
-        ].map(({ label, value, icon: Icon, tone }) => (
-          <div key={label} className="rounded-2xl border border-white/75 bg-white/62 px-3 py-2.5 shadow-[0_16px_42px_rgba(56,119,182,.12)] backdrop-blur-2xl">
-            <div className="flex items-center gap-2">
-              <Icon className={cn("h-4 w-4", tone)} />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</p>
-                <p className="text-lg font-black leading-none text-slate-900">{typeof value === "number" ? value.toLocaleString() : value}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
