@@ -656,6 +656,13 @@ function GiftTrajectoryRails() {
 function FlyingGiftLayer() {
   return (
     <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+      <motion.div
+        className="absolute left-[18%] top-[31%] rounded-full border border-rose-200 bg-white/88 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-rose-700 shadow-[0_16px_42px_rgba(244,63,94,.20)] backdrop-blur-2xl"
+        animate={{ x: [0, 18, 0], opacity: [0.78, 1, 0.78] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        gifts flying to Angie
+      </motion.div>
       {FLYING_GIFTS.map(({ gift, emoji, fromX, fromY, toX, toY, delay, color }, idx) => (
         <motion.div
           key={gift}
@@ -665,7 +672,7 @@ function FlyingGiftLayer() {
             left: [fromX, "32%", toX],
             top: [fromY, idx % 2 ? "34%" : "58%", toY],
             scale: [0.78, 1.25, 0.42],
-            opacity: [0, 1, 1, 0],
+            opacity: [0.42, 1, 1, 0.42],
             rotate: [-18, 16, 38],
           }}
           transition={{ duration: 3.4, delay, repeat: Infinity, repeatDelay: 0.65, ease: "easeInOut" }}
@@ -674,6 +681,21 @@ function FlyingGiftLayer() {
           <Gift className="h-4 w-4" />
           <span>{emoji}</span>
           <span className="text-[9px] uppercase tracking-widest opacity-70">to Angie</span>
+        </motion.div>
+      ))}
+      {[
+        { left: "19%", top: "54%", label: "rose x8", tone: "text-rose-700 bg-rose-50 border-rose-200" },
+        { left: "31%", top: "49%", label: "star x3", tone: "text-sky-700 bg-sky-50 border-sky-200" },
+        { left: "43%", top: "45%", label: "gold x1", tone: "text-amber-700 bg-amber-50 border-amber-200" },
+      ].map(({ left, top, label, tone }, idx) => (
+        <motion.div
+          key={label}
+          className={cn("absolute rounded-full border px-3 py-1.5 text-xs font-black shadow-[0_12px_32px_rgba(56,119,182,.14)] backdrop-blur-xl", tone)}
+          style={{ left, top }}
+          animate={{ y: [0, -8, 0], scale: [0.95, 1.08, 0.95] }}
+          transition={{ duration: 1.2, delay: idx * 0.2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Gift className="mr-1 inline h-3.5 w-3.5" />{label}
         </motion.div>
       ))}
     </div>
@@ -694,11 +716,11 @@ function GiftReactionWave() {
         />
       ))}
       <motion.div
-        className="absolute left-1/2 top-[62%] -translate-x-1/2 rounded-full border border-amber-200 bg-amber-50/90 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-amber-700 shadow-[0_16px_40px_rgba(245,158,11,.22)]"
+        className="absolute left-1/2 top-[64%] -translate-x-1/2 rounded-full border-2 border-amber-200 bg-amber-50/95 px-5 py-2.5 text-sm font-black uppercase tracking-[0.18em] text-amber-700 shadow-[0_18px_48px_rgba(245,158,11,.28)]"
         animate={{ y: [0, -12, 0], opacity: [0.45, 1, 0.45], scale: [0.94, 1.08, 0.94] }}
         transition={{ duration: 1.45, repeat: Infinity, ease: "easeInOut" }}
       >
-        gift reaction wave +384
+        reaction wave live +384
       </motion.div>
     </div>
   );
@@ -805,9 +827,8 @@ function ViewerCelebrationRibbon() {
         <motion.div
           key={name}
           className={cn("flex items-center gap-2 rounded-full border px-3 py-2 shadow-[0_14px_36px_rgba(56,119,182,.16)] backdrop-blur-2xl", color)}
-          initial={{ opacity: 0, y: -18 }}
-          animate={{ opacity: [0, 1, 1, 0], y: [-18, 0, 0, -10] }}
-          transition={{ duration: 5.4, delay: idx * 1.1, repeat: Infinity, repeatDelay: 1.8, ease: "easeInOut" }}
+          animate={{ opacity: [0.74, 1, 0.74], y: [0, -7, 0], scale: [0.96, 1.05, 0.96] }}
+          transition={{ duration: 2.1, delay: idx * 0.35, repeat: Infinity, ease: "easeInOut" }}
         >
           <Icon className="h-3.5 w-3.5" />
           <div className="leading-none">
