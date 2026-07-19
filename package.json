@@ -1,25 +1,24 @@
 {
-  "name": "workspace",
-  "version": "0.0.0",
-  "license": "MIT",
-  "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
-    "desktop:dev": "pnpm --filter @workspace/desktop run dev",
-    "desktop:build": "pnpm --filter @workspace/desktop run build:desktop",
-    "desktop:build:win": "pnpm --filter @workspace/desktop run build:desktop:win",
-    "desktop:build:mac": "pnpm --filter @workspace/desktop run build:desktop:mac",
-    "desktop:build:linux": "pnpm --filter @workspace/desktop run build:desktop:linux"
-  },
+  "name": "new-project",
+  "version": "0.1.0",
   "private": true,
-  "devDependencies": {
-    "prettier": "^3.8.3",
-    "typescript": "~5.9.3"
+  "packageManager": "pnpm@11.15.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
-    "stripe": "^22.2.0",
-    "stripe-replit-sync": "^1.0.0"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5"
   }
 }
