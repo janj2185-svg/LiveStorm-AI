@@ -358,6 +358,16 @@
   --sy-on-verdant: #0c0c0f;
   --sy-on-solar: #0c0c0f;
   --sy-on-crimson: #0c0c0f;
+  --sy-on-brand: #0c0c0f;
+  --sy-on-live: #0c0c0f;
+  --sy-on-creator: #0c0c0f;
+  --sy-on-success: #0c0c0f;
+  --sy-on-warning: #0c0c0f;
+  --sy-on-danger: #0c0c0f;
+
+  --sy-fg-on-media: #f4f4f6;
+  --sy-fg-on-media-muted: #bababe;
+  --sy-scrim-on-media: #161418c7;
 
   --sy-alpha-hi-04: #f4f4f60a;
   --sy-alpha-lo-04: #0c0c0f0a;
@@ -551,6 +561,16 @@
   --sy-on-verdant: #fbfbff;
   --sy-on-solar: #fbfbff;
   --sy-on-crimson: #fbfbff;
+  --sy-on-brand: #fbfbff;
+  --sy-on-live: #fbfbff;
+  --sy-on-creator: #fbfbff;
+  --sy-on-success: #fbfbff;
+  --sy-on-warning: #fbfbff;
+  --sy-on-danger: #fbfbff;
+
+  --sy-fg-on-media: #f4f4f6;
+  --sy-fg-on-media-muted: #bababe;
+  --sy-scrim-on-media: #161418c7;
 
   --sy-alpha-hi-04: #1e1e1f0a;
   --sy-alpha-lo-04: #fbfbff0a;
@@ -746,6 +766,16 @@
     --sy-on-verdant: #0c0c0f;
     --sy-on-solar: #0c0c0f;
     --sy-on-crimson: #0c0c0f;
+    --sy-on-brand: #0c0c0f;
+    --sy-on-live: #0c0c0f;
+    --sy-on-creator: #0c0c0f;
+    --sy-on-success: #0c0c0f;
+    --sy-on-warning: #0c0c0f;
+    --sy-on-danger: #0c0c0f;
+
+    --sy-fg-on-media: oklch(96.80% 0.0028 282);
+    --sy-fg-on-media-muted: oklch(79.00% 0.0051 282);
+    --sy-scrim-on-media: oklch(12% 0.02 282 / 0.78);
 
     --sy-alpha-hi-04: oklch(96.80% 0.0028 282 / 0.04);
     --sy-alpha-lo-04: oklch(15.50% 0.0069 282 / 0.04);
@@ -939,6 +969,16 @@
     --sy-on-verdant: #fbfbff;
     --sy-on-solar: #fbfbff;
     --sy-on-crimson: #fbfbff;
+    --sy-on-brand: #fbfbff;
+    --sy-on-live: #fbfbff;
+    --sy-on-creator: #fbfbff;
+    --sy-on-success: #fbfbff;
+    --sy-on-warning: #fbfbff;
+    --sy-on-danger: #fbfbff;
+
+    --sy-fg-on-media: oklch(96.80% 0.0028 282);
+    --sy-fg-on-media-muted: oklch(79.00% 0.0051 282);
+    --sy-scrim-on-media: oklch(12% 0.02 282 / 0.78);
 
     --sy-alpha-hi-04: oklch(23.50% 0.0023 282 / 0.04);
     --sy-alpha-lo-04: oklch(99.00% 0.0057 282 / 0.04);

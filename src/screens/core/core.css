@@ -20,8 +20,12 @@
 .sy-home__search .sy-input {
   flex: 1;
 }
-/* On tablet and wider the shell's top bar owns search, so this row retires. */
-@container screen (min-width: 768px) {
+/*
+  Above the compact posture the shell's top bar owns search, so this row
+  retires. 560 is the content-column threshold that corresponds to the shell
+  gaining its rail — see the breakpoint note in patterns.css.
+*/
+@container screen (min-width: 560px) {
   .sy-home__search {
     display: none;
   }

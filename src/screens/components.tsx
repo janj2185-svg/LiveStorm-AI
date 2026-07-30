@@ -328,16 +328,25 @@ export function ListRow({
   subtitle,
   trailing,
   onClick,
+  className,
+  /** Allow the title to wrap. Off by default so dense lists stay one line. */
+  wrapTitle = false,
 }: {
   leading?: ReactNode;
   title: ReactNode;
   subtitle?: ReactNode;
   trailing?: ReactNode;
   onClick?: () => void;
+  className?: string;
+  wrapTitle?: boolean;
 }) {
   const Tag = onClick ? 'button' : 'div';
   return (
-    <Tag type={onClick ? 'button' : undefined} className="sy-list-row" onClick={onClick}>
+    <Tag
+      type={onClick ? 'button' : undefined}
+      className={['sy-list-row', wrapTitle && 'sy-list-row--wrap', className].filter(Boolean).join(' ')}
+      onClick={onClick}
+    >
       {leading && <span className="sy-list-row__leading">{leading}</span>}
       <span className="sy-list-row__text">
         <span className="sy-list-row__title">{title}</span>
@@ -353,14 +362,16 @@ export function ScreenSection({
   action,
   children,
   eyebrow,
+  className,
 }: {
   title?: string;
   eyebrow?: string;
   action?: ReactNode;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="sy-screen-section">
+    <section className={['sy-screen-section', className].filter(Boolean).join(' ')}>
       {title && (
         <header className="sy-screen-section__head">
           <div>

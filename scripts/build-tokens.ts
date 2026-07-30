@@ -33,6 +33,7 @@ import {
   GRID,
   MEASURE,
   RADIUS,
+  SEMANTIC_ROLES,
   SHELL,
   SPACE,
   STAGGER,
@@ -291,6 +292,27 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
     if (family === 'neutral') continue;
     push(`  --sy-on-${family}: ${onSolidColor(mode, family)};`);
   }
+  // Semantic spellings of the same values, so a component can ask for
+  // "text on the danger fill" without knowing danger is crimson.
+  for (const [role, family] of Object.entries(SEMANTIC_ROLES)) {
+    push(`  --sy-on-${role}: ${onSolidColor(mode, family as ColorFamily)};`);
+  }
+  push();
+
+  /*
+    Foreground for content sitting on media.
+    Photographic and generative covers are always darkened by the same scrim,
+    in both themes, so text over them must NOT flip with the theme. These
+    resolve to the dark ramp's text colours regardless of the active theme —
+    without them, every caption over an image becomes invisible in light mode.
+  */
+  push(`  --sy-fg-on-media: ${useOklch ? materialised.dark.neutral[11].oklch : materialised.dark.neutral[11].hex};`);
+  push(`  --sy-fg-on-media-muted: ${useOklch ? materialised.dark.neutral[10].oklch : materialised.dark.neutral[10].hex};`);
+  push(
+    `  --sy-scrim-on-media: ${
+      useOklch ? 'oklch(12% 0.02 282 / 0.78)' : '#161418c7'
+    };`,
+  );
   push();
 
   // Translucent overlays. `hi` is a light veil, `lo` is a dark veil.

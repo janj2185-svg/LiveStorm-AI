@@ -6,8 +6,19 @@
  * desktop. Nothing here reads the viewport.
  */
 
-.sy-shell {
+/**
+ * The frame owns the `shell` container; `.sy-shell` is the element that
+ * responds to it. They cannot be the same element — a container query never
+ * matches the element that establishes the container, so collapsing these two
+ * would silently pin the shell to its compact posture forever.
+ */
+.sy-shell-frame {
   container: shell / inline-size;
+  block-size: 100%;
+  min-block-size: 0;
+}
+
+.sy-shell {
   position: relative;
   display: grid;
   /* Compact posture: a single column with the tab bar pinned to the bottom. */
@@ -20,9 +31,15 @@
   overflow: hidden;
 }
 
+/**
+ * Immersive surfaces have no shell chrome, so they hand the whole frame to the
+ * screen and establish the `screen` container themselves.
+ */
 .sy-shell--immersive {
   display: block;
+  container: screen / inline-size;
   background: #000;
+  block-size: 100%;
 }
 
 .sy-shell__body {
@@ -34,14 +51,22 @@
   overflow: hidden;
 }
 
+/**
+ * `.sy-main` establishes the `screen` container. Putting it here rather than on
+ * `.sy-screen` is deliberate: a screen's own root can then be restyled by a
+ * container query, which it could not do if it were its own container.
+ */
 .sy-main {
+  container: screen / inline-size;
   flex: 1;
   min-block-size: 0;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  /* Reserve room for the floating tab bar in compact posture. */
-  padding-block-end: calc(var(--sy-shell-tabBar) + var(--sy-space-6));
+  /* Reserve room for the floating tab bar and the home indicator beneath it. */
+  padding-block-end: calc(
+    var(--sy-shell-tabBar) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + var(--sy-space-6)
+  );
 }
 .sy-main:focus {
   outline: none;
@@ -57,6 +82,14 @@
 /* Top bar                                                             */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Safe areas.
+ *
+ * On a notched phone the status bar and home indicator sit *inside* the
+ * viewport, so chrome that starts at y=0 renders underneath the hardware. The
+ * design gallery supplies `--safe-top` / `--safe-bottom` from the device
+ * profile; on a real device they fall back to the platform's own env() values.
+ */
 .sy-topbar {
   position: sticky;
   inset-block-start: 0;
@@ -64,11 +97,34 @@
   display: flex;
   align-items: center;
   gap: var(--sy-space-3);
-  block-size: var(--sy-shell-topBar);
+  block-size: calc(var(--sy-shell-topBar) + var(--safe-top, env(safe-area-inset-top, 0px)));
+  padding-block-start: var(--safe-top, env(safe-area-inset-top, 0px));
   padding-inline: var(--sy-space-4);
   border: none;
   border-block-end: 1px solid var(--sy-border-subtle);
   flex-shrink: 0;
+}
+
+/*
+  Search lives in the top bar only when there is room for it. Below that the
+  screen owns its own search field, positioned in thumb reach — showing both
+  would be a duplicate control and a wasted 40px of a 393px screen.
+*/
+@container shell (max-width: 767px) {
+  .sy-topbar__search {
+    display: none;
+  }
+}
+
+/* Identity lives in the rail once there is one, so the top bar releases it. */
+.sy-topbar__brand {
+  display: inline-flex;
+  align-items: center;
+}
+@container shell (min-width: 768px) {
+  .sy-topbar__brand {
+    display: none;
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -204,7 +260,8 @@
  */
 .sy-tabbar {
   position: absolute;
-  inset-block-end: var(--sy-space-3);
+  /* Floats clear of the home indicator rather than under it. */
+  inset-block-end: calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + var(--sy-space-2));
   inset-inline: var(--sy-space-3);
   z-index: var(--sy-z-navigation);
   display: flex;
@@ -393,28 +450,59 @@
 /* ------------------------------------------------------------------ */
 
 /**
- * Every screen declares a container named `screen`. Screen-level layouts query
- * this rather than the viewport, which is what lets a single screen definition
- * render correctly inside a phone frame and full-bleed on desktop.
+ * Screen root.
+ *
+ * The `screen` container is established by `.sy-main` (or, for immersive
+ * screens, by `.sy-shell--immersive`), so `.sy-screen` itself is queryable.
  */
 .sy-screen {
-  container: screen / inline-size;
   min-block-size: 100%;
 }
 
 .sy-screen__inner {
   inline-size: 100%;
-  max-inline-size: var(--sy-grid-max);
+  /*
+    Capped independently of the viewport. The shell has already subtracted the
+    rail and context panel, so this only has to stop the content column from
+    running past a comfortable reading width on very large displays.
+  */
+  max-inline-size: 1440px;
   margin-inline: auto;
   padding-inline: var(--sy-space-4);
 }
 
-@container screen (min-width: 768px) {
+/* ------------------------------------------------------------------ */
+/* Content-column breakpoints                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * These thresholds are measured against the *content column*, not the device.
+ * The shell subtracts its own chrome first, so the width a screen actually
+ * receives on each reference device is:
+ *
+ *   iPhone   393  ->  393   (no chrome)
+ *   Android  412  ->  412
+ *   Tablet   834  ->  758   (minus the 76px collapsed rail)
+ *   Web     1280  ->  676   (minus 264 rail + 340 context panel)
+ *   Desktop 1512  ->  908   (minus 264 rail + 340 context panel)
+ *
+ * Two consequences that are easy to get wrong:
+ *
+ * 1. Web at 1280 is NARROWER than tablet at 834. The widest device is not the
+ *    widest content column, because the expanded posture spends 604px on
+ *    navigation. 676px is the tightest multi-column case in the product.
+ *
+ * 2. A `min-width: 768px` container query fires on NEITHER the tablet nor the
+ *    1280 web posture. Device-shaped numbers are the wrong numbers here. The
+ *    system uses 560 / 840 / 880 instead, which land cleanly either side of
+ *    the five real widths above.
+ */
+@container screen (min-width: 560px) {
   .sy-screen__inner {
     padding-inline: var(--sy-space-6);
   }
 }
-@container screen (min-width: 1280px) {
+@container screen (min-width: 880px) {
   .sy-screen__inner {
     padding-inline: var(--sy-space-8);
   }
@@ -426,19 +514,19 @@
   gap: var(--sy-space-4);
   grid-template-columns: 1fr;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-cols--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sy-cols--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sy-cols--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 840px) {
+  .sy-cols { gap: var(--sy-space-6); }
   .sy-cols--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sy-cols--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .sy-cols--sidebar { grid-template-columns: minmax(0, 1fr) 320px; }
-  .sy-cols--sidebar-start { grid-template-columns: 260px minmax(0, 1fr); }
 }
-@container screen (min-width: 1280px) {
-  .sy-cols { gap: var(--sy-space-6); }
+@container screen (min-width: 880px) {
+  .sy-cols--sidebar { grid-template-columns: minmax(0, 1fr) 300px; }
+  .sy-cols--sidebar-start { grid-template-columns: 250px minmax(0, 1fr); }
 }
 
 /* Horizontal scroller with edge-to-edge bleed and snap. */
@@ -460,7 +548,7 @@
   scroll-snap-align: start;
   flex-shrink: 0;
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 560px) {
   .sy-scroller {
     margin-inline: calc(var(--sy-space-6) * -1);
     padding-inline: var(--sy-space-6);

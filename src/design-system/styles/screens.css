@@ -385,6 +385,11 @@ button.sy-list-row:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.sy-list-row--wrap .sy-list-row__title {
+  overflow: visible;
+  white-space: normal;
+  text-wrap: pretty;
+}
 .sy-list-row__trailing {
   flex-shrink: 0;
   display: flex;

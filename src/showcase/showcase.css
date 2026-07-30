@@ -250,6 +250,20 @@
   }
 }
 
+/**
+ * Bare mode (`chrome=0`).
+ * The device alone at true resolution, with no gallery furniture, so a capture
+ * is pixel-exact and needs no cropping.
+ */
+.sy-gallery__bare {
+  display: inline-block;
+  padding: 12px;
+  background: var(--sy-neutral-1);
+}
+.sy-gallery__bare .sy-device__frame {
+  box-shadow: none;
+}
+
 /* ------------------------------------------------------------------ */
 /* Device frame                                                        */
 /* ------------------------------------------------------------------ */

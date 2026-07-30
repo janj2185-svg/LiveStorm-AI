@@ -333,6 +333,12 @@ export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: IconName;
   /** Renders a remove affordance and calls `onRemove`. */
   onRemove?: () => void;
+  /**
+   * Accessible name for the remove control. Defaults to naming the chip, so a
+   * screen reader announces "Remove Photography" rather than a bare "Remove"
+   * repeated once per chip.
+   */
+  removeLabel?: string;
   tone?: Tone;
 }
 
@@ -340,6 +346,7 @@ export function Chip({
   selected = false,
   icon,
   onRemove,
+  removeLabel,
   tone = 'accent',
   className,
   children,
@@ -359,7 +366,7 @@ export function Chip({
           className="sy-chip__remove"
           role="button"
           tabIndex={-1}
-          aria-label="Remove"
+          aria-label={removeLabel ?? (typeof children === 'string' ? `Remove ${children}` : 'Remove')}
           onClick={(event) => {
             event.stopPropagation();
             onRemove();
@@ -385,6 +392,7 @@ export interface AvatarProps {
   presence?: 'online' | 'away' | 'offline';
   verified?: boolean;
   className?: string;
+  style?: CSSProperties;
 }
 
 /**
@@ -395,7 +403,7 @@ export interface AvatarProps {
  * therefore looks like 400 individuals rather than 400 identical grey circles,
  * with zero extra data.
  */
-export function Avatar({ name, src, size = 40, ring = false, presence, verified, className }: AvatarProps) {
+export function Avatar({ name, src, size = 40, ring = false, presence, verified, className, style }: AvatarProps) {
   const initials = useMemo(
     () =>
       name
@@ -417,7 +425,12 @@ export function Avatar({ name, src, size = 40, ring = false, presence, verified,
   return (
     <span
       className={cx('sy-avatar', ring && `sy-avatar--ring-${ring}`, className)}
-      style={{ width: size, height: size, ['--avatar-hue' as string]: hue }}
+      /*
+        Size is applied through a custom property rather than a fixed width, so
+        a screen can make an avatar responsive from CSS without having to
+        out-specify an inline style.
+      */
+      style={{ ['--avatar-size' as string]: `${size}px`, ['--avatar-hue' as string]: hue, ...style }}
     >
       <span className="sy-avatar__inner">
         {src ? (
@@ -831,18 +844,38 @@ export function Stat({
   label,
   value,
   delta,
+  polarity = 'higher-is-better',
   icon,
   tone = 'accent',
+  status,
 }: {
   label: string;
   value: string;
-  /** Signed change, e.g. "+12.4%". Sign drives the colour and the arrow. */
+  /** Signed change, e.g. "+12.4%" or "−8.1%". The sign drives the arrow. */
   delta?: string;
+  /**
+   * Which direction is *good*.
+   *
+   * A rising error rate, latency or cost is bad news, so tying green to "+"
+   * would actively mislead on roughly a third of the metrics in this product.
+   * `neutral` renders the movement with no judgement at all, which is the right
+   * answer whenever "better" genuinely depends on context.
+   */
+  polarity?: 'higher-is-better' | 'lower-is-better' | 'neutral';
   icon?: IconName;
   tone?: Tone;
+  /** Optional state chip, e.g. an SLO or health label. */
+  status?: ReactNode;
 }) {
-  const positive = delta?.startsWith('+');
-  const negative = delta?.startsWith('-');
+  // Accept both the ASCII hyphen and the typographic minus, since correctly
+  // typeset figures use U+2212 and would otherwise read as "no change".
+  const rising = delta ? /^\+/.test(delta) : false;
+  const falling = delta ? /^[-\u2212]/.test(delta) : false;
+  const good =
+    polarity === 'neutral' ? false : polarity === 'higher-is-better' ? rising : falling;
+  const bad =
+    polarity === 'neutral' ? false : polarity === 'higher-is-better' ? falling : rising;
+
   return (
     <div className={cx('sy-stat', `sy-tone-${tone}`)}>
       <div className="sy-stat__head">
@@ -852,11 +885,12 @@ export function Stat({
           </span>
         )}
         <span className="sy-caption sy-fg-muted">{label}</span>
+        {status && <span className="sy-stat__status">{status}</span>}
       </div>
       <div className="sy-stat__value sy-mono-lg">{value}</div>
       {delta && (
-        <div className={cx('sy-stat__delta', positive && 'is-up', negative && 'is-down')}>
-          {(positive || negative) && <Icon name={positive ? 'trendUp' : 'trendDown'} size={13} />}
+        <div className={cx('sy-stat__delta', good && 'is-up', bad && 'is-down')}>
+          {(rising || falling) && <Icon name={rising ? 'trendUp' : 'trendDown'} size={13} />}
           {delta}
         </div>
       )}

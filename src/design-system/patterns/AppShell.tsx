@@ -72,11 +72,18 @@ export function AppShell({
     .filter((item): item is NavItem => Boolean(item));
 
   if (immersive) {
-    return <div className="sy-shell sy-shell--immersive">{children}</div>;
+    return <div className="sy-shell-frame sy-shell--immersive">{children}</div>;
   }
 
+  /*
+    The frame exists solely to own the `shell` container. An element can never
+    match a container query it declares itself, so the element whose grid
+    changes with posture has to be a *child* of the container, not the
+    container. This is the one structural wrapper in the whole system.
+  */
   return (
-    <div className="sy-shell">
+    <div className="sy-shell-frame">
+      <div className="sy-shell">
       <a className="sy-skip-link" href="#sy-main">
         Skip to content
       </a>
@@ -148,7 +155,8 @@ export function AppShell({
             </button>
           );
         })}
-      </nav>
+        </nav>
+      </div>
     </div>
   );
 }

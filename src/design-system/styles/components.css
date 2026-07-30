@@ -433,6 +433,9 @@
   display: inline-block;
   flex-shrink: 0;
   border-radius: 50%;
+  /* Set by the component, overridable from any screen stylesheet. */
+  inline-size: var(--avatar-size, 40px);
+  block-size: var(--avatar-size, 40px);
 }
 .sy-avatar__inner {
   display: grid;
@@ -932,6 +935,10 @@
   background: var(--tone-bg);
   color: var(--tone-fg);
 }
+.sy-stat__status {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
 .sy-stat__value {
   color: var(--sy-fg-default);
 }
@@ -1027,7 +1034,14 @@
 /* Icon                                                                */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The reset blockifies every `svg`, which makes an icon placed mid-sentence
+ * break the line. Restoring inline-block costs nothing inside flex and grid
+ * containers — where display is blockified anyway — and fixes inline use.
+ */
 .sy-icon {
+  display: inline-block;
+  vertical-align: middle;
   flex-shrink: 0;
 }
 /**

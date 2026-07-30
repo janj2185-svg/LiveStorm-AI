@@ -22,10 +22,37 @@ import { DeviceFrame } from './DeviceFrame';
 
 type ThemeName = 'dark' | 'light';
 
+/**
+ * Deep link format: `#/<screenId>?device=<id>&theme=<dark|light>&chrome=<0|1>`
+ *
+ * Every view in the gallery is addressable, so a specific screen at a specific
+ * posture in a specific theme can be linked in a review, a bug report or a
+ * capture script. `chrome=0` strips the gallery furniture and renders the
+ * device alone, which is what the screenshot pipeline uses.
+ */
+function readLocation() {
+  const raw = window.location.hash.replace(/^#\/?/, '');
+  const [id, search] = raw.split('?');
+  const params = new URLSearchParams(search ?? '');
+  return {
+    screenId: id || null,
+    device: (params.get('device') as DeviceId | null) ?? null,
+    theme: (params.get('theme') as ThemeName | null) ?? null,
+    bare: params.get('chrome') === '0',
+  };
+}
+
 export function App() {
-  const [theme, setTheme] = useState<ThemeName>('dark');
-  const [screenId, setScreenId] = useState(SCREENS[0].id);
-  const [device, setDevice] = useState<DeviceId>('desktop');
+  const initial = typeof window === 'undefined' ? null : readLocation();
+
+  const [theme, setTheme] = useState<ThemeName>(initial?.theme ?? 'dark');
+  const [screenId, setScreenId] = useState(
+    initial?.screenId && SCREENS.some((s) => s.id === initial.screenId)
+      ? initial.screenId
+      : SCREENS[0].id,
+  );
+  const [device, setDevice] = useState<DeviceId>(initial?.device ?? 'desktop');
+  const [bare, setBare] = useState(initial?.bare ?? false);
   const [query, setQuery] = useState('');
   const [fit, setFit] = useState(true);
   const [navOpen, setNavOpen] = useState(false);
@@ -46,10 +73,39 @@ export function App() {
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // When a screen declares a canonical posture, follow it on selection.
+  // When a screen declares a canonical posture, follow it on selection —
+  // unless the URL asked for a specific device, which always wins.
   useEffect(() => {
+    if (initial?.device) return;
     if (screen.preferredDevice) setDevice(screen.preferredDevice);
+    // `initial` is read once at mount and never changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
+
+  /*
+    React to fragment changes so browser back and forward move between views
+    rather than doing nothing. It also lets tooling drive the gallery without
+    reloading the document.
+  */
+  useEffect(() => {
+    const onHashChange = () => {
+      const next = readLocation();
+      if (next.screenId && SCREENS.some((item) => item.id === next.screenId)) setScreenId(next.screenId);
+      if (next.device && DEVICES[next.device]) setDevice(next.device);
+      if (next.theme === 'dark' || next.theme === 'light') setTheme(next.theme);
+      setBare(next.bare);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Keep the address bar in sync so the current view is always linkable.
+  useEffect(() => {
+    const next = `#/${screenId}?device=${device}&theme=${theme}${bare ? '&chrome=0' : ''}`;
+    if (window.location.hash !== next) {
+      window.history.replaceState(null, '', next);
+    }
+  }, [screenId, device, theme, bare]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return SCREENS;
@@ -76,6 +132,53 @@ export function App() {
 
   const Screen = screen.component;
   const ContextPanel = screen.contextPanel;
+
+  const preview = (
+    <div className="sy-preview" data-theme={theme}>
+      {screen.immersive ? (
+        // Immersive screens still need a `screen` container to query;
+        // the shell's immersive frame is what provides it.
+        <div className="sy-shell-frame sy-shell--immersive">
+          <Screen />
+        </div>
+      ) : (
+        <AppShell
+          nav={SHELL_NAV}
+          navSecondary={SHELL_NAV_SECONDARY}
+          active={screen.navId ?? 'home'}
+          contextPanel={ContextPanel ? <ContextPanel /> : undefined}
+          contextPanelTitle={screen.contextPanelTitle}
+          topBar={
+            <>
+              {/* Compact posture has no rail, so the top bar carries identity. */}
+              <span className="sy-topbar__brand">
+                <LogoLockup size={24} />
+              </span>
+              <div className="sy-topbar__search">
+                <SearchInput placeholder="Search SYLORA" shortcut="⌘K" />
+              </div>
+              <span className="sy-grow" />
+              <IconButton icon="sparkles" label="Assistant" variant="ghost" size="sm" />
+              <IconButton icon="notifications" label="Notifications" variant="ghost" size="sm" />
+            </>
+          }
+        >
+          <Screen />
+        </AppShell>
+      )}
+    </div>
+  );
+
+  // `chrome=0`: the device alone, at true resolution, for screenshot capture.
+  if (bare) {
+    return (
+      <div className="sy-gallery__bare">
+        <DeviceFrame device={device} scale={1}>
+          {preview}
+        </DeviceFrame>
+      </div>
+    );
+  }
 
   return (
     <div className="sy-gallery">
@@ -150,6 +253,9 @@ export function App() {
                     <button
                       key={item.id}
                       type="button"
+                      // Exposed for the screenshot harness and future end-to-end tests.
+                      data-screen-id={item.id}
+                      data-screen-immersive={item.immersive ? 'true' : 'false'}
                       className={`sy-gallery__nav-item${item.id === screenId ? ' is-active' : ''}`}
                       onClick={() => {
                         setScreenId(item.id);
@@ -183,37 +289,14 @@ export function App() {
           <p className="sy-body-sm sy-fg-muted sy-gallery__purpose">{screen.purpose}</p>
 
           <div className="sy-gallery__frame-wrap">
+            {/*
+              The preview owns its own theme scope. `data-theme` on the preview
+              — not on the document — is what lets the gallery stay dark while
+              the product renders light, which is how a designer actually
+              compares the two.
+            */}
             <DeviceFrame device={device} scale={scale}>
-              {/*
-                The preview owns its own theme scope. `data-theme` here — not on
-                the document — is what lets the gallery stay dark while the
-                product renders light, which is how a designer actually compares.
-              */}
-              <div className="sy-preview" data-theme={theme}>
-                {screen.immersive ? (
-                  <Screen />
-                ) : (
-                  <AppShell
-                    nav={SHELL_NAV}
-                    navSecondary={SHELL_NAV_SECONDARY}
-                    active={screen.navId ?? 'home'}
-                    contextPanel={ContextPanel ? <ContextPanel /> : undefined}
-                    contextPanelTitle={screen.contextPanelTitle}
-                    topBar={
-                      <>
-                        <div className="sy-topbar__search">
-                          <SearchInput placeholder="Search SYLORA" shortcut="⌘K" />
-                        </div>
-                        <span className="sy-grow" />
-                        <IconButton icon="sparkles" label="Assistant" variant="ghost" size="sm" />
-                        <IconButton icon="notifications" label="Notifications" variant="ghost" size="sm" />
-                      </>
-                    }
-                  >
-                    <Screen />
-                  </AppShell>
-                )}
-              </div>
+              {preview}
             </DeviceFrame>
           </div>
 
