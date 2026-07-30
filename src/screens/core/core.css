@@ -204,3 +204,1516 @@
   font-size: var(--sy-type-bodySmall-size);
   font-weight: 550;
 }
+
+/* ------------------------------------------------------------------ */
+/* Feed                                                                */
+/* ------------------------------------------------------------------ */
+
+.sy-fdscreen {
+  padding-block-end: var(--sy-space-8);
+}
+
+/**
+ * Filter bar.
+ * Sticks to the top of the scroll area — not the viewport — because the shell
+ * top bar is outside the scroller. It bleeds past the content padding so the
+ * rule underneath reads as a full-width division of the screen rather than a
+ * line drawn inside the column.
+ */
+.sy-fdscreen__bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--sy-z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding-block: var(--sy-space-3);
+  margin-inline: calc(var(--sy-space-4) * -1);
+  padding-inline: var(--sy-space-4);
+  margin-block-end: var(--sy-space-4);
+  background: var(--sy-bg-canvas);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-fdscreen__tabs {
+  flex: 1;
+  min-inline-size: 0;
+}
+.sy-fdscreen__sort {
+  flex-shrink: 0;
+}
+@container screen (min-width: 768px) {
+  .sy-fdscreen__bar {
+    margin-inline: calc(var(--sy-space-6) * -1);
+    padding-inline: var(--sy-space-6);
+  }
+}
+@container screen (min-width: 1280px) {
+  .sy-fdscreen__bar {
+    margin-inline: calc(var(--sy-space-8) * -1);
+    padding-inline: var(--sy-space-8);
+  }
+}
+
+/**
+ * Two-column band.
+ * The shell only opens its own context panel at 1280px of *shell* width, so
+ * between roughly 1024 and 1279 the surface is wide enough for two columns and
+ * the shell supplies nothing to fill the second one. This column is what serves
+ * that band.
+ *
+ * The threshold is 960 rather than 1024 because the query is on the *screen*
+ * container, not the shell: the collapsed rail already costs 76px, so a 1024px
+ * shell hands the screen 948. Using 1024 here would make the column appear at a
+ * 1100px shell, vanish again at 1280 when the rail expands to 264px and leaves
+ * the screen 1016, then return at 1368 — a layout that goes backwards as the
+ * window grows. 960 keeps it monotonic.
+ *
+ * Below the threshold the column is dropped outright rather than stacked:
+ * everything in it is reachable from Discover and Search, and appending it under
+ * a long timeline would put it somewhere nobody scrolls.
+ */
+.sy-fdscreen__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sy-space-6);
+  align-items: start;
+}
+.sy-fdscreen__side {
+  display: none;
+}
+@container screen (min-width: 960px) {
+  .sy-fdscreen__layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .sy-fdscreen__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sy-space-4);
+    position: sticky;
+    inset-block-start: var(--sy-space-20);
+  }
+}
+
+.sy-fdscreen__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-fdscreen__panel-title {
+  color: var(--sy-fg-muted);
+}
+.sy-fdscreen__person {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-fdscreen__space {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-md);
+  color: var(--sy-fg-muted);
+  text-align: start;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-fdscreen__space:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-fdscreen__space-name,
+.sy-fdscreen__space-meta {
+  display: block;
+  color: var(--sy-fg-default);
+}
+.sy-fdscreen__space-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  color: var(--sy-fg-quiet);
+}
+/* Presence is a dot *and* a count, never the dot alone. */
+.sy-fdscreen__dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--sy-success-solid);
+  flex-shrink: 0;
+}
+
+/* Composer entry */
+.sy-composer {
+  margin-block-end: var(--sy-space-4);
+  overflow: hidden;
+}
+.sy-composer__entry {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  min-block-size: 64px;
+  padding: var(--sy-space-3) var(--sy-space-4);
+  text-align: start;
+  color: var(--sy-fg-muted);
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-composer__entry:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-composer__prompt {
+  flex: 1;
+  min-inline-size: 0;
+}
+.sy-composer__hint {
+  display: none;
+}
+@container screen (min-width: 640px) {
+  .sy-composer__hint {
+    display: inline;
+  }
+}
+.sy-composer__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+  padding: 0 var(--sy-space-4) var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-subtle);
+  padding-block-start: var(--sy-space-3);
+}
+.sy-composer__types[hidden] {
+  display: none;
+}
+
+/**
+ * New-posts pill.
+ * Floats over the timeline instead of pushing it down, and stays put while the
+ * column scrolls under it. Glass, because it is a layer rather than an item.
+ */
+.sy-fdscreen__newwrap {
+  position: sticky;
+  inset-block-start: 72px;
+  z-index: var(--sy-z-raised);
+  display: flex;
+  justify-content: center;
+  /* The wrapper takes no vertical space so the pill overlays the timeline
+     instead of pushing it down; the pill must therefore size to its own
+     content rather than stretching to the wrapper's zero height. */
+  align-items: flex-start;
+  pointer-events: none;
+  block-size: 0;
+}
+.sy-newpill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-1) var(--sy-space-1) var(--sy-space-1) var(--sy-space-2);
+  border-radius: var(--sy-radius-pill);
+  box-shadow: var(--sy-elevation-overlay);
+  translate: 0 calc(var(--sy-space-2) * -1);
+  /* The glass fill alone is close to invisible where the pill overlaps flat
+     canvas — there is nothing behind it to blur — and in light theme the glass
+     rim is fully transparent, so the pill loses its shape entirely. Tinting
+     with a translucent accent surface keeps the blur working over post media
+     while giving the pill an edge everywhere else. */
+  background: color-mix(in oklab, var(--sy-accent-bg) 82%, transparent);
+  border: 1px solid var(--sy-accent-border);
+}
+.sy-newpill:hover {
+  background: color-mix(in oklab, var(--sy-accent-bg-hover) 88%, transparent);
+}
+.sy-newpill__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+  color: var(--sy-accent-fg);
+  padding-inline: var(--sy-space-1);
+}
+
+.sy-fdscreen__stream {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  max-inline-size: 680px;
+}
+.sy-fdscreen__end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding-block: var(--sy-space-6);
+  text-align: center;
+}
+
+/* Poll post */
+.sy-poll__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-poll__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: var(--sy-space-2) var(--sy-space-3);
+  border: 1px solid var(--sy-border-default);
+  border-radius: var(--sy-radius-md);
+  overflow: hidden;
+  text-align: start;
+  transition: border-color var(--sy-transition-hover);
+}
+.sy-poll__option:hover {
+  border-color: var(--sy-border-interactive);
+}
+.sy-poll__option.is-chosen {
+  border-color: var(--sy-accent-border);
+}
+/* The fill is decoration; the percentage beside it is the actual result. */
+.sy-poll__fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  background: var(--sy-accent-bg);
+  z-index: 0;
+}
+.sy-poll__option.is-chosen .sy-poll__fill {
+  background: var(--sy-accent-bg-hover);
+}
+.sy-poll__label,
+.sy-poll__share {
+  position: relative;
+  z-index: 1;
+}
+.sy-poll__label {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex: 1;
+  min-inline-size: 0;
+  color: var(--sy-fg-default);
+}
+.sy-poll__label .sy-icon {
+  color: var(--sy-accent-fg);
+  flex-shrink: 0;
+}
+.sy-poll__option.is-chosen .sy-poll__label {
+  font-weight: 600;
+}
+.sy-poll__share {
+  color: var(--sy-fg-muted);
+  flex-shrink: 0;
+}
+
+/* Space digest */
+.sy-digest {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sy-digest__strip {
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+}
+.sy-digest__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  padding: var(--sy-space-4);
+}
+.sy-digest__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+}
+.sy-digest__threads {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+.sy-digest__thread {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-md);
+  text-align: start;
+  color: var(--sy-fg-muted);
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-digest__thread:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-digest__rank {
+  inline-size: 20px;
+  flex-shrink: 0;
+  color: var(--sy-fg-quiet);
+  padding-block-start: 2px;
+}
+/* No `display` here: these carry .sy-clamp-*, which sets its own display and
+   would be silently cancelled by a later block declaration. */
+.sy-digest__thread-title,
+.sy-disc__card-title {
+  color: var(--sy-fg-default);
+}
+.sy-digest__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+  padding-block-start: var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+
+/* ------------------------------------------------------------------ */
+/* Search                                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Search is capped to a single scan column rather than filling the content
+ * width. A result row stretched to 1248px puts the Follow button a screen away
+ * from the name it acts on, and the eye has to travel the full width to pair
+ * them. Capping the whole screen — not just the lists — keeps every section
+ * header on the same right edge as the results underneath it.
+ */
+.sy-search {
+  padding-block: var(--sy-space-5) var(--sy-space-8);
+  max-inline-size: 820px;
+}
+.sy-search__field {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-search__field .sy-input {
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 52px;
+}
+.sy-search__field .sy-input input {
+  font-size: var(--sy-type-bodyLarge-size);
+}
+
+/* Shortcuts are shown, not documented elsewhere: this row is the only place a
+   keyboard user learns the search grammar. */
+.sy-search__kbd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-1) var(--sy-space-4);
+  margin-block: var(--sy-space-3);
+}
+.sy-search__kbd span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+}
+
+.sy-search__chiprow {
+  display: flex;
+  gap: var(--sy-space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: var(--sy-space-1);
+  margin-inline: calc(var(--sy-space-4) * -1);
+  padding-inline: var(--sy-space-4);
+}
+.sy-search__chiprow::-webkit-scrollbar {
+  display: none;
+}
+.sy-search__chiprow > * {
+  flex-shrink: 0;
+}
+@container screen (min-width: 768px) {
+  .sy-search__chiprow {
+    margin-inline: calc(var(--sy-space-6) * -1);
+    padding-inline: var(--sy-space-6);
+  }
+}
+.sy-search__recent {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  margin-block-start: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-search__recent .sy-search__chiprow {
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+.sy-search__tabs {
+  margin-block: var(--sy-space-5) var(--sy-space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sy-search__tabs::-webkit-scrollbar {
+  display: none;
+}
+.sy-search__summary {
+  margin-block-end: var(--sy-space-5);
+}
+
+.sy-search__top-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  margin-block-end: var(--sy-space-2);
+  color: var(--sy-accent-fg);
+}
+.sy-search__hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--sy-space-4);
+  /* An aurora hairline marks the single highest-confidence result. */
+  background:
+    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
+    var(--sy-gradient-aurora) border-box;
+  border: 1px solid transparent;
+}
+.sy-search__hero-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+.sy-search__hero-bio {
+  margin-block: var(--sy-space-2);
+  max-inline-size: var(--sy-measure-comfortable);
+}
+.sy-search__hero-actions {
+  display: flex;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+
+.sy-search__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-search__posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+
+/**
+ * Result rows.
+ * Each result type keeps a different leading element — round avatar, square
+ * thumbnail — so the type is legible before the text is read.
+ */
+.sy-result {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+}
+.sy-result__thumb {
+  inline-size: 64px;
+  flex-shrink: 0;
+}
+.sy-result__bio {
+  margin-block-start: 2px;
+}
+.sy-result__rating {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+}
+.sy-result__end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+}
+.sy-result__price {
+  color: var(--sy-fg-default);
+}
+.sy-search__empty {
+  border: 1px dashed var(--sy-border-default);
+}
+
+/* ------------------------------------------------------------------ */
+/* Discover                                                            */
+/* ------------------------------------------------------------------ */
+
+.sy-disc {
+  padding-block: var(--sy-space-5) var(--sy-space-8);
+}
+
+/**
+ * Editorial hero.
+ * Height is clamped rather than driven purely by the aspect ratio: at 393px a
+ * 16/9 box is 221px tall, which cannot hold a title, an identity row and three
+ * buttons; at 1248px the same ratio would be 700px and push everything else
+ * below the fold.
+ */
+.sy-disc__hero-media {
+  min-block-size: 400px;
+  max-block-size: 540px;
+}
+.sy-disc__hero-media .sy-media__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--sy-space-4);
+}
+.sy-disc__hero-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+.sy-disc__hero-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  color: var(--sy-neutral-12);
+}
+.sy-disc__hero-eyebrow {
+  color: var(--sy-alpha-hi-80);
+}
+.sy-disc__hero-title {
+  max-inline-size: 22ch;
+  color: var(--sy-neutral-12);
+}
+.sy-disc__hero-creator {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  max-inline-size: 420px;
+}
+.sy-disc__hero-sub {
+  color: var(--sy-alpha-hi-80);
+}
+.sy-disc__hero-actions {
+  display: flex;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+.sy-disc__hero-why {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-3);
+  max-inline-size: var(--sy-measure-comfortable);
+}
+.sy-disc__hero-why .sy-icon {
+  margin-block-start: 2px;
+  flex-shrink: 0;
+}
+@container screen (min-width: 768px) {
+  .sy-disc__hero-media .sy-media__content {
+    padding: var(--sy-space-6);
+  }
+  .sy-disc__hero-title {
+    max-inline-size: 26ch;
+  }
+}
+
+.sy-disc__categories {
+  margin-block: var(--sy-space-6) var(--sy-space-2);
+}
+
+/**
+ * Shelf.
+ * "Why this?" is a header control rather than an overflow item because
+ * recommendation transparency that has to be hunted for is not transparency.
+ */
+.sy-shelf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  margin-block-end: var(--sy-space-8);
+}
+.sy-shelf__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+.sy-shelf__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  flex-shrink: 0;
+}
+.sy-shelf__reason {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+  border-color: var(--sy-accent-border);
+}
+.sy-shelf__reason .sy-icon {
+  color: var(--sy-accent-fg);
+  flex-shrink: 0;
+  margin-block-start: 2px;
+}
+
+.sy-disc__creator {
+  inline-size: 248px;
+}
+.sy-disc__card,
+.sy-disc__long {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  inline-size: 268px;
+}
+.sy-disc__card-badge {
+  display: flex;
+}
+.sy-disc__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1_5);
+  min-inline-size: 0;
+}
+.sy-disc__guild {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  inline-size: 244px;
+}
+.sy-disc__course {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sy-disc__course-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-4);
+}
+
+/* ------------------------------------------------------------------ */
+/* Profile                                                             */
+/* ------------------------------------------------------------------ */
+
+.sy-profile {
+  padding-block-end: var(--sy-space-8);
+}
+
+/**
+ * Banner.
+ * The wrapper sets a definite height so the generative art crops rather than
+ * scales; a 3/1 ratio on a 393px screen would be a 131px sliver, and on a
+ * 1248px one a 416px wall.
+ */
+.sy-profile__banner {
+  block-size: 132px;
+  overflow: hidden;
+}
+.sy-profile__banner .sy-media {
+  block-size: 100%;
+}
+@container screen (min-width: 640px) {
+  .sy-profile__banner {
+    block-size: 180px;
+  }
+}
+@container screen (min-width: 1024px) {
+  .sy-profile__banner {
+    block-size: 232px;
+  }
+}
+
+.sy-profile__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-5);
+  padding-block-end: var(--sy-space-6);
+}
+.sy-profile__identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+/**
+ * The avatar straddles the banner edge. Its pixel size is written inline by the
+ * Avatar primitive, so the posture change has to override the inline style —
+ * the only !important on this screen, and the reason it is here.
+ */
+.sy-profile__avatar {
+  inline-size: 84px !important;
+  block-size: 84px !important;
+  margin-block-start: -46px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px var(--sy-bg-canvas);
+}
+.sy-profile__avatar .sy-avatar__initials {
+  font-size: 30px !important;
+}
+@container screen (min-width: 640px) {
+  .sy-profile__avatar {
+    inline-size: 112px !important;
+    block-size: 112px !important;
+    margin-block-start: -60px;
+  }
+  .sy-profile__avatar .sy-avatar__initials {
+    font-size: 40px !important;
+  }
+}
+.sy-profile__namebox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-profile__nameline {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+.sy-profile__bio {
+  margin-block-start: var(--sy-space-2);
+}
+.sy-profile__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-2);
+}
+
+.sy-profile__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-3) var(--sy-space-8);
+  padding-block: var(--sy-space-4);
+  border-block: 1px solid var(--sy-border-subtle);
+}
+.sy-profile__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 92px;
+}
+
+/**
+ * Actions.
+ * Compact gets a deliberate two-up grid: Follow and Subscribe share the first
+ * row because they are the two decisions, Message takes the second with the
+ * overflow tucked beside it. A flex row here would wrap unpredictably at 393px
+ * and shrink targets below 44px. Placement follows source order in both
+ * postures so the tab sequence never disagrees with what the eye sees.
+ */
+.sy-profile__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: var(--sy-space-2);
+}
+.sy-profile__action-follow {
+  grid-column: 1;
+  grid-row: 1;
+}
+.sy-profile__action-subscribe {
+  grid-column: 2 / -1;
+  grid-row: 1;
+}
+.sy-profile__action-message {
+  grid-column: 1 / 3;
+  grid-row: 2;
+}
+.sy-profile__action-more {
+  grid-column: 3;
+  grid-row: 2;
+}
+@container screen (min-width: 640px) {
+  .sy-profile__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sy-space-3);
+  }
+}
+
+/* Subscription tiers */
+.sy-tiers__head {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+  margin-block-end: var(--sy-space-4);
+}
+.sy-tiers__grid {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: minmax(0, 1fr);
+}
+/* Three across from 640 rather than 768: a tablet only hands the screen 758px
+   once the rail is subtracted, and three tiers side by side is the entire point
+   of the card — stacked, they stop being comparable. */
+@container screen (min-width: 640px) {
+  .sy-tiers__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.sy-tier {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-tier.is-popular {
+  border-color: var(--tone-border);
+}
+.sy-tier__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+.sy-tier__price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sy-space-1);
+  color: var(--sy-fg-default);
+}
+.sy-tier__perks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  margin-block: var(--sy-space-3);
+  flex: 1;
+}
+.sy-tier__perks li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+  color: var(--sy-fg-muted);
+}
+.sy-tier__perks .sy-icon {
+  color: var(--tone-fg);
+  flex-shrink: 0;
+  margin-block-start: 2px;
+}
+
+.sy-profile__tabs {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--sy-z-sticky);
+  background: var(--sy-bg-canvas);
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-block-end: var(--sy-space-5);
+}
+.sy-profile__tabs::-webkit-scrollbar {
+  display: none;
+}
+.sy-profile__panel {
+  min-block-size: 320px;
+}
+.sy-profile__posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  max-inline-size: 680px;
+}
+.sy-profile__thumb {
+  inline-size: 96px;
+}
+/* Broadcast titles are long by nature, so this row opts out of single-line
+   truncation rather than losing the half of the title that says what it was. */
+.sy-profile__broadcast .sy-list-row__title {
+  white-space: normal;
+  overflow: visible;
+}
+.sy-profile__video {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-profile__about {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-profile__about-title {
+  margin-block-end: var(--sy-space-3);
+}
+.sy-profile__about p + p {
+  margin-block-start: var(--sy-space-3);
+}
+
+.sy-shop__feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+.sy-shop__feature-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-5);
+}
+@container screen (min-width: 640px) {
+  .sy-shop__feature {
+    grid-template-columns: 280px minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .sy-shop__feature-media {
+    block-size: 100%;
+  }
+}
+.sy-shop__card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sy-shop__card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3);
+}
+.sy-shop__card-body .sy-row {
+  inline-size: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Settings                                                            */
+/* ------------------------------------------------------------------ */
+
+.sy-settings {
+  padding-block: var(--sy-space-6) var(--sy-space-8);
+}
+.sy-settings__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-4);
+  margin-block-end: var(--sy-space-6);
+}
+
+/**
+ * Compact keeps the category list *and* the detail on one screen, stacked.
+ * A pushed detail view is the platform convention, but it hides the other nine
+ * categories behind a back gesture, and Accessibility is the category people
+ * most often do not know exists.
+ */
+.sy-settings__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sy-space-6);
+  align-items: start;
+}
+/* 960 for the same reason as the Feed sidebar: measured on the screen
+   container, the shell's rail has already taken 76px (collapsed) or 264px
+   (expanded) before this query ever sees the width. */
+@container screen (min-width: 960px) {
+  .sy-settings__layout {
+    grid-template-columns: 288px minmax(0, 1fr);
+  }
+  .sy-settings__nav {
+    position: sticky;
+    inset-block-start: var(--sy-space-4);
+  }
+}
+.sy-settings__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sy-settings__navitem {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  min-block-size: 56px;
+  padding: var(--sy-space-2) var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  color: var(--sy-fg-muted);
+  text-align: start;
+  transition: background-color var(--sy-transition-hover), color var(--sy-transition-hover);
+}
+.sy-settings__navitem:hover {
+  background: var(--sy-bg-hover);
+  color: var(--sy-fg-default);
+}
+/* Active carries a fill, a tinted tile and bolder label — not colour alone. */
+.sy-settings__navitem.is-active {
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-default);
+}
+.sy-settings__navitem.is-active .sy-settings__navlabel {
+  font-weight: 650;
+}
+.sy-settings__navicon {
+  inline-size: 34px;
+  block-size: 34px;
+}
+.sy-settings__navlabel {
+  display: block;
+  color: var(--sy-fg-default);
+}
+/* The one-line summary is what makes a category name like "Data" mean
+   something. It only appears once rows are wide enough to hold it. */
+.sy-settings__navsummary {
+  display: none;
+}
+@container screen (min-width: 640px) {
+  .sy-settings__navsummary {
+    display: block;
+  }
+}
+
+.sy-settings__detail {
+  min-inline-size: 0;
+}
+.sy-settings__lead {
+  margin-block-end: var(--sy-space-2);
+}
+.sy-settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-settings__group .sy-divider {
+  margin-block: calc(var(--sy-space-1) * -1);
+}
+.sy-settings__switchrow {
+  padding-block: var(--sy-space-1);
+}
+.sy-settings__slider {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-settings__slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-settings__slider-row .sy-slider {
+  flex: 1;
+}
+/* The two A's are the scale made visible; the readout above carries the value. */
+.sy-settings__aa {
+  color: var(--sy-fg-quiet);
+  font-weight: 600;
+  line-height: 1;
+}
+.sy-settings__aa.is-small {
+  font-size: var(--sy-type-caption-size);
+}
+.sy-settings__aa.is-large {
+  font-size: var(--sy-type-title3-size);
+}
+
+/* Theme tiles */
+.sy-themes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sy-space-3);
+}
+@container screen (min-width: 640px) {
+  .sy-themes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.sy-theme-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border: 1px solid var(--sy-border-default);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  text-align: start;
+  transition: border-color var(--sy-transition-hover), background-color var(--sy-transition-hover);
+}
+.sy-theme-tile:hover {
+  border-color: var(--sy-border-interactive);
+}
+.sy-theme-tile.is-selected {
+  border-color: var(--sy-accent-solid);
+  background: var(--sy-bg-raised);
+}
+/* The frame is its own container so the miniature inside can be sized in `cqi`
+   and stay proportional whether the tile is 200px or 380px wide. */
+.sy-theme-tile__frame {
+  container-type: inline-size;
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--sy-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-theme-tile__full,
+.sy-theme-tile__half {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+/* System is drawn as one preview split on a diagonal, which is the clearest way
+   to say "either of these, chosen for you". */
+.sy-theme-tile__half {
+  clip-path: polygon(0 0, 58% 0, 42% 100%, 0 100%);
+}
+.sy-theme-tile__half.is-end {
+  clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%);
+}
+.sy-theme-tile__meta {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2_5);
+}
+.sy-theme-tile__check {
+  display: grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--sy-border-strong);
+  color: var(--sy-on-iris);
+  flex-shrink: 0;
+  margin-block-start: 2px;
+}
+.sy-theme-tile.is-selected .sy-theme-tile__check {
+  background: var(--sy-accent-solid);
+  border-color: var(--sy-accent-solid);
+}
+.sy-theme-tile__label {
+  display: block;
+  color: var(--sy-fg-default);
+}
+.sy-theme-tile.is-selected .sy-theme-tile__label {
+  font-weight: 650;
+}
+
+/* The miniature: real chrome at small scale, built from semantic tokens only. */
+.sy-theme-mini {
+  display: flex;
+  block-size: 100%;
+  background: var(--sy-bg-canvas);
+}
+.sy-theme-mini__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2cqi;
+  inline-size: 11cqi;
+  padding: 2.5cqi 1.5cqi;
+  background: var(--sy-bg-surface);
+  border-inline-end: 1px solid var(--sy-border-subtle);
+}
+.sy-theme-mini__dot {
+  inline-size: 100%;
+  block-size: 5cqi;
+  border-radius: 1.6cqi;
+  background: var(--sy-bg-active);
+}
+.sy-theme-mini__dot.is-active {
+  background: var(--sy-accent-solid);
+}
+.sy-theme-mini__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2cqi;
+  flex: 1;
+  padding: 2.5cqi;
+  min-inline-size: 0;
+}
+.sy-theme-mini__bar {
+  block-size: 5cqi;
+  border-radius: 1.6cqi;
+  background: var(--sy-bg-raised);
+}
+.sy-theme-mini__card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8cqi;
+  flex: 1;
+  padding: 2.4cqi;
+  border-radius: 1.8cqi;
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-theme-mini__line {
+  block-size: 1.8cqi;
+  inline-size: 55%;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-fg-quiet);
+}
+.sy-theme-mini__line.is-wide {
+  inline-size: 82%;
+  background: var(--sy-fg-default);
+}
+.sy-theme-mini__pill {
+  inline-size: 14cqi;
+  block-size: 3.4cqi;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-accent-solid);
+  margin-block-start: auto;
+}
+
+/* Accent swatches */
+.sy-accents {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sy-space-3);
+}
+@container screen (min-width: 640px) {
+  .sy-accents {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+.sy-accent-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-md);
+  border: 1px solid transparent;
+  transition: background-color var(--sy-transition-hover), border-color var(--sy-transition-hover);
+}
+.sy-accent-swatch:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-accent-swatch.is-selected {
+  border-color: var(--sy-border-interactive);
+  background: var(--sy-bg-active);
+}
+/* Selection is the check mark inside the swatch, so the choice is still
+   readable to someone who cannot tell the six hues apart. */
+.sy-accent-swatch__chip {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--sy-alpha-hi-16);
+}
+.sy-accent-swatch__chip--iris {
+  background: var(--sy-iris-9);
+  color: var(--sy-on-iris);
+}
+.sy-accent-swatch__chip--flux {
+  background: var(--sy-flux-9);
+  color: var(--sy-on-flux);
+}
+.sy-accent-swatch__chip--nova {
+  background: var(--sy-nova-9);
+  color: var(--sy-on-nova);
+}
+.sy-accent-swatch__chip--verdant {
+  background: var(--sy-verdant-9);
+  color: var(--sy-on-verdant);
+}
+.sy-accent-swatch__chip--solar {
+  background: var(--sy-solar-9);
+  color: var(--sy-on-solar);
+}
+.sy-accent-swatch__chip--crimson {
+  background: var(--sy-crimson-9);
+  color: var(--sy-on-crimson);
+}
+.sy-accent-swatch__label {
+  color: var(--sy-fg-default);
+  font-weight: 550;
+}
+.sy-accent-swatch.is-selected .sy-accent-swatch__label {
+  font-weight: 700;
+}
+
+.sy-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-preview-card__sample {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-4);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-preview-card__sample .sy-row {
+  margin-block-start: var(--sy-space-2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Notifications                                                       */
+/* ------------------------------------------------------------------ */
+
+/* Triage is a vertical scan. Capping the column keeps the actor, the body and
+   the row actions inside one fixation rather than at opposite screen edges. */
+.sy-notif {
+  padding-block: var(--sy-space-6) var(--sy-space-8);
+  max-inline-size: 880px;
+}
+.sy-notif__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-4);
+  flex-wrap: wrap;
+  margin-block-end: var(--sy-space-5);
+}
+.sy-notif__head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-notif__tabs {
+  margin-block-end: var(--sy-space-5);
+}
+.sy-notif__muted {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  margin-block-end: var(--sy-space-4);
+  color: var(--sy-fg-muted);
+  border-style: dashed;
+}
+.sy-notif__group {
+  margin-block-end: var(--sy-space-6);
+}
+.sy-notif__grouphead {
+  display: block;
+  margin-block-end: var(--sy-space-2);
+}
+.sy-notif__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sy-notif__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-lg);
+  border: 1px solid transparent;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-notif__row:hover {
+  background: var(--sy-bg-hover);
+}
+/**
+ * Unread carries three independent signals: a tinted row, a leading accent
+ * rule and a filled dot beside the words "Unread". Any one of them can fail —
+ * greyscale, low contrast, a colour-vision difference — and the state survives.
+ */
+.sy-notif__row.is-unread {
+  background: var(--sy-accent-bg);
+  border-color: var(--sy-accent-border);
+}
+.sy-notif__row.is-unread:hover {
+  background: var(--sy-accent-bg-hover);
+}
+.sy-notif__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sy-space-1);
+}
+.sy-notif__actor {
+  font-weight: 650;
+  color: var(--sy-fg-default);
+}
+.sy-notif__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+.sy-notif__dot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--sy-accent-solid);
+  flex-shrink: 0;
+}
+.sy-notif__unread-label {
+  color: var(--sy-accent-fg);
+  font-weight: 600;
+}
+.sy-notif__avatar {
+  display: none;
+  flex-shrink: 0;
+}
+.sy-notif__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  flex-shrink: 0;
+  opacity: 1;
+  transition: opacity var(--sy-transition-hover);
+}
+@container screen (min-width: 640px) {
+  .sy-notif__avatar {
+    display: block;
+  }
+}
+@container screen (min-width: 768px) {
+  /* Row actions fade in on pointer devices but stay in the tab order, so a
+     keyboard reveals them with focus rather than needing a different path. */
+  .sy-notif__actions {
+    opacity: 0;
+  }
+  .sy-notif__row:hover .sy-notif__actions,
+  .sy-notif__row:focus-within .sy-notif__actions {
+    opacity: 1;
+  }
+}
+
+.sy-notif__expand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  margin: var(--sy-space-1) 0 var(--sy-space-2) var(--sy-space-4);
+  border-color: var(--sy-creator-border);
+}
+.sy-notif__gift {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+.sy-notif__gift-tile {
+  display: grid;
+  place-items: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-gradient-ember);
+  color: var(--sy-on-nova);
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.sy-notif__reply {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-notif__reply-actions {
+  display: flex;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+.sy-notif__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  flex-wrap: wrap;
+  padding-block-start: var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}

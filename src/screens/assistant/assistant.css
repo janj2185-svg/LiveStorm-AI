@@ -1,1 +1,450 @@
-/* assistant screen styles. Owned by the assistant group. */
+/**
+ * Assistant screen styles.
+ *
+ * Two visual contracts are enforced here and nowhere else:
+ *   1. The user speaks in a bubble; the assistant publishes a document.
+ *   2. Anything the assistant authored carries the hairline aurora border,
+ *      the same signature used by the daily brief on Home.
+ */
+
+/**
+ * The screen takes a definite height and hands the scroll to the thread rather
+ * than to the shell's main region. A composer that scrolls away with the
+ * conversation is a composer you have to hunt for, and every attempt to fake a
+ * dock with sticky positioning lands it a scroll-container padding short of the
+ * bottom edge — which is worse than either honest option.
+ */
+.sy-assistant {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0;
+}
+
+.sy-assistant__inner {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow-y: auto;
+  /* The thread is a scroll dead end: reaching the top of the conversation must
+     not start scrolling the page behind the device frame. */
+  overscroll-behavior: contain;
+}
+
+.sy-assistant__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-2) var(--sy-space-3);
+  padding-block: var(--sy-space-5) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+/* No max-inline-size here: a maximum would clamp the flex base size and let
+   the note squeeze back onto the title row instead of taking its own. */
+.sy-assistant__scope {
+  flex-basis: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Thread                                                              */
+/* ------------------------------------------------------------------ */
+
+.sy-thread {
+  display: flex;
+  flex-direction: column;
+  /* Turns are separated by more space than any element inside a turn, so the
+     boundary between speakers is never ambiguous. */
+  gap: var(--sy-space-8);
+  padding-block: var(--sy-space-6) var(--sy-space-4);
+}
+
+/* --- The user's turn: an utterance --- */
+
+.sy-turn--user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+}
+.sy-turn__bubble {
+  max-inline-size: min(560px, 88%);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  /* The squared corner points back at the speaker — the only asymmetry, and it
+     does the work an avatar would otherwise have to do. */
+  border-radius: var(--sy-radius-xl) var(--sy-radius-xl) var(--sy-radius-xs) var(--sy-radius-xl);
+  background: var(--sy-accent-bg);
+  border: 1px solid var(--sy-accent-border);
+}
+.sy-turn__byline {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+
+/* --- The assistant's turn: a document --- */
+
+.sy-turn--assistant {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-turn__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+.sy-turn__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-turn__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-1);
+  margin-block-start: calc(var(--sy-space-1) * -1);
+}
+
+/* Numbered reference at the end of a claim. Small, but a real target: it is
+   the fastest route from a sentence to the thing that produced it. */
+.sy-cite-ref {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 16px;
+  block-size: 16px;
+  margin-inline-start: var(--sy-space-1);
+  padding-inline: 3px;
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  font-size: var(--sy-type-overline-size);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sy-cites {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-cites__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+.sy-cite {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  max-inline-size: 100%;
+  block-size: 30px;
+  padding-inline: var(--sy-space-2_5) var(--sy-space-3);
+  padding-inline-start: var(--sy-space-1);
+  border-radius: var(--sy-radius-pill);
+  border: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-caption-size);
+  transition: border-color var(--sy-transition-hover), color var(--sy-transition-hover);
+}
+.sy-cite:hover {
+  border-color: var(--sy-accent-border);
+  color: var(--sy-fg-default);
+}
+.sy-cite__index {
+  display: grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 50%;
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  font-size: var(--sy-type-overline-size);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.sy-cite__label {
+  min-inline-size: 0;
+}
+.sy-cite .sy-icon {
+  flex-shrink: 0;
+  color: var(--sy-fg-quiet);
+}
+
+/* ------------------------------------------------------------------ */
+/* Proposed actions                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The approval gate. It is a distinct object with its own border because it is
+ * the one place on the screen where the assistant asks for permission rather
+ * than reports — and that difference must never be a matter of reading closely.
+ */
+.sy-proposal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  background:
+    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
+    var(--sy-gradient-aurora) border-box;
+  border: 1px solid transparent;
+}
+.sy-proposal__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+.sy-proposal__lock {
+  --tone-bg: var(--sy-accent-bg);
+  --tone-fg: var(--sy-accent-fg);
+}
+.sy-proposal__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-proposal__item {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  border: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  transition: border-color var(--sy-transition-hover), background-color var(--sy-transition-hover);
+}
+.sy-proposal__item > .sy-grow {
+  min-inline-size: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* Approved and dismissed change fill, border *and* carry a worded state with
+   an icon — three signals, none of them colour on its own. */
+.sy-proposal__item.is-approved {
+  border-color: var(--sy-success-border);
+  background: var(--sy-success-bg);
+}
+.sy-proposal__item.is-dismissed {
+  opacity: 0.58;
+}
+.sy-proposal__index {
+  display: grid;
+  place-items: center;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-overline-size);
+  flex-shrink: 0;
+}
+.sy-proposal__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+.sy-proposal__state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  font-weight: 550;
+}
+
+/* ------------------------------------------------------------------ */
+/* Generating turn                                                     */
+/* ------------------------------------------------------------------ */
+
+.sy-turn--assistant.is-generating {
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-4);
+  border-radius: var(--sy-radius-xl);
+  background:
+    linear-gradient(var(--sy-bg-surface), var(--sy-bg-surface)) padding-box,
+    var(--sy-gradient-aurora) border-box;
+  border: 1px solid transparent;
+}
+.sy-generating {
+  gap: var(--sy-space-2_5);
+  max-inline-size: var(--sy-measure-comfortable);
+}
+.sy-generating__note {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+
+/* ------------------------------------------------------------------ */
+/* Composer                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A peer of the thread rather than an overlay on it: the composer never covers
+ * a word of the answer, and the hairline is the seam between the part of the
+ * screen that scrolls and the part that does not.
+ */
+.sy-composer-dock {
+  flex: 0 0 auto;
+  padding-block: var(--sy-space-4) var(--sy-space-1);
+  border-block-start: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-canvas);
+}
+
+.sy-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-composer__shell {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color var(--sy-transition-hover), box-shadow var(--sy-transition-hover);
+}
+/* The focus ring belongs to the whole composer, not to the textarea inside it,
+   because the textarea and the toolbar are one control to the person using it. */
+.sy-composer__shell:focus-within {
+  border-color: var(--sy-accent-solid);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--sy-accent-solid) 24%, transparent);
+}
+/**
+ * The label is present for assistive technology but not painted: a composer at
+ * the foot of a conversation is self-evident to a sighted user, and a visible
+ * "Message the assistant" label above it would be the loudest thing on screen.
+ */
+.sy-composer__field .sy-field__label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.sy-composer__field .sy-input {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+}
+.sy-composer__field .sy-input:hover,
+.sy-composer__field .sy-input:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.sy-composer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+/* The rule separates the attachment controls from the mode selector. Below
+   640px the selector drops to its own line, so the rule would divide a group
+   from nothing. */
+.sy-composer__rule {
+  display: none;
+  inline-size: 1px;
+  block-size: 20px;
+  background: var(--sy-border-subtle);
+}
+/* Below 640px the mode selector takes its own line rather than competing with
+   attach and send for a 361px row. */
+.sy-composer__modes {
+  order: 10;
+  flex-basis: 100%;
+}
+.sy-composer__note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-1_5);
+  padding-inline: var(--sy-space-1);
+  max-inline-size: var(--sy-measure-comfortable);
+}
+.sy-composer__note .sy-icon {
+  margin-block-start: 1px;
+  flex-shrink: 0;
+}
+
+@container screen (min-width: 640px) {
+  .sy-composer__modes {
+    order: 0;
+    flex-basis: auto;
+  }
+  .sy-composer__rule {
+    display: block;
+  }
+  .sy-thread {
+    gap: var(--sy-space-10);
+  }
+}
+
+@container screen (min-width: 1024px) {
+  /* The thread stops widening before the measure does: an assistant answer at
+     110 characters per line is unreadable no matter how much room there is. */
+  .sy-thread,
+  .sy-assistant__head,
+  .sy-composer {
+    max-inline-size: 820px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Context panel                                                       */
+/* ------------------------------------------------------------------ */
+
+.sy-assistant-context__title {
+  display: block;
+  color: var(--sy-fg-muted);
+}
+.sy-assistant-context__icon {
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: var(--sy-radius-sm);
+}
+
+.sy-model-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  background: var(--sy-bg-canvas);
+  border-color: var(--sy-border-subtle);
+}
+.sy-model-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-model-card__icon {
+  --tone-bg: var(--sy-accent-bg);
+  --tone-fg: var(--sy-accent-fg);
+  inline-size: 34px;
+  block-size: 34px;
+}
+.sy-model-card__note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-1_5);
+}
+.sy-model-card__note .sy-icon {
+  margin-block-start: 1px;
+  flex-shrink: 0;
+  color: var(--sy-fg-quiet);
+}
+.sy-model-card .sy-btn {
+  align-self: flex-start;
+}

@@ -1,1 +1,858 @@
-/* learning screen styles. Owned by the learning group. */
+/**
+ * Learning screen styles — Courses and Events.
+ *
+ * Both screens are built around a repeated fixed-width block on the left of a
+ * flexible row: a lesson state mark on Courses, a date tile on Events. That
+ * column is what makes a long list scannable, so it never shrinks and never
+ * wraps — everything else in the row gives way first.
+ */
+
+.sy-learn,
+.sy-events {
+  padding-block: var(--sy-space-5) var(--sy-space-10);
+}
+
+/* ================================================================== */
+/* Courses — resume hero                                               */
+/* ================================================================== */
+
+.sy-resume {
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+}
+.sy-resume__cover {
+  position: relative;
+}
+.sy-resume__play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--sy-neutral-12) 22%, transparent);
+  border: 1px solid color-mix(in oklab, var(--sy-neutral-12) 34%, transparent);
+  color: var(--sy-neutral-12);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+[data-theme='light'] .sy-resume__play {
+  background: color-mix(in oklab, var(--sy-neutral-1) 30%, transparent);
+  color: var(--sy-neutral-1);
+}
+.sy-resume__duration {
+  position: absolute;
+  inset-block-end: var(--sy-space-2);
+  inset-inline-end: var(--sy-space-2);
+  padding: 2px var(--sy-space-1_5);
+  border-radius: var(--sy-radius-xs);
+  background: color-mix(in oklab, var(--sy-neutral-1) 72%, transparent);
+  color: var(--sy-neutral-12);
+  font-size: var(--sy-type-caption-size);
+}
+.sy-resume__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-5);
+}
+.sy-resume__title {
+  text-wrap: balance;
+}
+.sy-resume__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-4);
+  padding-block: var(--sy-space-3);
+  border-block: 1px solid var(--sy-border-subtle);
+}
+.sy-resume__ring {
+  font-size: var(--sy-type-caption-size);
+  font-weight: 600;
+}
+.sy-resume__meta {
+  margin-block-start: var(--sy-space-2);
+}
+.sy-resume__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+
+@container screen (min-width: 640px) {
+  .sy-resume {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+  .sy-resume__cover .sy-media {
+    block-size: 100%;
+    aspect-ratio: auto;
+    min-block-size: 260px;
+  }
+  .sy-resume__body {
+    padding: var(--sy-space-6);
+  }
+}
+
+/* ================================================================== */
+/* Courses — cards                                                     */
+/* ================================================================== */
+
+.sy-learn-cats {
+  align-items: center;
+}
+
+/* The catalogue holds four courses. Two fixed columns keep them as a square
+   block; an auto-fit grid strands the fourth on a row of its own. */
+.sy-course-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+@container screen (min-width: 560px) {
+  .sy-course-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.sy-course-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sy-course-card__level {
+  position: absolute;
+  inset-block-start: var(--sy-space-2);
+  inset-inline-start: var(--sy-space-2);
+}
+.sy-course-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3) var(--sy-space-4) var(--sy-space-4);
+  flex: 1;
+}
+.sy-course-card__title {
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+  line-height: 1.35;
+  min-block-size: 2.7em;
+}
+.sy-course-card__author {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-course-card__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  margin-block-start: auto;
+  padding-block-start: var(--sy-space-2);
+}
+.sy-course-card__progress .sy-progress {
+  flex: 1;
+}
+/* "Not started" is stated in words rather than implied by an empty bar. */
+.sy-course-card__notstarted {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  margin-block-start: auto;
+  padding-block-start: var(--sy-space-2);
+  color: var(--sy-fg-quiet);
+  font-size: var(--sy-type-caption-size);
+}
+.sy-course-card__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  margin-block-start: auto;
+  padding-block-start: var(--sy-space-2);
+}
+.sy-course-card__price {
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+}
+
+.sy-course-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+.sy-course-rating > span[aria-hidden] {
+  display: inline-flex;
+  gap: 1px;
+  color: var(--sy-warning-fg);
+}
+.sy-course-rating .is-empty {
+  color: var(--sy-border-default);
+}
+.sy-course-rating .sy-mono {
+  font-weight: 600;
+}
+
+/* ================================================================== */
+/* Courses — curriculum                                                */
+/* ================================================================== */
+
+.sy-curriculum__head {
+  margin-block-end: var(--sy-space-4);
+}
+
+.sy-modules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-modules > li {
+  border: 1px solid var(--sy-border-subtle);
+  border-radius: var(--sy-radius-md);
+  overflow: hidden;
+}
+.sy-modules > li.is-open {
+  border-color: var(--sy-border-default);
+  background: var(--sy-bg-canvas);
+}
+.sy-module__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  padding: var(--sy-space-3);
+  text-align: start;
+  color: inherit;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-module__head:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-module__index {
+  color: var(--sy-fg-quiet);
+  flex-shrink: 0;
+}
+.sy-module__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  flex: 1;
+}
+.sy-module__count {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.sy-lessons {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--sy-space-3) var(--sy-space-2);
+}
+.sy-lessons li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-2) var(--sy-space-1);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-lesson__mark {
+  display: grid;
+  place-items: center;
+  inline-size: 22px;
+  block-size: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+/* Shape first: filled check, filled play, outlined padlock. */
+.sy-lessons li.is-done .sy-lesson__mark {
+  background: var(--sy-success-solid);
+  color: var(--sy-on-verdant);
+}
+.sy-lessons li.is-done span:not(.sy-lesson__mark) {
+  color: var(--sy-fg-muted);
+}
+.sy-lessons li.is-next .sy-lesson__mark {
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+}
+.sy-lessons li.is-next {
+  font-weight: 600;
+}
+.sy-lessons li.is-locked .sy-lesson__mark {
+  border: 1px solid var(--sy-border-default);
+  color: var(--sy-fg-muted);
+}
+/* Locked lessons stay at muted, never quiet: the syllabus is the sales pitch. */
+.sy-lessons li.is-locked span:not(.sy-lesson__mark) {
+  color: var(--sy-fg-muted);
+}
+
+.sy-outcomes {
+  margin-block-start: var(--sy-space-6);
+  padding-block-start: var(--sy-space-5);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-outcomes ul {
+  display: grid;
+  gap: var(--sy-space-3);
+  margin-block-start: var(--sy-space-3);
+  grid-template-columns: 1fr;
+}
+.sy-outcomes li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2_5);
+  color: var(--sy-fg-muted);
+}
+.sy-outcomes li .sy-icon {
+  margin-block-start: 3px;
+  color: var(--sy-success-fg);
+  flex-shrink: 0;
+}
+@container screen (min-width: 1024px) {
+  .sy-outcomes ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Enrol card */
+.sy-enrol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  position: sticky;
+  inset-block-start: var(--sy-space-4);
+}
+.sy-enrol__price {
+  color: var(--sy-fg-default);
+}
+.sy-enrol .sy-btn {
+  margin-block-start: var(--sy-space-2);
+}
+.sy-enrol__includes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-4);
+  padding-block-start: var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-enrol__includes li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2_5);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-bodySmall-size);
+}
+.sy-enrol__includes .sy-icon {
+  color: var(--sy-accent-fg);
+  flex-shrink: 0;
+}
+
+/* Instructor */
+.sy-instructor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-instructor__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-instructor__stats {
+  display: flex;
+  gap: var(--sy-space-6);
+  padding-block-start: var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-instructor__stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-instructor__stats .sy-mono {
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+}
+
+/* Certificate — deliberately paper-like: light stock, engraved rule, seal. */
+.sy-certificate__head {
+  margin-block-end: var(--sy-space-3);
+}
+.sy-certificate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-5) var(--sy-space-4) var(--sy-space-4);
+  border: 1px solid var(--sy-warning-border);
+  border-radius: var(--sy-radius-md);
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--sy-solar-9) 12%, transparent), transparent 70%),
+    var(--sy-bg-canvas);
+  text-align: center;
+}
+.sy-certificate__seal {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  margin-inline: auto;
+  border-radius: 50%;
+  border: 1.5px solid var(--sy-warning-border);
+  background: var(--sy-warning-bg);
+  color: var(--sy-warning-fg);
+}
+.sy-certificate__eyebrow {
+  color: var(--sy-warning-fg);
+  margin-block-start: var(--sy-space-2);
+}
+.sy-certificate__title {
+  font-family: var(--sy-font-display);
+  font-size: var(--sy-type-title3-size);
+  font-weight: 600;
+  letter-spacing: var(--sy-type-title3-tracking);
+}
+.sy-certificate__name {
+  color: var(--sy-fg-muted);
+}
+.sy-certificate__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  margin-block-start: var(--sy-space-4);
+  padding-block-start: var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+  color: var(--sy-fg-quiet);
+}
+.sy-certificate__actions {
+  display: flex;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-3);
+}
+
+/* ================================================================== */
+/* Events                                                              */
+/* ================================================================== */
+
+.sy-events__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  flex-wrap: wrap;
+  margin-block-end: var(--sy-space-6);
+}
+.sy-events__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+.sy-events__head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+
+/* Hero */
+.sy-event-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+}
+.sy-event-hero__media {
+  position: relative;
+}
+.sy-event-hero__date {
+  position: absolute;
+  inset-block-start: var(--sy-space-3);
+  inset-inline-start: var(--sy-space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  inline-size: 56px;
+  padding-block: var(--sy-space-1_5) var(--sy-space-1);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  color: var(--sy-fg-default);
+}
+.sy-event-hero__day {
+  font-size: var(--sy-type-title3-size);
+  font-weight: 600;
+  line-height: 1.05;
+}
+.sy-event-hero__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-5);
+}
+.sy-event-hero__title {
+  text-wrap: balance;
+}
+.sy-event-hero__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2) var(--sy-space-4);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-bodySmall-size);
+}
+.sy-event-hero__facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+.sy-event-hero__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+  padding-block-start: var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-event-hero__host,
+.sy-event-hero__going {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-event-hero__price {
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+}
+@container screen (min-width: 640px) {
+  .sy-event-hero {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+  .sy-event-hero__media .sy-media {
+    block-size: 100%;
+    aspect-ratio: auto;
+    min-block-size: 280px;
+  }
+  .sy-event-hero__body {
+    padding: var(--sy-space-6);
+  }
+}
+
+/* List */
+.sy-event-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sy-space-3);
+  align-items: start;
+  padding: var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-event-list li:last-child .sy-event-row {
+  border-block-end: none;
+}
+.sy-event-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  inline-size: 54px;
+  block-size: 58px;
+  flex-shrink: 0;
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-event-date__day {
+  font-size: var(--sy-type-title3-size);
+  font-weight: 600;
+  line-height: 1;
+}
+.sy-event-date__month {
+  color: var(--sy-fg-quiet);
+}
+.sy-event-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1_5);
+  min-inline-size: 0;
+}
+.sy-event-row__host {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-event-row__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+.sy-event-row__meta .sy-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.sy-event-row__action {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-event-row__price {
+  font-weight: 600;
+}
+.sy-event-row__registered {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  padding-inline: var(--sy-space-2_5);
+  block-size: 32px;
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-success-bg);
+  color: var(--sy-success-fg);
+  font-size: var(--sy-type-caption-size);
+  font-weight: 650;
+}
+@container screen (min-width: 768px) {
+  .sy-event-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .sy-event-row__action {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}
+
+/* Calendar */
+.sy-cal__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  margin-block-end: var(--sy-space-3);
+}
+.sy-cal__month {
+  min-inline-size: 130px;
+  text-align: center;
+}
+.sy-cal__weekdays,
+.sy-cal__week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--sy-space-1);
+}
+.sy-cal__weekdays span {
+  padding-block: var(--sy-space-1);
+  text-align: center;
+}
+.sy-cal__week {
+  margin-block-start: var(--sy-space-1);
+}
+.sy-cal__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--sy-space-1);
+  min-block-size: 48px;
+  padding-block: var(--sy-space-1_5);
+  border-radius: var(--sy-radius-sm);
+  border: 1px solid transparent;
+  color: var(--sy-fg-default);
+  transition: background-color var(--sy-transition-hover), border-color var(--sy-transition-hover);
+}
+.sy-cal__day:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-cal__day.is-outside .sy-cal__num {
+  color: var(--sy-fg-quiet);
+}
+/* The selected day is a filled chip *and* a ring, so it survives a screenshot
+   printed in black and white. */
+.sy-cal__day.is-selected {
+  border-color: var(--sy-accent-solid);
+  background: var(--sy-accent-bg);
+}
+.sy-cal__day.is-selected .sy-cal__num {
+  color: var(--sy-accent-fg);
+  font-weight: 700;
+}
+.sy-cal__num {
+  font-size: var(--sy-type-bodySmall-size);
+}
+.sy-cal__dots {
+  display: flex;
+  gap: 3px;
+}
+.sy-cal__dot {
+  inline-size: 5px;
+  block-size: 5px;
+  border-radius: 50%;
+  background: var(--sy-fg-quiet);
+}
+.sy-cal__dot.is-workshop { background: var(--sy-accent-solid); }
+.sy-cal__dot.is-ama { background: var(--sy-live-solid); }
+.sy-cal__dot.is-premiere { background: var(--sy-creator-solid); }
+.sy-cal__dot.is-meetup { background: var(--sy-success-solid); }
+.sy-cal__dot.is-conference { background: var(--sy-warning-solid); }
+
+.sy-cal__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2) var(--sy-space-4);
+  margin-block-start: var(--sy-space-4);
+  padding-block-start: var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-cal__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+.sy-cal__selected {
+  margin-block-start: var(--sy-space-4);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+}
+.sy-cal__selected ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-2);
+}
+.sy-cal__selected li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-cal__selected .sy-mono {
+  color: var(--sy-fg-muted);
+  flex-shrink: 0;
+}
+
+@container screen (min-width: 768px) {
+  .sy-cal__day {
+    min-block-size: 74px;
+  }
+}
+
+/* Your events */
+.sy-your-events__head {
+  margin-block-end: var(--sy-space-3);
+}
+.sy-your-events {
+  display: flex;
+  flex-direction: column;
+}
+.sy-your-events li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding-block: var(--sy-space-3);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-your-events li:last-child {
+  border-block-end: none;
+}
+.sy-your-events__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  flex: 1;
+}
+
+/* Detail */
+.sy-event-detail__grid {
+  display: grid;
+  gap: var(--sy-space-6);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 1024px) {
+  .sy-event-detail__grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .sy-event-detail__aside {
+    padding-inline-start: var(--sy-space-6);
+    border-inline-start: 1px solid var(--sy-border-subtle);
+  }
+}
+.sy-event-detail__desc {
+  margin-block-start: var(--sy-space-2);
+}
+.sy-event-detail__subhead {
+  display: block;
+  margin-block-end: var(--sy-space-3);
+  color: var(--sy-fg-muted);
+}
+
+/* Agenda: a timeline, because the gaps between items are information too. */
+.sy-agenda {
+  display: flex;
+  flex-direction: column;
+}
+.sy-agenda li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px 20px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sy-space-2);
+  padding-block: var(--sy-space-2_5);
+}
+.sy-agenda__time {
+  color: var(--sy-fg-muted);
+  padding-block-start: 1px;
+}
+.sy-agenda__marker {
+  position: relative;
+  display: block;
+  inline-size: 10px;
+  block-size: 10px;
+  margin-block-start: 5px;
+  margin-inline: auto;
+  border-radius: 50%;
+  border: 2px solid var(--sy-accent-solid);
+  background: var(--sy-bg-surface);
+}
+.sy-agenda li:not(:last-child) .sy-agenda__marker::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  inline-size: 2px;
+  block-size: calc(100% + var(--sy-space-5));
+  background: var(--sy-border-subtle);
+}
+.sy-agenda__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+.sy-event-detail__going {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+.sy-event-detail__host {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-event-detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-2);
+}

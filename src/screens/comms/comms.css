@@ -1,1 +1,1049 @@
-/* comms screen styles. Owned by the comms group. */
+/**
+ * Communication screen styles — chat, inbox, people and spaces.
+ * Owned by the comms group.
+ *
+ * The through-line for all four screens is the *row*: a leading identity, a
+ * two-line text block that truncates, and a trailing status. Once that shape is
+ * fixed, the inbox, the conversation list and the channel list can share the
+ * same scanning rhythm even though they carry different content.
+ */
+
+/* ================================================================== */
+/* Chat                                                                */
+/* ================================================================== */
+
+/**
+ * The screen is pinned to the height of the content area rather than growing
+ * with the transcript: a messenger whose composer scrolls off the bottom is a
+ * messenger you cannot reply in. Everything below scrolls inside this box.
+ */
+.sy-chat-screen {
+  block-size: 100%;
+  overflow: hidden;
+}
+
+/**
+ * Compact posture: the thread is the whole screen. The list and details panes
+ * exist in the DOM at every width so focus order and landmarks never change —
+ * only their display does.
+ */
+.sy-chat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  block-size: 100%;
+  min-block-size: 0;
+}
+.sy-chat__list,
+.sy-chat__details {
+  display: none;
+}
+
+.sy-chat__thread {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+}
+
+.sy-chat__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  flex-shrink: 0;
+}
+.sy-chat__header-text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-chat__presence {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  color: var(--sy-fg-muted);
+}
+/* Presence is a dot *and* the word "Online" — the dot alone is decoration. */
+.sy-chat__presence-dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--sy-success-solid);
+  box-shadow: 0 0 8px var(--sy-success-solid);
+  flex-shrink: 0;
+}
+
+.sy-chat__stream {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-5) var(--sy-space-4);
+}
+
+.sy-chat__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  margin-block: var(--sy-space-2);
+  color: var(--sy-fg-quiet);
+}
+.sy-chat__divider::before,
+.sy-chat__divider::after {
+  content: '';
+  flex: 1;
+  block-size: 1px;
+  background: var(--sy-border-subtle);
+}
+
+/* ---- Bubbles ---- */
+
+.sy-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+  max-inline-size: 100%;
+}
+.sy-bubble-row.is-me {
+  justify-content: flex-end;
+}
+.sy-bubble-row__avatar {
+  flex-shrink: 0;
+  margin-block-end: var(--sy-space-1);
+}
+
+.sy-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  /* Speech stops looking like speech past a short measure. */
+  max-inline-size: min(var(--sy-measure-tight), 78%);
+  padding: var(--sy-space-2_5) var(--sy-space-3);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-subtle);
+}
+/* The flattened corner points at the speaker. */
+.sy-bubble-row.is-them .sy-bubble {
+  border-start-start-radius: var(--sy-radius-xs);
+}
+.sy-bubble-row.is-me .sy-bubble {
+  background: var(--sy-accent-bg);
+  border-color: var(--sy-accent-border);
+  border-end-end-radius: var(--sy-radius-xs);
+}
+.sy-bubble__time {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  color: var(--sy-fg-quiet);
+  margin-block-start: calc(var(--sy-space-1) * -1);
+}
+/* Read receipt: two ticks and the word, because two ticks alone is folklore. */
+.sy-bubble__receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--sy-accent-fg);
+  font-weight: 600;
+}
+.sy-bubble__receipt-second {
+  margin-inline-start: -7px;
+  margin-inline-end: 3px;
+}
+
+.sy-attach-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2_5);
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+  transition: border-color var(--sy-transition-hover);
+}
+.sy-attach-card:hover {
+  border-color: var(--sy-border-interactive);
+}
+.sy-attach-card__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 34px;
+  block-size: 34px;
+  border-radius: var(--sy-radius-sm);
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  flex-shrink: 0;
+}
+.sy-attach-card__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-attach-card__action {
+  color: var(--sy-fg-muted);
+  flex-shrink: 0;
+}
+
+.sy-link-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--sy-radius-md);
+  overflow: hidden;
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-link-card__art {
+  border-radius: 0;
+}
+.sy-link-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-2_5);
+}
+
+/* Typing. Three dots on a stagger — the only looping animation in the thread. */
+.sy-typing {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-3);
+}
+.sy-typing__dot {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: var(--sy-fg-quiet);
+  animation: sy-typing-bounce 1.2s var(--sy-ease-standard) infinite;
+}
+.sy-typing__dot:nth-child(2) {
+  animation-delay: 160ms;
+}
+.sy-typing__dot:nth-child(3) {
+  animation-delay: 320ms;
+}
+@keyframes sy-typing-bounce {
+  0%,
+  60%,
+  100% {
+    translate: 0 0;
+    opacity: 0.45;
+  }
+  30% {
+    translate: 0 -4px;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sy-typing__dot {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ---- Composer ---- */
+
+.sy-chat__composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  padding-block-end: calc(var(--safe-bottom, 0px) + var(--sy-space-3));
+  border-block-start: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  flex-shrink: 0;
+}
+.sy-chat__field {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  padding: var(--sy-space-1) var(--sy-space-3);
+  border-radius: var(--sy-radius-xl);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-default);
+}
+.sy-chat__field:focus-within {
+  border-color: var(--sy-accent-solid);
+}
+.sy-chat__field textarea {
+  inline-size: 100%;
+  max-block-size: 96px;
+  padding-block: var(--sy-space-2);
+  background: none;
+  border: none;
+  resize: none;
+  color: var(--sy-fg-default);
+  font-size: var(--sy-type-bodySmall-size);
+  line-height: var(--sy-type-bodySmall-line);
+}
+.sy-chat__field textarea::placeholder {
+  color: var(--sy-fg-quiet);
+}
+
+/* ---- Pane 1 and 3 ---- */
+
+.sy-chat__list {
+  flex-direction: column;
+  min-block-size: 0;
+  border-inline-end: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+}
+.sy-chat__list-head {
+  padding: var(--sy-space-3);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+.sy-chat__list-body {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--sy-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sy-chat__list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2_5);
+  inline-size: 100%;
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-md);
+  text-align: start;
+  color: inherit;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-chat__list-item:hover {
+  background: var(--sy-bg-hover);
+}
+/* The open thread keeps a bar as well as a fill so it survives greyscale. */
+.sy-chat__list-item.is-active {
+  background: var(--sy-accent-bg);
+  box-shadow: inset 3px 0 0 0 var(--sy-accent-solid);
+}
+.sy-chat__list-text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sy-chat__list-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-chat__list-unread {
+  display: grid;
+  place-items: center;
+  min-inline-size: 20px;
+  block-size: 20px;
+  padding-inline: var(--sy-space-1_5);
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sy-chat__details {
+  flex-direction: column;
+  gap: var(--sy-space-6);
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--sy-space-5) var(--sy-space-4);
+  border-inline-start: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+}
+.sy-chat__details-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-2);
+  text-align: center;
+}
+.sy-chat__details-section {
+  display: flex;
+  flex-direction: column;
+}
+.sy-chat__file {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2_5);
+  inline-size: 100%;
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+  color: var(--sy-fg-muted);
+  text-align: start;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-chat__file:hover {
+  background: var(--sy-bg-hover);
+  color: var(--sy-fg-default);
+}
+.sy-chat__file .sy-grow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.sy-chat__media-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sy-space-2);
+}
+
+/**
+ * Thresholds are measured against the content column, not the device. A portrait
+ * tablet is 834px wide but only hands a screen about 758px once the icon rail is
+ * deducted, and the widest desktop column in the system is a little over 1200px,
+ * so 768/1280 queries would fire on none of the devices they describe.
+ */
+@container screen (min-width: 700px) {
+  .sy-chat {
+    grid-template-columns: 288px minmax(0, 1fr);
+  }
+  .sy-chat__list {
+    display: flex;
+  }
+  /* Back is only an affordance when the list is not already on screen. */
+  .sy-chat__back {
+    display: none;
+  }
+}
+
+@container screen (min-width: 1152px) {
+  .sy-chat {
+    grid-template-columns: 300px minmax(0, 1fr) 300px;
+  }
+  .sy-chat__details {
+    display: flex;
+  }
+}
+
+/* ================================================================== */
+/* Inbox                                                               */
+/* ================================================================== */
+
+.sy-inbox {
+  padding-block-end: var(--sy-space-10);
+}
+.sy-inbox__search {
+  margin-block-end: var(--sy-space-3);
+}
+.sy-inbox__tabs {
+  margin-block-end: var(--sy-space-5);
+}
+/* Four filters with counts do not fit a 393px track at default padding, and a
+   segmented control that scrolls has lost the plot — you cannot see the option
+   you are not on. Tightening the tabs is cheaper than hiding the counts, which
+   are the only reason to look at this row. */
+@container screen (max-width: 519px) {
+  .sy-inbox__tabs .sy-tabs__tab {
+    padding-inline: var(--sy-space-2);
+    gap: var(--sy-space-1);
+  }
+}
+.sy-inbox__empty {
+  padding-block: var(--sy-space-12);
+}
+
+.sy-inbox__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-4);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  margin-block-end: var(--sy-space-6);
+}
+.sy-inbox__notice-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 38px;
+  block-size: 38px;
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  flex-shrink: 0;
+}
+.sy-inbox__notice .sy-btn {
+  flex-shrink: 0;
+}
+@container screen (max-width: 519px) {
+  .sy-inbox__notice {
+    flex-wrap: wrap;
+  }
+  .sy-inbox__notice .sy-btn {
+    inline-size: 100%;
+  }
+}
+
+.sy-inbox__group {
+  margin-block-end: var(--sy-space-6);
+}
+.sy-inbox__group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  padding-inline: var(--sy-space-2);
+  margin-block-end: var(--sy-space-2);
+}
+
+/**
+ * Inbox row.
+ * The row is a container, not a button, because the three secondary actions
+ * must be reachable by keyboard without being nested inside the primary
+ * control. On touch the same three are what a left swipe reveals.
+ */
+.sy-inbox-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--sy-radius-lg);
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-inbox-row:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-inbox-row.is-unread {
+  background: var(--sy-accent-bg);
+}
+.sy-inbox-row.is-unread:hover {
+  background: var(--sy-accent-bg-hover);
+}
+
+.sy-inbox-row__main {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: inherit;
+  text-align: start;
+  color: inherit;
+}
+.sy-inbox-row__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sy-inbox-row__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-inbox-row__name {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+  font-size: var(--sy-type-label-size);
+  font-weight: 500;
+}
+.sy-inbox-row__preview {
+  font-size: var(--sy-type-bodySmall-size);
+  color: var(--sy-fg-muted);
+}
+/* Unread: weight change on the name, brighter preview, and the count pill. */
+.sy-inbox-row.is-unread .sy-inbox-row__name {
+  font-weight: 700;
+}
+.sy-inbox-row.is-unread .sy-inbox-row__preview {
+  color: var(--sy-fg-default);
+}
+.sy-inbox-row__count {
+  display: grid;
+  place-items: center;
+  min-inline-size: 22px;
+  block-size: 22px;
+  padding-inline: var(--sy-space-1_5);
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sy-inbox-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-inline-end: var(--sy-space-2);
+  opacity: 0;
+  translate: var(--sy-travel-small) 0;
+  transition: opacity var(--sy-transition-hover), translate var(--sy-transition-hover);
+}
+.sy-inbox-row:hover .sy-inbox-row__actions,
+.sy-inbox-row:focus-within .sy-inbox-row__actions {
+  opacity: 1;
+  translate: 0 0;
+}
+/* Without hover there is nothing to reveal, so the actions stay visible. */
+@media (hover: none) {
+  .sy-inbox-row__actions {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@container screen (max-width: 519px) {
+  .sy-inbox-row__actions {
+    display: none;
+  }
+}
+
+/* ================================================================== */
+/* People                                                              */
+/* ================================================================== */
+
+.sy-friends {
+  padding-block-end: var(--sy-space-10);
+}
+.sy-friends__requests,
+.sy-friends__directory,
+.sy-friends__find {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  margin-block-end: var(--sy-space-10);
+}
+.sy-friends__requests-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+}
+
+/**
+ * Request card.
+ * Accept and Decline are the same size and adjacent, because an oversized
+ * Accept is a dark pattern in a screen about consent.
+ */
+.sy-request-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-4);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  box-shadow: var(--sy-elevation-surface);
+}
+.sy-request-card__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sy-request-card__reason {
+  margin-block-start: var(--sy-space-2);
+}
+.sy-request-card__text .sy-fg-quiet {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-1_5);
+  margin-block-start: var(--sy-space-1);
+}
+.sy-request-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+}
+@container screen (max-width: 639px) {
+  .sy-request-card {
+    flex-wrap: wrap;
+  }
+  .sy-request-card__actions {
+    inline-size: 100%;
+    justify-content: flex-end;
+  }
+}
+
+.sy-person-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sy-space-4);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  transition: border-color var(--sy-transition-hover), translate var(--sy-transition-hover);
+}
+.sy-person-card:hover {
+  border-color: var(--sy-border-strong);
+  translate: 0 calc(var(--sy-travel-micro) * -1);
+}
+.sy-person-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-block-end: var(--sy-space-2);
+}
+.sy-person-card__mutual {
+  margin-block: var(--sy-space-2);
+  min-block-size: 32px;
+}
+.sy-person-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  margin-block-start: auto;
+  padding-block-start: var(--sy-space-2);
+}
+
+/**
+ * Follow toggle.
+ * Both labels are rendered and cross-faded in place, so the button's width
+ * never changes and the row does not reflow under the cursor.
+ */
+.sy-follow-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  block-size: 32px;
+  min-inline-size: 104px;
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  border: 1px solid var(--sy-border-default);
+  color: var(--sy-fg-default);
+  font-size: var(--sy-type-label-size);
+  font-weight: var(--sy-type-label-weight);
+  transition: background-color var(--sy-transition-hover), border-color var(--sy-transition-hover);
+}
+.sy-follow-toggle__rest,
+.sy-follow-toggle__hover {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  transition: opacity var(--sy-transition-hover);
+}
+.sy-follow-toggle__hover {
+  opacity: 0;
+}
+.sy-follow-toggle:hover,
+.sy-follow-toggle:focus-visible,
+.sy-follow-toggle.is-hovered {
+  background: var(--sy-danger-bg);
+  border-color: var(--sy-danger-border);
+  color: var(--sy-danger-fg);
+}
+.sy-follow-toggle:hover .sy-follow-toggle__rest,
+.sy-follow-toggle:focus-visible .sy-follow-toggle__rest,
+.sy-follow-toggle.is-hovered .sy-follow-toggle__rest {
+  opacity: 0;
+}
+.sy-follow-toggle:hover .sy-follow-toggle__hover,
+.sy-follow-toggle:focus-visible .sy-follow-toggle__hover,
+.sy-follow-toggle.is-hovered .sy-follow-toggle__hover {
+  opacity: 1;
+}
+
+.sy-find-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-4);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-find-tile .sy-tile-icon {
+  --tone-bg: var(--sy-accent-bg);
+  --tone-fg: var(--sy-accent-fg);
+  margin-block-end: var(--sy-space-1);
+}
+.sy-find-tile .sy-btn {
+  margin-block-start: var(--sy-space-3);
+}
+
+/* ================================================================== */
+/* Spaces                                                              */
+/* ================================================================== */
+
+.sy-spaces {
+  padding-block-end: var(--sy-space-10);
+}
+.sy-spaces__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  margin-block-end: var(--sy-space-4);
+}
+.sy-spaces__discover {
+  margin-block-start: var(--sy-space-10);
+}
+
+/** Live population: a pulsing dot plus the number. The number is the fact. */
+.sy-online {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  color: var(--sy-success-fg);
+  font-variant-numeric: tabular-nums;
+}
+.sy-online__dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--sy-success-solid);
+  box-shadow: 0 0 0 0 var(--sy-success-solid);
+  animation: sy-online-pulse 2.4s var(--sy-ease-standard) infinite;
+}
+@keyframes sy-online-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--sy-success-solid) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sy-online__dot {
+    animation: none;
+  }
+}
+
+.sy-space-tile {
+  inline-size: 232px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+.sy-space-tile__art {
+  margin-block-end: var(--sy-space-1);
+}
+.sy-space-tile__privacy {
+  position: absolute;
+  inset-block-start: var(--sy-space-2);
+  inset-inline-start: var(--sy-space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  padding: 3px var(--sy-space-2);
+  border-radius: var(--sy-radius-pill);
+  background: oklch(12% 0.01 282 / 0.74);
+  border: 1px solid oklch(98% 0 0 / 0.18);
+  color: oklch(97% 0.005 282);
+  font-size: 11px;
+  font-weight: 600;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.sy-space-tile__counts {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+
+/* ---- Expanded space ---- */
+
+.sy-space-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sy-space-4);
+  margin-block-start: var(--sy-space-8);
+  padding: var(--sy-space-4);
+  border-radius: var(--sy-radius-xl);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  box-shadow: var(--sy-elevation-raised);
+}
+.sy-space-detail__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  min-inline-size: 0;
+}
+.sy-space-detail__identity {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+}
+/* Until the detail column is genuinely wide, the space name is the headline of
+   the card: it gets the full width and the membership control drops to a
+   full-width row beneath it rather than squeezing the name into two lines. */
+@container screen (max-width: 899px) {
+  .sy-space-detail__identity {
+    flex-wrap: wrap;
+  }
+  .sy-space-detail__identity > .sy-btn {
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}
+.sy-space-detail__crest {
+  inline-size: 56px;
+  flex-shrink: 0;
+}
+.sy-space-detail__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-2);
+}
+.sy-space-detail__active {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+
+.sy-pinned {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+  border-inline-start: 3px solid var(--sy-warning-solid);
+}
+.sy-pinned__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  color: var(--sy-warning-fg);
+  font-weight: 600;
+}
+.sy-pinned__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+
+.sy-space-detail__channels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-space-detail__channels .sy-overline {
+  padding: var(--sy-space-2);
+}
+.sy-channel {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  inline-size: 100%;
+  min-block-size: 36px;
+  padding-inline: var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-bodySmall-size);
+  text-align: start;
+  transition: background-color var(--sy-transition-hover), color var(--sy-transition-hover);
+}
+.sy-channel:hover {
+  background: var(--sy-bg-hover);
+  color: var(--sy-fg-default);
+}
+.sy-channel__hash {
+  color: var(--sy-fg-quiet);
+  font-weight: 600;
+}
+.sy-channel__name {
+  flex: 1;
+  min-inline-size: 0;
+}
+.sy-channel__lock {
+  color: var(--sy-fg-quiet);
+  flex-shrink: 0;
+}
+/* Unread channels go bold as well as gaining a count. */
+.sy-channel.is-unread {
+  color: var(--sy-fg-default);
+  font-weight: 650;
+}
+.sy-channel__badge {
+  display: grid;
+  place-items: center;
+  min-inline-size: 20px;
+  block-size: 20px;
+  padding-inline: var(--sy-space-1_5);
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+@container screen (min-width: 700px) {
+  .sy-space-detail {
+    grid-template-columns: minmax(0, 1fr) 264px;
+  }
+}
+
+/* ---- Discovery grid ---- */
+
+.sy-space-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--sy-radius-lg);
+  overflow: hidden;
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  transition: border-color var(--sy-transition-hover), translate var(--sy-transition-hover);
+}
+.sy-space-card:hover {
+  border-color: var(--sy-border-strong);
+  translate: 0 calc(var(--sy-travel-micro) * -1);
+}
+.sy-space-card__banner {
+  flex-shrink: 0;
+}
+.sy-space-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-4);
+  flex: 1;
+}
+.sy-space-card__title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+}
+.sy-space-card__title .sy-badge {
+  flex-shrink: 0;
+}
+.sy-space-card__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  margin-block-start: auto;
+  padding-block-start: var(--sy-space-2);
+}

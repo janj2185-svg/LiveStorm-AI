@@ -1,1 +1,899 @@
-/* game screen styles. Owned by the game group. */
+/**
+ * Gamification screen styles — Leaderboards, Achievements, Missions.
+ *
+ * The group's one shared idea is that celebration is *earned* by hierarchy: a
+ * podium, a Prism medal and a claimable node are the only three places allowed
+ * to glow. Everything else in these screens is deliberately quiet so those
+ * three read as events rather than decoration.
+ */
+
+.sy-lb,
+.sy-ach,
+.sy-ms {
+  padding-block: var(--sy-space-5) var(--sy-space-10);
+}
+
+/* ================================================================== */
+/* Leaderboards                                                        */
+/* ================================================================== */
+
+.sy-lb__head,
+.sy-ms__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  flex-wrap: wrap;
+  margin-block-end: var(--sy-space-6);
+}
+.sy-lb__head-text,
+.sy-ms__head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+
+.sy-lb-controls {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: 1fr;
+  align-items: end;
+}
+.sy-lb-controls__cats {
+  align-items: center;
+}
+@container screen (min-width: 640px) {
+  .sy-lb-controls {
+    grid-template-columns: minmax(0, 1fr) 180px;
+  }
+}
+
+/**
+ * Podium.
+ * Three pedestals with the winner centred and tallest. Built from grid rather
+ * than absolute positioning so the columns stay aligned to a shared baseline
+ * when a name wraps to two lines.
+ */
+.sy-podium {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 118%, color-mix(in oklab, var(--sy-iris-9) 22%, transparent), transparent 70%),
+    var(--sy-bg-raised);
+}
+.sy-podium__glow {
+  position: absolute;
+  inset-block-start: -40%;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  inline-size: 320px;
+  block-size: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--sy-solar-9), transparent 62%);
+  opacity: var(--sy-glow-halo-alpha);
+  filter: blur(var(--sy-glow-halo-spread));
+  pointer-events: none;
+}
+.sy-podium__stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-6) var(--sy-space-3) 0;
+}
+.sy-podium__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-inline-size: 0;
+}
+.sy-podium__person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-1);
+  inline-size: 100%;
+  padding-block-end: var(--sy-space-3);
+  text-align: center;
+}
+.sy-podium__avatar {
+  position: relative;
+  display: inline-block;
+  margin-block-end: var(--sy-space-1);
+}
+/* The medal is a numeral in a metal disc — rank is readable without colour. */
+.sy-podium__medal {
+  position: absolute;
+  inset-block-end: -6px;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--sy-bg-raised);
+  font-family: var(--sy-font-mono);
+  font-size: var(--sy-type-caption-size);
+  font-weight: 700;
+  color: var(--sy-on-solar);
+}
+/* Three columns inside a phone leave ~110px per name. Wrapping to a second
+   line beats truncating a person's name to "Dr. Ngozi Ade…". */
+.sy-podium__name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+  line-height: 1.25;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+.sy-podium__score {
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+  margin-block-start: var(--sy-space-1);
+}
+.sy-podium__block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sy-space-1);
+  inline-size: 100%;
+  border-start-start-radius: var(--sy-radius-md);
+  border-start-end-radius: var(--sy-radius-md);
+  border: 1px solid var(--sy-border-subtle);
+  border-block-end: none;
+}
+.sy-podium__rank {
+  font-size: var(--sy-type-title2-size);
+  font-weight: 700;
+  line-height: 1;
+}
+.sy-podium__medal-name {
+  color: var(--sy-fg-muted);
+}
+
+/* Pedestal heights and metals. Ceremonial, not proportional. */
+.sy-podium__col.is-rank-1 .sy-podium__block {
+  block-size: 116px;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--sy-solar-9) 30%, transparent), transparent);
+  border-color: var(--sy-solar-8);
+}
+.sy-podium__col.is-rank-1 .sy-podium__medal {
+  background: linear-gradient(140deg, var(--sy-solar-11), var(--sy-solar-9));
+}
+.sy-podium__col.is-rank-1 .sy-podium__rank {
+  color: var(--sy-solar-11);
+}
+.sy-podium__col.is-rank-2 .sy-podium__block {
+  block-size: 82px;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--sy-neutral-9) 26%, transparent), transparent);
+  border-color: var(--sy-neutral-8);
+}
+.sy-podium__col.is-rank-2 .sy-podium__medal {
+  background: linear-gradient(140deg, var(--sy-neutral-11), var(--sy-neutral-9));
+  color: var(--sy-neutral-1);
+}
+.sy-podium__col.is-rank-3 .sy-podium__block {
+  block-size: 62px;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--sy-crimson-9) 22%, transparent), transparent);
+  border-color: var(--sy-crimson-8);
+}
+.sy-podium__col.is-rank-3 .sy-podium__medal {
+  background: linear-gradient(140deg, var(--sy-solar-9), var(--sy-crimson-8));
+  color: var(--sy-on-crimson);
+}
+
+@container screen (min-width: 768px) {
+  .sy-podium__stage {
+    padding-inline: var(--sy-space-6);
+    gap: var(--sy-space-4);
+  }
+  .sy-podium__col.is-rank-1 .sy-podium__block { block-size: 148px; }
+  .sy-podium__col.is-rank-2 .sy-podium__block { block-size: 108px; }
+  .sy-podium__col.is-rank-3 .sy-podium__block { block-size: 82px; }
+}
+/* Past this point the pedestals would stretch into flat bars. Capping the
+   stage keeps the silhouette of a podium and centres the ceremony. */
+@container screen (min-width: 720px) {
+  .sy-podium__stage {
+    max-inline-size: 620px;
+    margin-inline: auto;
+  }
+}
+
+/* Movement indicator */
+.sy-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--sy-type-caption-size);
+  font-weight: 600;
+  color: var(--sy-fg-quiet);
+}
+.sy-move.is-up {
+  color: var(--sy-success-fg);
+}
+.sy-move.is-down {
+  color: var(--sy-danger-fg);
+}
+.sy-move.is-flat {
+  color: var(--sy-fg-muted);
+}
+
+/* Ranked table */
+.sy-lb-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: var(--sy-space-1) var(--sy-space-3);
+  align-items: center;
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-lb-table li:last-child .sy-lb-row {
+  border-block-end: none;
+}
+.sy-lb-row--head {
+  color: var(--sy-fg-quiet);
+  font-size: var(--sy-type-caption-size);
+  text-transform: uppercase;
+  letter-spacing: var(--sy-type-overline-tracking);
+}
+.sy-lb-row__rank {
+  color: var(--sy-fg-muted);
+  font-weight: 600;
+  text-align: end;
+}
+.sy-lb-row__person {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-lb-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-inline-size: 0;
+}
+.sy-lb-row__score {
+  font-weight: 600;
+  text-align: end;
+}
+.sy-lb-row__move {
+  grid-column: 2;
+  justify-self: start;
+}
+/* Narrow rows drop the movement under the name instead of into a column, so a
+   "Change" heading would label an empty track. The chip names itself anyway. */
+.sy-lb-row--head .sy-lb-row__move {
+  display: none;
+}
+@container screen (min-width: 640px) {
+  .sy-lb-row {
+    grid-template-columns: 40px minmax(0, 1fr) 110px 84px;
+  }
+  .sy-lb-row__move {
+    grid-column: auto;
+    justify-self: end;
+  }
+  .sy-lb-row--head .sy-lb-row__move {
+    display: block;
+  }
+}
+
+/**
+ * Your row.
+ * Sticks to the bottom of the list container. It repeats the table's grid
+ * exactly so the columns line up with the rows scrolling behind it.
+ */
+.sy-lb-you {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: var(--sy-z-sticky);
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: var(--sy-space-1) var(--sy-space-3);
+  align-items: center;
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-accent-border);
+  background: var(--sy-accent-bg);
+  border-end-start-radius: inherit;
+  border-end-end-radius: inherit;
+}
+.sy-lb-you__tag {
+  margin-inline-start: var(--sy-space-2);
+}
+.sy-lb-you .sy-lb-row__rank {
+  color: var(--sy-accent-fg);
+}
+@container screen (min-width: 640px) {
+  .sy-lb-you {
+    grid-template-columns: 40px minmax(0, 1fr) 110px 84px;
+  }
+}
+
+/* ================================================================== */
+/* Achievements                                                        */
+/* ================================================================== */
+
+/**
+ * Medals.
+ * One shape, four fills. Bronze, silver and gold are metal ramps built from
+ * the raw colour scales; Prism is the aurora gradient and is the only badge in
+ * the product allowed to use it, which is what makes it feel like the ceiling.
+ */
+.sy-medal {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 44px;
+  block-size: 44px;
+}
+.sy-medal--sm { inline-size: 34px; block-size: 34px; }
+.sy-medal--lg { inline-size: 62px; block-size: 62px; }
+
+.sy-medal__face {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in oklab, var(--medal-rim, var(--sy-border-default)) 80%, transparent);
+  background: var(--medal-fill, var(--sy-bg-active));
+  color: var(--medal-ink, var(--sy-fg-default));
+  box-shadow: inset 0 1px 0 0 color-mix(in oklab, var(--sy-neutral-12) 22%, transparent);
+}
+/* A short ribbon tail: enough to read as a medal, not enough to cost height. */
+.sy-medal__ribbon {
+  position: absolute;
+  inset-block-end: -3px;
+  inline-size: 42%;
+  block-size: 8px;
+  border-radius: 0 0 var(--sy-radius-xs) var(--sy-radius-xs);
+  background: var(--medal-fill, var(--sy-bg-active));
+  opacity: 0.7;
+  clip-path: polygon(0 0, 100% 0, 78% 100%, 22% 100%);
+}
+.sy-medal.is-bronze {
+  --medal-fill: linear-gradient(145deg, var(--sy-solar-9), var(--sy-crimson-8));
+  --medal-rim: var(--sy-solar-8);
+  --medal-ink: var(--sy-on-solar);
+}
+.sy-medal.is-silver {
+  --medal-fill: linear-gradient(145deg, var(--sy-neutral-11), var(--sy-neutral-8));
+  --medal-rim: var(--sy-neutral-9);
+  --medal-ink: var(--sy-neutral-1);
+}
+.sy-medal.is-gold {
+  --medal-fill: linear-gradient(145deg, var(--sy-solar-11), var(--sy-solar-9));
+  --medal-rim: var(--sy-solar-10);
+  --medal-ink: var(--sy-on-solar);
+}
+.sy-medal.is-prism {
+  --medal-fill: var(--sy-gradient-aurora);
+  --medal-rim: var(--sy-accent-solid);
+  --medal-ink: var(--sy-on-iris);
+}
+.sy-medal.is-prism .sy-medal__face {
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, var(--sy-neutral-12) 26%, transparent),
+    0 0 var(--sy-glow-base-spread)
+      color-mix(in oklab, var(--sy-accent-solid) calc(var(--sy-glow-base-alpha) * 100%), transparent);
+}
+
+/* Summary */
+.sy-ach-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sy-space-4) var(--sy-space-5);
+  margin-block-end: var(--sy-space-8);
+}
+.sy-ach-summary__ring {
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+}
+/* Numerals inside the headline take the headline's size — the standalone
+   .sy-mono scale would shrink them out of the sentence. */
+.sy-ach-summary__count {
+  font-family: var(--sy-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.sy-ach-summary__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-ach-summary__tier {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding-block-start: var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+@container screen (min-width: 1024px) {
+  .sy-ach-summary {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .sy-ach-summary__tier {
+    grid-column: auto;
+    padding-block-start: 0;
+    padding-inline-start: var(--sy-space-5);
+    border-block-start: none;
+    border-inline-start: 1px solid var(--sy-border-subtle);
+  }
+}
+
+/* Recently unlocked strip */
+.sy-ach-recent {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 268px;
+}
+.sy-ach-recent__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  flex: 1;
+}
+
+.sy-ach-filters {
+  align-items: center;
+}
+
+/* Achievement card */
+.sy-ach-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+/**
+ * Locked cards lose saturation and elevation, never legibility: the body text
+ * stays at muted, which is the same contrast it has on an unlocked card. What
+ * changes is the surface, so the state reads instantly without the copy
+ * becoming a low-contrast smudge.
+ */
+.sy-ach-card.is-locked {
+  background: var(--sy-bg-canvas);
+  border-style: dashed;
+}
+.sy-ach-card.is-locked .sy-medal__face {
+  filter: saturate(0.35);
+}
+.sy-ach-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-ach-card__name {
+  display: block;
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+}
+.sy-ach-card__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  align-self: flex-start;
+  padding-inline: var(--sy-space-2);
+  block-size: 22px;
+  border-radius: var(--sy-radius-sm);
+  background: var(--sy-success-bg);
+  color: var(--sy-success-fg);
+  font-size: var(--sy-type-caption-size);
+  font-weight: 650;
+  white-space: nowrap;
+}
+.sy-ach-card__state.is-locked {
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+}
+.sy-ach-card__desc {
+  flex: 1;
+}
+.sy-ach-card__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-ach-card__date {
+  font-weight: 600;
+}
+
+/* Detail */
+.sy-ach-detail__hero {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-4);
+  padding-block-end: var(--sy-space-5);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-ach-detail__meta {
+  display: flex;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+  margin-block-start: var(--sy-space-3);
+}
+.sy-ach-detail__grid {
+  display: grid;
+  gap: var(--sy-space-6);
+  grid-template-columns: 1fr;
+  padding-block-start: var(--sy-space-5);
+}
+@container screen (min-width: 1024px) {
+  .sy-ach-detail__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.sy-ach-detail__subhead {
+  display: block;
+  margin-block-end: var(--sy-space-3);
+  color: var(--sy-fg-muted);
+}
+.sy-ach-detail__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2_5);
+}
+.sy-ach-detail__steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2_5);
+  color: var(--sy-fg-muted);
+}
+.sy-ach-detail__bullet {
+  inline-size: 6px;
+  block-size: 6px;
+  margin-block-start: 8px;
+  flex-shrink: 0;
+  rotate: 45deg;
+  background: var(--sy-accent-solid);
+}
+.sy-ach-detail__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-ach-detail__count {
+  font-size: var(--sy-type-title3-size);
+  font-weight: 600;
+}
+.sy-ach-detail__rewards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-ach-detail__rewards li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-ach-detail__rewards li > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-inline-size: 0;
+}
+.sy-ach-detail__share {
+  margin-block-start: var(--sy-space-4);
+}
+
+/* ================================================================== */
+/* Missions                                                            */
+/* ================================================================== */
+
+.sy-ms__earned {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-ms__earned-figure {
+  color: var(--sy-fg-default);
+}
+.sy-ms__earned .sy-fg-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/**
+ * Season track.
+ * A rail with the filled portion drawn behind the nodes. The nodes scroll
+ * horizontally on narrow surfaces rather than wrapping: a pass track that
+ * wraps to a second line stops reading as a journey.
+ */
+.sy-track {
+  position: relative;
+  overflow: hidden;
+}
+.sy-track__scroll {
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: var(--sy-space-2) var(--sy-space-4);
+  margin-inline: calc(var(--sy-space-5) * -1);
+  padding-inline: var(--sy-space-5);
+}
+.sy-track__scroll::-webkit-scrollbar {
+  display: none;
+}
+.sy-track__rail {
+  position: absolute;
+  inset-block-start: 62px;
+  inset-inline: var(--sy-space-5);
+  block-size: 4px;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-active);
+}
+.sy-track__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--sy-gradient-signal);
+}
+.sy-track__nodes {
+  position: relative;
+  display: flex;
+  gap: var(--sy-space-3);
+  min-inline-size: max-content;
+}
+.sy-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  inline-size: 128px;
+  text-align: center;
+}
+.sy-node__tier {
+  color: var(--sy-fg-quiet);
+  text-transform: uppercase;
+  letter-spacing: var(--sy-type-overline-tracking);
+}
+.sy-node__disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 54px;
+  block-size: 54px;
+  border-radius: 50%;
+  border: 2px solid var(--sy-border-default);
+  background: var(--sy-bg-raised);
+  color: var(--sy-fg-muted);
+}
+.sy-node__tick {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-end: -2px;
+  display: grid;
+  place-items: center;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: 50%;
+  background: var(--sy-success-solid);
+  color: var(--sy-on-verdant);
+  border: 2px solid var(--sy-bg-raised);
+}
+.sy-node__reward {
+  min-block-size: 2.4em;
+}
+.sy-node__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--sy-type-caption-size);
+  color: var(--sy-fg-quiet);
+}
+.sy-node.is-claimed .sy-node__disc {
+  border-color: var(--sy-success-border);
+  background: var(--sy-success-bg);
+  color: var(--sy-success-fg);
+}
+.sy-node.is-claimed .sy-node__state {
+  color: var(--sy-success-fg);
+}
+/* The one claimable node: filled, glowing, and the only Claim button on the
+   rail. Everything else on the track is deliberately inert. */
+.sy-node.is-claimable .sy-node__disc {
+  border-color: var(--sy-accent-solid);
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+  scale: 1.12;
+  box-shadow: 0 0 var(--sy-glow-strong-spread)
+    color-mix(in oklab, var(--sy-accent-solid) calc(var(--sy-glow-strong-alpha) * 100%), transparent);
+  animation: sy-node-pulse 2.4s var(--sy-ease-standard) infinite;
+}
+.sy-node.is-claimable .sy-node__state {
+  color: var(--sy-accent-fg);
+  font-weight: 650;
+}
+.sy-node.is-locked .sy-node__disc {
+  border-style: dashed;
+  color: var(--sy-fg-quiet);
+}
+.sy-node.is-locked .sy-node__reward {
+  color: var(--sy-fg-muted);
+}
+.sy-node__claim {
+  margin-block-start: var(--sy-space-1);
+}
+
+@keyframes sy-node-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 var(--sy-glow-base-spread)
+      color-mix(in oklab, var(--sy-accent-solid) calc(var(--sy-glow-base-alpha) * 100%), transparent);
+  }
+  50% {
+    box-shadow: 0 0 var(--sy-glow-halo-spread)
+      color-mix(in oklab, var(--sy-accent-solid) calc(var(--sy-glow-strong-alpha) * 100%), transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sy-node.is-claimable .sy-node__disc {
+    animation: none;
+  }
+}
+
+.sy-track__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-4);
+  flex-wrap: wrap;
+  padding-block-start: var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-track__meta {
+  margin-block-start: var(--sy-space-2);
+}
+
+/* Streak */
+.sy-streak {
+  display: grid;
+  gap: var(--sy-space-4);
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+.sy-streak__count {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-streak__flame {
+  display: grid;
+  place-items: center;
+  inline-size: 52px;
+  block-size: 52px;
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-warning-bg);
+  border: 1px solid var(--sy-warning-border);
+  color: var(--sy-warning-fg);
+}
+.sy-streak__figure {
+  font-size: var(--sy-type-title2-size);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.sy-streak__week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--sy-space-2);
+}
+.sy-streak__week li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-1);
+}
+.sy-streak__dot {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  max-inline-size: 44px;
+  aspect-ratio: 1;
+  border-radius: var(--sy-radius-md);
+  border: 1px solid var(--sy-border-default);
+  color: var(--sy-fg-quiet);
+}
+.sy-streak__week li.is-done .sy-streak__dot {
+  background: var(--sy-success-solid);
+  border-color: var(--sy-success-solid);
+  color: var(--sy-on-verdant);
+}
+.sy-streak__day {
+  color: var(--sy-fg-quiet);
+}
+.sy-streak__note {
+  grid-column: 1 / -1;
+}
+.sy-streak__note strong {
+  color: var(--sy-fg-default);
+}
+@container screen (min-width: 768px) {
+  .sy-streak {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .sy-streak__note {
+    grid-column: 2;
+  }
+}
+
+/* Each tab holds four missions, so a fixed pair of columns keeps them as a
+   balanced block instead of leaving one card orphaned on its own row. */
+.sy-mission-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+@container screen (min-width: 560px) {
+  .sy-mission-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mission card */
+.sy-mission {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-mission.is-complete {
+  border-color: var(--sy-success-border);
+}
+.sy-mission__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-mission__title {
+  font-size: var(--sy-type-bodySmall-size);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.sy-mission__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-mission__progress .sy-progress {
+  flex: 1;
+}
+.sy-mission__count {
+  color: var(--sy-fg-muted);
+  flex-shrink: 0;
+}
+.sy-mission__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+  padding-block-start: var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-mission__reward {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  color: var(--sy-accent-fg);
+}
+.sy-mission__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-inline-end: auto;
+}

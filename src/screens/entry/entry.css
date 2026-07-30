@@ -1,1 +1,696 @@
-/* entry screen styles. Owned by the entry group. */
+/**
+ * Entry screen styles — Welcome, Authentication, Onboarding.
+ *
+ * These three surfaces share one job: get a stranger to a first useful moment.
+ * They also share one visual device — the aurora field with a single opaque
+ * object floating on it — which is why their styles live together.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Welcome                                                             */
+/* ------------------------------------------------------------------ */
+
+.sy-welcome {
+  position: relative;
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+}
+
+/**
+ * The aurora is a full-bleed field, so every text layer above it is explicitly
+ * promoted. Without the promotion the gradient would win the paint order and
+ * the headline would sit *inside* the colour rather than on top of it.
+ */
+.sy-welcome__inner {
+  position: relative;
+  z-index: var(--sy-z-raised);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-12);
+  padding-block: var(--sy-space-10) var(--sy-space-12);
+}
+
+.sy-welcome__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-5);
+  text-align: center;
+}
+
+.sy-welcome__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-4);
+}
+
+.sy-welcome__headline {
+  /* Balanced wrapping matters more here than anywhere else in the product: a
+     display line with one orphaned word looks like a bug, not a headline. */
+  text-wrap: balance;
+  max-inline-size: var(--sy-measure-tight);
+}
+
+.sy-welcome__lede {
+  max-inline-size: var(--sy-measure-comfortable);
+}
+
+/* On a phone both CTAs go full width: a 44px-tall button that only spans half
+   the screen is a smaller target than the thumb that has to find it. */
+.sy-welcome__cta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  margin-block-start: var(--sy-space-2);
+}
+.sy-welcome__cta .sy-btn {
+  inline-size: 100%;
+}
+.sy-welcome__cta-note {
+  max-inline-size: var(--sy-measure-comfortable);
+}
+
+.sy-welcome__props {
+  display: grid;
+  gap: var(--sy-space-5);
+  inline-size: 100%;
+  margin-block-start: var(--sy-space-4);
+}
+.sy-welcome__prop {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  /* Body copy is never centred, even when its container is. */
+  text-align: start;
+}
+.sy-welcome__prop-icon {
+  --tone-bg: var(--sy-accent-bg);
+  --tone-fg: var(--sy-accent-fg);
+}
+.sy-welcome__prop-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+
+.sy-welcome__proof {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  padding-block-start: var(--sy-space-6);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-welcome__proof-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-welcome__proof-text strong {
+  color: var(--sy-fg-default);
+  font-weight: 600;
+}
+
+/* --- Floating product preview --- */
+
+.sy-welcome__preview {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  inline-size: 100%;
+  max-inline-size: 440px;
+  margin-inline: auto;
+}
+/* A halo behind the stack so the cards read as lifted off the field rather
+   than pasted onto it. */
+.sy-welcome__preview::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--sy-space-8) * -1);
+  border-radius: var(--sy-radius-3xl);
+  background: radial-gradient(
+    60% 50% at 50% 40%,
+    color-mix(in oklab, var(--sy-accent-solid) 26%, transparent),
+    transparent 72%
+  );
+  pointer-events: none;
+}
+.sy-welcome__card {
+  position: relative;
+  z-index: var(--sy-z-raised);
+}
+
+.sy-welcome__card--stream {
+  overflow: hidden;
+}
+.sy-welcome__stream-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+}
+.sy-welcome__stream-clock {
+  padding: 2px var(--sy-space-1_5);
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-glass-dome-fill);
+  color: var(--sy-fg-default);
+  font-size: var(--sy-type-overline-size);
+}
+.sy-welcome__stream-bottom {
+  position: absolute;
+  inset-block-end: var(--sy-space-3);
+  inset-inline: var(--sy-space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  /* Sits on the media scrim, which is dark in both themes. */
+  color: var(--sy-neutral-12);
+}
+[data-theme='light'] .sy-welcome__stream-bottom {
+  color: var(--sy-neutral-1);
+}
+.sy-welcome__stream-title {
+  padding: var(--sy-space-3) var(--sy-space-4) var(--sy-space-4);
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* The cards are different widths and hang off opposite edges of the column.
+   That offset — not a vertical overlap — is what makes the stack read as
+   floating; overlapping them would bury the live tile's own title. */
+.sy-welcome__card--stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  inline-size: 76%;
+}
+.sy-welcome__stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+}
+
+/* Assistant-authored surfaces carry the hairline aurora border. */
+.sy-welcome__card--ai {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2_5);
+  inline-size: 88%;
+  margin-inline-start: auto;
+  background:
+    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
+    var(--sy-gradient-aurora) border-box;
+  border: 1px solid transparent;
+}
+.sy-welcome__ai-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-welcome__ai-actions {
+  display: flex;
+  gap: var(--sy-space-2);
+}
+
+@container screen (min-width: 640px) {
+  .sy-welcome__cta {
+    flex-direction: row;
+  }
+  .sy-welcome__cta .sy-btn {
+    inline-size: auto;
+  }
+  .sy-welcome__props {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sy-space-6);
+  }
+  .sy-welcome__proof {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sy-space-4);
+  }
+}
+
+/**
+ * The split. Two columns only once there is enough width for the hero to keep
+ * a comfortable measure *and* the preview to stay above 320px — below that the
+ * live tile stops being a live tile and starts being a thumbnail.
+ *
+ * This deliberately does not fire in the medium posture, where the icon rail
+ * leaves the screen about 758px: splitting there would leave the headline a
+ * ~360px column, and a display-scale headline broken over five lines beside a
+ * cramped preview is a worse first impression than the centred column it
+ * replaces. The tablet gets the phone's composition at a larger scale.
+ */
+@container screen (min-width: 768px) {
+  .sy-welcome__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    align-items: center;
+    gap: var(--sy-space-10);
+    padding-block: var(--sy-space-12);
+  }
+  .sy-welcome__hero {
+    align-items: flex-start;
+    text-align: start;
+  }
+  .sy-welcome__brand {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sy-space-5);
+  }
+  .sy-welcome__preview {
+    max-inline-size: none;
+  }
+  /* The cards break their column on both sides — that overhang is what makes
+     the stack read as floating rather than as a third of the grid. */
+  .sy-welcome__card--stat {
+    margin-inline-start: calc(var(--sy-space-6) * -1);
+  }
+  .sy-welcome__card--ai {
+    margin-inline-end: calc(var(--sy-space-5) * -1);
+  }
+}
+
+@container screen (min-width: 1024px) {
+  .sy-welcome__inner {
+    gap: var(--sy-space-16);
+  }
+  .sy-welcome__props {
+    gap: var(--sy-space-6) var(--sy-space-8);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Authentication                                                      */
+/* ------------------------------------------------------------------ */
+
+.sy-auth {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.sy-auth__inner {
+  position: relative;
+  z-index: var(--sy-z-raised);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-5);
+  max-inline-size: 468px;
+  padding-block: var(--sy-space-8) var(--sy-space-10);
+  /* Full bleed on a phone: see the card rule below. */
+  padding-inline: 0;
+}
+
+/**
+ * On a phone the card sheds its border, fill and shadow. A bordered card inside
+ * a bordered device is two frames doing one job, and the inner one only steals
+ * horizontal space from the inputs. From 640px up it becomes a real object
+ * floating on the field, which is where the elevation starts earning its keep.
+ */
+.sy-auth__card {
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-5);
+  background: transparent;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.sy-auth__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-2);
+  text-align: center;
+}
+.sy-auth__head .sy-logo-mark {
+  margin-block-end: var(--sy-space-2);
+}
+
+.sy-auth__tabs {
+  inline-size: 100%;
+}
+
+.sy-auth__passkey {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2_5);
+}
+.sy-auth__passkey-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-1_5);
+  text-align: start;
+}
+.sy-auth__passkey-note .sy-icon {
+  margin-block-start: 1px;
+  color: var(--sy-success-fg);
+  flex-shrink: 0;
+}
+
+.sy-auth__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-auth__divider .sy-divider {
+  flex: 1;
+}
+
+.sy-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-auth__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  flex-wrap: wrap;
+}
+
+.sy-auth__providers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sy-space-2);
+}
+.sy-auth__providers .sy-btn {
+  padding-inline: var(--sy-space-2);
+}
+
+.sy-auth__legal {
+  text-align: start;
+  line-height: 1.5;
+}
+
+.sy-auth__switch {
+  text-align: center;
+  padding-inline: var(--sy-space-4);
+}
+
+@container screen (min-width: 640px) {
+  .sy-auth__inner {
+    padding-inline: var(--sy-space-4);
+  }
+  .sy-auth__card {
+    max-inline-size: 420px;
+    background: var(--sy-bg-raised);
+    border-color: var(--sy-border-subtle);
+    border-radius: var(--sy-radius-2xl);
+    box-shadow: var(--sy-elevation-overlay);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Onboarding                                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Three bands: progress, the step itself, and the controls. Only the middle one
+ * scrolls, so a person can always see how far along they are and always reach
+ * Continue — neither of which survives letting the whole screen scroll as one.
+ */
+.sy-onboard-screen {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0;
+}
+
+.sy-onboard__scroll {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  /* `safe` matters: a plain centre would push the heading above the scrollport
+     the moment the chip grid outgrows it, and overflow above the start edge is
+     unreachable. Centred when it fits, top-aligned when it does not. */
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  /* The step is a scroll dead end: reaching its end must not start scrolling
+     whatever is behind the surface. */
+  overscroll-behavior: contain;
+}
+
+.sy-onboard__steps {
+  flex: 0 0 auto;
+  padding-block: var(--sy-space-5) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-canvas);
+}
+.sy-onboard__steps-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-onboard__steps-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+}
+
+/**
+ * Step indicator.
+ * Four equal segments rather than a single bar: a bar tells you how far along
+ * you are, segments also tell you how many decisions are left, which is the
+ * thing people actually want to know before they commit to a setup flow.
+ */
+.sy-steps {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--sy-space-2);
+}
+.sy-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-step__track {
+  block-size: 4px;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-active);
+}
+.sy-step.is-done .sy-step__track {
+  background: var(--sy-accent-solid);
+}
+/* The current segment carries the brand gradient — the one place in the flow
+   where the eye should land first. */
+.sy-step.is-current .sy-step__track {
+  background: var(--sy-gradient-aurora);
+  box-shadow: 0 0 var(--sy-glow-base-spread)
+    color-mix(in oklab, var(--sy-accent-solid) 40%, transparent);
+}
+.sy-step__name {
+  display: none;
+  align-items: center;
+  gap: var(--sy-space-1);
+  color: var(--sy-fg-quiet);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sy-step.is-done .sy-step__name {
+  color: var(--sy-fg-muted);
+}
+.sy-step.is-current .sy-step__name {
+  color: var(--sy-fg-default);
+  font-weight: 600;
+}
+
+.sy-onboard__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-8);
+  padding-block: var(--sy-space-6) var(--sy-space-8);
+}
+.sy-onboard__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-5);
+  min-inline-size: 0;
+}
+.sy-onboard__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+
+/* The count is a status, so it reads as one: icon, then a sentence that says
+   what is missing rather than a bare number next to a dead button. */
+.sy-onboard__count {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2_5) var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  color: var(--sy-fg-muted);
+  align-self: flex-start;
+  max-inline-size: 100%;
+}
+.sy-onboard__count strong {
+  color: var(--sy-fg-default);
+  font-weight: 600;
+}
+
+.sy-onboard__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+}
+
+/* Disclosure */
+.sy-why {
+  border: 1px solid var(--sy-border-subtle);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+}
+.sy-why__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-block-size: 44px;
+  padding: var(--sy-space-2) var(--sy-space-4);
+  color: var(--sy-fg-muted);
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--sy-radius-lg);
+  transition: color var(--sy-transition-hover), background-color var(--sy-transition-hover);
+}
+.sy-why__summary::-webkit-details-marker {
+  display: none;
+}
+.sy-why__summary:hover {
+  color: var(--sy-fg-default);
+  background: var(--sy-bg-hover);
+}
+.sy-why__chevron {
+  margin-inline-start: auto;
+  transition: rotate var(--sy-transition-hover);
+}
+.sy-why[open] .sy-why__chevron {
+  rotate: 180deg;
+}
+.sy-why__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-1) var(--sy-space-4) var(--sy-space-4);
+}
+
+/* Aside: what the selection actually changes */
+.sy-onboard__preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-onboard__preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+}
+.sy-onboard__matches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding-block: var(--sy-space-1);
+}
+.sy-onboard__match {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-onboard__match > .sy-icon {
+  flex-shrink: 0;
+}
+.sy-onboard__selected {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding-block-start: var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+.sy-onboard__selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-1_5);
+}
+
+/* The hairline is the seam between what scrolls and what does not, so the
+   controls never read as part of the step's content. */
+.sy-onboard__footer {
+  flex: 0 0 auto;
+  padding-block: var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-canvas);
+}
+.sy-onboard__footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+}
+.sy-onboard__footer-count {
+  display: none;
+}
+
+@container screen (min-width: 640px) {
+  .sy-step__name {
+    display: flex;
+  }
+  .sy-onboard__body {
+    padding-block: var(--sy-space-8);
+  }
+  .sy-onboard__footer-count {
+    display: inline;
+  }
+}
+
+/**
+ * The preview moves alongside the chips as early as it can bear to. 700px, not
+ * 768px: the medium posture spends part of its width on the icon rail and hands
+ * the screen roughly 758px, and a preview that answers "what does this pick do?"
+ * is worth far more beside the pick than a scroll below it.
+ */
+@container screen (min-width: 700px) {
+  .sy-onboard__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+    align-items: start;
+    gap: var(--sy-space-6);
+  }
+  /* Sticky so the answer stays on screen while the question is still being
+     answered — the pick and its consequence must never be a scroll apart. */
+  .sy-onboard__aside {
+    position: sticky;
+    inset-block-start: var(--sy-space-6);
+  }
+}
+
+@container screen (min-width: 1024px) {
+  .sy-onboard__body {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--sy-space-8);
+  }
+}

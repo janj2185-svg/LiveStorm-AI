@@ -1,1 +1,885 @@
-/* ops screen styles. Owned by the ops group. */
+/**
+ * Operations screen styles — Admin, Moderator, Business.
+ *
+ * These three screens are read under time pressure by people who did not
+ * design them, so the visual budget goes almost entirely into alignment and
+ * state legibility. Three rules run through the whole file:
+ *
+ *   1. Every state is a dot or an icon *plus* a word. Colour is the third
+ *      signal, never the first.
+ *   2. Numbers are monospaced and right-aligned so a column reads as a column.
+ *      The shared table system in creator.css does that job; nothing here
+ *      re-implements it.
+ *   3. Nothing decorative. There is no gradient anywhere in this file — the
+ *      aurora is reserved for assistant-authored content, and none of these
+ *      surfaces are.
+ *
+ * `creator.css` is imported first and owns `.sy-table-scroll`, `.sy-data-table`
+ * and `.sy-meter`; this file assumes them.
+ */
+
+/* ================================================================== */
+/* Shared: status dot                                                  */
+/* ================================================================== */
+
+/**
+ * The dot is the fast read and never the only one — every use site pairs it
+ * with a word. The ring on the two non-nominal states means the three are
+ * still distinguishable in greyscale and to a reader with low colour
+ * discrimination, where fill alone would not be.
+ */
+.sy-ad-dot {
+  flex-shrink: 0;
+  inline-size: var(--sy-space-2);
+  block-size: var(--sy-space-2);
+  border-radius: 50%;
+  background: var(--sy-success-solid);
+}
+.sy-ad-dot.is-warn,
+.sy-ad-health__state.is-elevated .sy-ad-dot {
+  background: var(--sy-warning-solid);
+  box-shadow: 0 0 0 3px var(--sy-warning-bg);
+}
+.sy-ad-dot.is-down,
+.sy-ad-health__state.is-breached .sy-ad-dot {
+  background: var(--sy-danger-solid);
+  box-shadow: 0 0 0 3px var(--sy-danger-bg);
+}
+
+/* ================================================================== */
+/* Admin                                                               */
+/* ================================================================== */
+
+.sy-ad,
+.sy-mod,
+.sy-bz {
+  padding-block: var(--sy-space-6) var(--sy-space-10);
+}
+
+.sy-ad__head,
+.sy-mod__head,
+.sy-bz__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  margin-block-end: var(--sy-space-5);
+}
+.sy-ad__title,
+.sy-mod__title,
+.sy-bz__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-ad__head-actions,
+.sy-mod__head-actions,
+.sy-bz__head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+}
+
+/* ---- Health tiles --------------------------------------------------- */
+
+/**
+ * Two across on a phone, three on a tablet, six only once there is genuinely
+ * room for six. The screen container is 1016px in the 1280 posture and 1248px
+ * at 1512, so 1100 is the only threshold that separates the two: at 1016, six
+ * tiles are 155px each and "412 Gb/s" has nowhere to go.
+ */
+.sy-ad__health {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-block-end: var(--sy-space-8);
+}
+@container screen (min-width: 640px) {
+  .sy-ad__health {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container screen (min-width: 1100px) {
+  .sy-ad__health {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/**
+ * The state gets its own line above the metric rather than sharing the label's
+ * row. Six tiles across leaves each label under 150px, and "Concurrent
+ * streams" beside "NOMINAL" in that space means one of the two truncates —
+ * and truncating the state defeats the point of writing it out.
+ */
+.sy-ad-health {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-ad-health__state {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  font-size: var(--sy-type-overline-size);
+  line-height: var(--sy-type-overline-line);
+  font-weight: var(--sy-type-overline-weight);
+  letter-spacing: var(--sy-type-overline-tracking);
+  text-transform: uppercase;
+  color: var(--sy-fg-quiet);
+}
+.sy-ad-health__state.is-elevated {
+  color: var(--sy-warning-fg);
+}
+.sy-ad-health__state.is-breached {
+  color: var(--sy-danger-fg);
+}
+
+/* ---- Two-column regions --------------------------------------------- */
+
+/**
+ * 960 rather than 1024: an ops screen has no context panel, so the 1280
+ * posture hands it 1016px. A 1024 breakpoint would never fire in the posture
+ * it was written for and the layout would jump straight from one column to
+ * two at 1512.
+ */
+.sy-ad__split,
+.sy-bz__split {
+  display: grid;
+  gap: var(--sy-space-4);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 960px) {
+  .sy-ad__split {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: var(--sy-space-6);
+    align-items: start;
+  }
+  .sy-ad__split--even {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .sy-bz__split {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--sy-space-6);
+    align-items: start;
+  }
+}
+
+/* ---- Services ------------------------------------------------------- */
+
+.sy-ad__services {
+  display: flex;
+  flex-direction: column;
+}
+.sy-ad-service {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-ad-service:last-child {
+  border-block-end: none;
+}
+.sy-ad-service__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* The sparkline is the first thing to go: it shows shape, and the uptime
+   figure beside it carries the fact. */
+.sy-ad-service__spark {
+  display: none;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.sy-ad-service__uptime {
+  flex-shrink: 0;
+  color: var(--sy-fg-default);
+}
+.sy-ad-service > .sy-badge {
+  flex-shrink: 0;
+  inline-size: calc(var(--sy-space-24) + var(--sy-space-2));
+  justify-content: center;
+}
+@container screen (min-width: 480px) {
+  .sy-ad-service__spark {
+    display: block;
+  }
+}
+
+/* ---- Incident ------------------------------------------------------- */
+
+/* A left rule rather than a tinted card: the tint would put a large warm area
+   next to six neutral service rows and pull the eye off the rows. */
+.sy-ad-incident {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  border-inline-start: 3px solid var(--sy-warning-solid);
+}
+.sy-ad-incident__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-ad-incident__facts {
+  margin-block-start: var(--sy-space-1);
+}
+.sy-ad-incident__facts .sy-kv__value {
+  text-align: end;
+}
+.sy-ad-incident__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-2);
+}
+
+/* ---- User filters and rows ------------------------------------------ */
+
+.sy-ad__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-default);
+}
+.sy-ad__filter-search {
+  flex: 1 1 calc(var(--sy-space-40) + var(--sy-space-8));
+  min-inline-size: 0;
+}
+.sy-ad__filter-select {
+  flex: 0 1 calc(var(--sy-space-32) + var(--sy-space-4));
+  min-inline-size: calc(var(--sy-space-32) + var(--sy-space-4));
+}
+
+.sy-ad-user {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-ad-user__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-inline-size: 0;
+}
+.sy-data-table td.sy-ad__row-actions,
+.sy-data-table th.sy-ad__row-actions {
+  inline-size: var(--sy-space-12);
+  text-align: end;
+  padding-inline-start: 0;
+}
+
+/* ---- Feature flags -------------------------------------------------- */
+
+.sy-ad__flags {
+  display: flex;
+  flex-direction: column;
+}
+.sy-ad-flag {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-ad-flag:last-child {
+  border-block-end: none;
+}
+/* Flag keys are identifiers, not prose: they are compared character by
+   character against a config file, so they are set in mono. */
+.sy-ad-flag .sy-switch-row__text .sy-label {
+  font-family: var(--sy-font-mono);
+  font-size: var(--sy-type-mono-size);
+}
+.sy-ad-flag__rollout {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-ad-flag__meter {
+  flex: 1;
+  min-inline-size: var(--sy-space-16);
+}
+.sy-ad-flag__pct {
+  flex-shrink: 0;
+  inline-size: var(--sy-space-10);
+  text-align: end;
+  color: var(--sy-fg-default);
+}
+
+/* ---- Audit ---------------------------------------------------------- */
+
+.sy-ad__audit {
+  display: flex;
+  flex-direction: column;
+}
+.sy-ad-audit {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-ad-audit:last-child {
+  border-block-end: none;
+}
+.sy-ad-audit__at {
+  flex-shrink: 0;
+  padding-block-start: 2px;
+}
+.sy-ad-audit__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-ad-audit__badge {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  inline-size: var(--sy-space-5);
+  block-size: var(--sy-space-5);
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-quiet);
+}
+
+/* ================================================================== */
+/* Moderator                                                           */
+/* ================================================================== */
+
+.sy-mod__stats {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-block-end: var(--sy-space-6);
+}
+@container screen (min-width: 640px) {
+  .sy-mod__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/**
+ * Queue and evidence. Below 960 the queue stacks above the detail, which is
+ * the correct compact behaviour: on a phone a moderator picks a case, reads
+ * it, acts, and comes back — the two panes are sequential anyway.
+ *
+ * Above 960 the queue is deliberately the narrower column. It only has to
+ * carry five short facts per row; the evidence is what needs the width, and
+ * an even split would give the excerpt a 45-character measure.
+ */
+.sy-mod__work {
+  display: grid;
+  gap: var(--sy-space-5);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@container screen (min-width: 960px) {
+  .sy-mod__work {
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+    gap: var(--sy-space-6);
+  }
+  /* The queue outlives the case: it stays put while the evidence scrolls. */
+  .sy-mod__queue {
+    position: sticky;
+    inset-block-start: var(--sy-space-4);
+  }
+}
+
+.sy-mod__queue,
+.sy-mod__detail {
+  min-inline-size: 0;
+}
+.sy-mod__queue-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  margin-block-end: var(--sy-space-2);
+}
+.sy-mod__advisory {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-1_5);
+  margin-block-end: var(--sy-space-3);
+}
+.sy-mod__advisory .sy-icon {
+  flex-shrink: 0;
+  margin-block-start: 1px;
+}
+
+.sy-mod__cases {
+  display: flex;
+  flex-direction: column;
+}
+.sy-mod-case {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1_5);
+  inline-size: 100%;
+  padding: var(--sy-space-3) var(--sy-space-4);
+  text-align: start;
+  border-block-end: 1px solid var(--sy-border-subtle);
+  border-inline-start: 2px solid transparent;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-mod__cases li:last-child .sy-mod-case {
+  border-block-end: none;
+}
+.sy-mod-case:hover {
+  background: var(--sy-bg-hover);
+}
+/* Selection is fill plus an edge rule plus `aria-current`, so it survives
+   greyscale and is announced rather than merely seen. */
+.sy-mod-case.is-selected {
+  background: var(--sy-bg-active);
+  border-inline-start-color: var(--sy-accent-solid);
+}
+.sy-mod-case__top {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.sy-mod-case__target {
+  color: var(--sy-fg-default);
+  inline-size: 100%;
+}
+.sy-mod-case__ai {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  inline-size: 100%;
+  min-inline-size: 0;
+  margin-block-start: var(--sy-space-1);
+  padding-block-start: var(--sy-space-2);
+  border-block-start: 1px dashed var(--sy-border-subtle);
+  color: var(--sy-accent-fg);
+}
+.sy-mod-case__conf {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+.sy-mod-case__meter {
+  inline-size: var(--sy-space-10);
+}
+.sy-mod-case__pct {
+  inline-size: var(--sy-space-8);
+  text-align: end;
+  color: var(--sy-fg-default);
+}
+
+/* ---- Detail pane ---------------------------------------------------- */
+
+.sy-mod__pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-5);
+  margin-block-end: var(--sy-space-8);
+}
+.sy-mod-detail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+}
+.sy-mod-detail__ident {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-mod-detail__ident-text {
+  min-inline-size: 0;
+}
+.sy-mod-detail__ident-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sy-space-1);
+}
+.sy-mod-detail__label {
+  display: block;
+  margin-block-end: var(--sy-space-2);
+  color: var(--sy-fg-muted);
+}
+.sy-mod-detail__where {
+  margin-block-start: calc(var(--sy-space-2) * -1);
+  margin-block-end: var(--sy-space-2);
+}
+.sy-mod-detail__cols {
+  display: grid;
+  gap: var(--sy-space-5);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 768px) {
+  .sy-mod-detail__cols {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.sy-mod-detail__history-note {
+  display: block;
+  margin-block-start: var(--sy-space-2);
+}
+
+/* The excerpt is set in a sunken well so it reads as quoted material rather
+   than as the product's own copy. */
+.sy-mod-excerpt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-mod-excerpt__line {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--sy-space-1_5) var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+  color: var(--sy-fg-muted);
+}
+/* The reported lines carry a flag glyph as well as a tint: the whole point of
+   showing context is that the reader can tell quoted-and-reported from
+   quoted-and-not. */
+.sy-mod-excerpt__line.is-flagged {
+  background: var(--sy-danger-bg);
+  color: var(--sy-fg-default);
+  padding-inline-end: var(--sy-space-8);
+}
+.sy-mod-excerpt__mark {
+  position: absolute;
+  inset-block-start: var(--sy-space-1_5);
+  inset-inline-end: var(--sy-space-2);
+  color: var(--sy-danger-fg);
+}
+.sy-mod-excerpt__author {
+  color: var(--sy-fg-quiet);
+}
+
+.sy-mod-rec {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-accent-bg);
+  border: 1px solid var(--sy-accent-border);
+}
+.sy-mod-rec__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  inline-size: var(--sy-space-8);
+  block-size: var(--sy-space-8);
+  border-radius: var(--sy-radius-sm);
+  color: var(--sy-accent-fg);
+}
+.sy-mod-rec__text {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+
+/* ---- Action bar ----------------------------------------------------- */
+
+.sy-mod-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-mod-actions__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-mod-actions__timeout {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+}
+.sy-mod-actions__select {
+  inline-size: calc(var(--sy-space-32) + var(--sy-space-2));
+}
+/* Irreversible outcomes are physically separated from reversible ones and
+   fenced by an acknowledgement. Distance is the cheapest safeguard there is. */
+.sy-mod-actions__danger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-danger-bg);
+  border: 1px solid var(--sy-danger-border);
+}
+.sy-mod-actions__gate {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+
+/* ---- Policy --------------------------------------------------------- */
+
+.sy-mod__policy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-mod-clause {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+}
+.sy-mod-clause__id {
+  flex-shrink: 0;
+  padding: var(--sy-space-0_5) var(--sy-space-2);
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-caption-size);
+}
+.sy-mod-clause__text {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+.sy-mod__policy-all {
+  margin-block-start: var(--sy-space-4);
+}
+
+/* ================================================================== */
+/* Business                                                            */
+/* ================================================================== */
+
+.sy-bz__account {
+  align-self: flex-start;
+  margin-block-end: var(--sy-space-1);
+}
+.sy-bz__range {
+  inline-size: calc(var(--sy-space-32) + var(--sy-space-8));
+}
+
+.sy-bz__stats {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-block-end: var(--sy-space-8);
+}
+@container screen (min-width: 640px) {
+  .sy-bz__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Budget needs a bar and two figures, so it gets a floor no other column has. */
+.sy-data-table th.sy-bz__budget-col,
+.sy-data-table td.sy-bz__budget-col {
+  inline-size: calc(var(--sy-space-40) - var(--sy-space-4));
+  min-inline-size: calc(var(--sy-space-40) - var(--sy-space-4));
+}
+.sy-bz-budget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1_5);
+}
+.sy-bz-budget__figures {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-bz__table .sy-avatar-group {
+  vertical-align: middle;
+}
+
+.sy-bz-creator {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-bz-creator__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-inline-size: 0;
+}
+
+/* ---- Pacing chart --------------------------------------------------- */
+
+.sy-bz__pace-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  margin-block-end: var(--sy-space-5);
+}
+.sy-bz__pace-figures {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+}
+.sy-bz__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-4);
+}
+.sy-bz__swatch {
+  display: inline-block;
+  inline-size: var(--sy-space-3);
+  block-size: var(--sy-space-2);
+  margin-inline-end: var(--sy-space-1_5);
+  vertical-align: middle;
+  border-radius: var(--sy-radius-xs);
+}
+.sy-bz__swatch.is-planned {
+  background: var(--sy-bg-active);
+  border: 1px solid var(--sy-border-strong);
+}
+.sy-bz__swatch.is-actual {
+  background: var(--sy-accent-solid);
+}
+.sy-bz__swatch.is-over {
+  background: var(--sy-warning-solid);
+}
+
+.sy-bz-pace__plot {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+  block-size: var(--sy-space-40);
+}
+.sy-bz-pace__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 100%;
+}
+/* The two bars overlap by a third rather than sitting side by side: at eight
+   weeks in 400px, two separated bars are 8px each and the comparison the
+   chart exists for stops being readable. */
+.sy-bz-pace__bars {
+  position: relative;
+  inline-size: 100%;
+  flex: 1;
+  min-block-size: 0;
+}
+.sy-bz-pace__bar {
+  position: absolute;
+  inset-block-end: 0;
+  display: block;
+  border-radius: var(--sy-radius-xs) var(--sy-radius-xs) 0 0;
+}
+.sy-bz-pace__bar.is-planned {
+  inset-inline-start: 0;
+  inline-size: 62%;
+  background: var(--sy-bg-active);
+  border: 1px solid var(--sy-border-strong);
+  border-block-end: none;
+}
+.sy-bz-pace__bar.is-actual {
+  inset-inline-end: 0;
+  inline-size: 62%;
+  background: var(--sy-accent-solid);
+}
+.sy-bz-pace__bar.is-over {
+  background: var(--sy-warning-solid);
+}
+.sy-bz-pace__label {
+  flex-shrink: 0;
+}
+.sy-bz__pace-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-1_5);
+  margin-block-start: var(--sy-space-4);
+}
+.sy-bz__pace-note .sy-icon {
+  flex-shrink: 0;
+  margin-block-start: 2px;
+}
+
+/* ---- Billing -------------------------------------------------------- */
+
+.sy-bz__billing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-bz__invoice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-0_5);
+}
+.sy-bz__method {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-bz__billing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+}
+
+/* ---- Team ----------------------------------------------------------- */
+
+.sy-bz__team {
+  display: flex;
+  flex-direction: column;
+}
+.sy-bz-member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-bz-member:last-child {
+  border-block-end: none;
+}
+.sy-bz-member__text {
+  flex: 1 1 calc(var(--sy-space-32) + var(--sy-space-4));
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-bz-member__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+}

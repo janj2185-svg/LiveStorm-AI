@@ -334,3 +334,744 @@
     inset-block-end: 104px;
   }
 }
+
+/* ================================================================== */
+/* Live studio                                                         */
+/* ================================================================== */
+
+/**
+ * The control room.
+ *
+ * Compact posture is one column: the programme monitor and the output toolbar
+ * are always mounted, and the switch above them swaps which of the three
+ * secondary regions is on screen. Regions are hidden with `display` rather than
+ * unmounted so tab order and landmark structure are identical at every width —
+ * a broadcaster who learns the keyboard path on a laptop keeps it on a tablet.
+ */
+/**
+ * Regions are ordered with `order` rather than named grid areas. Named areas
+ * would read better here, but they cannot be redefined reliably from inside a
+ * container query in every engine, and this screen's whole layout hangs off
+ * one. Explicit column placement is the version that cannot silently collapse.
+ */
+/* Giving the root a definite height is what lets the wide layout hand each
+   column its own scroller; when the room is stacked the content simply
+   overflows and the shell scrolls it as a normal page. */
+.sy-studio-screen {
+  block-size: 100%;
+}
+
+.sy-studio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  min-block-size: 100%;
+  background: var(--sy-bg-canvas);
+}
+
+/* Compact reading order: the switch, then what is on air, then the rest. */
+.sy-studio__switch { order: 0; }
+.sy-studio__stage { order: 1; }
+.sy-studio__scenes { order: 2; }
+.sy-studio__side { order: 3; }
+
+.sy-studio[data-panel='scenes'] .sy-studio__side,
+.sy-studio[data-panel='scenes'] .sy-mixer,
+.sy-studio[data-panel='chat'] .sy-studio__scenes,
+.sy-studio[data-panel='chat'] .sy-mixer,
+.sy-studio[data-panel='audio'] .sy-studio__scenes,
+.sy-studio[data-panel='audio'] .sy-studio__side {
+  display: none;
+}
+
+.sy-studio__scenes,
+.sy-studio__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-studio__stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+
+/* Every region is the same object: a bordered panel with a small caps head. */
+.sy-studio__block,
+.sy-studio__chat,
+.sy-studio__activity,
+.sy-mixer {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  overflow: hidden;
+}
+.sy-studio__block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2) var(--sy-space-2) var(--sy-space-2) var(--sy-space-3);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+
+/* ---- Scenes ---- */
+
+.sy-scene-list,
+.sy-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sy-space-2);
+  overflow-y: auto;
+  min-block-size: 0;
+}
+
+.sy-scene {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2_5);
+  inline-size: 100%;
+  padding: var(--sy-space-1_5);
+  border-radius: var(--sy-radius-md);
+  border: 1px solid transparent;
+  text-align: start;
+  color: inherit;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-scene:hover {
+  background: var(--sy-bg-hover);
+}
+/**
+ * On-air and staged are two different states and neither may rely on hue: the
+ * live scene gets a crimson rim plus the word LIVE, the staged one a neutral
+ * rim plus PVW. This is the same convention broadcast hardware has used for
+ * fifty years, and breaking it in software is how people cut to the wrong feed.
+ */
+.sy-scene.is-live {
+  background: var(--sy-danger-bg);
+  border-color: var(--sy-danger-border);
+}
+.sy-scene.is-preview {
+  border-color: var(--sy-border-default);
+}
+.sy-scene__thumb {
+  inline-size: 56px;
+  flex-shrink: 0;
+}
+.sy-scene__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* Scene rows are scanned, not read: two fixed lines that clip beat two lines
+   that reflow into four and shove the on-air flag out of alignment. */
+.sy-scene__text > * {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sy-scene__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--sy-space-1_5);
+  border-radius: var(--sy-radius-xs);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.sy-scene__flag.is-live {
+  background: var(--sy-crimson-9);
+  color: var(--sy-on-crimson);
+}
+.sy-scene__flag.is-preview {
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+}
+.sy-scene__flag-dot {
+  inline-size: 5px;
+  block-size: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: sy-live-pulse 1.8s var(--sy-ease-standard) infinite;
+}
+.sy-scene__key {
+  font-size: 11px;
+  color: var(--sy-fg-quiet);
+  flex-shrink: 0;
+}
+
+/* ---- Sources ---- */
+
+.sy-source {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-1) var(--sy-space-1) var(--sy-space-1) var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-source:hover {
+  background: var(--sy-bg-hover);
+}
+/* A hidden source dims *and* swaps its toggle icon. */
+.sy-source.is-hidden {
+  opacity: 0.5;
+}
+.sy-source.is-hidden .sy-label {
+  text-decoration: line-through;
+}
+.sy-source__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+  flex-shrink: 0;
+}
+.sy-source__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.sy-source .sy-btn.is-locked {
+  color: var(--sy-warning-fg);
+}
+
+/* ---- Monitors ---- */
+
+.sy-studio__monitors {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sy-space-3);
+}
+.sy-studio__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+
+.sy-monitor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-monitor__feed {
+  overflow: hidden;
+}
+/* Programme is rimmed in crimson; preview is rimmed in nothing. */
+.sy-monitor.is-programme .sy-monitor__feed {
+  box-shadow: 0 0 0 2px var(--sy-crimson-9);
+}
+.sy-monitor.is-preview .sy-monitor__feed {
+  box-shadow: 0 0 0 2px var(--sy-border-default);
+}
+.sy-monitor__caption {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+  padding-inline: var(--sy-space-1);
+}
+.sy-monitor__badge {
+  position: absolute;
+  inset-block-start: var(--sy-space-2);
+  inset-inline-start: var(--sy-space-2);
+}
+.sy-monitor__clock {
+  position: absolute;
+  inset-block-start: var(--sy-space-2);
+  inset-inline-end: var(--sy-space-2);
+  padding: 2px var(--sy-space-2);
+  border-radius: var(--sy-radius-xs);
+  background: oklch(10% 0 0 / 0.66);
+  color: oklch(98% 0 0);
+  font-size: 11px;
+}
+.sy-monitor__tag {
+  position: absolute;
+  inset-block-start: var(--sy-space-2);
+  inset-inline-start: var(--sy-space-2);
+  padding: 2px var(--sy-space-2);
+  border-radius: var(--sy-radius-xs);
+  background: oklch(10% 0 0 / 0.66);
+  color: oklch(98% 0 0);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* Title-safe guide. Broadcasters compose to it, so the tool has to show it. */
+.sy-monitor__safe {
+  position: absolute;
+  inset: 10%;
+  border: 1px dashed oklch(98% 0 0 / 0.28);
+  border-radius: var(--sy-radius-xs);
+}
+
+/* ---- Transitions ---- */
+
+/**
+ * The transition bar spans both monitors rather than hiding in the preview
+ * column: at control-room widths the preview column is barely 200px, and a
+ * three-way choice squeezed to 60px a chip is how a broadcaster cuts to the
+ * wrong scene. Full width also puts Take next to the picture it takes.
+ */
+.sy-transition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-2) var(--sy-space-3);
+  padding: var(--sy-space-2_5) var(--sy-space-3);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-transition__title {
+  flex-shrink: 0;
+}
+.sy-transition__row {
+  display: flex;
+  gap: var(--sy-space-1);
+  flex: 1 1 210px;
+}
+.sy-transition__take {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+.sy-transition__chip {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sy-space-1);
+  block-size: 32px;
+  white-space: nowrap;
+  border-radius: var(--sy-radius-sm);
+  background: var(--sy-bg-hover);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-label-size);
+  font-weight: var(--sy-type-label-weight);
+  transition: background-color var(--sy-transition-hover), color var(--sy-transition-hover);
+}
+.sy-transition__chip:hover {
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-default);
+}
+/* The chosen transition carries a tick as well as the fill. */
+.sy-transition__chip.is-active {
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  box-shadow: inset 0 0 0 1px var(--sy-accent-border);
+}
+.sy-transition__duration {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+}
+.sy-transition__duration .sy-input {
+  inline-size: 108px;
+}
+
+/* ---- Health strip ---- */
+
+.sy-health {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sy-space-2);
+}
+.sy-health__cell {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2) var(--sy-space-2_5);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  min-inline-size: 0;
+}
+.sy-health__dot {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sy-health__cell.is-good .sy-health__dot {
+  background: var(--sy-success-solid);
+  box-shadow: 0 0 8px var(--sy-success-solid);
+}
+.sy-health__cell.is-warn .sy-health__dot {
+  background: var(--sy-warning-solid);
+  box-shadow: 0 0 8px var(--sy-warning-solid);
+}
+.sy-health__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  min-inline-size: 0;
+}
+/* A metric that wraps mid-token is unreadable at a glance, which defeats the
+   entire point of a health strip, so values clip instead of folding. */
+.sy-health__value {
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+  color: var(--sy-fg-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sy-health__text > .sy-caption {
+  white-space: nowrap;
+}
+.sy-health__unit {
+  margin-inline-start: 3px;
+  color: var(--sy-fg-quiet);
+  font-weight: 400;
+}
+.sy-health__cell .sy-badge {
+  flex-shrink: 0;
+}
+/* The ingest endpoint is the one value nobody should have to guess at, so it
+   takes two columns rather than eliding into "fra-0…". */
+.sy-health__cell--wide {
+  grid-column: span 2;
+}
+
+/* ---- Output toolbar ---- */
+
+.sy-studio__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  box-shadow: var(--sy-elevation-raised);
+}
+.sy-studio__uptime {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 1.2;
+}
+.sy-studio__devices {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-studio__devices .sy-btn.is-on {
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  box-shadow: inset 0 0 0 1px var(--sy-accent-border);
+}
+.sy-studio__record {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  block-size: 40px;
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-danger-bg);
+  color: var(--sy-danger-fg);
+  border: 1px solid var(--sy-danger-border);
+  font-size: 12px;
+  font-weight: 600;
+}
+.sy-studio__record-dot {
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 50%;
+  background: var(--sy-crimson-9);
+  animation: sy-live-pulse 1.8s var(--sy-ease-standard) infinite;
+}
+
+/* ---- Audio mixer ---- */
+
+.sy-mixer__channels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+}
+.sy-mixer__channel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2_5);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+  min-inline-size: 0;
+}
+.sy-mixer__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-inline-size: 0;
+}
+.sy-mixer__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-mixer__controls .sy-slider {
+  flex: 1;
+  min-inline-size: 0;
+}
+.sy-mixer__db {
+  font-size: 11px;
+  color: var(--sy-fg-muted);
+  inline-size: 58px;
+  text-align: end;
+  flex-shrink: 0;
+}
+
+/**
+ * Level meter.
+ * Built from a repeating gradient so it reads as discrete LED segments, with a
+ * hard-edged hot zone in the last fifth. The zone is a *position*, so a peak
+ * that is clipping is obvious in a greyscale screenshot as well as in colour.
+ */
+.sy-meter {
+  position: relative;
+  block-size: 8px;
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-bg-active);
+  overflow: hidden;
+}
+/**
+ * The fill is a full-width gradient *clipped* to the level rather than a
+ * gradient scaled to it. That keeps the hot zone at a fixed physical position
+ * on the meter instead of sliding with the signal — which is the entire reason
+ * a level meter can be read at a glance rather than parsed.
+ */
+.sy-meter__fill {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 calc(100% - var(--level)) 0 0);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 4px, var(--sy-bg-canvas) 4px 6px),
+    linear-gradient(
+      90deg,
+      var(--sy-verdant-9) 0%,
+      var(--sy-verdant-9) 66%,
+      var(--sy-solar-9) 82%,
+      var(--sy-crimson-9) 100%
+    );
+}
+.sy-meter__peak {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(var(--level) + 4px);
+  inline-size: 2px;
+  background: var(--sy-fg-default);
+  opacity: 0.7;
+}
+
+/* ---- Chat and activity ---- */
+
+.sy-studio__chat {
+  flex: 1;
+  min-block-size: 240px;
+}
+.sy-studio__chat-stream {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3);
+}
+.sy-studio__chat-line {
+  position: relative;
+  padding-inline-end: var(--sy-space-12);
+}
+.sy-studio__chat-tools {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: flex;
+  gap: 0;
+  opacity: 0;
+  transition: opacity var(--sy-transition-hover);
+}
+.sy-chat-line:hover .sy-studio__chat-tools,
+.sy-chat-line:focus-within .sy-studio__chat-tools {
+  opacity: 1;
+}
+.sy-studio__chat-composer {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2_5) var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+
+.sy-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-2);
+  overflow-y: auto;
+  min-block-size: 0;
+}
+.sy-activity {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-1_5) var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+}
+.sy-activity__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* Each activity kind gets its own icon *and* tint — the icon is the fallback. */
+.sy-activity.is-gift .sy-activity__icon {
+  background: var(--sy-creator-bg);
+  color: var(--sy-creator-fg);
+}
+.sy-activity.is-sub .sy-activity__icon {
+  background: var(--sy-warning-bg);
+  color: var(--sy-warning-fg);
+}
+.sy-activity.is-follow .sy-activity__icon {
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+}
+.sy-activity__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.sy-activity__text .sy-caption:first-child {
+  color: var(--sy-fg-muted);
+}
+.sy-activity__text strong {
+  color: var(--sy-fg-default);
+}
+.sy-studio__thanks {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2_5) var(--sy-space-3);
+  border-block-start: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+
+/* ---- Medium: monitors pair up, mixer goes to three columns ----
+   Thresholds are measured against the content column rather than the device:
+   a portrait tablet is 834px wide but only offers about 758px once the icon
+   rail is deducted, so a 768px query would miss the device it was written for. */
+
+@container screen (min-width: 700px) {
+  .sy-studio__monitors {
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  }
+  .sy-mixer__channels {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---- Expanded: the full three-column control room ---- */
+
+@container screen (min-width: 992px) {
+  /* Once the room fits, it stops being a page: nothing scrolls but the panels
+     that are meant to, so the output toolbar never leaves the glass. */
+  .sy-studio {
+    overflow: hidden;
+    /* The side columns are held to the narrowest width their content survives
+       at, because every pixel they give up goes to the programme monitor. */
+    grid-template-columns: 216px minmax(0, 1fr) 288px;
+    grid-template-rows: minmax(0, 1fr);
+    block-size: 100%;
+    min-block-size: 0;
+    align-items: stretch;
+  }
+  .sy-studio__scenes {
+    order: 0;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .sy-studio__stage {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .sy-studio__side {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .sy-studio__switch {
+    display: none;
+  }
+  /* Every region is visible at once, so the compact switch stops governing. */
+  .sy-studio[data-panel] .sy-studio__scenes,
+  .sy-studio[data-panel] .sy-studio__side,
+  .sy-studio[data-panel] .sy-mixer {
+    display: flex;
+  }
+  .sy-studio__scenes,
+  .sy-studio__side,
+  .sy-studio__stage {
+    min-block-size: 0;
+    overflow-y: auto;
+  }
+  .sy-studio__block:first-child {
+    flex: 1 1 44%;
+  }
+  .sy-studio__block:last-child {
+    flex: 1 1 56%;
+  }
+  .sy-studio__activity {
+    flex: 0 0 auto;
+    max-block-size: 46%;
+  }
+  /* In the narrow room the scene name matters more than the scene picture. */
+  .sy-scene__thumb {
+    inline-size: 44px;
+  }
+}
+
+@container screen (min-width: 1152px) {
+  .sy-studio {
+    grid-template-columns: 268px minmax(0, 1fr) 344px;
+    gap: var(--sy-space-4);
+    padding: var(--sy-space-4);
+  }
+  .sy-scene__thumb {
+    inline-size: 56px;
+  }
+}

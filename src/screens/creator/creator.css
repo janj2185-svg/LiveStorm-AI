@@ -1,1 +1,1210 @@
-/* creator screen styles. Owned by the creator group. */
+/**
+ * Creator screen styles — Creator Dashboard, Analytics, Monetization, Premium.
+ *
+ * Three of these four screens are professional tools, so the visual budget is
+ * spent on alignment and density rather than on decoration. The rules are:
+ * numbers are monospaced and right-aligned so a column can be scanned as a
+ * column; hairlines rather than fills separate rows, because a striped table
+ * at this density reads as texture; and nothing animates on data change,
+ * because an operator re-reading a figure should not have to wait for it.
+ *
+ * The first block below is shared with the Operations group. Both groups build
+ * the same kind of surface — a dense table of facts — and duplicating the
+ * table system into two stylesheets guarantees they drift apart. This file is
+ * imported before ops.css, so the ops screens can rely on it.
+ */
+
+/* ================================================================== */
+/* SHARED: data tables, meters  (creator + ops)                        */
+/* ================================================================== */
+
+/**
+ * Horizontal table scroll.
+ *
+ * A six-column table needs roughly 640px. The expanded posture hands a screen
+ * only ~676px once the rail and the context panel are paid for, and the
+ * compact posture hands it 393px. Below the table's natural width the choices
+ * are: shrink the type, wrap cells onto two lines, or scroll. The first two
+ * both destroy column alignment, which is the only reason to use a table at
+ * all — so the table keeps its designed width and the overflow becomes a
+ * scroll the reader controls.
+ */
+.sy-table-scroll {
+  inline-size: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.sy-data-table {
+  inline-size: 100%;
+  /* 4 × 160px. Below this, columns start colliding. */
+  min-inline-size: calc(var(--sy-space-40) * 4);
+  border-collapse: collapse;
+}
+
+.sy-data-table thead th {
+  padding: var(--sy-space-3) var(--sy-space-4);
+  text-align: start;
+  white-space: nowrap;
+  font-size: var(--sy-type-overline-size);
+  line-height: var(--sy-type-overline-line);
+  font-weight: var(--sy-type-overline-weight);
+  letter-spacing: var(--sy-type-overline-tracking);
+  text-transform: uppercase;
+  color: var(--sy-fg-quiet);
+  border-block-end: 1px solid var(--sy-border-default);
+}
+
+.sy-data-table tbody th,
+.sy-data-table td {
+  padding: var(--sy-space-3) var(--sy-space-4);
+  text-align: start;
+  font-size: var(--sy-type-bodySmall-size);
+  line-height: var(--sy-type-bodySmall-line);
+  font-weight: 400;
+  color: var(--sy-fg-muted);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  vertical-align: middle;
+}
+.sy-data-table tbody tr:last-child th,
+.sy-data-table tbody tr:last-child td {
+  border-block-end: none;
+}
+.sy-data-table tbody tr {
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-data-table tbody tr:hover {
+  background: var(--sy-bg-hover);
+}
+
+/* Numeric columns: right-aligned, never wrapped, always tabular. */
+.sy-data-table__num {
+  text-align: end;
+  white-space: nowrap;
+  color: var(--sy-fg-default);
+}
+.sy-data-table thead th.sy-data-table__num {
+  text-align: end;
+}
+
+.sy-data-table__wide {
+  inline-size: 42%;
+  min-inline-size: calc(var(--sy-space-40) + var(--sy-space-12));
+}
+.sy-data-table__title {
+  font-weight: 550;
+  color: var(--sy-fg-default);
+}
+
+/* Sortable header. The chevron is always present but only opaque on the
+   sorted column, so the header row does not gain six competing arrows. */
+.sy-data-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  border-radius: var(--sy-radius-xs);
+  transition: color var(--sy-transition-hover);
+}
+.sy-data-table__num .sy-data-table__sort {
+  justify-content: flex-end;
+  inline-size: 100%;
+}
+.sy-data-table__sort .sy-icon {
+  opacity: 0;
+  transition: opacity var(--sy-transition-hover);
+}
+.sy-data-table__sort:hover {
+  color: var(--sy-fg-default);
+}
+.sy-data-table__sort:hover .sy-icon {
+  opacity: 0.5;
+}
+.sy-data-table__sort.is-active {
+  color: var(--sy-fg-default);
+}
+.sy-data-table__sort.is-active .sy-icon {
+  opacity: 1;
+  color: var(--sy-accent-fg);
+}
+
+/**
+ * Meter. A share bar, used for device split, geography, budget pacing and AI
+ * confidence. It is deliberately thin: it exists to let the eye rank rows, and
+ * the exact figure is always printed beside it.
+ */
+.sy-meter {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--sy-space-1_5);
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-active);
+  overflow: hidden;
+}
+.sy-meter__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--tone-solid, var(--sy-accent-solid));
+}
+
+/* ================================================================== */
+/* Creator dashboard                                                   */
+/* ================================================================== */
+
+.sy-cd,
+.sy-an,
+.sy-mz,
+.sy-pr {
+  padding-block: var(--sy-space-6) var(--sy-space-10);
+}
+
+.sy-cd__head,
+.sy-an__head,
+.sy-mz__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  margin-block-end: var(--sy-space-5);
+}
+.sy-cd__greeting,
+.sy-an__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+/* The range control takes the full row on a phone and shrinks to its content
+   as soon as there is a second column to share with. */
+.sy-cd__range {
+  inline-size: 100%;
+}
+@container screen (min-width: 640px) {
+  .sy-cd__range {
+    inline-size: auto;
+    min-inline-size: calc(var(--sy-space-40) + var(--sy-space-24));
+  }
+}
+
+.sy-cd__stats {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-block-end: var(--sy-space-8);
+}
+@container screen (min-width: 640px) {
+  .sy-cd__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sy-metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-metric__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-metric__icon {
+  inline-size: var(--sy-space-6);
+  block-size: var(--sy-space-6);
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+}
+/* The hero value drops from monoLarge to title-3: four of these sit in a
+   676px row, and 28px numerals overflow a 145px card. */
+.sy-metric__value {
+  font-size: var(--sy-type-title3-size);
+  line-height: var(--sy-type-title3-line);
+  color: var(--sy-fg-default);
+}
+.sy-metric__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  font-size: var(--sy-type-caption-size);
+  color: var(--sy-fg-muted);
+}
+.sy-metric__delta.is-up {
+  color: var(--sy-success-fg);
+}
+.sy-metric__delta.is-down {
+  color: var(--sy-danger-fg);
+}
+.sy-metric__delta .sy-mono {
+  font-size: var(--sy-type-caption-size);
+}
+.sy-metric__spark {
+  margin-block-start: var(--sy-space-2);
+  inline-size: 100%;
+}
+.sy-metric__spark svg {
+  inline-size: 100%;
+  block-size: auto;
+}
+
+/* Next broadcast — the only deadline on the screen. */
+.sy-cd__next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-5);
+  border-inline-start: 3px solid var(--sy-live-solid);
+}
+.sy-cd__next-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  flex: 1 1 calc(var(--sy-space-40) + var(--sy-space-20));
+  min-inline-size: 0;
+}
+.sy-cd__next-count {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-0_5);
+}
+.sy-cd__countdown {
+  color: var(--sy-live-fg);
+}
+.sy-cd__next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+}
+
+/* AI insight. The hairline aurora border is the product-wide signature for
+   assistant-authored surfaces — same technique as `.sy-brief` on Home. */
+.sy-cd__insight {
+  position: relative;
+  background:
+    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
+    var(--sy-gradient-aurora) border-box;
+  border: 1px solid transparent;
+}
+.sy-cd__insight-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  margin-block-end: var(--sy-space-3);
+}
+.sy-cd__insight strong {
+  font-weight: 600;
+}
+.sy-cd__source {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  margin-block-start: var(--sy-space-3);
+}
+.sy-cd__insight-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-4);
+}
+
+/* Context panel */
+.sy-cd-check .sy-check-row {
+  align-items: flex-start;
+}
+.sy-cd-comment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-2_5);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-cd-comment__all {
+  margin-block-start: var(--sy-space-2);
+}
+.sy-cd-payout__state {
+  color: var(--sy-accent-fg);
+  margin-block-end: var(--sy-space-2);
+}
+
+/* ================================================================== */
+/* Analytics                                                           */
+/* ================================================================== */
+
+.sy-an__controls {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+  flex-wrap: wrap;
+}
+.sy-an__range {
+  min-inline-size: calc(var(--sy-space-40) + var(--sy-space-8));
+}
+/* The tile row is the primary metric switcher. This select is the same state
+   under a second control and only earns its place while the tiles scroll. */
+@container screen (min-width: 640px) {
+  .sy-an__metric-select {
+    display: none;
+  }
+}
+
+.sy-an__tiles {
+  display: flex;
+  gap: var(--sy-space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-block-end: var(--sy-space-6);
+  padding-block-end: var(--sy-space-1);
+}
+.sy-an__tiles::-webkit-scrollbar {
+  display: none;
+}
+.sy-an-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  flex: 0 0 calc(var(--sy-space-32) + var(--sy-space-2));
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  border: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  text-align: start;
+  transition:
+    border-color var(--sy-transition-hover),
+    background-color var(--sy-transition-hover);
+}
+.sy-an-tile:hover {
+  border-color: var(--sy-border-strong);
+}
+/* Selection is carried by border weight, fill and the accent bar — not by
+   colour alone, and not by the accent fill alone either. */
+.sy-an-tile.is-selected {
+  background: var(--sy-accent-bg);
+  border-color: var(--sy-accent-border);
+  box-shadow: inset 0 2px 0 var(--sy-accent-solid);
+}
+.sy-an-tile__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  min-inline-size: 0;
+  color: var(--sy-fg-muted);
+}
+.sy-an-tile.is-selected .sy-an-tile__head {
+  color: var(--sy-accent-fg);
+}
+.sy-an-tile__value {
+  font-size: var(--sy-type-headline-size);
+  color: var(--sy-fg-default);
+}
+.sy-an-tile__delta {
+  font-size: var(--sy-type-caption-size);
+  color: var(--sy-fg-muted);
+}
+.sy-an-tile__delta.is-up {
+  color: var(--sy-success-fg);
+}
+.sy-an-tile__delta.is-down {
+  color: var(--sy-danger-fg);
+}
+@container screen (min-width: 640px) {
+  .sy-an__tiles {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .sy-an-tile {
+    flex: initial;
+  }
+}
+
+.sy-an__chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  margin-block-end: var(--sy-space-5);
+}
+.sy-an__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sy-space-4);
+}
+
+/* ---- Chart engine -------------------------------------------------- */
+
+/**
+ * The plot is an SVG on a 0-100 viewBox with `preserveAspectRatio: none`, so
+ * the geometry stretches to whatever width it is given. Every stroke carries
+ * `vector-effect: non-scaling-stroke`, which is what stops a 2px line becoming
+ * a 6px wedge at 1512px. All type — axis ticks, tooltip, callout — is HTML
+ * layered on top, so it never scales at all.
+ */
+.sy-chart {
+  --chart-h: var(--sy-space-40);
+  position: relative;
+  display: block;
+}
+@container screen (min-width: 768px) {
+  .sy-chart {
+    --chart-h: calc(var(--sy-space-40) + var(--sy-space-12));
+  }
+}
+.sy-chart--retention {
+  --chart-h: calc(var(--sy-space-40) + var(--sy-space-10));
+}
+@container screen (min-width: 768px) {
+  .sy-chart--retention {
+    --chart-h: calc(var(--sy-space-40) + var(--sy-space-16));
+  }
+}
+
+.sy-chart__frame {
+  display: flex;
+}
+.sy-chart__yaxis {
+  position: relative;
+  flex-shrink: 0;
+  inline-size: var(--sy-space-14);
+  block-size: var(--chart-h);
+}
+.sy-chart__ytick {
+  position: absolute;
+  inset-inline-end: var(--sy-space-2);
+  translate: 0 -50%;
+  white-space: nowrap;
+  font-size: var(--sy-type-overline-size);
+  line-height: var(--sy-type-overline-line);
+  color: var(--sy-fg-quiet);
+}
+.sy-chart__plot {
+  position: relative;
+  flex: 1;
+  min-inline-size: 0;
+  block-size: var(--chart-h);
+}
+.sy-chart__svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.sy-chart__grid {
+  stroke: var(--sy-border-subtle);
+  stroke-width: 1;
+}
+.sy-chart__area {
+  fill: var(--sy-accent-solid);
+  opacity: 0.12;
+}
+.sy-chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sy-chart__line--current {
+  stroke: var(--sy-accent-solid);
+}
+/* The comparison series is dashed as well as muted: on a greyscale printout
+   or for a reader with low colour discrimination, the dash is the signal. */
+.sy-chart__line--previous {
+  stroke: var(--sy-border-interactive);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+.sy-chart__guide {
+  stroke: var(--sy-border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.sy-chart__guide--alert {
+  stroke: var(--sy-warning-solid);
+  stroke-dasharray: 3 3;
+}
+
+.sy-chart__marker {
+  position: absolute;
+  inline-size: var(--sy-space-2_5);
+  block-size: var(--sy-space-2_5);
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--sy-accent-solid);
+  box-shadow: 0 0 0 2px var(--sy-bg-surface);
+}
+.sy-chart__marker--alert {
+  background: var(--sy-warning-solid);
+}
+
+.sy-chart__tip {
+  position: absolute;
+  inset-block-start: var(--sy-space-2);
+  z-index: var(--sy-z-raised);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-0_5);
+  min-inline-size: var(--sy-space-32);
+  padding: var(--sy-space-2) var(--sy-space-2_5);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-default);
+  box-shadow: var(--sy-elevation-overlay);
+  translate: var(--sy-space-3) 0;
+  pointer-events: none;
+}
+.sy-chart__tip.is-flip {
+  translate: calc(-100% - var(--sy-space-3)) 0;
+}
+.sy-chart__tip-value {
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+  color: var(--sy-fg-default);
+}
+.sy-chart__tip-row {
+  color: var(--sy-fg-muted);
+  white-space: nowrap;
+}
+.sy-chart__tip-delta {
+  font-size: var(--sy-type-caption-size);
+  color: var(--sy-fg-muted);
+}
+.sy-chart__tip-delta.is-up {
+  color: var(--sy-success-fg);
+}
+.sy-chart__tip-delta.is-down {
+  color: var(--sy-danger-fg);
+}
+
+.sy-chart__swatch {
+  display: inline-block;
+  inline-size: var(--sy-space-4);
+  block-size: 2px;
+  margin-inline-end: var(--sy-space-1_5);
+  vertical-align: middle;
+  border-radius: var(--sy-radius-pill);
+}
+.sy-chart__swatch--current {
+  background: var(--sy-accent-solid);
+}
+.sy-chart__swatch--previous {
+  background: repeating-linear-gradient(
+    to right,
+    var(--sy-border-interactive) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.sy-chart__xaxis {
+  position: relative;
+  block-size: var(--sy-space-5);
+  margin-inline-start: var(--sy-space-14);
+  margin-block-start: var(--sy-space-2);
+}
+.sy-chart__xtick {
+  position: absolute;
+  translate: -50% 0;
+  white-space: nowrap;
+  color: var(--sy-fg-quiet);
+}
+.sy-chart__xtick.is-first {
+  translate: 0 0;
+}
+.sy-chart__xtick.is-last {
+  translate: -100% 0;
+}
+
+/**
+ * Drop-off annotation. Below 768px it is a block under the chart: a floating
+ * panel that is 60% as tall as the plot is not an annotation, it is an
+ * occlusion. Above 768px there is finally an empty corner to float into.
+ */
+.sy-chart__callout {
+  position: static;
+  inline-size: 100%;
+  margin-block-start: var(--sy-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-2_5);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-warning-border);
+}
+@container screen (min-width: 768px) {
+  .sy-chart__callout {
+    position: absolute;
+    inset-block-end: calc(var(--sy-space-5) + var(--sy-space-5));
+    inset-inline-end: var(--sy-space-2);
+    z-index: var(--sy-z-raised);
+    inline-size: min(52%, calc(var(--sy-space-40) + var(--sy-space-20)));
+    margin-block-start: 0;
+    box-shadow: var(--sy-elevation-overlay);
+  }
+}
+.sy-chart__callout-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  color: var(--sy-warning-fg);
+}
+
+/* ---- Breakdown panels ---------------------------------------------- */
+
+.sy-an__breakdown {
+  display: grid;
+  gap: var(--sy-space-4);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 640px) {
+  .sy-an__breakdown {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sy-an__breakdown > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+@container screen (min-width: 1024px) {
+  .sy-an__breakdown {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sy-an__breakdown > :last-child {
+    grid-column: auto;
+  }
+}
+
+.sy-an__panel-title {
+  display: block;
+  margin-block-end: var(--sy-space-4);
+  color: var(--sy-fg-muted);
+}
+.sy-an__donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-4);
+}
+.sy-an__donut-value {
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+}
+.sy-an__legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  flex: 1 1 calc(var(--sy-space-40) - var(--sy-space-4));
+  min-inline-size: 0;
+}
+.sy-an__legend-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-an__dot,
+.sy-mz__dot {
+  inline-size: var(--sy-space-2);
+  block-size: var(--sy-space-2);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sy-an__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-an__bars li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1_5);
+  min-inline-size: 0;
+}
+
+.sy-an__geo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-an__geo li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  min-inline-size: 0;
+}
+.sy-an__rank {
+  flex-shrink: 0;
+  inline-size: var(--sy-space-4);
+  color: var(--sy-fg-quiet);
+  font-size: var(--sy-type-caption-size);
+  text-align: end;
+}
+.sy-an__geo-text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1_5);
+}
+.sy-an__geo-num {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.sy-an__geo-note {
+  margin-block-start: var(--sy-space-4);
+}
+
+/* ================================================================== */
+/* Monetization                                                        */
+/* ================================================================== */
+
+.sy-mz__summary {
+  display: grid;
+  gap: var(--sy-space-6);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 768px) {
+  .sy-mz__summary {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: center;
+  }
+}
+.sy-mz__summary-total {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+.sy-mz__total {
+  color: var(--sy-fg-default);
+}
+.sy-mz__total-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  color: var(--sy-success-fg);
+  font-size: var(--sy-type-caption-size);
+}
+.sy-mz__donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-5);
+}
+.sy-mz__donut-value {
+  font-size: var(--sy-type-title3-size);
+  font-weight: 600;
+}
+.sy-mz__legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2_5);
+  flex: 1 1 calc(var(--sy-space-40) + var(--sy-space-4));
+  min-inline-size: 0;
+}
+.sy-mz__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-mz__legend-pct {
+  inline-size: var(--sy-space-10);
+  text-align: end;
+}
+
+.sy-mz__streams {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 640px) {
+  .sy-mz__streams {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/**
+ * 960, not 1024. A screen without a context panel is handed 1016px in the
+ * 1280 posture (1280 − 264px rail), so a 1024 breakpoint can never fire in
+ * the posture it was written for — the layout would jump straight from two
+ * columns to four-hundred-pixel-wide cards on a 1512 display.
+ */
+@container screen (min-width: 960px) {
+  .sy-mz__streams {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.sy-mz-stream {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+.sy-mz-stream__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  margin-block-end: var(--sy-space-2);
+}
+.sy-mz-stream__head h3 {
+  margin-block-end: var(--sy-space-1_5);
+}
+.sy-mz-stream__amount {
+  font-size: var(--sy-type-title3-size);
+  line-height: var(--sy-type-title3-line);
+  color: var(--sy-fg-default);
+}
+.sy-mz-stream__trend {
+  font-size: var(--sy-type-caption-size);
+  color: var(--sy-fg-muted);
+}
+.sy-mz-stream__trend.is-up {
+  color: var(--sy-success-fg);
+}
+.sy-mz-stream__trend.is-down {
+  color: var(--sy-danger-fg);
+}
+.sy-mz-stream__detail {
+  min-block-size: var(--sy-space-10);
+  margin-block: var(--sy-space-2) var(--sy-space-3);
+}
+
+.sy-mz__split {
+  display: grid;
+  gap: var(--sy-space-4);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 960px) {
+  .sy-mz__split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+    gap: var(--sy-space-6);
+    align-items: start;
+  }
+}
+.sy-mz__aside {
+  min-inline-size: 0;
+}
+
+.sy-mz__payout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-mz__payout-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+}
+.sy-mz__payout-amount {
+  font-size: var(--sy-type-monoLarge-size);
+  line-height: var(--sy-type-monoLarge-line);
+  color: var(--sy-fg-default);
+}
+.sy-mz__payout-when {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sy-space-1);
+}
+.sy-mz__method {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-mz__sub {
+  color: var(--sy-fg-muted);
+}
+.sy-mz__tx {
+  display: flex;
+  flex-direction: column;
+}
+.sy-mz__tx li {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding-block: var(--sy-space-3);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-mz__tx li:last-child {
+  border-block-end: none;
+}
+.sy-mz__tx-text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-mz__tx-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.sy-mz__tx-amount.is-in {
+  color: var(--sy-success-fg);
+}
+.sy-mz__tx-amount.is-out {
+  color: var(--sy-fg-default);
+}
+/* The status badge is the last column so the three of them line up; it is
+   fixed-width so a "Processing" row does not push the amounts around. */
+.sy-mz__tx li > .sy-badge {
+  flex-shrink: 0;
+  inline-size: calc(var(--sy-space-20) + var(--sy-space-1));
+  justify-content: center;
+}
+
+.sy-mz__elig-intro {
+  display: block;
+  margin-block-end: var(--sy-space-4);
+}
+.sy-mz__criteria {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-mz__criteria li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+}
+/* Met and unmet differ by icon shape first, fill second, colour third. */
+.sy-mz__criterion-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: var(--sy-space-6);
+  block-size: var(--sy-space-6);
+  border-radius: 50%;
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+}
+.sy-mz__criterion-icon.is-met {
+  background: var(--sy-success-bg);
+  color: var(--sy-success-fg);
+}
+.sy-mz__criterion-text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+}
+.sy-mz__criterion-state {
+  flex-shrink: 0;
+  color: var(--sy-fg-quiet);
+  font-family: var(--sy-font-mono);
+}
+.sy-mz__criterion-state.is-met {
+  color: var(--sy-success-fg);
+  font-family: var(--sy-font-text);
+}
+
+.sy-mz__net {
+  border-block-end: none;
+  margin-block-start: var(--sy-space-1);
+  padding-block-start: var(--sy-space-4);
+  border-block-start: 1px solid var(--sy-border-default);
+}
+.sy-mz__net-value {
+  font-size: var(--sy-type-title3-size);
+  color: var(--sy-fg-default);
+}
+.sy-mz__fee-note {
+  display: block;
+  margin-block-start: var(--sy-space-4);
+}
+
+/* ================================================================== */
+/* Premium                                                             */
+/* ================================================================== */
+
+.sy-pr__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-3);
+  text-align: center;
+  padding-block: var(--sy-space-6) var(--sy-space-10);
+}
+.sy-pr__headline {
+  margin-block-start: var(--sy-space-1);
+}
+.sy-pr__cycle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sy-space-3);
+  margin-block-start: var(--sy-space-4);
+}
+.sy-pr__cycle .sy-tabs {
+  min-inline-size: calc(var(--sy-space-40) + var(--sy-space-16));
+}
+
+.sy-pr__plans {
+  display: grid;
+  gap: var(--sy-space-4);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@container screen (min-width: 640px) {
+  .sy-pr__plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.sy-pr-plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  block-size: 100%;
+}
+/* The recommended plan gets the same aurora hairline the assistant uses. It is
+   the one place in the product where the brand gradient marks a commercial
+   choice rather than generated content, and it is deliberate: this is the
+   plan SYLORA is recommending, and the mark says so. */
+.sy-pr-plan.is-featured {
+  background:
+    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
+    var(--sy-gradient-aurora) border-box;
+  border: 1px solid transparent;
+}
+.sy-pr-plan__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+}
+.sy-pr-plan__tagline {
+  min-block-size: var(--sy-space-10);
+}
+.sy-pr-plan__price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-2);
+  color: var(--sy-fg-default);
+}
+.sy-pr-plan__equivalent {
+  display: block;
+  min-block-size: var(--sy-space-8);
+}
+.sy-pr-plan__perks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2_5);
+  margin-block: var(--sy-space-4);
+  flex: 1;
+}
+.sy-pr-plan__perks li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+  color: var(--sy-fg-muted);
+}
+.sy-pr-plan__perks .sy-icon {
+  flex-shrink: 0;
+  margin-block-start: 3px;
+  color: var(--sy-success-fg);
+}
+.sy-pr-plan__cta {
+  margin-block-start: auto;
+}
+
+/* Comparison table: the capability column stays pinned while the plan columns
+   scroll, so the row label never leaves the viewport mid-comparison. */
+.sy-pr__table th.sy-data-table__wide {
+  position: sticky;
+  inset-inline-start: 0;
+  background: var(--sy-bg-surface);
+  z-index: var(--sy-z-raised);
+}
+.sy-pr__table thead th.sy-data-table__wide {
+  z-index: var(--sy-z-sticky);
+}
+.sy-pr__col {
+  text-align: center;
+  inline-size: calc(var(--sy-space-32) + var(--sy-space-4));
+}
+.sy-pr__table thead th.sy-pr__col {
+  text-align: center;
+}
+.sy-pr__col.is-featured {
+  background: var(--sy-accent-bg);
+}
+.sy-pr__mark {
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--sy-space-6);
+  block-size: var(--sy-space-6);
+  border-radius: 50%;
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-quiet);
+}
+.sy-pr__mark.is-yes {
+  background: var(--sy-success-bg);
+  color: var(--sy-success-fg);
+}
+.sy-pr__mark-text {
+  color: var(--sy-fg-default);
+}
+
+.sy-pr__faq {
+  display: grid;
+  gap: var(--sy-space-3);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 768px) {
+  .sy-pr__faq {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.sy-pr__faq-q {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+  margin-block-end: var(--sy-space-2);
+}
+.sy-pr__faq-q .sy-icon {
+  flex-shrink: 0;
+  margin-block-start: 1px;
+  color: var(--sy-accent-fg);
+}
+
+.sy-pr__checkout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+.sy-pr__method {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-pr__reassure {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+}
+.sy-pr__reassure .sy-icon {
+  flex-shrink: 0;
+  margin-block-start: 1px;
+}
