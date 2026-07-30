@@ -1,0 +1,336 @@
+/**
+ * Live screen styles — viewer and studio.
+ *
+ * The viewer is the product's only true two-region immersive layout: a video
+ * stage that must never be letterboxed by chrome, and a chat rail that docks
+ * to the side on wide surfaces and to the bottom on phones.
+ */
+
+.sy-live-viewer {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  background: #000;
+  color: oklch(97% 0.005 282);
+}
+
+.sy-live-viewer__stage {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.sy-live-viewer__video,
+.sy-live-viewer__video.sy-media {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  block-size: 100%;
+}
+
+/* ---- Top chrome ---- */
+
+.sy-live-viewer__top {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+  /* Respect the device's safe area so nothing hides under a notch. */
+  padding: calc(var(--safe-top, 0px) + var(--sy-space-3)) var(--sy-space-3) var(--sy-space-3);
+}
+
+.sy-live-viewer__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2_5);
+  padding: var(--sy-space-1_5) var(--sy-space-2);
+  padding-inline-end: var(--sy-space-2);
+  border-radius: var(--sy-radius-pill);
+  min-inline-size: 0;
+  max-inline-size: 320px;
+}
+.sy-live-viewer__identity-text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  gap: 0;
+}
+
+.sy-live-viewer__status {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+}
+.sy-live-viewer__pill {
+  display: inline-flex;
+  align-items: center;
+  block-size: 22px;
+  padding-inline: var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+  font-size: 11px;
+}
+
+.sy-live-viewer__title {
+  position: absolute;
+  inset-block-start: calc(var(--safe-top, 0px) + 68px);
+  inset-inline: var(--sy-space-4);
+  z-index: 1;
+  max-inline-size: 560px;
+  font-family: var(--sy-font-display);
+  font-size: var(--sy-type-headline-size);
+  font-weight: 600;
+  line-height: 1.3;
+  text-shadow: 0 1px 12px oklch(10% 0 0 / 0.6);
+}
+
+/* ---- Bottom chrome ---- */
+
+.sy-live-viewer__bottom {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-3) var(--sy-space-3) calc(var(--safe-bottom, 0px) + var(--sy-space-3));
+}
+
+.sy-live-viewer__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  padding: var(--sy-space-1_5) var(--sy-space-2);
+  border-radius: var(--sy-radius-lg);
+  color: inherit;
+}
+.sy-live-viewer__controls .sy-btn--ghost {
+  color: inherit;
+}
+.sy-live-viewer__quality {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  padding-inline: var(--sy-space-2);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.82;
+}
+/* Connection health is a colour *and* a number — never colour alone. */
+.sy-live-viewer__dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--sy-verdant-9);
+  box-shadow: 0 0 8px var(--sy-verdant-9);
+}
+
+/* ---- Gift rail ---- */
+
+.sy-gift-rail {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sy-gift-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.sy-gift-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  inline-size: 54px;
+  block-size: 54px;
+  flex-shrink: 0;
+  border-radius: var(--sy-radius-lg);
+  background: oklch(98% 0 0 / 0.1);
+  border: 1px solid oklch(98% 0 0 / 0.16);
+  color: inherit;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  transition: scale var(--sy-transition-press), background-color var(--sy-transition-hover);
+}
+.sy-gift-chip:hover {
+  background: oklch(98% 0 0 / 0.18);
+}
+.sy-gift-chip:active {
+  scale: 0.9;
+}
+.sy-gift-chip__icon {
+  font-size: 19px;
+  line-height: 1;
+}
+.sy-gift-chip__price {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.78;
+}
+/* Rarity is carried by the glyph's colour and a rim, so it survives greyscale
+   through the rim's contrast difference as well as hue. */
+.sy-gift-chip.is-common .sy-gift-chip__icon { color: var(--sy-flux-11); }
+.sy-gift-chip.is-rare .sy-gift-chip__icon { color: var(--sy-iris-11); }
+.sy-gift-chip.is-epic .sy-gift-chip__icon { color: var(--sy-nova-11); }
+.sy-gift-chip.is-epic { border-color: oklch(70% 0.16 335 / 0.5); }
+.sy-gift-chip.is-legendary .sy-gift-chip__icon { color: var(--sy-solar-11); }
+.sy-gift-chip.is-legendary { border-color: oklch(74% 0.15 78 / 0.6); }
+
+.sy-gift-rail__more {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+
+/* ---- Gift celebration ---- */
+
+/**
+ * Lands with a spring, holds, then leaves. Positioned in the upper-left band
+ * so it never covers the creator's face, which on a 16:9 webcam framing sits
+ * centre-right.
+ */
+.sy-gift-toast {
+  position: absolute;
+  inset-block-start: calc(var(--safe-top, 0px) + 118px);
+  inset-inline-start: var(--sy-space-4);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-2_5) var(--sy-space-4) var(--sy-space-2_5) var(--sy-space-2_5);
+  border-radius: var(--sy-radius-xl);
+  background: oklch(20% 0.06 335 / 0.72);
+  border: 1px solid oklch(70% 0.16 335 / 0.42);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+  box-shadow: 0 0 32px oklch(62% 0.2 335 / 0.28);
+  animation: sy-gift-land var(--sy-dur-moderate) var(--sy-ease-spring) backwards;
+}
+.sy-gift-toast__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 38px;
+  block-size: 38px;
+  border-radius: 50%;
+  background: var(--sy-gradient-ember);
+  font-size: 18px;
+  color: #fff;
+}
+
+@keyframes sy-gift-land {
+  from {
+    opacity: 0;
+    translate: calc(var(--sy-travel-large) * -1) 0;
+    scale: 0.88;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* ---- Chat ---- */
+
+.sy-live-chat {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  /* Phone: chat is a fixed-height bottom sheet under the stage. */
+  block-size: 38%;
+  background: var(--sy-bg-canvas);
+  border-block-start: 1px solid var(--sy-border-subtle);
+  color: var(--sy-fg-default);
+}
+.sy-live-chat__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+.sy-live-chat__stream {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3) var(--sy-space-4);
+}
+.sy-live-chat__composer {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  padding-block-end: calc(var(--safe-bottom, 0px) + var(--sy-space-3));
+  border-block-start: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+
+.sy-chat-line__author {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+  color: var(--sy-fg-muted);
+  margin-inline-end: var(--sy-space-1_5);
+}
+/* Role is shown with an icon as well as a colour. */
+.sy-chat-line__author.is-moderator { color: var(--sy-verdant-11); }
+.sy-chat-line__author.is-subscriber { color: var(--sy-solar-11); }
+.sy-chat-line__body {
+  color: var(--sy-fg-default);
+  overflow-wrap: anywhere;
+}
+
+.sy-chat-gift {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  padding: var(--sy-space-2) var(--sy-space-2_5);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-creator-bg);
+  border: 1px solid var(--sy-creator-border);
+}
+.sy-chat-gift__icon {
+  color: var(--sy-creator-fg);
+  font-size: 14px;
+}
+
+.sy-chat-system {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  padding: var(--sy-space-1_5) var(--sy-space-2_5);
+  border-radius: var(--sy-radius-sm);
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+}
+
+/* ---- Wide layout: chat docks to the side ---- */
+
+@container screen (min-width: 1024px) {
+  .sy-live-viewer {
+    flex-direction: row;
+  }
+  .sy-live-chat {
+    inline-size: 360px;
+    block-size: 100%;
+    border-block-start: none;
+    border-inline-start: 1px solid var(--sy-border-subtle);
+    flex-shrink: 0;
+  }
+  .sy-live-viewer__title {
+    inset-block-start: auto;
+    inset-block-end: 104px;
+  }
+}

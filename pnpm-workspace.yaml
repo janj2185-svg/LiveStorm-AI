@@ -1,0 +1,4 @@
+# esbuild ships a prebuilt native binary and needs its install script to link it.
+# It is a direct, first-party dependency of the Vite/tsx/vitest toolchain.
+allowBuilds:
+  esbuild: true

@@ -1,0 +1,1041 @@
+/**
+ * SYLORA component layer
+ * ---------------------------------------------------------------------------
+ * Styles for every primitive. Two conventions run through the whole file:
+ *
+ * 1. TONE INDIRECTION
+ *    A component never names a colour family. It reads --tone-solid,
+ *    --tone-fg, --tone-bg and --tone-border, which the `.sy-tone-*` classes
+ *    set. That is why one Button implementation covers seven tones and why
+ *    adding an eighth requires no component changes.
+ *
+ * 2. PRESS PHYSICS
+ *    Interactive elements scale to 0.97 on :active over 80ms. It is small
+ *    enough to feel like the surface yielding rather than the object shrinking,
+ *    and it makes touch feel responsive even when the network is not.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Tone indirection                                                    */
+/* ------------------------------------------------------------------ */
+
+.sy-tone-accent {
+  --tone-solid: var(--sy-accent-solid);
+  --tone-solid-hover: var(--sy-accent-solid-hover);
+  --tone-on-solid: var(--sy-on-iris);
+  --tone-fg: var(--sy-accent-fg);
+  --tone-bg: var(--sy-accent-bg);
+  --tone-border: var(--sy-accent-border);
+}
+.sy-tone-live {
+  --tone-solid: var(--sy-live-solid);
+  --tone-solid-hover: var(--sy-flux-10);
+  --tone-on-solid: var(--sy-on-flux);
+  --tone-fg: var(--sy-live-fg);
+  --tone-bg: var(--sy-live-bg);
+  --tone-border: var(--sy-live-border);
+}
+.sy-tone-creator {
+  --tone-solid: var(--sy-creator-solid);
+  --tone-solid-hover: var(--sy-nova-10);
+  --tone-on-solid: var(--sy-on-nova);
+  --tone-fg: var(--sy-creator-fg);
+  --tone-bg: var(--sy-creator-bg);
+  --tone-border: var(--sy-creator-border);
+}
+.sy-tone-success {
+  --tone-solid: var(--sy-success-solid);
+  --tone-solid-hover: var(--sy-verdant-10);
+  --tone-on-solid: var(--sy-on-verdant);
+  --tone-fg: var(--sy-success-fg);
+  --tone-bg: var(--sy-success-bg);
+  --tone-border: var(--sy-success-border);
+}
+.sy-tone-warning {
+  --tone-solid: var(--sy-warning-solid);
+  --tone-solid-hover: var(--sy-solar-10);
+  --tone-on-solid: var(--sy-on-solar);
+  --tone-fg: var(--sy-warning-fg);
+  --tone-bg: var(--sy-warning-bg);
+  --tone-border: var(--sy-warning-border);
+}
+.sy-tone-danger {
+  --tone-solid: var(--sy-danger-solid);
+  --tone-solid-hover: var(--sy-crimson-10);
+  --tone-on-solid: var(--sy-on-crimson);
+  --tone-fg: var(--sy-danger-fg);
+  --tone-bg: var(--sy-danger-bg);
+  --tone-border: var(--sy-danger-border);
+}
+.sy-tone-neutral {
+  --tone-solid: var(--sy-neutral-9);
+  --tone-solid-hover: var(--sy-neutral-10);
+  --tone-on-solid: var(--sy-bg-canvas);
+  --tone-fg: var(--sy-fg-default);
+  --tone-bg: var(--sy-bg-raised);
+  --tone-border: var(--sy-border-default);
+}
+
+/* ------------------------------------------------------------------ */
+/* Button                                                              */
+/* ------------------------------------------------------------------ */
+
+.sy-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-gap);
+  block-size: var(--btn-height);
+  padding-inline: var(--btn-padding);
+  border-radius: var(--btn-radius);
+  font-size: var(--sy-type-label-size);
+  font-weight: var(--sy-type-label-weight);
+  letter-spacing: var(--sy-type-label-tracking);
+  white-space: nowrap;
+  user-select: none;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--sy-transition-hover),
+    border-color var(--sy-transition-hover),
+    color var(--sy-transition-hover),
+    box-shadow var(--sy-transition-hover),
+    scale var(--sy-transition-press);
+}
+
+.sy-btn--xs { --btn-height: 24px; --btn-padding: var(--sy-space-2); --btn-gap: var(--sy-space-1); --btn-radius: var(--sy-radius-sm); }
+.sy-btn--sm { --btn-height: 32px; --btn-padding: var(--sy-space-3); --btn-gap: var(--sy-space-1_5); --btn-radius: var(--sy-radius-md); }
+.sy-btn--md { --btn-height: 40px; --btn-padding: var(--sy-space-4); --btn-gap: var(--sy-space-2); --btn-radius: var(--sy-radius-md); }
+.sy-btn--lg { --btn-height: 48px; --btn-padding: var(--sy-space-5); --btn-gap: var(--sy-space-2_5); --btn-radius: var(--sy-radius-lg); }
+.sy-btn--xl { --btn-height: 56px; --btn-padding: var(--sy-space-6); --btn-gap: var(--sy-space-3); --btn-radius: var(--sy-radius-lg); font-size: var(--sy-type-body-size); }
+
+.sy-btn--block {
+  inline-size: 100%;
+}
+
+.sy-btn__content {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+
+.sy-btn:active:not(:disabled) {
+  scale: 0.97;
+}
+
+.sy-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* Primary: the solid fill. One per view — two primaries means no primary. */
+.sy-btn--primary {
+  background: var(--tone-solid);
+  color: var(--tone-on-solid);
+}
+.sy-btn--primary:hover:not(:disabled) {
+  background: var(--tone-solid-hover);
+  /* Glow on hover reinforces the "living light" language on the one element
+     that most wants to be pressed. */
+  box-shadow: 0 0 var(--sy-glow-base-spread) color-mix(in oklab, var(--tone-solid) 45%, transparent);
+}
+
+.sy-btn--secondary {
+  background: var(--sy-bg-raised);
+  color: var(--sy-fg-default);
+  border-color: var(--sy-border-default);
+}
+.sy-btn--secondary:hover:not(:disabled) {
+  background: var(--sy-bg-hover);
+  border-color: var(--sy-border-strong);
+}
+
+.sy-btn--outline {
+  background: transparent;
+  color: var(--tone-fg);
+  border-color: var(--tone-border);
+}
+.sy-btn--outline:hover:not(:disabled) {
+  background: var(--tone-bg);
+}
+
+.sy-btn--ghost {
+  background: transparent;
+  color: var(--sy-fg-muted);
+}
+.sy-btn--ghost:hover:not(:disabled) {
+  background: var(--sy-bg-hover);
+  color: var(--sy-fg-default);
+}
+
+.sy-btn--glass {
+  background: var(--sy-glass-panel-fill);
+  border-color: var(--sy-glass-panel-rim);
+  color: var(--sy-fg-default);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .sy-btn--glass {
+    -webkit-backdrop-filter: blur(var(--sy-glass-panel-blur)) saturate(var(--sy-glass-panel-saturate));
+    backdrop-filter: blur(var(--sy-glass-panel-blur)) saturate(var(--sy-glass-panel-saturate));
+  }
+}
+.sy-btn--glass:hover:not(:disabled) {
+  border-color: var(--sy-border-strong);
+}
+
+.sy-btn--link {
+  background: transparent;
+  color: var(--tone-fg);
+  block-size: auto;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+}
+.sy-btn--link:hover:not(:disabled) {
+  text-decoration-color: currentColor;
+}
+
+/* Icon-only: square, and the label lives in aria-label. */
+.sy-btn--icon {
+  padding-inline: 0;
+  inline-size: var(--btn-height);
+}
+
+/* While loading, the label is hidden but still occupies its width. */
+.sy-btn.is-loading .sy-btn__content {
+  opacity: 0;
+}
+.sy-btn__spinner {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Spinner                                                             */
+/* ------------------------------------------------------------------ */
+
+.sy-spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, currentColor 22%, transparent);
+  border-block-start-color: currentColor;
+  animation: sy-spin 640ms linear infinite;
+}
+
+@keyframes sy-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sy-spinner {
+    animation-duration: 1600ms;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Progress                                                            */
+/* ------------------------------------------------------------------ */
+
+.sy-progress {
+  position: relative;
+  inline-size: 100%;
+  block-size: var(--track-size, 6px);
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-active);
+  overflow: hidden;
+}
+.sy-progress--sm { --track-size: 4px; }
+.sy-progress__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--tone-solid);
+  transition: inline-size var(--sy-transition-enter);
+}
+.sy-progress.is-indeterminate .sy-progress__fill {
+  inline-size: 40%;
+  animation: sy-progress-slide 1.4s var(--sy-ease-standard) infinite;
+}
+@keyframes sy-progress-slide {
+  0% { translate: -100% 0; }
+  100% { translate: 250% 0; }
+}
+
+.sy-ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.sy-ring__track {
+  stroke: var(--sy-bg-active);
+}
+.sy-ring__fill {
+  stroke: var(--tone-solid);
+  transition: stroke-dashoffset var(--sy-transition-enter);
+}
+.sy-ring__content {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Surface                                                             */
+/* ------------------------------------------------------------------ */
+
+.sy-surface {
+  position: relative;
+  padding: var(--sy-surface-padding);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  border-radius: var(--sy-radius-lg);
+}
+.sy-surface--radius-md { border-radius: var(--sy-radius-md); }
+.sy-surface--radius-lg { border-radius: var(--sy-radius-lg); }
+.sy-surface--radius-xl { border-radius: var(--sy-radius-xl); }
+.sy-surface--radius-2xl { border-radius: var(--sy-radius-2xl); }
+
+.sy-surface--flat { background: transparent; border-color: transparent; }
+.sy-surface--sunken { background: var(--sy-bg-canvas); box-shadow: var(--sy-elevation-sunken); }
+.sy-surface--surface { box-shadow: var(--sy-elevation-surface); }
+.sy-surface--raised { background: var(--sy-bg-raised); box-shadow: var(--sy-elevation-raised); }
+.sy-surface--overlay { background: var(--sy-bg-raised); box-shadow: var(--sy-elevation-overlay); }
+.sy-surface--lifted { background: var(--sy-bg-hover); box-shadow: var(--sy-elevation-lifted); }
+
+/**
+ * Interactive cards rise slightly on hover. The lift is 2px — enough to read
+ * as a response, small enough that a grid of cards does not feel like it is
+ * boiling as the pointer crosses it.
+ */
+.sy-surface--interactive {
+  cursor: pointer;
+  transition:
+    translate var(--sy-transition-hover),
+    border-color var(--sy-transition-hover),
+    box-shadow var(--sy-transition-hover),
+    background-color var(--sy-transition-hover);
+}
+.sy-surface--interactive:hover {
+  translate: 0 -2px;
+  border-color: var(--sy-border-strong);
+  box-shadow: var(--sy-elevation-raised);
+}
+.sy-surface--interactive:active {
+  translate: 0 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Badge, chip, live badge                                             */
+/* ------------------------------------------------------------------ */
+
+.sy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  padding-inline: var(--badge-pad, var(--sy-space-2));
+  block-size: var(--badge-height, 20px);
+  border-radius: var(--sy-radius-sm);
+  font-size: var(--sy-type-caption-size);
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.sy-badge--md { --badge-height: 26px; --badge-pad: var(--sy-space-2_5); }
+.sy-badge--soft { background: var(--tone-bg); color: var(--tone-fg); }
+.sy-badge--solid { background: var(--tone-solid); color: var(--tone-on-solid); }
+.sy-badge--outline { border-color: var(--tone-border); color: var(--tone-fg); }
+
+.sy-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  padding-inline: var(--sy-space-2);
+  block-size: 22px;
+  border-radius: var(--sy-radius-sm);
+  background: var(--sy-crimson-9);
+  color: var(--sy-on-crimson);
+  font-size: var(--sy-type-overline-size);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.sy-live-badge__dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: sy-live-pulse 1.8s var(--sy-ease-standard) infinite;
+}
+.sy-live-badge__count {
+  padding-inline-start: var(--sy-space-1_5);
+  border-inline-start: 1px solid color-mix(in oklab, currentColor 30%, transparent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+@keyframes sy-live-pulse {
+  0%, 100% { opacity: 1; scale: 1; }
+  50% { opacity: 0.45; scale: 0.82; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sy-live-badge__dot { animation: none; }
+}
+
+.sy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  block-size: 32px;
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-default);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-label-size);
+  font-weight: 500;
+  transition:
+    background-color var(--sy-transition-hover),
+    border-color var(--sy-transition-hover),
+    color var(--sy-transition-hover),
+    scale var(--sy-transition-press);
+}
+.sy-chip:hover {
+  border-color: var(--sy-border-strong);
+  color: var(--sy-fg-default);
+}
+.sy-chip:active { scale: 0.96; }
+.sy-chip.is-selected {
+  background: var(--tone-bg);
+  border-color: var(--tone-solid);
+  color: var(--tone-fg);
+}
+.sy-chip__remove {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  background: color-mix(in oklab, currentColor 16%, transparent);
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ */
+/* Avatar                                                              */
+/* ------------------------------------------------------------------ */
+
+.sy-avatar {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+.sy-avatar__inner {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  /*
+    Fallback fill derives its hue from the person's name, so every avatar in a
+    list is distinguishable without any avatar image being uploaded.
+  */
+  background: linear-gradient(
+    140deg,
+    oklch(58% 0.14 calc(var(--avatar-hue) * 1deg)),
+    oklch(46% 0.16 calc((var(--avatar-hue) + 48) * 1deg))
+  );
+  color: #fff;
+}
+.sy-avatar__inner img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.sy-avatar__initials {
+  font-family: var(--sy-font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+/** Story and live rings are drawn outside the avatar so they never crop it. */
+.sy-avatar--ring-story::before,
+.sy-avatar--ring-live::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  padding: 2px;
+  background: var(--sy-gradient-aurora);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+.sy-avatar--ring-live::before {
+  background: var(--sy-crimson-9);
+}
+
+.sy-avatar__presence {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  inline-size: 28%;
+  block-size: 28%;
+  min-inline-size: 8px;
+  min-block-size: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--sy-bg-surface);
+}
+.sy-avatar__presence.is-online { background: var(--sy-verdant-9); }
+.sy-avatar__presence.is-away { background: var(--sy-solar-9); }
+.sy-avatar__presence.is-offline { background: var(--sy-neutral-8); }
+
+.sy-avatar__verified {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-end: -2px;
+  display: grid;
+  place-items: center;
+  color: var(--sy-iris-9);
+  background: var(--sy-bg-surface);
+  border-radius: 50%;
+}
+
+.sy-avatar-group {
+  display: inline-flex;
+  align-items: center;
+}
+.sy-avatar-group > * + * {
+  margin-inline-start: calc(var(--overlap) * -1);
+}
+.sy-avatar-group .sy-avatar__inner,
+.sy-avatar-group__overflow {
+  box-shadow: 0 0 0 2px var(--sy-bg-surface);
+}
+.sy-avatar-group__overflow {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fields                                                              */
+/* ------------------------------------------------------------------ */
+
+.sy-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1_5);
+  min-inline-size: 0;
+}
+.sy-field__label {
+  color: var(--sy-fg-default);
+}
+.sy-field__required {
+  color: var(--sy-danger-fg);
+  margin-inline-start: 2px;
+}
+.sy-field__hint {
+  color: var(--sy-fg-muted);
+}
+.sy-field__error {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  color: var(--sy-danger-fg);
+}
+
+.sy-input {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  block-size: var(--input-height, 40px);
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-default);
+  color: var(--sy-fg-default);
+  transition:
+    border-color var(--sy-transition-hover),
+    box-shadow var(--sy-transition-hover),
+    background-color var(--sy-transition-hover);
+}
+.sy-input--xs { --input-height: 28px; }
+.sy-input--sm { --input-height: 32px; }
+.sy-input--lg { --input-height: 48px; }
+.sy-input--xl { --input-height: 56px; }
+
+.sy-input:hover {
+  border-color: var(--sy-border-strong);
+}
+
+/**
+ * Focus-within, not focus: the visible ring belongs to the whole field, but
+ * the actual focus is on the inner input. Without this the ring would only
+ * appear around a 1px caret.
+ */
+.sy-input:focus-within {
+  border-color: var(--sy-accent-solid);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--sy-accent-solid) 24%, transparent);
+}
+.sy-input.is-invalid {
+  border-color: var(--sy-danger-solid);
+}
+.sy-input.is-invalid:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--sy-danger-solid) 24%, transparent);
+}
+
+.sy-input input,
+.sy-input textarea,
+.sy-input select {
+  flex: 1;
+  min-inline-size: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: var(--sy-type-body-size);
+}
+.sy-input input::placeholder,
+.sy-input textarea::placeholder {
+  color: var(--sy-fg-quiet);
+}
+.sy-input__icon,
+.sy-input__trailing {
+  color: var(--sy-fg-quiet);
+  flex-shrink: 0;
+}
+.sy-input--textarea {
+  block-size: auto;
+  padding-block: var(--sy-space-3);
+  align-items: flex-start;
+}
+.sy-input--textarea textarea {
+  resize: vertical;
+  line-height: var(--sy-type-body-line);
+}
+.sy-input--select select {
+  appearance: none;
+  cursor: pointer;
+}
+.sy-input--search {
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-surface);
+}
+.sy-input input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.sy-kbd {
+  font-family: var(--sy-font-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: var(--sy-radius-xs);
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+  border: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+
+/* Switch */
+.sy-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+}
+.sy-switch-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+.sy-switch {
+  position: relative;
+  inline-size: 44px;
+  block-size: 26px;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-active);
+  border: 1px solid var(--sy-border-default);
+  flex-shrink: 0;
+  transition: background-color var(--sy-transition-hover), border-color var(--sy-transition-hover);
+}
+.sy-switch__thumb {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 3px;
+  translate: 0 -50%;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: 50%;
+  background: var(--sy-neutral-11);
+  /* Spring easing gives the thumb a small overshoot — it feels mechanical. */
+  transition: translate var(--sy-dur-base) var(--sy-ease-spring), background-color var(--sy-transition-hover);
+}
+.sy-switch.is-on {
+  background: var(--sy-accent-solid);
+  border-color: var(--sy-accent-solid);
+}
+.sy-switch.is-on .sy-switch__thumb {
+  translate: 18px -50%;
+  background: var(--sy-on-iris);
+}
+
+/* Checkbox */
+.sy-check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2_5);
+}
+.sy-checkbox {
+  display: grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: var(--sy-radius-xs);
+  border: 1.5px solid var(--sy-border-interactive);
+  background: transparent;
+  color: var(--sy-on-iris);
+  flex-shrink: 0;
+  transition: background-color var(--sy-transition-press), border-color var(--sy-transition-press);
+}
+.sy-checkbox.is-on {
+  background: var(--sy-accent-solid);
+  border-color: var(--sy-accent-solid);
+}
+
+/* Slider */
+.sy-slider input {
+  inline-size: 100%;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.sy-slider input::-webkit-slider-runnable-track {
+  block-size: 6px;
+  border-radius: var(--sy-radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--tone-solid) var(--percent),
+    var(--sy-bg-active) var(--percent)
+  );
+}
+.sy-slider input::-moz-range-track {
+  block-size: 6px;
+  border-radius: var(--sy-radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--tone-solid) var(--percent),
+    var(--sy-bg-active) var(--percent)
+  );
+}
+.sy-slider input::-webkit-slider-thumb {
+  appearance: none;
+  inline-size: 16px;
+  block-size: 16px;
+  margin-block-start: -5px;
+  border-radius: 50%;
+  background: var(--sy-neutral-12);
+  box-shadow: 0 1px 4px var(--shadow-color-32);
+  transition: scale var(--sy-transition-press);
+}
+.sy-slider input::-moz-range-thumb {
+  inline-size: 16px;
+  block-size: 16px;
+  border: none;
+  border-radius: 50%;
+  background: var(--sy-neutral-12);
+}
+.sy-slider input:active::-webkit-slider-thumb {
+  scale: 1.15;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tabs                                                                */
+/* ------------------------------------------------------------------ */
+
+.sy-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sy-tabs::-webkit-scrollbar { display: none; }
+
+.sy-tabs__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  block-size: 40px;
+  padding-inline: var(--sy-space-3);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-label-size);
+  font-weight: var(--sy-type-label-weight);
+  white-space: nowrap;
+  transition: color var(--sy-transition-hover), background-color var(--sy-transition-hover);
+}
+.sy-tabs__tab:hover { color: var(--sy-fg-default); }
+.sy-tabs__tab.is-active { color: var(--sy-fg-default); }
+
+.sy-tabs__badge {
+  padding-inline: var(--sy-space-1_5);
+  block-size: 18px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-bg-active);
+  color: var(--sy-fg-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Underline variant: an animated 2px rule under the active tab. */
+.sy-tabs--underline {
+  border-block-end: 1px solid var(--sy-border-subtle);
+  gap: var(--sy-space-4);
+}
+.sy-tabs--underline .sy-tabs__tab { padding-inline: 0; }
+.sy-tabs--underline .sy-tabs__tab::after {
+  content: '';
+  position: absolute;
+  inset-block-end: -1px;
+  inset-inline: 0;
+  block-size: 2px;
+  border-radius: var(--sy-radius-pill) var(--sy-radius-pill) 0 0;
+  background: var(--sy-accent-solid);
+  scale: 0 1;
+  transition: scale var(--sy-dur-base) var(--sy-ease-emphasized);
+}
+.sy-tabs--underline .sy-tabs__tab.is-active::after { scale: 1 1; }
+
+/* Segmented variant: a sliding pill inside a sunken track. */
+.sy-tabs--segmented {
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+}
+.sy-tabs--segmented .sy-tabs__tab {
+  block-size: 32px;
+  border-radius: var(--sy-radius-sm);
+  flex: 1;
+  justify-content: center;
+}
+.sy-tabs--segmented .sy-tabs__tab.is-active {
+  background: var(--sy-bg-raised);
+  box-shadow: var(--sy-elevation-surface);
+}
+
+.sy-tabs--pill .sy-tabs__tab {
+  block-size: 34px;
+  border-radius: var(--sy-radius-pill);
+}
+.sy-tabs--pill .sy-tabs__tab.is-active {
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+}
+
+/* ------------------------------------------------------------------ */
+/* Skeleton                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Skeletons sweep rather than pulse. A sweep implies "content is arriving from
+ * somewhere"; a pulse implies "something is wrong". The sweep is a single
+ * background-position animation, which the compositor handles without layout.
+ */
+.sy-skeleton {
+  display: block;
+  background:
+    linear-gradient(
+      90deg,
+      var(--sy-bg-raised) 0%,
+      var(--sy-bg-hover) 44%,
+      var(--sy-bg-raised) 88%
+    );
+  background-size: 220% 100%;
+  animation: sy-skeleton-sweep 1.4s var(--sy-ease-standard) infinite;
+}
+.sy-skeleton--sm { border-radius: var(--sy-radius-xs); }
+.sy-skeleton--md { border-radius: var(--sy-radius-sm); }
+.sy-skeleton--lg { border-radius: var(--sy-radius-md); }
+.sy-skeleton--pill { border-radius: var(--sy-radius-pill); }
+.sy-skeleton--full { border-radius: 50%; }
+
+@keyframes sy-skeleton-sweep {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sy-skeleton { animation: none; opacity: 0.6; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty state, stat, tooltip, toast                                   */
+/* ------------------------------------------------------------------ */
+
+.sy-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-12) var(--sy-space-6);
+  text-align: center;
+}
+.sy-empty__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: var(--sy-radius-xl);
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  margin-block-end: var(--sy-space-1);
+}
+
+.sy-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-stat__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+}
+.sy-stat__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: var(--sy-radius-xs);
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+}
+.sy-stat__value {
+  color: var(--sy-fg-default);
+}
+.sy-stat__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--sy-type-caption-size);
+  font-weight: 550;
+  color: var(--sy-fg-muted);
+}
+.sy-stat__delta.is-up { color: var(--sy-success-fg); }
+.sy-stat__delta.is-down { color: var(--sy-danger-fg); }
+
+.sy-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.sy-tooltip {
+  position: absolute;
+  inset-block-end: calc(100% + 8px);
+  inset-inline-start: 50%;
+  translate: -50% 4px;
+  z-index: var(--sy-z-tooltip);
+  padding: var(--sy-space-1_5) var(--sy-space-2_5);
+  border-radius: var(--sy-radius-sm);
+  background: var(--sy-neutral-12);
+  color: var(--sy-bg-canvas);
+  font-size: var(--sy-type-caption-size);
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--sy-transition-hover), translate var(--sy-transition-hover);
+}
+.sy-tooltip-wrap:hover .sy-tooltip,
+.sy-tooltip-wrap:focus-within .sy-tooltip {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+.sy-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+  inline-size: min(380px, calc(100vw - var(--sy-space-8)));
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-raised);
+  border: 1px solid var(--sy-border-default);
+  box-shadow: var(--sy-elevation-overlay);
+}
+.sy-toast__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: var(--sy-radius-sm);
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+  flex-shrink: 0;
+}
+.sy-toast__body {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Section header                                                      */
+/* ------------------------------------------------------------------ */
+
+.sy-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  margin-block-end: var(--sy-space-4);
+}
+.sy-section-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-section-header__action {
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Icon                                                                */
+/* ------------------------------------------------------------------ */
+
+.sy-icon {
+  flex-shrink: 0;
+}
+/**
+ * Selected navigation icons gain a translucent fill in addition to changing
+ * colour, so selection survives greyscale and colour-vision differences.
+ */
+.sy-icon--filled path,
+.sy-icon--filled circle,
+.sy-icon--filled rect {
+  fill: color-mix(in oklab, currentColor 20%, transparent);
+}

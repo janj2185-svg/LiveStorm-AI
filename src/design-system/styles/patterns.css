@@ -1,0 +1,468 @@
+/**
+ * SYLORA shell and layout patterns
+ * ---------------------------------------------------------------------------
+ * The shell is driven entirely by container queries on `.sy-shell`, so the
+ * same markup is correct at 390px inside a phone frame and at 1920px on a
+ * desktop. Nothing here reads the viewport.
+ */
+
+.sy-shell {
+  container: shell / inline-size;
+  position: relative;
+  display: grid;
+  /* Compact posture: a single column with the tab bar pinned to the bottom. */
+  grid-template-columns: 1fr;
+  grid-template-areas: 'body';
+  block-size: 100%;
+  min-block-size: 0;
+  background: var(--sy-bg-canvas);
+  color: var(--sy-fg-default);
+  overflow: hidden;
+}
+
+.sy-shell--immersive {
+  display: block;
+  background: #000;
+}
+
+.sy-shell__body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.sy-main {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  /* Reserve room for the floating tab bar in compact posture. */
+  padding-block-end: calc(var(--sy-shell-tabBar) + var(--sy-space-6));
+}
+.sy-main:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sy-main {
+    scroll-behavior: auto;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Top bar                                                             */
+/* ------------------------------------------------------------------ */
+
+.sy-topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--sy-z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  block-size: var(--sy-shell-topBar);
+  padding-inline: var(--sy-space-4);
+  border: none;
+  border-block-end: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Navigation rail                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Hidden in compact posture. Display is toggled rather than the element being
+ * unmounted so that focus order and screen-reader landmarks stay stable when
+ * the shell is resized.
+ */
+.sy-rail {
+  display: none;
+  grid-area: rail;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  inline-size: var(--sy-shell-railCollapsed);
+  padding: var(--sy-space-3) var(--sy-space-2);
+  border-inline-end: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sy-rail__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 48px;
+  margin-block-end: var(--sy-space-3);
+  padding-inline: var(--sy-space-1);
+}
+/* Collapsed rail shows the mark only; expanded shows the full lockup. */
+.sy-rail__brand > .sy-logo-lockup {
+  display: none;
+}
+
+.sy-rail__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sy-rail__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  block-size: 44px;
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-label-size);
+  font-weight: var(--sy-type-label-weight);
+  transition: background-color var(--sy-transition-hover), color var(--sy-transition-hover);
+}
+.sy-rail__item:hover {
+  background: var(--sy-bg-hover);
+  color: var(--sy-fg-default);
+}
+
+/**
+ * Active state carries three signals at once — fill, colour and a leading
+ * indicator bar — so it survives greyscale, colour-blindness and low contrast.
+ */
+.sy-rail__item.is-active {
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+}
+.sy-rail__item.is-active::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 25%;
+  inline-size: 3px;
+  border-radius: 0 var(--sy-radius-pill) var(--sy-radius-pill) 0;
+  background: var(--sy-accent-solid);
+}
+
+.sy-rail__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.sy-rail__live,
+.sy-tabbar__live {
+  position: absolute;
+  inset-block-start: -2px;
+  inset-inline-end: -3px;
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: var(--sy-crimson-9);
+  box-shadow: 0 0 0 2px var(--sy-bg-surface);
+  animation: sy-live-pulse 1.8s var(--sy-ease-standard) infinite;
+}
+
+.sy-rail__label,
+.sy-rail__badge {
+  display: none;
+}
+.sy-rail__badge {
+  margin-inline-start: auto;
+  padding-inline: var(--sy-space-1_5);
+  block-size: 18px;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+  font-size: 11px;
+  font-weight: 600;
+  place-items: center;
+}
+
+.sy-rail__divider {
+  margin-block: var(--sy-space-2);
+}
+
+.sy-rail__footer {
+  margin-block-start: auto;
+  padding-block-start: var(--sy-space-3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Bottom tab bar (compact posture)                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The tab bar floats above content rather than sitting flush, and is glass so
+ * the feed stays partly visible beneath it. That preserves the sense that the
+ * content is continuous and the navigation is a layer on top of it.
+ */
+.sy-tabbar {
+  position: absolute;
+  inset-block-end: var(--sy-space-3);
+  inset-inline: var(--sy-space-3);
+  z-index: var(--sy-z-navigation);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  block-size: var(--sy-shell-tabBar);
+  padding-inline: var(--sy-space-1);
+  border-radius: var(--sy-radius-xl);
+  box-shadow: var(--sy-elevation-overlay);
+}
+
+.sy-tabbar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  block-size: 100%;
+  min-inline-size: 0;
+  border-radius: var(--sy-radius-lg);
+  color: var(--sy-fg-quiet);
+  transition: color var(--sy-transition-hover), scale var(--sy-transition-press);
+}
+.sy-tabbar__item:active {
+  scale: 0.92;
+}
+.sy-tabbar__item.is-active {
+  color: var(--sy-accent-fg);
+}
+
+.sy-tabbar__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.sy-tabbar__label {
+  font-size: 10px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sy-tabbar__badge {
+  position: absolute;
+  inset-block-start: -4px;
+  inset-inline-start: 60%;
+  min-inline-size: 16px;
+  block-size: 16px;
+  padding-inline: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--sy-radius-pill);
+  background: var(--sy-crimson-9);
+  color: var(--sy-on-crimson);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------ */
+/* Context panel                                                       */
+/* ------------------------------------------------------------------ */
+
+.sy-context {
+  display: none;
+  grid-area: context;
+  flex-direction: column;
+  inline-size: var(--sy-shell-contextPanel);
+  border-inline-start: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  min-block-size: 0;
+}
+.sy-context__header {
+  display: flex;
+  align-items: center;
+  block-size: var(--sy-shell-topBar);
+  padding-inline: var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+.sy-context__body {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--sy-space-4);
+}
+
+/* ------------------------------------------------------------------ */
+/* Page header                                                         */
+/* ------------------------------------------------------------------ */
+
+.sy-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  padding-block: var(--sy-space-6) var(--sy-space-4);
+}
+.sy-page-header__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  flex-wrap: wrap;
+}
+.sy-page-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+.sy-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Posture: medium (>= 768)                                            */
+/* ------------------------------------------------------------------ */
+
+@container shell (min-width: 768px) {
+  .sy-shell {
+    grid-template-columns: auto 1fr;
+    grid-template-areas: 'rail body';
+  }
+  .sy-rail {
+    display: flex;
+  }
+  .sy-tabbar {
+    display: none;
+  }
+  .sy-main {
+    padding-block-end: var(--sy-space-8);
+  }
+  .sy-rail__item {
+    justify-content: center;
+    padding-inline: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Posture: expanded (>= 1280)                                         */
+/* ------------------------------------------------------------------ */
+
+@container shell (min-width: 1280px) {
+  .sy-shell {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'rail body context';
+  }
+  .sy-rail {
+    inline-size: var(--sy-shell-railExpanded);
+    padding-inline: var(--sy-space-3);
+  }
+  .sy-rail__brand {
+    justify-content: flex-start;
+    padding-inline: var(--sy-space-2);
+  }
+  .sy-rail__brand > .sy-logo-lockup {
+    display: inline-flex;
+  }
+  .sy-rail__brand > .sy-rail__brand-mark {
+    display: none;
+  }
+  .sy-rail__item {
+    justify-content: flex-start;
+    padding-inline: var(--sy-space-3);
+  }
+  .sy-rail__label {
+    display: inline;
+  }
+  .sy-rail__badge {
+    display: grid;
+  }
+  .sy-context {
+    display: flex;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Screen container                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Every screen declares a container named `screen`. Screen-level layouts query
+ * this rather than the viewport, which is what lets a single screen definition
+ * render correctly inside a phone frame and full-bleed on desktop.
+ */
+.sy-screen {
+  container: screen / inline-size;
+  min-block-size: 100%;
+}
+
+.sy-screen__inner {
+  inline-size: 100%;
+  max-inline-size: var(--sy-grid-max);
+  margin-inline: auto;
+  padding-inline: var(--sy-space-4);
+}
+
+@container screen (min-width: 768px) {
+  .sy-screen__inner {
+    padding-inline: var(--sy-space-6);
+  }
+}
+@container screen (min-width: 1280px) {
+  .sy-screen__inner {
+    padding-inline: var(--sy-space-8);
+  }
+}
+
+/* Common responsive column helpers used across screens. */
+.sy-cols {
+  display: grid;
+  gap: var(--sy-space-4);
+  grid-template-columns: 1fr;
+}
+@container screen (min-width: 640px) {
+  .sy-cols--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sy-cols--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sy-cols--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container screen (min-width: 1024px) {
+  .sy-cols--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sy-cols--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sy-cols--sidebar { grid-template-columns: minmax(0, 1fr) 320px; }
+  .sy-cols--sidebar-start { grid-template-columns: 260px minmax(0, 1fr); }
+}
+@container screen (min-width: 1280px) {
+  .sy-cols { gap: var(--sy-space-6); }
+}
+
+/* Horizontal scroller with edge-to-edge bleed and snap. */
+.sy-scroller {
+  display: flex;
+  gap: var(--sy-space-3);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-block-end: var(--sy-space-2);
+  /* Bleed past the container padding so cards run to the screen edge. */
+  margin-inline: calc(var(--sy-space-4) * -1);
+  padding-inline: var(--sy-space-4);
+}
+.sy-scroller::-webkit-scrollbar {
+  display: none;
+}
+.sy-scroller > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+@container screen (min-width: 768px) {
+  .sy-scroller {
+    margin-inline: calc(var(--sy-space-6) * -1);
+    padding-inline: var(--sy-space-6);
+  }
+}

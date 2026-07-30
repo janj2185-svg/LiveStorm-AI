@@ -1,0 +1,1642 @@
+{
+  "$description": "SYLORA design tokens in W3C DTCG format. Import via Tokens Studio for Figma. Colours are gamut-mapped sRGB equivalents of the authored OKLCH values.",
+  "dark": {
+    "color": {
+      "neutral": {
+        "1": {
+          "$type": "color",
+          "$value": "#0c0c0f",
+          "$description": "neutral step 1 — oklch(15.50% 0.0069 282)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#131317",
+          "$description": "neutral step 2 — oklch(18.80% 0.0078 282)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#1a1b1f",
+          "$description": "neutral step 3 — oklch(22.30% 0.0087 282)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#212227",
+          "$description": "neutral step 4 — oklch(25.30% 0.0092 282)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#292a2f",
+          "$description": "neutral step 5 — oklch(28.50% 0.0097 282)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#34343a",
+          "$description": "neutral step 6 — oklch(32.80% 0.0097 282)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#44444a",
+          "$description": "neutral step 7 — oklch(39.00% 0.0092 282)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#5d5e63",
+          "$description": "neutral step 8 — oklch(48.20% 0.0083 282)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#85868a",
+          "$description": "neutral step 9 — oklch(62.00% 0.0069 282)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#97979c",
+          "$description": "neutral step 10 — oklch(67.80% 0.0064 282)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#bababe",
+          "$description": "neutral step 11 — oklch(79.00% 0.0051 282)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#f4f4f6",
+          "$description": "neutral step 12 — oklch(96.80% 0.0028 282)"
+        }
+      },
+      "iris": {
+        "1": {
+          "$type": "color",
+          "$value": "#0b0b15",
+          "$description": "iris step 1 — oklch(15.50% 0.0205 285)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#121123",
+          "$description": "iris step 2 — oklch(18.80% 0.0369 285)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#191636",
+          "$description": "iris step 3 — oklch(22.30% 0.0615 285)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#201a46",
+          "$description": "iris step 4 — oklch(25.30% 0.0779 285)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#272056",
+          "$description": "iris step 5 — oklch(28.50% 0.0943 285)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#31286a",
+          "$description": "iris step 6 — oklch(32.80% 0.1107 285)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#413587",
+          "$description": "iris step 7 — oklch(39.00% 0.1312 285)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#5949b5",
+          "$description": "iris step 8 — oklch(48.20% 0.1640 285)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#7e6bfa",
+          "$description": "iris step 9 — oklch(62.00% 0.2050 285)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#8f83ff",
+          "$description": "iris step 10 — oklch(67.80% 0.1947 285)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#b3b0ff",
+          "$description": "iris step 11 — oklch(79.00% 0.1476 285)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#f3f3ff",
+          "$description": "iris step 12 — oklch(96.80% 0.0574 285)"
+        }
+      },
+      "flux": {
+        "1": {
+          "$type": "color",
+          "$value": "#050e0f",
+          "$description": "flux step 1 — oklch(15.50% 0.0142 203)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#041718",
+          "$description": "flux step 2 — oklch(18.80% 0.0256 203)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#002023",
+          "$description": "flux step 3 — oklch(22.30% 0.0426 203)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#00282c",
+          "$description": "flux step 4 — oklch(25.30% 0.0540 203)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#003135",
+          "$description": "flux step 5 — oklch(28.50% 0.0653 203)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#003d42",
+          "$description": "flux step 6 — oklch(32.80% 0.0767 203)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#004f55",
+          "$description": "flux step 7 — oklch(39.00% 0.0909 203)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#006b73",
+          "$description": "flux step 8 — oklch(48.20% 0.1136 203)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#0098a2",
+          "$description": "flux step 9 — oklch(62.00% 0.1420 203)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#00acb7",
+          "$description": "flux step 10 — oklch(67.80% 0.1349 203)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#5eced8",
+          "$description": "flux step 11 — oklch(79.00% 0.1022 203)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#dafcff",
+          "$description": "flux step 12 — oklch(96.80% 0.0398 203)"
+        }
+      },
+      "nova": {
+        "1": {
+          "$type": "color",
+          "$value": "#110910",
+          "$description": "nova step 1 — oklch(15.50% 0.0196 335)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#1d0d1a",
+          "$description": "nova step 2 — oklch(18.80% 0.0353 335)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#2b0f26",
+          "$description": "nova step 3 — oklch(22.30% 0.0588 335)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#371230",
+          "$description": "nova step 4 — oklch(25.30% 0.0745 335)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#43143b",
+          "$description": "nova step 5 — oklch(28.50% 0.0902 335)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#541a4a",
+          "$description": "nova step 6 — oklch(32.80% 0.1058 335)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#6b245f",
+          "$description": "nova step 7 — oklch(39.00% 0.1254 335)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#903280",
+          "$description": "nova step 8 — oklch(48.20% 0.1568 335)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#c94db4",
+          "$description": "nova step 9 — oklch(62.00% 0.1960 335)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#da64c4",
+          "$description": "nova step 10 — oklch(67.80% 0.1862 335)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#f296de",
+          "$description": "nova step 11 — oklch(79.00% 0.1411 335)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#ffeffb",
+          "$description": "nova step 12 — oklch(96.80% 0.0549 335)"
+        }
+      },
+      "verdant": {
+        "1": {
+          "$type": "color",
+          "$value": "#070e0a",
+          "$description": "verdant step 1 — oklch(15.50% 0.0152 158)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#08170f",
+          "$description": "verdant step 2 — oklch(18.80% 0.0274 158)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#042213",
+          "$description": "verdant step 3 — oklch(22.30% 0.0456 158)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#012a17",
+          "$description": "verdant step 4 — oklch(25.30% 0.0578 158)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#00341d",
+          "$description": "verdant step 5 — oklch(28.50% 0.0699 158)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#004025",
+          "$description": "verdant step 6 — oklch(32.80% 0.0821 158)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#005331",
+          "$description": "verdant step 7 — oklch(39.00% 0.0973 158)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#007145",
+          "$description": "verdant step 8 — oklch(48.20% 0.1216 158)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#009f63",
+          "$description": "verdant step 9 — oklch(62.00% 0.1520 158)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#2db275",
+          "$description": "verdant step 10 — oklch(67.80% 0.1444 158)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#7ad0a0",
+          "$description": "verdant step 11 — oklch(79.00% 0.1094 158)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#defeea",
+          "$description": "verdant step 12 — oklch(96.80% 0.0426 158)"
+        }
+      },
+      "solar": {
+        "1": {
+          "$type": "color",
+          "$value": "#100b05",
+          "$description": "solar step 1 — oklch(15.50% 0.0162 78)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#1a1204",
+          "$description": "solar step 2 — oklch(18.80% 0.0292 78)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#271800",
+          "$description": "solar step 3 — oklch(22.30% 0.0486 78)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#301e00",
+          "$description": "solar step 4 — oklch(25.30% 0.0616 78)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#3a2600",
+          "$description": "solar step 5 — oklch(28.50% 0.0745 78)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#483000",
+          "$description": "solar step 6 — oklch(32.80% 0.0875 78)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#5d3e00",
+          "$description": "solar step 7 — oklch(39.00% 0.1037 78)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#7d5600",
+          "$description": "solar step 8 — oklch(48.20% 0.1296 78)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#b07b00",
+          "$description": "solar step 9 — oklch(62.00% 0.1620 78)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#c78b00",
+          "$description": "solar step 10 — oklch(67.80% 0.1539 78)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#e4b15e",
+          "$description": "solar step 11 — oklch(79.00% 0.1166 78)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#fff3e0",
+          "$description": "solar step 12 — oklch(96.80% 0.0454 78)"
+        }
+      },
+      "crimson": {
+        "1": {
+          "$type": "color",
+          "$value": "#130908",
+          "$description": "crimson step 1 — oklch(15.50% 0.0188 24)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#200d0c",
+          "$description": "crimson step 2 — oklch(18.80% 0.0338 24)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#310f0e",
+          "$description": "crimson step 3 — oklch(22.30% 0.0564 24)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#3e1110",
+          "$description": "crimson step 4 — oklch(25.30% 0.0714 24)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#4c1314",
+          "$description": "crimson step 5 — oklch(28.50% 0.0865 24)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#5e1819",
+          "$description": "crimson step 6 — oklch(32.80% 0.1015 24)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#792223",
+          "$description": "crimson step 7 — oklch(39.00% 0.1203 24)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#a23031",
+          "$description": "crimson step 8 — oklch(48.20% 0.1504 24)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#e1494b",
+          "$description": "crimson step 9 — oklch(62.00% 0.1880 24)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#f2625f",
+          "$description": "crimson step 10 — oklch(67.80% 0.1786 24)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#ff9b94",
+          "$description": "crimson step 11 — oklch(79.00% 0.1354 24)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#fff1ef",
+          "$description": "crimson step 12 — oklch(96.80% 0.0526 24)"
+        }
+      }
+    },
+    "semantic": {
+      "bg-canvas": {
+        "$type": "color",
+        "$value": "#0c0c0f",
+        "$description": "Alias of neutral.1"
+      },
+      "bg-surface": {
+        "$type": "color",
+        "$value": "#131317",
+        "$description": "Alias of neutral.2"
+      },
+      "bg-raised": {
+        "$type": "color",
+        "$value": "#1a1b1f",
+        "$description": "Alias of neutral.3"
+      },
+      "bg-hover": {
+        "$type": "color",
+        "$value": "#212227",
+        "$description": "Alias of neutral.4"
+      },
+      "bg-active": {
+        "$type": "color",
+        "$value": "#292a2f",
+        "$description": "Alias of neutral.5"
+      },
+      "border-subtle": {
+        "$type": "color",
+        "$value": "#34343a",
+        "$description": "Alias of neutral.6"
+      },
+      "border-default": {
+        "$type": "color",
+        "$value": "#44444a",
+        "$description": "Alias of neutral.7"
+      },
+      "border-strong": {
+        "$type": "color",
+        "$value": "#5d5e63",
+        "$description": "Alias of neutral.8"
+      },
+      "border-interactive": {
+        "$type": "color",
+        "$value": "#85868a",
+        "$description": "Alias of neutral.9"
+      },
+      "fg-quiet": {
+        "$type": "color",
+        "$value": "#5d5e63",
+        "$description": "Alias of neutral.8"
+      },
+      "fg-muted": {
+        "$type": "color",
+        "$value": "#bababe",
+        "$description": "Alias of neutral.11"
+      },
+      "fg-default": {
+        "$type": "color",
+        "$value": "#f4f4f6",
+        "$description": "Alias of neutral.12"
+      },
+      "accent-bg": {
+        "$type": "color",
+        "$value": "#191636",
+        "$description": "Alias of iris.3"
+      },
+      "accent-bg-hover": {
+        "$type": "color",
+        "$value": "#201a46",
+        "$description": "Alias of iris.4"
+      },
+      "accent-border": {
+        "$type": "color",
+        "$value": "#413587",
+        "$description": "Alias of iris.7"
+      },
+      "accent-solid": {
+        "$type": "color",
+        "$value": "#7e6bfa",
+        "$description": "Alias of iris.9"
+      },
+      "accent-solid-hover": {
+        "$type": "color",
+        "$value": "#8f83ff",
+        "$description": "Alias of iris.10"
+      },
+      "accent-fg": {
+        "$type": "color",
+        "$value": "#b3b0ff",
+        "$description": "Alias of iris.11"
+      },
+      "live-bg": {
+        "$type": "color",
+        "$value": "#002023",
+        "$description": "Alias of flux.3"
+      },
+      "live-border": {
+        "$type": "color",
+        "$value": "#004f55",
+        "$description": "Alias of flux.7"
+      },
+      "live-solid": {
+        "$type": "color",
+        "$value": "#0098a2",
+        "$description": "Alias of flux.9"
+      },
+      "live-fg": {
+        "$type": "color",
+        "$value": "#5eced8",
+        "$description": "Alias of flux.11"
+      },
+      "creator-bg": {
+        "$type": "color",
+        "$value": "#2b0f26",
+        "$description": "Alias of nova.3"
+      },
+      "creator-border": {
+        "$type": "color",
+        "$value": "#6b245f",
+        "$description": "Alias of nova.7"
+      },
+      "creator-solid": {
+        "$type": "color",
+        "$value": "#c94db4",
+        "$description": "Alias of nova.9"
+      },
+      "creator-fg": {
+        "$type": "color",
+        "$value": "#f296de",
+        "$description": "Alias of nova.11"
+      },
+      "success-bg": {
+        "$type": "color",
+        "$value": "#042213",
+        "$description": "Alias of verdant.3"
+      },
+      "success-border": {
+        "$type": "color",
+        "$value": "#005331",
+        "$description": "Alias of verdant.7"
+      },
+      "success-solid": {
+        "$type": "color",
+        "$value": "#009f63",
+        "$description": "Alias of verdant.9"
+      },
+      "success-fg": {
+        "$type": "color",
+        "$value": "#7ad0a0",
+        "$description": "Alias of verdant.11"
+      },
+      "warning-bg": {
+        "$type": "color",
+        "$value": "#271800",
+        "$description": "Alias of solar.3"
+      },
+      "warning-border": {
+        "$type": "color",
+        "$value": "#5d3e00",
+        "$description": "Alias of solar.7"
+      },
+      "warning-solid": {
+        "$type": "color",
+        "$value": "#b07b00",
+        "$description": "Alias of solar.9"
+      },
+      "warning-fg": {
+        "$type": "color",
+        "$value": "#e4b15e",
+        "$description": "Alias of solar.11"
+      },
+      "danger-bg": {
+        "$type": "color",
+        "$value": "#310f0e",
+        "$description": "Alias of crimson.3"
+      },
+      "danger-border": {
+        "$type": "color",
+        "$value": "#792223",
+        "$description": "Alias of crimson.7"
+      },
+      "danger-solid": {
+        "$type": "color",
+        "$value": "#e1494b",
+        "$description": "Alias of crimson.9"
+      },
+      "danger-fg": {
+        "$type": "color",
+        "$value": "#ff9b94",
+        "$description": "Alias of crimson.11"
+      }
+    }
+  },
+  "light": {
+    "color": {
+      "neutral": {
+        "1": {
+          "$type": "color",
+          "$value": "#fbfbff",
+          "$description": "neutral step 1 — oklch(99.00% 0.0057 282)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#f8f9fe",
+          "$description": "neutral step 2 — oklch(98.20% 0.0065 282)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#f2f3f8",
+          "$description": "neutral step 3 — oklch(96.40% 0.0072 282)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#ececf2",
+          "$description": "neutral step 4 — oklch(94.50% 0.0076 282)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#e5e6ec",
+          "$description": "neutral step 5 — oklch(92.50% 0.0080 282)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#dcdce2",
+          "$description": "neutral step 6 — oklch(89.70% 0.0080 282)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#d0d0d6",
+          "$description": "neutral step 7 — oklch(86.00% 0.0076 282)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#b5b5ba",
+          "$description": "neutral step 8 — oklch(77.50% 0.0068 282)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#727376",
+          "$description": "neutral step 9 — oklch(55.50% 0.0057 282)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#636366",
+          "$description": "neutral step 10 — oklch(50.00% 0.0053 282)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#5b5b5e",
+          "$description": "neutral step 11 — oklch(47.20% 0.0042 282)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#1e1e1f",
+          "$description": "neutral step 12 — oklch(23.50% 0.0023 282)"
+        }
+      },
+      "iris": {
+        "1": {
+          "$type": "color",
+          "$value": "#fbfbff",
+          "$description": "iris step 1 — oklch(99.00% 0.0065 285)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#f8f8ff",
+          "$description": "iris step 2 — oklch(98.20% 0.0151 285)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#f1f2ff",
+          "$description": "iris step 3 — oklch(96.40% 0.0301 285)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#eaebff",
+          "$description": "iris step 4 — oklch(94.50% 0.0473 285)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#e3e3ff",
+          "$description": "iris step 5 — oklch(92.50% 0.0645 285)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#d9d9ff",
+          "$description": "iris step 6 — oklch(89.70% 0.0817 285)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#cbcbff",
+          "$description": "iris step 7 — oklch(86.00% 0.1032 285)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#aeabff",
+          "$description": "iris step 8 — oklch(77.50% 0.1419 285)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#6e54ea",
+          "$description": "iris step 9 — oklch(56.00% 0.2150 285)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#6045d2",
+          "$description": "iris step 10 — oklch(50.50% 0.2064 285)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#5640bc",
+          "$description": "iris step 11 — oklch(47.20% 0.1849 285)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#1c1444",
+          "$description": "iris step 12 — oklch(23.50% 0.0860 285)"
+        }
+      },
+      "flux": {
+        "1": {
+          "$type": "color",
+          "$value": "#f9fdfd",
+          "$description": "flux step 1 — oklch(99.00% 0.0043 203)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#f2fbfc",
+          "$description": "flux step 2 — oklch(98.20% 0.0102 203)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#e4f7f9",
+          "$description": "flux step 3 — oklch(96.40% 0.0203 203)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#d5f4f6",
+          "$description": "flux step 4 — oklch(94.50% 0.0319 203)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#c5eff3",
+          "$description": "flux step 5 — oklch(92.50% 0.0435 203)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#b3e8ed",
+          "$description": "flux step 6 — oklch(89.70% 0.0551 203)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#9adfe5",
+          "$description": "flux step 7 — oklch(86.00% 0.0696 203)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#62c8d1",
+          "$description": "flux step 8 — oklch(77.50% 0.0957 203)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#008088",
+          "$description": "flux step 9 — oklch(54.50% 0.1450 203)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#006e75",
+          "$description": "flux step 10 — oklch(49.00% 0.1392 203)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#00686f",
+          "$description": "flux step 11 — oklch(47.20% 0.1247 203)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#002326",
+          "$description": "flux step 12 — oklch(23.50% 0.0580 203)"
+        }
+      },
+      "nova": {
+        "1": {
+          "$type": "color",
+          "$value": "#fffafd",
+          "$description": "nova step 1 — oklch(99.00% 0.0061 335)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#fff6fd",
+          "$description": "nova step 2 — oklch(98.20% 0.0143 335)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#ffedfa",
+          "$description": "nova step 3 — oklch(96.40% 0.0287 335)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#ffe3f8",
+          "$description": "nova step 4 — oklch(94.50% 0.0451 335)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#ffd9f5",
+          "$description": "nova step 5 — oklch(92.50% 0.0615 335)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#fecaf2",
+          "$description": "nova step 6 — oklch(89.70% 0.0779 335)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#fab9eb",
+          "$description": "nova step 7 — oklch(86.00% 0.0984 335)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#eb93d8",
+          "$description": "nova step 8 — oklch(77.50% 0.1353 335)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#b733a3",
+          "$description": "nova step 9 — oklch(56.00% 0.2050 335)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#a22490",
+          "$description": "nova step 10 — oklch(50.50% 0.1968 335)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#922581",
+          "$description": "nova step 11 — oklch(47.20% 0.1763 335)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#340a2d",
+          "$description": "nova step 12 — oklch(23.50% 0.0820 335)"
+        }
+      },
+      "verdant": {
+        "1": {
+          "$type": "color",
+          "$value": "#f9fdfa",
+          "$description": "verdant step 1 — oklch(99.00% 0.0047 158)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#f3fcf6",
+          "$description": "verdant step 2 — oklch(98.20% 0.0111 158)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#e8f8ed",
+          "$description": "verdant step 3 — oklch(96.40% 0.0221 158)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#dbf4e4",
+          "$description": "verdant step 4 — oklch(94.50% 0.0348 158)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#cdf0da",
+          "$description": "verdant step 5 — oklch(92.50% 0.0474 158)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#bdeace",
+          "$description": "verdant step 6 — oklch(89.70% 0.0600 158)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#a7e1be",
+          "$description": "verdant step 7 — oklch(86.00% 0.0758 158)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#79ca9c",
+          "$description": "verdant step 8 — oklch(77.50% 0.1043 158)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#008451",
+          "$description": "verdant step 9 — oklch(54.00% 0.1580 158)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#007245",
+          "$description": "verdant step 10 — oklch(48.50% 0.1517 158)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#006d43",
+          "$description": "verdant step 11 — oklch(47.20% 0.1359 158)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#002614",
+          "$description": "verdant step 12 — oklch(23.50% 0.0632 158)"
+        }
+      },
+      "solar": {
+        "1": {
+          "$type": "color",
+          "$value": "#fefbf8",
+          "$description": "solar step 1 — oklch(99.00% 0.0050 78)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#fef8f0",
+          "$description": "solar step 2 — oklch(98.20% 0.0118 78)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#fcf2e2",
+          "$description": "solar step 3 — oklch(96.40% 0.0235 78)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#fbead2",
+          "$description": "solar step 4 — oklch(94.50% 0.0370 78)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#f9e3c1",
+          "$description": "solar step 5 — oklch(92.50% 0.0504 78)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#f5d9ae",
+          "$description": "solar step 6 — oklch(89.70% 0.0638 78)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#eecb95",
+          "$description": "solar step 7 — oklch(86.00% 0.0806 78)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#ddad5f",
+          "$description": "solar step 8 — oklch(77.50% 0.1109 78)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#9a6a00",
+          "$description": "solar step 9 — oklch(56.00% 0.1680 78)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#855c00",
+          "$description": "solar step 10 — oklch(50.50% 0.1613 78)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#795300",
+          "$description": "solar step 11 — oklch(47.20% 0.1445 78)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#2b1b00",
+          "$description": "solar step 12 — oklch(23.50% 0.0672 78)"
+        }
+      },
+      "crimson": {
+        "1": {
+          "$type": "color",
+          "$value": "#fffbfa",
+          "$description": "crimson step 1 — oklch(99.00% 0.0059 24)"
+        },
+        "2": {
+          "$type": "color",
+          "$value": "#fff7f6",
+          "$description": "crimson step 2 — oklch(98.20% 0.0137 24)"
+        },
+        "3": {
+          "$type": "color",
+          "$value": "#ffefed",
+          "$description": "crimson step 3 — oklch(96.40% 0.0274 24)"
+        },
+        "4": {
+          "$type": "color",
+          "$value": "#ffe6e4",
+          "$description": "crimson step 4 — oklch(94.50% 0.0431 24)"
+        },
+        "5": {
+          "$type": "color",
+          "$value": "#ffddda",
+          "$description": "crimson step 5 — oklch(92.50% 0.0588 24)"
+        },
+        "6": {
+          "$type": "color",
+          "$value": "#ffd0cc",
+          "$description": "crimson step 6 — oklch(89.70% 0.0745 24)"
+        },
+        "7": {
+          "$type": "color",
+          "$value": "#ffbeb9",
+          "$description": "crimson step 7 — oklch(86.00% 0.0941 24)"
+        },
+        "8": {
+          "$type": "color",
+          "$value": "#fe938d",
+          "$description": "crimson step 8 — oklch(77.50% 0.1294 24)"
+        },
+        "9": {
+          "$type": "color",
+          "$value": "#cf2e36",
+          "$description": "crimson step 9 — oklch(56.00% 0.1960 24)"
+        },
+        "10": {
+          "$type": "color",
+          "$value": "#b81c29",
+          "$description": "crimson step 10 — oklch(50.50% 0.1882 24)"
+        },
+        "11": {
+          "$type": "color",
+          "$value": "#a52028",
+          "$description": "crimson step 11 — oklch(47.20% 0.1686 24)"
+        },
+        "12": {
+          "$type": "color",
+          "$value": "#3b090a",
+          "$description": "crimson step 12 — oklch(23.50% 0.0784 24)"
+        }
+      }
+    },
+    "semantic": {
+      "bg-canvas": {
+        "$type": "color",
+        "$value": "#fbfbff",
+        "$description": "Alias of neutral.1"
+      },
+      "bg-surface": {
+        "$type": "color",
+        "$value": "#f8f9fe",
+        "$description": "Alias of neutral.2"
+      },
+      "bg-raised": {
+        "$type": "color",
+        "$value": "#f2f3f8",
+        "$description": "Alias of neutral.3"
+      },
+      "bg-hover": {
+        "$type": "color",
+        "$value": "#ececf2",
+        "$description": "Alias of neutral.4"
+      },
+      "bg-active": {
+        "$type": "color",
+        "$value": "#e5e6ec",
+        "$description": "Alias of neutral.5"
+      },
+      "border-subtle": {
+        "$type": "color",
+        "$value": "#dcdce2",
+        "$description": "Alias of neutral.6"
+      },
+      "border-default": {
+        "$type": "color",
+        "$value": "#d0d0d6",
+        "$description": "Alias of neutral.7"
+      },
+      "border-strong": {
+        "$type": "color",
+        "$value": "#b5b5ba",
+        "$description": "Alias of neutral.8"
+      },
+      "border-interactive": {
+        "$type": "color",
+        "$value": "#727376",
+        "$description": "Alias of neutral.9"
+      },
+      "fg-quiet": {
+        "$type": "color",
+        "$value": "#b5b5ba",
+        "$description": "Alias of neutral.8"
+      },
+      "fg-muted": {
+        "$type": "color",
+        "$value": "#5b5b5e",
+        "$description": "Alias of neutral.11"
+      },
+      "fg-default": {
+        "$type": "color",
+        "$value": "#1e1e1f",
+        "$description": "Alias of neutral.12"
+      },
+      "accent-bg": {
+        "$type": "color",
+        "$value": "#f1f2ff",
+        "$description": "Alias of iris.3"
+      },
+      "accent-bg-hover": {
+        "$type": "color",
+        "$value": "#eaebff",
+        "$description": "Alias of iris.4"
+      },
+      "accent-border": {
+        "$type": "color",
+        "$value": "#cbcbff",
+        "$description": "Alias of iris.7"
+      },
+      "accent-solid": {
+        "$type": "color",
+        "$value": "#6e54ea",
+        "$description": "Alias of iris.9"
+      },
+      "accent-solid-hover": {
+        "$type": "color",
+        "$value": "#6045d2",
+        "$description": "Alias of iris.10"
+      },
+      "accent-fg": {
+        "$type": "color",
+        "$value": "#5640bc",
+        "$description": "Alias of iris.11"
+      },
+      "live-bg": {
+        "$type": "color",
+        "$value": "#e4f7f9",
+        "$description": "Alias of flux.3"
+      },
+      "live-border": {
+        "$type": "color",
+        "$value": "#9adfe5",
+        "$description": "Alias of flux.7"
+      },
+      "live-solid": {
+        "$type": "color",
+        "$value": "#008088",
+        "$description": "Alias of flux.9"
+      },
+      "live-fg": {
+        "$type": "color",
+        "$value": "#00686f",
+        "$description": "Alias of flux.11"
+      },
+      "creator-bg": {
+        "$type": "color",
+        "$value": "#ffedfa",
+        "$description": "Alias of nova.3"
+      },
+      "creator-border": {
+        "$type": "color",
+        "$value": "#fab9eb",
+        "$description": "Alias of nova.7"
+      },
+      "creator-solid": {
+        "$type": "color",
+        "$value": "#b733a3",
+        "$description": "Alias of nova.9"
+      },
+      "creator-fg": {
+        "$type": "color",
+        "$value": "#922581",
+        "$description": "Alias of nova.11"
+      },
+      "success-bg": {
+        "$type": "color",
+        "$value": "#e8f8ed",
+        "$description": "Alias of verdant.3"
+      },
+      "success-border": {
+        "$type": "color",
+        "$value": "#a7e1be",
+        "$description": "Alias of verdant.7"
+      },
+      "success-solid": {
+        "$type": "color",
+        "$value": "#008451",
+        "$description": "Alias of verdant.9"
+      },
+      "success-fg": {
+        "$type": "color",
+        "$value": "#006d43",
+        "$description": "Alias of verdant.11"
+      },
+      "warning-bg": {
+        "$type": "color",
+        "$value": "#fcf2e2",
+        "$description": "Alias of solar.3"
+      },
+      "warning-border": {
+        "$type": "color",
+        "$value": "#eecb95",
+        "$description": "Alias of solar.7"
+      },
+      "warning-solid": {
+        "$type": "color",
+        "$value": "#9a6a00",
+        "$description": "Alias of solar.9"
+      },
+      "warning-fg": {
+        "$type": "color",
+        "$value": "#795300",
+        "$description": "Alias of solar.11"
+      },
+      "danger-bg": {
+        "$type": "color",
+        "$value": "#ffefed",
+        "$description": "Alias of crimson.3"
+      },
+      "danger-border": {
+        "$type": "color",
+        "$value": "#ffbeb9",
+        "$description": "Alias of crimson.7"
+      },
+      "danger-solid": {
+        "$type": "color",
+        "$value": "#cf2e36",
+        "$description": "Alias of crimson.9"
+      },
+      "danger-fg": {
+        "$type": "color",
+        "$value": "#a52028",
+        "$description": "Alias of crimson.11"
+      }
+    }
+  },
+  "dimension": {
+    "space": {
+      "0": {
+        "$type": "dimension",
+        "$value": "0px"
+      },
+      "1": {
+        "$type": "dimension",
+        "$value": "4px"
+      },
+      "2": {
+        "$type": "dimension",
+        "$value": "8px"
+      },
+      "3": {
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "4": {
+        "$type": "dimension",
+        "$value": "16px"
+      },
+      "5": {
+        "$type": "dimension",
+        "$value": "20px"
+      },
+      "6": {
+        "$type": "dimension",
+        "$value": "24px"
+      },
+      "7": {
+        "$type": "dimension",
+        "$value": "28px"
+      },
+      "8": {
+        "$type": "dimension",
+        "$value": "32px"
+      },
+      "10": {
+        "$type": "dimension",
+        "$value": "40px"
+      },
+      "12": {
+        "$type": "dimension",
+        "$value": "48px"
+      },
+      "14": {
+        "$type": "dimension",
+        "$value": "56px"
+      },
+      "16": {
+        "$type": "dimension",
+        "$value": "64px"
+      },
+      "20": {
+        "$type": "dimension",
+        "$value": "80px"
+      },
+      "24": {
+        "$type": "dimension",
+        "$value": "96px"
+      },
+      "32": {
+        "$type": "dimension",
+        "$value": "128px"
+      },
+      "40": {
+        "$type": "dimension",
+        "$value": "160px"
+      },
+      "px": {
+        "$type": "dimension",
+        "$value": "1px"
+      },
+      "0.5": {
+        "$type": "dimension",
+        "$value": "2px"
+      },
+      "1.5": {
+        "$type": "dimension",
+        "$value": "6px"
+      },
+      "2.5": {
+        "$type": "dimension",
+        "$value": "10px"
+      }
+    },
+    "radius": {
+      "none": {
+        "$type": "dimension",
+        "$value": "0px"
+      },
+      "xs": {
+        "$type": "dimension",
+        "$value": "4px"
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "6px"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "10px"
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "14px"
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "20px"
+      },
+      "2xl": {
+        "$type": "dimension",
+        "$value": "28px"
+      },
+      "3xl": {
+        "$type": "dimension",
+        "$value": "36px"
+      },
+      "pill": {
+        "$type": "dimension",
+        "$value": "999px"
+      }
+    }
+  },
+  "typography": {
+    "display1": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Sora Variable', 'Sora', 'SF Pro Display', system-ui, sans-serif",
+        "fontSize": "72px",
+        "lineHeight": "76px",
+        "fontWeight": 620,
+        "letterSpacing": "-0.035em"
+      },
+      "$description": "Landing hero headline."
+    },
+    "display2": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Sora Variable', 'Sora', 'SF Pro Display', system-ui, sans-serif",
+        "fontSize": "56px",
+        "lineHeight": "60px",
+        "fontWeight": 620,
+        "letterSpacing": "-0.03em"
+      },
+      "$description": "Section hero, onboarding statements."
+    },
+    "display3": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Sora Variable', 'Sora', 'SF Pro Display', system-ui, sans-serif",
+        "fontSize": "44px",
+        "lineHeight": "50px",
+        "fontWeight": 600,
+        "letterSpacing": "-0.025em"
+      },
+      "$description": "Feature headline, empty-state hero."
+    },
+    "title1": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Sora Variable', 'Sora', 'SF Pro Display', system-ui, sans-serif",
+        "fontSize": "34px",
+        "lineHeight": "40px",
+        "fontWeight": 600,
+        "letterSpacing": "-0.02em"
+      },
+      "$description": "Page title."
+    },
+    "title2": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Sora Variable', 'Sora', 'SF Pro Display', system-ui, sans-serif",
+        "fontSize": "27px",
+        "lineHeight": "34px",
+        "fontWeight": 600,
+        "letterSpacing": "-0.016em"
+      },
+      "$description": "Major section heading."
+    },
+    "title3": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Sora Variable', 'Sora', 'SF Pro Display', system-ui, sans-serif",
+        "fontSize": "22px",
+        "lineHeight": "28px",
+        "fontWeight": 600,
+        "letterSpacing": "-0.012em"
+      },
+      "$description": "Card group heading, modal title."
+    },
+    "headline": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Inter Variable', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "fontWeight": 600,
+        "letterSpacing": "-0.008em"
+      },
+      "$description": "Card title, list item emphasis."
+    },
+    "bodyLarge": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Inter Variable', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "fontSize": "17px",
+        "lineHeight": "26px",
+        "fontWeight": 400,
+        "letterSpacing": "-0.002em"
+      },
+      "$description": "Article body, long-form reading."
+    },
+    "body": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Inter Variable', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "fontSize": "15px",
+        "lineHeight": "22px",
+        "fontWeight": 400,
+        "letterSpacing": "0em"
+      },
+      "$description": "Default UI text."
+    },
+    "bodySmall": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Inter Variable', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "fontSize": "13.5px",
+        "lineHeight": "20px",
+        "fontWeight": 400,
+        "letterSpacing": "0.002em"
+      },
+      "$description": "Secondary text, descriptions, metadata."
+    },
+    "label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Inter Variable', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "fontSize": "13.5px",
+        "lineHeight": "16px",
+        "fontWeight": 550,
+        "letterSpacing": "0.004em"
+      },
+      "$description": "Buttons, tabs, form labels."
+    },
+    "caption": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Inter Variable', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "fontSize": "12px",
+        "lineHeight": "16px",
+        "fontWeight": 450,
+        "letterSpacing": "0.008em"
+      },
+      "$description": "Timestamps, helper text, counts."
+    },
+    "overline": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'Inter Variable', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif",
+        "fontSize": "11px",
+        "lineHeight": "14px",
+        "fontWeight": 600,
+        "letterSpacing": "0.09em"
+      },
+      "$description": "Category eyebrow. Uppercase. Max 3 words."
+    },
+    "mono": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', monospace",
+        "fontSize": "13px",
+        "lineHeight": "20px",
+        "fontWeight": 450,
+        "letterSpacing": "0em"
+      },
+      "$description": "IDs, keys, timecode, code."
+    },
+    "monoLarge": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', monospace",
+        "fontSize": "28px",
+        "lineHeight": "34px",
+        "fontWeight": 500,
+        "letterSpacing": "-0.01em"
+      },
+      "$description": "Dashboard metric values, wallet balances."
+    }
+  },
+  "duration": {
+    "instant": {
+      "$type": "duration",
+      "$value": "80ms"
+    },
+    "fast": {
+      "$type": "duration",
+      "$value": "140ms"
+    },
+    "base": {
+      "$type": "duration",
+      "$value": "200ms"
+    },
+    "moderate": {
+      "$type": "duration",
+      "$value": "280ms"
+    },
+    "slow": {
+      "$type": "duration",
+      "$value": "380ms"
+    },
+    "slower": {
+      "$type": "duration",
+      "$value": "520ms"
+    },
+    "ambient": {
+      "$type": "duration",
+      "$value": "900ms"
+    }
+  },
+  "cubicBezier": {
+    "enter": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.16,
+        1,
+        0.3,
+        1
+      ]
+    },
+    "exit": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.4,
+        0,
+        1,
+        1
+      ]
+    },
+    "standard": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.4,
+        0,
+        0.2,
+        1
+      ]
+    },
+    "emphasized": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.2,
+        0,
+        0,
+        1
+      ]
+    },
+    "spring": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.34,
+        1.56,
+        0.64,
+        1
+      ]
+    },
+    "anticipate": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.68,
+        -0.4,
+        0.32,
+        1.4
+      ]
+    }
+  }
+}

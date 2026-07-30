@@ -1,0 +1,486 @@
+/**
+ * SYLORA shared screen styles
+ * ---------------------------------------------------------------------------
+ * Styles for the composites in `src/screens/components.tsx` plus the layout
+ * primitives that several screens share. Screen-specific rules live in the
+ * screen group stylesheets.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Generative media                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Cover art is synthesised from a seeded hue. Three stacked layers:
+ *   art    two-stop aurora gradient at the seed hue and its complement
+ *   sweep  a conic highlight, giving the surface a sense of direction
+ *   grain  fractal noise at very low opacity, which stops large flat
+ *          gradients from banding on 8-bit displays
+ */
+.sy-media {
+  position: relative;
+  inline-size: 100%;
+  overflow: hidden;
+  background: var(--sy-bg-active);
+  isolation: isolate;
+}
+.sy-media--radius-md { border-radius: var(--sy-radius-md); }
+.sy-media--radius-lg { border-radius: var(--sy-radius-lg); }
+.sy-media--radius-xl { border-radius: var(--sy-radius-xl); }
+.sy-media--radius-none { border-radius: 0; }
+
+.sy-media__art {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      120% 100% at 12% 8%,
+      oklch(66% 0.19 calc(var(--seed-hue) * 1deg)) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      110% 110% at 88% 92%,
+      oklch(58% 0.17 calc((var(--seed-hue) + 128) * 1deg)) 0%,
+      transparent 62%
+    ),
+    linear-gradient(
+      152deg,
+      oklch(32% 0.11 calc((var(--seed-hue) + 40) * 1deg)),
+      oklch(20% 0.07 calc((var(--seed-hue) + 260) * 1deg))
+    );
+}
+
+.sy-media__sweep {
+  position: absolute;
+  inset: -20%;
+  background: conic-gradient(
+    from calc(var(--seed-hue) * 1deg) at 30% 30%,
+    transparent 0deg,
+    oklch(96% 0.03 calc(var(--seed-hue) * 1deg) / 0.22) 60deg,
+    transparent 150deg,
+    transparent 360deg
+  );
+  mix-blend-mode: overlay;
+}
+
+/**
+ * Grain. An inline SVG turbulence filter — no network request, no asset
+ * pipeline, and it is what stops the gradients above from banding.
+ */
+.sy-media__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/** Scrim: a bottom-weighted gradient so overlaid captions stay legible. */
+.sy-media--scrim::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    oklch(12% 0.02 282 / 0.82) 0%,
+    oklch(12% 0.02 282 / 0.32) 38%,
+    transparent 68%
+  );
+}
+
+.sy-media__content {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: var(--sy-space-3);
+}
+
+.sy-media__play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  inline-size: 52px;
+  block-size: 52px;
+  border-radius: 50%;
+  background: oklch(98% 0 0 / 0.16);
+  border: 1px solid oklch(98% 0 0 / 0.28);
+  color: #fff;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: scale var(--sy-transition-hover), background-color var(--sy-transition-hover);
+}
+.sy-media:hover .sy-media__play {
+  scale: 1.08;
+  background: oklch(98% 0 0 / 0.26);
+}
+
+.sy-media__duration {
+  position: absolute;
+  inset-block-end: var(--sy-space-2);
+  inset-inline-end: var(--sy-space-2);
+  padding: 2px var(--sy-space-1_5);
+  border-radius: var(--sy-radius-xs);
+  background: oklch(10% 0 0 / 0.72);
+  color: #fff;
+  font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Post card                                                           */
+/* ------------------------------------------------------------------ */
+
+.sy-post {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  padding: var(--sy-space-4);
+}
+.sy-post__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-3);
+}
+.sy-post__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-inline-size: 0;
+}
+.sy-post__name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sy-space-1_5);
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+  min-inline-size: 0;
+}
+.sy-post__handle {
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sy-post__body {
+  /* Reading measure applies even inside a card. */
+  max-inline-size: var(--sy-measure-comfortable);
+  color: var(--sy-fg-default);
+}
+.sy-post__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+  margin-block-start: calc(var(--sy-space-1) * -1);
+}
+
+.sy-post-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  block-size: 34px;
+  padding-inline: var(--sy-space-2);
+  border-radius: var(--sy-radius-md);
+  color: var(--sy-fg-quiet);
+  transition: color var(--sy-transition-hover), background-color var(--sy-transition-hover), scale var(--sy-transition-press);
+}
+.sy-post-action:hover {
+  color: var(--sy-fg-default);
+  background: var(--sy-bg-hover);
+}
+.sy-post-action:active {
+  scale: 0.92;
+}
+/* Like is the only action that changes hue on hover — it is the emotional one. */
+.sy-post-action:first-child:hover {
+  color: var(--sy-danger-fg);
+}
+
+/* ------------------------------------------------------------------ */
+/* Stream card                                                         */
+/* ------------------------------------------------------------------ */
+
+.sy-stream-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+  background: transparent;
+  border-color: transparent;
+}
+.sy-stream-card--sm { inline-size: 220px; }
+.sy-stream-card--md { inline-size: 100%; }
+
+.sy-stream-card__overlay-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sy-stream-card__duration {
+  padding: 2px var(--sy-space-1_5);
+  border-radius: var(--sy-radius-xs);
+  background: oklch(10% 0 0 / 0.66);
+  color: #fff;
+  font-size: 11px;
+}
+.sy-stream-card__meta {
+  display: flex;
+  gap: var(--sy-space-3);
+  align-items: flex-start;
+}
+.sy-stream-card__text {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sy-stream-card__title {
+  font-size: var(--sy-type-label-size);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--sy-fg-default);
+}
+
+/* ------------------------------------------------------------------ */
+/* Creator card                                                        */
+/* ------------------------------------------------------------------ */
+
+.sy-creator-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sy-creator-card__banner {
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+}
+.sy-creator-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  padding: 0 var(--sy-space-4) var(--sy-space-4);
+}
+/* Avatar straddles the banner edge — the classic profile overlap, tokenised. */
+.sy-creator-card__avatar {
+  margin-block-start: -28px;
+  box-shadow: 0 0 0 3px var(--sy-bg-surface);
+  border-radius: 50%;
+  margin-block-end: var(--sy-space-2);
+}
+.sy-creator-card__bio {
+  margin-block: var(--sy-space-1);
+  min-block-size: 40px;
+}
+.sy-creator-card__stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  margin-block-end: var(--sy-space-3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Charts                                                              */
+/* ------------------------------------------------------------------ */
+
+.sy-barchart__plot {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sy-space-2);
+}
+.sy-barchart__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  block-size: 100%;
+  gap: var(--sy-space-2);
+  min-inline-size: 0;
+}
+.sy-barchart__bar {
+  position: relative;
+  inline-size: 100%;
+  max-inline-size: 44px;
+  border-radius: var(--sy-radius-sm) var(--sy-radius-sm) 2px 2px;
+  background: linear-gradient(to top, color-mix(in oklab, var(--tone-solid) 42%, transparent), var(--tone-solid));
+  /* Bars grow from the baseline on mount — the axis is the origin. */
+  transform-origin: bottom;
+  animation: sy-bar-grow var(--sy-dur-slower) var(--sy-ease-emphasized) backwards;
+}
+.sy-barchart__col:nth-child(1) .sy-barchart__bar { animation-delay: 0ms; }
+.sy-barchart__col:nth-child(2) .sy-barchart__bar { animation-delay: 40ms; }
+.sy-barchart__col:nth-child(3) .sy-barchart__bar { animation-delay: 80ms; }
+.sy-barchart__col:nth-child(4) .sy-barchart__bar { animation-delay: 120ms; }
+.sy-barchart__col:nth-child(5) .sy-barchart__bar { animation-delay: 160ms; }
+.sy-barchart__col:nth-child(6) .sy-barchart__bar { animation-delay: 200ms; }
+.sy-barchart__col:nth-child(7) .sy-barchart__bar { animation-delay: 240ms; }
+
+@keyframes sy-bar-grow {
+  from { scale: 1 0; opacity: 0; }
+  to { scale: 1 1; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sy-barchart__bar { animation: none; }
+}
+
+.sy-barchart__value {
+  position: absolute;
+  inset-block-start: calc(var(--sy-space-5) * -1);
+  inset-inline: 0;
+  text-align: center;
+  color: var(--sy-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sy-barchart__label {
+  white-space: nowrap;
+}
+
+.sy-donut {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.sy-donut__centre {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* List row                                                            */
+/* ------------------------------------------------------------------ */
+
+.sy-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  inline-size: 100%;
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  text-align: start;
+  color: inherit;
+  transition: background-color var(--sy-transition-hover);
+}
+button.sy-list-row:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-list-row__leading {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.sy-list-row__text {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sy-list-row__title {
+  font-size: var(--sy-type-label-size);
+  font-weight: 550;
+  color: var(--sy-fg-default);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sy-list-row__trailing {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  color: var(--sy-fg-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Screen section                                                      */
+/* ------------------------------------------------------------------ */
+
+.sy-screen-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  margin-block-end: var(--sy-space-8);
+}
+.sy-screen-section__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-3);
+}
+
+/* Icon tile used across settings, wallet, admin and empty states. */
+.sy-tile-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--sy-radius-md);
+  background: var(--tone-bg, var(--sy-bg-active));
+  color: var(--tone-fg, var(--sy-fg-muted));
+  flex-shrink: 0;
+}
+.sy-tile-icon--lg {
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--sy-radius-lg);
+}
+
+/* Key/value rows used in wallet, settings and admin detail panels. */
+.sy-kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  padding-block: var(--sy-space-2_5);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-kv:last-child {
+  border-block-end: none;
+}
+.sy-kv__key {
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-bodySmall-size);
+}
+.sy-kv__value {
+  font-weight: 550;
+  text-align: end;
+}
+
+/**
+ * Entrance choreography.
+ * Sections cascade in at 40ms intervals. Capped at eight children so long
+ * lists do not turn the cascade into a progress bar.
+ */
+.sy-enter > * {
+  animation: sy-enter-up var(--sy-dur-slow) var(--sy-ease-enter) backwards;
+}
+.sy-enter > *:nth-child(1) { animation-delay: 0ms; }
+.sy-enter > *:nth-child(2) { animation-delay: 40ms; }
+.sy-enter > *:nth-child(3) { animation-delay: 80ms; }
+.sy-enter > *:nth-child(4) { animation-delay: 120ms; }
+.sy-enter > *:nth-child(5) { animation-delay: 160ms; }
+.sy-enter > *:nth-child(6) { animation-delay: 200ms; }
+.sy-enter > *:nth-child(7) { animation-delay: 240ms; }
+.sy-enter > *:nth-child(n + 8) { animation-delay: 280ms; }
+
+@keyframes sy-enter-up {
+  from {
+    opacity: 0;
+    translate: 0 var(--sy-travel-medium);
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sy-enter > * {
+    animation: sy-enter-fade var(--sy-dur-base) linear backwards;
+  }
+  @keyframes sy-enter-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}

@@ -1,0 +1,668 @@
+{
+  "generatedAt": "2026-07-30T18:53:43.470Z",
+  "standard": "WCAG 2.2",
+  "note": "Ratios computed from gamut-mapped sRGB hex, which is what a display actually renders. Wide-gamut OKLCH rendering has equal or greater separation.",
+  "summary": {
+    "total": 82,
+    "passed": 82,
+    "failed": 0
+  },
+  "results": [
+    {
+      "theme": "dark",
+      "pair": "fg-default on bg-canvas",
+      "ratio": 17.78,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "fg-muted on bg-canvas",
+      "ratio": 10.1,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "fg-default on bg-surface",
+      "ratio": 16.87,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "fg-muted on bg-surface",
+      "ratio": 9.58,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "fg-default on bg-raised",
+      "ratio": 15.66,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "fg-muted on bg-raised",
+      "ratio": 8.89,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "iris-11 text on surface",
+      "ratio": 9.33,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "on-iris text on iris-9 solid",
+      "ratio": 5,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "iris-9 solid against canvas",
+      "ratio": 5,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "iris-9 solid against surface",
+      "ratio": 4.74,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "iris-8 emphasis on surface",
+      "ratio": 2.69,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "flux-11 text on surface",
+      "ratio": 9.97,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "on-flux text on flux-9 solid",
+      "ratio": 5.59,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "flux-9 solid against canvas",
+      "ratio": 5.59,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "flux-9 solid against surface",
+      "ratio": 5.31,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "flux-8 emphasis on surface",
+      "ratio": 2.96,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "nova-11 text on surface",
+      "ratio": 8.99,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "on-nova text on nova-9 solid",
+      "ratio": 4.84,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "nova-9 solid against canvas",
+      "ratio": 4.84,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "nova-9 solid against surface",
+      "ratio": 4.59,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "nova-8 emphasis on surface",
+      "ratio": 2.61,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "verdant-11 text on surface",
+      "ratio": 10.02,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "on-verdant text on verdant-9 solid",
+      "ratio": 5.71,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "verdant-9 solid against canvas",
+      "ratio": 5.71,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "verdant-9 solid against surface",
+      "ratio": 5.42,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "verdant-8 emphasis on surface",
+      "ratio": 3.04,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "solar-11 text on surface",
+      "ratio": 9.49,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "on-solar text on solar-9 solid",
+      "ratio": 5.28,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "solar-9 solid against canvas",
+      "ratio": 5.28,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "solar-9 solid against surface",
+      "ratio": 5.01,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "solar-8 emphasis on surface",
+      "ratio": 2.83,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "crimson-11 text on surface",
+      "ratio": 9.15,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "on-crimson text on crimson-9 solid",
+      "ratio": 4.89,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "crimson-9 solid against canvas",
+      "ratio": 4.89,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "crimson-9 solid against surface",
+      "ratio": 4.64,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "crimson-8 emphasis on surface",
+      "ratio": 2.65,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "border-default on surface",
+      "ratio": 1.92,
+      "requirement": 1.3,
+      "level": "Perceivable hairline",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "border-strong on surface",
+      "ratio": 2.87,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "border-interactive on surface",
+      "ratio": 5.1,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "focus ring (iris-9) on canvas",
+      "ratio": 5,
+      "requirement": 3,
+      "level": "AA focus indicator",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "focus ring (iris-9) on surface",
+      "ratio": 4.74,
+      "requirement": 3,
+      "level": "AA focus indicator",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-default on bg-canvas",
+      "ratio": 16.14,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-muted on bg-canvas",
+      "ratio": 6.56,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-default on bg-surface",
+      "ratio": 15.84,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-muted on bg-surface",
+      "ratio": 6.44,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-default on bg-raised",
+      "ratio": 15.03,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-muted on bg-raised",
+      "ratio": 6.11,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "iris-11 text on surface",
+      "ratio": 7,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "on-iris text on iris-9 solid",
+      "ratio": 4.94,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "iris-9 solid against canvas",
+      "ratio": 4.94,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "iris-9 solid against surface",
+      "ratio": 4.85,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "iris-8 emphasis on surface",
+      "ratio": 1.98,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "flux-11 text on surface",
+      "ratio": 6.22,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "on-flux text on flux-9 solid",
+      "ratio": 4.58,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "flux-9 solid against canvas",
+      "ratio": 4.58,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "flux-9 solid against surface",
+      "ratio": 4.5,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "flux-8 emphasis on surface",
+      "ratio": 1.87,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "nova-11 text on surface",
+      "ratio": 7.12,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "on-nova text on nova-9 solid",
+      "ratio": 5.07,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "nova-9 solid against canvas",
+      "ratio": 5.07,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "nova-9 solid against surface",
+      "ratio": 4.97,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "nova-8 emphasis on surface",
+      "ratio": 2.06,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "verdant-11 text on surface",
+      "ratio": 6.11,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "on-verdant text on verdant-9 solid",
+      "ratio": 4.6,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "verdant-9 solid against canvas",
+      "ratio": 4.6,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "verdant-9 solid against surface",
+      "ratio": 4.52,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "verdant-8 emphasis on surface",
+      "ratio": 1.86,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "solar-11 text on surface",
+      "ratio": 6.55,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "on-solar text on solar-9 solid",
+      "ratio": 4.59,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "solar-9 solid against canvas",
+      "ratio": 4.59,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "solar-9 solid against surface",
+      "ratio": 4.5,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "solar-8 emphasis on surface",
+      "ratio": 1.95,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "crimson-11 text on surface",
+      "ratio": 7.04,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "on-crimson text on crimson-9 solid",
+      "ratio": 4.97,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "crimson-9 solid against canvas",
+      "ratio": 4.97,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "crimson-9 solid against surface",
+      "ratio": 4.87,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "crimson-8 emphasis on surface",
+      "ratio": 2.04,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "border-default on surface",
+      "ratio": 1.46,
+      "requirement": 1.3,
+      "level": "Perceivable hairline",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "border-strong on surface",
+      "ratio": 1.94,
+      "requirement": 1.5,
+      "level": "Perceivable edge",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "border-interactive on surface",
+      "ratio": 4.51,
+      "requirement": 3,
+      "level": "AA non-text",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "focus ring (iris-9) on canvas",
+      "ratio": 4.94,
+      "requirement": 3,
+      "level": "AA focus indicator",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "focus ring (iris-9) on surface",
+      "ratio": 4.85,
+      "requirement": 3,
+      "level": "AA focus indicator",
+      "pass": true
+    }
+  ]
+}

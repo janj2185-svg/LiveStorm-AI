@@ -1,0 +1,613 @@
+/**
+ * SYLORA base layer
+ * ---------------------------------------------------------------------------
+ * Reset, document defaults, typography classes and the small set of layout
+ * utilities the whole product is built from. Everything here consumes tokens;
+ * there is not a single literal colour, size or duration below.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Reset                                                               */
+/* ------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Scroll anchoring for sticky headers. */
+  scroll-padding-block-start: calc(var(--sy-shell-topBar) + var(--sy-space-4));
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--sy-font-text);
+  font-size: var(--sy-type-body-size);
+  line-height: var(--sy-type-body-line);
+  font-weight: var(--sy-type-body-weight);
+  letter-spacing: var(--sy-type-body-tracking);
+  color: var(--sy-fg-default);
+  background-color: var(--sy-bg-canvas);
+  /* Grayscale antialiasing keeps light-on-dark text from looking bold. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-synthesis-weight: none;
+  /* Tabular figures everywhere: numbers in a product must not shift width. */
+  font-variant-numeric: tabular-nums;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+hr {
+  border: none;
+  border-block-start: 1px solid var(--sy-border-subtle);
+}
+
+:target {
+  scroll-margin-block-start: calc(var(--sy-shell-topBar) + var(--sy-space-4));
+}
+
+/* ------------------------------------------------------------------ */
+/* Focus                                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Focus is never removed, only redrawn. The double ring — brand colour inside,
+ * canvas colour outside — is what lets one indicator survive on top of any
+ * background, including a brand-coloured button.
+ */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--sy-accent-solid);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--sy-bg-canvas);
+  border-radius: var(--sy-radius-sm);
+}
+
+/* Windows High Contrast Mode: fall back to the system's own indicator. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid Highlight;
+    box-shadow: none;
+  }
+}
+
+::selection {
+  background-color: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+}
+
+/* ------------------------------------------------------------------ */
+/* Scrollbars                                                          */
+/* ------------------------------------------------------------------ */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sy-border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--sy-border-strong);
+  border-radius: var(--sy-radius-pill);
+  /* Transparent border creates inset padding without a wrapper. */
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--sy-border-interactive);
+  background-clip: content-box;
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography classes                                                  */
+/* ------------------------------------------------------------------ */
+
+.sy-display-1,
+.sy-display-2,
+.sy-display-3,
+.sy-title-1,
+.sy-title-2,
+.sy-title-3 {
+  font-family: var(--sy-font-display);
+  /* Display type is set tight; optical sizing does the rest. */
+  font-optical-sizing: auto;
+}
+
+.sy-display-1 {
+  font-size: var(--sy-type-display1-size);
+  line-height: 1.06;
+  font-weight: var(--sy-type-display1-weight);
+  letter-spacing: var(--sy-type-display1-tracking);
+}
+.sy-display-2 {
+  font-size: var(--sy-type-display2-size);
+  line-height: 1.08;
+  font-weight: var(--sy-type-display2-weight);
+  letter-spacing: var(--sy-type-display2-tracking);
+}
+.sy-display-3 {
+  font-size: var(--sy-type-display3-size);
+  line-height: 1.14;
+  font-weight: var(--sy-type-display3-weight);
+  letter-spacing: var(--sy-type-display3-tracking);
+}
+.sy-title-1 {
+  font-size: var(--sy-type-title1-size);
+  line-height: 1.18;
+  font-weight: var(--sy-type-title1-weight);
+  letter-spacing: var(--sy-type-title1-tracking);
+}
+.sy-title-2 {
+  font-size: var(--sy-type-title2-size);
+  line-height: var(--sy-type-title2-line);
+  font-weight: var(--sy-type-title2-weight);
+  letter-spacing: var(--sy-type-title2-tracking);
+}
+.sy-title-3 {
+  font-size: var(--sy-type-title3-size);
+  line-height: var(--sy-type-title3-line);
+  font-weight: var(--sy-type-title3-weight);
+  letter-spacing: var(--sy-type-title3-tracking);
+}
+.sy-headline {
+  font-size: var(--sy-type-headline-size);
+  line-height: var(--sy-type-headline-line);
+  font-weight: var(--sy-type-headline-weight);
+  letter-spacing: var(--sy-type-headline-tracking);
+}
+.sy-body-lg {
+  font-size: var(--sy-type-bodyLarge-size);
+  line-height: var(--sy-type-bodyLarge-line);
+  font-weight: var(--sy-type-bodyLarge-weight);
+}
+.sy-body {
+  font-size: var(--sy-type-body-size);
+  line-height: var(--sy-type-body-line);
+  font-weight: var(--sy-type-body-weight);
+}
+.sy-body-sm {
+  font-size: var(--sy-type-bodySmall-size);
+  line-height: var(--sy-type-bodySmall-line);
+  font-weight: var(--sy-type-bodySmall-weight);
+  letter-spacing: var(--sy-type-bodySmall-tracking);
+}
+.sy-label {
+  font-size: var(--sy-type-label-size);
+  line-height: var(--sy-type-label-line);
+  font-weight: var(--sy-type-label-weight);
+  letter-spacing: var(--sy-type-label-tracking);
+}
+.sy-caption {
+  font-size: var(--sy-type-caption-size);
+  line-height: var(--sy-type-caption-line);
+  font-weight: var(--sy-type-caption-weight);
+  letter-spacing: var(--sy-type-caption-tracking);
+}
+.sy-overline {
+  font-size: var(--sy-type-overline-size);
+  line-height: var(--sy-type-overline-line);
+  font-weight: var(--sy-type-overline-weight);
+  letter-spacing: var(--sy-type-overline-tracking);
+  text-transform: uppercase;
+}
+.sy-mono {
+  font-family: var(--sy-font-mono);
+  font-size: var(--sy-type-mono-size);
+  line-height: var(--sy-type-mono-line);
+  font-weight: var(--sy-type-mono-weight);
+  font-variant-numeric: tabular-nums;
+}
+.sy-mono-lg {
+  font-family: var(--sy-font-mono);
+  font-size: var(--sy-type-monoLarge-size);
+  line-height: var(--sy-type-monoLarge-line);
+  font-weight: var(--sy-type-monoLarge-weight);
+  letter-spacing: var(--sy-type-monoLarge-tracking);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dark mode sheds a little weight from body copy to cancel optical bloom. */
+[data-theme='dark'] .sy-body,
+[data-theme='dark'] .sy-body-lg,
+[data-theme='dark'] .sy-body-sm {
+  font-weight: 380;
+}
+
+/* Colour helpers */
+.sy-fg-default {
+  color: var(--sy-fg-default);
+}
+.sy-fg-muted {
+  color: var(--sy-fg-muted);
+}
+.sy-fg-quiet {
+  color: var(--sy-fg-quiet);
+}
+.sy-fg-accent {
+  color: var(--sy-accent-fg);
+}
+.sy-fg-success {
+  color: var(--sy-success-fg);
+}
+.sy-fg-warning {
+  color: var(--sy-warning-fg);
+}
+.sy-fg-danger {
+  color: var(--sy-danger-fg);
+}
+.sy-fg-live {
+  color: var(--sy-live-fg);
+}
+.sy-fg-creator {
+  color: var(--sy-creator-fg);
+}
+
+/**
+ * Gradient text. Uses the aurora gradient clipped to the glyphs.
+ * `paint-order` keeps the fallback colour visible if background-clip fails.
+ */
+.sy-gradient-text {
+  background: var(--sy-gradient-aurora);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Fallback for engines without background-clip: text */
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    background: none;
+    color: var(--sy-accent-fg);
+  }
+}
+
+.sy-measure {
+  max-width: var(--sy-measure-comfortable);
+}
+
+.sy-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sy-clamp-2,
+.sy-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sy-clamp-2 {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.sy-clamp-3 {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* ------------------------------------------------------------------ */
+/* Accessibility utilities                                             */
+/* ------------------------------------------------------------------ */
+
+/** Visually hidden but reachable by assistive technology. */
+.sy-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/** Hidden until focused — used for skip links. */
+.sy-skip-link {
+  position: absolute;
+  inset-inline-start: var(--sy-space-4);
+  inset-block-start: var(--sy-space-4);
+  z-index: var(--sy-z-spotlight);
+  padding: var(--sy-space-3) var(--sy-space-5);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+  font-weight: 600;
+  transform: translateY(calc(-100% - var(--sy-space-6)));
+  transition: transform var(--sy-transition-enter);
+}
+.sy-skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/**
+ * Guarantees a 44px touch target without changing the visual box.
+ * Applied to any control whose rendered height is below the minimum.
+ */
+.sy-touch-target {
+  position: relative;
+}
+.sy-touch-target::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout utilities                                                    */
+/* ------------------------------------------------------------------ */
+
+.sy-stack {
+  display: flex;
+  flex-direction: column;
+}
+.sy-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.sy-between {
+  justify-content: space-between;
+}
+.sy-center {
+  align-items: center;
+  justify-content: center;
+}
+.sy-wrap {
+  flex-wrap: wrap;
+}
+.sy-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sy-shrink-0 {
+  flex-shrink: 0;
+}
+
+/* Gap scale, matching the spacing lattice. */
+.sy-gap-1 { gap: var(--sy-space-1); }
+.sy-gap-2 { gap: var(--sy-space-2); }
+.sy-gap-3 { gap: var(--sy-space-3); }
+.sy-gap-4 { gap: var(--sy-space-4); }
+.sy-gap-5 { gap: var(--sy-space-5); }
+.sy-gap-6 { gap: var(--sy-space-6); }
+.sy-gap-8 { gap: var(--sy-space-8); }
+.sy-gap-10 { gap: var(--sy-space-10); }
+.sy-gap-12 { gap: var(--sy-space-12); }
+
+/** The responsive content column. Width and margin come from the grid tokens. */
+.sy-container {
+  width: 100%;
+  max-width: var(--sy-grid-max);
+  margin-inline: auto;
+  padding-inline: var(--sy-grid-margin);
+}
+
+/**
+ * Auto-fitting card grid.
+ * `--min` is the smallest acceptable card width; the browser decides the
+ * column count. This removes almost every breakpoint from card layouts.
+ */
+.sy-grid {
+  display: grid;
+  gap: var(--sy-grid-gutter);
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--min, 260px), 100%), 1fr));
+}
+
+.sy-divider {
+  block-size: 1px;
+  inline-size: 100%;
+  background: var(--sy-border-subtle);
+  border: none;
+  flex-shrink: 0;
+}
+.sy-divider--vertical {
+  inline-size: 1px;
+  block-size: auto;
+  align-self: stretch;
+}
+
+/* ------------------------------------------------------------------ */
+/* Signature surfaces                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Aurora field.
+ * Three large, slowly drifting radial gradients. This is the brand's ambient
+ * backdrop: colour that feels like it is *behind* the interface rather than
+ * painted on it. Blur is baked into the gradient stops rather than applied as
+ * a filter, because filters on full-viewport elements are expensive.
+ */
+.sy-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Not announced; purely atmospheric. */
+  z-index: 0;
+}
+.sy-aurora::before,
+.sy-aurora::after {
+  content: '';
+  position: absolute;
+  inline-size: 80vmax;
+  block-size: 80vmax;
+  border-radius: 50%;
+  filter: blur(0.5px);
+  opacity: 0.5;
+  will-change: transform;
+}
+.sy-aurora::before {
+  inset-block-start: -30vmax;
+  inset-inline-start: -20vmax;
+  background: radial-gradient(
+    circle at center,
+    var(--sy-iris-9) 0%,
+    transparent 62%
+  );
+  animation: sy-aurora-a var(--sy-aurora-duration, 24s) ease-in-out infinite alternate;
+}
+.sy-aurora::after {
+  inset-block-end: -34vmax;
+  inset-inline-end: -24vmax;
+  background: radial-gradient(
+    circle at center,
+    var(--sy-flux-9) 0%,
+    transparent 62%
+  );
+  animation: sy-aurora-b var(--sy-aurora-duration, 24s) ease-in-out infinite alternate;
+}
+[data-theme='light'] .sy-aurora::before,
+[data-theme='light'] .sy-aurora::after {
+  opacity: 0.22;
+}
+
+@keyframes sy-aurora-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(12%, 8%, 0) scale(1.16);
+  }
+}
+@keyframes sy-aurora-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(-10%, -6%, 0) scale(0.94);
+  }
+}
+
+/**
+ * Glass.
+ * Three cooperating layers — blur, translucent fill, rim highlight.
+ * `@supports` guards the whole effect: without backdrop-filter the surface
+ * becomes opaque rather than unreadable.
+ */
+.sy-glass {
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .sy-glass {
+    background: var(--sy-glass-panel-fill);
+    -webkit-backdrop-filter: blur(var(--sy-glass-panel-blur)) saturate(var(--sy-glass-panel-saturate));
+    backdrop-filter: blur(var(--sy-glass-panel-blur)) saturate(var(--sy-glass-panel-saturate));
+    border-color: var(--sy-glass-panel-rim);
+  }
+  .sy-glass--veil {
+    background: var(--sy-glass-veil-fill);
+    -webkit-backdrop-filter: blur(var(--sy-glass-veil-blur)) saturate(var(--sy-glass-veil-saturate));
+    backdrop-filter: blur(var(--sy-glass-veil-blur)) saturate(var(--sy-glass-veil-saturate));
+    border-color: var(--sy-glass-veil-rim);
+  }
+  .sy-glass--dome {
+    background: var(--sy-glass-dome-fill);
+    -webkit-backdrop-filter: blur(var(--sy-glass-dome-blur)) saturate(var(--sy-glass-dome-saturate));
+    backdrop-filter: blur(var(--sy-glass-dome-blur)) saturate(var(--sy-glass-dome-saturate));
+    border-color: var(--sy-glass-dome-rim);
+  }
+}
+
+/**
+ * Users who ask for more contrast get opaque surfaces. Translucency is the
+ * first thing to go, because it is the only place the system knowingly trades
+ * contrast for depth.
+ */
+@media (prefers-contrast: more) {
+  .sy-glass,
+  .sy-glass--veil,
+  .sy-glass--dome {
+    background: var(--sy-bg-surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border-color: var(--sy-border-interactive) !important;
+  }
+  .sy-aurora {
+    display: none;
+  }
+}
+
+/* Ambient motion is atmosphere, so it is the first thing removed. */
+@media (prefers-reduced-motion: reduce) {
+  .sy-aurora::before,
+  .sy-aurora::after {
+    animation: none;
+  }
+}

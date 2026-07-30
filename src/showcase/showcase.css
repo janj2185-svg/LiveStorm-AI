@@ -1,0 +1,395 @@
+/**
+ * Gallery chrome
+ * ---------------------------------------------------------------------------
+ * Styles for the design gallery itself. This is a *tool*, not part of the
+ * shipped product, so it is deliberately quieter than anything it frames: a
+ * neutral surround, no brand gradients, no ambient motion. The screens on
+ * display must be the only thing competing for attention.
+ */
+
+.sy-gallery {
+  display: flex;
+  flex-direction: column;
+  block-size: 100dvh;
+  background: var(--sy-neutral-1);
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/* Top bar                                                             */
+/* ------------------------------------------------------------------ */
+
+.sy-gallery__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-4);
+  block-size: 60px;
+  padding-inline: var(--sy-space-4);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  flex-shrink: 0;
+  z-index: var(--sy-z-navigation);
+}
+
+.sy-gallery__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+}
+
+.sy-gallery__bar-centre {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-inline-size: 0;
+}
+
+.sy-gallery__devices {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+  border: 1px solid var(--sy-border-subtle);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sy-gallery__devices::-webkit-scrollbar {
+  display: none;
+}
+.sy-gallery__device {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  block-size: 30px;
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-sm);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-label-size);
+  font-weight: 550;
+  white-space: nowrap;
+  transition: background-color var(--sy-transition-hover), color var(--sy-transition-hover);
+}
+.sy-gallery__device:hover {
+  color: var(--sy-fg-default);
+}
+.sy-gallery__device.is-active {
+  background: var(--sy-bg-raised);
+  color: var(--sy-fg-default);
+  box-shadow: var(--sy-elevation-surface);
+}
+
+.sy-gallery__bar-end {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  flex-shrink: 0;
+}
+
+.sy-gallery__zoom {
+  block-size: 32px;
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-md);
+  border: 1px solid var(--sy-border-default);
+  background: var(--sy-bg-raised);
+  color: var(--sy-fg-muted);
+  font-family: var(--sy-font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sy-gallery__zoom.is-active {
+  color: var(--sy-accent-fg);
+  border-color: var(--sy-accent-border);
+}
+
+/* ------------------------------------------------------------------ */
+/* Body                                                                */
+/* ------------------------------------------------------------------ */
+
+.sy-gallery__body {
+  flex: 1;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+
+.sy-gallery__nav {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  border-inline-end: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+}
+.sy-gallery__nav-search {
+  padding: var(--sy-space-3);
+  border-block-end: 1px solid var(--sy-border-subtle);
+  flex-shrink: 0;
+}
+.sy-gallery__nav-list {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--sy-space-3) var(--sy-space-2) var(--sy-space-8);
+}
+.sy-gallery__nav-group {
+  display: block;
+  padding: var(--sy-space-3) var(--sy-space-2) var(--sy-space-1);
+  color: var(--sy-fg-quiet);
+}
+.sy-gallery__nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sy-space-2);
+  inline-size: 100%;
+  block-size: 32px;
+  padding-inline: var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+  color: var(--sy-fg-muted);
+  font-size: var(--sy-type-bodySmall-size);
+  text-align: start;
+  transition: background-color var(--sy-transition-hover), color var(--sy-transition-hover);
+}
+.sy-gallery__nav-item:hover {
+  background: var(--sy-bg-hover);
+  color: var(--sy-fg-default);
+}
+.sy-gallery__nav-item.is-active {
+  background: var(--sy-accent-bg);
+  color: var(--sy-accent-fg);
+  font-weight: 550;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stage                                                               */
+/* ------------------------------------------------------------------ */
+
+.sy-gallery__stage {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow: auto;
+  padding: var(--sy-space-5) var(--sy-space-6) var(--sy-space-8);
+  /*
+    A faint dot grid. It gives the frames somewhere to sit and makes the
+    device chrome read as an object on a surface rather than floating in void.
+  */
+  background-image: radial-gradient(var(--sy-neutral-5) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.sy-gallery__stage-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sy-space-4);
+  flex-wrap: wrap;
+}
+.sy-gallery__stage-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+}
+.sy-gallery__purpose {
+  max-inline-size: 78ch;
+  margin-block: var(--sy-space-2) var(--sy-space-5);
+}
+
+.sy-gallery__frame-wrap {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.sy-gallery__notes {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-6);
+  padding: var(--sy-space-3) var(--sy-space-4);
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-surface);
+  border: 1px solid var(--sy-border-subtle);
+  color: var(--sy-fg-quiet);
+  max-inline-size: 80ch;
+  margin-inline: auto;
+}
+.sy-gallery__notes .sy-icon {
+  margin-block-start: 2px;
+  flex-shrink: 0;
+}
+
+.sy-gallery__menu-btn {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .sy-gallery__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sy-gallery__nav {
+    position: fixed;
+    inset-block: 60px 0;
+    inset-inline-start: 0;
+    z-index: var(--sy-z-drawer);
+    inline-size: 280px;
+    translate: -100% 0;
+    transition: translate var(--sy-transition-sheet);
+    box-shadow: var(--sy-elevation-overlay);
+  }
+  .sy-gallery__body.is-nav-open .sy-gallery__nav {
+    translate: 0 0;
+  }
+  .sy-gallery__menu-btn {
+    display: inline-flex;
+  }
+  .sy-gallery__bar-centre {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Device frame                                                        */
+/* ------------------------------------------------------------------ */
+
+.sy-device {
+  position: relative;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.sy-device__frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--sy-neutral-1);
+  /*
+    Bezel: a dark rim plus a hairline highlight. Two shadows rather than a
+    border keeps the corner radius perfectly continuous with the screen inside.
+  */
+  box-shadow:
+    0 0 0 10px oklch(16% 0.006 282),
+    0 0 0 11px oklch(34% 0.008 282),
+    0 32px 64px -24px oklch(4% 0.01 282 / 0.7),
+    0 8px 20px -8px oklch(4% 0.01 282 / 0.5);
+}
+
+.sy-device__frame.is-bare,
+.sy-device__frame--none {
+  box-shadow: 0 24px 60px -28px oklch(4% 0.01 282 / 0.6);
+  border: 1px solid var(--sy-border-default);
+}
+
+.sy-device__viewport {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: hidden;
+  background: var(--sy-neutral-1);
+}
+
+/* Hardware overlays */
+.sy-device__island {
+  position: absolute;
+  inset-block-start: 11px;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  inline-size: 124px;
+  block-size: 35px;
+  border-radius: 999px;
+  background: #000;
+  pointer-events: none;
+}
+.sy-device__punch {
+  position: absolute;
+  inset-block-start: 13px;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  inline-size: 13px;
+  block-size: 13px;
+  border-radius: 50%;
+  background: #000;
+  pointer-events: none;
+}
+.sy-device__home-indicator {
+  position: absolute;
+  inset-block-end: 9px;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  inline-size: 138px;
+  block-size: 5px;
+  border-radius: 999px;
+  background: oklch(70% 0 0 / 0.55);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Browser chrome */
+.sy-device__frame--browser .sy-device__viewport {
+  block-size: calc(100% - 40px);
+}
+.sy-device__browser-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  block-size: 40px;
+  padding-inline: var(--sy-space-3);
+  background: var(--sy-neutral-3);
+  border-block-end: 1px solid var(--sy-border-subtle);
+}
+.sy-device__dots {
+  display: flex;
+  gap: 6px;
+}
+.sy-device__dots i {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  background: var(--sy-neutral-6);
+}
+.sy-device__url {
+  flex: 1;
+  block-size: 24px;
+  display: flex;
+  align-items: center;
+  padding-inline: var(--sy-space-3);
+  border-radius: var(--sy-radius-sm);
+  background: var(--sy-neutral-1);
+  color: var(--sy-fg-quiet);
+  font-size: 11px;
+  font-family: var(--sy-font-mono);
+}
+
+.sy-device__caption {
+  position: absolute;
+  inset-block-end: -26px;
+  inset-inline: 0;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Preview surface                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The preview is a theme root. Setting `data-theme` here rather than on
+ * <html> is what allows a light product screen inside a dark gallery.
+ */
+.sy-preview {
+  block-size: 100%;
+  inline-size: 100%;
+  background: var(--sy-bg-canvas);
+  color: var(--sy-fg-default);
+  overflow: hidden;
+  /* Contain layout and paint so a screen cannot affect the gallery around it. */
+  contain: layout paint style;
+}
+
+.sy-preview .sy-shell {
+  block-size: 100%;
+}
+
+.sy-topbar__search {
+  inline-size: min(420px, 42%);
+}

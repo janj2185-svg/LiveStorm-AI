@@ -1,8 +1,4 @@
-dist
-node_modules
-.env
-.env.*
-!.env.example
-.DS_Store
+node_modules/
+dist/
 *.local
-*.tsbuildinfo
+.DS_Store

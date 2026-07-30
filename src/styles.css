@@ -1,0 +1,45 @@
+/**
+ * SYLORA stylesheet entry
+ * ---------------------------------------------------------------------------
+ * Import order is load-bearing and mirrors the system's dependency graph:
+ *
+ *   1. Fonts       must be requested first so text never reflows
+ *   2. Tokens      every later rule reads these custom properties
+ *   3. Base        reset, document defaults, typography, utilities
+ *   4. Brand       logo and AI orb
+ *   5. Components  primitives
+ *   6. Patterns    shell, navigation, layout
+ *   7. Screens     shared screen composites
+ *   8. Group CSS   per-area screen styles
+ *   9. Showcase    the gallery chrome, which is not part of the product
+ */
+
+/* 1 — Typefaces. Variable fonts, so one file covers the whole weight axis. */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/sora';
+@import '@fontsource-variable/jetbrains-mono';
+
+/* 2-7 — The design system. */
+@import './design-system/styles/tokens.css';
+@import './design-system/styles/base.css';
+@import './design-system/styles/brand.css';
+@import './design-system/styles/components.css';
+@import './design-system/styles/patterns.css';
+@import './design-system/styles/screens.css';
+
+/* 8 — Screen groups. */
+@import './screens/entry/entry.css';
+@import './screens/core/core.css';
+@import './screens/assistant/assistant.css';
+@import './screens/media/media.css';
+@import './screens/live/live.css';
+@import './screens/comms/comms.css';
+@import './screens/creator/creator.css';
+@import './screens/commerce/commerce.css';
+@import './screens/learning/learning.css';
+@import './screens/game/game.css';
+@import './screens/ops/ops.css';
+@import './screens/foundations/foundations.css';
+
+/* 9 — Gallery chrome. */
+@import './showcase/showcase.css';

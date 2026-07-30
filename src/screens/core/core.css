@@ -1,0 +1,206 @@
+/**
+ * Core screen styles — Home, Feed, Search, Discover, Profile, Settings,
+ * Notifications.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Home                                                                */
+/* ------------------------------------------------------------------ */
+
+.sy-home__main {
+  padding-block: var(--sy-space-4) var(--sy-space-8);
+}
+
+.sy-home__search {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  margin-block-end: var(--sy-space-5);
+}
+.sy-home__search .sy-input {
+  flex: 1;
+}
+/* On tablet and wider the shell's top bar owns search, so this row retires. */
+@container screen (min-width: 768px) {
+  .sy-home__search {
+    display: none;
+  }
+}
+
+/* Stories rail */
+.sy-stories {
+  display: flex;
+  gap: var(--sy-space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-inline: calc(var(--sy-space-4) * -1);
+  padding-inline: var(--sy-space-4);
+}
+.sy-stories::-webkit-scrollbar {
+  display: none;
+}
+.sy-story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  inline-size: 68px;
+  flex-shrink: 0;
+}
+/**
+ * The story ring is a gradient border drawn with a mask, so it hugs the avatar
+ * exactly. Seen stories drop to a flat neutral ring — the state change is
+ * saturation, which reads instantly even in peripheral vision.
+ */
+.sy-story__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 2.5px;
+  border-radius: 50%;
+  background: var(--sy-gradient-aurora);
+  transition: scale var(--sy-transition-press);
+}
+.sy-story__ring.is-seen {
+  background: var(--sy-border-default);
+}
+.sy-story:active .sy-story__ring {
+  scale: 0.94;
+}
+.sy-story__ring .sy-avatar__inner {
+  box-shadow: 0 0 0 2.5px var(--sy-bg-canvas);
+}
+.sy-story__own {
+  position: relative;
+  display: block;
+}
+.sy-story__add {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-end: -2px;
+  display: grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 50%;
+  background: var(--sy-accent-solid);
+  color: var(--sy-on-iris);
+  box-shadow: 0 0 0 2.5px var(--sy-bg-canvas);
+}
+.sy-story__name {
+  max-inline-size: 100%;
+  color: var(--sy-fg-muted);
+}
+
+/* Live tiles */
+.sy-live-tile {
+  inline-size: 232px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-2);
+}
+.sy-live-tile__top {
+  display: flex;
+  justify-content: flex-start;
+}
+.sy-live-tile__bottom {
+  position: absolute;
+  inset-block-end: var(--sy-space-3);
+  inset-inline: var(--sy-space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-2);
+  color: #fff;
+}
+.sy-live-tile__title {
+  font-size: var(--sy-type-bodySmall-size);
+  font-weight: 550;
+  line-height: 1.35;
+}
+@container screen (min-width: 1024px) {
+  .sy-live-tile {
+    inline-size: 268px;
+  }
+}
+
+/* AI daily brief */
+.sy-brief {
+  /* A hairline aurora border marks assistant-authored surfaces throughout the
+     product. It is the one visual signature reserved for generated content. */
+  position: relative;
+  background:
+    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
+    var(--sy-gradient-aurora) border-box;
+  border: 1px solid transparent;
+}
+.sy-brief__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+  margin-block-end: var(--sy-space-4);
+}
+.sy-brief__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-3);
+}
+.sy-brief__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-2_5);
+  color: var(--sy-fg-muted);
+}
+.sy-brief__list li .sy-icon {
+  margin-block-start: 3px;
+  color: var(--sy-accent-fg);
+}
+.sy-brief__list strong {
+  color: var(--sy-fg-default);
+  font-weight: 600;
+}
+.sy-brief__actions {
+  display: flex;
+  gap: var(--sy-space-2);
+  margin-block-start: var(--sy-space-5);
+}
+
+/* Feed column */
+.sy-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+  /* Feed text is capped independently of the card so long posts stay readable
+     even when the card is 900px wide on a desktop. */
+  max-inline-size: 680px;
+}
+
+/* Context panel pieces */
+.sy-context-title {
+  display: block;
+  margin-block-end: var(--sy-space-3);
+  color: var(--sy-fg-muted);
+}
+.sy-mission-mini,
+.sy-suggest-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+.sy-trend-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  inline-size: 100%;
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-sm);
+  text-align: start;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-trend-row:hover {
+  background: var(--sy-bg-hover);
+}
+.sy-trend-row__tag {
+  font-size: var(--sy-type-bodySmall-size);
+  font-weight: 550;
+}
