@@ -4,65 +4,112 @@ import 'package:go_router/go_router.dart';
 
 import 'core/lumen_theme.dart';
 import 'core/lumen_widgets.dart';
+import 'features/admin/admin_screens.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
+import 'features/business/business_screens.dart';
+import 'features/creator/creator_screens.dart';
+import 'features/learning/learning_screens.dart';
+import 'features/marketplace/marketplace_screens.dart';
+import 'features/more/more_screen.dart';
 import 'features/platform/platform_screens.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/social/social_screens.dart';
 
-const _destinations = <ShellDestination>[
-  ShellDestination(
-    label: 'Home',
-    icon: Icons.home_outlined,
-    selectedIcon: Icons.home_rounded,
-    path: '/home',
-  ),
-  ShellDestination(
-    label: 'Search',
-    icon: Icons.search_outlined,
-    selectedIcon: Icons.search_rounded,
-    path: '/search',
-  ),
-  ShellDestination(
-    label: 'Messages',
-    icon: Icons.chat_bubble_outline_rounded,
-    selectedIcon: Icons.chat_bubble_rounded,
-    path: '/messages',
-  ),
-  ShellDestination(
-    label: 'Wallet',
-    icon: Icons.account_balance_wallet_outlined,
-    selectedIcon: Icons.account_balance_wallet_rounded,
-    path: '/wallet',
-  ),
-  ShellDestination(
-    label: 'Gifts',
-    icon: Icons.card_giftcard_outlined,
-    selectedIcon: Icons.card_giftcard_rounded,
-    path: '/gifts',
-  ),
-  ShellDestination(
-    label: 'AI',
-    icon: Icons.auto_awesome_outlined,
-    selectedIcon: Icons.auto_awesome_rounded,
-    path: '/ai',
-  ),
-  ShellDestination(
-    label: 'Live',
-    icon: Icons.sensors_outlined,
-    selectedIcon: Icons.sensors_rounded,
-    path: '/live',
-  ),
-  ShellDestination(
-    label: 'Settings',
-    icon: Icons.settings_outlined,
-    selectedIcon: Icons.settings_rounded,
-    path: '/settings',
-  ),
+const _homeDestination = ShellDestination(
+  label: 'Home',
+  icon: Icons.home_outlined,
+  selectedIcon: Icons.home_rounded,
+  path: '/home',
+);
+const _searchDestination = ShellDestination(
+  label: 'Search',
+  icon: Icons.search_outlined,
+  selectedIcon: Icons.search_rounded,
+  path: '/search',
+);
+const _messagesDestination = ShellDestination(
+  label: 'Messages',
+  icon: Icons.chat_bubble_outline_rounded,
+  selectedIcon: Icons.chat_bubble_rounded,
+  path: '/messages',
+);
+const _marketplaceDestination = ShellDestination(
+  label: 'Market',
+  icon: Icons.storefront_outlined,
+  selectedIcon: Icons.storefront_rounded,
+  path: '/marketplace',
+);
+const _creatorDestination = ShellDestination(
+  label: 'Creator',
+  icon: Icons.edit_note_outlined,
+  selectedIcon: Icons.edit_note_rounded,
+  path: '/creator',
+);
+const _businessDestination = ShellDestination(
+  label: 'Workspace',
+  icon: Icons.business_outlined,
+  selectedIcon: Icons.business_rounded,
+  path: '/business',
+);
+const _adminDestination = ShellDestination(
+  label: 'Admin',
+  icon: Icons.admin_panel_settings_outlined,
+  selectedIcon: Icons.admin_panel_settings_rounded,
+  path: '/admin',
+);
+const _moreDestination = ShellDestination(
+  label: 'More',
+  icon: Icons.apps_outlined,
+  selectedIcon: Icons.apps_rounded,
+  path: '/more',
+);
+
+const _compactDestinations = <ShellDestination>[
+  _homeDestination,
+  _searchDestination,
+  _messagesDestination,
+  _marketplaceDestination,
+  _moreDestination,
 ];
+
+List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
+  final roleSet = roles.toSet();
+  return <ShellDestination>[
+    _homeDestination,
+    _searchDestination,
+    _messagesDestination,
+    _marketplaceDestination,
+    if (roleSet.contains('creator') || roleSet.contains('admin'))
+      _creatorDestination,
+    if (roleSet.contains('business') || roleSet.contains('admin'))
+      _businessDestination,
+    if (roleSet.contains('admin')) _adminDestination,
+    _moreDestination,
+  ];
+}
+
+bool canAccessRoleRoute(Iterable<String> roles, String path) {
+  final roleSet = roles.toSet();
+  if (path == '/marketplace/seller') {
+    return roleSet.contains('creator') || roleSet.contains('admin');
+  }
+  if (path == '/creator' || path.startsWith('/creator/')) {
+    return roleSet.contains('creator') || roleSet.contains('admin');
+  }
+  if (path == '/business' || path.startsWith('/business/')) {
+    return roleSet.contains('business') || roleSet.contains('admin');
+  }
+  if (path == '/admin' || path.startsWith('/admin/')) {
+    return roleSet.contains('admin');
+  }
+  return true;
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
+  final roles = auth.user?.roles ?? const <String>[];
+  final destinations = shellDestinationsForRoles(roles);
   final reducedMotion = ref.watch(
     visualSettingsProvider.select((value) => value.reducedMotion),
   );
@@ -118,12 +165,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       ShellRoute(
         builder: (context, state, child) {
-          final index = _destinationIndex(state.uri.path);
+          final index = _destinationIndex(state.uri.path, destinations);
+          final compactIndex = _destinationIndex(
+            state.uri.path,
+            _compactDestinations,
+          );
           return LumenResponsiveShell(
-            destinations: _destinations,
+            destinations: destinations,
             selectedIndex: index,
             onDestinationSelected: (value) =>
-                context.go(_destinations[value].path),
+                context.go(destinations[value].path),
+            compactDestinations: _compactDestinations,
+            compactSelectedIndex: compactIndex,
+            onCompactDestinationSelected: (value) =>
+                context.go(_compactDestinations[value].path),
             contextPanel: index == 0 ? const RecommendationsPanel() : null,
             body: child,
           );
@@ -146,6 +201,42 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'messages',
             pageBuilder: (context, state) =>
                 _page(state, const ConversationsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/marketplace',
+            name: 'marketplace',
+            pageBuilder: (context, state) =>
+                _page(state, const MarketplaceScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/learning',
+            name: 'learning',
+            pageBuilder: (context, state) =>
+                _page(state, const LearningScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/creator',
+            name: 'creator',
+            pageBuilder: (context, state) =>
+                _page(state, const CreatorScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/business',
+            name: 'business',
+            pageBuilder: (context, state) =>
+                _page(state, const BusinessScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/admin',
+            name: 'admin',
+            pageBuilder: (context, state) =>
+                _page(state, const AdminScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/more',
+            name: 'more',
+            pageBuilder: (context, state) =>
+                _page(state, const MoreScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/wallet',
@@ -267,6 +358,137 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/creator/content/:id',
+        name: 'creator-content',
+        pageBuilder: (context, state) => _page(
+          state,
+          CreatorContentScreen(contentId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/marketplace/products/:id',
+        name: 'marketplace-product',
+        pageBuilder: (context, state) => _page(
+          state,
+          MarketplaceProductScreen(productId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/marketplace/orders/:id',
+        name: 'marketplace-order',
+        pageBuilder: (context, state) => _page(
+          state,
+          MarketplaceOrderScreen(orderId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/marketplace/seller',
+        name: 'marketplace-seller',
+        pageBuilder: (context, state) =>
+            _page(state, const MarketplaceSellerScreen(), reducedMotion),
+      ),
+      GoRoute(
+        path: '/marketplace/bookings/:id',
+        name: 'marketplace-booking',
+        pageBuilder: (context, state) => _page(
+          state,
+          MarketplaceBookingScreen(bookingId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/learning/courses/:id',
+        name: 'learning-course',
+        pageBuilder: (context, state) => _page(
+          state,
+          LearningCourseScreen(courseId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/learning/enrollments/:id/courses/:courseId',
+        name: 'learning-enrollment',
+        pageBuilder: (context, state) => _page(
+          state,
+          LearningEnrollmentScreen(
+            enrollmentId: state.pathParameters['id']!,
+            courseId: state.pathParameters['courseId']!,
+          ),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/learning/enrollments/:enrollmentId/lessons/:lessonId',
+        name: 'learning-lesson',
+        pageBuilder: (context, state) => _page(
+          state,
+          LearningLessonScreen(
+            enrollmentId: state.pathParameters['enrollmentId']!,
+            lessonId: state.pathParameters['lessonId']!,
+          ),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/learning/enrollments/:enrollmentId/quizzes/:quizId',
+        name: 'learning-quiz',
+        pageBuilder: (context, state) => _page(
+          state,
+          LearningQuizScreen(
+            quizId: state.pathParameters['quizId']!,
+            enrollmentId: state.pathParameters['enrollmentId']!,
+          ),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/business/workspaces/:workspaceId',
+        name: 'business-workspace',
+        pageBuilder: (context, state) => _page(
+          state,
+          BusinessWorkspaceScreen(
+            workspaceId: state.pathParameters['workspaceId']!,
+          ),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/business/workspaces/:workspaceId/:area',
+        name: 'business-area',
+        pageBuilder: (context, state) => _page(
+          state,
+          BusinessAreaScreen(
+            workspaceId: state.pathParameters['workspaceId']!,
+            area: state.pathParameters['area']!,
+          ),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/business/workspaces/:workspaceId/documents/:documentId',
+        name: 'business-document',
+        pageBuilder: (context, state) => _page(
+          state,
+          BusinessDocumentScreen(
+            workspaceId: state.pathParameters['workspaceId']!,
+            documentId: state.pathParameters['documentId']!,
+          ),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/users/:id',
+        name: 'admin-user',
+        pageBuilder: (context, state) => _page(
+          state,
+          AdminUserScreen(userId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
         path: '/settings/sessions',
         name: 'sessions',
         pageBuilder: (context, state) =>
@@ -294,7 +516,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         AuthStatus.authenticated =>
           public || location == '/mfa' || location == '/splash'
               ? '/home'
-              : null,
+              : canAccessRoleRoute(roles, location)
+              ? null
+              : '/more',
       };
     },
   );
@@ -320,10 +544,16 @@ Page<void> _page(GoRouterState state, Widget child, bool reducedMotion) {
   );
 }
 
-int _destinationIndex(String path) {
-  final index = _destinations.indexWhere(
-    (destination) => path == destination.path,
+int _destinationIndex(String path, List<ShellDestination> destinations) {
+  var index = destinations.indexWhere(
+    (destination) =>
+        path == destination.path || path.startsWith('${destination.path}/'),
   );
+  if (index < 0) {
+    index = destinations.indexWhere(
+      (destination) => destination.path == '/more',
+    );
+  }
   return index < 0 ? 0 : index;
 }
 

@@ -279,6 +279,9 @@ final class LumenResponsiveShell extends StatelessWidget {
     required this.selectedIndex,
     required this.onDestinationSelected,
     super.key,
+    this.compactDestinations,
+    this.compactSelectedIndex,
+    this.onCompactDestinationSelected,
     this.contextPanel,
   });
 
@@ -286,6 +289,9 @@ final class LumenResponsiveShell extends StatelessWidget {
   final List<ShellDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
+  final List<ShellDestination>? compactDestinations;
+  final int? compactSelectedIndex;
+  final ValueChanged<int>? onCompactDestinationSelected;
   final Widget? contextPanel;
 
   @override
@@ -293,13 +299,16 @@ final class LumenResponsiveShell extends StatelessWidget {
     builder: (context, constraints) {
       final width = constraints.maxWidth;
       if (width < 768) {
+        final mobileDestinations = compactDestinations ?? destinations;
+        final mobileIndex = compactSelectedIndex ?? selectedIndex;
         return Scaffold(
           body: body,
           bottomNavigationBar: NavigationBar(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
+            selectedIndex: mobileIndex.clamp(0, mobileDestinations.length - 1),
+            onDestinationSelected:
+                onCompactDestinationSelected ?? onDestinationSelected,
             destinations: <NavigationDestination>[
-              for (final destination in destinations)
+              for (final destination in mobileDestinations)
                 NavigationDestination(
                   icon: Icon(destination.icon),
                   selectedIcon: Icon(destination.selectedIcon),

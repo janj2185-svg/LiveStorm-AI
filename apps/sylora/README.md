@@ -7,8 +7,9 @@ demo data, offline product fixtures, or fake API.
 ## Backend and configuration
 
 Start the FastAPI backend and its database/Redis dependencies before running the
-client. The API must expose the `/v1` identity, social, messaging, wallet, gifts,
-AI, and live routes described by the backend OpenAPI document.
+client. The API must expose the `/v1` identity, social, messaging, wallet,
+gifts, AI, live, creator, marketplace, learning, business, and admin routes
+described by the backend OpenAPI document.
 
 Development defaults to `http://localhost:8000`:
 
@@ -94,6 +95,28 @@ required to enable browser realtime safely.
   stream keys, rotation, MediaMTX ingest details, destination add/remove,
   event/action/persona/rule views, and action approval/execution. Direct ingest
   sessions remain usable when an account lacks integration-management access.
+- Creator account onboarding/settings, persisted analytics, content drafts and
+  versions, review/publish/schedule/archive/delete actions, S3 upload
+  capabilities, processing jobs, tiers, subscriptions, gifts, renewals,
+  cancellation, and refunds
+- Marketplace catalog search/filter/detail, persisted cart mutation,
+  idempotent checkout, order history/detail, entitlements/downloads,
+  verified-purchase reviews, seller stores/products/sales/refunds, and service
+  booking status/messages
+- Learning catalog/curriculum, idempotent paid enrollment, enrollment progress,
+  lesson start/heartbeat/completion, quiz attempts and answer recording without
+  pre-finalization correctness, final scores, certificate issue/verification,
+  and backend PDF rendering
+- Business workspace create/switch, members/invitations/teams, CRM companies,
+  contacts, stages and deals, tasks, calendar, document upload/verification/
+  approval/download, budgets, expenses, invoices, and persisted finance reports
+- Admin-only user search/detail/suspend/restore, feature flags/evaluation,
+  versioned platform settings, audit history, persisted analytics,
+  application-submitted service health, and security dashboards. Secret setting
+  values are never rendered.
+- Named deep links and role guards for creator, business, seller, and admin
+  operations. Compact navigation stays bounded to five destinations and uses a
+  role-aware More surface; wider layouts expose permitted workspaces directly.
 - Light-first Lumen design, optional dark mode, high contrast, reduced motion,
   text scaling, keyboard focus, accessible touch targets, and responsive bottom
   navigation/rail/expanded rail with context
@@ -104,6 +127,17 @@ streaming software without pretending that the Flutter client is publishing.
 Gift rendering also reports target capability instead of claiming unsupported
 AAA rendering.
 
+The client does not fabricate external provider success. API problems such as
+`payment_provider_unavailable`, `storage_provider_unavailable`, processing
+unavailability, and certificate PDF storage failures remain explicit UI states.
+Upload forms request real short-lived S3 capabilities and display the returned
+URL/headers; selecting and streaming local file bytes is not implemented.
+Marketplace entitlement responses currently omit product asset IDs, so the
+download form requires the asset ID distributed with the purchased product.
+Learning curriculum responses currently omit quiz IDs, so quiz deep links
+require the ID distributed by the course author. The client does not synthesize
+PDF files.
+
 ## Verification commands
 
 ```sh
@@ -113,23 +147,12 @@ flutter analyze
 flutter test
 flutter build web \
   --dart-define=SYLORA_API_BASE_URL=https://api.example.com
-flutter build linux \
-  --dart-define=SYLORA_API_BASE_URL=https://api.example.com
 ```
 
 Tests use an injected `TestTransport` and repository test doubles located only
 under `test/`; they do not make network requests.
 
-This Linux validation run built:
-
-- Web release output, including the Wasm dry run.
-- Linux x64 release bundle.
-- Android release APK (unsigned, because no organization release key is stored
-  in the repository).
-- Android debug APK signed by the generated local debug key for emulator/device
-  testing.
-
-iOS and macOS still require Xcode and signing/provisioning on macOS. Windows
-requires the Windows Flutter/Visual Studio toolchain. CI has separate compile
-jobs for Linux/Web/Android, iOS/macOS without code signing, and Windows; a
-passing Linux run alone is not evidence that Apple or Windows binaries compile.
+The verification documented for this feature set covers Flutter analysis, the
+automated test suite, and a Web release build. Native platform builds require
+their corresponding Flutter toolchains and signing/provisioning and are not
+implied by a successful Web build.
