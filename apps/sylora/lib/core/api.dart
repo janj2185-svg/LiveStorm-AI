@@ -224,7 +224,11 @@ final class ApiClient {
       return await dio.request<dynamic>(
         path,
         data: data,
-        queryParameters: queryParameters,
+        queryParameters: queryParameters == null
+            ? null
+            : Map<String, dynamic>.fromEntries(
+                queryParameters.entries.where((entry) => entry.value != null),
+              ),
         options: Options(
           method: method,
           headers: headers,

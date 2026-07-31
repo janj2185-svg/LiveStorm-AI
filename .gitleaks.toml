@@ -1,0 +1,17 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Non-secret test idempotency values and explicit templates"
+paths = [
+  '''services/api/tests/.*''',
+  '''infrastructure/\.env\.example''',
+]
+
+[[allowlists]]
+description = "Environment-backed configuration references, not literal credentials"
+regexTarget = "line"
+regexes = [
+  '''(?i)key:\s*RECORDING_S3_(BUCKET|PREFIX)''',
+  '''curl\s+-fsS\s+-u\s+"elastic:\$\$\{ELASTIC_PASSWORD\}"''',
+]

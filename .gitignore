@@ -11,8 +11,12 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .venv/
+services/api/build/
 
 # Local runtime configuration and generated captures
 .env
+.env.*
+!.env.example
+!**/.env.example
 design/captures/
 dump.rdb

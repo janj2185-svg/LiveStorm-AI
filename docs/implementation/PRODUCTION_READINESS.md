@@ -3,7 +3,37 @@
 Assessment date: 2026-07-31  
 Decision: **NO-GO**
 
-## Decision
+## Stage 2 reassessment
+
+Stage 2 implemented the product application, Flutter clients, backend modules,
+database migrations, ledger, realtime control planes, gift runtime/editor, OBS
+companion, CI and infrastructure described in
+`docs/implementation/STAGE2_REPORT.md`.
+
+The decision remains **NO-GO for a public production launch**, but the blockers
+are now deployment and external-verification gates rather than an absent
+application:
+
+- production SMTP/OIDC/payment/S3/AI/provider credentials and approvals are not
+  present;
+- the full Compose stack could not start in this nested cloud VM because its
+  cgroup-v2 hierarchy is in threaded mode, although images built and
+  configuration passed static/semantic validation;
+- Kubernetes has not been applied to a real managed cluster;
+- iOS/macOS/Windows binaries and all store signing/provisioning require their
+  native runners and owner accounts;
+- external live adapters require approved test channels and real scope/quota
+  verification;
+- AAA gift assets, rights clearance and representative-device performance QA
+  are not bundled;
+- legal/compliance, incident-response, restore/failover and controlled launch
+  sign-offs remain owner responsibilities.
+
+The implemented code is suitable for continued integration and controlled
+provider sandbox testing. It must not be represented as an externally verified
+production deployment until those gates are closed.
+
+## Initial baseline decision (before Stage 2)
 
 Поточний repository не можна розгортати або представляти як production SYLORA platform. Він є client-only design gallery з 38 visual-only screens і fixture content. Немає жодного production-complete screen або requested module, здатного виконати наскрізну бізнес-операцію.
 

@@ -55,6 +55,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy ${{ inputs.environment }}
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ inputs.environment }}
@@ -70,6 +71,8 @@ jobs:
       OVERLAY: infrastructure/kubernetes/overlays/${{ inputs.environment }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: main
 
       - name: Validate provider configuration
         shell: bash

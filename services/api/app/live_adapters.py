@@ -9,7 +9,6 @@ import ipaddress
 import json
 import random
 import uuid
-import xml.etree.ElementTree as ET
 from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -20,6 +19,7 @@ import httpx
 import websockets
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from defusedxml import ElementTree as ET
 
 from app.config import Settings
 from app.live_models import (

@@ -75,6 +75,43 @@ void main() {
     });
   });
 
+  test(
+    'API requests omit null query values instead of sending empty cursors',
+    () async {
+      late RequestOptions captured;
+      final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test/v1/'));
+      dio.httpClientAdapter = TestTransport((options) {
+        captured = options;
+        return jsonResponse(<String, dynamic>{'status': 'ok'}, 200);
+      });
+      final client = ApiClient(
+        config: AppConfig(apiBaseUri: Uri.parse('https://api.example.test')),
+        tokenStore: _MemoryTokenStore(
+          const AuthTokens(
+            accessToken: 'access-token',
+            refreshToken: 'refresh-token',
+            expiresIn: 900,
+          ),
+        ),
+        networkMonitor: const _OnlineMonitor(),
+        dio: dio,
+      );
+
+      await client.request(
+        'social/feed',
+        queryParameters: <String, dynamic>{
+          'mode': 'chronological',
+          'cursor': null,
+          'q': null,
+        },
+      );
+
+      expect(captured.uri.queryParameters, <String, String>{
+        'mode': 'chronological',
+      });
+    },
+  );
+
   test('refresh rotation is single-flight across concurrent 401s', () async {
     final store = _MemoryTokenStore(
       const AuthTokens(

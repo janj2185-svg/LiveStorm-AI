@@ -10,9 +10,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Proprietary" }
 dependencies = [
-  "cryptography>=46.0.7,<47",
+  "cryptography>=48.0.1,<49",
   "fastapi>=0.141.1,<0.142",
   "httpx>=0.28.1,<0.29",
+  "idna>=3.15,<4",
   "keyring>=25.7.0,<26",
   "prometheus-client>=0.23.1,<0.24",
   "pydantic>=2.12.5,<3",
