@@ -125,18 +125,10 @@ router = APIRouter(prefix="/live", tags=["AI Live Hub"])
 admin_router = APIRouter(prefix="/admin/live", tags=["Administration"])
 websocket_router = APIRouter(tags=["AI Live Hub"])
 
-ManageAuth = Annotated[
-    AuthContext, Depends(require_permission("live:manage"))
-]
-IntegrationAuth = Annotated[
-    AuthContext, Depends(require_permission("live:integrations:manage"))
-]
-ModerateAuth = Annotated[
-    AuthContext, Depends(require_permission("live:moderate"))
-]
-AdminAuth = Annotated[
-    AuthContext, Depends(require_permission("live:admin"))
-]
+ManageAuth = Annotated[AuthContext, Depends(require_permission("live:manage"))]
+IntegrationAuth = Annotated[AuthContext, Depends(require_permission("live:integrations:manage"))]
+ModerateAuth = Annotated[AuthContext, Depends(require_permission("live:moderate"))]
+AdminAuth = Annotated[AuthContext, Depends(require_permission("live:admin"))]
 
 
 def registry(request: Request) -> AdapterRegistry:
@@ -158,9 +150,7 @@ async def live_rate_limit(request: Request, user_id: uuid.UUID) -> None:
 async def consume_oauth_state_once(request: Request, state: str) -> None:
     key = "sylora:live:oauth-state:" + hashlib.sha256(state.encode()).hexdigest()
     try:
-        accepted = await request.app.state.redis.set(
-            key, "consumed", ex=600, nx=True
-        )
+        accepted = await request.app.state.redis.set(key, "consumed", ex=600, nx=True)
     except Exception as exc:
         raise APIError(
             503,
@@ -202,9 +192,7 @@ def integration_response(record: IntegrationConnection) -> IntegrationConnection
     )
 
 
-async def session_response(
-    db: AsyncSession, record: LiveSession
-) -> LiveSessionResponse:
+async def session_response(db: AsyncSession, record: LiveSession) -> LiveSessionResponse:
     destinations = await session_destinations(db, record.id)
     return LiveSessionResponse(
         id=record.id,
@@ -224,9 +212,7 @@ async def session_response(
         last_error_code=record.last_error_code,
         created_at=record.created_at,
         updated_at=record.updated_at,
-        destinations=[
-            LiveDestinationResponse.model_validate(item) for item in destinations
-        ],
+        destinations=[LiveDestinationResponse.model_validate(item) for item in destinations],
     )
 
 
@@ -244,9 +230,7 @@ async def publish_latest(request: Request, session_id: uuid.UUID) -> None:
             )
 
 
-@router.get(
-    "/integrations", response_model=list[IntegrationConnectionResponse]
-)
+@router.get("/integrations", response_model=list[IntegrationConnectionResponse])
 async def list_integrations(
     auth: IntegrationAuth,
     db: AsyncSession = Depends(get_session),
@@ -292,9 +276,7 @@ async def get_integration(
     auth: IntegrationAuth,
     db: AsyncSession = Depends(get_session),
 ) -> IntegrationConnectionResponse:
-    return integration_response(
-        await owned_connection(db, connection_id, auth.user.id)
-    )
+    return integration_response(await owned_connection(db, connection_id, auth.user.id))
 
 
 @router.post(
@@ -309,9 +291,7 @@ async def integration_health(
     settings: Settings = Depends(get_settings),
 ) -> IntegrationCapabilitySnapshot:
     connection = await owned_connection(db, connection_id, auth.user.id)
-    return await health_connection(
-        db, registry(request), settings, connection
-    )
+    return await health_connection(db, registry(request), settings, connection)
 
 
 @router.get(
@@ -328,9 +308,7 @@ async def integration_capabilities(
         (
             await db.scalars(
                 select(IntegrationCapabilitySnapshot)
-                .where(
-                    IntegrationCapabilitySnapshot.connection_id == connection_id
-                )
+                .where(IntegrationCapabilitySnapshot.connection_id == connection_id)
                 .order_by(
                     IntegrationCapabilitySnapshot.fetched_at.desc(),
                     IntegrationCapabilitySnapshot.id.desc(),
@@ -353,15 +331,11 @@ async def disconnect_connection(
     settings: Settings = Depends(get_settings),
 ) -> MessageResponse:
     connection = await owned_connection(db, connection_id, auth.user.id)
-    await disconnect_integration(
-        db, registry(request), settings, connection
-    )
+    await disconnect_integration(db, registry(request), settings, connection)
     return MessageResponse(status="disconnected")
 
 
-@router.post(
-    "/integrations/oauth/{platform}/start", response_model=OAuthStartResponse
-)
+@router.post("/integrations/oauth/{platform}/start", response_model=OAuthStartResponse)
 async def start_integration_oauth(
     platform: IntegrationPlatform,
     payload: OAuthStartRequest,
@@ -466,31 +440,21 @@ async def create_session_endpoint(
     db: AsyncSession = Depends(get_session),
 ) -> LiveSessionCreated:
     await live_rate_limit(request, auth.user.id)
-    record, raw_key = await create_live_session(
-        db, registry(request), auth.user.id, payload
-    )
+    record, raw_key = await create_live_session(db, registry(request), auth.user.id, payload)
     response = await session_response(db, record)
-    return LiveSessionCreated(
-        **response.model_dump(), stream_key_once=raw_key
-    )
+    return LiveSessionCreated(**response.model_dump(), stream_key_once=raw_key)
 
 
-@router.get(
-    "/sessions/{session_id}", response_model=LiveSessionResponse
-)
+@router.get("/sessions/{session_id}", response_model=LiveSessionResponse)
 async def get_session_endpoint(
     session_id: uuid.UUID,
     auth: ManageAuth,
     db: AsyncSession = Depends(get_session),
 ) -> LiveSessionResponse:
-    return await session_response(
-        db, await owned_live_session(db, session_id, auth.user.id)
-    )
+    return await session_response(db, await owned_live_session(db, session_id, auth.user.id))
 
 
-@router.patch(
-    "/sessions/{session_id}", response_model=LiveSessionResponse
-)
+@router.patch("/sessions/{session_id}", response_model=LiveSessionResponse)
 async def patch_session_endpoint(
     session_id: uuid.UUID,
     payload: LiveSessionPatch,
@@ -508,9 +472,7 @@ async def patch_session_endpoint(
             "Live session state conflict",
             "Session configuration is immutable after start.",
         )
-    for key, value in payload.model_dump(
-        exclude_unset=True, mode="json"
-    ).items():
+    for key, value in payload.model_dump(exclude_unset=True, mode="json").items():
         if key == "moderation_policy":
             setattr(record, key, value)
         else:
@@ -533,9 +495,7 @@ async def create_destination_endpoint(
     db: AsyncSession = Depends(get_session),
 ) -> LiveDestination:
     record = await owned_live_session(db, session_id, auth.user.id)
-    destination = await add_destination(
-        db, record, auth.user.id, payload
-    )
+    destination = await add_destination(db, record, auth.user.id, payload)
     await publish_latest(request, session_id)
     return destination
 
@@ -579,9 +539,7 @@ async def delete_destination_endpoint(
     return MessageResponse(status="deleted")
 
 
-@router.post(
-    "/sessions/{session_id}/preflight", response_model=PreflightResponse
-)
+@router.post("/sessions/{session_id}/preflight", response_model=PreflightResponse)
 async def preflight_endpoint(
     session_id: uuid.UUID,
     request: Request,
@@ -590,16 +548,12 @@ async def preflight_endpoint(
     settings: Settings = Depends(get_settings),
 ) -> PreflightResponse:
     record = await owned_live_session(db, session_id, auth.user.id)
-    result = await preflight_session(
-        db, registry(request), settings, record
-    )
+    result = await preflight_session(db, registry(request), settings, record)
     await publish_latest(request, session_id)
     return result
 
 
-@router.post(
-    "/sessions/{session_id}/start", response_model=LiveSessionResponse
-)
+@router.post("/sessions/{session_id}/start", response_model=LiveSessionResponse)
 async def start_session_endpoint(
     session_id: uuid.UUID,
     request: Request,
@@ -609,16 +563,12 @@ async def start_session_endpoint(
 ) -> LiveSessionResponse:
     await live_rate_limit(request, auth.user.id)
     record = await owned_live_session(db, session_id, auth.user.id)
-    record = await start_session(
-        db, registry(request), settings, record
-    )
+    record = await start_session(db, registry(request), settings, record)
     await publish_latest(request, session_id)
     return await session_response(db, record)
 
 
-@router.post(
-    "/sessions/{session_id}/reconnect", response_model=LiveSessionResponse
-)
+@router.post("/sessions/{session_id}/reconnect", response_model=LiveSessionResponse)
 async def reconnect_session_endpoint(
     session_id: uuid.UUID,
     request: Request,
@@ -627,16 +577,12 @@ async def reconnect_session_endpoint(
     settings: Settings = Depends(get_settings),
 ) -> LiveSessionResponse:
     record = await owned_live_session(db, session_id, auth.user.id)
-    record = await reconnect_session(
-        db, registry(request), settings, record
-    )
+    record = await reconnect_session(db, registry(request), settings, record)
     await publish_latest(request, session_id)
     return await session_response(db, record)
 
 
-@router.post(
-    "/sessions/{session_id}/end", response_model=LiveSessionResponse
-)
+@router.post("/sessions/{session_id}/end", response_model=LiveSessionResponse)
 async def end_session_endpoint(
     session_id: uuid.UUID,
     request: Request,
@@ -645,9 +591,7 @@ async def end_session_endpoint(
     settings: Settings = Depends(get_settings),
 ) -> LiveSessionResponse:
     record = await owned_live_session(db, session_id, auth.user.id)
-    record = await end_session(
-        db, registry(request), settings, record
-    )
+    record = await end_session(db, registry(request), settings, record)
     await publish_latest(request, session_id)
     return await session_response(db, record)
 
@@ -747,9 +691,7 @@ async def owned_persona(
     return record
 
 
-@router.get(
-    "/personas/{persona_id}", response_model=PersonaResponse
-)
+@router.get("/personas/{persona_id}", response_model=PersonaResponse)
 async def get_persona(
     persona_id: uuid.UUID,
     auth: ManageAuth,
@@ -758,9 +700,7 @@ async def get_persona(
     return await owned_persona(db, persona_id, auth.user.id)
 
 
-@router.patch(
-    "/personas/{persona_id}", response_model=PersonaResponse
-)
+@router.patch("/personas/{persona_id}", response_model=PersonaResponse)
 async def patch_persona(
     persona_id: uuid.UUID,
     payload: PersonaPatch,
@@ -768,18 +708,14 @@ async def patch_persona(
     db: AsyncSession = Depends(get_session),
 ) -> AILivePersona:
     record = await owned_persona(db, persona_id, auth.user.id)
-    for key, value in payload.model_dump(
-        exclude_unset=True, mode="json"
-    ).items():
+    for key, value in payload.model_dump(exclude_unset=True, mode="json").items():
         setattr(record, key, value)
     await db.commit()
     await db.refresh(record)
     return record
 
 
-@router.delete(
-    "/personas/{persona_id}", response_model=MessageResponse
-)
+@router.delete("/personas/{persona_id}", response_model=MessageResponse)
 async def delete_persona(
     persona_id: uuid.UUID,
     auth: ManageAuth,
@@ -829,9 +765,7 @@ async def create_rule(
     return record
 
 
-async def owned_rule(
-    db: AsyncSession, rule_id: uuid.UUID, owner_user_id: uuid.UUID
-) -> AILiveRule:
+async def owned_rule(db: AsyncSession, rule_id: uuid.UUID, owner_user_id: uuid.UUID) -> AILiveRule:
     record = await db.scalar(
         select(AILiveRule).where(
             AILiveRule.id == rule_id,
@@ -857,9 +791,7 @@ async def get_rule(
     return await owned_rule(db, rule_id, auth.user.id)
 
 
-@router.patch(
-    "/rules/{rule_id}", response_model=RuleResponse
-)
+@router.patch("/rules/{rule_id}", response_model=RuleResponse)
 async def patch_rule(
     rule_id: uuid.UUID,
     payload: RulePatch,
@@ -899,17 +831,13 @@ def _page_cursor(
 ) -> str | None:
     visible = records[:limit]
     return (
-        encode_cursor(
-            settings, scope, visible[-1].created_at, visible[-1].id
-        )
+        encode_cursor(settings, scope, visible[-1].created_at, visible[-1].id)
         if len(records) > limit and visible
         else None
     )
 
 
-@router.get(
-    "/sessions/{session_id}/events", response_model=EventPage
-)
+@router.get("/sessions/{session_id}/events", response_model=EventPage)
 async def list_live_events(
     session_id: uuid.UUID,
     auth: ManageAuth,
@@ -920,9 +848,7 @@ async def list_live_events(
 ) -> EventPage:
     await owned_live_session(db, session_id, auth.user.id)
     scope = f"live-events:{session_id}"
-    statement = select(LiveNormalizedEvent).where(
-        LiveNormalizedEvent.session_id == session_id
-    )
+    statement = select(LiveNormalizedEvent).where(LiveNormalizedEvent.session_id == session_id)
     statement = apply_cursor(
         statement,
         LiveNormalizedEvent.created_at,
@@ -940,10 +866,7 @@ async def list_live_events(
         ).all()
     )
     return EventPage(
-        items=[
-            NormalizedEventResponse.model_validate(item)
-            for item in records[:limit]
-        ],
+        items=[NormalizedEventResponse.model_validate(item) for item in records[:limit]],
         next_cursor=_page_cursor(settings, scope, records, limit),
     )
 
@@ -969,9 +892,7 @@ async def owned_action(
     return action
 
 
-@router.get(
-    "/sessions/{session_id}/actions", response_model=ActionPage
-)
+@router.get("/sessions/{session_id}/actions", response_model=ActionPage)
 async def list_live_actions(
     session_id: uuid.UUID,
     auth: ManageAuth,
@@ -982,9 +903,7 @@ async def list_live_actions(
 ) -> ActionPage:
     await owned_live_session(db, session_id, auth.user.id)
     scope = f"live-actions:{session_id}"
-    statement = select(LiveAction).where(
-        LiveAction.session_id == session_id
-    )
+    statement = select(LiveAction).where(LiveAction.session_id == session_id)
     statement = apply_cursor(
         statement,
         LiveAction.created_at,
@@ -994,24 +913,19 @@ async def list_live_actions(
     records = list(
         (
             await db.scalars(
-                statement.order_by(
-                    LiveAction.created_at.desc(), LiveAction.id.desc()
-                ).limit(limit + 1)
+                statement.order_by(LiveAction.created_at.desc(), LiveAction.id.desc()).limit(
+                    limit + 1
+                )
             )
         ).all()
     )
     return ActionPage(
-        items=[
-            LiveActionResponse.model_validate(item)
-            for item in records[:limit]
-        ],
+        items=[LiveActionResponse.model_validate(item) for item in records[:limit]],
         next_cursor=_page_cursor(settings, scope, records, limit),
     )
 
 
-@router.post(
-    "/actions/{action_id}/approve", response_model=LiveActionResponse
-)
+@router.post("/actions/{action_id}/approve", response_model=LiveActionResponse)
 async def approve_action_endpoint(
     action_id: uuid.UUID,
     auth: ManageAuth,
@@ -1021,9 +935,7 @@ async def approve_action_endpoint(
     return await approve_live_action(db, action, auth.user.id)
 
 
-@router.post(
-    "/actions/{action_id}/execute", response_model=LiveActionResponse
-)
+@router.post("/actions/{action_id}/execute", response_model=LiveActionResponse)
 async def execute_action_endpoint(
     action_id: uuid.UUID,
     request: Request,
@@ -1032,16 +944,12 @@ async def execute_action_endpoint(
     settings: Settings = Depends(get_settings),
 ) -> LiveAction:
     action = await owned_action(db, action_id, auth.user.id)
-    result = await execute_live_action(
-        db, registry(request), settings, action
-    )
+    result = await execute_live_action(db, registry(request), settings, action)
     await publish_latest(request, result.session_id)
     return result
 
 
-@router.get(
-    "/sessions/{session_id}/moderation", response_model=ModerationPage
-)
+@router.get("/sessions/{session_id}/moderation", response_model=ModerationPage)
 async def list_moderation_decisions(
     session_id: uuid.UUID,
     auth: ManageAuth,
@@ -1072,10 +980,7 @@ async def list_moderation_decisions(
         ).all()
     )
     return ModerationPage(
-        items=[
-            ModerationDecisionResponse.model_validate(item)
-            for item in records[:limit]
-        ],
+        items=[ModerationDecisionResponse.model_validate(item) for item in records[:limit]],
         next_cursor=_page_cursor(settings, scope, records, limit),
     )
 
@@ -1091,9 +996,7 @@ async def ai_moderate_event(
     auth: ManageAuth,
     db: AsyncSession = Depends(get_session),
 ) -> LiveModerationDecision:
-    live_session = await owned_live_session(
-        db, session_id, auth.user.id
-    )
+    live_session = await owned_live_session(db, session_id, auth.user.id)
     event = await db.scalar(
         select(LiveNormalizedEvent).where(
             LiveNormalizedEvent.id == event_id,
@@ -1149,9 +1052,7 @@ async def human_moderate_event(
     )
 
 
-@router.get(
-    "/sessions/{session_id}/turns", response_model=TurnPage
-)
+@router.get("/sessions/{session_id}/turns", response_model=TurnPage)
 async def list_live_turns(
     session_id: uuid.UUID,
     auth: ManageAuth,
@@ -1162,9 +1063,7 @@ async def list_live_turns(
 ) -> TurnPage:
     await owned_live_session(db, session_id, auth.user.id)
     scope = f"live-turns:{session_id}"
-    statement = select(AILiveTurn).where(
-        AILiveTurn.session_id == session_id
-    )
+    statement = select(AILiveTurn).where(AILiveTurn.session_id == session_id)
     statement = apply_cursor(
         statement,
         AILiveTurn.created_at,
@@ -1174,17 +1073,14 @@ async def list_live_turns(
     records = list(
         (
             await db.scalars(
-                statement.order_by(
-                    AILiveTurn.created_at.desc(), AILiveTurn.id.desc()
-                ).limit(limit + 1)
+                statement.order_by(AILiveTurn.created_at.desc(), AILiveTurn.id.desc()).limit(
+                    limit + 1
+                )
             )
         ).all()
     )
     return TurnPage(
-        items=[
-            LiveTurnResponse.model_validate(item)
-            for item in records[:limit]
-        ],
+        items=[LiveTurnResponse.model_validate(item) for item in records[:limit]],
         next_cursor=_page_cursor(settings, scope, records, limit),
     )
 
@@ -1202,9 +1098,7 @@ async def create_live_turn(
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> AILiveTurn:
-    live_session = await owned_live_session(
-        db, session_id, auth.user.id
-    )
+    live_session = await owned_live_session(db, session_id, auth.user.id)
     event = await db.scalar(
         select(LiveNormalizedEvent).where(
             LiveNormalizedEvent.id == event_id,
@@ -1232,9 +1126,7 @@ async def create_live_turn(
     )
 
 
-async def game_response(
-    db: AsyncSession, game: LiveGameSession
-) -> GameResponse:
+async def game_response(db: AsyncSession, game: LiveGameSession) -> GameResponse:
     questions = (
         await db.scalars(
             select(LiveGameQuestion)
@@ -1250,9 +1142,7 @@ async def game_response(
         started_at=game.started_at,
         ended_at=game.ended_at,
         created_at=game.created_at,
-        questions=[
-            GameQuestionResponse.model_validate(item) for item in questions
-        ],
+        questions=[GameQuestionResponse.model_validate(item) for item in questions],
     )
 
 
@@ -1266,9 +1156,7 @@ async def create_game_endpoint(
     auth: ManageAuth,
     db: AsyncSession = Depends(get_session),
 ) -> GameResponse:
-    return await game_response(
-        db, await create_game(db, auth.user.id, payload)
-    )
+    return await game_response(db, await create_game(db, auth.user.id, payload))
 
 
 @router.get("/games/{game_id}", response_model=GameResponse)
@@ -1277,14 +1165,10 @@ async def get_game_endpoint(
     auth: ManageAuth,
     db: AsyncSession = Depends(get_session),
 ) -> GameResponse:
-    return await game_response(
-        db, await owned_game(db, game_id, auth.user.id)
-    )
+    return await game_response(db, await owned_game(db, game_id, auth.user.id))
 
 
-@router.post(
-    "/games/{game_id}/start", response_model=GameResponse
-)
+@router.post("/games/{game_id}/start", response_model=GameResponse)
 async def start_game_endpoint(
     game_id: uuid.UUID,
     auth: ManageAuth,
@@ -1294,9 +1178,7 @@ async def start_game_endpoint(
     return await game_response(db, await start_game(db, game))
 
 
-@router.post(
-    "/games/{game_id}/answers", response_model=GameAnswerResponse
-)
+@router.post("/games/{game_id}/answers", response_model=GameAnswerResponse)
 async def answer_game_endpoint(
     game_id: uuid.UUID,
     payload: GameAnswerRequest,
@@ -1307,9 +1189,7 @@ async def answer_game_endpoint(
     return await answer_game_question(db, game, payload)
 
 
-@router.get(
-    "/games/{game_id}/scores", response_model=list[GameScoreResponse]
-)
+@router.get("/games/{game_id}/scores", response_model=list[GameScoreResponse])
 async def game_scores_endpoint(
     game_id: uuid.UUID,
     auth: ManageAuth,
@@ -1330,9 +1210,7 @@ async def game_scores_endpoint(
     )
 
 
-@router.post(
-    "/games/{game_id}/end", response_model=GameResponse
-)
+@router.post("/games/{game_id}/end", response_model=GameResponse)
 async def end_game_endpoint(
     game_id: uuid.UUID,
     auth: ManageAuth,
@@ -1387,12 +1265,8 @@ async def integration_webhook(
     )
 
 
-@admin_router.get(
-    "/platforms", response_model=list[PlatformStatusResponse]
-)
-async def admin_platform_status(
-    request: Request, _: AdminAuth
-) -> list[PlatformStatusResponse]:
+@admin_router.get("/platforms", response_model=list[PlatformStatusResponse])
+async def admin_platform_status(request: Request, _: AdminAuth) -> list[PlatformStatusResponse]:
     return [
         PlatformStatusResponse(
             platform=item.platform,
@@ -1407,9 +1281,7 @@ async def admin_platform_status(
     ]
 
 
-@admin_router.get(
-    "/integrations", response_model=list[IntegrationConnectionResponse]
-)
+@admin_router.get("/integrations", response_model=list[IntegrationConnectionResponse])
 async def admin_integrations(
     _: AdminAuth,
     db: AsyncSession = Depends(get_session),
@@ -1428,9 +1300,7 @@ async def admin_integrations(
 
 
 @websocket_router.websocket("/ws/live/{session_id}")
-async def live_websocket(
-    websocket: WebSocket, session_id: uuid.UUID
-) -> None:
+async def live_websocket(websocket: WebSocket, session_id: uuid.UUID) -> None:
     try:
         user_id = await websocket_user(websocket)
         settings: Settings = websocket.app.state.settings
@@ -1474,9 +1344,7 @@ async def live_websocket(
                                 ),
                             ),
                         )
-                        .order_by(
-                            LiveEvent.created_at.asc(), LiveEvent.id.asc()
-                        )
+                        .order_by(LiveEvent.created_at.asc(), LiveEvent.id.asc())
                         .limit(500)
                     )
                 ).all()
@@ -1502,9 +1370,7 @@ async def live_websocket(
                     }
                 )
             elif outgoing in done:
-                await websocket.send_json(
-                    outgoing.result().model_dump(mode="json")
-                )
+                await websocket.send_json(outgoing.result().model_dump(mode="json"))
             elif incoming in done and incoming.result() == "ping":
                 await websocket.send_json(
                     {

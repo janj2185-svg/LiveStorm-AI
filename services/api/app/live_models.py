@@ -594,9 +594,7 @@ class LiveAction(Base):
     __tablename__ = "live_actions"
     __table_args__ = (
         UniqueConstraint("idempotency_key", name="uq_live_action_idempotency"),
-        CheckConstraint(
-            "retry_count >= 0 AND max_retries >= 0", name="ck_live_action_retries"
-        ),
+        CheckConstraint("retry_count >= 0 AND max_retries >= 0", name="ck_live_action_retries"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)

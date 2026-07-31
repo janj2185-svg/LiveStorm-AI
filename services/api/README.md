@@ -451,6 +451,70 @@ process-local. Multi-replica deployments still require Redis Streams, Kafka,
 or equivalent committed-event fan-out and recovery; arbitrary socket
 subscriptions are not accepted.
 
+## Creator platform, marketplace, and education
+
+Migration `20260731_0006_creator_commerce_learning` adds creator accounts,
+subscription tiers and entitlement windows, versioned creator content and S3
+asset declarations, stores and versioned products, persisted carts and orders,
+digital entitlements and service bookings, buyer reviews, versioned courses,
+ordered modules and lessons, server-authoritative progress, quizzes, attempts,
+and verifiable certificates.
+
+Creators receive `creator:manage`, `creator:analytics`, `marketplace:sell`, and
+`courses:author`. Moderators receive `courses:review`; administrators receive
+all creator, commerce, refund, course review, and course publication
+permissions. Ownership remains mandatory in addition to RBAC. Published
+content, product, and course versions are immutable; a new draft version is
+required for changes. Content schedules dispatch the persisted content ID and
+due time to the real `sylora.content.publish_scheduled` Celery task.
+
+Principal APIs are:
+
+- `/v1/creator/account`, `/v1/creator/channels/{slug}`,
+  `/v1/creator/subscription-tiers`, `/v1/creator/dashboard`, and
+  `/v1/creator/analytics`;
+- `/v1/subscriptions` for credit or configured external purchases, gifts,
+  entitlement windows, cancellation, and refunds;
+- `/v1/content` for owned content/version lifecycle, scheduling,
+  publication/unlisting, strict visibility checks, S3 upload declarations and
+  verification, and explicit processing jobs;
+- `/v1/marketplace/catalog`, `/v1/marketplace/cart`,
+  `/v1/marketplace/checkout`, `/v1/marketplace/orders`,
+  `/v1/marketplace/entitlements`, `/v1/marketplace/downloads`, and
+  `/v1/marketplace/reviews`, with store, product, price, inventory, collection,
+  sales, refund, and booking routes under `/v1/marketplace/seller` and
+  `/v1/marketplace/orders/bookings`;
+- `/v1/learning/courses`, `/v1/learning/enrollments`,
+  `/v1/learning/quizzes`, and `/v1/learning/certificates` for catalog,
+  curriculum, free/credit/configured-external enrollment, ordered
+  prerequisites, bounded heartbeat progress, deterministic server-side quiz
+  scoring, completion, issuance, and public verification.
+
+Credit subscription, marketplace, refund, and course operations post balanced
+entries to the existing immutable ledger. Marketplace carts retain integer
+price snapshots. Credit checkout atomically creates the order and seller/platform
+ledger split, decrements inventory, and creates either a digital entitlement or
+a service booking request. A service purchase is not represented as delivered:
+the seller must explicitly accept, schedule, and complete its booking. External
+checkout remains `pending_payment` until a signature-verified, deduplicated
+provider webhook advances it; a client return URL never marks an order paid.
+Refunds append a ledger reversal and revoke active digital access rather than
+editing financial history.
+
+Catalog and course search use portable SQL `ILIKE` with the same
+authorization/availability predicates in PostgreSQL and tests. At future scale,
+committed product and course changes can be exported through an outbox to
+Elasticsearch/OpenSearch while reapplying those predicates. No Elasticsearch
+integration is active.
+
+No payment provider, content transcoder, certificate PDF renderer, product
+asset, course material, or S3 credentials are bundled. Unconfigured external
+checkout/refund, media processing, PDF rendering, upload verification, and
+signed download operations return explicit `503` errors and never persist or
+report simulated success. The API does not claim that any real external
+payment, media processing job, PDF rendering job, or S3 operation was verified
+without deployment credentials and a configured real adapter.
+
 ## Security model
 
 Access tokens are short-lived bearer JWTs supplied only in the

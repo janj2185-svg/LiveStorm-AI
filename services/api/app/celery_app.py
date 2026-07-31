@@ -20,6 +20,7 @@ from app.live_service import (
     reconnect_session,
     refresh_due_connections,
 )
+from app.platform_service import expire_due_subscriptions, publish_scheduled_content
 from app.storage import S3ObjectStorage
 
 settings = get_settings()
@@ -64,6 +65,11 @@ celery_app.conf.update(
             "task": "sylora.live.reconcile_voice",
             "schedule": 15.0,
             "options": {"expires": 12},
+        },
+        "creator-expire-subscriptions": {
+            "task": "sylora.creator.expire_subscriptions",
+            "schedule": 300.0,
+            "options": {"expires": 240},
         },
     },
 )
@@ -166,9 +172,7 @@ async def _refresh_live_tokens() -> dict[str, int]:
     engine = create_engine(settings)
     try:
         async with create_session_factory(engine)() as session:
-            return await refresh_due_connections(
-                session, AdapterRegistry(settings), settings
-            )
+            return await refresh_due_connections(session, AdapterRegistry(settings), settings)
     finally:
         await engine.dispose()
 
@@ -182,9 +186,7 @@ async def _check_live_health() -> dict[str, int]:
     engine = create_engine(settings)
     try:
         async with create_session_factory(engine)() as session:
-            return await check_connection_health(
-                session, AdapterRegistry(settings), settings
-            )
+            return await check_connection_health(session, AdapterRegistry(settings), settings)
     finally:
         await engine.dispose()
 
@@ -211,9 +213,7 @@ async def _reconnect_live_sessions() -> dict[str, int]:
                 ).all()
             )
             for record in records:
-                result = await reconnect_session(
-                    session, registry, settings, record
-                )
+                result = await reconnect_session(session, registry, settings, record)
                 if result.state == LiveSessionState.live:
                     reconnected += 1
                 else:
@@ -240,3 +240,33 @@ async def _reconcile_live_voice() -> dict[str, int]:
 @celery_app.task(name="sylora.live.reconcile_voice")
 def reconcile_live_voice() -> dict[str, int]:
     return asyncio.run(_reconcile_live_voice())
+
+
+async def _publish_scheduled_content(content_id: uuid.UUID) -> dict[str, str]:
+    engine = create_engine(settings)
+    try:
+        async with create_session_factory(engine)() as session:
+            item = await publish_scheduled_content(session, content_id)
+            return {"content_id": str(item.id), "state": item.state.value}
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="sylora.content.publish_scheduled")
+def publish_content_on_schedule(content_id: str) -> dict[str, str]:
+    """Publish a persisted due content version from a real Celery worker."""
+    return asyncio.run(_publish_scheduled_content(uuid.UUID(content_id)))
+
+
+async def _expire_creator_subscriptions() -> dict[str, int]:
+    engine = create_engine(settings)
+    try:
+        async with create_session_factory(engine)() as session:
+            return {"expired": await expire_due_subscriptions(session)}
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="sylora.creator.expire_subscriptions")
+def expire_creator_subscriptions() -> dict[str, int]:
+    return asyncio.run(_expire_creator_subscriptions())

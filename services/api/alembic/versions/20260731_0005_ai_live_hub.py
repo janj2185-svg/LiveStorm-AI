@@ -107,14 +107,10 @@ def upgrade() -> None:
 def downgrade() -> None:
     connection = op.get_bind()
     if connection.dialect.name == "postgresql":
-        op.execute(
-            "DROP TRIGGER IF EXISTS live_actions_command_immutable ON live_actions"
-        )
+        op.execute("DROP TRIGGER IF EXISTS live_actions_command_immutable ON live_actions")
         op.execute("DROP FUNCTION IF EXISTS protect_live_action_command()")
         for table_name in STRICT_APPEND_ONLY_TABLES:
-            op.execute(
-                f"DROP TRIGGER IF EXISTS {table_name}_append_only ON {table_name}"
-            )
+            op.execute(f"DROP TRIGGER IF EXISTS {table_name}_append_only ON {table_name}")
         op.execute("DROP FUNCTION IF EXISTS reject_live_append_only_mutation()")
 
     for table_name in reversed(LIVE_TABLES):

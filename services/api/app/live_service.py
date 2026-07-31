@@ -126,19 +126,13 @@ def connection_context(
     return AdapterConnectionContext(
         connection_id=connection.id,
         platform=connection.platform,
-        access_credential=decrypt_secret(
-            connection.encrypted_access_credential, settings
-        )
+        access_credential=decrypt_secret(connection.encrypted_access_credential, settings)
         if connection.encrypted_access_credential
         else None,
-        refresh_credential=decrypt_secret(
-            connection.encrypted_refresh_credential, settings
-        )
+        refresh_credential=decrypt_secret(connection.encrypted_refresh_credential, settings)
         if connection.encrypted_refresh_credential
         else None,
-        connection_secret=decrypt_secret(
-            connection.encrypted_connection_secret, settings
-        )
+        connection_secret=decrypt_secret(connection.encrypted_connection_secret, settings)
         if connection.encrypted_connection_secret
         else None,
         scopes=frozenset(connection.scopes),
@@ -149,13 +143,18 @@ def connection_context(
 
 
 def _adapter_api_error(exc: AdapterError, *, operation: str) -> APIError:
-    status_code = 409 if exc.code in {
-        "requires_provider_review",
-        "platform_adapter_unavailable",
-        "plugin_signing_key_not_allowed",
-        "plugin_endpoint_host_not_allowed",
-        "obs_websocket_host_not_allowed",
-    } else 503
+    status_code = (
+        409
+        if exc.code
+        in {
+            "requires_provider_review",
+            "platform_adapter_unavailable",
+            "plugin_signing_key_not_allowed",
+            "plugin_endpoint_host_not_allowed",
+            "obs_websocket_host_not_allowed",
+        }
+        else 503
+    )
     return APIError(
         status_code,
         exc.code,
@@ -268,12 +267,8 @@ async def create_integration_connection(
         requested = {capability.value for capability in payload.requested_capabilities}
         missing = requested - set(verified)
         record.verified_capabilities = verified
-        record.external_account_id = (
-            result.external_account_id or record.external_account_id
-        )
-        record.external_channel_id = (
-            result.external_channel_id or record.external_channel_id
-        )
+        record.external_account_id = result.external_account_id or record.external_account_id
+        record.external_channel_id = result.external_channel_id or record.external_channel_id
         if result.refreshed_access_credential:
             record.encrypted_access_credential = encrypt_secret(
                 result.refreshed_access_credential, settings
@@ -284,9 +279,7 @@ async def create_integration_connection(
             )
         record.token_expires_at = result.token_expires_at or record.token_expires_at
         record.state = IntegrationState.degraded if missing else IntegrationState.connected
-        record.provider_status = (
-            "capability_mismatch" if missing else "capabilities_verified"
-        )
+        record.provider_status = "capability_mismatch" if missing else "capabilities_verified"
         record.last_health_at = utcnow()
         record.last_error_code = "requested_capability_unavailable" if missing else None
         record.last_error_at = utcnow() if missing else None
@@ -305,9 +298,7 @@ async def create_integration_connection(
         db.add(snapshot)
         if payload.plugin_manifest:
             manifest = payload.plugin_manifest.model_dump(mode="json")
-            canonical = {
-                key: value for key, value in manifest.items() if key != "signature"
-            }
+            canonical = {key: value for key, value in manifest.items() if key != "signature"}
             db.add(
                 LivePluginManifest(
                     connection_id=record.id,
@@ -318,14 +309,11 @@ async def create_integration_connection(
                     oauth_reference=payload.plugin_manifest.oauth_reference,
                     secret_reference=payload.plugin_manifest.secret_reference,
                     declared_capabilities=[
-                        item.value
-                        for item in payload.plugin_manifest.declared_capabilities
+                        item.value for item in payload.plugin_manifest.declared_capabilities
                     ],
                     signing_key_id=payload.plugin_manifest.signing_key_id,
                     manifest_hash=hashlib.sha256(
-                        json.dumps(
-                            canonical, sort_keys=True, separators=(",", ":")
-                        ).encode()
+                        json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
                     ).hexdigest(),
                     verified_at=utcnow(),
                 )
@@ -337,9 +325,7 @@ async def create_integration_connection(
         await db.rollback()
         failed_record = await db.get(IntegrationConnection, connection_id)
         assert failed_record is not None
-        failed_record.state = (
-            IntegrationState.revoked if exc.revoked else IntegrationState.error
-        )
+        failed_record.state = IntegrationState.revoked if exc.revoked else IntegrationState.error
         failed_record.provider_status = exc.code
         failed_record.last_error_code = exc.code
         failed_record.last_error_at = utcnow()
@@ -417,9 +403,7 @@ def oauth_start(
     external_channel_id: str | None,
 ) -> str:
     verifier = secrets.token_urlsafe(48)
-    challenge = (
-        base64_url(hashlib.sha256(verifier.encode()).digest())
-    )
+    challenge = base64_url(hashlib.sha256(verifier.encode()).digest())
     state = create_oauth_state(
         {
             "purpose": "live_integration",
@@ -458,9 +442,8 @@ async def oauth_callback_connection(
     state_token: str,
 ) -> IntegrationConnection:
     state = decode_oauth_state(state_token, settings)
-    if (
-        state.get("purpose") != "live_integration"
-        or state.get("owner_user_id") != str(owner_user_id)
+    if state.get("purpose") != "live_integration" or state.get("owner_user_id") != str(
+        owner_user_id
     ):
         raise APIError(
             400,
@@ -529,14 +512,10 @@ class LiveEventHub:
 
     def __init__(self, queue_size: int = 100) -> None:
         self.queue_size = queue_size
-        self._queues: dict[
-            uuid.UUID, set[asyncio.Queue[LiveReplayEvent]]
-        ] = defaultdict(set)
+        self._queues: dict[uuid.UUID, set[asyncio.Queue[LiveReplayEvent]]] = defaultdict(set)
         self._lock = asyncio.Lock()
 
-    async def subscribe(
-        self, session_id: uuid.UUID
-    ) -> asyncio.Queue[LiveReplayEvent]:
+    async def subscribe(self, session_id: uuid.UUID) -> asyncio.Queue[LiveReplayEvent]:
         queue: asyncio.Queue[LiveReplayEvent] = asyncio.Queue(maxsize=self.queue_size)
         async with self._lock:
             self._queues[session_id].add(queue)
@@ -630,9 +609,7 @@ def media_context() -> AdapterConnectionContext:
     )
 
 
-async def _provision_ingest(
-    registry: AdapterRegistry, ingest_path: str, stream_key: str
-) -> bool:
+async def _provision_ingest(registry: AdapterRegistry, ingest_path: str, stream_key: str) -> bool:
     adapter = registry.resolve(IntegrationPlatform.rtmp_webrtc)
     if not adapter.descriptor().available:
         return False
@@ -673,9 +650,7 @@ async def create_live_session(
     db.add(record)
     await db.flush()
     for destination_payload in payload.destinations:
-        await add_destination(
-            db, record, owner_user_id, destination_payload, commit=False
-        )
+        await add_destination(db, record, owner_user_id, destination_payload, commit=False)
     _append_live_event(
         db,
         record,
@@ -806,13 +781,11 @@ def _required_capability_checks(
     return [
         (
             "publish",
-            not destination.publish_enabled
-            or bool(available & publish_capabilities),
+            not destination.publish_enabled or bool(available & publish_capabilities),
         ),
         (
             "chat",
-            not destination.chat_enabled
-            or LiveCapability.chat_send.value in available,
+            not destination.chat_enabled or LiveCapability.chat_send.value in available,
         ),
         (
             "events",
@@ -831,15 +804,12 @@ def _required_capability_checks(
         ),
         (
             "analytics",
-            not destination.analytics_enabled
-            or LiveCapability.analytics.value in available,
+            not destination.analytics_enabled or LiveCapability.analytics.value in available,
         ),
     ]
 
 
-async def session_destinations(
-    db: AsyncSession, session_id: uuid.UUID
-) -> list[LiveDestination]:
+async def session_destinations(db: AsyncSession, session_id: uuid.UUID) -> list[LiveDestination]:
     return list(
         (
             await db.scalars(
@@ -905,9 +875,7 @@ async def preflight_session(
         )
         destination.last_health_at = utcnow()
         destination.state = (
-            LiveDestinationState.ready
-            if health.ok
-            else LiveDestinationState.unavailable
+            LiveDestinationState.ready if health.ok else LiveDestinationState.unavailable
         )
         destination.last_error_code = None if health.ok else health.status
         checks.append(
@@ -1064,9 +1032,7 @@ async def reconnect_session(
         else:
             destination.last_error_code = health.status
             failures += 1
-    live_session.state = (
-        LiveSessionState.reconnecting if failures else LiveSessionState.live
-    )
+    live_session.state = LiveSessionState.reconnecting if failures else LiveSessionState.live
     live_session.last_error_code = "destination_reconnect_pending" if failures else None
     _append_live_event(
         db,
@@ -1114,9 +1080,7 @@ async def end_session(
     media = registry.resolve(IntegrationPlatform.rtmp_webrtc)
     if live_session.ingest_provisioned:
         try:
-            await media.end_broadcast(
-                media_context(), live_session.ingest_path
-            )
+            await media.end_broadcast(media_context(), live_session.ingest_path)
             live_session.ingest_provisioned = False
         except AdapterError as exc:
             errors.append(exc.code)
@@ -1185,9 +1149,7 @@ async def accept_webhook(
         normalized = [_serialized_inbound(event) for event in inbound]
     except AdapterError as exc:
         raise APIError(
-            401
-            if "signature" in exc.code
-            else 422,
+            401 if "signature" in exc.code else 422,
             exc.code,
             "Live webhook rejected",
             "The webhook failed official transport verification or its strict schema.",
@@ -1247,9 +1209,7 @@ async def _active_destination_for_connection(
                 LiveDestination.state.in_(
                     (LiveDestinationState.live, LiveDestinationState.reconnecting)
                 ),
-                LiveSession.state.in_(
-                    (LiveSessionState.live, LiveSessionState.reconnecting)
-                ),
+                LiveSession.state.in_((LiveSessionState.live, LiveSessionState.reconnecting)),
             )
             .order_by(LiveSession.started_at.desc())
             .limit(1)
@@ -1275,14 +1235,17 @@ async def persist_normalized_event(
         )
         if existing is not None:
             return existing
-    sequence = int(
-        await db.scalar(
-            select(func.coalesce(func.max(LiveNormalizedEvent.sequence), 0)).where(
-                LiveNormalizedEvent.session_id == live_session.id
+    sequence = (
+        int(
+            await db.scalar(
+                select(func.coalesce(func.max(LiveNormalizedEvent.sequence), 0)).where(
+                    LiveNormalizedEvent.session_id == live_session.id
+                )
             )
+            or 0
         )
-        or 0
-    ) + 1
+        + 1
+    )
     event = LiveNormalizedEvent(
         session_id=live_session.id,
         destination_id=destination.id if destination else None,
@@ -1407,8 +1370,7 @@ async def evaluate_rules_for_event(
                 select(LiveAction.id)
                 .where(
                     LiveAction.rule_id == rule.id,
-                    LiveAction.created_at
-                    >= now - timedelta(seconds=rule.cooldown_seconds),
+                    LiveAction.created_at >= now - timedelta(seconds=rule.cooldown_seconds),
                 )
                 .limit(1)
             )
@@ -1428,13 +1390,9 @@ async def evaluate_rules_for_event(
         )
         if count >= rule.rate_limit_count:
             continue
-        idempotency_key = hashlib.sha256(
-            f"live-rule:{rule.id}:{event.id}".encode()
-        ).hexdigest()
+        idempotency_key = hashlib.sha256(f"live-rule:{rule.id}:{event.id}".encode()).hexdigest()
         existing = await db.scalar(
-            select(LiveAction).where(
-                LiveAction.idempotency_key == idempotency_key
-            )
+            select(LiveAction).where(LiveAction.idempotency_key == idempotency_key)
         )
         if existing is not None:
             actions.append(existing)
@@ -1444,9 +1402,7 @@ async def evaluate_rules_for_event(
             session_id=live_session.id,
             event_id=event.id,
             rule_id=rule.id,
-            destination_id=uuid.UUID(destination_id)
-            if isinstance(destination_id, str)
-            else None,
+            destination_id=uuid.UUID(destination_id) if isinstance(destination_id, str) else None,
             action_type=rule.action_type,
             state=LiveActionState.queued,
             idempotency_key=idempotency_key,
@@ -1517,9 +1473,7 @@ async def execute_live_action(
             "Live action approval required",
             "A human must approve this action before execution.",
         )
-    if action.action_type == LiveActionType.moderate and action.typed_payload.get(
-        "kind"
-    ) == "ban":
+    if action.action_type == LiveActionType.moderate and action.typed_payload.get("kind") == "ban":
         raise APIError(
             409,
             "live_auto_ban_forbidden",
@@ -1527,9 +1481,7 @@ async def execute_live_action(
             "Live automation never executes a ban action.",
         )
     destination = (
-        await db.get(LiveDestination, action.destination_id)
-        if action.destination_id
-        else None
+        await db.get(LiveDestination, action.destination_id) if action.destination_id else None
     )
     if destination is not None and (
         destination.session_id != action.session_id
@@ -1555,13 +1507,9 @@ async def execute_live_action(
             LiveDestination.state == LiveDestinationState.live,
         )
         if required_flag is not None:
-            destination_statement = destination_statement.where(
-                required_flag.is_(True)
-            )
+            destination_statement = destination_statement.where(required_flag.is_(True))
         destination = await db.scalar(
-            destination_statement.order_by(
-                LiveDestination.created_at
-            ).limit(1)
+            destination_statement.order_by(LiveDestination.created_at).limit(1)
         )
     if destination is None:
         raise APIError(
@@ -1645,9 +1593,7 @@ async def execute_live_action(
             )
             failed_action.next_retry_at = None
         else:
-            await _transition_action(
-                db, failed_action, LiveActionState.retry, exc.code
-            )
+            await _transition_action(db, failed_action, LiveActionState.retry, exc.code)
             failed_action.next_retry_at = utcnow() + timedelta(
                 seconds=retry_delay_seconds(failed_action.retry_count)
             )
@@ -1823,9 +1769,7 @@ async def generate_live_ai_turn(
                 effective_action_type = LiveActionType.respond_text
         if effective_action_type == LiveActionType.respond_text:
             selected_destination = (
-                await db.get(LiveDestination, destination_id)
-                if destination_id
-                else None
+                await db.get(LiveDestination, destination_id) if destination_id else None
             )
             if selected_destination is not None and (
                 selected_destination.session_id != live_session.id
@@ -1888,9 +1832,7 @@ async def generate_live_ai_turn(
         assert unavailable_turn is not None
         unavailable_turn.status = LiveTurnStatus.unavailable
         unavailable_turn.failure_code = exc.code
-        unavailable_turn.latency_ms = int(
-            (utcnow() - started).total_seconds() * 1000
-        )
+        unavailable_turn.latency_ms = int((utcnow() - started).total_seconds() * 1000)
         await db.commit()
         return unavailable_turn
 
@@ -2011,9 +1953,7 @@ async def record_human_moderation_decision(
 async def create_game(
     db: AsyncSession, owner_user_id: uuid.UUID, payload: GameCreate
 ) -> LiveGameSession:
-    live_session = await owned_live_session(
-        db, payload.live_session_id, owner_user_id
-    )
+    live_session = await owned_live_session(db, payload.live_session_id, owner_user_id)
     game = LiveGameSession(
         live_session_id=live_session.id,
         owner_user_id=owner_user_id,
@@ -2289,9 +2229,7 @@ async def check_connection_health(
     healthy = 0
     unhealthy = 0
     for connection in records:
-        snapshot = await health_connection(
-            db, registry, settings, connection
-        )
+        snapshot = await health_connection(db, registry, settings, connection)
         if snapshot.status == "connected":
             healthy += 1
         else:
@@ -2336,8 +2274,7 @@ async def reconcile_live_voice_turns(db: AsyncSession) -> dict[str, int]:
             (
                 item
                 for item in job.output_refs
-                if str(item.get("content_type", "")).startswith("audio/")
-                and item.get("object_key")
+                if str(item.get("content_type", "")).startswith("audio/") and item.get("object_key")
             ),
             None,
         )
@@ -2354,9 +2291,7 @@ async def reconcile_live_voice_turns(db: AsyncSession) -> dict[str, int]:
                 LiveAction.state == LiveActionState.queued,
             )
         )
-        if action is not None and (
-            not action.requires_approval or action.approved_at is not None
-        ):
+        if action is not None and (not action.requires_approval or action.approved_at is not None):
             turn.status = LiveTurnStatus.succeeded
             action.official_response_reference_hash = hashlib.sha256(
                 turn.audio_output_reference.encode()
@@ -2377,16 +2312,12 @@ async def reconcile_live_voice_turns(db: AsyncSession) -> dict[str, int]:
     return {"ready": ready, "failed": failed}
 
 
-async def scrub_live_user_records(
-    db: AsyncSession, user_id: uuid.UUID, settings: Settings
-) -> None:
+async def scrub_live_user_records(db: AsyncSession, user_id: uuid.UUID, settings: Settings) -> None:
     now = utcnow()
     connections = list(
         (
             await db.scalars(
-                select(IntegrationConnection).where(
-                    IntegrationConnection.owner_user_id == user_id
-                )
+                select(IntegrationConnection).where(IntegrationConnection.owner_user_id == user_id)
             )
         ).all()
     )
@@ -2406,11 +2337,7 @@ async def scrub_live_user_records(
         connection.last_error_code = "owner_deleted"
         connection.last_error_at = now
     sessions = list(
-        (
-            await db.scalars(
-                select(LiveSession).where(LiveSession.owner_user_id == user_id)
-            )
-        ).all()
+        (await db.scalars(select(LiveSession).where(LiveSession.owner_user_id == user_id))).all()
     )
     for live_session in sessions:
         live_session.owner_user_id = None
@@ -2434,14 +2361,10 @@ async def scrub_live_user_records(
         )
         if consent_ids:
             await db.execute(
-                delete(LiveViewerMemory).where(
-                    LiveViewerMemory.consent_id.in_(consent_ids)
-                )
+                delete(LiveViewerMemory).where(LiveViewerMemory.consent_id.in_(consent_ids))
             )
         await db.execute(
-            delete(LiveViewerConsent).where(
-                LiveViewerConsent.connection_id.in_(connection_ids)
-            )
+            delete(LiveViewerConsent).where(LiveViewerConsent.connection_id.in_(connection_ids))
         )
     await db.execute(delete(AILiveRule).where(AILiveRule.owner_user_id == user_id))
     await db.execute(delete(AILivePersona).where(AILivePersona.owner_user_id == user_id))

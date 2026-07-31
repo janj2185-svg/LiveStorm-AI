@@ -33,16 +33,25 @@ from app.middleware import (
     SecurityHeadersMiddleware,
 )
 from app.payments import PaymentProvider, configured_payment_provider
+from app.platform_service import (
+    CertificateRenderer,
+    ContentProcessor,
+    UnconfiguredCertificateRenderer,
+    UnconfiguredContentProcessor,
+)
 from app.routers import (
     admin,
     admin_ai,
     ai,
     auth,
+    creator_platform,
     gift_authoring,
     gifts,
     health,
+    learning,
     ledger,
     live,
+    marketplace,
     messaging,
     oauth,
     social,
@@ -63,6 +72,9 @@ def create_app(
     ai_job_dispatcher: Callable[[uuid.UUID], Awaitable[None]] | None = None,
     live_adapter_registry: AdapterRegistry | None = None,
     live_webhook_dispatcher: Callable[[uuid.UUID], Awaitable[None]] | None = None,
+    content_processor: ContentProcessor | None = None,
+    certificate_renderer: CertificateRenderer | None = None,
+    content_publish_dispatcher: (Callable[[uuid.UUID, Any], Awaitable[None]] | None) = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     resolved_engine = engine or create_engine(resolved_settings)
@@ -92,6 +104,16 @@ def create_app(
             celery_app.send_task,
             "sylora.live.process_webhook",
             args=[str(delivery_id)],
+        )
+
+    async def dispatch_content_publish(content_id: uuid.UUID, scheduled_at: Any) -> None:
+        from app.celery_app import celery_app
+
+        await asyncio.to_thread(
+            celery_app.send_task,
+            "sylora.content.publish_scheduled",
+            args=[str(content_id)],
+            eta=scheduled_at,
         )
 
     @asynccontextmanager
@@ -144,6 +166,18 @@ def create_app(
                 "name": "AI Live Hub",
                 "description": "Official live integrations and durable control plane",
             },
+            {
+                "name": "Creator platform",
+                "description": "Creator channels, subscriptions, content, and analytics",
+            },
+            {
+                "name": "Marketplace",
+                "description": "Stores, products, carts, orders, fulfillment, and reviews",
+            },
+            {
+                "name": "Learning",
+                "description": "Courses, progress, quizzes, and verifiable certificates",
+            },
             {"name": "Administration", "description": "Server-enforced RBAC"},
             {"name": "Operations", "description": "Health and telemetry"},
         ],
@@ -162,12 +196,11 @@ def create_app(
     app.state.object_storage = object_storage or S3ObjectStorage(resolved_settings)
     app.state.ai_provider_registry = resolved_ai_registry
     app.state.ai_job_dispatcher = ai_job_dispatcher or dispatch_ai_job
-    app.state.live_adapter_registry = live_adapter_registry or AdapterRegistry(
-        resolved_settings
-    )
-    app.state.live_webhook_dispatcher = (
-        live_webhook_dispatcher or dispatch_live_webhook
-    )
+    app.state.live_adapter_registry = live_adapter_registry or AdapterRegistry(resolved_settings)
+    app.state.live_webhook_dispatcher = live_webhook_dispatcher or dispatch_live_webhook
+    app.state.content_processor = content_processor or UnconfiguredContentProcessor()
+    app.state.certificate_renderer = certificate_renderer or UnconfiguredCertificateRenderer()
+    app.state.content_publish_dispatcher = content_publish_dispatcher or dispatch_content_publish
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)
@@ -208,6 +241,9 @@ def create_app(
     app.include_router(gifts.router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.admin_router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.websocket_router, prefix=resolved_settings.api_prefix)
+    app.include_router(creator_platform.router, prefix=resolved_settings.api_prefix)
+    app.include_router(marketplace.router, prefix=resolved_settings.api_prefix)
+    app.include_router(learning.router, prefix=resolved_settings.api_prefix)
     install_exception_handlers(app)
     return app
 

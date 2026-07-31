@@ -32,3 +32,25 @@ def add_audit_event(
             event_metadata=metadata or {},
         )
     )
+
+
+def add_system_audit_event(
+    session: AsyncSession,
+    action: str,
+    *,
+    actor_user_id: uuid.UUID | None = None,
+    target_user_id: uuid.UUID | None = None,
+    metadata: dict[str, Any] | None = None,
+    operation_id: uuid.UUID | None = None,
+) -> None:
+    """Append audit for a trusted worker operation without an HTTP request."""
+    session.add(
+        SecurityAuditEvent(
+            actor_user_id=actor_user_id,
+            action=action,
+            target_user_id=target_user_id,
+            request_id=f"worker:{operation_id or uuid.uuid4()}",
+            ip_hash=None,
+            event_metadata=metadata or {},
+        )
+    )

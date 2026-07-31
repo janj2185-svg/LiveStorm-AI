@@ -65,6 +65,12 @@ class Settings(BaseSettings):
     live_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
     live_manage_rate_limit: int = Field(default=60, ge=1, le=5000)
     live_webhook_rate_limit: int = Field(default=600, ge=1, le=100_000)
+    creator_subscription_rate_limit: int = Field(default=10, ge=1, le=1000)
+    marketplace_checkout_rate_limit: int = Field(default=10, ge=1, le=1000)
+    marketplace_review_rate_limit: int = Field(default=30, ge=1, le=2000)
+    learning_progress_rate_limit: int = Field(default=120, ge=1, le=10_000)
+    learning_quiz_rate_limit: int = Field(default=60, ge=1, le=5000)
+    platform_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
     ip_hash_key: SecretStr | None = None
 
     s3_endpoint_url: str | None = None

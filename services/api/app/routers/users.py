@@ -26,6 +26,7 @@ from app.models import (
     UserRole,
     UserStatus,
 )
+from app.platform_service import scrub_platform_user_records
 from app.schemas import (
     AccountSettingsPatch,
     AccountSettingsResponse,
@@ -296,5 +297,6 @@ async def delete_own_account(
     )
     await scrub_ai_user_records(db, user.id, settings)
     await scrub_live_user_records(db, user.id, settings)
+    await scrub_platform_user_records(db, user.id)
     await db.commit()
     return MessageResponse(status="deleted")

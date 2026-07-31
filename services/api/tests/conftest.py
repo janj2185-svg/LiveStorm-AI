@@ -104,6 +104,9 @@ def api_factory(tmp_path: Path):
                 "live_webhook_dispatcher",
                 "object_storage",
                 "payment_provider",
+                "content_processor",
+                "certificate_renderer",
+                "content_publish_dispatcher",
             )
             if key in overrides
         }

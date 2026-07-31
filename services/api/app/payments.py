@@ -48,6 +48,17 @@ class PaymentProvider(Protocol):
         amount_minor: int,
     ) -> ProviderOperationResult: ...
 
+    async def create_checkout_intent(
+        self,
+        *,
+        idempotency_key: str,
+        user_reference: str,
+        amount_minor: int,
+        settlement_currency: str,
+        return_url: str,
+        line_references: list[str],
+    ) -> ProviderOperationResult: ...
+
     async def create_payout(
         self,
         *,
@@ -90,6 +101,18 @@ class UnconfiguredPaymentProvider:
         idempotency_key: str,
         provider_operation_id: str,
         amount_minor: int,
+    ) -> ProviderOperationResult:
+        raise self._unavailable()
+
+    async def create_checkout_intent(
+        self,
+        *,
+        idempotency_key: str,
+        user_reference: str,
+        amount_minor: int,
+        settlement_currency: str,
+        return_url: str,
+        line_references: list[str],
     ) -> ProviderOperationResult:
         raise self._unavailable()
 

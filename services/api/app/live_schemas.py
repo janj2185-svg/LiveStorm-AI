@@ -115,9 +115,7 @@ class IntegrationConnectRequest(StrictSchema):
             raise ValueError("integration scopes are invalid")
         return sorted(set(value))
 
-    @field_validator(
-        "external_account_id", "external_channel_id", "guild_id", "bot_application_id"
-    )
+    @field_validator("external_account_id", "external_channel_id", "guild_id", "bot_application_id")
     @classmethod
     def valid_external_ids(cls, value: str | None) -> str | None:
         if value is not None and not ID_PATTERN.fullmatch(value):
@@ -229,9 +227,7 @@ class ModerationPolicyInput(StrictSchema):
         cls, value: dict[str, Literal["delete", "timeout"]]
     ) -> dict[str, Literal["delete", "timeout"]]:
         if any(
-            not key
-            or len(key) > 64
-            or not key.replace("_", "").replace("-", "").isalnum()
+            not key or len(key) > 64 or not key.replace("_", "").replace("-", "").isalnum()
             for key in value
         ):
             raise ValueError("moderation policy category is invalid")
@@ -581,9 +577,9 @@ class TurnPage(CursorPage):
 
 class LiveTurnCreate(StrictSchema):
     persona_id: uuid.UUID
-    action_type: Literal[
-        LiveActionType.respond_text, LiveActionType.respond_voice
-    ] = LiveActionType.respond_text
+    action_type: Literal[LiveActionType.respond_text, LiveActionType.respond_voice] = (
+        LiveActionType.respond_text
+    )
     destination_id: uuid.UUID | None = None
     allow_text_fallback: bool = False
 
@@ -604,9 +600,9 @@ class GameQuestionCreate(StrictSchema):
     @classmethod
     def options_are_plain(cls, value: list[str]) -> list[str]:
         cleaned = [safe_text(item) for item in value]
-        if any(not item or len(item) > 200 for item in cleaned) or len(
-            set(cleaned)
-        ) != len(cleaned):
+        if any(not item or len(item) > 200 for item in cleaned) or len(set(cleaned)) != len(
+            cleaned
+        ):
             raise ValueError("quiz options must be unique bounded plain text")
         return cleaned
 

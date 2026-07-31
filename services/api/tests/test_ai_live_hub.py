@@ -75,9 +75,7 @@ class TestAdapter(BasePlatformAdapter):
             potential_capabilities=self.potential_capabilities,
         )
 
-    async def connect(
-        self, context: AdapterConnectionContext
-    ) -> AdapterConnectionResult:
+    async def connect(self, context: AdapterConnectionContext) -> AdapterConnectionResult:
         if not self.healthy:
             from app.live_adapters import AdapterError
 
@@ -89,15 +87,11 @@ class TestAdapter(BasePlatformAdapter):
             provider_metadata={"transport_verified": True},
         )
 
-    async def health(
-        self, context: AdapterConnectionContext
-    ) -> AdapterHealth:
+    async def health(self, context: AdapterConnectionContext) -> AdapterHealth:
         return AdapterHealth(
             ok=self.healthy,
             status="connected" if self.healthy else "test_adapter_unhealthy",
-            verified_capabilities=self.potential_capabilities
-            if self.healthy
-            else frozenset(),
+            verified_capabilities=self.potential_capabilities if self.healthy else frozenset(),
         )
 
     def verify_webhook(
@@ -107,9 +101,7 @@ class TestAdapter(BasePlatformAdapter):
         body: bytes,
     ) -> str:
         assert context.connection_secret
-        expected = hmac.new(
-            context.connection_secret.encode(), body, hashlib.sha256
-        ).hexdigest()
+        expected = hmac.new(context.connection_secret.encode(), body, hashlib.sha256).hexdigest()
         supplied = headers.get("x-test-signature", "")
         if not hmac.compare_digest(supplied, expected):
             from app.live_adapters import AdapterError
@@ -154,9 +146,7 @@ class TestAdapter(BasePlatformAdapter):
         self.actions.append(("create", dict(configuration)))
         return AdapterActionResult(
             provider_reference="broadcast-ref",
-            external_broadcast_id=str(
-                configuration.get("ingest_path", "external-broadcast")
-            ),
+            external_broadcast_id=str(configuration.get("ingest_path", "external-broadcast")),
         )
 
     async def update_broadcast(
@@ -176,9 +166,7 @@ class TestAdapter(BasePlatformAdapter):
         self.actions.append(("end", {"id": external_broadcast_id}))
         return AdapterActionResult(provider_reference=external_broadcast_id)
 
-    async def send_chat(
-        self, context: AdapterConnectionContext, text: str
-    ) -> AdapterActionResult:
+    async def send_chat(self, context: AdapterConnectionContext, text: str) -> AdapterActionResult:
         self.actions.append(("chat", {"text": text}))
         return AdapterActionResult(provider_reference="message-ref")
 
@@ -273,9 +261,7 @@ async def test_platform_capability_gating_and_secret_redaction(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, _ = await creator_headers(api)
         connection = await connect_test_integration(api, headers)
         assert connection["state"] == "connected"
@@ -312,9 +298,7 @@ async def test_session_preflight_state_machine_and_reveal_once_key(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, _ = await creator_headers(api)
         connection = await connect_test_integration(api, headers)
         created = await api.client.post(
@@ -336,13 +320,9 @@ async def test_session_preflight_state_machine_and_reveal_once_key(
         raw_key = body["stream_key_once"]
         assert len(raw_key) >= 32
         session_id = body["id"]
-        listing = await api.client.get(
-            f"/v1/live/sessions/{session_id}", headers=headers
-        )
+        listing = await api.client.get(f"/v1/live/sessions/{session_id}", headers=headers)
         assert raw_key not in listing.text
-        reveal = await api.client.get(
-            f"/v1/live/sessions/{session_id}/stream-key", headers=headers
-        )
+        reveal = await api.client.get(f"/v1/live/sessions/{session_id}/stream-key", headers=headers)
         assert reveal.status_code == 410
 
         preflight = await api.client.post(
@@ -350,14 +330,10 @@ async def test_session_preflight_state_machine_and_reveal_once_key(
         )
         assert preflight.status_code == 200
         assert preflight.json()["ready"] is True
-        started = await api.client.post(
-            f"/v1/live/sessions/{session_id}/start", headers=headers
-        )
+        started = await api.client.post(f"/v1/live/sessions/{session_id}/start", headers=headers)
         assert started.status_code == 200, started.text
         assert started.json()["state"] == "live"
-        ended = await api.client.post(
-            f"/v1/live/sessions/{session_id}/end", headers=headers
-        )
+        ended = await api.client.post(f"/v1/live/sessions/{session_id}/end", headers=headers)
         assert ended.status_code == 200
         assert ended.json()["state"] == "ended"
         rotated = await api.client.post(
@@ -383,9 +359,7 @@ async def test_injected_adapter_reconnect_error_and_recovery(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, _ = await creator_headers(api)
         connection = await connect_test_integration(api, headers)
         created = await api.client.post(
@@ -403,35 +377,24 @@ async def test_injected_adapter_reconnect_error_and_recovery(
             },
         )
         session_id = uuid.UUID(created.json()["id"])
-        await api.client.post(
-            f"/v1/live/sessions/{session_id}/preflight", headers=headers
-        )
-        started = await api.client.post(
-            f"/v1/live/sessions/{session_id}/start", headers=headers
-        )
+        await api.client.post(f"/v1/live/sessions/{session_id}/preflight", headers=headers)
+        started = await api.client.post(f"/v1/live/sessions/{session_id}/start", headers=headers)
         assert started.status_code == 200
 
         async with api.app.state.session_factory() as db:
             destination = await db.scalar(
-                select(LiveDestination).where(
-                    LiveDestination.session_id == session_id
-                )
+                select(LiveDestination).where(LiveDestination.session_id == session_id)
             )
             assert destination is not None
             destination.state = LiveDestinationState.failed
             await db.commit()
 
         media.healthy = False
-        failed = await api.client.post(
-            f"/v1/live/sessions/{session_id}/reconnect", headers=headers
-        )
+        failed = await api.client.post(f"/v1/live/sessions/{session_id}/reconnect", headers=headers)
         assert failed.status_code == 200
         assert failed.json()["state"] == "reconnecting"
         assert failed.json()["destinations"][0]["state"] == "reconnecting"
-        assert (
-            failed.json()["destinations"][0]["last_error_code"]
-            == "test_adapter_unhealthy"
-        )
+        assert failed.json()["destinations"][0]["last_error_code"] == "test_adapter_unhealthy"
         assert failed.json()["destinations"][0]["reconnect_count"] == 1
 
         media.healthy = True
@@ -485,16 +448,10 @@ async def test_webhook_signature_dedupe_and_normalized_persistence(
             },
         )
         session_id = session.json()["id"]
-        await api.client.post(
-            f"/v1/live/sessions/{session_id}/preflight", headers=headers
-        )
-        await api.client.post(
-            f"/v1/live/sessions/{session_id}/start", headers=headers
-        )
+        await api.client.post(f"/v1/live/sessions/{session_id}/preflight", headers=headers)
+        await api.client.post(f"/v1/live/sessions/{session_id}/start", headers=headers)
         payload = json.dumps({"id": "official-event-1", "text": "Hello live"}).encode()
-        signature = hmac.new(
-            b"test-webhook-secret", payload, hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(b"test-webhook-secret", payload, hashlib.sha256).hexdigest()
         rejected = await api.client.post(
             f"/v1/live/webhooks/rtmp_webrtc/{connection['id']}",
             content=payload,
@@ -542,13 +499,9 @@ def test_rule_dsl_is_typed_bounded_and_has_no_eval() -> None:
         },
     )
     with pytest.raises(ValueError):
-        validate_condition_dsl(
-            {"field": "__class__", "op": "eq", "value": "anything"}
-        )
+        validate_condition_dsl({"field": "__class__", "op": "eq", "value": "anything"})
     with pytest.raises(ValueError):
-        validate_condition_dsl(
-            {"field": "text", "op": "eval", "value": "open('/etc/passwd')"}
-        )
+        validate_condition_dsl({"field": "text", "op": "eval", "value": "open('/etc/passwd')"})
 
 
 @pytest.mark.asyncio
@@ -566,9 +519,7 @@ async def test_rule_cooldown_idempotency_and_moderation_never_auto_bans(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, user_id = await creator_headers(api)
         connection = await connect_test_integration(
             api,
@@ -657,9 +608,7 @@ async def test_rule_cooldown_idempotency_and_moderation_never_auto_bans(
             db.add(action)
             await db.commit()
             action_id = action.id
-        execution = await api.client.post(
-            f"/v1/live/actions/{action_id}/execute", headers=headers
-        )
+        execution = await api.client.post(f"/v1/live/actions/{action_id}/execute", headers=headers)
         assert execution.status_code == 409
         assert execution.json()["code"] == "live_auto_ban_forbidden"
 
@@ -689,9 +638,7 @@ async def test_ai_unavailable_is_explicit_and_quiz_scores_real_answers(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, user_id = await creator_headers(api)
         connection = await connect_test_integration(api, headers)
         session_response = await api.client.post(
@@ -767,10 +714,7 @@ async def test_ai_unavailable_is_explicit_and_quiz_scores_real_answers(
         )
         assert unavailable_provider.status_code == 200
         assert unavailable_provider.json()["status"] == "unavailable"
-        assert (
-            unavailable_provider.json()["failure_code"]
-            == "ai_provider_unavailable"
-        )
+        assert unavailable_provider.json()["failure_code"] == "ai_provider_unavailable"
 
         game = await api.client.post(
             "/v1/live/games",
@@ -791,9 +735,7 @@ async def test_ai_unavailable_is_explicit_and_quiz_scores_real_answers(
         assert game.status_code == 201, game.text
         game_id = game.json()["id"]
         question_id = game.json()["questions"][0]["id"]
-        await api.client.post(
-            f"/v1/live/games/{game_id}/start", headers=headers
-        )
+        await api.client.post(f"/v1/live/games/{game_id}/start", headers=headers)
         answer = await api.client.post(
             f"/v1/live/games/{game_id}/answers",
             headers=headers,
@@ -808,9 +750,7 @@ async def test_ai_unavailable_is_explicit_and_quiz_scores_real_answers(
         assert answer.status_code == 200, answer.text
         assert answer.json()["correct"] is True
         assert answer.json()["total_score"] == 7
-        scores = await api.client.get(
-            f"/v1/live/games/{game_id}/scores", headers=headers
-        )
+        scores = await api.client.get(f"/v1/live/games/{game_id}/scores", headers=headers)
         assert scores.json()[0]["score"] == 7
 
 
@@ -828,9 +768,7 @@ async def test_first_party_gift_separation_and_account_deletion_cleanup(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, user_id = await creator_headers(api)
         connection = await connect_test_integration(api, headers)
         async with api.app.state.session_factory() as db:
@@ -865,9 +803,7 @@ async def test_first_party_gift_separation_and_account_deletion_cleanup(
         )
         assert deleted.status_code == 200, deleted.text
         async with api.app.state.session_factory() as db:
-            stored_connection = await db.get(
-                IntegrationConnection, uuid.UUID(connection["id"])
-            )
+            stored_connection = await db.get(IntegrationConnection, uuid.UUID(connection["id"]))
             assert stored_connection is not None
             assert stored_connection.owner_user_id is None
             assert stored_connection.encrypted_connection_secret is None
@@ -877,11 +813,7 @@ async def test_first_party_gift_separation_and_account_deletion_cleanup(
             assert stored_session.owner_user_id is None
             assert stored_session.state == LiveSessionState.failed
             assert (
-                await db.scalar(
-                    select(AILivePersona).where(
-                        AILivePersona.owner_user_id == user_id
-                    )
-                )
+                await db.scalar(select(AILivePersona).where(AILivePersona.owner_user_id == user_id))
                 is None
             )
 
@@ -900,9 +832,7 @@ async def test_live_replay_outbox_is_durable(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, _ = await creator_headers(api)
         created = await api.client.post(
             "/v1/live/sessions",
@@ -912,11 +842,7 @@ async def test_live_replay_outbox_is_durable(
         session_id = uuid.UUID(created.json()["id"])
         async with api.app.state.session_factory() as db:
             rows = (
-                await db.scalars(
-                    select(LiveEvent).where(
-                        LiveEvent.session_id == session_id
-                    )
-                )
+                await db.scalars(select(LiveEvent).where(LiveEvent.session_id == session_id))
             ).all()
             assert [row.event_type for row in rows] == ["session.created"]
 
@@ -935,9 +861,7 @@ async def test_live_websocket_replays_committed_events_after_cursor(
             }
         ),
     )
-    async with api_factory(
-        live_adapter_registry=TestRegistry([media])
-    ) as api:
+    async with api_factory(live_adapter_registry=TestRegistry([media])) as api:
         headers, _ = await creator_headers(api)
         created = await api.client.post(
             "/v1/live/sessions",
@@ -967,6 +891,4 @@ async def test_live_websocket_replays_committed_events_after_cursor(
         await live_websocket(websocket, session_id)  # type: ignore[arg-type]
         assert websocket.accepted is True
         assert websocket.close_codes == []
-        assert [item["event"] for item in websocket.sent] == [
-            "session.preflight_completed"
-        ]
+        assert [item["event"] for item in websocket.sent] == ["session.preflight_completed"]

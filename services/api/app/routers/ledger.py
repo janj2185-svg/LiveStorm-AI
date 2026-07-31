@@ -52,6 +52,7 @@ from app.ledger_service import (
 )
 from app.models import User
 from app.payments import PaymentProvider
+from app.platform_service import settle_external_commerce
 from app.rate_limit import rate_limit
 from app.security import utcnow
 from app.social_service import apply_cursor, decode_cursor, encode_cursor
@@ -631,6 +632,12 @@ async def payment_webhook(
                     event_id=verified.event_id,
                     new_status=new_status,
                 )
+        await settle_external_commerce(
+            db,
+            provider_name=provider_name,
+            operation_id=verified.operation_id,
+            operation_status=verified.operation_status,
+        )
     event.processed_at = utcnow()
     await db.commit()
     return {"status": "processed"}

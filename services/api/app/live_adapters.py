@@ -220,9 +220,7 @@ class BasePlatformAdapter:
             )
         raise AdapterError("event_stream_unavailable")
 
-    async def send_chat(
-        self, context: AdapterConnectionContext, text: str
-    ) -> AdapterActionResult:
+    async def send_chat(self, context: AdapterConnectionContext, text: str) -> AdapterActionResult:
         raise AdapterError("chat_send_unavailable")
 
     async def moderate(
@@ -546,7 +544,10 @@ class YouTubeAdapter(BasePlatformAdapter):
             root = ET.fromstring(body)
         except ET.ParseError as exc:
             raise AdapterError("youtube_webhook_invalid_xml") from exc
-        namespace = {"atom": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
+        namespace = {
+            "atom": "http://www.w3.org/2005/Atom",
+            "yt": "http://www.youtube.com/xml/schemas/2015",
+        }
         events: list[AdapterInboundEvent] = []
         for entry in root.findall("atom:entry", namespace):
             video_id = entry.findtext("yt:videoId", default="", namespaces=namespace)
@@ -596,11 +597,7 @@ class YouTubeAdapter(BasePlatformAdapter):
                     continue
                 event_kind = str(snippet.get("type", ""))
                 details = snippet.get("textMessageDetails", {})
-                text = (
-                    str(details.get("messageText", ""))
-                    if isinstance(details, Mapping)
-                    else None
-                )
+                text = str(details.get("messageText", "")) if isinstance(details, Mapping) else None
                 normalized_type = {
                     "textMessageEvent": LiveNormalizedEventType.chat,
                     "newSponsorEvent": LiveNormalizedEventType.subscription,
@@ -621,18 +618,14 @@ class YouTubeAdapter(BasePlatformAdapter):
                 yield AdapterInboundEvent(
                     platform_event_id=str(item.get("id", "")),
                     event_type=normalized_type,
-                    occurred_at=_parse_provider_time(
-                        str(snippet.get("publishedAt", ""))
-                    ),
+                    occurred_at=_parse_provider_time(str(snippet.get("publishedAt", ""))),
                     actor_platform_id=str(author.get("channelId", "")) or None,
                     actor_display_name=str(author.get("displayName", "")) or None,
                     text=text,
                     safe_metadata=metadata,
                 )
             page_token_value = payload.get("nextPageToken")
-            page_token = (
-                str(page_token_value) if page_token_value is not None else page_token
-            )
+            page_token = str(page_token_value) if page_token_value is not None else page_token
             interval_ms = payload.get("pollingIntervalMillis", 5000)
             interval = (
                 max(1, min(float(interval_ms) / 1000, 30))
@@ -641,9 +634,7 @@ class YouTubeAdapter(BasePlatformAdapter):
             )
             await asyncio.sleep(interval)
 
-    async def send_chat(
-        self, context: AdapterConnectionContext, text: str
-    ) -> AdapterActionResult:
+    async def send_chat(self, context: AdapterConnectionContext, text: str) -> AdapterActionResult:
         live_chat_id = str(context.safe_configuration.get("live_chat_id", ""))
         if not live_chat_id:
             raise AdapterError("youtube_live_chat_id_required")
@@ -744,15 +735,19 @@ class TwitchAdapter(BasePlatformAdapter):
             and self.settings.twitch_redirect_uri
         ):
             raise AdapterError("twitch_oauth_unconfigured")
-        return f"{TWITCH_AUTH_URL}?{urlencode({
-            'client_id': self.settings.twitch_client_id,
-            'redirect_uri': self.settings.twitch_redirect_uri,
-            'response_type': 'code',
-            'scope': ' '.join(scopes),
-            'state': state,
-            'code_challenge': code_challenge,
-            'code_challenge_method': 'S256',
-        })}"
+        return f"{TWITCH_AUTH_URL}?{
+            urlencode(
+                {
+                    'client_id': self.settings.twitch_client_id,
+                    'redirect_uri': self.settings.twitch_redirect_uri,
+                    'response_type': 'code',
+                    'scope': ' '.join(scopes),
+                    'state': state,
+                    'code_challenge': code_challenge,
+                    'code_challenge_method': 'S256',
+                }
+            )
+        }"
 
     async def exchange_code(self, code: str, verifier: str) -> Mapping[str, Any]:
         if not (
@@ -935,17 +930,18 @@ class TwitchAdapter(BasePlatformAdapter):
             raise AdapterError("twitch_webhook_signature_missing")
         try:
             sent_at = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            if sent_at.tzinfo is None or abs(
-                (datetime.now(UTC) - sent_at).total_seconds()
-            ) > 600:
+            if sent_at.tzinfo is None or abs((datetime.now(UTC) - sent_at).total_seconds()) > 600:
                 raise ValueError
         except ValueError as exc:
             raise AdapterError("twitch_webhook_timestamp_invalid") from exc
-        expected = "sha256=" + hmac.new(
-            context.connection_secret.encode(),
-            message_id.encode() + timestamp.encode() + body,
-            hashlib.sha256,
-        ).hexdigest()
+        expected = (
+            "sha256="
+            + hmac.new(
+                context.connection_secret.encode(),
+                message_id.encode() + timestamp.encode() + body,
+                hashlib.sha256,
+            ).hexdigest()
+        )
         if not hmac.compare_digest(signature, expected):
             raise AdapterError("twitch_webhook_signature_invalid")
         return message_id
@@ -1025,14 +1021,9 @@ class TwitchAdapter(BasePlatformAdapter):
         ) as socket:
             welcome_raw = await socket.recv()
             welcome = json.loads(welcome_raw)
-            session_id = str(
-                welcome.get("payload", {})
-                .get("session", {})
-                .get("id", "")
-            )
+            session_id = str(welcome.get("payload", {}).get("session", {}).get("id", ""))
             if (
-                welcome.get("metadata", {}).get("message_type")
-                != "session_welcome"
+                welcome.get("metadata", {}).get("message_type") != "session_welcome"
                 or not session_id
             ):
                 raise AdapterError("twitch_eventsub_welcome_invalid")
@@ -1126,26 +1117,18 @@ class TwitchAdapter(BasePlatformAdapter):
                     "session_reconnect",
                     "revocation",
                 }:
-                    raise AdapterError(
-                        "twitch_eventsub_reconnect_required", retryable=True
-                    )
+                    raise AdapterError("twitch_eventsub_reconnect_required", retryable=True)
                 if metadata.get("message_type") != "notification":
                     continue
                 synthetic_headers = {
                     "twitch-eventsub-message-id": str(metadata.get("message_id", "")),
-                    "twitch-eventsub-message-timestamp": str(
-                        metadata.get("message_timestamp", "")
-                    ),
+                    "twitch-eventsub-message-timestamp": str(metadata.get("message_timestamp", "")),
                 }
                 normalized_body = json.dumps(payload.get("payload", {})).encode()
-                for event in self.ingest_webhook(
-                    context, synthetic_headers, normalized_body
-                ):
+                for event in self.ingest_webhook(context, synthetic_headers, normalized_body):
                     yield event
 
-    async def send_chat(
-        self, context: AdapterConnectionContext, text: str
-    ) -> AdapterActionResult:
+    async def send_chat(self, context: AdapterConnectionContext, text: str) -> AdapterActionResult:
         broadcaster_id = context.external_channel_id
         sender_id = context.external_account_id
         if not broadcaster_id or not sender_id:
@@ -1202,9 +1185,9 @@ class TwitchAdapter(BasePlatformAdapter):
                 "data": {
                     "user_id": user_id,
                     "duration": max(1, min(duration, 1_209_600)),
-                    "reason": str(
-                        action.get("reason", "SYLORA configured moderation policy")
-                    )[:500],
+                    "reason": str(action.get("reason", "SYLORA configured moderation policy"))[
+                        :500
+                    ],
                 }
             },
         )
@@ -1241,8 +1224,7 @@ class DiscordAdapter(BasePlatformAdapter):
         roles: Sequence[Mapping[str, Any]],
     ) -> int:
         role_permissions = {
-            str(role.get("id", "")): int(role.get("permissions", "0"))
-            for role in roles
+            str(role.get("id", "")): int(role.get("permissions", "0")) for role in roles
         }
         permissions = role_permissions.get(guild_id, 0)
         member_roles = {str(item) for item in member.get("roles", [])}
@@ -1342,9 +1324,7 @@ class DiscordAdapter(BasePlatformAdapter):
         if not isinstance(member, Mapping) or not isinstance(roles_payload, list):
             raise AdapterError("discord_permissions_unavailable")
         roles = [role for role in roles_payload if isinstance(role, Mapping)]
-        permissions = self._effective_channel_permissions(
-            bot_id, guild_id, channel, member, roles
-        )
+        permissions = self._effective_channel_permissions(bot_id, guild_id, channel, member, roles)
         requested = {
             LiveCapability(value)
             for value in context.safe_configuration.get("requested_capabilities", [])
@@ -1354,27 +1334,13 @@ class DiscordAdapter(BasePlatformAdapter):
         can_view = bool(permissions & (1 << 10))
         if can_view and LiveCapability.events in requested:
             verified.add(LiveCapability.events)
-        if (
-            can_view
-            and permissions & (1 << 16)
-            and LiveCapability.chat_read in requested
-        ):
+        if can_view and permissions & (1 << 16) and LiveCapability.chat_read in requested:
             verified.add(LiveCapability.chat_read)
-        if (
-            can_view
-            and permissions & (1 << 11)
-            and LiveCapability.chat_send in requested
-        ):
+        if can_view and permissions & (1 << 11) and LiveCapability.chat_send in requested:
             verified.add(LiveCapability.chat_send)
-        if (
-            permissions & (1 << 13)
-            and LiveCapability.moderation_delete in requested
-        ):
+        if permissions & (1 << 13) and LiveCapability.moderation_delete in requested:
             verified.add(LiveCapability.moderation_delete)
-        if (
-            permissions & (1 << 40)
-            and LiveCapability.moderation_timeout in requested
-        ):
+        if permissions & (1 << 40) and LiveCapability.moderation_timeout in requested:
             verified.add(LiveCapability.moderation_timeout)
         return AdapterConnectionResult(
             verified_capabilities=frozenset(verified),
@@ -1516,9 +1482,7 @@ class DiscordAdapter(BasePlatformAdapter):
             finally:
                 heartbeat_task.cancel()
 
-    async def send_chat(
-        self, context: AdapterConnectionContext, text: str
-    ) -> AdapterActionResult:
+    async def send_chat(self, context: AdapterConnectionContext, text: str) -> AdapterActionResult:
         if not context.external_channel_id:
             raise AdapterError("discord_channel_required")
         payload = await self._request(
@@ -1788,15 +1752,12 @@ class MediaMTXAdapter(BasePlatformAdapter):
                 self.settings.mediamtx_control_username,
                 self.settings.mediamtx_control_password.get_secret_value(),
             )
-            if self.settings.mediamtx_control_username
-            and self.settings.mediamtx_control_password
+            if self.settings.mediamtx_control_username and self.settings.mediamtx_control_password
             else None
         )
         try:
             if self._client:
-                response = await self._client.request(
-                    method, url, json=json_body, auth=auth
-                )
+                response = await self._client.request(method, url, json=json_body, auth=auth)
             else:
                 async with httpx.AsyncClient(timeout=httpx.Timeout(10, connect=3)) as client:
                     response = await client.request(method, url, json=json_body, auth=auth)
@@ -1874,9 +1835,7 @@ class MediaMTXAdapter(BasePlatformAdapter):
         external_broadcast_id: str,
         configuration: Mapping[str, Any],
     ) -> AdapterActionResult:
-        return await self.rotate_path(
-            external_broadcast_id, str(configuration["ingest_key"])
-        )
+        return await self.rotate_path(external_broadcast_id, str(configuration["ingest_key"]))
 
     async def end_broadcast(
         self, context: AdapterConnectionContext, external_broadcast_id: str
@@ -1905,9 +1864,7 @@ class PluginAdapter(BasePlatformAdapter):
         signature = str(manifest.get("signature", ""))
         if not encoded_key or not signature:
             raise AdapterError("plugin_signing_key_not_allowed")
-        canonical = {
-            key: value for key, value in manifest.items() if key != "signature"
-        }
+        canonical = {key: value for key, value in manifest.items() if key != "signature"}
         message = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
         try:
             key = Ed25519PublicKey.from_public_bytes(base64.b64decode(encoded_key))
@@ -1949,9 +1906,7 @@ class PluginAdapter(BasePlatformAdapter):
         except (httpx.TimeoutException, httpx.NetworkError) as exc:
             raise AdapterError("plugin_health_unavailable", retryable=True) from exc
         if response.status_code >= 400:
-            raise AdapterError(
-                "plugin_health_unavailable", retryable=response.status_code >= 500
-            )
+            raise AdapterError("plugin_health_unavailable", retryable=response.status_code >= 500)
         return AdapterConnectionResult(
             verified_capabilities=capabilities,
             provider_metadata={
@@ -2058,9 +2013,7 @@ class PluginAdapter(BasePlatformAdapter):
             external_broadcast_id=str(data.get("external_broadcast_id", "")) or None,
         )
 
-    async def send_chat(
-        self, context: AdapterConnectionContext, text: str
-    ) -> AdapterActionResult:
+    async def send_chat(self, context: AdapterConnectionContext, text: str) -> AdapterActionResult:
         return await self._action(context, "chat", {"text": text})
 
     async def moderate(
@@ -2112,18 +2065,10 @@ class AdapterRegistry:
             OBSAdapter(settings),
             MediaMTXAdapter(settings),
             PluginAdapter(settings),
-            UnavailablePlatformAdapter(
-                IntegrationPlatform.tiktok, "requires_provider_review"
-            ),
-            UnavailablePlatformAdapter(
-                IntegrationPlatform.kick, "requires_provider_review"
-            ),
-            UnavailablePlatformAdapter(
-                IntegrationPlatform.facebook, "requires_provider_review"
-            ),
-            UnavailablePlatformAdapter(
-                IntegrationPlatform.instagram, "requires_provider_review"
-            ),
+            UnavailablePlatformAdapter(IntegrationPlatform.tiktok, "requires_provider_review"),
+            UnavailablePlatformAdapter(IntegrationPlatform.kick, "requires_provider_review"),
+            UnavailablePlatformAdapter(IntegrationPlatform.facebook, "requires_provider_review"),
+            UnavailablePlatformAdapter(IntegrationPlatform.instagram, "requires_provider_review"),
         ]
         self._adapters = {adapter.platform: adapter for adapter in defaults}
         for adapter in adapters:
