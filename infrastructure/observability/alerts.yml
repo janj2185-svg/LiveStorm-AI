@@ -1,0 +1,118 @@
+groups:
+  - name: sylora-api
+    interval: 30s
+    rules:
+      - alert: SyloraAPIHighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_total{job="api",status_code=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(http_server_requests_total{job="api"}[5m])), 0.001)
+          ) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: SYLORA API 5xx rate exceeds 5%
+          description: The API 5xx ratio has exceeded 5% for ten minutes.
+
+      - alert: SyloraAPIHighP95Latency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(http_server_request_duration_seconds_bucket{job="api"}[5m]))
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: SYLORA API p95 latency exceeds one second
+          description: API p95 server latency has exceeded one second for ten minutes.
+
+      - alert: SyloraAPIReadinessFailed
+        expr: max(probe_success{job="api-readiness"}) < 1 or absent(probe_success{job="api-readiness"})
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: SYLORA API readiness endpoint is failing
+          description: Prometheus cannot obtain a successful response from /health/ready.
+
+      - alert: SyloraAPIMetricsUnavailable
+        expr: max(up{job="api"}) < 1 or absent(up{job="api"})
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: SYLORA API metrics target is unavailable
+          description: Prometheus has not scraped the API metrics endpoint successfully.
+
+  - name: sylora-workers
+    interval: 30s
+    rules:
+      - alert: SyloraCeleryWorkersUnavailable
+        expr: max(celery_workers{job="celery"}) < 1 or absent(celery_workers{job="celery"})
+        for: 5m
+        labels:
+          severity: critical
+          service: celery
+        annotations:
+          summary: No SYLORA Celery workers are reporting
+          description: The Celery exporter has reported zero workers for five minutes.
+
+      - alert: SyloraCeleryQueueBacklog
+        expr: max(celery_queue_length{job="celery"}) > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: SYLORA Celery queue backlog is elevated
+          description: At least one queue has held more than 100 messages for ten minutes.
+
+      - alert: SyloraCeleryTaskFailures
+        expr: sum(increase(celery_tasks_total{job="celery",state="FAILURE"}[10m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: SYLORA Celery task failures are elevated
+          description: More than five tasks failed in a ten-minute window.
+
+      - alert: SyloraCeleryExporterUnavailable
+        expr: max(up{job="celery"}) < 1 or absent(up{job="celery"})
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: SYLORA Celery metrics are unavailable
+          description: Prometheus cannot scrape the Celery exporter.
+
+  - name: sylora-dependencies
+    interval: 30s
+    rules:
+      - alert: SyloraPostgreSQLUnavailable
+        expr: max(pg_up{job="postgres"}) < 1 or absent(pg_up{job="postgres"})
+        for: 2m
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: SYLORA PostgreSQL is unavailable
+          description: The PostgreSQL exporter cannot connect to the database.
+
+      - alert: SyloraRedisUnavailable
+        expr: max(redis_up{job="redis"}) < 1 or absent(redis_up{job="redis"})
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: SYLORA Redis is unavailable
+          description: The Redis exporter cannot connect to Redis.

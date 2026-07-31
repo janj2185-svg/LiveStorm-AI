@@ -1,0 +1,628 @@
+name: ${COMPOSE_PROJECT_NAME:-sylora}
+
+x-api-image: &api-image
+  build:
+    context: ../../services/api
+    dockerfile: ../../infrastructure/docker/api.Dockerfile
+  image: sylora-api:local
+  env_file:
+    - ../.env
+  environment: &api-environment
+    ENVIRONMENT: development
+    DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-sylora}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in infrastructure/.env}@postgres:5432/${POSTGRES_DB:-sylora}"
+    REDIS_URL: "redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in infrastructure/.env}@redis:6379/0"
+    CELERY_BROKER_URL: "redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in infrastructure/.env}@redis:6379/1"
+    CELERY_RESULT_BACKEND: "redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in infrastructure/.env}@redis:6379/2"
+    KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    ELASTICSEARCH_URL: http://elasticsearch:9200
+    ELASTICSEARCH_USERNAME: elastic
+    ELASTICSEARCH_PASSWORD: "${ELASTIC_PASSWORD:?Set ELASTIC_PASSWORD in infrastructure/.env}"
+    MILVUS_URI: http://milvus:19530
+    S3_ENDPOINT_URL: http://minio:9000
+    S3_ACCESS_KEY_ID: "${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in infrastructure/.env}"
+    S3_SECRET_ACCESS_KEY: "${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in infrastructure/.env}"
+    S3_BUCKET: sylora-private
+    JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in infrastructure/.env}"
+    JWT_ISSUER: "${JWT_ISSUER:-http://localhost:8000}"
+    JWT_AUDIENCE: "${JWT_AUDIENCE:-sylora-local}"
+    DATA_ENCRYPTION_KEY: "${DATA_ENCRYPTION_KEY:?Set DATA_ENCRYPTION_KEY in infrastructure/.env}"
+    IP_HASH_KEY: "${IP_HASH_KEY:?Set IP_HASH_KEY in infrastructure/.env}"
+    SMTP_HOST: mailpit
+    SMTP_PORT: "1025"
+    SMTP_FROM_EMAIL: "${SMTP_FROM_EMAIL:-no-reply@sylora.local}"
+    SMTP_START_TLS: "false"
+    SMTP_USE_TLS: "false"
+    CORS_ORIGINS: "${API_CORS_ORIGINS:-[\"http://localhost:5173\"]}"
+    ALLOWED_HOSTS: "${API_ALLOWED_HOSTS:-[\"localhost\",\"127.0.0.1\",\"api\"]}"
+    WEB_BASE_URL: "${WEB_BASE_URL:-http://localhost:5173}"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+    LOG_FORMAT: json
+  restart: unless-stopped
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:size=128m,mode=1777
+  security_opt:
+    - no-new-privileges:true
+  networks:
+    - application
+    - data
+    - observability
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-sylora}"
+      POSTGRES_USER: "${POSTGRES_USER:-sylora}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in infrastructure/.env}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "127.0.0.1:5432:5432"
+    restart: unless-stopped
+    shm_size: 256mb
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          cpus: "0.25"
+          memory: 256m
+
+  redis:
+    image: redis:7-alpine
+    command:
+      - sh
+      - -ec
+      - exec redis-server --appendonly yes --appendfsync everysec --requirepass "$${REDIS_PASSWORD}"
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:?Set REDIS_PASSWORD in infrastructure/.env}"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:6379:6379"
+    restart: unless-stopped
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+        reservations:
+          cpus: "0.1"
+          memory: 128m
+
+  kafka:
+    image: apache/kafka:4.0.0
+    environment:
+      CLUSTER_ID: "${KAFKA_CLUSTER_ID:?Set KAFKA_CLUSTER_ID in infrastructure/.env}"
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: CONTROLLER://:29093,INTERNAL://:29092,HOST://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:29092 >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    ports:
+      - "127.0.0.1:9092:9092"
+    restart: unless-stopped
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          cpus: "0.25"
+          memory: 512m
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD:?Set ELASTIC_PASSWORD in infrastructure/.env}"
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS -u "elastic:$${ELASTIC_PASSWORD}" "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s" >/dev/null
+      interval: 15s
+      timeout: 10s
+      retries: 15
+      start_period: 45s
+    ports:
+      - "127.0.0.1:9200:9200"
+    restart: unless-stopped
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          cpus: "0.25"
+          memory: 1g
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in infrastructure/.env}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in infrastructure/.env}"
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    restart: unless-stopped
+    networks:
+      - data
+      - edge
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          cpus: "0.1"
+          memory: 256m
+
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in infrastructure/.env}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in infrastructure/.env}"
+    volumes:
+      - ./minio/cors.json:/config/cors.json:ro
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"
+        mc mb --ignore-existing local/sylora-private
+        mc mb --ignore-existing local/sylora-backups
+        mc mb --ignore-existing local/milvus
+        mc anonymous set none local/sylora-private
+        mc anonymous set none local/sylora-backups
+        mc anonymous set none local/milvus
+        mc cors set local/sylora-private /config/cors.json
+        if mc ilm rule ls --json local/sylora-backups | grep -Eq '"id"[[:space:]]*:[[:space:]]*"backup-expiration-30d"'; then
+          mc ilm rule edit --id backup-expiration-30d --expire-days 30 local/sylora-backups
+        else
+          mc ilm rule add --id backup-expiration-30d --expire-days 30 local/sylora-backups
+        fi
+    restart: "no"
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.18
+    command:
+      - etcd
+      - --advertise-client-urls=http://etcd:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --data-dir=/etcd
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: "1000"
+      ETCD_QUOTA_BACKEND_BYTES: "4294967296"
+      ETCD_SNAPSHOT_COUNT: "50000"
+    volumes:
+      - etcd-data:/etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+        reservations:
+          cpus: "0.1"
+          memory: 128m
+
+  milvus:
+    image: milvusdb/milvus:v2.6.21
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+      MINIO_ACCESS_KEY_ID: "${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in infrastructure/.env}"
+      MINIO_SECRET_ACCESS_KEY: "${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in infrastructure/.env}"
+      MINIO_BUCKET_NAME: milvus
+    depends_on:
+      etcd:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes:
+      - milvus-data:/var/lib/milvus
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9091/healthz"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 45s
+    ports:
+      - "127.0.0.1:19530:19530"
+    restart: unless-stopped
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4g
+        reservations:
+          cpus: "0.5"
+          memory: 1g
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: "5000"
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    volumes:
+      - mailpit-data:/data
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    restart: unless-stopped
+    networks:
+      - application
+      - edge
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+
+  api:
+    <<: *api-image
+    command:
+      - sh
+      - -ec
+      - exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers "$${API_WORKERS:-2}" --log-level "$${API_LOG_LEVEL:-info}" --proxy-headers
+    environment:
+      <<: *api-environment
+      API_WORKERS: "${API_WORKERS:-2}"
+      API_LOG_LEVEL: "${API_LOG_LEVEL:-info}"
+    depends_on: &application-dependencies
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      milvus:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    networks:
+      - edge
+      - application
+      - data
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1g
+        reservations:
+          cpus: "0.25"
+          memory: 256m
+
+  celery-worker:
+    <<: *api-image
+    command: ["celery", "-A", "app.celery_app", "worker", "--loglevel=INFO", "--concurrency=4"]
+    environment:
+      <<: *api-environment
+    depends_on: *application-dependencies
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.celery_app inspect ping -d \"celery@$${HOSTNAME}\" --timeout=5 | grep -q pong"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1g
+        reservations:
+          cpus: "0.25"
+          memory: 256m
+
+  celery-beat:
+    <<: *api-image
+    command: ["celery", "-A", "app.celery_app", "beat", "--loglevel=INFO", "--schedule=/tmp/celerybeat-schedule"]
+    environment:
+      <<: *api-environment
+    depends_on: *application-dependencies
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import os,time; p='/tmp/celerybeat-schedule'; assert os.path.exists(p) and time.time()-os.path.getmtime(p) < 600
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m
+        reservations:
+          cpus: "0.1"
+          memory: 128m
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    profiles: ["observability"]
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-sylora}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in infrastructure/.env}@postgres:5432/${POSTGRES_DB:-sylora}?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - data
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.75.0
+    profiles: ["observability"]
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: "${REDIS_PASSWORD:?Set REDIS_PASSWORD in infrastructure/.env}"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - data
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+  celery-exporter:
+    image: danihodovic/celery-exporter:0.12.2
+    profiles: ["observability"]
+    environment:
+      CE_BROKER_URL: "redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in infrastructure/.env}@redis:6379/1"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - data
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.27.0
+    profiles: ["observability"]
+    command:
+      - --config.file=/etc/blackbox_exporter/config.yml
+    volumes:
+      - ../observability/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    restart: unless-stopped
+    networks:
+      - application
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    profiles: ["observability"]
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    restart: unless-stopped
+    networks:
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    profiles: ["observability"]
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    restart: unless-stopped
+    networks:
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: ["observability"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+    networks:
+      - application
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+        reservations:
+          cpus: "0.1"
+          memory: 256m
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    profiles: ["observability"]
+    environment:
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:?Set GRAFANA_ADMIN_USER in infrastructure/.env}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in infrastructure/.env}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    ports:
+      - "127.0.0.1:3001:3000"
+    restart: unless-stopped
+    networks:
+      - edge
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
+        reservations:
+          cpus: "0.1"
+          memory: 128m
+
+volumes:
+  postgres-data:
+  redis-data:
+  kafka-data:
+  elasticsearch-data:
+  minio-data:
+  etcd-data:
+  milvus-data:
+  mailpit-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  edge:
+  application:
+    internal: true
+  data:
+    internal: true
+  observability:
+    internal: true

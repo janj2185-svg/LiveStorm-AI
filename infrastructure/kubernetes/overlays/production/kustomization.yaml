@@ -1,0 +1,108 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+labels:
+  - pairs:
+      app.kubernetes.io/environment: production
+    includeSelectors: false
+images:
+  - name: sylora-api
+    newName: ghcr.io/replace-with-owner/sylora-api
+    newTag: replace-with-immutable-tag
+patches:
+  - target:
+      kind: ConfigMap
+      name: sylora-api-config
+    patch: |-
+      - op: replace
+        path: /data/APP_ENV
+        value: production
+      - op: replace
+        path: /data/CORS_ORIGINS
+        value: https://app.production.example.invalid
+      - op: replace
+        path: /data/KAFKA_BOOTSTRAP_SERVERS
+        value: kafka.production.example.invalid:9092
+      - op: replace
+        path: /data/ELASTICSEARCH_URL
+        value: https://elasticsearch.production.example.invalid
+      - op: replace
+        path: /data/MILVUS_URI
+        value: https://milvus.production.example.invalid
+      - op: replace
+        path: /data/S3_ENDPOINT_URL
+        value: https://s3.production.example.invalid
+      - op: replace
+        path: /data/SMTP_HOST
+        value: smtp.production.example.invalid
+      - op: add
+        path: /data/OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector.observability.svc.cluster.local:4317
+      - op: add
+        path: /data/OTEL_RESOURCE_ATTRIBUTES
+        value: deployment.environment=production,service.namespace=sylora
+  - target:
+      kind: Deployment
+      name: sylora-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+  - target:
+      kind: Deployment
+      name: sylora-celery-worker
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+  - target:
+      kind: Deployment
+      name: sylora-celery-beat
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+  - target:
+      kind: Job
+      name: sylora-migrate
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: sylora-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 20
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: sylora-celery-worker
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 30
+  - target:
+      kind: Ingress
+      name: sylora-api
+    patch: |-
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: api.production.example.invalid
+      - op: replace
+        path: /spec/rules/0/host
+        value: api.production.example.invalid

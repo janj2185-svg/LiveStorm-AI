@@ -1,0 +1,23 @@
+# Optional: add this file to kustomization.yaml only when the Prometheus
+# Operator monitoring.coreos.com/v1 ServiceMonitor CRD is installed.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sylora-api
+  namespace: sylora
+  labels:
+    app.kubernetes.io/name: sylora-api
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - sylora
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-api
+      app.kubernetes.io/component: api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

@@ -1,0 +1,110 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+labels:
+  - pairs:
+      app.kubernetes.io/environment: development
+    includeSelectors: false
+images:
+  - name: sylora-api
+    newName: sylora-api
+    newTag: local
+patches:
+  - target:
+      kind: ConfigMap
+      name: sylora-api-config
+    patch: |-
+      - op: replace
+        path: /data/APP_ENV
+        value: development
+      - op: replace
+        path: /data/CORS_ORIGINS
+        value: http://localhost:5173
+      - op: replace
+        path: /data/KAFKA_BOOTSTRAP_SERVERS
+        value: host.docker.internal:9092
+      - op: replace
+        path: /data/ELASTICSEARCH_URL
+        value: http://host.docker.internal:9200
+      - op: replace
+        path: /data/MILVUS_URI
+        value: http://host.docker.internal:19530
+      - op: replace
+        path: /data/S3_ENDPOINT_URL
+        value: http://host.docker.internal:9000
+      - op: replace
+        path: /data/SMTP_HOST
+        value: host.docker.internal
+      - op: replace
+        path: /data/SMTP_PORT
+        value: "1025"
+      - op: add
+        path: /data/OTEL_SDK_DISABLED
+        value: "true"
+  - target:
+      kind: Deployment
+      name: sylora-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Deployment
+      name: sylora-celery-worker
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Deployment
+      name: sylora-celery-beat
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Job
+      name: sylora-migrate
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: sylora-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: sylora-celery-worker
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2
+  - target:
+      kind: Ingress
+      name: sylora-api
+    patch: |-
+      - op: replace
+        path: /metadata/annotations/nginx.ingress.kubernetes.io~1ssl-redirect
+        value: "false"
+      - op: remove
+        path: /spec/tls
+      - op: replace
+        path: /spec/rules/0/host
+        value: api.sylora.local

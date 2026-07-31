@@ -1,0 +1,267 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Protected GitHub environment and Kustomize overlay
+        required: true
+        type: choice
+        options:
+          - development
+          - production
+      cloud_provider:
+        description: OIDC provider used to authenticate to the cluster and registry
+        required: true
+        type: choice
+        options:
+          - aws
+          - gcp
+          - azure
+      cluster_name:
+        description: Managed Kubernetes cluster name
+        required: true
+        type: string
+      region:
+        description: Cloud region or zone
+        required: true
+        type: string
+      resource_group:
+        description: Azure resource group; required only for Azure
+        required: false
+        type: string
+      registry:
+        description: Registry hostname, without scheme
+        required: true
+        type: string
+      image_name:
+        description: Repository path inside the registry
+        required: true
+        default: sylora-api
+        type: string
+      api_base_url:
+        description: HTTPS base URL used for the post-deploy readiness smoke test
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}:${{ github.sha }}
+      OVERLAY: infrastructure/kubernetes/overlays/${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate provider configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ inputs.cloud_provider }}" in
+            aws)
+              [[ -n "${AWS_ROLE_ARN}" ]] || {
+                echo "::error::Set AWS_DEPLOY_ROLE_ARN in the protected GitHub environment"
+                exit 1
+              }
+              ;;
+            gcp)
+              [[ -n "${GCP_WORKLOAD_IDENTITY_PROVIDER}" && -n "${GCP_SERVICE_ACCOUNT}" && -n "${GCP_PROJECT_ID}" ]] || {
+                echo "::error::Set GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_DEPLOY_SERVICE_ACCOUNT, and GCP_PROJECT_ID"
+                exit 1
+              }
+              ;;
+            azure)
+              [[ -n "${AZURE_CLIENT_ID}" && -n "${AZURE_TENANT_ID}" && -n "${AZURE_SUBSCRIPTION_ID}" ]] || {
+                echo "::error::Set AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_SUBSCRIPTION_ID"
+                exit 1
+              }
+              [[ -n "${{ inputs.resource_group }}" ]] || {
+                echo "::error::resource_group is required for Azure"
+                exit 1
+              }
+              ;;
+            *)
+              echo "::error::Unsupported cloud provider"
+              exit 1
+              ;;
+          esac
+          [[ "${{ inputs.registry }}" != http* ]] || {
+            echo "::error::registry must be a hostname without a scheme"
+            exit 1
+          }
+          [[ "${{ inputs.api_base_url }}" == https://* ]] || {
+            echo "::error::api_base_url must use HTTPS"
+            exit 1
+          }
+
+      - name: Authenticate to AWS with OIDC
+        if: inputs.cloud_provider == 'aws'
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ inputs.region }}
+          role-session-name: sylora-${{ github.run_id }}
+
+      - name: Configure AWS cluster context
+        if: inputs.cloud_provider == 'aws'
+        run: aws eks update-kubeconfig --name "${{ inputs.cluster_name }}" --region "${{ inputs.region }}"
+
+      - name: Authenticate to Google Cloud with OIDC
+        if: inputs.cloud_provider == 'gcp'
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud CLI
+        if: inputs.cloud_provider == 'gcp'
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure GKE cluster context
+        if: inputs.cloud_provider == 'gcp'
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ inputs.cluster_name }}
+          location: ${{ inputs.region }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Authenticate to Azure with OIDC
+        if: inputs.cloud_provider == 'azure'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Configure AKS cluster context
+        if: inputs.cloud_provider == 'azure'
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ inputs.resource_group }}
+          cluster-name: ${{ inputs.cluster_name }}
+          admin: "false"
+
+      - name: Authenticate Docker to AWS registry
+        if: inputs.cloud_provider == 'aws'
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecr get-login-password --region "${{ inputs.region }}" |
+            docker login --username AWS --password-stdin "${{ inputs.registry }}"
+
+      - name: Authenticate Docker to Google registry
+        if: inputs.cloud_provider == 'gcp'
+        run: gcloud auth configure-docker "${{ inputs.registry }}" --quiet
+
+      - name: Authenticate Docker to Azure registry
+        if: inputs.cloud_provider == 'azure'
+        shell: bash
+        run: |
+          set -euo pipefail
+          registry_name="${{ inputs.registry }}"
+          az acr login --name "${registry_name%%.*}"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Require API build context
+        run: |
+          test -f services/api/pyproject.toml || {
+            echo "::error::services/api is missing; deployment cannot build an API image"
+            exit 1
+          }
+
+      - name: Build and push immutable API image
+        uses: docker/build-push-action@v6
+        with:
+          context: services/api
+          file: infrastructure/docker/api.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_URI }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: imranismail/setup-kustomize@v2
+
+      - name: Render immutable release manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          (
+            cd "${OVERLAY}"
+            kustomize edit set image "sylora-api=${IMAGE_URI}"
+          )
+          kustomize build "${OVERLAY}" > /tmp/sylora-release.yaml
+          if rg -n 'example\.invalid|replace-with|REPLACE_WITH' /tmp/sylora-release.yaml; then
+            echo "::error::Release manifests contain placeholder values; configure the selected overlay"
+            exit 1
+          fi
+
+      - name: Verify cluster and secret-manager boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          kubectl auth can-i create deployments.apps --namespace sylora | rg -q '^yes$' || {
+            echo "::error::OIDC identity cannot deploy to namespace sylora"
+            exit 1
+          }
+          kubectl apply -f infrastructure/kubernetes/base/namespace.yaml
+          kubectl get secret sylora-api-secrets --namespace sylora >/dev/null || {
+            echo "::error::sylora-api-secrets must be provisioned by the configured secret manager"
+            exit 1
+          }
+
+      - name: Apply release and run migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          kubectl delete job sylora-migrate --namespace sylora --ignore-not-found --wait=true
+          kubectl apply -k "${OVERLAY}"
+          if ! kubectl wait \
+            --for=condition=complete \
+            job/sylora-migrate \
+            --namespace sylora \
+            --timeout=15m; then
+            kubectl logs job/sylora-migrate --namespace sylora --all-containers=true
+            exit 1
+          fi
+
+      - name: Wait for application rollouts
+        run: |
+          kubectl rollout status deployment/sylora-api --namespace sylora --timeout=10m
+          kubectl rollout status deployment/sylora-celery-worker --namespace sylora --timeout=10m
+          kubectl rollout status deployment/sylora-celery-beat --namespace sylora --timeout=5m
+
+      - name: Smoke-test readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --show-error \
+              --max-time 10 \
+              "${{ inputs.api_base_url }}/health/ready"; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Readiness smoke test failed after 20 attempts"
+          exit 1
