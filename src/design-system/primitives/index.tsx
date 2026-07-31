@@ -267,9 +267,9 @@ export function Surface({
         'sy-surface',
         `sy-surface--${elevation}`,
         `sy-surface--radius-${radius}`,
-        glass && 'sy-glass',
-        glass === 'veil' && 'sy-glass--veil',
-        glass === 'dome' && 'sy-glass--dome',
+        glass && 'sy-vellum',
+        glass === 'veil' && 'sy-vellum--veil',
+        glass === 'dome' && 'sy-vellum--dome',
         interactive && 'sy-surface--interactive',
         className,
       )}

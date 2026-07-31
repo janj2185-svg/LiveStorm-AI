@@ -6,6 +6,7 @@ import { WelcomeScreen } from './WelcomeScreen';
 export const ENTRY_SCREENS: ScreenDefinition[] = [
   {
     id: 'welcome',
+    immersive: true,
     name: 'Welcome',
     group: 'Entry',
     navId: 'home',
@@ -15,6 +16,7 @@ export const ENTRY_SCREENS: ScreenDefinition[] = [
   },
   {
     id: 'auth',
+    immersive: true,
     name: 'Authentication',
     group: 'Entry',
     purpose:
@@ -23,6 +25,7 @@ export const ENTRY_SCREENS: ScreenDefinition[] = [
   },
   {
     id: 'onboarding',
+    immersive: true,
     name: 'Onboarding',
     group: 'Entry',
     purpose:

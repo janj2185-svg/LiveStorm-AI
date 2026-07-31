@@ -21,6 +21,14 @@
  * Elapsed, buffered and unloaded are three different facts. Buffered is the one
  * that predicts whether a seek will stall, so it gets its own value rather than
  * being folded into the background.
+ *
+ * WHY THIS SCREEN IS DARK IN A LIGHT-FIRST PRODUCT
+ * The picture is the light source. Ringing a moving image with white raises the
+ * black level of everything inside it, floods the viewer's own room, and makes a
+ * two-hour recording tiring to sit through — so playback stays dark in both
+ * themes. That is stated once, here, by re-scoping the theme onto the root
+ * rather than by hard-coding blacks in the stylesheet; every token inside then
+ * resolves through the dark ramp and the screen stays made of SYLORA's material.
  */
 
 import { Badge, Button, Icon, IconButton } from '../../design-system/primitives';
@@ -51,7 +59,7 @@ const QUALITIES = [
 
 export function PlayerScreen() {
   return (
-    <div className="sy-screen sy-player">
+    <div className="sy-screen sy-player" data-theme="dark">
       <div className="sy-player__stage">
         <Media seed="token-pipeline-vod" ratio="auto" radius="none" className="sy-player__video">
           <span className="sy-sr-only">
@@ -61,7 +69,7 @@ export function PlayerScreen() {
 
         {/* Top chrome: who and what, plus the two output destinations. */}
         <header className="sy-player__top">
-          <div className="sy-player__topbar sy-glass">
+          <div className="sy-player__topbar sy-vellum">
             <IconButton icon="chevronLeft" label="Back to library" variant="ghost" size="sm" />
             <div className="sy-player__heading">
               <h1 className="sy-player__title sy-truncate">
@@ -96,7 +104,7 @@ export function PlayerScreen() {
 
         {/* Bottom chrome: seek first, then transport, so the eye reads time → action. */}
         <footer className="sy-player__bottom">
-          <div className="sy-player__panel sy-glass">
+          <div className="sy-player__panel sy-vellum">
             <div
               className="sy-scrub"
               role="slider"
@@ -175,7 +183,7 @@ export function PlayerScreen() {
           hover is a menu nobody designed. It anchors to the gear rather than
           centring, so the control that opened it stays visible underneath.
         */}
-        <div className="sy-player__menu sy-glass sy-glass--dome" role="menu" aria-label="Playback settings">
+        <div className="sy-player__menu sy-vellum sy-vellum--dome" role="menu" aria-label="Playback settings">
           <section className="sy-player__menu-group">
             <h2 className="sy-overline sy-fg-quiet">Quality</h2>
             {QUALITIES.map((quality) => {

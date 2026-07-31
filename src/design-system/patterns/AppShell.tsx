@@ -116,7 +116,7 @@ export function AppShell({
       </nav>
 
       <div className="sy-shell__body">
-        {topBar && <header className="sy-topbar sy-glass sy-glass--veil">{topBar}</header>}
+        {topBar && <header className="sy-topbar sy-vellum sy-vellum--veil">{topBar}</header>}
 
         <main className="sy-main" id="sy-main" tabIndex={-1}>
           {children}
@@ -135,7 +135,7 @@ export function AppShell({
       )}
 
       {/* Bottom tab bar — compact posture only. */}
-      <nav className="sy-tabbar sy-glass sy-glass--veil" aria-label="Primary">
+      <nav className="sy-tabbar sy-vellum sy-vellum--veil" aria-label="Primary">
         {tabItems.map((item) => {
           const isActive = item.id === active;
           return (

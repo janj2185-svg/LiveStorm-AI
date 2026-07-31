@@ -24,8 +24,8 @@
  * composer's mode selector is the only place that contract can be changed, and
  * it states the consequence of each mode in text.
  *
- * The aurora hairline is reserved for surfaces the assistant authored, so the
- * eye can always separate generated content from the user's own.
+ * The refraction hairline is reserved for surfaces the assistant authored, so
+ * the eye can always separate generated content from the user's own.
  */
 
 import { useState } from 'react';
@@ -251,7 +251,7 @@ function AssistantAnswer({
         ))}
       </div>
 
-      <Surface className="sy-proposal" elevation="raised" radius="xl" padding="md">
+      <Surface className="sy-proposal sy-refract" elevation="raised" radius="xl" padding="md">
         <header className="sy-proposal__head">
           <span className="sy-tile-icon sy-proposal__lock">
             <Icon name="lock" size={18} />
@@ -339,7 +339,10 @@ function AssistantAnswer({
  */
 function GeneratingAnswer() {
   return (
-    <article className="sy-turn sy-turn--assistant is-generating" aria-label="Assistant is answering">
+    <article
+      className="sy-turn sy-turn--assistant is-generating sy-refract sy-refract--bloom"
+      aria-label="Assistant is answering"
+    >
       <header className="sy-turn__head">
         <AiOrb size={30} state="thinking" />
         <h2 className="sy-label">SYLORA Assistant</h2>

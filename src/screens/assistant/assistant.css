@@ -3,8 +3,15 @@
  *
  * Two visual contracts are enforced here and nowhere else:
  *   1. The user speaks in a bubble; the assistant publishes a document.
- *   2. Anything the assistant authored carries the hairline aurora border,
- *      the same signature used by the daily brief on Home.
+ *   2. Anything the assistant authored carries the refraction hairline, the
+ *      same signature used by the daily brief on Home.
+ *
+ * The hairline comes from the shared `.sy-refract` class rather than a local
+ * copy of the two-background trick. That class paints its stroke by clipping a
+ * gradient to the border box, so any rule that later sets a real `border-color`
+ * covers it — including the dark theme's `.sy-surface` hairline, which outranks
+ * a single class. Every refracting surface below therefore releases that border
+ * by name in dark.
  */
 
 /**
@@ -186,13 +193,20 @@
  * than reports — and that difference must never be a matter of reading closely.
  */
 .sy-proposal {
+  --refract-fill: var(--sy-bg-raised);
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-3);
+}
+[data-theme='dark'] .sy-proposal {
+  border-color: transparent;
+}
+/* And it has to out-specify the Surface fill, which loads after the signature
+   surfaces and would otherwise paint straight over the clipped gradient. */
+.sy-proposal.sy-refract {
   background:
-    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
-    var(--sy-gradient-aurora) border-box;
-  border: 1px solid transparent;
+    linear-gradient(var(--refract-fill), var(--refract-fill)) padding-box,
+    var(--sy-gradient-prism) border-box;
 }
 .sy-proposal__head {
   display: flex;
@@ -209,6 +223,9 @@
   flex-direction: column;
   gap: var(--sy-space-2);
 }
+/* Each action is a row nested inside a card that is already at the top of the
+   light, so it separates by going down rather than up: the page colour and the
+   sunken level's inset edge. That also leaves its border free to mean state. */
 .sy-proposal__item {
   display: flex;
   align-items: flex-start;
@@ -216,8 +233,9 @@
   gap: var(--sy-space-3);
   padding: var(--sy-space-3);
   border-radius: var(--sy-radius-md);
-  border: 1px solid var(--sy-border-subtle);
-  background: var(--sy-bg-surface);
+  border: 1px solid transparent;
+  background: var(--sy-bg-canvas);
+  box-shadow: var(--sy-elevation-sunken);
   transition: border-color var(--sy-transition-hover), background-color var(--sy-transition-hover);
 }
 .sy-proposal__item > .sy-grow {
@@ -266,14 +284,13 @@
 /* Generating turn                                                     */
 /* ------------------------------------------------------------------ */
 
+/* Generating is the one state that earns the bloom behind the hairline: an
+   answer being written is the closest thing this product has to a live signal,
+   and the spread is the only part of refraction that reads as motion. */
 .sy-turn--assistant.is-generating {
   gap: var(--sy-space-3);
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-xl);
-  background:
-    linear-gradient(var(--sy-bg-surface), var(--sy-bg-surface)) padding-box,
-    var(--sy-gradient-aurora) border-box;
-  border: 1px solid transparent;
 }
 .sy-generating {
   gap: var(--sy-space-2_5);
@@ -353,17 +370,17 @@
   padding: var(--sy-space-2);
   border-block-start: 1px solid var(--sy-border-subtle);
 }
-/* The rule separates the attachment controls from the mode selector. Below
-   640px the selector drops to its own line, so the rule would divide a group
-   from nothing. */
+/* The rule separates the attachment controls from the mode selector. On a
+   compact column the selector drops to its own line, so the rule would divide a
+   group from nothing. */
 .sy-composer__rule {
   display: none;
   inline-size: 1px;
   block-size: 20px;
   background: var(--sy-border-subtle);
 }
-/* Below 640px the mode selector takes its own line rather than competing with
-   attach and send for a 361px row. */
+/* On a compact column the mode selector takes its own line rather than
+   competing with attach and send for a 361px row. */
 .sy-composer__modes {
   order: 10;
   flex-basis: 100%;
@@ -380,7 +397,7 @@
   flex-shrink: 0;
 }
 
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-composer__modes {
     order: 0;
     flex-basis: auto;
@@ -393,7 +410,7 @@
   }
 }
 
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   /* The thread stops widening before the measure does: an assistant answer at
      110 characters per line is unreadable no matter how much room there is. */
   .sy-thread,
@@ -417,11 +434,16 @@
   border-radius: var(--sy-radius-sm);
 }
 
+/* A well inside the context panel: the page colour with the sunken inset edge,
+   so it reads as carved out of the panel rather than boxed on top of it. */
 .sy-model-card {
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-3);
   background: var(--sy-bg-canvas);
+  box-shadow: var(--sy-elevation-sunken);
+}
+[data-theme='dark'] .sy-model-card {
   border-color: var(--sy-border-subtle);
 }
 .sy-model-card__head {

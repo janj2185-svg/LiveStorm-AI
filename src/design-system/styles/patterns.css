@@ -35,10 +35,20 @@
  * Immersive surfaces have no shell chrome, so they hand the whole frame to the
  * screen and establish the `screen` container themselves.
  */
+/**
+ * Immersive surfaces have no shell chrome, so they hand the whole frame to the
+ * screen and establish the `screen` container themselves.
+ *
+ * The default fill is the page canvas, not black. Two very different kinds of
+ * screen are immersive — pre-authentication surfaces, which are the brightest
+ * pages in the product, and media surfaces, which are the darkest. Media
+ * screens set their own black; defaulting to it would have made every landing
+ * page flash dark before its own styles applied.
+ */
 .sy-shell--immersive {
   display: block;
   container: screen / inline-size;
-  background: #000;
+  background: var(--sy-bg-canvas);
   block-size: 100%;
 }
 
@@ -219,7 +229,7 @@
   inline-size: 7px;
   block-size: 7px;
   border-radius: 50%;
-  background: var(--sy-crimson-9);
+  background: var(--sy-rose-9);
   box-shadow: 0 0 0 2px var(--sy-bg-surface);
   animation: sy-live-pulse 1.8s var(--sy-ease-standard) infinite;
 }
@@ -234,7 +244,7 @@
   block-size: 18px;
   border-radius: var(--sy-radius-pill);
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
   font-size: 11px;
   font-weight: 600;
   place-items: center;
@@ -319,8 +329,8 @@
   display: grid;
   place-items: center;
   border-radius: var(--sy-radius-pill);
-  background: var(--sy-crimson-9);
-  color: var(--sy-on-crimson);
+  background: var(--sy-rose-9);
+  color: var(--sy-on-danger);
   font-size: 10px;
   font-weight: 700;
 }
@@ -555,9 +565,19 @@
   scroll-snap-align: start;
   flex-shrink: 0;
 }
+/*
+  Snap padding must match the bleed, or mandatory snapping aligns the first
+  card to the scrollport edge and quietly scrolls the rail by one gutter — the
+  leading card ends up flush against the screen while every heading above it
+  stays indented.
+*/
+.sy-scroller {
+  scroll-padding-inline: var(--sy-space-4);
+}
 @container screen (min-width: 560px) {
   .sy-scroller {
     margin-inline: calc(var(--sy-space-6) * -1);
     padding-inline: var(--sy-space-6);
+    scroll-padding-inline: var(--sy-space-6);
   }
 }

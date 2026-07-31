@@ -1,50 +1,53 @@
 /**
- * SYLORA colour system
+ * SYLORA colour system — "Lumen"
  * ---------------------------------------------------------------------------
- * Every colour in the product is generated, never hand-picked.
+ * SYLORA is a light-first product. That is a design decision with consequences
+ * far beyond swapping a background, because the two themes cannot use the same
+ * physics.
  *
- * WHY OKLCH
- * A designer picking hex values by eye produces ramps where "the same" step
- * looks heavier in blue than in yellow, because sRGB is not perceptually
- * uniform. OKLCH separates perceived Lightness from Chroma and Hue, so a fixed
- * lightness curve reads as the same visual weight at every hue. That single
- * decision is what lets us promise contrast ratios per *step* instead of
- * auditing 600 individual colours.
+ * In a dark interface, depth and emphasis come from *emission*: things glow.
+ * On white, nothing can glow — a halo on a bright ground is invisible. So the
+ * light theme is built on the opposite phenomenon, **refraction**: light
+ * arrives, passes through the interface, and leaves as spectrum. Colour is
+ * something the surface *does to light*, not something painted on it.
  *
- * THE 12-STEP CONTRACT
- * Each family is a 12-step ramp where the step index has a fixed meaning.
- * A component never says "use violet-600"; it says "use step 9 of the active
- * accent". Re-theming is therefore a hue swap, not a redesign.
+ * Three consequences run through this file:
  *
- *   1  canvas          furthest-back app background
- *   2  surface         cards, sheets, panels
- *   3  raised          surfaces stacked on surfaces, inputs at rest
- *   4  hover           interactive background, hovered
- *   5  active          interactive background, pressed / selected
- *   6  borderSubtle    dividers, hairlines, low-emphasis separation
- *   7  border          default component border
- *   8  borderStrong    focus ring companion, hovered border, sliders
- *   9  solid           the load-bearing fill: primary buttons, brand marks
- *  10  solidHover      step 9, hovered
- *  11  textMuted       secondary text — guaranteed >= 4.5:1 on steps 1-2
- *  12  text            primary text — guaranteed >= 15:1 on step 1
+ * 1. THE NEUTRAL SHIFTS HUE.
+ *    Real daylight is warm and its shadows are cool, because shadows are lit
+ *    by the sky rather than the sun. SYLORA's neutral ramp reproduces that: the
+ *    lightest steps carry a faint warm cast, the darkest carry a cool one, and
+ *    the interpolation runs through OKLab a/b so the middle passes through true
+ *    neutral instead of detouring through green. Greys stop looking like grey
+ *    and start looking like a lit material.
  *
- * Steps 1-5 are backgrounds, 6-8 are borders, 9-10 are fills, 11-12 are text.
- * Any component that respects that grammar is automatically accessible.
+ * 2. LIGHT IS DESIGNED FIRST.
+ *    The light curve is tuned for a bright, airy, high-white product; the dark
+ *    curve is derived to match its rhythm. Dark mode is a supported option, not
+ *    the canonical expression.
+ *
+ * 3. ELEVATION MEANS MORE LIGHT IN BOTH THEMES.
+ *    In dark mode a raised surface is lighter than the canvas. In light mode
+ *    the canvas is toned porcelain and a raised surface is *brighter* — closer
+ *    to white. A card is a lit object either way. This is why the semantic
+ *    mapping differs per theme rather than being one shared table.
  */
 
 import { bestTextContrast, oklchToHex } from './color-science';
 
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode = 'light' | 'dark';
+
+/** The default theme. Light is the product; dark is an option. */
+export const DEFAULT_THEME: ThemeMode = 'light';
 
 /** The 12 ramp positions, named so intent survives refactors. */
 export const RAMP_ROLES = [
+  'base',
   'canvas',
-  'surface',
-  'raised',
   'hover',
   'active',
-  'borderSubtle',
+  'selected',
+  'hairline',
   'border',
   'borderStrong',
   'solid',
@@ -58,114 +61,135 @@ export type RampRole = (typeof RAMP_ROLES)[number];
 /**
  * Lightness curves.
  *
- * Dark starts at L .155 rather than pure black: true black clips OLED
- * sub-pixels, kills the sense of depth, and makes elevation impossible to
- * express with light. Starting slightly above black leaves room for shadow
- * *and* glow.
+ * LIGHT — the primary. Step 1 is near-white and is where cards live; step 2 is
+ * the toned porcelain page behind them. The gap between 1 and 2 is small on
+ * purpose: it should read as a change in *illumination*, not as two different
+ * greys. Steps 3-5 stay high so interactive fills stay airy, and 6-8 fall away
+ * quickly so borders can be genuine hairlines rather than boxes.
  *
- * The two curves are deliberately not mirrors. Dark mode needs a wider gap
- * between steps 1-3 (depth must be legible in low light), while light mode
- * needs a wider gap between 8-12 (text must punch through a bright field).
+ * DARK — derived, and deliberately not a mirror. It starts at L .162 rather
+ * than black: true black clips OLED sub-pixels and leaves no room to express
+ * elevation with light.
  */
+/*
+  The light ramp's dark end carries three legible text tiers, not two.
+
+  A bright ground is unforgiving here: the usable contrast range between the
+  page and true ink is short, so it is tempting to spend it on one body colour
+  and call everything else "quiet". That produces axis ticks, placeholders,
+  timestamps and column headers sitting at 2:1 — technically present, and
+  unreadable for a large number of people.
+
+  Steps 9, 11 and 12 are therefore all *text* steps in the light theme, spaced
+  so each clears 4.5:1 against the canvas while staying visibly distinct from
+  its neighbour. Step 8 is released from carrying text and becomes purely a
+  border.
+*/
 const LIGHTNESS: Record<ThemeMode, readonly number[]> = {
-  dark: [0.155, 0.188, 0.223, 0.253, 0.285, 0.328, 0.39, 0.482, 0.62, 0.678, 0.79, 0.968],
-  light: [0.994, 0.982, 0.964, 0.945, 0.925, 0.897, 0.86, 0.775, 0.56, 0.505, 0.472, 0.235],
+  light: [0.996, 0.964, 0.941, 0.918, 0.893, 0.872, 0.828, 0.7, 0.538, 0.482, 0.42, 0.205],
+  dark: [0.162, 0.195, 0.23, 0.262, 0.295, 0.335, 0.395, 0.485, 0.62, 0.678, 0.79, 0.968],
 };
 
 /**
- * Chroma envelope, expressed as a fraction of each family's peak chroma.
+ * Chroma envelope, as a fraction of each family's peak.
  *
  * Saturation peaks at step 9 — the one step that must command attention — and
- * falls away toward both ends. Backgrounds stay near-neutral so that content,
- * not chrome, carries the colour. Text desaturates at step 12 because fully
- * saturated body copy vibrates against its background and fatigues the eye.
+ * falls away toward both ends. The light envelope is tighter at the top than
+ * the dark one: on a bright ground even a little chroma in a background reads
+ * as a tint, and a tinted page is the fastest way to look cheap.
  */
 const CHROMA_ENVELOPE: Record<ThemeMode, readonly number[]> = {
+  light: [0.02, 0.05, 0.1, 0.16, 0.23, 0.31, 0.42, 0.62, 1.0, 0.98, 0.88, 0.42],
   dark: [0.1, 0.18, 0.3, 0.38, 0.46, 0.54, 0.64, 0.8, 1.0, 0.95, 0.72, 0.28],
-  light: [0.03, 0.07, 0.14, 0.22, 0.3, 0.38, 0.48, 0.66, 1.0, 0.96, 0.86, 0.4],
 };
 
+/** A tint expressed in OKLab a/b, so ramps can interpolate through true grey. */
+export interface Tint {
+  a: number;
+  b: number;
+}
+
 export interface ColorFamilyDefinition {
-  /** OKLCH hue angle in degrees. */
+  /** OKLCH hue angle in degrees. Ignored when `tintRamp` is present. */
   hue: number;
   /** Peak chroma at step 9, per theme. Tuned to stay inside the sRGB gamut. */
   peakChroma: Record<ThemeMode, number>;
-  /**
-   * Optional replacement for the shared chroma envelope.
-   * Only the neutral family uses this: accents want saturation concentrated at
-   * step 9, whereas the neutral needs an almost flat, very low chroma so every
-   * surface carries the same faint violet cast.
-   */
+  /** Optional replacement for the shared chroma envelope. */
   chromaEnvelope?: readonly number[];
-  /** Why this hue exists in the product. */
+  /**
+   * Interpolate the family's tint in OKLab a/b from step 1 to step 12 instead
+   * of holding one hue. Only the neutral uses this — it is what produces warm
+   * highlights and cool shadows without the midtones drifting green.
+   */
+  tintRamp?: Record<ThemeMode, { from: Tint; to: Tint }>;
+  /** Why this family exists in the product. */
   rationale: string;
 }
 
 /**
- * Neutral chroma envelope.
- *
- * Deliberately flat. A grey that drifts in saturation as it gets lighter looks
- * like a printing error; a grey that holds one faint tint across the whole
- * ramp reads as a designed material. Values stay under 0.01 chroma, which is
- * below the threshold where most people would call it "purple" but above the
- * threshold where the screen feels dead.
- */
-const NEUTRAL_ENVELOPE = [0.3, 0.34, 0.38, 0.4, 0.42, 0.42, 0.4, 0.36, 0.3, 0.28, 0.22, 0.12] as const;
-
-/**
  * The SYLORA spectrum.
  *
- * SYLORA's brand idea is "living light" — an aurora is light made visible by
- * energy passing through a medium. The palette is therefore an aurora sampled
- * at six points, not an arbitrary set of brand colours. Each hue owns exactly
- * one job, so colour alone communicates meaning before a single word is read.
+ * Six hues, spaced 46-74 degrees apart so no two are ever mistaken for each
+ * other, each owning exactly one job. Colour communicates meaning before a word
+ * is read.
+ *
+ * The brand hue is a deep aquamarine. It is chosen against the ground rather
+ * than in isolation: a cool accent on a warm porcelain page is a complementary
+ * pair, so the accent separates cleanly at any size without needing to shout.
+ * It is also the part of the spectrum the industry has left alone — the default
+ * technology blue-violet sits 60-90 degrees away.
  */
 export const COLOR_FAMILIES = {
   /**
-   * Structural neutral. Carries a 282 degrees violet cast at very low chroma so
-   * greys feel related to the brand instead of dead. Pure grey next to a violet
-   * accent reads as dirty; a 0.014-chroma tint reads as intentional.
+   * Structure. Carries a warm cast at the light end and a cool one at the dark
+   * end, so a page reads as lit paper and its text reads as ink in shadow.
    */
-  neutral: {
-    hue: 282,
-    peakChroma: { dark: 0.023, light: 0.019 },
-    chromaEnvelope: NEUTRAL_ENVELOPE,
-    rationale: 'Structure, surfaces, text. Violet-tinted so neutrals belong to the brand.',
+  porcelain: {
+    hue: 250,
+    peakChroma: { light: 0.02, dark: 0.024 },
+    chromaEnvelope: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    tintRamp: {
+      // Light: sunlit warm at the top, sky-cool in the shadows.
+      light: { from: { a: -0.0006, b: 0.006 }, to: { a: 0.004, b: -0.014 } },
+      // Dark: the same physics, compressed — the ambient is cooler throughout.
+      dark: { from: { a: 0.003, b: -0.01 }, to: { a: -0.0004, b: 0.004 } },
+    },
+    rationale: 'Surfaces, structure and text. Warm in light, cool in shadow.',
   },
-  /** Primary brand + anything intelligent. The colour of SYLORA itself. */
-  iris: {
-    hue: 285,
-    peakChroma: { dark: 0.205, light: 0.215 },
+  /** Primary brand, and anything intelligent. The colour of SYLORA itself. */
+  aether: {
+    hue: 196,
+    peakChroma: { light: 0.118, dark: 0.128 },
     rationale: 'Brand primary, AI, generated content, focus rings.',
   },
-  /** Realtime. Anything happening *now*: live, streaming, presence, sync. */
-  flux: {
-    hue: 203,
-    peakChroma: { dark: 0.142, light: 0.145 },
-    rationale: 'Live state, realtime signal, presence, connection health.',
+  /** Anything happening *now*: live, streaming, presence, sync. */
+  pulse: {
+    hue: 272,
+    peakChroma: { light: 0.19, dark: 0.185 },
+    rationale: 'Realtime signal, presence, connection health, sync.',
   },
   /** Human expression. Creators, gifts, reactions, celebration. */
-  nova: {
-    hue: 335,
-    peakChroma: { dark: 0.196, light: 0.205 },
+  bloom: {
+    hue: 328,
+    peakChroma: { light: 0.2, dark: 0.196 },
     rationale: 'Creator identity, gifting, reactions, celebratory moments.',
   },
   /** Positive outcomes. Success, growth, earnings, verified. */
-  verdant: {
-    hue: 158,
-    peakChroma: { dark: 0.152, light: 0.158 },
+  verdigris: {
+    hue: 152,
+    peakChroma: { light: 0.144, dark: 0.152 },
     rationale: 'Success, upward metrics, earnings, verification.',
   },
   /** Attention without alarm. Warnings, achievements, premium tier. */
   solar: {
     hue: 78,
-    peakChroma: { dark: 0.162, light: 0.168 },
+    peakChroma: { light: 0.156, dark: 0.162 },
     rationale: 'Warnings, achievements, premium and scarcity.',
   },
   /** Stop. Destructive actions, errors, moderation removal. */
-  crimson: {
-    hue: 24,
-    peakChroma: { dark: 0.188, light: 0.196 },
+  rose: {
+    hue: 22,
+    peakChroma: { light: 0.185, dark: 0.188 },
     rationale: 'Errors, destructive actions, moderation removal.',
   },
 } as const satisfies Record<string, ColorFamilyDefinition>;
@@ -180,22 +204,22 @@ export interface OklchColor {
   h: number;
 }
 
-/**
- * Reference text colours, taken straight from the neutral curve so the solver
- * below cannot become circular.
- */
+/** Reference text colours, taken from the raw curve so the solver stays acyclic. */
 function referenceTextPair(mode: ThemeMode): [string, string] {
   const l = LIGHTNESS[mode];
-  const e = NEUTRAL_ENVELOPE;
-  const peak = COLOR_FAMILIES.neutral.peakChroma[mode];
-  const hue = COLOR_FAMILIES.neutral.hue;
-  return [oklchToHex(l[11], peak * e[11], hue), oklchToHex(l[0], peak * e[0], hue)];
+  const ramp = COLOR_FAMILIES.porcelain.tintRamp![mode];
+  const toOklch = (index: number) => {
+    const t = index / 11;
+    const a = ramp.from.a + (ramp.to.a - ramp.from.a) * t;
+    const b = ramp.from.b + (ramp.to.b - ramp.from.b) * t;
+    return oklchToHex(l[index], Math.hypot(a, b), (Math.atan2(b, a) * 180) / Math.PI);
+  };
+  return [toOklch(11), toOklch(0)];
 }
 
 /**
  * Minimum contrast that step 9 must achieve with its best text colour.
- * 4.6 rather than 4.5 leaves headroom for the rounding that happens when a
- * colour is quantised to 8 bits per channel.
+ * 4.6 rather than 4.5 leaves headroom for 8-bit quantisation.
  */
 const SOLID_TEXT_TARGET = 4.6;
 
@@ -207,11 +231,10 @@ const SOLID_TEXT_TARGET = 4.6;
  * OKLCH lightness therefore have very different WCAG luminance, and the cyan
  * one can end up with no text colour that reaches 4.5:1.
  *
- * Rather than pretend the conflict does not exist, the one step that must
- * carry text is solved numerically against the metric that actually governs
+ * Rather than pretend the conflict does not exist, the one step that must carry
+ * text is solved numerically against the metric that actually governs
  * accessibility. The search starts at the curve value and walks outward in
- * 0.005 increments, taking the nearest lightness that satisfies the target, so
- * families that already pass are left completely untouched.
+ * 0.005 increments, so families that already pass are left untouched.
  */
 function solveSolidLightness(family: ColorFamily, mode: ThemeMode, chroma: number): number {
   const base = LIGHTNESS[mode][8];
@@ -242,24 +265,38 @@ export function buildRamp(family: ColorFamily, mode: ThemeMode): OklchColor[] {
   const lightness = LIGHTNESS[mode];
   const envelope = definition.chromaEnvelope ?? CHROMA_ENVELOPE[mode];
   const peak = definition.peakChroma[mode];
+  const tint = definition.tintRamp?.[mode];
 
   const solidChroma = peak * envelope[8];
-  const solvedSolid = solveSolidLightness(family, mode, solidChroma);
-  // Step 10 is step 9 hovered; it keeps the curve's original delta so the
-  // hover feels identical across every family.
+  const solvedSolid = tint ? lightness[8] : solveSolidLightness(family, mode, solidChroma);
+  // Step 10 is step 9 hovered; it keeps the curve's original delta so the hover
+  // feels identical across every family.
   const solidDelta = solvedSolid - lightness[8];
 
   return lightness.map((l, index) => {
     const adjusted = index === 8 ? solvedSolid : index === 9 ? l + solidDelta : l;
+
+    if (tint) {
+      // Interpolate the tint in OKLab a/b, so the ramp passes through true
+      // neutral in the middle instead of swinging through an intermediate hue.
+      const t = index / (lightness.length - 1);
+      const a = tint.from.a + (tint.to.a - tint.from.a) * t;
+      const b = tint.from.b + (tint.to.b - tint.from.b) * t;
+      return {
+        l: Number(Math.min(0.999, Math.max(0.02, adjusted)).toFixed(4)),
+        c: Number((Math.hypot(a, b) * peak * 50 * envelope[index]).toFixed(4)),
+        h: Number((((Math.atan2(b, a) * 180) / Math.PI + 360) % 360).toFixed(2)),
+      };
+    }
+
     return {
-      l: Number(Math.min(0.99, Math.max(0.02, adjusted)).toFixed(4)),
+      l: Number(Math.min(0.999, Math.max(0.02, adjusted)).toFixed(4)),
       c: Number((peak * envelope[index]).toFixed(4)),
       h: definition.hue,
     };
   });
 }
 
-/** Serialise to a CSS `oklch()` value. */
 export function formatOklch({ l, c, h }: OklchColor): string {
   return `oklch(${(l * 100).toFixed(2)}% ${c.toFixed(4)} ${h})`;
 }
@@ -272,14 +309,6 @@ export function buildAllRamps(mode: ThemeMode): ColorRamps {
   ) as ColorRamps;
 }
 
-/**
- * Alpha overlays.
- *
- * Glass surfaces, scrims and hover states must work over *unknown* content —
- * a video frame, a photo, a gradient. Solid ramp steps cannot do that, so the
- * system ships a parallel set of translucent neutrals. `formatOklchAlpha`
- * keeps them in the same colour space as everything else.
- */
 export function formatOklchAlpha({ l, c, h }: OklchColor, alpha: number): string {
   return `oklch(${(l * 100).toFixed(2)}% ${c.toFixed(4)} ${h} / ${alpha})`;
 }
@@ -289,17 +318,20 @@ export const ALPHA_STEPS = [0.04, 0.08, 0.12, 0.16, 0.24, 0.32, 0.48, 0.64, 0.8,
 /**
  * Semantic aliases.
  *
- * Screens consume these names, never raw ramp steps. Changing what "danger"
- * means becomes a one-line edit, and a designer reading a spec never has to
- * decode a number.
+ * The mapping is per theme, because "raised" means something different in each.
+ * In dark, elevation climbs the ramp toward light. In light, the page is toned
+ * porcelain and elevation climbs *back toward white* — so a card is brighter
+ * than its page, exactly as a lit object is brighter than its surroundings.
+ * One shared table could not express that, and forcing one would give the light
+ * theme grey cards on a white page: recessed, flat, and cheap-looking.
  */
 export const SEMANTIC_ROLES = {
-  brand: 'iris',
-  live: 'flux',
-  creator: 'nova',
-  success: 'verdant',
+  brand: 'aether',
+  live: 'pulse',
+  creator: 'bloom',
+  success: 'verdigris',
   warning: 'solar',
-  danger: 'crimson',
+  danger: 'rose',
 } as const satisfies Record<string, ColorFamily>;
 
 export type SemanticRole = keyof typeof SEMANTIC_ROLES;
@@ -307,30 +339,32 @@ export type SemanticRole = keyof typeof SEMANTIC_ROLES;
 /**
  * Signature gradients.
  *
- * The aurora is expressed as motion across hue at *constant* lightness, which
- * is why these never look muddy: in OKLCH, interpolating hue at fixed L and C
- * traces the perceptual rim of the gamut instead of cutting through grey.
+ * `prism` is the brand's core gesture: cyan to indigo to magenta is the order
+ * light actually separates into when it is refracted, so the gradient is a
+ * physical fact rather than a palette choice. It appears as hairline edges and
+ * thin sweeps — never as a large filled area, where it would read as decoration
+ * instead of as light.
  */
 export const GRADIENTS = {
-  aurora: {
-    stops: ['iris', 'flux', 'nova'] as ColorFamily[],
-    angle: 135,
-    rationale: 'Primary brand gradient. Intelligence to signal to expression.',
+  prism: {
+    stops: ['aether', 'pulse', 'bloom'] as ColorFamily[],
+    angle: 104,
+    rationale: 'The brand gesture. Refraction order: cyan, indigo, magenta.',
   },
-  signal: {
-    stops: ['flux', 'iris'] as ColorFamily[],
-    angle: 120,
-    rationale: 'Live and realtime surfaces.',
+  beam: {
+    stops: ['aether', 'pulse'] as ColorFamily[],
+    angle: 118,
+    rationale: 'Live and realtime surfaces; the narrow end of the spectrum.',
   },
   ember: {
-    stops: ['nova', 'solar'] as ColorFamily[],
-    angle: 135,
+    stops: ['bloom', 'solar'] as ColorFamily[],
+    angle: 128,
     rationale: 'Creator earnings, gifting, celebration.',
   },
-  depth: {
-    stops: ['neutral', 'iris'] as ColorFamily[],
+  daylight: {
+    stops: ['porcelain', 'aether'] as ColorFamily[],
     angle: 160,
-    rationale: 'Ambient backgrounds; colour barely surfacing out of structure.',
+    rationale: 'Ambient wash; colour barely surfacing out of the page.',
   },
 } as const;
 

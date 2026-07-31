@@ -14,8 +14,9 @@
  *      aurora is reserved for assistant-authored content, and none of these
  *      surfaces are.
  *
- * `creator.css` is imported first and owns `.sy-table-scroll`, `.sy-data-table`
- * and `.sy-meter`; this file assumes them.
+ * `creator.css` is imported first and owns `.sy-table-scroll`, `.sy-data-table`,
+ * `.sy-meter` and the `--rule` / `--rule-strong` weights; this file assumes
+ * them.
  */
 
 /* ================================================================== */
@@ -38,11 +39,22 @@
 .sy-ad-dot.is-warn,
 .sy-ad-health__state.is-elevated .sy-ad-dot {
   background: var(--sy-warning-solid);
-  box-shadow: 0 0 0 3px var(--sy-warning-bg);
+  box-shadow: 0 0 0 3px var(--sy-warning-border);
 }
 .sy-ad-dot.is-down,
 .sy-ad-health__state.is-breached .sy-ad-dot {
   background: var(--sy-danger-solid);
+  box-shadow: 0 0 0 3px var(--sy-danger-border);
+}
+/* The ring is drawn from the tint step in dark and the border step in light.
+   A step-2 ring on a near-white card is the same colour as the card, which
+   loses the greyscale signal the ring exists to provide. */
+[data-theme='dark'] .sy-ad-dot.is-warn,
+[data-theme='dark'] .sy-ad-health__state.is-elevated .sy-ad-dot {
+  box-shadow: 0 0 0 3px var(--sy-warning-bg);
+}
+[data-theme='dark'] .sy-ad-dot.is-down,
+[data-theme='dark'] .sy-ad-health__state.is-breached .sy-ad-dot {
   box-shadow: 0 0 0 3px var(--sy-danger-bg);
 }
 
@@ -97,12 +109,12 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-block-end: var(--sy-space-8);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-ad__health {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-@container screen (min-width: 1100px) {
+@container screen (min-width: 880px) {
   .sy-ad__health {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
@@ -129,7 +141,7 @@
   font-weight: var(--sy-type-overline-weight);
   letter-spacing: var(--sy-type-overline-tracking);
   text-transform: uppercase;
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
 }
 .sy-ad-health__state.is-elevated {
   color: var(--sy-warning-fg);
@@ -152,7 +164,7 @@
   gap: var(--sy-space-4);
   grid-template-columns: 1fr;
 }
-@container screen (min-width: 960px) {
+@container screen (min-width: 880px) {
   .sy-ad__split {
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     gap: var(--sy-space-6);
@@ -179,7 +191,7 @@
   align-items: center;
   gap: var(--sy-space-3);
   padding: var(--sy-space-3) var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-ad-service:last-child {
   border-block-end: none;
@@ -207,7 +219,7 @@
   inline-size: calc(var(--sy-space-24) + var(--sy-space-2));
   justify-content: center;
 }
-@container screen (min-width: 480px) {
+@container screen (min-width: 560px) {
   .sy-ad-service__spark {
     display: block;
   }
@@ -249,7 +261,7 @@
   align-items: flex-end;
   gap: var(--sy-space-3);
   padding: var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-default);
+  border-block-end: 1px solid var(--rule-strong);
 }
 .sy-ad__filter-search {
   flex: 1 1 calc(var(--sy-space-40) + var(--sy-space-8));
@@ -290,7 +302,7 @@
   flex-direction: column;
   gap: var(--sy-space-3);
   padding: var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-ad-flag:last-child {
   border-block-end: none;
@@ -328,7 +340,7 @@
   align-items: flex-start;
   gap: var(--sy-space-3);
   padding: var(--sy-space-3) var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-ad-audit:last-child {
   border-block-end: none;
@@ -352,7 +364,7 @@
   block-size: var(--sy-space-5);
   border-radius: var(--sy-radius-xs);
   background: var(--sy-bg-active);
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
 }
 
 /* ================================================================== */
@@ -365,7 +377,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-block-end: var(--sy-space-6);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-mod__stats {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -386,7 +398,7 @@
   grid-template-columns: 1fr;
   align-items: start;
 }
-@container screen (min-width: 960px) {
+@container screen (min-width: 880px) {
   .sy-mod__work {
     grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
     gap: var(--sy-space-6);
@@ -431,7 +443,7 @@
   inline-size: 100%;
   padding: var(--sy-space-3) var(--sy-space-4);
   text-align: start;
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
   border-inline-start: 2px solid transparent;
   transition: background-color var(--sy-transition-hover);
 }
@@ -466,7 +478,7 @@
   min-inline-size: 0;
   margin-block-start: var(--sy-space-1);
   padding-block-start: var(--sy-space-2);
-  border-block-start: 1px dashed var(--sy-border-subtle);
+  border-block-start: 1px dashed var(--rule-strong);
   color: var(--sy-accent-fg);
 }
 .sy-mod-case__conf {
@@ -529,7 +541,7 @@
   gap: var(--sy-space-5);
   grid-template-columns: 1fr;
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 840px) {
   .sy-mod-detail__cols {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -540,7 +552,9 @@
 }
 
 /* The excerpt is set in a sunken well so it reads as quoted material rather
-   than as the product's own copy. */
+   than as the product's own copy. Light gets the inset shadow that makes
+   "sunken" literal and drops the box; dark has no tone step between canvas and
+   surface to spend, so it keeps the hairline instead. */
 .sy-mod-excerpt {
   display: flex;
   flex-direction: column;
@@ -548,7 +562,12 @@
   padding: var(--sy-space-3);
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-canvas);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-sunken);
+}
+[data-theme='dark'] .sy-mod-excerpt {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-mod-excerpt__line {
   position: relative;
@@ -574,7 +593,7 @@
   color: var(--sy-danger-fg);
 }
 .sy-mod-excerpt__author {
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
 }
 
 .sy-mod-rec {
@@ -688,7 +707,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-block-end: var(--sy-space-8);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-bz__stats {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -838,14 +857,20 @@
   flex-direction: column;
   gap: var(--sy-space-0_5);
 }
+/* A block inside a card: in light it steps *down* to the page colour, because
+   two near-whites separated by a hairline is a box drawn for no reason. */
 .sy-bz__method {
   display: flex;
   align-items: center;
   gap: var(--sy-space-3);
   padding: var(--sy-space-3);
   border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+  border: 1px solid transparent;
+}
+[data-theme='dark'] .sy-bz__method {
   background: var(--sy-bg-raised);
-  border: 1px solid var(--sy-border-subtle);
+  border-color: var(--sy-border-subtle);
 }
 .sy-bz__billing-actions {
   display: flex;
@@ -865,7 +890,7 @@
   align-items: center;
   gap: var(--sy-space-3);
   padding: var(--sy-space-3) var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-bz-member:last-child {
   border-block-end: none;

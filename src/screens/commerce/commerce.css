@@ -10,6 +10,11 @@
  *   MONEY   every figure is mono and tabular. Amounts are right-aligned
  *           wherever they can be compared vertically, and never elsewhere —
  *           a right-aligned number in a single-row card just looks lost.
+ *
+ * Row rules come from `--rule` / `--rule-strong`, declared once in creator.css
+ * and imported before this file. They exist because the system border tokens
+ * are calibrated for a near-black field: reused unchanged on porcelain they
+ * stop being hairlines and start drawing a grid.
  */
 
 /* ================================================================== */
@@ -23,23 +28,23 @@
  */
 .sy-gifts .is-common,
 .sy-inv .is-common {
-  --rarity-solid: var(--sy-flux-9);
-  --rarity-fg: var(--sy-flux-11);
-  --rarity-border: var(--sy-flux-8);
+  --rarity-solid: var(--sy-pulse-9);
+  --rarity-fg: var(--sy-pulse-11);
+  --rarity-border: var(--sy-pulse-8);
   --rarity-weight: 1px;
 }
 .sy-gifts .is-rare,
 .sy-inv .is-rare {
-  --rarity-solid: var(--sy-iris-9);
-  --rarity-fg: var(--sy-iris-11);
-  --rarity-border: var(--sy-iris-8);
+  --rarity-solid: var(--sy-aether-9);
+  --rarity-fg: var(--sy-aether-11);
+  --rarity-border: var(--sy-aether-8);
   --rarity-weight: 1px;
 }
 .sy-gifts .is-epic,
 .sy-inv .is-epic {
-  --rarity-solid: var(--sy-nova-9);
-  --rarity-fg: var(--sy-nova-11);
-  --rarity-border: var(--sy-nova-8);
+  --rarity-solid: var(--sy-bloom-9);
+  --rarity-fg: var(--sy-bloom-11);
+  --rarity-border: var(--sy-bloom-8);
   --rarity-weight: 1.5px;
 }
 .sy-gifts .is-legendary,
@@ -103,8 +108,8 @@
   gap: var(--sy-space-1_5);
   padding: var(--sy-space-1) var(--sy-space-2_5);
   border-radius: var(--sy-radius-pill);
-  background: var(--sy-gradient-aurora);
-  color: var(--sy-on-iris);
+  background: var(--sy-gradient-prism);
+  color: var(--sy-on-brand);
   font-size: var(--sy-type-caption-size);
   font-weight: 600;
 }
@@ -136,13 +141,13 @@
   flex-wrap: wrap;
   margin-block-start: var(--sy-space-1);
   padding-block-start: var(--sy-space-4);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-mkt-hero__was s {
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
 }
 
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-mkt-hero {
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
     align-items: stretch;
@@ -176,12 +181,12 @@
 .sy-mkt-filters__toggle {
   padding-block-start: var(--sy-space-1);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-mkt-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-mkt-filters {
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr);
   }
@@ -209,7 +214,7 @@
 /* Product card */
 /* Six products divide cleanly into two or three columns. A fourth column just
    leaves a ragged half-row, so the grid stops climbing at three. */
-@container screen (min-width: 900px) {
+@container screen (min-width: 880px) {
   .sy-market-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -227,10 +232,12 @@
   position: absolute;
   inset-block-end: var(--sy-space-2);
   inset-inline-start: var(--sy-space-2);
-  background: color-mix(in oklab, var(--sy-neutral-1) 76%, transparent);
-  color: var(--sy-neutral-12);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  /* Sits on cover art, which is uncontrolled and identical in both themes, so
+     the chip uses the media pair rather than the page pair. */
+  background: var(--sy-scrim-on-media);
+  color: var(--sy-fg-on-media);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-scrim-blur));
+  backdrop-filter: blur(var(--sy-vellum-scrim-blur));
 }
 .sy-pcard__wish {
   position: absolute;
@@ -295,9 +302,9 @@
   flex-wrap: wrap;
   margin-block-start: auto;
   padding-block-start: var(--sy-space-3);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-mkt-pick {
     inline-size: 300px;
   }
@@ -342,7 +349,7 @@
   gap: var(--sy-space-2) var(--sy-space-3);
   align-items: center;
   padding: var(--sy-space-3);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-dp-table li:last-child .sy-dp-row,
 .sy-dp-table li:last-child {
@@ -373,7 +380,7 @@
 }
 .sy-dp-row .sy-dp-num::before {
   content: attr(data-label) ' ';
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
   font-family: var(--sy-font-text);
   font-size: var(--sy-type-caption-size);
 }
@@ -391,7 +398,7 @@
   justify-self: end;
 }
 
-@container screen (min-width: 768px) {
+@container screen (min-width: 840px) {
   .sy-dp-table__head,
   .sy-dp-row {
     display: grid;
@@ -401,8 +408,8 @@
   }
   .sy-dp-table__head {
     padding: var(--sy-space-3);
-    border-block-end: 1px solid var(--sy-border-subtle);
-    color: var(--sy-fg-quiet);
+    border-block-end: 1px solid var(--rule);
+    color: var(--quiet);
     font-size: var(--sy-type-caption-size);
     text-transform: uppercase;
     letter-spacing: var(--sy-type-overline-tracking);
@@ -428,26 +435,35 @@
   gap: var(--sy-space-4);
   grid-template-columns: 1fr;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-dp-pricing {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
   }
 }
+ /**
+ * A block nested inside a card takes the page colour rather than a second
+ * near-white: the tone step down is the separation, so the box needs no drawn
+ * edge. Dark has no such step to spend — canvas and surface are two shades of
+ * near-black — so it keeps the hairline.
+ */
 .sy-dp-pwyw {
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-3);
   padding: var(--sy-space-3);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-canvas);
+}
+[data-theme='dark'] .sy-dp-pwyw {
+  border-color: var(--sy-border-subtle);
 }
 .sy-dp-pwyw__suggest {
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-2);
   padding-block-start: var(--sy-space-3);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 
 .sy-dp-files__head {
@@ -462,7 +478,7 @@
   align-items: center;
   gap: var(--sy-space-3);
   padding-block: var(--sy-space-2_5);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-dp-files li:last-child {
   border-block-end: none;
@@ -528,7 +544,7 @@
   flex-direction: column;
   gap: var(--sy-space-3);
   padding-block-start: var(--sy-space-3);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-dp-check__blocked {
   display: flex;
@@ -542,34 +558,88 @@
 
 /**
  * Balance card.
- * Painted with the brand gradient and the system's own ink colour for brand
- * fills (`--sy-on-iris`), which is the one pairing guaranteed to pass contrast
- * in both themes. Everything inside re-derives from that ink so the card needs
- * no theme-specific rules at all.
+ *
+ * This card used to be a full-bleed brand gradient with white ink. That is a
+ * dark-canvas move: a saturated teal-to-magenta block is the loudest thing on
+ * a porcelain page by an order of magnitude, and it drags the eye away from
+ * the number it is supposed to frame. Worse, it is the only place in the
+ * product where the ink inverts, so the reader re-calibrates for one card.
+ *
+ * Light therefore treats it as **foil**: a near-white stock with an
+ * iridescent sheen laid over it and a spectral hairline for an edge. The
+ * chroma is present but rationed — the sheen bands sit at a fraction of full
+ * strength, so the card reads as a specially printed surface rather than a
+ * coloured one, and the amount stays the darkest thing in the frame. This is
+ * the same claim to importance made with refraction instead of emission.
+ *
+ * Dark keeps the gradient. On a near-black field a pale card would be the
+ * loud object, and the ink inversion is not a re-calibration there because
+ * everything around it is already light-on-dark.
  */
 .sy-balance {
+  /* One indirection so the body, rules and buttons need no theme branches. */
+  --balance-ink: var(--sy-fg-default);
+  --balance-rule: var(--sy-porcelain-5);
+  --balance-lattice: var(--sy-porcelain-7);
   position: relative;
   overflow: hidden;
-  background: var(--sy-gradient-aurora);
-  border-color: transparent;
-  color: var(--sy-on-iris);
+  color: var(--balance-ink);
+  /* Padding-box fill over a border-box prism: the refraction edge without an
+     extra element. Rationed to this one surface on this screen. */
+  background:
+    linear-gradient(var(--sy-bg-surface), var(--sy-bg-surface)) padding-box,
+    var(--sy-gradient-prism) border-box;
+  border: var(--sy-refract-hairline-weight) solid transparent;
 }
+[data-theme='dark'] .sy-balance {
+  --balance-ink: var(--sy-on-brand);
+  --balance-rule: color-mix(in oklab, var(--sy-on-brand) 24%, transparent);
+  --balance-lattice: color-mix(in oklab, var(--sy-on-brand) 60%, transparent);
+  background: var(--sy-gradient-prism);
+  border-color: transparent;
+}
+
+/**
+ * The sheen. Three wide bands sampled in refraction order, separated by clear
+ * stops so the eye reads light *travelling across* the stock rather than a
+ * gradient painted onto it. The clear stops are the whole effect: an unbroken
+ * sweep is a gradient, an interrupted one is foil.
+ */
 .sy-balance__wash {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 130% at 88% 8%, color-mix(in oklab, var(--sy-on-iris) 22%, transparent), transparent 58%),
-    radial-gradient(90% 120% at 4% 96%, color-mix(in oklab, var(--sy-neutral-1) 28%, transparent), transparent 62%);
+    linear-gradient(
+      104deg,
+      color-mix(in oklab, var(--sy-aether-9) 15%, transparent) 0%,
+      transparent 30%,
+      color-mix(in oklab, var(--sy-pulse-9) 11%, transparent) 52%,
+      transparent 72%,
+      color-mix(in oklab, var(--sy-bloom-9) 16%, transparent) 100%
+    ),
+    radial-gradient(90% 130% at 6% 100%, color-mix(in oklab, var(--sy-solar-9) 7%, transparent), transparent 60%);
 }
-/* A faint engraved lattice — the detail that separates a gradient from a card. */
+[data-theme='dark'] .sy-balance__wash {
+  background:
+    radial-gradient(120% 130% at 88% 8%, color-mix(in oklab, var(--sy-on-brand) 22%, transparent), transparent 58%),
+    radial-gradient(90% 120% at 4% 96%, color-mix(in oklab, var(--sy-porcelain-1) 28%, transparent), transparent 62%);
+}
+
+/* A faint engraved lattice — the detail that separates a printed card from a
+   coloured rectangle. Light rules it in porcelain rather than in white, since
+   white on near-white is nothing at all. */
 .sy-balance__grid {
   position: absolute;
   inset: 0;
-  opacity: 0.16;
+  opacity: 0.5;
   background-image:
-    repeating-linear-gradient(90deg, color-mix(in oklab, var(--sy-on-iris) 60%, transparent) 0 1px, transparent 1px 44px),
-    repeating-linear-gradient(0deg, color-mix(in oklab, var(--sy-on-iris) 60%, transparent) 0 1px, transparent 1px 44px);
-  mask-image: radial-gradient(120% 100% at 100% 0%, black, transparent 70%);
+    repeating-linear-gradient(90deg, var(--balance-lattice) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(0deg, var(--balance-lattice) 0 1px, transparent 1px 44px);
+  /* Only the alpha of these stops is read, so the opaque one is any ink token. */
+  mask-image: radial-gradient(120% 100% at 100% 0%, var(--sy-fg-default), transparent 70%);
+}
+[data-theme='dark'] .sy-balance__grid {
+  opacity: 0.16;
 }
 .sy-balance__body {
   position: relative;
@@ -586,12 +656,18 @@
   flex-wrap: wrap;
 }
 .sy-balance__eyebrow {
+  color: var(--sy-fg-muted);
+}
+[data-theme='dark'] .sy-balance__eyebrow {
+  color: inherit;
   opacity: 0.78;
 }
-.sy-balance .sy-badge {
-  background: color-mix(in oklab, var(--sy-on-iris) 18%, transparent);
-  border-color: color-mix(in oklab, var(--sy-on-iris) 32%, transparent);
-  color: var(--sy-on-iris);
+/* Only dark needs to restate the badge: over the gradient the soft tone would
+   otherwise be a coloured patch on a coloured field. On foil it reads as-is. */
+[data-theme='dark'] .sy-balance .sy-badge {
+  background: color-mix(in oklab, var(--sy-on-brand) 18%, transparent);
+  border-color: color-mix(in oklab, var(--sy-on-brand) 32%, transparent);
+  color: var(--sy-on-brand);
 }
 .sy-balance__amount {
   display: flex;
@@ -603,6 +679,10 @@
   font-family: var(--sy-font-display);
   font-size: var(--sy-type-title2-size);
   font-weight: 600;
+  color: var(--sy-fg-muted);
+}
+[data-theme='dark'] .sy-balance__currency {
+  color: inherit;
   opacity: 0.72;
 }
 .sy-balance__figure {
@@ -616,11 +696,15 @@
   flex-wrap: wrap;
   gap: var(--sy-space-3) var(--sy-space-6);
   padding-block-start: var(--sy-space-4);
-  border-block-start: 1px solid color-mix(in oklab, var(--sy-on-iris) 24%, transparent);
+  border-block-start: 1px solid var(--balance-rule);
 }
 .sy-balance__meta dt {
-  opacity: 0.76;
+  color: var(--sy-fg-muted);
   margin-block-end: 2px;
+}
+[data-theme='dark'] .sy-balance__meta dt {
+  color: inherit;
+  opacity: 0.76;
 }
 .sy-balance__meta dd {
   font-weight: 600;
@@ -631,27 +715,30 @@
   gap: var(--sy-space-2);
   flex-wrap: wrap;
 }
-/* Inside the gradient the ink colour becomes the button, and the brand colour
-   becomes the label. It is the same pairing inverted, so contrast is preserved. */
-.sy-balance .sy-btn--primary {
-  background: var(--sy-on-iris);
+/* On foil the buttons are ordinary buttons — the accent fill is legible
+   against a near-white stock, and re-styling them would only re-introduce the
+   inversion the card just removed. Dark still inverts: inside the gradient the
+   ink colour becomes the button and the brand colour becomes the label, which
+   is the same pairing flipped, so contrast is preserved. */
+[data-theme='dark'] .sy-balance .sy-btn--primary {
+  background: var(--sy-on-brand);
   color: var(--sy-accent-solid);
 }
-.sy-balance .sy-btn--primary:hover:not(:disabled) {
-  background: color-mix(in oklab, var(--sy-on-iris) 88%, var(--sy-accent-solid));
+[data-theme='dark'] .sy-balance .sy-btn--primary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--sy-on-brand) 88%, var(--sy-accent-solid));
   box-shadow: none;
 }
-.sy-balance .sy-btn--glass {
-  background: color-mix(in oklab, var(--sy-on-iris) 14%, transparent);
-  border-color: color-mix(in oklab, var(--sy-on-iris) 30%, transparent);
-  color: var(--sy-on-iris);
+[data-theme='dark'] .sy-balance .sy-btn--glass {
+  background: color-mix(in oklab, var(--sy-on-brand) 14%, transparent);
+  border-color: color-mix(in oklab, var(--sy-on-brand) 30%, transparent);
+  color: var(--sy-on-brand);
 }
-.sy-balance .sy-btn--glass:hover:not(:disabled) {
-  background: color-mix(in oklab, var(--sy-on-iris) 24%, transparent);
-  border-color: color-mix(in oklab, var(--sy-on-iris) 46%, transparent);
+[data-theme='dark'] .sy-balance .sy-btn--glass:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--sy-on-brand) 24%, transparent);
+  border-color: color-mix(in oklab, var(--sy-on-brand) 46%, transparent);
 }
 
-@container screen (min-width: 768px) {
+@container screen (min-width: 840px) {
   .sy-balance__body {
     padding: var(--sy-space-8);
   }
@@ -663,7 +750,7 @@
   gap: var(--sy-space-4);
   grid-template-columns: 1fr;
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-wallet-credits {
     grid-template-columns: 260px minmax(0, 1fr);
     align-items: start;
@@ -696,12 +783,19 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding-block-start: var(--sy-space-2);
 }
-@container screen (min-width: 900px) {
+@container screen (min-width: 880px) {
   .sy-topups {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
+/**
+ * A package tile is a control, so it sits above the page: near-white fill and
+ * a shadow, no drawn edge. Four boxed tiles in a row on porcelain read as a
+ * table of prices rather than as four things you can press, and the border is
+ * what does that — remove it and the fill alone says "surface you can act on".
+ * Dark keeps the hairline, because a shadow on near-black defines no edge.
+ */
 .sy-topup {
   position: relative;
   display: flex;
@@ -709,26 +803,56 @@
   align-items: flex-start;
   gap: var(--sy-space-1_5);
   padding: var(--sy-space-4) var(--sy-space-3) var(--sy-space-3);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
+  box-shadow: var(--sy-elevation-surface);
   text-align: start;
   transition: border-color var(--sy-transition-hover), background-color var(--sy-transition-hover),
-    scale var(--sy-transition-press);
+    box-shadow var(--sy-transition-hover), scale var(--sy-transition-press);
+}
+[data-theme='dark'] .sy-topup {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-topup:hover {
+  box-shadow: var(--sy-elevation-raised);
+}
+[data-theme='dark'] .sy-topup:hover {
   border-color: var(--sy-border-interactive);
+  box-shadow: none;
 }
 .sy-topup:active {
   scale: 0.98;
 }
-/* Selection is a border, a tint and a written "Selected" row. */
+/**
+ * Selection is an edge, a tint and a written "Selected" row — three signals,
+ * only one of them colour. The edge appears where there was none, so it reads
+ * as a change of state rather than a change of shade; the glow behind it is
+ * dark-only, since on white a 10px accent halo is invisible at best and a
+ * smudge at worst.
+ */
 .sy-topup.is-selected {
   border-color: var(--sy-accent-solid);
   background: var(--sy-accent-bg);
-  box-shadow: 0 0 var(--sy-glow-base-spread)
-    color-mix(in oklab, var(--sy-accent-solid) calc(var(--sy-glow-base-alpha) * 100%), transparent);
 }
+[data-theme='dark'] .sy-topup.is-selected {
+  box-shadow: 0 0 var(--sy-refract-edge-spread)
+    color-mix(in oklab, var(--sy-accent-solid) calc(var(--sy-refract-edge-alpha) * 100%), transparent);
+}
+/**
+ * The bonus ribbon.
+ *
+ * Ember sweeps magenta to amber. On near-black both ends land bright and it
+ * reads as a hot promotional flash, which is the intent. On porcelain both ends
+ * land dark, the interpolation between them passes through brown, and three
+ * ribbons across the row end up heavier than the selected tile they are meant
+ * to decorate — the offer out-shouting the choice. Light keeps the hue travel
+ * and spends it on the tint instead: step 2 of the same two families sits at
+ * one lightness, so a single ink colour stays legible from end to end. The
+ * hairline is doing real work here, since the ribbon overhangs the tile onto
+ * the page and a pale chip on a near-white card has no edge of its own.
+ */
 .sy-topup__bonus {
   position: absolute;
   inset-block-start: calc(var(--sy-space-2_5) * -1);
@@ -738,11 +862,17 @@
   gap: 3px;
   padding-inline: var(--sy-space-2);
   block-size: 20px;
+  border: 1px solid var(--sy-creator-border);
   border-radius: var(--sy-radius-pill);
-  background: var(--sy-gradient-ember);
-  color: var(--sy-on-nova);
+  background: linear-gradient(128deg, var(--sy-creator-bg), var(--sy-solar-2));
+  color: var(--sy-creator-fg);
   font-size: var(--sy-type-caption-size);
   font-weight: 650;
+}
+[data-theme='dark'] .sy-topup__bonus {
+  border-color: transparent;
+  background: var(--sy-gradient-ember);
+  color: var(--sy-on-creator);
 }
 .sy-topup__credits {
   display: inline-flex;
@@ -778,7 +908,7 @@
   gap: var(--sy-space-3);
   inline-size: 100%;
   padding: var(--sy-space-3) var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
   text-align: start;
   color: inherit;
 }
@@ -811,7 +941,7 @@
 .sy-tx-filters__export {
   justify-self: start;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-tx-filters {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   }
@@ -820,7 +950,7 @@
 .sy-tx__date {
   padding: var(--sy-space-3) var(--sy-space-4) var(--sy-space-2);
   background: var(--sy-bg-canvas);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-tx-row {
   display: grid;
@@ -828,7 +958,7 @@
   gap: var(--sy-space-1) var(--sy-space-3);
   align-items: center;
   padding: var(--sy-space-3) var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-tx-row__text {
   display: flex;
@@ -868,7 +998,7 @@
   color: var(--sy-fg-default);
 }
 
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-tx-row {
     grid-template-columns: auto minmax(0, 1fr) auto auto;
   }
@@ -943,16 +1073,26 @@
   block-size: 148px;
   border-radius: 50%;
   background: radial-gradient(circle, var(--sy-solar-9), transparent 62%);
-  opacity: var(--sy-glow-halo-alpha);
-  filter: blur(var(--sy-glow-halo-spread));
+  /* A pool of warm light *under* the glyph rather than a halo around it: on
+     porcelain the effect has to darken to register at all. */
+  opacity: 0.16;
+  filter: blur(var(--sy-refract-halo-spread));
+}
+[data-theme='dark'] .sy-gift-featured__glow {
+  opacity: var(--sy-refract-halo-alpha);
 }
 .sy-gift-featured__glyph {
   position: relative;
   font-size: var(--sy-type-display1-size);
   line-height: 1;
   color: var(--sy-solar-11);
-  text-shadow: 0 0 var(--sy-glow-strong-spread)
-    color-mix(in oklab, var(--sy-solar-9) calc(var(--sy-glow-strong-alpha) * 100%), transparent);
+}
+/* The bloom is emission, so it belongs to dark. On the light stock the glyph
+   is already the darkest thing in the panel and the warm pool behind it does
+   the separating; adding a halo only softens the one crisp edge there is. */
+[data-theme='dark'] .sy-gift-featured__glyph {
+  text-shadow: 0 0 var(--sy-refract-bloom-spread)
+    color-mix(in oklab, var(--sy-solar-9) calc(var(--sy-refract-bloom-alpha) * 100%), transparent);
 }
 .sy-gift-featured__body {
   display: flex;
@@ -974,7 +1114,7 @@
   gap: var(--sy-space-3);
   flex-wrap: wrap;
   padding-block-start: var(--sy-space-4);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-gift-featured__countdown {
   display: inline-flex;
@@ -986,7 +1126,7 @@
   font-size: var(--sy-type-headline-size);
   font-weight: 600;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-gift-featured {
     grid-template-columns: 240px minmax(0, 1fr);
   }
@@ -1045,15 +1185,41 @@
 .sy-gift-tile__name {
   inline-size: 100%;
 }
-/* Legendary is the only tier that glows. Scarcity should be visible from the
-   other side of the room; anything more widely used would just be noise. */
+/**
+ * Legendary is the only tier singled out. Scarcity should be visible from the
+ * other side of the room; anything more widely used would just be noise.
+ *
+ * The signal is theme-specific because the physics are. On near-black a halo
+ * works — the tile emits and the field absorbs. On porcelain there is nothing
+ * for a halo to land on, so light gets **foil**: the tier's tint printed on
+ * the stock with a clear diagonal band cut through it, which is what light
+ * looks like crossing a metallic surface. It also gets one step more
+ * elevation, so the tile is physically nearer as well as more decorated.
+ */
 .sy-gift-tile.is-legendary {
-  box-shadow: 0 0 var(--sy-glow-strong-spread)
-    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-glow-strong-alpha) * 100%), transparent);
+  background:
+    linear-gradient(
+      116deg,
+      transparent 26%,
+      color-mix(in oklab, var(--sy-bg-surface) 78%, transparent) 44%,
+      transparent 60%
+    ),
+    radial-gradient(120% 86% at 50% 0%, color-mix(in oklab, var(--rarity-solid) 22%, transparent), transparent 66%),
+    var(--sy-bg-surface);
+  box-shadow: var(--sy-elevation-raised);
 }
-.sy-gift-tile.is-legendary .sy-gift-tile__glyph {
-  text-shadow: 0 0 var(--sy-glow-base-spread)
-    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-glow-base-alpha) * 100%), transparent);
+[data-theme='dark'] .sy-gift-tile.is-legendary {
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in oklab, var(--rarity-solid) 14%, transparent), transparent 62%),
+    var(--sy-bg-surface);
+  box-shadow: 0 0 var(--sy-refract-bloom-spread)
+    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-refract-bloom-alpha) * 100%), transparent);
+}
+/* A text glow is emission, so it belongs to dark only; on white the glyph
+   would gain a coloured smudge and lose contrast for it. */
+[data-theme='dark'] .sy-gift-tile.is-legendary .sy-gift-tile__glyph {
+  text-shadow: 0 0 var(--sy-refract-edge-spread)
+    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-refract-edge-alpha) * 100%), transparent);
 }
 .sy-gift-tile.is-selected {
   border-color: var(--sy-accent-solid);
@@ -1068,7 +1234,7 @@
   block-size: 18px;
   border-radius: 50%;
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-brand);
 }
 
 /* Send panel */
@@ -1091,8 +1257,13 @@
   border: 1px solid var(--sy-border-default);
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-canvas);
+  /* Reads as a field, so it is recessed like one rather than raised. */
+  box-shadow: var(--sy-elevation-sunken);
   color: inherit;
   text-align: start;
+}
+[data-theme='dark'] .sy-gift-recipient {
+  box-shadow: none;
 }
 .sy-gift-recipient:hover {
   border-color: var(--sy-border-interactive);
@@ -1111,8 +1282,14 @@
   gap: var(--sy-space-3);
   flex-wrap: wrap;
   padding: var(--sy-space-3);
-  border: 1px solid var(--sy-border-subtle);
+  /* Grouped by tone, like the totals block below it, rather than by a box. */
+  border: 1px solid transparent;
   border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
+}
+[data-theme='dark'] .sy-gift-send__row {
+  background: none;
+  border-color: var(--sy-border-subtle);
 }
 .sy-gift-send__chosen {
   display: flex;
@@ -1183,10 +1360,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sy-space-2);
-  color: var(--sy-neutral-12);
-}
-[data-theme='light'] .sy-gift-preview__chrome {
-  color: var(--sy-neutral-1);
+  color: var(--sy-fg-on-media);
 }
 .sy-gift-preview__live {
   display: inline-flex;
@@ -1195,8 +1369,8 @@
   padding-inline: var(--sy-space-2);
   block-size: 20px;
   border-radius: var(--sy-radius-sm);
-  background: var(--sy-crimson-9);
-  color: var(--sy-on-crimson);
+  background: var(--sy-rose-9);
+  color: var(--sy-on-danger);
   font-size: var(--sy-type-caption-size);
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -1205,14 +1379,14 @@
   inline-size: 6px;
   block-size: 6px;
   border-radius: 50%;
-  background: var(--sy-on-crimson);
+  background: var(--sy-on-danger);
 }
 .sy-gift-preview__viewers {
   padding-inline: var(--sy-space-2);
   block-size: 20px;
   border-radius: var(--sy-radius-sm);
-  background: color-mix(in oklab, var(--sy-neutral-1) 62%, transparent);
-  color: var(--sy-neutral-12);
+  background: var(--sy-scrim-on-media);
+  color: var(--sy-fg-on-media);
   font-size: var(--sy-type-caption-size);
 }
 .sy-gift-preview__note {
@@ -1235,16 +1409,13 @@
   padding: var(--sy-space-2) var(--sy-space-3);
   border-radius: var(--sy-radius-lg);
   border: var(--rarity-weight) solid color-mix(in oklab, var(--rarity-border) 80%, transparent);
-  background: color-mix(in oklab, var(--sy-neutral-1) 72%, transparent);
-  color: var(--sy-neutral-12);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  backdrop-filter: blur(18px) saturate(1.4);
-  box-shadow: 0 0 var(--sy-glow-base-spread)
-    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-glow-base-alpha) * 100%), transparent);
+  background: var(--sy-scrim-on-media);
+  color: var(--sy-fg-on-media);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
+  backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
+  box-shadow: 0 0 var(--sy-refract-edge-spread)
+    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-refract-edge-alpha) * 100%), transparent);
   animation: sy-cheer-land var(--sy-dur-moderate) var(--sy-ease-spring) backwards;
-}
-[data-theme='light'] .sy-gift-cheer {
-  color: var(--sy-neutral-1);
 }
 .sy-gift-cheer__glyph {
   display: grid;
@@ -1292,7 +1463,7 @@
   align-items: center;
   gap: var(--sy-space-3);
   padding-block: var(--sy-space-2_5);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-gift-recent li:last-child {
   border-block-end: none;
@@ -1332,7 +1503,7 @@
 }
 .sy-slot.is-empty .sy-slot__glyph {
   background: var(--sy-bg-hover);
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
 }
 .sy-slot__label {
   text-transform: uppercase;
@@ -1345,7 +1516,7 @@
   gap: var(--sy-space-2) var(--sy-space-3);
   align-items: center;
   padding: var(--sy-space-3) var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-inv-expiring li:last-child {
   border-block-end: none;
@@ -1378,7 +1549,7 @@
   grid-row: 1;
   justify-self: end;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-inv-expiring li {
     grid-template-columns: auto minmax(0, 1fr) auto auto;
   }
@@ -1398,9 +1569,13 @@
   gap: var(--sy-space-2);
   border-color: color-mix(in oklab, var(--rarity-border) 55%, transparent);
 }
+/* Same argument as the gift tile: light lifts the card, dark lights it. */
 .sy-inv-card.is-legendary {
-  box-shadow: 0 0 var(--sy-glow-base-spread)
-    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-glow-base-alpha) * 100%), transparent);
+  box-shadow: var(--sy-elevation-raised);
+}
+[data-theme='dark'] .sy-inv-card.is-legendary {
+  box-shadow: 0 0 var(--sy-refract-edge-spread)
+    color-mix(in oklab, var(--rarity-solid) calc(var(--sy-refract-edge-alpha) * 100%), transparent);
 }
 .sy-inv-card__top {
   display: flex;
@@ -1468,7 +1643,7 @@
 .sy-rarity-legend__name {
   min-inline-size: 84px;
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 840px) {
   .sy-rarity-legend {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

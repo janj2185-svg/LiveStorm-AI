@@ -100,7 +100,7 @@ export function HomeScreen() {
             user accepts rather than an action already taken.
           */}
           <ScreenSection>
-            <Surface className="sy-brief" elevation="raised" radius="xl" padding="lg">
+            <Surface className="sy-brief sy-refract" elevation="raised" radius="xl" padding="lg">
               <div className="sy-brief__head">
                 <AiOrb size={38} state="idle" />
                 <div className="sy-grow">

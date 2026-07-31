@@ -114,12 +114,18 @@ const METRICS: MetricDef[] = [
   },
 ];
 
+/**
+ * Ordered by share, and coloured by the categorical series ramp rather than by
+ * one hue per source. Green and amber are spoken for by up/down and warning
+ * elsewhere on this screen, so spending them on a traffic source would make the
+ * reader stop to decide whether a colour is a label or a verdict.
+ */
 const TRAFFIC = [
-  { label: 'Following feed', share: 36.4, tone: 'var(--sy-iris-9)' },
-  { label: 'Search', share: 22.1, tone: 'var(--sy-flux-9)' },
-  { label: 'Discover', share: 19.6, tone: 'var(--sy-nova-9)' },
-  { label: 'External links', share: 13.2, tone: 'var(--sy-verdant-9)' },
-  { label: 'Spaces', share: 8.7, tone: 'var(--sy-solar-9)' },
+  { label: 'Following feed', share: 36.4, tone: 'var(--series-1)' },
+  { label: 'Search', share: 22.1, tone: 'var(--series-2)' },
+  { label: 'Discover', share: 19.6, tone: 'var(--series-3)' },
+  { label: 'External links', share: 13.2, tone: 'var(--series-4)' },
+  { label: 'Spaces', share: 8.7, tone: 'var(--series-5)' },
 ];
 
 const DEVICES = [

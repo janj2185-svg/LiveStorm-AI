@@ -4,14 +4,24 @@
  * The viewer is the product's only true two-region immersive layout: a video
  * stage that must never be letterboxed by chrome, and a chat rail that docks
  * to the side on wide surfaces and to the bottom on phones.
+ *
+ * THE TWO REGIONS DO NOT SHARE A THEME, AND THAT IS THE POINT
+ * The stage is a playback surface: it is dark in both themes, because the
+ * broadcast is the light source and wrapping it in white destroys its contrast.
+ * The chat rail is an ordinary product surface — a scrolling list of text people
+ * read for an hour — so it is light-native. The seam between them is deliberate
+ * and is the same seam the studio uses between its monitors and its controls.
+ *
+ * The stage declares its darkness by re-scoping `data-theme="dark"` onto itself
+ * in the markup, so every token inside resolves through the dark ramp rather
+ * than being faked with literal blacks.
  */
 
 .sy-live-viewer {
   display: flex;
   flex-direction: column;
   block-size: 100%;
-  background: #000;
-  color: oklch(97% 0.005 282);
+  background: var(--sy-bg-canvas);
 }
 
 .sy-live-viewer__stage {
@@ -19,6 +29,17 @@
   flex: 1;
   min-block-size: 0;
   overflow: hidden;
+  /* Resolves through the dark scope this element carries in both themes. */
+  background: var(--sy-bg-canvas);
+  color: var(--sy-fg-default);
+  /**
+   * The bottom chrome is a fixed two-row stack — a transport row and a gift
+   * row — inside its own padding. Its height is declared here, on the element
+   * both the footer and the title can read, because on wide screens the title
+   * parks directly above the chrome and a guessed offset is how a headline
+   * ends up hidden underneath the controls.
+   */
+  --viewer-chrome-block: calc(46px + 54px + var(--sy-space-3) * 3 + var(--safe-bottom, 0px));
 }
 
 .sy-live-viewer__video,
@@ -86,7 +107,20 @@
   font-size: var(--sy-type-headline-size);
   font-weight: 600;
   line-height: 1.3;
-  text-shadow: 0 1px 12px oklch(10% 0 0 / 0.6);
+  text-shadow: 0 1px 12px var(--sy-alpha-lo-64);
+}
+
+/**
+ * At phone width the identity chip, the live badge and the elapsed clock all
+ * compete for one row, and the loser is always the creator's name — the one
+ * thing the row exists to say. The category and the clock both appear again
+ * further down the screen, so they are the two that yield.
+ */
+@container screen (max-width: 559px) {
+  .sy-live-viewer__identity-text .sy-caption,
+  .sy-live-viewer__pill {
+    display: none;
+  }
 }
 
 /* ---- Bottom chrome ---- */
@@ -100,6 +134,9 @@
   flex-direction: column;
   gap: var(--sy-space-3);
   padding: var(--sy-space-3) var(--sy-space-3) calc(var(--safe-bottom, 0px) + var(--sy-space-3));
+  /* Holds the declared height honest: the stack can never be shorter than the
+     space the title has been told to leave for it. */
+  min-block-size: var(--viewer-chrome-block);
 }
 
 .sy-live-viewer__controls {
@@ -126,8 +163,8 @@
   inline-size: 6px;
   block-size: 6px;
   border-radius: 50%;
-  background: var(--sy-verdant-9);
-  box-shadow: 0 0 8px var(--sy-verdant-9);
+  background: var(--sy-verdigris-9);
+  box-shadow: 0 0 8px var(--sy-verdigris-9);
 }
 
 /* ---- Gift rail ---- */
@@ -153,15 +190,15 @@
   block-size: 54px;
   flex-shrink: 0;
   border-radius: var(--sy-radius-lg);
-  background: oklch(98% 0 0 / 0.1);
-  border: 1px solid oklch(98% 0 0 / 0.16);
+  background: var(--sy-alpha-hi-08);
+  border: 1px solid var(--sy-alpha-hi-16);
   color: inherit;
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-veil-blur));
+  backdrop-filter: blur(var(--sy-vellum-veil-blur));
   transition: scale var(--sy-transition-press), background-color var(--sy-transition-hover);
 }
 .sy-gift-chip:hover {
-  background: oklch(98% 0 0 / 0.18);
+  background: var(--sy-alpha-hi-16);
 }
 .sy-gift-chip:active {
   scale: 0.9;
@@ -176,12 +213,12 @@
 }
 /* Rarity is carried by the glyph's colour and a rim, so it survives greyscale
    through the rim's contrast difference as well as hue. */
-.sy-gift-chip.is-common .sy-gift-chip__icon { color: var(--sy-flux-11); }
-.sy-gift-chip.is-rare .sy-gift-chip__icon { color: var(--sy-iris-11); }
-.sy-gift-chip.is-epic .sy-gift-chip__icon { color: var(--sy-nova-11); }
-.sy-gift-chip.is-epic { border-color: oklch(70% 0.16 335 / 0.5); }
+.sy-gift-chip.is-common .sy-gift-chip__icon { color: var(--sy-pulse-11); }
+.sy-gift-chip.is-rare .sy-gift-chip__icon { color: var(--sy-aether-11); }
+.sy-gift-chip.is-epic .sy-gift-chip__icon { color: var(--sy-bloom-11); }
+.sy-gift-chip.is-epic { border-color: color-mix(in oklab, var(--sy-bloom-9) 50%, transparent); }
 .sy-gift-chip.is-legendary .sy-gift-chip__icon { color: var(--sy-solar-11); }
-.sy-gift-chip.is-legendary { border-color: oklch(74% 0.15 78 / 0.6); }
+.sy-gift-chip.is-legendary { border-color: color-mix(in oklab, var(--sy-solar-9) 60%, transparent); }
 
 .sy-gift-rail__more {
   flex-shrink: 0;
@@ -205,11 +242,13 @@
   gap: var(--sy-space-3);
   padding: var(--sy-space-2_5) var(--sy-space-4) var(--sy-space-2_5) var(--sy-space-2_5);
   border-radius: var(--sy-radius-xl);
-  background: oklch(20% 0.06 335 / 0.72);
-  border: 1px solid oklch(70% 0.16 335 / 0.42);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  backdrop-filter: blur(24px) saturate(1.6);
-  box-shadow: 0 0 32px oklch(62% 0.2 335 / 0.28);
+  background: color-mix(in oklab, var(--sy-bloom-2) 82%, transparent);
+  border: 1px solid color-mix(in oklab, var(--sy-bloom-9) 42%, transparent);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
+  backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
+  /* A true bloom is legible here because the toast is always over dark video. */
+  box-shadow: 0 0 var(--sy-refract-bloom-spread)
+    color-mix(in oklab, var(--sy-bloom-9) 28%, transparent);
   animation: sy-gift-land var(--sy-dur-moderate) var(--sy-ease-spring) backwards;
 }
 .sy-gift-toast__icon {
@@ -220,7 +259,7 @@
   border-radius: 50%;
   background: var(--sy-gradient-ember);
   font-size: 18px;
-  color: #fff;
+  color: var(--sy-on-creator);
 }
 
 @keyframes sy-gift-land {
@@ -238,15 +277,23 @@
 
 /* ---- Chat ---- */
 
+/**
+ * Chat is a light surface docked against a dark one. In the light theme the
+ * tonal step from stage to rail is enormous, so no rule is needed to separate
+ * them; in the dark theme the two near-blacks are close enough that the rail
+ * needs a hairline to read as a separate plane at all.
+ */
 .sy-live-chat {
   display: flex;
   flex-direction: column;
   min-block-size: 0;
   /* Phone: chat is a fixed-height bottom sheet under the stage. */
   block-size: 38%;
-  background: var(--sy-bg-canvas);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
   color: var(--sy-fg-default);
+}
+[data-theme='dark'] .sy-live-chat {
+  border-block-start: 1px solid var(--sy-border-subtle);
 }
 .sy-live-chat__head {
   display: flex;
@@ -285,7 +332,7 @@
   margin-inline-end: var(--sy-space-1_5);
 }
 /* Role is shown with an icon as well as a colour. */
-.sy-chat-line__author.is-moderator { color: var(--sy-verdant-11); }
+.sy-chat-line__author.is-moderator { color: var(--sy-verdigris-11); }
 .sy-chat-line__author.is-subscriber { color: var(--sy-solar-11); }
 .sy-chat-line__body {
   color: var(--sy-fg-default);
@@ -318,7 +365,7 @@
 
 /* ---- Wide layout: chat docks to the side ---- */
 
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-live-viewer {
     flex-direction: row;
   }
@@ -329,9 +376,11 @@
     border-inline-start: 1px solid var(--sy-border-subtle);
     flex-shrink: 0;
   }
+  /* On a wide stage the picture's subject sits centre-frame, so the headline
+     moves out of it and sits with the controls instead. */
   .sy-live-viewer__title {
     inset-block-start: auto;
-    inset-block-end: 104px;
+    inset-block-end: calc(var(--viewer-chrome-block) + var(--sy-space-2));
   }
 }
 
@@ -341,6 +390,22 @@
 
 /**
  * The control room.
+ *
+ * A STUDIO IS A TOOL, NOT A MEDIA SURFACE
+ * Broadcast software has been dark by convention for twenty years, which is a
+ * habit inherited from rooms with the lights off — not a property of the work.
+ * The work here is reading numbers: bitrate, dropped frames, dB, the clock. So
+ * the room is bright. The page is toned porcelain, every region is a near-white
+ * panel that earns its edge from shadow rather than a rule, and anything meant
+ * to be *read into* rather than acted on — health readouts, mixer channels, the
+ * meters — is a well sunk back into its panel. Raised means "you can touch it",
+ * recessed means "look at this". That single rule is what keeps a screen with
+ * this much on it quiet.
+ *
+ * The only dark things in the room are the two monitors, because they show the
+ * picture and the picture is the light source. They say so by re-scoping the
+ * theme onto their own bezel, so the feed and its burned-in chrome resolve
+ * through the dark ramp while the caption underneath stays part of the tool.
  *
  * Compact posture is one column: the programme monitor and the output toolbar
  * are always mounted, and the switch above them swaps which of the three
@@ -399,7 +464,13 @@
   min-inline-size: 0;
 }
 
-/* Every region is the same object: a bordered panel with a small caps head. */
+/**
+ * Every region is the same object: a near-white panel with a small-caps head.
+ * In light theme the panel is defined by the shadow it drops onto the toned
+ * canvas, so it carries no rule; a hairline on top of that would read as a
+ * second, contradictory edge. Dark theme keeps the hairline because a shadow
+ * cast on near-black is not visible at all.
+ */
 .sy-studio__block,
 .sy-studio__chat,
 .sy-studio__activity,
@@ -409,8 +480,16 @@
   min-block-size: 0;
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
   overflow: hidden;
+}
+[data-theme='dark'] .sy-studio__block,
+[data-theme='dark'] .sy-studio__chat,
+[data-theme='dark'] .sy-studio__activity,
+[data-theme='dark'] .sy-mixer {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-studio__block-head {
   display: flex;
@@ -492,8 +571,8 @@
   flex-shrink: 0;
 }
 .sy-scene__flag.is-live {
-  background: var(--sy-crimson-9);
-  color: var(--sy-on-crimson);
+  background: var(--sy-rose-9);
+  color: var(--sy-on-danger);
 }
 .sy-scene__flag.is-preview {
   background: var(--sy-bg-active);
@@ -574,16 +653,34 @@
   padding: var(--sy-space-2);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-monitor {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
+}
+
+/**
+ * The bezel. It carries the dark scope, which is what makes the picture sit in
+ * a piece of equipment rather than bleed into a white card — and it holds the
+ * matte even before a feed has arrived, so a monitor that is not yet receiving
+ * still looks like a monitor rather than a hole in the page.
+ */
+.sy-monitor__screen {
+  position: relative;
+  padding: 4px;
+  border-radius: var(--sy-radius-md);
+  background: var(--sy-bg-canvas);
 }
 .sy-monitor__feed {
   overflow: hidden;
 }
 /* Programme is rimmed in crimson; preview is rimmed in nothing. */
-.sy-monitor.is-programme .sy-monitor__feed {
-  box-shadow: 0 0 0 2px var(--sy-crimson-9);
+.sy-monitor.is-programme .sy-monitor__screen {
+  box-shadow: 0 0 0 2px var(--sy-rose-9);
 }
-.sy-monitor.is-preview .sy-monitor__feed {
+.sy-monitor.is-preview .sy-monitor__screen {
   box-shadow: 0 0 0 2px var(--sy-border-default);
 }
 .sy-monitor__caption {
@@ -598,14 +695,17 @@
   inset-block-start: var(--sy-space-2);
   inset-inline-start: var(--sy-space-2);
 }
+/* Burned-in chrome sits on the picture, so it uses the media-invariant pair
+   rather than the theme's foreground: it must stay legible over a feed that
+   cuts from a black studio to a white slide mid-sentence. */
 .sy-monitor__clock {
   position: absolute;
   inset-block-start: var(--sy-space-2);
   inset-inline-end: var(--sy-space-2);
   padding: 2px var(--sy-space-2);
   border-radius: var(--sy-radius-xs);
-  background: oklch(10% 0 0 / 0.66);
-  color: oklch(98% 0 0);
+  background: var(--sy-scrim-on-media);
+  color: var(--sy-fg-on-media);
   font-size: 11px;
 }
 .sy-monitor__tag {
@@ -614,8 +714,8 @@
   inset-inline-start: var(--sy-space-2);
   padding: 2px var(--sy-space-2);
   border-radius: var(--sy-radius-xs);
-  background: oklch(10% 0 0 / 0.66);
-  color: oklch(98% 0 0);
+  background: var(--sy-scrim-on-media);
+  color: var(--sy-fg-on-media);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -625,7 +725,7 @@
 .sy-monitor__safe {
   position: absolute;
   inset: 10%;
-  border: 1px dashed oklch(98% 0 0 / 0.28);
+  border: 1px dashed color-mix(in oklab, var(--sy-fg-on-media) 30%, transparent);
   border-radius: var(--sy-radius-xs);
 }
 
@@ -645,7 +745,12 @@
   padding: var(--sy-space-2_5) var(--sy-space-3);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-transition {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-transition__title {
   flex-shrink: 0;
@@ -655,9 +760,15 @@
   gap: var(--sy-space-1);
   flex: 1 1 210px;
 }
+/**
+ * Take gets a row of its own at every width. Squeezed onto the end of the
+ * choice row it fits only by shaving the chips down until "Aurora" clips, and
+ * the alternative — letting it wrap by accident — leaves a hole in the panel.
+ * A full-width bar under the choice is also the truer shape: choose above,
+ * commit below, in the direction the eye already reads.
+ */
 .sy-transition__take {
-  flex-shrink: 0;
-  margin-inline-start: auto;
+  flex: 1 1 100%;
 }
 .sy-transition__chip {
   flex: 1 1 0;
@@ -691,16 +802,34 @@
   justify-content: space-between;
   gap: var(--sy-space-2);
 }
+/* Three digits and a unit. Anything wider is width the take control needs in
+   order to stay on the line with the transition it applies — a Take that has
+   wrapped away from its choice reads as a separate, unrelated decision. */
 .sy-transition__duration .sy-input {
-  inline-size: 108px;
+  inline-size: 88px;
 }
 
 /* ---- Health strip ---- */
 
+/**
+ * The strip is one panel, not five loose cards: these five numbers are read as
+ * a single instrument cluster, and five separate shadows on the canvas would
+ * make them look like five unrelated decisions. Inside it each metric is a
+ * recessed well — the readouts are the one part of the room nobody clicks.
+ */
 .sy-health {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--sy-space-2);
+  padding: var(--sy-space-2);
+  border-radius: var(--sy-radius-lg);
+  background: var(--sy-bg-surface);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-health {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-health__cell {
   display: flex;
@@ -708,8 +837,8 @@
   gap: var(--sy-space-2);
   padding: var(--sy-space-2) var(--sy-space-2_5);
   border-radius: var(--sy-radius-md);
-  background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-canvas);
+  box-shadow: var(--sy-elevation-sunken);
   min-inline-size: 0;
 }
 .sy-health__dot {
@@ -720,10 +849,16 @@
 }
 .sy-health__cell.is-good .sy-health__dot {
   background: var(--sy-success-solid);
-  box-shadow: 0 0 8px var(--sy-success-solid);
 }
 .sy-health__cell.is-warn .sy-health__dot {
   background: var(--sy-warning-solid);
+}
+/* A halo is how a lit indicator behaves on a dark panel and how a smudge
+   behaves on a white one, so the dot only blooms where blooming is legible. */
+[data-theme='dark'] .sy-health__cell.is-good .sy-health__dot {
+  box-shadow: 0 0 8px var(--sy-success-solid);
+}
+[data-theme='dark'] .sy-health__cell.is-warn .sy-health__dot {
   box-shadow: 0 0 8px var(--sy-warning-solid);
 }
 .sy-health__text {
@@ -770,8 +905,14 @@
   padding: var(--sy-space-3);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  /* The output bar outranks every other panel — it is the one that ends the
+     broadcast — so it sits a step further off the page than they do. */
   box-shadow: var(--sy-elevation-raised);
+}
+[data-theme='dark'] .sy-studio__toolbar {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-studio__uptime {
   display: flex;
@@ -806,7 +947,7 @@
   inline-size: 9px;
   block-size: 9px;
   border-radius: 50%;
-  background: var(--sy-crimson-9);
+  background: var(--sy-rose-9);
   animation: sy-live-pulse 1.8s var(--sy-ease-standard) infinite;
 }
 
@@ -818,6 +959,8 @@
   gap: var(--sy-space-3);
   padding: var(--sy-space-3);
 }
+/* A channel strip is a well cut into the console, the same object the health
+   readouts are, so it is recessed rather than rimmed. */
 .sy-mixer__channel {
   display: flex;
   flex-direction: column;
@@ -825,7 +968,7 @@
   padding: var(--sy-space-2_5);
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-canvas);
-  border: 1px solid var(--sy-border-subtle);
+  box-shadow: var(--sy-elevation-sunken);
   min-inline-size: 0;
 }
 .sy-mixer__label {
@@ -878,10 +1021,10 @@
     repeating-linear-gradient(90deg, transparent 0 4px, var(--sy-bg-canvas) 4px 6px),
     linear-gradient(
       90deg,
-      var(--sy-verdant-9) 0%,
-      var(--sy-verdant-9) 66%,
+      var(--sy-verdigris-9) 0%,
+      var(--sy-verdigris-9) 66%,
       var(--sy-solar-9) 82%,
-      var(--sy-crimson-9) 100%
+      var(--sy-rose-9) 100%
     );
 }
 .sy-meter__peak {
@@ -983,13 +1126,23 @@
 .sy-activity__text strong {
   color: var(--sy-fg-default);
 }
+/**
+ * The one refracted edge in the room. The suggestion below it is written by the
+ * assistant, not by the broadcaster, and the spectral hairline is the system's
+ * mark for that. It is spent here rather than on "Take to programme" because a
+ * take is already the loudest control on the screen; authorship is the thing
+ * that would otherwise go unsaid.
+ */
 .sy-studio__thanks {
   display: flex;
   align-items: center;
   gap: var(--sy-space-2);
   padding: var(--sy-space-2_5) var(--sy-space-3);
-  border-block-start: 1px solid var(--sy-border-subtle);
   flex-shrink: 0;
+}
+.sy-studio__thanks-rule {
+  flex-shrink: 0;
+  margin: 0;
 }
 
 /* ---- Medium: monitors pair up, mixer goes to three columns ----
@@ -997,7 +1150,7 @@
    a portrait tablet is 834px wide but only offers about 758px once the icon
    rail is deducted, so a 768px query would miss the device it was written for. */
 
-@container screen (min-width: 700px) {
+@container screen (min-width: 560px) {
   .sy-studio__monitors {
     grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
   }
@@ -1008,15 +1161,25 @@
 
 /* ---- Expanded: the full three-column control room ---- */
 
-@container screen (min-width: 992px) {
+@container screen (min-width: 880px) {
   /* Once the room fits, it stops being a page: nothing scrolls but the panels
      that are meant to, so the output toolbar never leaves the glass. */
   .sy-studio {
     overflow: hidden;
-    /* The side columns are held to the narrowest width their content survives
-       at, because every pixel they give up goes to the programme monitor. */
-    grid-template-columns: 216px minmax(0, 1fr) 288px;
+    /**
+     * The side columns are sized from the container rather than stepped at a
+     * second breakpoint: they are held to the narrowest width their content
+     * survives at, allowed to grow with the room, and capped once the
+     * programme monitor has all the pixels it can use. Every pixel they give
+     * up goes to the picture.
+     */
+    grid-template-columns:
+      clamp(204px, 19cqi, 268px)
+      minmax(0, 1fr)
+      clamp(272px, 25cqi, 344px);
     grid-template-rows: minmax(0, 1fr);
+    gap: var(--sy-space-4);
+    padding: var(--sy-space-4);
     block-size: 100%;
     min-block-size: 0;
     align-items: stretch;
@@ -1059,19 +1222,9 @@
     flex: 0 0 auto;
     max-block-size: 46%;
   }
-  /* In the narrow room the scene name matters more than the scene picture. */
+  /* In the narrow room the scene name matters more than the scene picture, so
+     the thumb shrinks with the column it lives in. */
   .sy-scene__thumb {
-    inline-size: 44px;
-  }
-}
-
-@container screen (min-width: 1152px) {
-  .sy-studio {
-    grid-template-columns: 268px minmax(0, 1fr) 344px;
-    gap: var(--sy-space-4);
-    padding: var(--sy-space-4);
-  }
-  .sy-scene__thumb {
-    inline-size: 56px;
+    inline-size: clamp(44px, 5cqi, 56px);
   }
 }

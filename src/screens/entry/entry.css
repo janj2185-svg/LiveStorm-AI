@@ -2,33 +2,64 @@
  * Entry screen styles — Welcome, Authentication, Onboarding.
  *
  * These three surfaces share one job: get a stranger to a first useful moment.
- * They also share one visual device — the aurora field with a single opaque
+ * They also share one visual device — the lumen field with a single opaque
  * object floating on it — which is why their styles live together.
+ *
+ * They are the only screens in the product that render *immersive*: no top bar,
+ * no rail, no tab bar. Two consequences run through everything below.
+ *
+ * 1. THE SCREEN OWNS ITS SCROLL. The shell's scrolling main region does not
+ *    exist here, so each root is a fixed-height box with its own scroller
+ *    inside it. Without that the fold is a hard edge and everything under it is
+ *    unreachable.
+ *
+ * 2. THE SCREEN OWNS ITS SAFE AREAS. The top bar normally absorbs the status
+ *    bar and the tab bar clears the home indicator. With no chrome, content
+ *    starts at y=0 and ends at the bottom edge — straight under the hardware —
+ *    unless the screen insets itself.
  */
+
+:where(.sy-welcome, .sy-auth, .sy-onboard-screen) {
+  --entry-safe-top: var(--safe-top, env(safe-area-inset-top, 0px));
+  --entry-safe-bottom: var(--safe-bottom, env(safe-area-inset-bottom, 0px));
+}
 
 /* ------------------------------------------------------------------ */
 /* Welcome                                                             */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The root is the frame; the scroller is inside it. Keeping the lumen field out
+ * of the scrolling box is the point of the split — an ambient wash that slides
+ * up and off the top with the content stops reading as light in the room and
+ * starts reading as a very large sticker.
+ */
 .sy-welcome {
   position: relative;
-  display: grid;
-  align-items: center;
+  block-size: 100%;
   overflow: hidden;
 }
 
-/**
- * The aurora is a full-bleed field, so every text layer above it is explicitly
- * promoted. Without the promotion the gradient would win the paint order and
- * the headline would sit *inside* the colour rather than on top of it.
- */
-.sy-welcome__inner {
+.sy-welcome__scroll {
   position: relative;
   z-index: var(--sy-z-raised);
   display: flex;
   flex-direction: column;
+  /* `safe` centring: centred while the composition fits, top-aligned the moment
+     it does not, because overflow above the start edge cannot be scrolled to. */
+  justify-content: safe center;
+  block-size: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.sy-welcome__inner {
+  display: flex;
+  flex-direction: column;
   gap: var(--sy-space-12);
-  padding-block: var(--sy-space-10) var(--sy-space-12);
+  padding-block: calc(var(--entry-safe-top) + var(--sy-space-10))
+    calc(var(--entry-safe-bottom) + var(--sy-space-12));
 }
 
 .sy-welcome__hero {
@@ -51,6 +82,17 @@
      display line with one orphaned word looks like a bug, not a headline. */
   text-wrap: balance;
   max-inline-size: var(--sy-measure-tight);
+}
+
+/* The claim is the whole argument, and this is the one place in the product
+   with nothing competing for the eye — so the serif is allowed its largest
+   size rather than the section-heading size it takes everywhere else. */
+@container screen (min-width: 880px) {
+  .sy-welcome__headline {
+    font-size: var(--sy-type-display1-size);
+    line-height: 1.04;
+    letter-spacing: var(--sy-type-display1-tracking);
+  }
 }
 
 .sy-welcome__lede {
@@ -128,19 +170,33 @@
   max-inline-size: 440px;
   margin-inline: auto;
 }
-/* A halo behind the stack so the cards read as lifted off the field rather
-   than pasted onto it. */
+/**
+ * The bloom behind the stack, so the cards read as lifted off the field rather
+ * than pasted onto it.
+ *
+ * Light and dark cannot share one recipe here. A saturated accent radial behind
+ * near-white cards on porcelain does not read as a halo — it reads as a smudge
+ * under them, because a dark wash on a bright ground is a stain, not a light.
+ * So the light theme adds what the principle actually asks for: more *light*.
+ * The stack sits in a pool of near-white, brighter than the page around it.
+ * Dark keeps the accent glow, which is the only theme where emission is real.
+ */
 .sy-welcome__preview::before {
   content: '';
   position: absolute;
   inset: calc(var(--sy-space-8) * -1);
   border-radius: var(--sy-radius-3xl);
+  background: radial-gradient(62% 54% at 50% 42%, var(--sy-bg-surface), transparent 70%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+[data-theme='dark'] .sy-welcome__preview::before {
   background: radial-gradient(
     60% 50% at 50% 40%,
-    color-mix(in oklab, var(--sy-accent-solid) 26%, transparent),
+    color-mix(in oklab, var(--sy-accent-solid) 30%, transparent),
     transparent 72%
   );
-  pointer-events: none;
+  opacity: 1;
 }
 .sy-welcome__card {
   position: relative;
@@ -159,7 +215,7 @@
 .sy-welcome__stream-clock {
   padding: 2px var(--sy-space-1_5);
   border-radius: var(--sy-radius-xs);
-  background: var(--sy-glass-dome-fill);
+  background: var(--sy-vellum-dome-fill);
   color: var(--sy-fg-default);
   font-size: var(--sy-type-overline-size);
 }
@@ -170,11 +226,12 @@
   display: flex;
   align-items: center;
   gap: var(--sy-space-2);
-  /* Sits on the media scrim, which is dark in both themes. */
-  color: var(--sy-neutral-12);
+  /* The media scrim is dark in both themes, so this caption takes the
+     theme-invariant on-media foreground rather than either theme's own. */
+  color: var(--sy-fg-on-media);
 }
-[data-theme='light'] .sy-welcome__stream-bottom {
-  color: var(--sy-neutral-1);
+.sy-welcome__stream-bottom .sy-caption {
+  color: var(--sy-fg-on-media-muted);
 }
 .sy-welcome__stream-title {
   padding: var(--sy-space-3) var(--sy-space-4) var(--sy-space-4);
@@ -199,17 +256,35 @@
   gap: var(--sy-space-3);
 }
 
-/* Assistant-authored surfaces carry the hairline aurora border. */
+/**
+ * The one refraction on this screen. Assistant-authored content is exactly what
+ * the hairline is rationed for, and spending it here rather than on the hero
+ * means the spectral edge lands on the single card that is making a claim about
+ * the product's intelligence.
+ *
+ * `.sy-refract` paints its stroke by clipping a gradient to the border box, so
+ * anything that later sets a real `border-color` covers it. Dark mode's
+ * `.sy-surface` hairline is one such rule and outranks the class, so it is
+ * released here by name.
+ */
 .sy-welcome__card--ai {
+  --refract-fill: var(--sy-bg-raised);
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-2_5);
   inline-size: 88%;
   margin-inline-start: auto;
+}
+[data-theme='dark'] .sy-welcome__card--ai {
+  border-color: transparent;
+}
+/* The class also has to out-specify the Surface fill that loads after it, or the
+   card paints its own background over the clipped gradient and the edge is
+   simply never there. Same restatement the core and assistant groups carry. */
+.sy-welcome__card--ai.sy-refract {
   background:
-    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
-    var(--sy-gradient-aurora) border-box;
-  border: 1px solid transparent;
+    linear-gradient(var(--refract-fill), var(--refract-fill)) padding-box,
+    var(--sy-gradient-prism) border-box;
 }
 .sy-welcome__ai-head {
   display: flex;
@@ -221,9 +296,13 @@
   gap: var(--sy-space-2);
 }
 
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
+  /* Once the buttons stop filling the row they have to be centred explicitly:
+     the hero centres its children, but a full-width flex row centres nothing
+     inside itself, and a left-hung CTA under centred copy reads as a mistake. */
   .sy-welcome__cta {
     flex-direction: row;
+    justify-content: center;
   }
   .sy-welcome__cta .sy-btn {
     inline-size: auto;
@@ -244,28 +323,36 @@
  * a comfortable measure *and* the preview to stay above 320px — below that the
  * live tile stops being a live tile and starts being a thumbnail.
  *
- * This deliberately does not fire in the medium posture, where the icon rail
- * leaves the screen about 758px: splitting there would leave the headline a
- * ~360px column, and a display-scale headline broken over five lines beside a
- * cramped preview is a worse first impression than the centred column it
- * replaces. The tablet gets the phone's composition at a larger scale.
+ * 880, the system's widest threshold, is what makes that true. Immersive
+ * screens have no rail to subtract, so the content column *is* the device: a
+ * tablet hands this screen 834px, which two columns would cut into a ~390px
+ * hero and a ~380px preview. That is where the four value props collapse into
+ * three-word lines. The tablet therefore gets the phone's composition at a
+ * larger scale, and only a desktop-width frame earns the split.
  */
-@container screen (min-width: 768px) {
+@container screen (min-width: 880px) {
   .sy-welcome__inner {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
     align-items: center;
-    gap: var(--sy-space-10);
-    padding-block: var(--sy-space-12);
+    gap: var(--sy-space-16);
+    padding-block: calc(var(--entry-safe-top) + var(--sy-space-12))
+      calc(var(--entry-safe-bottom) + var(--sy-space-12));
   }
   .sy-welcome__hero {
     align-items: flex-start;
     text-align: start;
   }
+  .sy-welcome__cta {
+    justify-content: flex-start;
+  }
   .sy-welcome__brand {
     flex-direction: row;
     align-items: center;
     gap: var(--sy-space-5);
+  }
+  .sy-welcome__props {
+    gap: var(--sy-space-6) var(--sy-space-8);
   }
   .sy-welcome__preview {
     max-inline-size: none;
@@ -280,44 +367,45 @@
   }
 }
 
-@container screen (min-width: 1024px) {
-  .sy-welcome__inner {
-    gap: var(--sy-space-16);
-  }
-  .sy-welcome__props {
-    gap: var(--sy-space-6) var(--sy-space-8);
-  }
-}
-
 /* ------------------------------------------------------------------ */
 /* Authentication                                                      */
 /* ------------------------------------------------------------------ */
 
 .sy-auth {
   position: relative;
-  display: grid;
-  place-items: center;
+  block-size: 100%;
   overflow: hidden;
 }
 
-.sy-auth__inner {
+.sy-auth__scroll {
   position: relative;
   z-index: var(--sy-z-raised);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: safe center;
+  block-size: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.sy-auth__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--sy-space-5);
   max-inline-size: 468px;
-  padding-block: var(--sy-space-8) var(--sy-space-10);
-  /* Full bleed on a phone: see the card rule below. */
-  padding-inline: 0;
+  padding-block: calc(var(--entry-safe-top) + var(--sy-space-8))
+    calc(var(--entry-safe-bottom) + var(--sy-space-8));
 }
 
 /**
- * On a phone the card sheds its border, fill and shadow. A bordered card inside
- * a bordered device is two frames doing one job, and the inner one only steals
- * horizontal space from the inputs. From 640px up it becomes a real object
- * floating on the field, which is where the elevation starts earning its keep.
+ * On a phone the card sheds its fill and shadow and the screen becomes the
+ * card. A bordered card inside a bordered device is two frames doing one job,
+ * and the inner one only steals horizontal space from the inputs. From 560px up
+ * it becomes a real object floating on the field, which is where the elevation
+ * starts earning its keep.
  */
 .sy-auth__card {
   inline-size: 100%;
@@ -328,6 +416,14 @@
   border-color: transparent;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* The single refraction on this screen: a spectral hairline closing the brand
+   head, which is the only part of the card that belongs to SYLORA rather than
+   to the form. */
+.sy-auth__rule {
+  inline-size: var(--sy-space-16);
+  align-self: center;
 }
 
 .sy-auth__head {
@@ -403,16 +499,38 @@
   padding-inline: var(--sy-space-4);
 }
 
-@container screen (min-width: 640px) {
+/**
+ * The floating card. It carries a real overlay shadow, so in the light theme it
+ * carries no border: the shadow is the edge, and adding a hairline underneath
+ * it is what makes a bright interface look like a 2012 web form. Dark keeps the
+ * hairline, because a shadow on near-black cannot describe an edge alone.
+ */
+@container screen (min-width: 560px) {
   .sy-auth__inner {
-    padding-inline: var(--sy-space-4);
+    max-inline-size: 500px;
   }
   .sy-auth__card {
-    max-inline-size: 420px;
     background: var(--sy-bg-raised);
-    border-color: var(--sy-border-subtle);
+    border-color: transparent;
     border-radius: var(--sy-radius-2xl);
     box-shadow: var(--sy-elevation-overlay);
+    padding: var(--sy-space-8);
+  }
+  [data-theme='dark'] .sy-auth__card {
+    border-color: var(--sy-border-subtle);
+  }
+}
+
+/* A landing page at desktop width should not look like a phone screenshot
+   pasted onto a wall: the card grows, and the space around it grows with it. */
+@container screen (min-width: 880px) {
+  .sy-auth__inner {
+    max-inline-size: 560px;
+    gap: var(--sy-space-6);
+  }
+  .sy-auth__card {
+    padding: var(--sy-space-10);
+    gap: var(--sy-space-6);
   }
 }
 
@@ -426,10 +544,22 @@
  * Continue — neither of which survives letting the whole screen scroll as one.
  */
 .sy-onboard-screen {
+  position: relative;
   display: flex;
   flex-direction: column;
   block-size: 100%;
   min-block-size: 0;
+  overflow: hidden;
+}
+
+/* The lumen field is the first child and paints behind everything, so the three
+   bands are promoted rather than given opaque fills — an ambient wash that stops
+   at a hairline is not ambient. */
+.sy-onboard__steps,
+.sy-onboard__scroll,
+.sy-onboard__footer {
+  position: relative;
+  z-index: var(--sy-z-raised);
 }
 
 .sy-onboard__scroll {
@@ -449,9 +579,8 @@
 
 .sy-onboard__steps {
   flex: 0 0 auto;
-  padding-block: var(--sy-space-5) var(--sy-space-4);
+  padding-block: calc(var(--entry-safe-top) + var(--sy-space-5)) var(--sy-space-4);
   border-block-end: 1px solid var(--sy-border-subtle);
-  background: var(--sy-bg-canvas);
 }
 .sy-onboard__steps-inner {
   display: flex;
@@ -494,8 +623,8 @@
 /* The current segment carries the brand gradient — the one place in the flow
    where the eye should land first. */
 .sy-step.is-current .sy-step__track {
-  background: var(--sy-gradient-aurora);
-  box-shadow: 0 0 var(--sy-glow-base-spread)
+  background: var(--sy-gradient-prism);
+  box-shadow: 0 0 var(--sy-refract-edge-spread)
     color-mix(in oklab, var(--sy-accent-solid) 40%, transparent);
 }
 .sy-step__name {
@@ -534,7 +663,9 @@
 }
 
 /* The count is a status, so it reads as one: icon, then a sentence that says
-   what is missing rather than a bare number next to a dead button. */
+   what is missing rather than a bare number next to a dead button.
+   It sits above the page rather than being outlined on it — near-white with a
+   contact shadow in light, a hairline in dark where a shadow cannot be seen. */
 .sy-onboard__count {
   display: flex;
   align-items: center;
@@ -542,10 +673,14 @@
   padding: var(--sy-space-2_5) var(--sy-space-3);
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
   color: var(--sy-fg-muted);
   align-self: flex-start;
   max-inline-size: 100%;
+}
+[data-theme='dark'] .sy-onboard__count {
+  border-color: var(--sy-border-subtle);
 }
 .sy-onboard__count strong {
   color: var(--sy-fg-default);
@@ -560,9 +695,13 @@
 
 /* Disclosure */
 .sy-why {
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
+  box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-why {
+  border-color: var(--sy-border-subtle);
 }
 .sy-why__summary {
   display: flex;
@@ -641,9 +780,8 @@
    controls never read as part of the step's content. */
 .sy-onboard__footer {
   flex: 0 0 auto;
-  padding-block: var(--sy-space-3);
+  padding-block: var(--sy-space-3) calc(var(--entry-safe-bottom) + var(--sy-space-3));
   border-block-start: 1px solid var(--sy-border-subtle);
-  background: var(--sy-bg-canvas);
 }
 .sy-onboard__footer-inner {
   display: flex;
@@ -655,7 +793,7 @@
   display: none;
 }
 
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-step__name {
     display: flex;
   }
@@ -665,32 +803,52 @@
   .sy-onboard__footer-count {
     display: inline;
   }
+  /* Stacked but wide: the preview is a band under the chips rather than a
+     narrow list, so the answer to "what does this pick change?" is still a
+     glance away when there is no room to put it beside the question. */
+  .sy-onboard__matches {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sy-space-3) var(--sy-space-5);
+  }
 }
 
 /**
- * The preview moves alongside the chips as early as it can bear to. 700px, not
- * 768px: the medium posture spends part of its width on the icon rail and hands
- * the screen roughly 758px, and a preview that answers "what does this pick do?"
- * is worth far more beside the pick than a scroll below it.
+ * The preview moves alongside the chips at the system's medium threshold. It
+ * cannot come earlier: the aside needs 300px and the chip grid needs the rest,
+ * and below 840 that leaves the chips a column too narrow to hold a two-word
+ * label without wrapping.
+ *
+ * Sticky, so the answer stays on screen while the question is still being
+ * answered — the pick and its consequence must never be a scroll apart.
  */
-@container screen (min-width: 700px) {
+@container screen (min-width: 840px) {
   .sy-onboard__body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
     align-items: start;
-    gap: var(--sy-space-6);
+    gap: var(--sy-space-8);
   }
-  /* Sticky so the answer stays on screen while the question is still being
-     answered — the pick and its consequence must never be a scroll apart. */
+  .sy-onboard__matches {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sy-space-3);
+  }
   .sy-onboard__aside {
     position: sticky;
     inset-block-start: var(--sy-space-6);
   }
 }
 
-@container screen (min-width: 1024px) {
-  .sy-onboard__body {
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: var(--sy-space-8);
+/**
+ * A setup step is a single question, so the column stops growing well before
+ * the 1440px content cap. Sixteen chips spread across 1100px already read as
+ * two long rows; across the full width they read as a table of contents.
+ */
+@container screen (min-width: 880px) {
+  .sy-onboard__body,
+  .sy-onboard__steps-inner,
+  .sy-onboard__footer-inner {
+    max-inline-size: 1100px;
+    margin-inline: auto;
   }
 }

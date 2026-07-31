@@ -14,9 +14,9 @@
  * marketing image can promise anything; a rendered product cannot, and that
  * asymmetry is the most honest thing on the page.
  *
- * Below 768px the preview stacks under the hero and the whole column centres,
- * because a phone visitor is reading, not comparing. Above it, the split gives
- * the eye somewhere to land after the CTA pair.
+ * Below 880px the preview stacks under the hero and the whole column centres,
+ * because a phone or tablet visitor is reading, not comparing. Above it, the
+ * split gives the eye somewhere to land after the CTA pair.
  *
  * The screen root doubles as the layout box: a percentage min-height only
  * resolves against a definite parent, and `.sy-screen` is the only ancestor
@@ -70,132 +70,141 @@ export function WelcomeScreen() {
 
   return (
     <div className="sy-screen sy-welcome">
-      {/* Ambient brand field: colour that reads as being behind the interface. */}
-      <div className="sy-aurora" />
+      {/* Ambient brand field: colour that reads as being behind the interface.
+          It sits outside the scroller so it stays put while the page moves. */}
+      <div className="sy-lumen" />
 
-      <div className="sy-welcome__inner sy-screen__inner">
-        <div className="sy-welcome__hero sy-enter">
-          <div className="sy-welcome__brand">
-            <LogoMark size={72} tone="gradient" title="SYLORA" />
-            <Badge tone="accent" variant="soft" icon="sparkles">
-              Creator OS · 2.0
-            </Badge>
-          </div>
-
-          <h1 className="sy-display-2 sy-welcome__headline">
-            Live, social, learning and income — <span className="sy-gradient-text">one system</span>.
-          </h1>
-
-          <p className="sy-body-lg sy-fg-muted sy-welcome__lede">
-            Broadcast-grade streaming, a feed that stays chronological, an assistant grounded in
-            your own analytics, and payouts that clear in three days. Everything a creator currently
-            stitches together from six separate products.
-          </p>
-
-          <div className="sy-welcome__cta">
-            <Button variant="primary" size="lg" iconEnd="arrowRight">
-              Create your account
-            </Button>
-            <Button variant="secondary" size="lg">
-              Sign in
-            </Button>
-          </div>
-
-          {/* Muted, not quiet: this line answers "what will this cost me?",
-              which is the question standing between a reader and the button
-              directly above it — too load-bearing to be the faintest text on
-              the screen. */}
-          <p className="sy-caption sy-fg-muted sy-welcome__cta-note">
-            Free below 1,000 followers. No card up front, no exclusivity clause, export any time.
-          </p>
-
-          <ul className="sy-welcome__props">
-            {VALUE_PROPS.map((prop) => (
-              <li key={prop.title} className="sy-welcome__prop">
-                <span className="sy-tile-icon sy-welcome__prop-icon">
-                  <Icon name={prop.icon} size={20} />
-                </span>
-                <div className="sy-welcome__prop-text">
-                  <h2 className="sy-label">{prop.title}</h2>
-                  <p className="sy-body-sm sy-fg-muted">{prop.body}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          {/* Social proof comes last: numbers persuade nobody who has not first
-              understood what the product does. */}
-          <div className="sy-welcome__proof">
-            <AvatarGroup people={CREATORS.map((creator) => ({ name: creator.name }))} max={5} size={34} />
-            <div className="sy-welcome__proof-text">
-              <p className="sy-body-sm">
-                <strong>482K creators</strong> · 1.2B minutes watched monthly ·{' '}
-                <strong>€41.6M</strong> paid out last year
-              </p>
-              <p className="sy-caption sy-fg-quiet">
-                Amara Okonkwo, Priya Raghunathan, Dr. Ngozi Adeyemi and 482,000 others publish here.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/*
-          The preview is a stack rather than a single frame: three cards from
-          three different surfaces of the product, so the "one system" claim in
-          the headline is demonstrated instead of repeated.
-        */}
-        <div className="sy-welcome__preview">
-          <Surface
-            className="sy-welcome__card sy-welcome__card--stream"
-            elevation="lifted"
-            radius="xl"
-            padding="none"
-          >
-            <Media seed={featured.id} ratio="16/9" scrim radius="xl">
-              <div className="sy-welcome__stream-top">
-                <LiveBadge viewers={featured.viewers} />
-                <span className="sy-mono sy-welcome__stream-clock">{featured.duration}</span>
-              </div>
-              <div className="sy-welcome__stream-bottom">
-                <Avatar name={featured.creator.name} size={30} ring="live" />
-                <div className="sy-grow">
-                  <p className="sy-label sy-truncate">{featured.creator.name}</p>
-                  <p className="sy-caption sy-truncate">{featured.category}</p>
-                </div>
-              </div>
-            </Media>
-            <p className="sy-welcome__stream-title sy-clamp-2">{featured.title}</p>
-          </Surface>
-
-          <Surface className="sy-welcome__card sy-welcome__card--stat" elevation="overlay" radius="lg">
-            <div className="sy-welcome__stat-head">
-              <span className="sy-caption sy-fg-muted">Watch time this week</span>
-              <Badge tone="success" variant="soft" icon="trendUp">
-                +18.2%
+      <div className="sy-welcome__scroll">
+        <div className="sy-welcome__inner sy-screen__inner">
+          <div className="sy-welcome__hero sy-enter">
+            <div className="sy-welcome__brand">
+              <LogoMark size={72} tone="spectral" title="SYLORA" />
+              <Badge tone="accent" variant="soft" icon="sparkles">
+                Creator OS · 2.0
               </Badge>
             </div>
-            <p className="sy-mono-lg">41h 12m</p>
-            <Sparkline data={[42, 58, 51, 77, 94, 86, 68]} width={148} height={34} tone="success" />
-          </Surface>
 
-          <Surface className="sy-welcome__card sy-welcome__card--ai" elevation="overlay" radius="lg">
-            <div className="sy-welcome__ai-head">
-              <AiOrb size={28} state="idle" />
-              <span className="sy-overline sy-fg-accent">Assistant</span>
-            </div>
-            <p className="sy-body-sm">
-              Retention drops 23% at minute 12, where you switch to screen share. Want a transition
-              script?
+            <h1 className="sy-display-2 sy-welcome__headline">
+              Live, social, learning and income — <span className="sy-gradient-text">one system</span>.
+            </h1>
+
+            <p className="sy-body-lg sy-fg-muted sy-welcome__lede">
+              Broadcast-grade streaming, a feed that stays chronological, an assistant grounded in
+              your own analytics, and payouts that clear in three days. Everything a creator currently
+              stitches together from six separate products.
             </p>
-            <div className="sy-welcome__ai-actions">
-              <Button variant="primary" size="xs" icon="check">
-                Approve
+
+            <div className="sy-welcome__cta">
+              <Button variant="primary" size="lg" iconEnd="arrowRight">
+                Create your account
               </Button>
-              <Button variant="ghost" size="xs">
-                Not now
+              <Button variant="secondary" size="lg">
+                Sign in
               </Button>
             </div>
-          </Surface>
+
+            {/* Muted, not quiet: this line answers "what will this cost me?",
+                which is the question standing between a reader and the button
+                directly above it — too load-bearing to be the faintest text on
+                the screen. */}
+            <p className="sy-caption sy-fg-muted sy-welcome__cta-note">
+              Free below 1,000 followers. No card up front, no exclusivity clause, export any time.
+            </p>
+
+            <ul className="sy-welcome__props">
+              {VALUE_PROPS.map((prop) => (
+                <li key={prop.title} className="sy-welcome__prop">
+                  <span className="sy-tile-icon sy-welcome__prop-icon">
+                    <Icon name={prop.icon} size={20} />
+                  </span>
+                  <div className="sy-welcome__prop-text">
+                    <h2 className="sy-label">{prop.title}</h2>
+                    <p className="sy-body-sm sy-fg-muted">{prop.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Social proof comes last: numbers persuade nobody who has not first
+                understood what the product does. */}
+            <div className="sy-welcome__proof">
+              <AvatarGroup people={CREATORS.map((creator) => ({ name: creator.name }))} max={5} size={34} />
+              <div className="sy-welcome__proof-text">
+                <p className="sy-body-sm">
+                  <strong>482K creators</strong> · 1.2B minutes watched monthly ·{' '}
+                  <strong>€41.6M</strong> paid out last year
+                </p>
+                <p className="sy-caption sy-fg-quiet">
+                  Amara Okonkwo, Priya Raghunathan, Dr. Ngozi Adeyemi and 482,000 others publish here.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/*
+            The preview is a stack rather than a single frame: three cards from
+            three different surfaces of the product, so the "one system" claim in
+            the headline is demonstrated instead of repeated.
+          */}
+          <div className="sy-welcome__preview">
+            <Surface
+              className="sy-welcome__card sy-welcome__card--stream"
+              elevation="lifted"
+              radius="xl"
+              padding="none"
+            >
+              <Media seed={featured.id} ratio="16/9" scrim radius="xl">
+                <div className="sy-welcome__stream-top">
+                  <LiveBadge viewers={featured.viewers} />
+                  <span className="sy-mono sy-welcome__stream-clock">{featured.duration}</span>
+                </div>
+                <div className="sy-welcome__stream-bottom">
+                  <Avatar name={featured.creator.name} size={30} ring="live" />
+                  <div className="sy-grow">
+                    <p className="sy-label sy-truncate">{featured.creator.name}</p>
+                    <p className="sy-caption sy-truncate">{featured.category}</p>
+                  </div>
+                </div>
+              </Media>
+              <p className="sy-welcome__stream-title sy-clamp-2">{featured.title}</p>
+            </Surface>
+
+            <Surface className="sy-welcome__card sy-welcome__card--stat" elevation="overlay" radius="lg">
+              <div className="sy-welcome__stat-head">
+                <span className="sy-caption sy-fg-muted">Watch time this week</span>
+                <Badge tone="success" variant="soft" icon="trendUp">
+                  +18.2%
+                </Badge>
+              </div>
+              <p className="sy-mono-lg">41h 12m</p>
+              <Sparkline data={[42, 58, 51, 77, 94, 86, 68]} width={148} height={34} tone="success" />
+            </Surface>
+
+            {/* The one refracting object on the page — the shared signature for
+                assistant-authored content, not a decoration on a card. */}
+            <Surface
+              className="sy-welcome__card sy-welcome__card--ai sy-refract"
+              elevation="overlay"
+              radius="lg"
+            >
+              <div className="sy-welcome__ai-head">
+                <AiOrb size={28} state="idle" />
+                <span className="sy-overline sy-fg-accent">Assistant</span>
+              </div>
+              <p className="sy-body-sm">
+                Retention drops 23% at minute 12, where you switch to screen share. Want a transition
+                script?
+              </p>
+              <div className="sy-welcome__ai-actions">
+                <Button variant="primary" size="xs" icon="check">
+                  Approve
+                </Button>
+                <Button variant="ghost" size="xs">
+                  Not now
+                </Button>
+              </div>
+            </Surface>
+          </div>
         </div>
       </div>
     </div>

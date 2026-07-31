@@ -316,16 +316,21 @@ export function WalletScreen() {
  * the date from the hero on purpose: it is the one number people re-check.
  */
 export function WalletContextPanel() {
+  /*
+    Coloured from the categorical series ramp rather than one brand hue per
+    revenue line: the four semantic families would put a success green next to
+    a danger-adjacent magenta in a chart where nothing is good or bad.
+  */
   const segments = [
-    { label: 'Subscriptions', value: 1918, tone: 'var(--sy-accent-solid)' },
-    { label: 'Gifts', value: 843, tone: 'var(--sy-creator-solid)' },
-    { label: 'Marketplace', value: 566, tone: 'var(--sy-live-solid)' },
-    { label: 'Courses', value: 1246, tone: 'var(--sy-success-solid)' },
+    { label: 'Subscriptions', value: 1918, tone: 'var(--series-1)' },
+    { label: 'Gifts', value: 843, tone: 'var(--series-3)' },
+    { label: 'Marketplace', value: 566, tone: 'var(--series-5)' },
+    { label: 'Courses', value: 1246, tone: 'var(--series-6)' },
   ];
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
 
   return (
-    <div className="sy-stack sy-gap-6">
+    <div className="sy-stack sy-gap-6 sy-wallet-panel">
       <section>
         <h3 className="sy-label sy-context-title">February so far</h3>
         <div className="sy-wallet-panel__donut">

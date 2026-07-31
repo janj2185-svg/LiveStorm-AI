@@ -22,6 +22,12 @@
  * the safe centre band but well clear of the tap zones' visual centre, because
  * a sticker that swallows a "next" tap is the fastest way to make people stop
  * tapping stickers.
+ *
+ * DARK IN BOTH THEMES
+ * A story is a full-bleed photograph with type laid directly on it. The type is
+ * light in both themes, so the ground under it cannot flip — and a white bezel
+ * around somebody's photograph is a gallery frame nobody asked for. The root
+ * therefore re-scopes to the dark ramp permanently.
  */
 
 import { Avatar, Button, Icon, IconButton } from '../../design-system/primitives';
@@ -37,7 +43,7 @@ const REACTIONS = ['🔥', '👏', '😮', '🥲', '💫', '🏺'];
 
 export function StoriesScreen() {
   return (
-    <div className="sy-screen sy-stories-screen">
+    <div className="sy-screen sy-stories-screen" data-theme="dark">
       <div className="sy-stories-screen__stage">
         <Media seed="yuki-kiln-open-04" ratio="auto" radius="none" className="sy-stories-screen__media">
           <span className="sy-sr-only">Kiln opening, fourth card: the cracked shino bowl</span>

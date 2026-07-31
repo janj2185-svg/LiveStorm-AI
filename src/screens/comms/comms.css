@@ -6,6 +6,14 @@
  * two-line text block that truncates, and a trailing status. Once that shape is
  * fixed, the inbox, the conversation list and the channel list can share the
  * same scanning rhythm even though they carry different content.
+ *
+ * DEPTH INSTEAD OF OUTLINES
+ * None of these screens is a media surface, so all four are light-native
+ * throughout. Depth does the work outlines used to: a card lifts off the toned
+ * canvas on its shadow alone, and anything nested inside a card — an
+ * attachment, a pinned message, a channel list — sinks into it instead of
+ * drawing a second rectangle. Only the dark theme keeps hairlines, where a
+ * shadow cast on near-black describes nothing.
  */
 
 /* ================================================================== */
@@ -74,8 +82,11 @@
   block-size: 6px;
   border-radius: 50%;
   background: var(--sy-success-solid);
-  box-shadow: 0 0 8px var(--sy-success-solid);
   flex-shrink: 0;
+}
+/* The halo only exists where light can be seen coming off something. */
+[data-theme='dark'] .sy-chat__presence-dot {
+  box-shadow: 0 0 8px var(--sy-success-solid);
 }
 
 .sy-chat__stream {
@@ -119,6 +130,12 @@
   margin-block-end: var(--sy-space-1);
 }
 
+/**
+ * A bubble is the smallest lifted object in the product and there are dozens on
+ * screen at once, so its edge has to be the cheapest possible: a soft shadow
+ * against the toned canvas of the transcript. Outlining every bubble would turn
+ * a conversation into a form.
+ */
 .sy-bubble {
   display: flex;
   flex-direction: column;
@@ -128,16 +145,25 @@
   padding: var(--sy-space-2_5) var(--sy-space-3);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-raised);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-bubble {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 /* The flattened corner points at the speaker. */
 .sy-bubble-row.is-them .sy-bubble {
   border-start-start-radius: var(--sy-radius-xs);
 }
+/* Mine is tinted rather than rimmed: side, corner and hue already say whose it
+   is three times over, and a fourth signal would only add noise. */
 .sy-bubble-row.is-me .sy-bubble {
   background: var(--sy-accent-bg);
-  border-color: var(--sy-accent-border);
   border-end-end-radius: var(--sy-radius-xs);
+}
+[data-theme='dark'] .sy-bubble-row.is-me .sy-bubble {
+  border-color: var(--sy-accent-border);
 }
 .sy-bubble__time {
   align-self: flex-end;
@@ -160,6 +186,8 @@
   margin-inline-end: 3px;
 }
 
+/* Attachments and link previews live *inside* a bubble, so they sink into it
+   rather than stacking a second raised card on top of one. */
 .sy-attach-card {
   display: flex;
   align-items: center;
@@ -167,7 +195,8 @@
   padding: var(--sy-space-2);
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-canvas);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-sunken);
   transition: border-color var(--sy-transition-hover);
 }
 .sy-attach-card:hover {
@@ -201,7 +230,7 @@
   border-radius: var(--sy-radius-md);
   overflow: hidden;
   background: var(--sy-bg-canvas);
-  border: 1px solid var(--sy-border-subtle);
+  box-shadow: var(--sy-elevation-sunken);
 }
 .sy-link-card__art {
   border-radius: 0;
@@ -355,7 +384,7 @@
   padding-inline: var(--sy-space-1_5);
   border-radius: var(--sy-radius-pill);
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
@@ -413,9 +442,12 @@
  * deducted, and the widest desktop column in the system is a little over 1200px,
  * so 768/1280 queries would fire on none of the devices they describe.
  */
-@container screen (min-width: 700px) {
+/* The side panes are sized from the container rather than stepped again at a
+   third breakpoint: they take the least width their rows survive at, grow with
+   the room, and stop once the transcript has all the measure it can use. */
+@container screen (min-width: 560px) {
   .sy-chat {
-    grid-template-columns: 288px minmax(0, 1fr);
+    grid-template-columns: clamp(240px, 30cqi, 300px) minmax(0, 1fr);
   }
   .sy-chat__list {
     display: flex;
@@ -426,9 +458,12 @@
   }
 }
 
-@container screen (min-width: 1152px) {
+@container screen (min-width: 880px) {
   .sy-chat {
-    grid-template-columns: 300px minmax(0, 1fr) 300px;
+    grid-template-columns:
+      clamp(240px, 24cqi, 300px)
+      minmax(0, 1fr)
+      clamp(260px, 24cqi, 300px);
   }
   .sy-chat__details {
     display: flex;
@@ -452,7 +487,7 @@
    segmented control that scrolls has lost the plot — you cannot see the option
    you are not on. Tightening the tabs is cheaper than hiding the counts, which
    are the only reason to look at this row. */
-@container screen (max-width: 519px) {
+@container screen (max-width: 559px) {
   .sy-inbox__tabs .sy-tabs__tab {
     padding-inline: var(--sy-space-2);
     gap: var(--sy-space-1);
@@ -469,8 +504,13 @@
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
   margin-block-end: var(--sy-space-6);
+}
+[data-theme='dark'] .sy-inbox__notice {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-inbox__notice-icon {
   display: grid;
@@ -485,7 +525,7 @@
 .sy-inbox__notice .sy-btn {
   flex-shrink: 0;
 }
-@container screen (max-width: 519px) {
+@container screen (max-width: 559px) {
   .sy-inbox__notice {
     flex-wrap: wrap;
   }
@@ -580,7 +620,7 @@
   padding-inline: var(--sy-space-1_5);
   border-radius: var(--sy-radius-pill);
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
@@ -607,7 +647,7 @@
     translate: 0 0;
   }
 }
-@container screen (max-width: 519px) {
+@container screen (max-width: 559px) {
   .sy-inbox-row__actions {
     display: none;
   }
@@ -647,8 +687,12 @@
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
   box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-request-card {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-request-card__text {
   flex: 1;
@@ -672,7 +716,7 @@
   gap: var(--sy-space-2);
   flex-shrink: 0;
 }
-@container screen (max-width: 639px) {
+@container screen (max-width: 559px) {
   .sy-request-card {
     flex-wrap: wrap;
   }
@@ -689,12 +733,25 @@
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
-  transition: border-color var(--sy-transition-hover), translate var(--sy-transition-hover);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
+  transition:
+    border-color var(--sy-transition-hover),
+    box-shadow var(--sy-transition-hover),
+    translate var(--sy-transition-hover);
 }
+/* Hovering lifts the card, so the shadow it casts grows with it. */
 .sy-person-card:hover {
-  border-color: var(--sy-border-strong);
+  box-shadow: var(--sy-elevation-raised);
   translate: 0 calc(var(--sy-travel-micro) * -1);
+}
+[data-theme='dark'] .sy-person-card {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
+}
+[data-theme='dark'] .sy-person-card:hover {
+  border-color: var(--sy-border-strong);
+  box-shadow: none;
 }
 .sy-person-card__head {
   display: flex;
@@ -770,7 +827,12 @@
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-find-tile {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-find-tile .sy-tile-icon {
   --tone-bg: var(--sy-accent-bg);
@@ -848,13 +910,16 @@
   gap: var(--sy-space-1);
   padding: 3px var(--sy-space-2);
   border-radius: var(--sy-radius-pill);
-  background: oklch(12% 0.01 282 / 0.74);
-  border: 1px solid oklch(98% 0 0 / 0.18);
-  color: oklch(97% 0.005 282);
+  /* Burned onto the tile's artwork rather than onto the page, so it uses the
+     media-invariant scrim: the art behind it is whatever the space uploaded and
+     is just as likely to be white in the light theme as in the dark one. */
+  background: var(--sy-scrim-on-media);
+  border: 1px solid color-mix(in oklab, var(--sy-fg-on-media) 18%, transparent);
+  color: var(--sy-fg-on-media);
   font-size: 11px;
   font-weight: 600;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-scrim-blur));
+  backdrop-filter: blur(var(--sy-vellum-scrim-blur));
 }
 .sy-space-tile__counts {
   display: flex;
@@ -873,8 +938,12 @@
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-xl);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
   box-shadow: var(--sy-elevation-raised);
+}
+[data-theme='dark'] .sy-space-detail {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-space-detail__main {
   display: flex;
@@ -890,7 +959,7 @@
 /* Until the detail column is genuinely wide, the space name is the headline of
    the card: it gets the full width and the membership control drops to a
    full-width row beneath it rather than squeezing the name into two lines. */
-@container screen (max-width: 899px) {
+@container screen (max-width: 879px) {
   .sy-space-detail__identity {
     flex-wrap: wrap;
   }
@@ -917,6 +986,8 @@
   flex-wrap: wrap;
 }
 
+/* Both of these sit inside the space card, so they are wells cut into it. The
+   pinned message keeps its warning edge — that edge is the flag, not a rim. */
 .sy-pinned {
   display: flex;
   flex-direction: column;
@@ -924,7 +995,7 @@
   padding: var(--sy-space-3);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-canvas);
-  border: 1px solid var(--sy-border-subtle);
+  box-shadow: var(--sy-elevation-sunken);
   border-inline-start: 3px solid var(--sy-warning-solid);
 }
 .sy-pinned__flag {
@@ -947,7 +1018,7 @@
   padding: var(--sy-space-2);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-canvas);
-  border: 1px solid var(--sy-border-subtle);
+  box-shadow: var(--sy-elevation-sunken);
 }
 .sy-space-detail__channels .sy-overline {
   padding: var(--sy-space-2);
@@ -994,15 +1065,15 @@
   padding-inline: var(--sy-space-1_5);
   border-radius: var(--sy-radius-pill);
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
 }
 
-@container screen (min-width: 700px) {
+@container screen (min-width: 560px) {
   .sy-space-detail {
-    grid-template-columns: minmax(0, 1fr) 264px;
+    grid-template-columns: minmax(0, 1fr) clamp(216px, 22cqi, 264px);
   }
 }
 
@@ -1014,12 +1085,24 @@
   border-radius: var(--sy-radius-lg);
   overflow: hidden;
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
-  transition: border-color var(--sy-transition-hover), translate var(--sy-transition-hover);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
+  transition:
+    border-color var(--sy-transition-hover),
+    box-shadow var(--sy-transition-hover),
+    translate var(--sy-transition-hover);
 }
 .sy-space-card:hover {
-  border-color: var(--sy-border-strong);
+  box-shadow: var(--sy-elevation-raised);
   translate: 0 calc(var(--sy-travel-micro) * -1);
+}
+[data-theme='dark'] .sy-space-card {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
+}
+[data-theme='dark'] .sy-space-card:hover {
+  border-color: var(--sy-border-strong);
+  box-shadow: none;
 }
 .sy-space-card__banner {
   flex-shrink: 0;

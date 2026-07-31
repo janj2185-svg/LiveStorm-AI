@@ -19,6 +19,12 @@
  * being a caption and starts being a paragraph. "more" expands in place rather
  * than opening a sheet, because leaving the video to read about the video is
  * the wrong trade.
+ *
+ * DARK IN BOTH THEMES
+ * The reel is edge-to-edge video with the whole interface floating on top of it,
+ * and it is the surface people hold longest in one sitting. It stays dark in
+ * both themes for the same reason the player does, by re-scoping the theme here
+ * rather than by painting the stylesheet black.
  */
 
 import { Avatar, Icon, IconButton } from '../../design-system/primitives';
@@ -30,7 +36,7 @@ const next = SHORTS[1];
 
 export function ShortsScreen() {
   return (
-    <div className="sy-screen sy-shorts">
+    <div className="sy-screen sy-shorts" data-theme="dark">
       <div className="sy-shorts__reel">
         {/* Active item. */}
         <article className="sy-shorts__item">

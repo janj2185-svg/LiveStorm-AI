@@ -27,8 +27,8 @@ import {
   FLUID_DISPLAY,
   FLUID_VIEWPORT,
   FONT_FAMILIES,
-  GLASS,
-  GLOW,
+  VELLUM,
+  REFRACTION,
   GRADIENTS,
   GRID,
   MEASURE,
@@ -75,10 +75,10 @@ function materialise(mode: ThemeMode): MaterialRamp {
   ) as MaterialRamp;
 }
 
-const THEMES: ThemeMode[] = ['dark', 'light'];
+const THEMES: ThemeMode[] = ['light', 'dark'];
 const materialised: Record<ThemeMode, MaterialRamp> = {
-  dark: materialise('dark'),
   light: materialise('light'),
+  dark: materialise('dark'),
 };
 
 /* ------------------------------------------------------------------ */
@@ -88,52 +88,91 @@ const materialised: Record<ThemeMode, MaterialRamp> = {
 /**
  * Semantic aliases resolve to `family.step` pairs. Screens only ever touch
  * these names, which is what makes a hue change a one-line edit.
+ *
+ * The structural half of the table is **per theme**, because elevation means
+ * the opposite direction on the ramp in each. In dark, the canvas is the
+ * darkest step and raising a surface moves toward light. In light, the canvas
+ * is toned porcelain and raising a surface moves *back toward white*: a card is
+ * brighter than the page it sits on, exactly as a lit object is brighter than
+ * its surroundings.
+ *
+ * Sharing one table would give the light theme grey cards on a white page,
+ * which reads as recessed and is the single most common reason a light UI looks
+ * cheap.
  */
-const SEMANTIC: Record<string, `${ColorFamily}.${number}`> = {
-  'bg-canvas': 'neutral.1',
-  'bg-surface': 'neutral.2',
-  'bg-raised': 'neutral.3',
-  'bg-hover': 'neutral.4',
-  'bg-active': 'neutral.5',
-  'border-subtle': 'neutral.6',
-  'border-default': 'neutral.7',
-  'border-strong': 'neutral.8',
-  // The only border token guaranteed >= 3:1. Any boundary that is the *sole*
-  // indicator of a control or its state must use this, not border-strong.
-  'border-interactive': 'neutral.9',
-  'fg-quiet': 'neutral.8',
-  'fg-muted': 'neutral.11',
-  'fg-default': 'neutral.12',
-  'accent-bg': 'iris.3',
-  'accent-bg-hover': 'iris.4',
-  'accent-border': 'iris.7',
-  'accent-solid': 'iris.9',
-  'accent-solid-hover': 'iris.10',
-  'accent-fg': 'iris.11',
-  'live-bg': 'flux.3',
-  'live-border': 'flux.7',
-  'live-solid': 'flux.9',
-  'live-fg': 'flux.11',
-  'creator-bg': 'nova.3',
-  'creator-border': 'nova.7',
-  'creator-solid': 'nova.9',
-  'creator-fg': 'nova.11',
-  'success-bg': 'verdant.3',
-  'success-border': 'verdant.7',
-  'success-solid': 'verdant.9',
-  'success-fg': 'verdant.11',
-  'warning-bg': 'solar.3',
-  'warning-border': 'solar.7',
-  'warning-solid': 'solar.9',
-  'warning-fg': 'solar.11',
-  'danger-bg': 'crimson.3',
-  'danger-border': 'crimson.7',
-  'danger-solid': 'crimson.9',
-  'danger-fg': 'crimson.11',
+const STRUCTURAL: Record<ThemeMode, Record<string, `porcelain.${number}`>> = {
+  light: {
+    'bg-canvas': 'porcelain.2',
+    'bg-surface': 'porcelain.1',
+    'bg-raised': 'porcelain.1',
+    'bg-hover': 'porcelain.3',
+    'bg-active': 'porcelain.4',
+    'bg-selected': 'porcelain.5',
+    // Recessed: a well cut into a card. Reads as the page showing through.
+    'bg-sunken': 'porcelain.2',
+    'border-subtle': 'porcelain.6',
+    'border-default': 'porcelain.7',
+    'border-strong': 'porcelain.8',
+    'border-interactive': 'porcelain.9',
+    // Light's third text tier, not a border. See the LIGHTNESS note in color.ts.
+    'fg-quiet': 'porcelain.9',
+    'fg-muted': 'porcelain.11',
+    'fg-default': 'porcelain.12',
+  },
+  dark: {
+    'bg-canvas': 'porcelain.1',
+    'bg-surface': 'porcelain.2',
+    'bg-raised': 'porcelain.3',
+    'bg-hover': 'porcelain.4',
+    'bg-active': 'porcelain.5',
+    'bg-selected': 'porcelain.5',
+    'bg-sunken': 'porcelain.1',
+    'border-subtle': 'porcelain.6',
+    'border-default': 'porcelain.7',
+    'border-strong': 'porcelain.8',
+    'border-interactive': 'porcelain.9',
+    // Same reasoning as light: quiet is a text tier, so it must be legible.
+    'fg-quiet': 'porcelain.9',
+    'fg-muted': 'porcelain.11',
+    'fg-default': 'porcelain.12',
+  },
 };
 
+/**
+ * Accent aliases. Shared across themes, because an accent's relationship to its
+ * own ramp does not change with the ambient light — only the ramp does.
+ *
+ * Light theme leans on step 2 rather than 3 for tinted backgrounds: on a bright
+ * ground, step 3 is already enough colour to read as a filled block.
+ */
+const ACCENT_STEPS: Record<ThemeMode, { bg: number; bgHover: number }> = {
+  light: { bg: 2, bgHover: 3 },
+  dark: { bg: 3, bgHover: 4 },
+};
+
+const ACCENT_ROLES = Object.entries(SEMANTIC_ROLES) as [string, ColorFamily][];
+
+function semanticTable(mode: ThemeMode): Record<string, `${ColorFamily}.${number}`> {
+  const table: Record<string, `${ColorFamily}.${number}`> = {
+    ...STRUCTURAL[mode],
+  };
+  const steps = ACCENT_STEPS[mode];
+  for (const [role, family] of ACCENT_ROLES) {
+    const key = role === 'brand' ? 'accent' : role;
+    table[`${key}-bg`] = `${family}.${steps.bg}`;
+    table[`${key}-bg-hover`] = `${family}.${steps.bgHover}`;
+    table[`${key}-border`] = `${family}.7`;
+    table[`${key}-solid`] = `${family}.9`;
+    table[`${key}-solid-hover`] = `${family}.10`;
+    table[`${key}-fg`] = `${family}.11`;
+  }
+  return table;
+}
+
+const SEMANTIC_ALIASES = Object.keys(semanticTable('light'));
+
 const resolveSemantic = (mode: ThemeMode, alias: string): MaterialStep => {
-  const [family, step] = SEMANTIC[alias].split('.') as [ColorFamily, string];
+  const [family, step] = semanticTable(mode)[alias].split('.') as [ColorFamily, string];
   return materialised[mode][family][Number(step) - 1];
 };
 
@@ -146,8 +185,8 @@ const resolveSemantic = (mode: ThemeMode, alias: string): MaterialStep => {
  */
 function onSolidColor(mode: ThemeMode, family: ColorFamily): string {
   const solid = materialised[mode][family][8].hex;
-  const rampTop = materialised[mode].neutral[11].hex;
-  const rampBottom = materialised[mode].neutral[0].hex;
+  const rampTop = materialised[mode].porcelain[11].hex;
+  const rampBottom = materialised[mode].porcelain[0].hex;
   return contrastRatio(rampTop, solid) >= contrastRatio(rampBottom, solid) ? rampTop : rampBottom;
 }
 
@@ -235,15 +274,16 @@ for (const [key, value] of Object.entries(Z_INDEX)) {
 }
 push();
 push('  /* Glass */');
-for (const [key, recipe] of Object.entries(GLASS)) {
-  push(`  --sy-glass-${key}-blur: ${recipe.blur}px;`);
-  push(`  --sy-glass-${key}-saturate: ${recipe.saturate};`);
+for (const [key, recipe] of Object.entries(VELLUM)) {
+  push(`  --sy-vellum-${key}-blur: ${recipe.blur}px;`);
+  push(`  --sy-vellum-${key}-saturate: ${recipe.saturate};`);
 }
 push();
 push('  /* Glow spreads */');
-for (const [key, recipe] of Object.entries(GLOW)) {
-  push(`  --sy-glow-${key}-spread: ${recipe.spread}px;`);
-  push(`  --sy-glow-${key}-alpha: ${recipe.alpha};`);
+for (const [key, recipe] of Object.entries(REFRACTION)) {
+  push(`  --sy-refract-${key}-weight: ${recipe.weight}px;`);
+  push(`  --sy-refract-${key}-spread: ${recipe.spread}px;`);
+  push(`  --sy-refract-${key}-alpha: ${recipe.alpha};`);
 }
 push('}');
 push();
@@ -282,20 +322,30 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
   }
   push();
 
-  for (const alias of Object.keys(SEMANTIC)) {
+  for (const alias of SEMANTIC_ALIASES) {
     const resolved = resolveSemantic(mode, alias);
     push(`  --sy-${alias}: ${useOklch ? resolved.oklch : resolved.hex};`);
   }
   push();
 
   for (const family of COLOR_FAMILY_NAMES) {
-    if (family === 'neutral') continue;
+    if (family === 'porcelain') continue;
     push(`  --sy-on-${family}: ${onSolidColor(mode, family)};`);
   }
-  // Semantic spellings of the same values, so a component can ask for
-  // "text on the danger fill" without knowing danger is crimson.
+  /*
+    Semantic spellings of the same values, so a component can ask for "text on
+    the danger fill" without knowing danger is rose.
+
+    `brand` is additionally emitted as `accent`, because that is the name the
+    component layer uses for the same idea — `.sy-tone-accent` sets
+    `--tone-on-solid: var(--sy-on-accent)`. Emitting only `--sy-on-brand` left
+    every primary button in the product falling back to inherited page ink on a
+    saturated fill, at 2.98:1.
+  */
   for (const [role, family] of Object.entries(SEMANTIC_ROLES)) {
-    push(`  --sy-on-${role}: ${onSolidColor(mode, family as ColorFamily)};`);
+    const value = onSolidColor(mode, family as ColorFamily);
+    push(`  --sy-on-${role}: ${value};`);
+    if (role === 'brand') push(`  --sy-on-accent: ${value};`);
   }
   push();
 
@@ -306,8 +356,8 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
     resolve to the dark ramp's text colours regardless of the active theme —
     without them, every caption over an image becomes invisible in light mode.
   */
-  push(`  --sy-fg-on-media: ${useOklch ? materialised.dark.neutral[11].oklch : materialised.dark.neutral[11].hex};`);
-  push(`  --sy-fg-on-media-muted: ${useOklch ? materialised.dark.neutral[10].oklch : materialised.dark.neutral[10].hex};`);
+  push(`  --sy-fg-on-media: ${useOklch ? materialised.dark.porcelain[11].oklch : materialised.dark.porcelain[11].hex};`);
+  push(`  --sy-fg-on-media-muted: ${useOklch ? materialised.dark.porcelain[10].oklch : materialised.dark.porcelain[10].hex};`);
   push(
     `  --sy-scrim-on-media: ${
       useOklch ? 'oklch(12% 0.02 282 / 0.78)' : '#161418c7'
@@ -316,8 +366,8 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
   push();
 
   // Translucent overlays. `hi` is a light veil, `lo` is a dark veil.
-  const hi = materialised[mode].neutral[11];
-  const lo = materialised[mode].neutral[0];
+  const hi = materialised[mode].porcelain[11];
+  const lo = materialised[mode].porcelain[0];
   for (const alpha of ALPHA_STEPS) {
     const token = String(Math.round(alpha * 100)).padStart(2, '0');
     push(
@@ -333,9 +383,16 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
   }
   push();
 
-  // Shadow and rim colours consumed by the elevation recipes.
-  const shadowBase = mode === 'dark' ? 'oklch(2% 0.01 282' : 'oklch(28% 0.03 282';
-  const shadowHex = mode === 'dark' ? '#040207' : '#3b3448';
+  /*
+    Shadow colour.
+
+    Light-mode shadows are tinted cool, not black. Under real daylight a shadow
+    is lit by the sky, so it takes on the sky's colour — a neutral black shadow
+    over a warm-white page reads as dirt, while a cool one reads as depth. This
+    is the same physics that gives the porcelain ramp its warm-to-cool shift.
+  */
+  const shadowBase = mode === 'dark' ? 'oklch(3% 0.012 268' : 'oklch(34% 0.042 266';
+  const shadowHex = mode === 'dark' ? '#04040a' : '#4a4767';
   for (const alpha of [0.04, 0.06, 0.08, 0.1, 0.12, 0.14, 0.16, 0.24, 0.32, 0.4, 0.48]) {
     const token = String(Math.round(alpha * 100)).padStart(2, '0');
     push(
@@ -364,18 +421,22 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
   push();
 
   // Glass fill and rim, per recipe.
-  for (const [name, recipe] of Object.entries(GLASS)) {
-    const surface = materialised[mode].neutral[1];
-    const rimSource = materialised[mode].neutral[11];
+  // Vellum fill, rim and brightness, per recipe.
+  // The fill is the *surface* step, so vellum brightens toward the card colour
+  // in light mode and toward the panel colour in dark mode.
+  const surface = resolveSemantic(mode, 'bg-surface');
+  const rimSource = materialised[mode].porcelain[mode === 'light' ? 0 : 11];
+  for (const [name, recipe] of Object.entries(VELLUM)) {
+    push(`  --sy-vellum-${name}-brightness: ${recipe.brightness[mode]};`);
     push(
-      `  --sy-glass-${name}-fill: ${
+      `  --sy-vellum-${name}-fill: ${
         useOklch
           ? surface.oklch.replace(')', ` / ${recipe.fillAlpha[mode]})`)
           : `${surface.hex}${Math.round(recipe.fillAlpha[mode] * 255).toString(16).padStart(2, '0')}`
       };`,
     );
     push(
-      `  --sy-glass-${name}-rim: ${
+      `  --sy-vellum-${name}-rim: ${
         useOklch
           ? rimSource.oklch.replace(')', ` / ${recipe.rimAlpha[mode]})`)
           : `${rimSource.hex}${Math.round(recipe.rimAlpha[mode] * 255).toString(16).padStart(2, '0')}`
@@ -401,16 +462,16 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
 }
 
 push('/* ===== Fallback layer: gamut-mapped sRGB ===== */');
-emitTheme('dark', '[data-theme="dark"], :root', false);
-emitTheme('light', '[data-theme="light"]', false);
+emitTheme('light', '[data-theme="light"], :root', false);
+emitTheme('dark', '[data-theme="dark"]', false);
 
 push('/* ===== Wide-gamut layer: authored OKLCH ===== */');
 push('@supports (color: oklch(50% 0.1 200)) {');
 const oklchLines: string[] = [];
 const originalPush = lines.push.bind(lines);
 lines.push = ((...args: string[]) => oklchLines.push(...args)) as typeof lines.push;
-emitTheme('dark', '[data-theme="dark"], :root', true);
-emitTheme('light', '[data-theme="light"]', true);
+emitTheme('light', '[data-theme="light"], :root', true);
+emitTheme('dark', '[data-theme="dark"]', true);
 lines.push = originalPush;
 for (const line of oklchLines) push(line ? `  ${line}` : '');
 push('}');
@@ -460,7 +521,7 @@ for (const mode of THEMES) {
     );
   }
   const semanticGroup = Object.fromEntries(
-    Object.entries(SEMANTIC).map(([alias, target]) => [
+    Object.entries(semanticTable(mode)).map(([alias, target]) => [
       alias,
       {
         $type: 'color',
@@ -540,9 +601,11 @@ function check(theme: ThemeMode, pair: string, fg: string, bg: string, requireme
 
 for (const mode of THEMES) {
   const ramp = materialised[mode];
-  const canvas = ramp.neutral[0].hex;
-  const surface = ramp.neutral[1].hex;
-  const raised = ramp.neutral[2].hex;
+  // Resolve through the semantic table, since the structural mapping differs
+  // per theme — auditing raw step indices would test the wrong pairs in light.
+  const canvas = resolveSemantic(mode, 'bg-canvas').hex;
+  const surface = resolveSemantic(mode, 'bg-surface').hex;
+  const raised = resolveSemantic(mode, 'bg-hover').hex;
 
   // Body and secondary text against all three background steps.
   for (const [bgName, bg] of [
@@ -550,13 +613,13 @@ for (const mode of THEMES) {
     ['surface', surface],
     ['raised', raised],
   ] as const) {
-    check(mode, `fg-default on bg-${bgName}`, ramp.neutral[11].hex, bg, 7, 'AAA body');
-    check(mode, `fg-muted on bg-${bgName}`, ramp.neutral[10].hex, bg, 4.5, 'AA body');
+    check(mode, `fg-default on bg-${bgName}`, resolveSemantic(mode, 'fg-default').hex, bg, 7, 'AAA body');
+    check(mode, `fg-muted on bg-${bgName}`, resolveSemantic(mode, 'fg-muted').hex, bg, 4.5, 'AA body');
   }
 
   // Accent text and solid fills.
   for (const family of COLOR_FAMILY_NAMES) {
-    if (family === 'neutral') continue;
+    if (family === 'porcelain') continue;
     check(mode, `${family}-11 text on surface`, ramp[family][10].hex, surface, 4.5, 'AA body');
     check(mode, `on-${family} text on ${family}-9 solid`, onSolidColor(mode, family), ramp[family][8].hex, 4.5, 'AA body');
     // Step 9 is the state-bearing step: a selected border, a filled control,
@@ -568,12 +631,17 @@ for (const mode of THEMES) {
     check(mode, `${family}-8 emphasis on surface`, ramp[family][7].hex, surface, 1.5, 'Perceivable edge');
   }
 
+  // The quiet tier is text, so it is audited as text. This is the assertion
+  // that was missing when axis ticks and placeholders sat at 2.3:1.
+  check(mode, 'fg-quiet on bg-canvas', resolveSemantic(mode, 'fg-quiet').hex, canvas, 4.5, 'AA body');
+  check(mode, 'fg-quiet on bg-surface', resolveSemantic(mode, 'fg-quiet').hex, surface, 4.5, 'AA body');
+
   // Structural borders.
-  check(mode, 'border-default on surface', ramp.neutral[6].hex, surface, 1.3, 'Perceivable hairline');
-  check(mode, 'border-strong on surface', ramp.neutral[7].hex, surface, 1.5, 'Perceivable edge');
-  check(mode, 'border-interactive on surface', ramp.neutral[8].hex, surface, 3, 'AA non-text');
-  check(mode, 'focus ring (iris-9) on canvas', ramp.iris[8].hex, canvas, 3, 'AA focus indicator');
-  check(mode, 'focus ring (iris-9) on surface', ramp.iris[8].hex, surface, 3, 'AA focus indicator');
+  check(mode, 'border-default on surface', resolveSemantic(mode, 'border-default').hex, surface, 1.15, 'Perceivable hairline');
+  check(mode, 'border-strong on surface', resolveSemantic(mode, 'border-strong').hex, surface, 1.4, 'Perceivable edge');
+  check(mode, 'border-interactive on surface', resolveSemantic(mode, 'border-interactive').hex, surface, 3, 'AA non-text');
+  check(mode, 'focus ring (aether-9) on canvas', ramp.aether[8].hex, canvas, 3, 'AA focus indicator');
+  check(mode, 'focus ring (aether-9) on surface', ramp.aether[8].hex, surface, 3, 'AA focus indicator');
 }
 
 const failures = audit.filter((row) => !row.pass);

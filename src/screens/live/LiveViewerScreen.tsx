@@ -19,6 +19,14 @@
  * The gift rail is the product's highest-intent action, so on phones it sits in
  * the bottom-right corner — the single easiest point to reach with a right
  * thumb — and it is the only control that uses the creator hue.
+ *
+ * ONE SCREEN, TWO THEMES
+ * The stage is a playback surface and stays dark in both themes: the broadcast
+ * is the light source, and a white surround raises its black level and tires
+ * anyone watching for an hour. The chat rail is not a playback surface — it is a
+ * column of text people read for that same hour — so it stays light-native.
+ * The stage says so by re-scoping the theme onto itself, which keeps every value
+ * inside it a token from the dark ramp instead of a hard-coded black.
  */
 
 import { Avatar, Badge, Button, Icon, IconButton, LiveBadge } from '../../design-system/primitives';
@@ -30,14 +38,14 @@ const stream = STREAMS[0];
 export function LiveViewerScreen() {
   return (
     <div className="sy-screen sy-live-viewer">
-      <div className="sy-live-viewer__stage">
+      <div className="sy-live-viewer__stage" data-theme="dark">
         <Media seed={`${stream.id}-stage`} ratio="auto" radius="none" className="sy-live-viewer__video">
           <span className="sy-sr-only">Live broadcast video</span>
         </Media>
 
         {/* Top chrome: identity and connection state. */}
         <header className="sy-live-viewer__top">
-          <div className="sy-live-viewer__identity sy-glass">
+          <div className="sy-live-viewer__identity sy-vellum">
             <Avatar name={stream.creator.name} size={34} ring="live" verified />
             <div className="sy-live-viewer__identity-text">
               <span className="sy-label sy-truncate">{stream.creator.name}</span>
@@ -50,7 +58,7 @@ export function LiveViewerScreen() {
 
           <div className="sy-live-viewer__status">
             <LiveBadge viewers={stream.viewers} />
-            <span className="sy-live-viewer__pill sy-glass sy-mono">{stream.duration}</span>
+            <span className="sy-live-viewer__pill sy-vellum sy-mono">{stream.duration}</span>
             <IconButton icon="close" label="Leave stream" variant="glass" size="sm" />
           </div>
         </header>
@@ -59,7 +67,7 @@ export function LiveViewerScreen() {
 
         {/* Bottom chrome: playback, quality and the gift rail. */}
         <footer className="sy-live-viewer__bottom">
-          <div className="sy-live-viewer__controls sy-glass">
+          <div className="sy-live-viewer__controls sy-vellum">
             <IconButton icon="pause" label="Pause" variant="ghost" size="sm" />
             <IconButton icon="volume" label="Mute" variant="ghost" size="sm" />
             <span className="sy-live-viewer__quality sy-caption">

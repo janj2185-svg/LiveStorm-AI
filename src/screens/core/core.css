@@ -31,6 +31,25 @@
   }
 }
 
+/**
+ * Snap padding for the bleeding rails.
+ *
+ * `.sy-scroller` bleeds past the content padding and then re-adds it inside, so
+ * the first card should start on the column's edge. Mandatory snapping ignores
+ * that: it aligns the first child to the *scrollport* edge and quietly scrolls
+ * the rail by one gutter, which lands the leading card flush against the screen
+ * while every heading above it stays indented. Snap padding puts the snap line
+ * back where the visual gutter already is.
+ */
+:where(.sy-home, .sy-disc) .sy-scroller {
+  scroll-padding-inline: var(--sy-space-4);
+}
+@container screen (min-width: 560px) {
+  :where(.sy-home, .sy-disc) .sy-scroller {
+    scroll-padding-inline: var(--sy-space-6);
+  }
+}
+
 /* Stories rail */
 .sy-stories {
   display: flex;
@@ -42,6 +61,14 @@
 }
 .sy-stories::-webkit-scrollbar {
   display: none;
+}
+/* The rail bleeds to the screen edge, so its negative margin has to track the
+   content column's own padding step for step or a gutter reappears. */
+@container screen (min-width: 560px) {
+  .sy-stories {
+    margin-inline: calc(var(--sy-space-6) * -1);
+    padding-inline: var(--sy-space-6);
+  }
 }
 .sy-story {
   display: flex;
@@ -62,7 +89,7 @@
   place-items: center;
   padding: 2.5px;
   border-radius: 50%;
-  background: var(--sy-gradient-aurora);
+  background: var(--sy-gradient-prism);
   transition: scale var(--sy-transition-press);
 }
 .sy-story__ring.is-seen {
@@ -88,7 +115,7 @@
   block-size: 20px;
   border-radius: 50%;
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
   box-shadow: 0 0 0 2.5px var(--sy-bg-canvas);
 }
 .sy-story__name {
@@ -107,6 +134,8 @@
   display: flex;
   justify-content: flex-start;
 }
+/* Sits on the media scrim, which is dark in both themes — hence the
+   theme-invariant on-media foreground rather than either theme's own. */
 .sy-live-tile__bottom {
   position: absolute;
   inset-block-end: var(--sy-space-3);
@@ -114,28 +143,48 @@
   display: flex;
   align-items: center;
   gap: var(--sy-space-2);
-  color: #fff;
+  color: var(--sy-fg-on-media);
 }
 .sy-live-tile__title {
   font-size: var(--sy-type-bodySmall-size);
   font-weight: 550;
   line-height: 1.35;
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-live-tile {
     inline-size: 268px;
   }
 }
 
-/* AI daily brief */
+/**
+ * AI daily brief.
+ *
+ * The refraction hairline marks assistant-authored surfaces throughout the
+ * product; this card and the top result on Search are the only two places in
+ * the core group that spend it. The stroke comes from the shared `.sy-refract`
+ * class rather than a local copy of the two-background trick — and because that
+ * class draws its stroke by clipping a gradient to the border box, the dark
+ * theme's `.sy-surface` hairline would paint straight over it.
+ */
 .sy-brief {
-  /* A hairline aurora border marks assistant-authored surfaces throughout the
-     product. It is the one visual signature reserved for generated content. */
-  position: relative;
+  --refract-fill: var(--sy-bg-raised);
+}
+[data-theme='dark'] .sy-brief {
+  border-color: transparent;
+}
+
+/**
+ * `.sy-refract` and `.sy-surface--raised` are both one class deep, and the
+ * surface rules load after the signature ones — so on a Surface the flat fill
+ * wins the cascade and the spectral edge never paints. Restating the recipe one
+ * class deeper is the only fix available from a screen stylesheet; the durable
+ * one is for the signature surfaces to outrank the surface fills in the system.
+ */
+.sy-brief.sy-refract,
+.sy-search__hero.sy-refract {
   background:
-    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
-    var(--sy-gradient-aurora) border-box;
-  border: 1px solid transparent;
+    linear-gradient(var(--refract-fill), var(--refract-fill)) padding-box,
+    var(--sy-gradient-prism) border-box;
 }
 .sy-brief__head {
   display: flex;
@@ -245,13 +294,13 @@
 .sy-fdscreen__sort {
   flex-shrink: 0;
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 560px) {
   .sy-fdscreen__bar {
     margin-inline: calc(var(--sy-space-6) * -1);
     padding-inline: var(--sy-space-6);
   }
 }
-@container screen (min-width: 1280px) {
+@container screen (min-width: 880px) {
   .sy-fdscreen__bar {
     margin-inline: calc(var(--sy-space-8) * -1);
     padding-inline: var(--sy-space-8);
@@ -260,17 +309,17 @@
 
 /**
  * Two-column band.
- * The shell only opens its own context panel at 1280px of *shell* width, so
- * between roughly 1024 and 1279 the surface is wide enough for two columns and
- * the shell supplies nothing to fill the second one. This column is what serves
- * that band.
+ * Feed supplies no context panel, so past a certain width the shell has nothing
+ * to put beside the timeline. This column is what serves that band.
  *
- * The threshold is 960 rather than 1024 because the query is on the *screen*
- * container, not the shell: the collapsed rail already costs 76px, so a 1024px
- * shell hands the screen 948. Using 1024 here would make the column appear at a
- * 1100px shell, vanish again at 1280 when the rail expands to 264px and leaves
- * the screen 1016, then return at 1368 — a layout that goes backwards as the
- * window grows. 960 keeps it monotonic.
+ * 880 is the system's widest content-column threshold, and the only one that
+ * behaves here. The query is on the *screen* container, not the shell, and the
+ * rail costs 76px collapsed or 264px expanded before the screen ever sees the
+ * width: a device-shaped 1024 would make the column appear at a 1100px shell,
+ * vanish again at 1280 when the rail expands and leaves the screen 1016, then
+ * return at 1368 — a layout that goes backwards as the window grows. 880 sits
+ * below every column width the shell can produce above tablet, so it only ever
+ * appears once.
  *
  * Below the threshold the column is dropped outright rather than stacked:
  * everything in it is reachable from Discover and Search, and appending it under
@@ -285,7 +334,7 @@
 .sy-fdscreen__side {
   display: none;
 }
-@container screen (min-width: 960px) {
+@container screen (min-width: 880px) {
   .sy-fdscreen__layout {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
@@ -371,7 +420,7 @@
 .sy-composer__hint {
   display: none;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-composer__hint {
     display: inline;
   }
@@ -391,7 +440,7 @@
 /**
  * New-posts pill.
  * Floats over the timeline instead of pushing it down, and stays put while the
- * column scrolls under it. Glass, because it is a layer rather than an item.
+ * column scrolls under it. Vellum, because it is a layer rather than an item.
  */
 .sy-fdscreen__newwrap {
   position: sticky;
@@ -414,16 +463,26 @@
   padding: var(--sy-space-1) var(--sy-space-1) var(--sy-space-1) var(--sy-space-2);
   border-radius: var(--sy-radius-pill);
   box-shadow: var(--sy-elevation-overlay);
-  translate: 0 calc(var(--sy-space-2) * -1);
-  /* The glass fill alone is close to invisible where the pill overlaps flat
-     canvas — there is nothing behind it to blur — and in light theme the glass
-     rim is fully transparent, so the pill loses its shape entirely. Tinting
-     with a translucent accent surface keeps the blur working over post media
-     while giving the pill an edge everywhere else. */
+  /* Centred on its zero-height line rather than hanging below it, so at rest the
+     pill straddles the seam between the composer and the first post instead of
+     landing across that post's author row and clipping the name in half. */
+  translate: 0 -50%;
+  /* An overlay you can read the timeline through is not an overlay. On the
+     bright page there is nothing behind the pill for the vellum blur to work
+     on, so light takes an opaque accent tint and lets the overlay shadow do the
+     lifting. Dark keeps the translucency, where the blur has a dark page and
+     post media underneath it to actually sample. */
+  background: color-mix(in oklab, var(--sy-accent-bg) 88%, var(--sy-bg-surface));
+  border: 1px solid transparent;
+}
+[data-theme='dark'] .sy-newpill {
   background: color-mix(in oklab, var(--sy-accent-bg) 82%, transparent);
-  border: 1px solid var(--sy-accent-border);
+  border-color: var(--sy-accent-border);
 }
 .sy-newpill:hover {
+  background: color-mix(in oklab, var(--sy-accent-bg-hover) 88%, var(--sy-bg-surface));
+}
+[data-theme='dark'] .sy-newpill:hover {
   background: color-mix(in oklab, var(--sy-accent-bg-hover) 88%, transparent);
 }
 .sy-newpill__label {
@@ -632,7 +691,7 @@
 .sy-search__chiprow > * {
   flex-shrink: 0;
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 560px) {
   .sy-search__chiprow {
     margin-inline: calc(var(--sy-space-6) * -1);
     padding-inline: var(--sy-space-6);
@@ -669,16 +728,17 @@
   margin-block-end: var(--sy-space-2);
   color: var(--sy-accent-fg);
 }
+/* The refraction hairline marks the single highest-confidence result — the one
+   row on the screen the ranker is prepared to stand behind. */
 .sy-search__hero {
+  --refract-fill: var(--sy-bg-raised);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--sy-space-4);
-  /* An aurora hairline marks the single highest-confidence result. */
-  background:
-    linear-gradient(var(--sy-bg-raised), var(--sy-bg-raised)) padding-box,
-    var(--sy-gradient-aurora) border-box;
-  border: 1px solid transparent;
+}
+[data-theme='dark'] .sy-search__hero {
+  border-color: transparent;
 }
 .sy-search__hero-name {
   display: flex;
@@ -762,11 +822,22 @@
   min-block-size: 400px;
   max-block-size: 540px;
 }
+/**
+ * The hero's own scrim.
+ *
+ * The shared media scrim reaches full strength only in the bottom fifth, which
+ * is right for a 180px thumbnail and wrong for a 400px hero: the title, the
+ * identity row and three buttons all sit well above that fifth. In the light
+ * theme the artwork underneath them is pale, so white text on a 24%-strength
+ * wash fails outright. This adds a second, taller ramp under the caption block
+ * so the whole lower half is a surface captions can be read on.
+ */
 .sy-disc__hero-media .sy-media__content {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: var(--sy-space-4);
+  background: linear-gradient(to top, var(--sy-scrim-on-media) 0%, transparent 68%);
 }
 .sy-disc__hero-top {
   display: flex;
@@ -774,18 +845,21 @@
   gap: var(--sy-space-2);
   flex-wrap: wrap;
 }
+/* Everything in the caption block sits on the scrim, which is dark in both
+   themes, so it takes the theme-invariant on-media foregrounds. Reading them
+   off a ramp step would make the block depend on the theme re-scope above it. */
 .sy-disc__hero-body {
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-3);
-  color: var(--sy-neutral-12);
+  color: var(--sy-fg-on-media);
 }
 .sy-disc__hero-eyebrow {
-  color: var(--sy-alpha-hi-80);
+  color: var(--sy-fg-on-media-muted);
 }
 .sy-disc__hero-title {
   max-inline-size: 22ch;
-  color: var(--sy-neutral-12);
+  color: var(--sy-fg-on-media);
 }
 .sy-disc__hero-creator {
   display: flex;
@@ -794,7 +868,7 @@
   max-inline-size: 420px;
 }
 .sy-disc__hero-sub {
-  color: var(--sy-alpha-hi-80);
+  color: var(--sy-fg-on-media-muted);
 }
 .sy-disc__hero-actions {
   display: flex;
@@ -812,7 +886,7 @@
   margin-block-start: 2px;
   flex-shrink: 0;
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 560px) {
   .sy-disc__hero-media .sy-media__content {
     padding: var(--sy-space-6);
   }
@@ -849,11 +923,18 @@
   gap: var(--sy-space-1);
   flex-shrink: 0;
 }
+/* The explanation is a tinted object rather than an outlined one: on white a
+   hairline over a shadow reads as a form field, while a faint accent fill says
+   "this is the assistant talking about the shelf" at a glance. */
 .sy-shelf__reason {
   display: flex;
   align-items: flex-start;
   gap: var(--sy-space-3);
   flex-wrap: wrap;
+  background: var(--sy-accent-bg);
+}
+[data-theme='dark'] .sy-shelf__reason {
+  background: var(--sy-bg-raised);
   border-color: var(--sy-accent-border);
 }
 .sy-shelf__reason .sy-icon {
@@ -921,12 +1002,12 @@
 .sy-profile__banner .sy-media {
   block-size: 100%;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-profile__banner {
     block-size: 180px;
   }
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-profile__banner {
     block-size: 232px;
   }
@@ -958,7 +1039,7 @@
 .sy-profile__avatar .sy-avatar__initials {
   font-size: 30px !important;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-profile__avatar {
     inline-size: 112px !important;
     block-size: 112px !important;
@@ -1033,7 +1114,7 @@
   grid-column: 3;
   grid-row: 2;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-profile__actions {
     display: flex;
     flex-wrap: wrap;
@@ -1054,10 +1135,10 @@
   gap: var(--sy-space-3);
   grid-template-columns: minmax(0, 1fr);
 }
-/* Three across from 640 rather than 768: a tablet only hands the screen 758px
-   once the rail is subtracted, and three tiers side by side is the entire point
-   of the card — stacked, they stop being comparable. */
-@container screen (min-width: 640px) {
+/* Three across from the first threshold rather than the second: a tablet only
+   hands the screen 758px once the rail is subtracted, and three tiers side by
+   side is the entire point of the card — stacked, they stop being comparable. */
+@container screen (min-width: 560px) {
   .sy-tiers__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1067,7 +1148,11 @@
   flex-direction: column;
   gap: var(--sy-space-2);
 }
-.sy-tier.is-popular {
+/* The popular tier is already a step further off the page than its neighbours,
+   and in light that lift is the whole signal — a hairline on top of it would be
+   the shadow's job done twice. Dark cannot express the step as clearly, so it
+   keeps the toned edge. */
+[data-theme='dark'] .sy-tier.is-popular {
   border-color: var(--tone-border);
 }
 .sy-tier__head {
@@ -1161,7 +1246,7 @@
   gap: var(--sy-space-3);
   padding: var(--sy-space-5);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-shop__feature {
     grid-template-columns: 280px minmax(0, 1fr);
     align-items: stretch;
@@ -1212,10 +1297,10 @@
   gap: var(--sy-space-6);
   align-items: start;
 }
-/* 960 for the same reason as the Feed sidebar: measured on the screen
+/* 880 for the same reason as the Feed sidebar: measured on the screen
    container, the shell's rail has already taken 76px (collapsed) or 264px
    (expanded) before this query ever sees the width. */
-@container screen (min-width: 960px) {
+@container screen (min-width: 880px) {
   .sy-settings__layout {
     grid-template-columns: 288px minmax(0, 1fr);
   }
@@ -1266,7 +1351,7 @@
 .sy-settings__navsummary {
   display: none;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-settings__navsummary {
     display: block;
   }
@@ -1321,23 +1406,40 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--sy-space-3);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-themes {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+/**
+ * A theme tile is a card that happens to be a radio, so it takes the card's
+ * physics: near-white on the toned page with a contact shadow, and no hairline
+ * to fight the shadow. That leaves the border free to mean exactly one thing —
+ * selection — instead of meaning "edge" until it is selected and then meaning
+ * two things at once.
+ */
 .sy-theme-tile {
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-3);
   padding: var(--sy-space-3);
-  border: 1px solid var(--sy-border-default);
+  border: 1px solid transparent;
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
+  box-shadow: var(--sy-elevation-surface);
   text-align: start;
-  transition: border-color var(--sy-transition-hover), background-color var(--sy-transition-hover);
+  transition:
+    border-color var(--sy-transition-hover),
+    box-shadow var(--sy-transition-hover),
+    background-color var(--sy-transition-hover);
+}
+[data-theme='dark'] .sy-theme-tile {
+  border-color: var(--sy-border-default);
 }
 .sy-theme-tile:hover {
+  box-shadow: var(--sy-elevation-raised);
+}
+[data-theme='dark'] .sy-theme-tile:hover {
   border-color: var(--sy-border-interactive);
 }
 .sy-theme-tile.is-selected {
@@ -1381,7 +1483,7 @@
   block-size: 20px;
   border-radius: 50%;
   border: 1.5px solid var(--sy-border-strong);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
   flex-shrink: 0;
   margin-block-start: 2px;
 }
@@ -1468,7 +1570,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sy-space-3);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-accents {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
@@ -1492,37 +1594,44 @@
 }
 /* Selection is the check mark inside the swatch, so the choice is still
    readable to someone who cannot tell the six hues apart. */
+/* The disc needs an edge, but the two themes need opposite ones. On a dark tile
+   a translucent light ring inside the disc is what separates it from the page;
+   on a bright tile the same ring only bleaches the hue it is supposed to be
+   showing, so light describes the edge with the cool contact shadow instead. */
 .sy-accent-swatch__chip {
   display: grid;
   place-items: center;
   inline-size: 40px;
   block-size: 40px;
   border-radius: 50%;
+  box-shadow: var(--sy-elevation-surface);
+}
+[data-theme='dark'] .sy-accent-swatch__chip {
   box-shadow: inset 0 0 0 1px var(--sy-alpha-hi-16);
 }
-.sy-accent-swatch__chip--iris {
-  background: var(--sy-iris-9);
-  color: var(--sy-on-iris);
+.sy-accent-swatch__chip--aether {
+  background: var(--sy-aether-9);
+  color: var(--sy-on-accent);
 }
-.sy-accent-swatch__chip--flux {
-  background: var(--sy-flux-9);
-  color: var(--sy-on-flux);
+.sy-accent-swatch__chip--pulse {
+  background: var(--sy-pulse-9);
+  color: var(--sy-on-live);
 }
-.sy-accent-swatch__chip--nova {
-  background: var(--sy-nova-9);
-  color: var(--sy-on-nova);
+.sy-accent-swatch__chip--bloom {
+  background: var(--sy-bloom-9);
+  color: var(--sy-on-creator);
 }
-.sy-accent-swatch__chip--verdant {
-  background: var(--sy-verdant-9);
-  color: var(--sy-on-verdant);
+.sy-accent-swatch__chip--verdigris {
+  background: var(--sy-verdigris-9);
+  color: var(--sy-on-success);
 }
 .sy-accent-swatch__chip--solar {
   background: var(--sy-solar-9);
-  color: var(--sy-on-solar);
+  color: var(--sy-on-warning);
 }
-.sy-accent-swatch__chip--crimson {
-  background: var(--sy-crimson-9);
-  color: var(--sy-on-crimson);
+.sy-accent-swatch__chip--rose {
+  background: var(--sy-rose-9);
+  color: var(--sy-on-danger);
 }
 .sy-accent-swatch__label {
   color: var(--sy-fg-default);
@@ -1537,14 +1646,17 @@
   flex-direction: column;
   gap: var(--sy-space-4);
 }
+/* A panel nested inside a card cannot separate by going up — the card is
+   already at the top of the light — so it goes down instead: the page colour,
+   with the inset edge the sunken level supplies. */
 .sy-preview-card__sample {
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-2);
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-lg);
-  background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-canvas);
+  box-shadow: var(--sy-elevation-sunken);
 }
 .sy-preview-card__sample .sy-row {
   margin-block-start: var(--sy-space-2);
@@ -1661,12 +1773,12 @@
   opacity: 1;
   transition: opacity var(--sy-transition-hover);
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-notif__avatar {
     display: block;
   }
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 840px) {
   /* Row actions fade in on pointer devices but stay in the tab order, so a
      keyboard reveals them with focus rather than needing a different path. */
   .sy-notif__actions {
@@ -1678,11 +1790,17 @@
   }
 }
 
+/* Same reasoning as the shelf explanation: the inline resolution panel is
+   marked by a creator-toned fill in light, by an edge in dark. */
 .sy-notif__expand {
   display: flex;
   flex-direction: column;
   gap: var(--sy-space-4);
   margin: var(--sy-space-1) 0 var(--sy-space-2) var(--sy-space-4);
+  background: var(--sy-creator-bg);
+}
+[data-theme='dark'] .sy-notif__expand {
+  background: var(--sy-bg-raised);
   border-color: var(--sy-creator-border);
 }
 .sy-notif__gift {
@@ -1698,7 +1816,7 @@
   block-size: 56px;
   border-radius: var(--sy-radius-lg);
   background: var(--sy-gradient-ember);
-  color: var(--sy-on-nova);
+  color: var(--sy-on-creator);
   font-size: 26px;
   flex-shrink: 0;
 }

@@ -14,9 +14,46 @@
   display: block;
   flex-shrink: 0;
   overflow: visible;
+  /*
+    Isolate so the lenses blend only with each other. Without this they would
+    blend with whatever happens to sit behind the mark, and the same logo would
+    render differently on a card, on media and on the page.
+  */
+  isolation: isolate;
 }
 
-.sy-logo-mark__blades {
+/**
+ * The physics switch.
+ *
+ * Light theme: the lenses are *filters*. Multiply subtracts, so overlaps deepen
+ * and the centre is the darkest point — exactly what three coloured gels do to
+ * transmitted daylight.
+ *
+ * Dark theme: there is no ambient light to subtract, so the lenses become
+ * *emitters*. Screen adds, overlaps brighten, and the centre goes to white.
+ *
+ * Same geometry, same three colours, opposite arithmetic. It is the clearest
+ * expression anywhere in the system of why the two themes are not inversions
+ * of each other.
+ */
+.sy-logo-mark--spectral .sy-logo-mark__lens {
+  mix-blend-mode: multiply;
+}
+[data-theme='dark'] .sy-logo-mark--spectral .sy-logo-mark__lens {
+  mix-blend-mode: screen;
+}
+
+/* Blending is unavailable in forced colours; fall back to a legible outline. */
+@media (forced-colors: active) {
+  .sy-logo-mark--spectral .sy-logo-mark__lens {
+    mix-blend-mode: normal;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+}
+
+.sy-logo-mark__lenses {
   transform-origin: 50% 50%;
 }
 
@@ -27,18 +64,18 @@
 
 /**
  * Thinking.
- * The aperture rotates at a constant rate — a real mechanism, so `linear` is
+ * The cluster rotates at a constant rate — a real mechanism, so `linear` is
  * correct here — while the core breathes on a slower, eased cycle. Two
  * unrelated periods make the motion read as alive rather than looped.
  */
-.sy-logo-mark--thinking .sy-logo-mark__blades {
-  animation: sy-logo-spin 2.4s linear infinite;
+.sy-logo-mark--thinking .sy-logo-mark__lenses {
+  animation: sy-logo-spin 3.2s linear infinite;
 }
 .sy-logo-mark--thinking .sy-logo-mark__core {
   animation: sy-logo-core-pulse 1.6s ease-in-out infinite;
 }
 
-/** Listening: the aperture holds still and only the core breathes. */
+/** Listening: the cluster holds still and only the core breathes. */
 .sy-logo-mark--listening .sy-logo-mark__core {
   animation: sy-logo-core-pulse 2.8s ease-in-out infinite;
 }
@@ -142,8 +179,8 @@
     conic-gradient(
       from 0deg,
       transparent 0deg,
-      var(--sy-iris-9) 90deg,
-      var(--sy-flux-9) 200deg,
+      var(--sy-aether-9) 90deg,
+      var(--sy-pulse-9) 200deg,
       transparent 300deg
     )
       border-box;
@@ -165,8 +202,8 @@
   inline-size: 34%;
   block-size: 34%;
   border-radius: 50%;
-  background: var(--sy-gradient-signal);
-  box-shadow: 0 0 var(--sy-glow-base-spread) color-mix(in oklab, var(--sy-flux-9) 60%, transparent);
+  background: var(--sy-gradient-beam);
+  box-shadow: 0 0 var(--sy-refract-edge-spread) color-mix(in oklab, var(--sy-pulse-9) 60%, transparent);
 }
 
 .sy-ai-orb--thinking .sy-ai-orb__ring--outer {

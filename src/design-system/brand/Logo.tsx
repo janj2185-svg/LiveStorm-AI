@@ -2,74 +2,86 @@
  * SYLORA brand marks
  * ---------------------------------------------------------------------------
  * THE IDEA
- * SYLORA's product is intelligence made visible. The mark is therefore an
- * *aperture*: three blades around a void, the instrument that gathers light
- * and focuses it into an image. It is the shape of a lens, an eye, and a
- * portal at the same time.
+ * SYLORA makes intelligence visible, and the mark shows the mechanism rather
+ * than a metaphor for it: **three lenses overlapping**, each passing one part
+ * of the spectrum, mixing where they cross. It is what actually happens when
+ * light meets a medium, drawn at brand scale.
  *
- * WHY AN APERTURE AND NOT A LETTER
- * A letterform mark ties a global brand to one alphabet. An aperture is
- * legible in every writing system, survives at 16px in a browser tab, and —
- * crucially — has a native motion behaviour. Blades rotate. That single degree
- * of freedom gives the brand a loading state, a listening state and a
- * generating state without inventing a separate animation language.
+ * WHY THIS AND NOT A LETTER
+ * A letterform ties a global product to one alphabet; SYLORA ships in scripts
+ * an "S" does not exist in. Three lenses are legible in every writing system,
+ * survive at 16px in a browser tab, and have a native motion behaviour — they
+ * rotate — which gives the brand a loading, listening and generating state
+ * without inventing a separate animation language for each.
+ *
+ * WHY IT BLENDS DIFFERENTLY PER THEME
+ * This is the detail that makes the mark belong to a light-first system. On a
+ * bright ground the lenses **multiply**, because that is what physical filters
+ * do to transmitted light: overlaps get deeper and the centre goes darkest. On
+ * a dark ground they **screen**, because there is no light to subtract and the
+ * lenses become emitters: overlaps get brighter and the centre goes white.
+ *
+ * The same geometry, the same three colours, the correct physics in each
+ * theme — and the mark reads as unmistakably itself in both.
  *
  * CONSTRUCTION
- * Everything derives from one circle. Blades are arcs of a single construction
- * radius, stroked with round caps, spaced at exact thirds. The centre void is
- * the negative space left behind. Because the geometry is computed rather than
- * drawn, the mark is mathematically identical at every size and any parameter
- * change stays symmetric.
+ * Everything derives from one circle. Three identical ellipses sit on a
+ * construction circle at exact thirds, each rotated so its long axis points at
+ * the centre. Because the geometry is computed rather than drawn, the mark is
+ * mathematically identical at every size and any parameter change stays
+ * symmetric.
  *
  *   viewBox        48 x 48
  *   centre         (24, 24)
- *   construction r 14.5
- *   blade weight   10  -> inner edge 9.5, outer edge 19.5
- *   blade sweep    66 degrees, repeated every 120 degrees
- *   core radius    3.4
+ *   construction r 7.4      distance from centre to each lens centre
+ *   lens           rx 13.6, ry 9.2
+ *   placement      -90, 30, 150 degrees
  *
- * The 66/54 split between blade and gap is the smallest gap that still reads
- * as three separate blades once round caps have eaten into it.
+ * The rx:ry ratio of roughly 3:2 is what makes the silhouette a rounded
+ * triangle rather than a circle — a Venn diagram of three circles reads as a
+ * colour-theory illustration, which is precisely what this must not look like.
  */
 
 import type { CSSProperties } from 'react';
 
 const VIEWBOX = 48;
 const CENTRE = VIEWBOX / 2;
-const CONSTRUCTION_RADIUS = 14.5;
-const BLADE_WEIGHT = 10;
-const BLADE_SWEEP = 66;
-const CORE_RADIUS = 3.4;
+const CONSTRUCTION_RADIUS = 7.4;
+const LENS_RX = 13.6;
+const LENS_RY = 9.2;
+const CORE_RADIUS = 2.5;
 
-/** Point on the construction circle at a given angle. */
-function pointAt(angleDeg: number, radius = CONSTRUCTION_RADIUS): [number, number] {
-  const rad = (angleDeg * Math.PI) / 180;
-  return [CENTRE + radius * Math.cos(rad), CENTRE + radius * Math.sin(rad)];
+/** Lens placements. -90 puts the first lens on the vertical axis. */
+const LENS_ANGLES = [-90, 30, 150];
+
+export interface Lens {
+  cx: number;
+  cy: number;
+  angle: number;
 }
 
-/** One blade, as an SVG arc command. Angles increase clockwise on screen. */
-function bladePath(startAngle: number): string {
-  const [x1, y1] = pointAt(startAngle);
-  const [x2, y2] = pointAt(startAngle + BLADE_SWEEP);
-  return `M ${x1.toFixed(3)} ${y1.toFixed(3)} A ${CONSTRUCTION_RADIUS} ${CONSTRUCTION_RADIUS} 0 0 1 ${x2.toFixed(
-    3,
-  )} ${y2.toFixed(3)}`;
-}
+export const LENSES: Lens[] = LENS_ANGLES.map((angle) => {
+  const rad = (angle * Math.PI) / 180;
+  return {
+    cx: Number((CENTRE + CONSTRUCTION_RADIUS * Math.cos(rad)).toFixed(3)),
+    cy: Number((CENTRE + CONSTRUCTION_RADIUS * Math.sin(rad)).toFixed(3)),
+    angle,
+  };
+});
 
-/** Blades begin at -90 so the first one is centred on the vertical axis. */
-const BLADE_ANGLES = [-90, 30, 150];
-export const BLADE_PATHS = BLADE_ANGLES.map(bladePath);
+/** The three spectral stops, in refraction order. */
+const LENS_COLORS = ['var(--sy-aether-9)', 'var(--sy-pulse-9)', 'var(--sy-bloom-9)'];
 
-export type LogoTone = 'gradient' | 'currentColor' | 'mono';
+export type LogoTone = 'spectral' | 'currentColor' | 'mono';
 export type LogoState = 'rest' | 'thinking' | 'listening';
 
 export interface LogoMarkProps {
   size?: number;
   tone?: LogoTone;
   /**
-   * `thinking` spins the blades and pulses the core — used while the assistant
-   * generates. `listening` breathes the core only, so an idle microphone does
-   * not look like a spinner.
+   * `thinking` rotates the lens cluster and pulses the core — used while the
+   * assistant generates. `listening` breathes the core only, so an idle
+   * microphone does not look like a spinner.
    */
   state?: LogoState;
   /** Give the mark an accessible name when it is not accompanied by the wordmark. */
@@ -78,68 +90,59 @@ export interface LogoMarkProps {
   style?: CSSProperties;
 }
 
-let gradientSeed = 0;
-
 export function LogoMark({
   size = 32,
-  tone = 'gradient',
+  tone = 'spectral',
   state = 'rest',
   title,
   className,
   style,
 }: LogoMarkProps) {
-  // Unique per instance: multiple marks on one page must not share a gradient
-  // id, or the first one wins and the rest render flat.
-  const gradientId = `sy-logo-gradient-${(gradientSeed += 1)}`;
-  const stroke = tone === 'gradient' ? `url(#${gradientId})` : 'currentColor';
+  const spectral = tone === 'spectral';
 
   return (
     <svg
-      className={['sy-logo-mark', `sy-logo-mark--${state}`, className].filter(Boolean).join(' ')}
+      className={[
+        'sy-logo-mark',
+        `sy-logo-mark--${state}`,
+        spectral && 'sy-logo-mark--spectral',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={style}
       width={size}
       height={size}
       viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
-      fill="none"
       role={title ? 'img' : 'presentation'}
       aria-label={title}
       aria-hidden={title ? undefined : true}
     >
-      {tone === 'gradient' && (
-        <defs>
-          {/*
-            The gradient runs across the mark on the same 135 degree axis as the
-            brand's aurora gradient, so the logo and the backdrop agree.
-          */}
-          <linearGradient id={gradientId} x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="var(--sy-iris-9)" />
-            <stop offset="52%" stopColor="var(--sy-flux-9)" />
-            <stop offset="100%" stopColor="var(--sy-nova-9)" />
-          </linearGradient>
-        </defs>
-      )}
-
-      {/* Blades. Grouped so the whole aperture can rotate as one object. */}
-      <g className="sy-logo-mark__blades">
-        {BLADE_PATHS.map((d, index) => (
-          <path
-            key={d}
-            d={d}
-            stroke={stroke}
-            strokeWidth={BLADE_WEIGHT}
-            strokeLinecap="round"
-            style={{ ['--blade-index' as string]: index }}
+      {/* Grouped so the cluster rotates as one object. */}
+      <g className="sy-logo-mark__lenses">
+        {LENSES.map((lens, index) => (
+          <ellipse
+            key={lens.angle}
+            className="sy-logo-mark__lens"
+            cx={lens.cx}
+            cy={lens.cy}
+            rx={LENS_RX}
+            ry={LENS_RY}
+            transform={`rotate(${lens.angle} ${lens.cx} ${lens.cy})`}
+            fill={spectral ? LENS_COLORS[index] : 'currentColor'}
+            /* Mono and currentColor cannot rely on blending to stay legible. */
+            opacity={spectral ? undefined : 0.62}
           />
         ))}
       </g>
 
-      {/* The core: the light the aperture is gathering. */}
+      {/* The core: the light the lenses are resolving. Never blended. */}
       <circle
         className="sy-logo-mark__core"
         cx={CENTRE}
         cy={CENTRE}
         r={CORE_RADIUS}
-        fill={tone === 'gradient' ? 'var(--sy-flux-9)' : 'currentColor'}
+        fill={spectral ? 'var(--sy-bg-surface)' : 'currentColor'}
       />
     </svg>
   );
@@ -190,7 +193,7 @@ export interface LogoLockupProps {
 export function LogoLockup({
   size = 32,
   orientation = 'horizontal',
-  tone = 'gradient',
+  tone = 'spectral',
   state = 'rest',
   suffix,
   className,

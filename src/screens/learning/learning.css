@@ -5,6 +5,10 @@
  * flexible row: a lesson state mark on Courses, a date tile on Events. That
  * column is what makes a long list scannable, so it never shrinks and never
  * wraps — everything else in the row gives way first.
+ *
+ * Row rules come from `--rule` / `--rule-strong`, declared once in creator.css
+ * and imported before this file: the system border tokens are tuned for a
+ * near-black field and read a step too heavy on porcelain.
  */
 
 .sy-learn,
@@ -33,15 +37,13 @@
   inline-size: 56px;
   block-size: 56px;
   border-radius: 50%;
-  background: color-mix(in oklab, var(--sy-neutral-12) 22%, transparent);
-  border: 1px solid color-mix(in oklab, var(--sy-neutral-12) 34%, transparent);
-  color: var(--sy-neutral-12);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-[data-theme='light'] .sy-resume__play {
-  background: color-mix(in oklab, var(--sy-neutral-1) 30%, transparent);
-  color: var(--sy-neutral-1);
+  /* On cover art the page's ink pair is the wrong one in both themes: the
+     still is dark either way, so the control reads from the media pair. */
+  background: color-mix(in oklab, var(--sy-scrim-on-media) 46%, transparent);
+  border: 1px solid color-mix(in oklab, var(--sy-fg-on-media) 34%, transparent);
+  color: var(--sy-fg-on-media);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-scrim-blur));
+  backdrop-filter: blur(var(--sy-vellum-scrim-blur));
 }
 .sy-resume__duration {
   position: absolute;
@@ -49,8 +51,8 @@
   inset-inline-end: var(--sy-space-2);
   padding: 2px var(--sy-space-1_5);
   border-radius: var(--sy-radius-xs);
-  background: color-mix(in oklab, var(--sy-neutral-1) 72%, transparent);
-  color: var(--sy-neutral-12);
+  background: var(--sy-scrim-on-media);
+  color: var(--sy-fg-on-media);
   font-size: var(--sy-type-caption-size);
 }
 .sy-resume__body {
@@ -67,7 +69,7 @@
   align-items: center;
   gap: var(--sy-space-4);
   padding-block: var(--sy-space-3);
-  border-block: 1px solid var(--sy-border-subtle);
+  border-block: 1px solid var(--rule);
 }
 .sy-resume__ring {
   font-size: var(--sy-type-caption-size);
@@ -83,7 +85,7 @@
   flex-wrap: wrap;
 }
 
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-resume {
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
   }
@@ -162,7 +164,7 @@
   gap: var(--sy-space-1_5);
   margin-block-start: auto;
   padding-block-start: var(--sy-space-2);
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
   font-size: var(--sy-type-caption-size);
 }
 .sy-course-card__foot {
@@ -208,13 +210,20 @@
   flex-direction: column;
   gap: var(--sy-space-2);
 }
+/**
+ * Module groups keep a drawn box even in light. They are not elevated
+ * surfaces — they are a bracket around a set of lessons, and an open module's
+ * lessons have to be visibly inside something. The weight is a hairline
+ * rather than the system border, which on porcelain would fence eight modules
+ * into a grid; open steps it up so the expanded group reads as the active one.
+ */
 .sy-modules > li {
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid var(--rule);
   border-radius: var(--sy-radius-md);
   overflow: hidden;
 }
 .sy-modules > li.is-open {
-  border-color: var(--sy-border-default);
+  border-color: var(--rule-strong);
   background: var(--sy-bg-canvas);
 }
 .sy-module__head {
@@ -231,7 +240,7 @@
   background: var(--sy-bg-hover);
 }
 .sy-module__index {
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
   flex-shrink: 0;
 }
 .sy-module__text {
@@ -256,7 +265,7 @@
   align-items: center;
   gap: var(--sy-space-3);
   padding: var(--sy-space-2) var(--sy-space-1);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-lesson__mark {
   display: grid;
@@ -269,14 +278,14 @@
 /* Shape first: filled check, filled play, outlined padlock. */
 .sy-lessons li.is-done .sy-lesson__mark {
   background: var(--sy-success-solid);
-  color: var(--sy-on-verdant);
+  color: var(--sy-on-success);
 }
 .sy-lessons li.is-done span:not(.sy-lesson__mark) {
   color: var(--sy-fg-muted);
 }
 .sy-lessons li.is-next .sy-lesson__mark {
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-brand);
 }
 .sy-lessons li.is-next {
   font-weight: 600;
@@ -293,7 +302,7 @@
 .sy-outcomes {
   margin-block-start: var(--sy-space-6);
   padding-block-start: var(--sy-space-5);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-outcomes ul {
   display: grid;
@@ -312,7 +321,7 @@
   color: var(--sy-success-fg);
   flex-shrink: 0;
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-outcomes ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -338,7 +347,7 @@
   gap: var(--sy-space-2);
   margin-block-start: var(--sy-space-4);
   padding-block-start: var(--sy-space-4);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-enrol__includes li {
   display: flex;
@@ -367,7 +376,7 @@
   display: flex;
   gap: var(--sy-space-6);
   padding-block-start: var(--sy-space-3);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-instructor__stats div {
   display: flex;
@@ -379,7 +388,15 @@
   font-weight: 600;
 }
 
-/* Certificate — deliberately paper-like: light stock, engraved rule, seal. */
+/**
+ * Certificate — deliberately paper-like: light stock, engraved rule, seal.
+ *
+ * Stock means the *brightest* thing in the frame, so in light it takes the
+ * surface colour and lifts off the card rather than sinking into the page
+ * colour. A certificate printed a shade darker than the page it lies on is
+ * the one thing a certificate must never be. Dark cannot go brighter without
+ * becoming a lightbox, so it keeps the recessed stock and the drawn edge.
+ */
 .sy-certificate__head {
   margin-block-end: var(--sy-space-3);
 }
@@ -392,9 +409,16 @@
   border: 1px solid var(--sy-warning-border);
   border-radius: var(--sy-radius-md);
   background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--sy-solar-9) 10%, transparent), transparent 70%),
+    var(--sy-bg-surface);
+  box-shadow: var(--sy-elevation-raised);
+  text-align: center;
+}
+[data-theme='dark'] .sy-certificate {
+  background:
     radial-gradient(120% 90% at 50% 0%, color-mix(in oklab, var(--sy-solar-9) 12%, transparent), transparent 70%),
     var(--sy-bg-canvas);
-  text-align: center;
+  box-shadow: none;
 }
 .sy-certificate__seal {
   display: grid;
@@ -427,8 +451,8 @@
   gap: var(--sy-space-3);
   margin-block-start: var(--sy-space-4);
   padding-block-start: var(--sy-space-3);
-  border-block-start: 1px solid var(--sy-border-subtle);
-  color: var(--sy-fg-quiet);
+  border-block-start: 1px solid var(--rule);
+  color: var(--quiet);
 }
 .sy-certificate__actions {
   display: flex;
@@ -481,8 +505,15 @@
   padding-block: var(--sy-space-1_5) var(--sy-space-1);
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  /* A tag lying on the cover art: it sits above the page, so light gives it a
+     shadow and dark gives it the edge a shadow cannot draw there. */
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-raised);
   color: var(--sy-fg-default);
+}
+[data-theme='dark'] .sy-event-hero__date {
+  border-color: var(--sy-border-subtle);
+  box-shadow: none;
 }
 .sy-event-hero__day {
   font-size: var(--sy-type-title3-size);
@@ -516,7 +547,7 @@
   gap: var(--sy-space-3);
   flex-wrap: wrap;
   padding-block-start: var(--sy-space-4);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-event-hero__host,
 .sy-event-hero__going {
@@ -529,7 +560,7 @@
   font-size: var(--sy-type-headline-size);
   font-weight: 600;
 }
-@container screen (min-width: 640px) {
+@container screen (min-width: 560px) {
   .sy-event-hero {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   }
@@ -550,7 +581,7 @@
   gap: var(--sy-space-3);
   align-items: start;
   padding: var(--sy-space-4);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-event-list li:last-child .sy-event-row {
   border-block-end: none;
@@ -566,7 +597,11 @@
   flex-shrink: 0;
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-canvas);
-  border: 1px solid var(--sy-border-subtle);
+  /* Nested inside a card, so the tone step down is the separation. */
+  border: 1px solid transparent;
+}
+[data-theme='dark'] .sy-event-date {
+  border-color: var(--sy-border-subtle);
 }
 .sy-event-date__day {
   font-size: var(--sy-type-title3-size);
@@ -574,7 +609,7 @@
   line-height: 1;
 }
 .sy-event-date__month {
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
 }
 .sy-event-row__text {
   display: flex;
@@ -620,7 +655,7 @@
   font-size: var(--sy-type-caption-size);
   font-weight: 650;
 }
-@container screen (min-width: 768px) {
+@container screen (min-width: 840px) {
   .sy-event-row {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
@@ -672,7 +707,7 @@
   background: var(--sy-bg-hover);
 }
 .sy-cal__day.is-outside .sy-cal__num {
-  color: var(--sy-fg-quiet);
+  color: var(--quiet);
 }
 /* The selected day is a filled chip *and* a ring, so it survives a screenshot
    printed in black and white. */
@@ -695,7 +730,7 @@
   inline-size: 5px;
   block-size: 5px;
   border-radius: 50%;
-  background: var(--sy-fg-quiet);
+  background: var(--quiet);
 }
 .sy-cal__dot.is-workshop { background: var(--sy-accent-solid); }
 .sy-cal__dot.is-ama { background: var(--sy-live-solid); }
@@ -709,7 +744,7 @@
   gap: var(--sy-space-2) var(--sy-space-4);
   margin-block-start: var(--sy-space-4);
   padding-block-start: var(--sy-space-3);
-  border-block-start: 1px solid var(--sy-border-subtle);
+  border-block-start: 1px solid var(--rule);
 }
 .sy-cal__legend > span {
   display: inline-flex;
@@ -739,7 +774,7 @@
   flex-shrink: 0;
 }
 
-@container screen (min-width: 768px) {
+@container screen (min-width: 840px) {
   .sy-cal__day {
     min-block-size: 74px;
   }
@@ -758,7 +793,7 @@
   align-items: center;
   gap: var(--sy-space-3);
   padding-block: var(--sy-space-3);
-  border-block-end: 1px solid var(--sy-border-subtle);
+  border-block-end: 1px solid var(--rule);
 }
 .sy-your-events li:last-child {
   border-block-end: none;
@@ -777,13 +812,13 @@
   gap: var(--sy-space-6);
   grid-template-columns: 1fr;
 }
-@container screen (min-width: 1024px) {
+@container screen (min-width: 880px) {
   .sy-event-detail__grid {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
   .sy-event-detail__aside {
     padding-inline-start: var(--sy-space-6);
-    border-inline-start: 1px solid var(--sy-border-subtle);
+    border-inline-start: 1px solid var(--rule);
   }
 }
 .sy-event-detail__desc {
@@ -831,7 +866,7 @@
   translate: -50% 0;
   inline-size: 2px;
   block-size: calc(100% + var(--sy-space-5));
-  background: var(--sy-border-subtle);
+  background: var(--rule-strong);
 }
 .sy-agenda__text {
   display: flex;

@@ -45,7 +45,7 @@ function readLocation() {
 export function App() {
   const initial = typeof window === 'undefined' ? null : readLocation();
 
-  const [theme, setTheme] = useState<ThemeName>(initial?.theme ?? 'dark');
+  const [theme, setTheme] = useState<ThemeName>(initial?.theme ?? 'light');
   const [screenId, setScreenId] = useState(
     initial?.screenId && SCREENS.some((s) => s.id === initial.screenId)
       ? initial.screenId
@@ -61,9 +61,10 @@ export function App() {
   const screen = useMemo(() => SCREENS.find((item) => item.id === screenId) ?? SCREENS[0], [screenId]);
   const spec = DEVICES[device];
 
-  // The gallery itself is always dark; only the preview surface switches theme.
+  // The gallery chrome follows the product's default so the tool and the thing
+  // it frames feel like one system. Only the preview switches independently.
   useEffect(() => {
-    document.documentElement.dataset.theme = 'dark';
+    document.documentElement.dataset.theme = 'light';
   }, []);
 
   useEffect(() => {
@@ -221,8 +222,8 @@ export function App() {
           <Tabs
             variant="segmented"
             tabs={[
-              { id: 'dark', label: 'Dark', icon: 'moon' },
               { id: 'light', label: 'Light', icon: 'sun' },
+              { id: 'dark', label: 'Dark', icon: 'moon' },
             ]}
             active={theme}
             onChange={(id) => setTheme(id as ThemeName)}

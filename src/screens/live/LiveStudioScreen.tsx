@@ -180,13 +180,20 @@ export function LiveStudioScreen() {
         <main className="sy-studio__stage" aria-label="Programme output">
           <div className="sy-studio__monitors">
             <figure className="sy-monitor is-programme">
-              <Media seed="studio-programme" ratio="16/9" radius="md" className="sy-monitor__feed">
-                <span className="sy-monitor__badge">
-                  <LiveBadge viewers={stream.viewers} />
-                </span>
-                <span className="sy-monitor__clock sy-mono">{stream.duration}</span>
-                <span className="sy-monitor__safe" aria-hidden="true" />
-              </Media>
+              {/*
+                Only the bezel and what is inside it are dark. The picture is
+                the light source; the caption underneath belongs to the tool and
+                stays in the room's theme.
+              */}
+              <div className="sy-monitor__screen" data-theme="dark">
+                <Media seed="studio-programme" ratio="16/9" radius="md" className="sy-monitor__feed">
+                  <span className="sy-monitor__badge">
+                    <LiveBadge viewers={stream.viewers} />
+                  </span>
+                  <span className="sy-monitor__clock sy-mono">{stream.duration}</span>
+                  <span className="sy-monitor__safe" aria-hidden="true" />
+                </Media>
+              </div>
               <figcaption className="sy-monitor__caption">
                 <span className="sy-label">Programme</span>
                 <span className="sy-caption sy-fg-quiet sy-truncate">Main cam · 1920×1080 · 60 fps</span>
@@ -195,9 +202,11 @@ export function LiveStudioScreen() {
 
             <div className="sy-studio__aside">
               <figure className="sy-monitor is-preview">
-                <Media seed="studio-preview" ratio="16/9" radius="md" className="sy-monitor__feed">
-                  <span className="sy-monitor__tag">Preview</span>
-                </Media>
+                <div className="sy-monitor__screen" data-theme="dark">
+                  <Media seed="studio-preview" ratio="16/9" radius="md" className="sy-monitor__feed">
+                    <span className="sy-monitor__tag">Preview</span>
+                  </Media>
+                </div>
                 <figcaption className="sy-monitor__caption">
                   <span className="sy-label">Preview</span>
                   <span className="sy-caption sy-fg-quiet sy-truncate">Screen share · staged, not on air</span>
@@ -452,6 +461,9 @@ export function LiveStudioScreen() {
                 </li>
               ))}
             </ul>
+            {/* Assistant-authored, so it is introduced by the spectral rule
+                rather than by the plain hairline every other footer uses. */}
+            <hr className="sy-refract-rule sy-studio__thanks-rule" />
             <div className="sy-studio__thanks">
               <Avatar name="marcus_ade" size={26} />
               <span className="sy-caption sy-fg-muted sy-grow">Thank the last gifter on stream?</span>

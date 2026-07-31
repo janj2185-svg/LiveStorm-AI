@@ -22,6 +22,13 @@
  * Rendered as directional arrows rather than thumbs. The icon set has no thumb,
  * and a heart cannot be negated, so the pair is drawn as one arrow and its
  * mirror — the relationship between the two is the meaning.
+ *
+ * WHY THIS ONE IS NOT DARK
+ * The player, stories and shorts stay dark in both themes because they are
+ * playback surfaces. This is not one: it is a page with a video near the top of
+ * it, and everything that makes it worth building — chapters, description,
+ * twelve hundred comments — is read rather than watched. So it is light-native,
+ * and only the poster frame and the pill sitting on it use the media tokens.
  */
 
 import { useState } from 'react';

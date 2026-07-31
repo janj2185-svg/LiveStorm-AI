@@ -49,7 +49,7 @@ const COMPOSER_TYPES: { id: string; label: string; icon: IconName }[] = [
 
 const POLL_OPTIONS = [
   { id: 'po1', label: 'Semantic only — bg.surface, fg.muted', share: 46, chosen: true },
-  { id: 'po2', label: 'Ramp steps only — neutral.3, iris.9', share: 12, chosen: false },
+  { id: 'po2', label: 'Ramp steps only — porcelain.3, aether.9', share: 12, chosen: false },
   { id: 'po3', label: 'Both, with semantic as the default', share: 38, chosen: false },
   { id: 'po4', label: 'Neither. Component-scoped tokens', share: 4, chosen: false },
 ];
@@ -126,13 +126,13 @@ export function FeedScreen() {
             </Surface>
 
             {/*
-              New posts arrive but never insert themselves. The pill is glass so
+              New posts arrive but never insert themselves. The pill is vellum so
               it reads as a layer over the timeline rather than an item in it,
               and it carries a count so the choice to jump is informed.
             */}
             {!pillDismissed && (
               <div className="sy-fdscreen__newwrap">
-                <div className="sy-newpill sy-glass">
+                <div className="sy-newpill sy-vellum">
                   <AvatarGroup
                     people={[CREATORS[2], CREATORS[5], CREATORS[7]].map((c) => ({ name: c.name }))}
                     size={20}
@@ -181,11 +181,11 @@ export function FeedScreen() {
 
           {/*
             In-screen sidebar.
-            The shell only opens its own context panel at 1280px. Between 1024
-            and 1279 the surface is wide enough for two columns but the shell
-            gives the screen nothing to fill the second one with, so the screen
-            has to supply it. Everything in here is duplicated elsewhere in the
-            product — this column is the first thing that may be dropped.
+            Feed supplies no context panel, so once the content column passes
+            the system's widest threshold the surface is wide enough for two
+            columns and the shell has nothing to fill the second one with. The
+            screen has to supply it. Everything in here is duplicated elsewhere
+            in the product — this column is the first thing that may be dropped.
           */}
           <aside className="sy-fdscreen__side" aria-label="Suggestions">
             <Surface className="sy-fdscreen__panel" padding="md" elevation="surface">

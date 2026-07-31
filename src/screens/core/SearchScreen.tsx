@@ -213,7 +213,7 @@ function AllResults() {
             <Icon name="sparkles" size={14} />
             <span className="sy-overline">Top result</span>
           </div>
-          <Surface className="sy-search__hero" padding="lg" elevation="raised" radius="xl">
+          <Surface className="sy-search__hero sy-refract" padding="lg" elevation="raised" radius="xl">
             <Avatar name={CREATORS[0].name} size={64} verified ring="live" />
             <div className="sy-grow">
               <div className="sy-search__hero-name">

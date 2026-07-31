@@ -165,17 +165,18 @@ const SECTIONS: SettingsSection[] = [
 ];
 
 const ACCENTS = [
-  { id: 'iris', label: 'Iris', note: 'Default' },
-  { id: 'flux', label: 'Flux', note: 'Realtime' },
-  { id: 'nova', label: 'Nova', note: 'Expressive' },
-  { id: 'verdant', label: 'Verdant', note: 'Calm' },
+  { id: 'aether', label: 'Aether', note: 'Default' },
+  { id: 'pulse', label: 'Pulse', note: 'Realtime' },
+  { id: 'bloom', label: 'Bloom', note: 'Expressive' },
+  { id: 'verdigris', label: 'Verdigris', note: 'Calm' },
   { id: 'solar', label: 'Solar', note: 'Warm' },
-  { id: 'crimson', label: 'Crimson', note: 'High energy' },
+  { id: 'rose', label: 'Rose', note: 'High energy' },
 ];
 
+/* Light leads, and the descriptions say why rather than which came first. */
 const THEMES = [
-  { id: 'dark', label: 'Dark', description: 'Built first. Lowest glare after sunset.' },
-  { id: 'light', label: 'Light', description: 'Same tokens, remapped. Best in daylight.' },
+  { id: 'light', label: 'Light', description: 'The default. Built for daylight and paper.' },
+  { id: 'dark', label: 'Dark', description: 'The same palette after sunset. Lowest glare.' },
   { id: 'system', label: 'System', description: 'Follows your device, switches at sunset.' },
 ];
 
@@ -190,8 +191,8 @@ const TEXT_SIZE_LABELS: Record<number, string> = {
 
 export function SettingsScreen() {
   const [active, setActive] = useState('appearance');
-  const [theme, setTheme] = useState('dark');
-  const [accent, setAccent] = useState('iris');
+  const [theme, setTheme] = useState('light');
+  const [accent, setAccent] = useState('aether');
   const [textSize, setTextSize] = useState(2);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [increaseContrast, setIncreaseContrast] = useState(false);
@@ -358,7 +359,7 @@ export function SettingsScreen() {
 
                     <Switch
                       label="Reduce motion"
-                      description="Removes parallax, the aurora drift and card entrance animation. Progress and loading states still animate."
+                      description="Removes parallax, the lumen drift and card entrance animation. Progress and loading states still animate."
                       checked={reduceMotion}
                       onChange={setReduceMotion}
                     />
@@ -367,7 +368,7 @@ export function SettingsScreen() {
 
                     <Switch
                       label="Increase contrast"
-                      description="Makes every glass surface opaque and raises border contrast to 3:1. Nothing moves position."
+                      description="Makes every vellum surface opaque and raises border contrast to 3:1. Nothing moves position."
                       checked={increaseContrast}
                       onChange={setIncreaseContrast}
                     />

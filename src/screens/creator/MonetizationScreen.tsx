@@ -50,7 +50,13 @@ interface Stream {
   active: boolean;
 }
 
-/** February to date. The donut, the total and the cards all read from this. */
+/**
+ * February to date. The donut, the total and the cards all read from this.
+ *
+ * Tones come from the categorical series ramp, not from each stream's brand
+ * hue: on white a six-hue donut reads as a pinwheel, and the semantic families
+ * are already committed to trend direction in the same view.
+ */
 const STREAMS: Stream[] = [
   {
     id: 'gifts',
@@ -59,7 +65,7 @@ const STREAMS: Stream[] = [
     amount: 1842.4,
     trend: '+12.4%',
     detail: 'Aurora Burst ×3, Prism Wave ×11, 284 smaller gifts',
-    tone: 'var(--sy-nova-9)',
+    tone: 'var(--series-1)',
     active: true,
   },
   {
@@ -69,7 +75,7 @@ const STREAMS: Stream[] = [
     amount: 1918.4,
     trend: '+4.1%',
     detail: '284 members across 3 tiers · 11 cancellations',
-    tone: 'var(--sy-iris-9)',
+    tone: 'var(--series-2)',
     active: true,
   },
   {
@@ -79,7 +85,7 @@ const STREAMS: Stream[] = [
     amount: 686.2,
     trend: '−6.8%',
     detail: 'Stream Deck Overlay Kit ×6 and 4 other listings',
-    tone: 'var(--sy-flux-9)',
+    tone: 'var(--series-3)',
     active: true,
   },
   {
@@ -89,7 +95,7 @@ const STREAMS: Stream[] = [
     amount: 604.75,
     trend: '+21.6%',
     detail: 'Design Systems from First Principles ×14',
-    tone: 'var(--sy-verdant-9)',
+    tone: 'var(--series-4)',
     active: true,
   },
   {
@@ -99,7 +105,7 @@ const STREAMS: Stream[] = [
     amount: 99.0,
     trend: '+2.0%',
     detail: 'One-off contributions, no membership attached',
-    tone: 'var(--sy-solar-9)',
+    tone: 'var(--series-5)',
     active: true,
   },
   {
@@ -109,7 +115,7 @@ const STREAMS: Stream[] = [
     amount: 0,
     trend: '—',
     detail: 'Brand briefs are matched to your category and audience',
-    tone: 'var(--sy-neutral-8)',
+    tone: 'var(--series-6)',
     active: false,
   },
 ];

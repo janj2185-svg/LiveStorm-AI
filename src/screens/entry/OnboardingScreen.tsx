@@ -100,13 +100,19 @@ export function OnboardingScreen() {
 
   return (
     <div className="sy-screen sy-onboard-screen">
+      {/* The same ambient field as Welcome and Authentication. Setup is still
+          pre-product, so it belongs to the brightest surfaces in the product
+          rather than to the shell it is about to hand you over to. */}
+      <div className="sy-lumen" />
+
       {/* Progress stays pinned. A wizard that lets you lose sight of how far
           along you are is a wizard people abandon in the middle. */}
       <header className="sy-onboard__steps">
         <div className="sy-onboard__steps-inner sy-screen__inner">
           <div className="sy-onboard__steps-head">
-            {/* Named as well as numbered: below 640px the per-segment labels are
-                suppressed, and "step 2 of 4" without a name is just a fraction. */}
+            {/* Named as well as numbered: on a compact column the per-segment
+                labels are suppressed, and "step 2 of 4" without a name is just
+                a fraction. */}
             <span className="sy-overline sy-fg-accent">
               Step {CURRENT_STEP + 1} of {STEPS.length} · {STEPS[CURRENT_STEP].label}
             </span>

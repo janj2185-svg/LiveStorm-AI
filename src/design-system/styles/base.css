@@ -135,7 +135,7 @@ hr {
 
 ::selection {
   background-color: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
 }
 
 /* ------------------------------------------------------------------ */
@@ -173,6 +173,11 @@ hr {
 /* Typography classes                                                  */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The display face stops at `title-1`. Below roughly 30px a high-contrast serif
+ * loses the thick/thin modulation that justifies using it, and becomes a serif
+ * for its own sake — so `title-2` and everything under it switch to the sans.
+ */
 .sy-display-1,
 .sy-display-2,
 .sy-display-3,
@@ -180,8 +185,10 @@ hr {
 .sy-title-2,
 .sy-title-3 {
   font-family: var(--sy-font-display);
-  /* Display type is set tight; optical sizing does the rest. */
   font-optical-sizing: auto;
+  /* The serif's own forms carry the emphasis; synthetic weight would smear it. */
+  font-weight: 400;
+  font-synthesis: none;
 }
 
 .sy-display-1 {
@@ -277,7 +284,19 @@ hr {
   font-variant-numeric: tabular-nums;
 }
 
-/* Dark mode sheds a little weight from body copy to cancel optical bloom. */
+/**
+ * Optical weight compensation.
+ *
+ * Dark ink on a bright ground *thins* — the light field eats into the strokes.
+ * Light text on a dark ground does the opposite and blooms. The two themes
+ * therefore correct in opposite directions so the voice reads the same in both,
+ * which is the whole reason a light-first system cannot simply invert.
+ */
+.sy-body,
+.sy-body-lg,
+.sy-body-sm {
+  font-weight: 410;
+}
 [data-theme='dark'] .sy-body,
 [data-theme='dark'] .sy-body-lg,
 [data-theme='dark'] .sy-body-sm {
@@ -318,7 +337,7 @@ hr {
  * `paint-order` keeps the fallback colour visible if background-clip fails.
  */
 .sy-gradient-text {
-  background: var(--sy-gradient-aurora);
+  background: var(--sy-gradient-prism);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -380,7 +399,7 @@ hr {
   padding: var(--sy-space-3) var(--sy-space-5);
   border-radius: var(--sy-radius-md);
   background: var(--sy-accent-solid);
-  color: var(--sy-on-iris);
+  color: var(--sy-on-accent);
   font-weight: 600;
   transform: translateY(calc(-100% - var(--sy-space-6)));
   transition: transform var(--sy-transition-enter);
@@ -486,13 +505,19 @@ hr {
 /* ------------------------------------------------------------------ */
 
 /**
- * Aurora field.
- * Three large, slowly drifting radial gradients. This is the brand's ambient
- * backdrop: colour that feels like it is *behind* the interface rather than
- * painted on it. Blur is baked into the gradient stops rather than applied as
- * a filter, because filters on full-viewport elements are expensive.
+ * The lumen field.
+ *
+ * SYLORA's ambient backdrop, and the light theme's answer to a dark theme's
+ * glow. Rather than colour emitted *onto* a dark page, this is colour caught
+ * *in* a bright one: two very wide, very pale spectral washes that behave like
+ * sunlight falling through glass onto paper.
+ *
+ * The values are deliberately extreme in one direction — enormous radius, tiny
+ * opacity. A saturated wash on white reads as a stain; a 10% wash across 80vmax
+ * reads as light in the room. Blur is baked into the gradient stops rather than
+ * applied as a filter, because filters on full-viewport elements are expensive.
  */
-.sy-aurora {
+.sy-lumen {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -500,114 +525,168 @@ hr {
   /* Not announced; purely atmospheric. */
   z-index: 0;
 }
-.sy-aurora::before,
-.sy-aurora::after {
+.sy-lumen::before,
+.sy-lumen::after {
   content: '';
   position: absolute;
-  inline-size: 80vmax;
-  block-size: 80vmax;
+  inline-size: 92vmax;
+  block-size: 92vmax;
   border-radius: 50%;
-  filter: blur(0.5px);
-  opacity: 0.5;
   will-change: transform;
 }
-.sy-aurora::before {
-  inset-block-start: -30vmax;
-  inset-inline-start: -20vmax;
-  background: radial-gradient(
-    circle at center,
-    var(--sy-iris-9) 0%,
-    transparent 62%
-  );
-  animation: sy-aurora-a var(--sy-aurora-duration, 24s) ease-in-out infinite alternate;
+.sy-lumen::before {
+  inset-block-start: -38vmax;
+  inset-inline-start: -26vmax;
+  background: radial-gradient(circle at center, var(--sy-aether-9) 0%, transparent 64%);
+  opacity: 0.1;
+  animation: sy-lumen-a var(--sy-lumen-duration, 26s) ease-in-out infinite alternate;
 }
-.sy-aurora::after {
-  inset-block-end: -34vmax;
-  inset-inline-end: -24vmax;
-  background: radial-gradient(
-    circle at center,
-    var(--sy-flux-9) 0%,
-    transparent 62%
-  );
-  animation: sy-aurora-b var(--sy-aurora-duration, 24s) ease-in-out infinite alternate;
+.sy-lumen::after {
+  inset-block-end: -42vmax;
+  inset-inline-end: -30vmax;
+  background: radial-gradient(circle at center, var(--sy-bloom-9) 0%, transparent 64%);
+  opacity: 0.08;
+  animation: sy-lumen-b var(--sy-lumen-duration, 26s) ease-in-out infinite alternate;
 }
-[data-theme='light'] .sy-aurora::before,
-[data-theme='light'] .sy-aurora::after {
-  opacity: 0.22;
+/* Dark mode can afford more presence, because there is no white to stain. */
+[data-theme='dark'] .sy-lumen::before {
+  opacity: 0.4;
+}
+[data-theme='dark'] .sy-lumen::after {
+  opacity: 0.32;
 }
 
-@keyframes sy-aurora-a {
+@keyframes sy-lumen-a {
   from {
     transform: translate3d(0, 0, 0) scale(1);
   }
   to {
-    transform: translate3d(12%, 8%, 0) scale(1.16);
+    transform: translate3d(10%, 7%, 0) scale(1.14);
   }
 }
-@keyframes sy-aurora-b {
+@keyframes sy-lumen-b {
   from {
     transform: translate3d(0, 0, 0) scale(1.1);
   }
   to {
-    transform: translate3d(-10%, -6%, 0) scale(0.94);
+    transform: translate3d(-9%, -5%, 0) scale(0.94);
   }
 }
 
 /**
- * Glass.
- * Three cooperating layers — blur, translucent fill, rim highlight.
- * `@supports` guards the whole effect: without backdrop-filter the surface
- * becomes opaque rather than unreadable.
+ * Vellum.
+ *
+ * Translucency that *transmits* rather than fogs. The brightness lift above 1
+ * in the light theme is the whole trick: ordinary frosted glass darkens what is
+ * behind it, which on a bright product reads as a grey smear. Lifting
+ * brightness while blurring reproduces fine translucent paper held over an
+ * image — it stays light, and the content beneath stays legible as shape.
+ *
+ * `@supports` guards the effect: without `backdrop-filter` the surface becomes
+ * opaque rather than unreadable.
  */
-.sy-glass {
+.sy-vellum {
   background: var(--sy-bg-surface);
   border: 1px solid var(--sy-border-subtle);
 }
 
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .sy-glass {
-    background: var(--sy-glass-panel-fill);
-    -webkit-backdrop-filter: blur(var(--sy-glass-panel-blur)) saturate(var(--sy-glass-panel-saturate));
-    backdrop-filter: blur(var(--sy-glass-panel-blur)) saturate(var(--sy-glass-panel-saturate));
-    border-color: var(--sy-glass-panel-rim);
+  .sy-vellum {
+    background: var(--sy-vellum-panel-fill);
+    -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate))
+      brightness(var(--sy-vellum-panel-brightness));
+    backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate))
+      brightness(var(--sy-vellum-panel-brightness));
+    border-color: var(--sy-vellum-panel-rim);
   }
-  .sy-glass--veil {
-    background: var(--sy-glass-veil-fill);
-    -webkit-backdrop-filter: blur(var(--sy-glass-veil-blur)) saturate(var(--sy-glass-veil-saturate));
-    backdrop-filter: blur(var(--sy-glass-veil-blur)) saturate(var(--sy-glass-veil-saturate));
-    border-color: var(--sy-glass-veil-rim);
+  .sy-vellum--veil {
+    background: var(--sy-vellum-veil-fill);
+    -webkit-backdrop-filter: blur(var(--sy-vellum-veil-blur)) saturate(var(--sy-vellum-veil-saturate))
+      brightness(var(--sy-vellum-veil-brightness));
+    backdrop-filter: blur(var(--sy-vellum-veil-blur)) saturate(var(--sy-vellum-veil-saturate))
+      brightness(var(--sy-vellum-veil-brightness));
+    border-color: var(--sy-vellum-veil-rim);
   }
-  .sy-glass--dome {
-    background: var(--sy-glass-dome-fill);
-    -webkit-backdrop-filter: blur(var(--sy-glass-dome-blur)) saturate(var(--sy-glass-dome-saturate));
-    backdrop-filter: blur(var(--sy-glass-dome-blur)) saturate(var(--sy-glass-dome-saturate));
-    border-color: var(--sy-glass-dome-rim);
+  .sy-vellum--dome {
+    background: var(--sy-vellum-dome-fill);
+    -webkit-backdrop-filter: blur(var(--sy-vellum-dome-blur)) saturate(var(--sy-vellum-dome-saturate))
+      brightness(var(--sy-vellum-dome-brightness));
+    backdrop-filter: blur(var(--sy-vellum-dome-blur)) saturate(var(--sy-vellum-dome-saturate))
+      brightness(var(--sy-vellum-dome-brightness));
+    border-color: var(--sy-vellum-dome-rim);
   }
 }
 
 /**
- * Users who ask for more contrast get opaque surfaces. Translucency is the
- * first thing to go, because it is the only place the system knowingly trades
- * contrast for depth.
+ * The refraction edge — SYLORA's signature.
+ *
+ * A hairline whose hue travels along its length, in the order light actually
+ * separates: cyan, indigo, magenta. It is drawn as a gradient border using two
+ * backgrounds and `border-box` clipping, which produces a gradient *stroke*
+ * without an extra element.
+ *
+ * At 1px it is nearly subliminal — the eye registers that an edge is alive
+ * before it registers that it is coloured. That is why it is rationed: brand
+ * surfaces, AI-authored content, and the single most important action in a
+ * view. Nothing else. If everything refracts, nothing is emphasised.
+ */
+.sy-refract {
+  position: relative;
+  background:
+    linear-gradient(var(--refract-fill, var(--sy-bg-surface)), var(--refract-fill, var(--sy-bg-surface)))
+      padding-box,
+    var(--sy-gradient-prism) border-box;
+  border: var(--sy-refract-hairline-weight) solid transparent;
+}
+
+/** Adds the bloom behind the edge. Only perceptible in dark mode. */
+.sy-refract--bloom {
+  box-shadow: 0 0 var(--sy-refract-bloom-spread)
+    color-mix(in oklab, var(--sy-aether-9) calc(var(--sy-refract-bloom-alpha) * 100%), transparent);
+}
+
+/**
+ * A refraction rule: the same spectral hairline as a standalone divider.
+ * Used to open a section that belongs to the brand or to the assistant.
+ */
+.sy-refract-rule {
+  block-size: 1px;
+  inline-size: 100%;
+  border: none;
+  background: var(--sy-gradient-prism);
+  opacity: 0.75;
+}
+
+/**
+ * Users who ask for more contrast get opaque surfaces and solid edges.
+ * Translucency and hue-varying hairlines are the two places the system
+ * knowingly trades contrast for character, so they are the first to go.
  */
 @media (prefers-contrast: more) {
-  .sy-glass,
-  .sy-glass--veil,
-  .sy-glass--dome {
+  .sy-vellum,
+  .sy-vellum--veil,
+  .sy-vellum--dome {
     background: var(--sy-bg-surface) !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
     border-color: var(--sy-border-interactive) !important;
   }
-  .sy-aurora {
+  .sy-refract {
+    background: var(--refract-fill, var(--sy-bg-surface)) !important;
+    border-color: var(--sy-border-interactive) !important;
+  }
+  .sy-refract-rule {
+    background: var(--sy-border-interactive);
+  }
+  .sy-lumen {
     display: none;
   }
 }
 
 /* Ambient motion is atmosphere, so it is the first thing removed. */
 @media (prefers-reduced-motion: reduce) {
-  .sy-aurora::before,
-  .sy-aurora::after {
+  .sy-lumen::before,
+  .sy-lumen::after {
     animation: none;
   }
 }

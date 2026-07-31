@@ -31,7 +31,7 @@ const has = (name: string) => args.includes(`--${name}`);
 const BASE = flag('base', 'http://localhost:5174');
 const OUT = resolve(process.cwd(), flag('out', 'design/captures')!);
 const DEVICE_LIST = (flag('devices', 'desktop')!.split(',') as DeviceId[]).filter((d) => DEVICES[d]);
-const THEMES = flag('themes', 'dark')!.split(',');
+const THEMES = flag('themes', 'light')!.split(',');
 
 mkdirSync(OUT, { recursive: true });
 
@@ -320,7 +320,7 @@ async function main() {
   if (!requested) {
     stage('navigating');
     const loaded = waitForLoad(page);
-    await page.send('Page.navigate', { url: `${BASE}/#/home?device=desktop&theme=dark` });
+    await page.send('Page.navigate', { url: `${BASE}/#/home?device=desktop&theme=light` });
     await loaded;
     stage('loaded');
     await sleep(1500);

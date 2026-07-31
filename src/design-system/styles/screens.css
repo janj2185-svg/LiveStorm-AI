@@ -29,9 +29,57 @@
 .sy-media--radius-xl { border-radius: var(--sy-radius-xl); }
 .sy-media--radius-none { border-radius: 0; }
 
+/**
+ * Cover art is generated per theme, not tinted per theme.
+ *
+ * The light recipe is not the dark one lightened. It inverts the construction:
+ * a pale, high-lightness ground with saturated colour arriving only at the
+ * edges, like light passing through the corner of a lens. Dark, saturated
+ * artwork on a porcelain page pulls every eye to the images and turns a feed
+ * into a contact sheet — the content should sit *in* the page, not on top of it.
+ *
+ * Chroma stays moderate for the same reason: on white, saturation reads as
+ * loudness, and a premium surface is never loud.
+ */
+/**
+ * Chroma is held low on purpose.
+ *
+ * A feed is mostly images, so cover art sets the volume of the whole page. At
+ * full saturation on porcelain, six covers in a grid become the only thing in
+ * the view and every heading, price and byline around them recedes — the page
+ * reads as a contact sheet rather than as a product. Held at roughly half
+ * chroma, the same artwork still identifies each item at a glance and still
+ * differs from its neighbour, while the interface stays legible around it.
+ *
+ * The hues within one cover are kept close — 18, 46 and 64 degrees apart —
+ * rather than complementary. Two opposed hues blended across a soft gradient
+ * pass through their desaturated midpoint, which is grey-brown, and that is
+ * where a gradient spends most of its area. Analogous hues never cross it, so
+ * every generated cover is harmonious by construction rather than by luck of
+ * the seed.
+ */
 .sy-media__art {
   position: absolute;
   inset: 0;
+  background:
+    radial-gradient(
+      124% 104% at 14% 6%,
+      oklch(90% 0.072 calc(var(--seed-hue) * 1deg)) 0%,
+      transparent 64%
+    ),
+    radial-gradient(
+      118% 116% at 88% 94%,
+      oklch(84% 0.078 calc((var(--seed-hue) + 46) * 1deg)) 0%,
+      transparent 68%
+    ),
+    linear-gradient(
+      152deg,
+      oklch(96.5% 0.022 calc((var(--seed-hue) + 18) * 1deg)),
+      oklch(93% 0.03 calc((var(--seed-hue) + 64) * 1deg))
+    );
+}
+
+[data-theme='dark'] .sy-media__art {
   background:
     radial-gradient(
       120% 100% at 12% 8%,
@@ -75,16 +123,23 @@
   mix-blend-mode: overlay;
 }
 
-/** Scrim: a bottom-weighted gradient so overlaid captions stay legible. */
+/**
+ * Scrim.
+ *
+ * Bottom-weighted, and dark in both themes: overlaid captions are white in both
+ * themes, so the surface they sit on cannot flip. It reaches full strength only
+ * in the bottom fifth, which leaves pale light-theme artwork pale everywhere a
+ * caption is not actually sitting.
+ */
 .sy-media--scrim::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to top,
-    oklch(12% 0.02 282 / 0.82) 0%,
-    oklch(12% 0.02 282 / 0.32) 38%,
-    transparent 68%
+    oklch(16% 0.03 266 / 0.78) 0%,
+    oklch(16% 0.03 266 / 0.24) 34%,
+    transparent 58%
   );
 }
 

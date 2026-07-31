@@ -2,15 +2,28 @@
  * Media screen styles — video player, stories, shorts and the long-video watch
  * page. Owned by the media group.
  *
- * Three of the four screens are immersive: the picture is the background and
- * every control is a glass layer floating on top of it. Those screens inherit
- * one shared convention — chrome uses translucent whites rather than surface
- * tokens, because a surface token assumes a canvas underneath it and here the
- * canvas is a moving image.
+ * WHY THREE OF THESE SCREENS STAY DARK IN A LIGHT-FIRST PRODUCT
+ * The player, stories and the shorts reel are playback surfaces: the picture is
+ * the light source and the interface is a guest on top of it. Surrounding a
+ * moving image with white destroys its contrast, floods the room the viewer is
+ * sitting in, and makes an hour of watching physically tiring. So those three
+ * roots re-scope `data-theme="dark"` onto themselves in the markup — a decision
+ * declared once, in one place, rather than re-created accidentally by literal
+ * blacks scattered through this file.
+ *
+ * What that buys: every token below still resolves through the normal ramp, so
+ * the chrome is built from `--sy-alpha-hi-*` (light veils), `--sy-alpha-lo-*`
+ * (dark veils) and the ordinary foreground/elevation tokens. These screens are
+ * therefore made of the same material as the bright ones — a *lit* near-black,
+ * porcelain step 1, not a raw black — which is what keeps them recognisably the
+ * same product as the watch page they sit next to.
+ *
+ * The long-video watch page is deliberately NOT in that group. It is a reading
+ * surface with a video on it, not a playback surface, so it is light-native.
  */
 
 /* ================================================================== */
-/* Shared over-video chrome                                            */
+/* Shared playback stages                                              */
 /* ================================================================== */
 
 .sy-player,
@@ -19,8 +32,9 @@
   display: flex;
   flex-direction: column;
   block-size: 100%;
-  background: oklch(0% 0 0);
-  color: oklch(97% 0.005 282);
+  /* Resolves through the dark scope these roots carry in both themes. */
+  background: var(--sy-bg-canvas);
+  color: var(--sy-fg-default);
 }
 
 /* An arrow that means "the other direction". Used for dislike and skip-back. */
@@ -94,7 +108,7 @@
   flex-shrink: 0;
 }
 /* On a phone-width frame only the overflow control survives the top bar. */
-@container screen (max-width: 519px) {
+@container screen (max-width: 559px) {
   .sy-player__top-actions .sy-btn:not(:last-child) {
     display: none;
   }
@@ -129,15 +143,15 @@
   block-size: 76px;
   border-radius: 50%;
   color: inherit;
-  background: oklch(98% 0 0 / 0.14);
-  border: 1px solid oklch(98% 0 0 / 0.26);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  backdrop-filter: blur(20px) saturate(1.4);
-  box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4);
+  background: var(--sy-alpha-hi-12);
+  border: 1px solid var(--sy-alpha-hi-24);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
+  backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
+  box-shadow: var(--sy-elevation-overlay);
   transition: scale var(--sy-transition-press), background-color var(--sy-transition-hover);
 }
 .sy-player__play:hover {
-  background: oklch(98% 0 0 / 0.24);
+  background: var(--sy-alpha-hi-24);
 }
 .sy-player__play:active {
   scale: 0.92;
@@ -151,14 +165,14 @@
   block-size: 56px;
   border-radius: 50%;
   color: inherit;
-  background: oklch(98% 0 0 / 0.08);
-  border: 1px solid oklch(98% 0 0 / 0.14);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  background: var(--sy-alpha-hi-08);
+  border: 1px solid var(--sy-alpha-hi-12);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-veil-blur));
+  backdrop-filter: blur(var(--sy-vellum-veil-blur));
   transition: scale var(--sy-transition-press), background-color var(--sy-transition-hover);
 }
 .sy-player__skip:hover {
-  background: oklch(98% 0 0 / 0.16);
+  background: var(--sy-alpha-hi-16);
 }
 .sy-player__skip:active {
   scale: 0.9;
@@ -183,7 +197,7 @@
  * sheet. It stays a fixed distance from the top rather than tracking the sheet,
  * because a control that moves when a menu opens cannot be hit blind either.
  */
-@container screen (max-width: 519px) {
+@container screen (max-width: 559px) {
   .sy-player__transport {
     inset-block-start: 30%;
     gap: var(--sy-space-5);
@@ -247,15 +261,15 @@
 }
 .sy-scrub__track {
   inline-size: 100%;
-  background: oklch(98% 0 0 / 0.2);
+  background: var(--sy-alpha-hi-24);
 }
 .sy-scrub__buffered {
   inline-size: var(--buffered);
-  background: oklch(98% 0 0 / 0.42);
+  background: var(--sy-alpha-hi-48);
 }
 .sy-scrub__played {
   inline-size: var(--played);
-  background: var(--sy-gradient-signal);
+  background: var(--sy-gradient-beam);
 }
 .sy-scrub:hover .sy-scrub__track,
 .sy-scrub:hover .sy-scrub__buffered,
@@ -272,7 +286,7 @@
   inline-size: 2px;
   block-size: 11px;
   border-radius: 1px;
-  background: oklch(8% 0 0 / 0.72);
+  background: var(--sy-alpha-lo-80);
 }
 
 .sy-scrub__head {
@@ -283,8 +297,8 @@
   inline-size: 15px;
   block-size: 15px;
   border-radius: 50%;
-  background: oklch(99% 0 0);
-  box-shadow: 0 0 0 1px oklch(0% 0 0 / 0.35), 0 2px 8px oklch(0% 0 0 / 0.5);
+  background: var(--sy-fg-default);
+  box-shadow: 0 0 0 1px var(--sy-alpha-lo-32), 0 2px 8px var(--sy-alpha-lo-48);
   transition: scale var(--sy-transition-hover);
 }
 .sy-scrub:hover .sy-scrub__head,
@@ -299,8 +313,8 @@
   translate: -50% 0;
   padding: 2px var(--sy-space-1_5);
   border-radius: var(--sy-radius-xs);
-  background: oklch(10% 0 0 / 0.86);
-  color: oklch(98% 0 0);
+  background: var(--sy-alpha-lo-92);
+  color: var(--sy-fg-default);
   font-size: 11px;
   white-space: nowrap;
   opacity: 0;
@@ -323,7 +337,7 @@
   min-inline-size: 0;
   opacity: 0.72;
 }
-@container screen (max-width: 519px) {
+@container screen (max-width: 559px) {
   .sy-player__chapter {
     display: none;
   }
@@ -345,7 +359,7 @@
   inline-size: 76px;
   block-size: 4px;
   border-radius: var(--sy-radius-pill);
-  background: oklch(98% 0 0 / 0.22);
+  background: var(--sy-alpha-hi-24);
   cursor: pointer;
 }
 .sy-player__volume-fill {
@@ -354,7 +368,7 @@
   inset-inline-start: 0;
   inline-size: var(--level);
   border-radius: inherit;
-  background: oklch(97% 0 0 / 0.9);
+  background: var(--sy-alpha-hi-92);
 }
 .sy-player__badges {
   display: flex;
@@ -362,7 +376,7 @@
   gap: var(--sy-space-1_5);
   margin-inline-end: var(--sy-space-1);
 }
-@container screen (max-width: 639px) {
+@container screen (max-width: 559px) {
   .sy-player__volume-track,
   .sy-player__badges {
     display: none;
@@ -382,7 +396,7 @@
   padding: var(--sy-space-3);
   border-radius: var(--sy-radius-xl);
   color: inherit;
-  box-shadow: 0 18px 48px oklch(0% 0 0 / 0.55);
+  box-shadow: var(--sy-elevation-lifted);
   animation: sy-menu-rise var(--sy-dur-base) var(--sy-ease-enter) backwards;
 }
 @keyframes sy-menu-rise {
@@ -407,9 +421,11 @@
   gap: 2px;
   padding-block: var(--sy-space-1);
 }
-.sy-player__menu-group .sy-overline {
+/* Section labels sit on vellum over a moving picture, so they take the muted
+   step rather than the quiet one — quiet is tuned against an opaque surface. */
+.sy-player__menu-group .sy-overline.sy-fg-quiet {
   padding: var(--sy-space-1) var(--sy-space-2);
-  color: oklch(97% 0 0 / 0.5);
+  color: var(--sy-fg-muted);
 }
 
 .sy-player__menu-item {
@@ -424,11 +440,11 @@
   transition: background-color var(--sy-transition-hover);
 }
 .sy-player__menu-item:hover {
-  background: oklch(98% 0 0 / 0.1);
+  background: var(--sy-alpha-hi-12);
 }
 /* Selection is a tick *and* a weight change, never the tick's colour alone. */
 .sy-player__menu-item.is-active {
-  background: oklch(98% 0 0 / 0.08);
+  background: var(--sy-alpha-hi-08);
 }
 .sy-player__menu-item.is-active .sy-label {
   font-weight: 650;
@@ -438,8 +454,8 @@
   flex-direction: column;
   gap: 1px;
 }
-.sy-player__menu-item .sy-caption {
-  color: oklch(97% 0 0 / 0.52);
+.sy-player__menu-item .sy-caption.sy-fg-quiet {
+  color: var(--sy-fg-muted);
 }
 .sy-player__menu-check {
   display: grid;
@@ -447,10 +463,10 @@
   inline-size: 18px;
   block-size: 18px;
   flex-shrink: 0;
-  color: var(--sy-flux-11);
+  color: var(--sy-accent-fg);
 }
 .sy-player__menu .sy-divider {
-  background: oklch(98% 0 0 / 0.12);
+  background: var(--sy-alpha-hi-12);
   margin-block: var(--sy-space-1);
 }
 
@@ -463,7 +479,7 @@
   flex: 1;
   block-size: 30px;
   border-radius: var(--sy-radius-sm);
-  background: oklch(98% 0 0 / 0.08);
+  background: var(--sy-alpha-hi-08);
   color: inherit;
   font-size: 12px;
   font-weight: 550;
@@ -471,11 +487,11 @@
   transition: background-color var(--sy-transition-hover);
 }
 .sy-player__speed-chip:hover {
-  background: oklch(98% 0 0 / 0.16);
+  background: var(--sy-alpha-hi-16);
 }
 .sy-player__speed-chip.is-active {
-  background: oklch(98% 0 0 / 0.92);
-  color: oklch(14% 0 0);
+  background: var(--sy-fg-default);
+  color: var(--sy-bg-canvas);
   font-weight: 700;
 }
 .sy-player__menu-foot {
@@ -494,7 +510,7 @@
  * the transport and the bottom chrome without scrolling — a menu that clips its
  * last row mid-height reads as a bug, not as an affordance.
  */
-@container screen (max-width: 899px) {
+@container screen (max-width: 879px) {
   .sy-player__menu {
     inset-inline: var(--sy-space-3);
     inset-block-end: calc(var(--safe-bottom, 0px) + 128px);
@@ -549,12 +565,12 @@
 .sy-stories-screen__stage::before {
   inset-block-start: 0;
   block-size: 34%;
-  background: linear-gradient(to bottom, oklch(6% 0 0 / 0.62), transparent);
+  background: linear-gradient(to bottom, var(--sy-alpha-lo-64), transparent);
 }
 .sy-stories-screen__stage::after {
   inset-block-end: 0;
   block-size: 42%;
-  background: linear-gradient(to top, oklch(6% 0 0 / 0.74), transparent);
+  background: linear-gradient(to top, var(--sy-alpha-lo-80), transparent);
 }
 
 /**
@@ -563,7 +579,7 @@
  * author framed — the poll sticker ends up a metre wide and the reaction row
  * spreads past the reach of either thumb.
  */
-@container screen (min-width: 600px) {
+@container screen (min-width: 560px) {
   .sy-stories-screen__stage {
     flex: 0 1 auto;
     block-size: 100%;
@@ -615,7 +631,7 @@
   flex: 1;
   block-size: 2.5px;
   border-radius: var(--sy-radius-pill);
-  background: oklch(98% 0 0 / 0.32);
+  background: var(--sy-alpha-hi-32);
   overflow: hidden;
 }
 .sy-story-progress__fill {
@@ -623,7 +639,7 @@
   block-size: 100%;
   inline-size: var(--filled);
   border-radius: inherit;
-  background: oklch(99% 0 0);
+  background: var(--sy-fg-default);
 }
 
 .sy-stories-screen__author {
@@ -637,7 +653,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  text-shadow: 0 1px 8px oklch(6% 0 0 / 0.7);
+  text-shadow: 0 1px 8px var(--sy-alpha-lo-64);
 }
 .sy-stories-screen__meta {
   opacity: 0.76;
@@ -663,11 +679,14 @@
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-2xl);
   rotate: -2.5deg;
-  background: oklch(20% 0.02 282 / 0.62);
-  border: 1px solid oklch(98% 0 0 / 0.2);
-  -webkit-backdrop-filter: blur(28px) saturate(1.7);
-  backdrop-filter: blur(28px) saturate(1.7);
-  box-shadow: 0 16px 40px oklch(0% 0 0 / 0.42);
+  /* Vellum: the sticker is a translucent sheet laid on the photograph. */
+  background: var(--sy-vellum-panel-fill);
+  border: 1px solid var(--sy-alpha-hi-16);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate))
+    brightness(var(--sy-vellum-panel-brightness));
+  backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate))
+    brightness(var(--sy-vellum-panel-brightness));
+  box-shadow: var(--sy-elevation-overlay);
 }
 .sy-story-sticker__question {
   font-family: var(--sy-font-display);
@@ -694,8 +713,8 @@
   min-block-size: 44px;
   padding: var(--sy-space-2) var(--sy-space-3);
   border-radius: var(--sy-radius-lg);
-  background: oklch(98% 0 0 / 0.12);
-  border: 1px solid oklch(98% 0 0 / 0.16);
+  background: var(--sy-alpha-hi-12);
+  border: 1px solid var(--sy-alpha-hi-16);
   color: inherit;
   overflow: hidden;
   text-align: start;
@@ -705,7 +724,7 @@
   inset-block: 0;
   inset-inline-start: 0;
   inline-size: var(--share);
-  background: oklch(98% 0 0 / 0.18);
+  background: var(--sy-alpha-hi-16);
 }
 .sy-story-poll__label {
   position: relative;
@@ -724,7 +743,7 @@
 }
 /* The chosen option is marked by a tick and a rim, not by its fill alone. */
 .sy-story-poll.is-chosen {
-  border-color: oklch(98% 0 0 / 0.62);
+  border-color: var(--sy-alpha-hi-64);
 }
 .sy-story-poll.is-chosen .sy-story-poll__label {
   font-weight: 700;
@@ -764,7 +783,7 @@
   transition: scale var(--sy-transition-press), background-color var(--sy-transition-hover);
 }
 .sy-story-reaction:hover {
-  background: oklch(98% 0 0 / 0.14);
+  background: var(--sy-alpha-hi-12);
   scale: 1.12;
 }
 .sy-story-reaction:active {
@@ -779,15 +798,18 @@
 .sy-stories-screen__input.sy-input {
   --input-height: 44px;
   border-radius: var(--sy-radius-pill);
-  background: oklch(98% 0 0 / 0.1);
-  border-color: oklch(98% 0 0 / 0.28);
+  /* A field over a photograph cannot be a sunken well — there is nothing to
+     sink into — so it inverts to a light veil with a defined rim instead. */
+  background: var(--sy-alpha-hi-08);
+  border-color: var(--sy-alpha-hi-24);
+  box-shadow: none;
   color: inherit;
   padding-inline: var(--sy-space-4);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur));
+  backdrop-filter: blur(var(--sy-vellum-panel-blur));
 }
 .sy-stories-screen__input.sy-input input::placeholder {
-  color: oklch(98% 0 0 / 0.6);
+  color: var(--sy-fg-muted);
 }
 
 /* ================================================================== */
@@ -826,7 +848,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: oklch(6% 0 0 / 0.55);
+  background: var(--sy-alpha-lo-48);
 }
 .sy-shorts__peek-meta {
   position: absolute;
@@ -857,7 +879,7 @@
   inset-block-end: 0;
   inset-inline: 0;
   block-size: 46%;
-  background: linear-gradient(to top, oklch(6% 0 0 / 0.8), transparent);
+  background: linear-gradient(to top, var(--sy-alpha-lo-80), transparent);
   pointer-events: none;
 }
 
@@ -875,13 +897,13 @@
   font-size: var(--sy-type-label-size);
   font-weight: 550;
   opacity: 0.62;
-  text-shadow: 0 1px 8px oklch(6% 0 0 / 0.6);
+  text-shadow: 0 1px 8px var(--sy-alpha-lo-64);
 }
 /* The selected feed is bolder and underscored — never colour alone. */
 .sy-shorts__tab.is-active {
   opacity: 1;
   font-weight: 700;
-  border-block-end: 2px solid oklch(99% 0 0);
+  border-block-end: 2px solid var(--sy-fg-default);
   padding-block-end: 2px;
 }
 
@@ -901,7 +923,7 @@
   margin-block-end: var(--sy-space-1);
 }
 .sy-shorts__creator .sy-avatar__inner {
-  box-shadow: 0 0 0 2px oklch(99% 0 0 / 0.9);
+  box-shadow: 0 0 0 2px var(--sy-alpha-hi-92);
 }
 .sy-shorts__follow {
   position: absolute;
@@ -913,9 +935,9 @@
   inline-size: 22px;
   block-size: 22px;
   border-radius: 50%;
-  background: var(--sy-crimson-9);
-  color: oklch(99% 0 0);
-  box-shadow: 0 2px 8px oklch(0% 0 0 / 0.4);
+  background: var(--sy-rose-9);
+  color: var(--sy-on-danger);
+  box-shadow: 0 2px 8px var(--sy-alpha-lo-32);
   transition: scale var(--sy-transition-press);
 }
 .sy-shorts__follow:active {
@@ -929,7 +951,7 @@
   gap: var(--sy-space-1);
   min-inline-size: 44px;
   color: inherit;
-  filter: drop-shadow(0 2px 6px oklch(0% 0 0 / 0.5));
+  filter: drop-shadow(0 2px 6px var(--sy-alpha-lo-48));
   transition: scale var(--sy-transition-press);
 }
 .sy-shorts__action:active {
@@ -939,17 +961,17 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+/* The glyph carries the state; the count stays plain so it is always readable
+   against whatever frame of video happens to be behind it. */
 .sy-shorts__action.is-liked {
-  color: var(--sy-crimson-10);
-}
-.sy-shorts__action.is-liked .sy-caption {
-  color: oklch(97% 0.005 282);
+  color: var(--sy-rose-9);
 }
 .sy-shorts__action.is-gift {
-  color: var(--sy-nova-11);
+  color: var(--sy-bloom-9);
 }
+.sy-shorts__action.is-liked .sy-caption,
 .sy-shorts__action.is-gift .sy-caption {
-  color: oklch(97% 0.005 282);
+  color: var(--sy-fg-default);
 }
 
 /** Album art spins while the audio plays — the one ambient motion allowed here. */
@@ -958,8 +980,8 @@
   block-size: 42px;
   border-radius: 50%;
   padding: 5px;
-  background: oklch(14% 0 0 / 0.8);
-  border: 1px solid oklch(98% 0 0 / 0.2);
+  background: var(--sy-alpha-lo-80);
+  border: 1px solid var(--sy-alpha-hi-16);
   animation: sy-disc-spin 6s linear infinite;
 }
 .sy-shorts__disc-art {
@@ -968,8 +990,8 @@
   block-size: 100%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 50%, oklch(14% 0 0) 0 22%, transparent 23%),
-    conic-gradient(from 20deg, var(--sy-iris-9), var(--sy-flux-9), var(--sy-nova-9), var(--sy-iris-9));
+    radial-gradient(circle at 50% 50%, var(--sy-porcelain-2) 0 22%, transparent 23%),
+    conic-gradient(from 20deg, var(--sy-aether-9), var(--sy-pulse-9), var(--sy-bloom-9), var(--sy-aether-9));
 }
 @keyframes sy-disc-spin {
   to {
@@ -1010,17 +1032,17 @@
 .sy-shorts__caption {
   font-size: var(--sy-type-bodySmall-size);
   line-height: 1.4;
-  text-shadow: 0 1px 10px oklch(6% 0 0 / 0.6);
+  text-shadow: 0 1px 10px var(--sy-alpha-lo-64);
 }
 .sy-shorts__more {
   align-self: flex-start;
   margin-block-start: calc(var(--sy-space-1) * -1);
-  color: oklch(97% 0.005 282 / 0.72);
+  color: var(--sy-fg-muted);
   font-size: var(--sy-type-bodySmall-size);
   font-weight: 600;
 }
 .sy-shorts__more:hover {
-  color: oklch(99% 0 0);
+  color: var(--sy-fg-default);
 }
 
 .sy-shorts__ticker {
@@ -1034,7 +1056,8 @@
   flex: 1;
   min-inline-size: 0;
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, oklch(0% 0 0) 6%, oklch(0% 0 0) 88%, transparent);
+  /* A mask only reads alpha, so `currentColor` keeps this free of a literal. */
+  mask-image: linear-gradient(to right, transparent, currentColor 6%, currentColor 88%, transparent);
 }
 .sy-shorts__ticker-text {
   display: inline-block;
@@ -1062,17 +1085,17 @@
   inset-inline: 0;
   z-index: 4;
   block-size: 2.5px;
-  background: oklch(98% 0 0 / 0.24);
+  background: var(--sy-alpha-hi-24);
 }
 .sy-shorts__progress-fill {
   display: block;
   block-size: 100%;
   inline-size: var(--played);
-  background: oklch(99% 0 0);
+  background: var(--sy-fg-default);
 }
 
 /* Wide surfaces: the reel is a phone-shaped column, centred, never stretched. */
-@container screen (min-width: 600px) {
+@container screen (min-width: 560px) {
   /* The item keeps 9:16 and the peek strip is added on top of it, so the reel
      is very slightly taller than the video it holds. */
   .sy-shorts__reel {
@@ -1083,14 +1106,25 @@
     aspect-ratio: 9 / 17;
     margin-inline: auto;
   }
+  /* The letterbox either side of the reel is porcelain step 1 rather than
+     black: a lit near-black keeps the surround related to the rest of the
+     product instead of punching a hole in it. */
   .sy-shorts {
-    background: oklch(10% 0.01 282);
+    background: var(--sy-porcelain-1);
   }
 }
 
 /* ================================================================== */
 /* Long video watch page                                               */
 /* ================================================================== */
+
+/**
+ * Unlike the three screens above, this one is light-native in the light theme.
+ * A watch page is read as much as it is watched — title, description, chapter
+ * list, twelve hundred comments — and reading is what porcelain and near-white
+ * cards are for. Only the picture itself and the pill that sits on it stay
+ * anchored to the media tokens.
+ */
 
 .sy-watch {
   display: grid;
@@ -1115,11 +1149,13 @@
   gap: var(--sy-space-1_5);
   padding: var(--sy-space-1) var(--sy-space-2_5);
   border-radius: var(--sy-radius-pill);
-  background: oklch(10% 0 0 / 0.7);
-  color: oklch(98% 0 0);
+  /* Sits on the poster frame, which is scrimmed identically in both themes,
+     so this pill must not flip with the theme either. */
+  background: var(--sy-scrim-on-media);
+  color: var(--sy-fg-on-media);
   font-size: var(--sy-type-caption-size);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(var(--sy-vellum-scrim-blur));
+  backdrop-filter: blur(var(--sy-vellum-scrim-blur));
 }
 
 .sy-watch__title {
@@ -1178,9 +1214,10 @@
  * Breakpoints here are set against the *content column*, not the device. A
  * tablet in portrait is 834px wide but hands a screen roughly 758px once the
  * icon rail is deducted, so a 768px query would never fire on the one device it
- * was written for. Every threshold below is chosen from measured column widths.
+ * was written for. The 560 / 840 / 880 ladder straddles the real column widths
+ * instead of landing on top of them.
  */
-@container screen (min-width: 700px) {
+@container screen (min-width: 560px) {
   /* Identity and actions share a line while both fit and split cleanly when
      they do not — wrapping, never overlapping, because the related rail can
      take 372px out of this column without warning. */
@@ -1204,6 +1241,11 @@
  * Like and dislike are welded into one pill because they are one decision with
  * two answers; everything else is its own pill. The rule between them is a real
  * border, so the pair reads as a segmented control even without colour.
+ *
+ * In the light theme a pill is a key resting *on* the porcelain page: near-white
+ * fill and a contact shadow, no outline. A grey fill would be a hole cut into
+ * the page, and a row of holes is what a 2012 toolbar looks like. The dark theme
+ * cannot cast a shadow onto near-black, so there it goes back to a raised fill.
  */
 .sy-pill-btn,
 .sy-pill-group {
@@ -1211,17 +1253,30 @@
   align-items: center;
   block-size: 38px;
   border-radius: var(--sy-radius-pill);
-  background: var(--sy-bg-hover);
+  background: var(--sy-bg-surface);
+  box-shadow: var(--sy-elevation-surface);
   color: var(--sy-fg-default);
   flex-shrink: 0;
+}
+[data-theme='dark'] .sy-pill-btn,
+[data-theme='dark'] .sy-pill-group {
+  background: var(--sy-bg-raised);
+  box-shadow: none;
 }
 .sy-pill-btn {
   gap: var(--sy-space-2);
   padding-inline: var(--sy-space-4);
-  transition: background-color var(--sy-transition-hover), scale var(--sy-transition-press);
+  transition:
+    background-color var(--sy-transition-hover),
+    box-shadow var(--sy-transition-hover),
+    scale var(--sy-transition-press);
 }
 .sy-pill-btn:hover {
-  background: var(--sy-bg-active);
+  box-shadow: var(--sy-elevation-raised);
+}
+[data-theme='dark'] .sy-pill-btn:hover {
+  background: var(--sy-bg-hover);
+  box-shadow: none;
 }
 .sy-pill-btn:active {
   scale: 0.96;
@@ -1231,7 +1286,7 @@
   color: var(--sy-creator-fg);
 }
 .sy-pill-btn.is-creator:hover {
-  background: var(--sy-nova-6);
+  background: var(--sy-creator-bg-hover);
 }
 
 .sy-pill-group__btn {
@@ -1245,7 +1300,7 @@
   transition: background-color var(--sy-transition-hover);
 }
 .sy-pill-group__btn:hover {
-  background: var(--sy-bg-active);
+  background: var(--sy-bg-hover);
 }
 .sy-pill-group__btn.is-on {
   color: var(--sy-accent-fg);
@@ -1260,6 +1315,11 @@
 
 /* ---- Description + chapters card ---- */
 
+/*
+  Elevated surfaces carry their edge with shadow in the light theme and with a
+  hairline in the dark one, because a shadow cannot define an edge on near-black
+  and a border plus a shadow on white is the 2012 form look.
+*/
 .sy-watch__card {
   display: flex;
   flex-direction: column;
@@ -1267,8 +1327,12 @@
   padding: var(--sy-space-4);
   border-radius: var(--sy-radius-lg);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
   margin-block-end: var(--sy-space-8);
+}
+[data-theme='dark'] .sy-watch__card {
+  border-color: var(--sy-border-subtle);
 }
 .sy-watch__card .sy-tabs {
   align-self: flex-start;
@@ -1336,7 +1400,7 @@
   flex-direction: column;
   gap: 2px;
 }
-@container screen (max-width: 519px) {
+@container screen (max-width: 559px) {
   .sy-chapter__thumb {
     display: none;
   }
@@ -1484,8 +1548,12 @@
   padding: var(--sy-space-2) var(--sy-space-3);
   border-radius: var(--sy-radius-md);
   background: var(--sy-bg-surface);
-  border: 1px solid var(--sy-border-subtle);
+  border: 1px solid transparent;
+  box-shadow: var(--sy-elevation-surface);
   margin-block-end: var(--sy-space-1);
+}
+[data-theme='dark'] .sy-watch__autoplay {
+  border-color: var(--sy-border-subtle);
 }
 .sy-up-next {
   display: flex;
@@ -1511,7 +1579,7 @@
 
 /* The related rail only earns its place once the video column can still hold a
    comfortable measure without it — around 960px of content. */
-@container screen (min-width: 960px) {
+@container screen (min-width: 880px) {
   .sy-watch {
     grid-template-columns: minmax(0, 1fr) 372px;
   }

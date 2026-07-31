@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   block-size: 100dvh;
-  background: var(--sy-neutral-1);
+  background: var(--sy-porcelain-1);
   overflow: hidden;
 }
 
@@ -175,7 +175,7 @@
     A faint dot grid. It gives the frames somewhere to sit and makes the
     device chrome read as an object on a surface rather than floating in void.
   */
-  background-image: radial-gradient(var(--sy-neutral-5) 1px, transparent 1px);
+  background-image: radial-gradient(var(--sy-porcelain-5) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
@@ -258,7 +258,7 @@
 .sy-gallery__bare {
   display: inline-block;
   padding: 12px;
-  background: var(--sy-neutral-1);
+  background: var(--sy-porcelain-1);
 }
 .sy-gallery__bare .sy-device__frame {
   box-shadow: none;
@@ -277,7 +277,7 @@
 .sy-device__frame {
   position: relative;
   overflow: hidden;
-  background: var(--sy-neutral-1);
+  background: var(--sy-porcelain-1);
   /*
     Bezel: a dark rim plus a hairline highlight. Two shadows rather than a
     border keeps the corner radius perfectly continuous with the screen inside.
@@ -300,7 +300,7 @@
   inline-size: 100%;
   block-size: 100%;
   overflow: hidden;
-  background: var(--sy-neutral-1);
+  background: var(--sy-porcelain-1);
 }
 
 /* Hardware overlays */
@@ -349,7 +349,7 @@
   gap: var(--sy-space-3);
   block-size: 40px;
   padding-inline: var(--sy-space-3);
-  background: var(--sy-neutral-3);
+  background: var(--sy-porcelain-3);
   border-block-end: 1px solid var(--sy-border-subtle);
 }
 .sy-device__dots {
@@ -360,7 +360,7 @@
   inline-size: 10px;
   block-size: 10px;
   border-radius: 50%;
-  background: var(--sy-neutral-6);
+  background: var(--sy-porcelain-6);
 }
 .sy-device__url {
   flex: 1;
@@ -369,7 +369,7 @@
   align-items: center;
   padding-inline: var(--sy-space-3);
   border-radius: var(--sy-radius-sm);
-  background: var(--sy-neutral-1);
+  background: var(--sy-porcelain-1);
   color: var(--sy-fg-quiet);
   font-size: 11px;
   font-family: var(--sy-font-mono);
