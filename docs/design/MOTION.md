@@ -63,7 +63,7 @@ the whole motion system.**
 | `emphasized` | `cubic-bezier(0.2, 0, 0, 1)` | Fast middle, soft landing | Hero and shared-element transitions |
 | `spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Overshoot | Elements that should feel physical: a sent message, a claimed reward, a gift landing. **Never for anything that must be read immediately** — the overshoot delays legibility |
 | `anticipate` | `cubic-bezier(0.68, -0.4, 0.32, 1.4)` | Pulls back first | Playful. Use sparingly |
-| `linear` | `linear` | Constant rate | Only for continuous loops: spinners, marquees, the aperture's rotation |
+| `linear` | `linear` | Constant rate | Only for continuous loops: spinners, marquees, the logo's lens cluster and the orb's rings, which are mechanisms genuinely rotating at constant rate |
 
 ### Canonical recipes
 
@@ -124,10 +124,17 @@ thing disabled under reduced motion.
 
 | Token | ms | What |
 |---|---|---|
-| `auroraDrift` | 24000 | The brand backdrop. Slow enough to be felt, not watched |
+| `auroraDrift` | 24000 | The ambient brand field's drift. Slow enough to be felt, not watched |
 | `livePulse` | 1800 | Live indicator. Matched to a resting heart rate — calm urgency |
 | `thinkingSweep` | 1600 | AI processing shimmer |
 | `skeletonSweep` | 1400 | Loading placeholder sweep |
+
+Two caveats on the first row. The backdrop is now `.sy-lumen` — very wide, very
+pale washes rather than an aurora — and `AMBIENT` is the one token group that is
+**not** compiled into CSS. `.sy-lumen` reads `--sy-lumen-duration` with a
+fallback of `26s`, so the value that actually ships is 26000, not the 24000 in
+`motion.ts`. Treat `auroraDrift` as a stale name carrying a stale number until
+the two are reconciled.
 
 **Skeletons sweep rather than pulse.** A sweep implies "content is arriving from
 somewhere"; a pulse implies "something is wrong". The sweep is a single
@@ -140,15 +147,15 @@ somewhere"; a pulse implies "something is wrong". The sweep is a single
 | Interaction | Motion | Duration / easing |
 |---|---|---|
 | Button press | `scale: 0.97` | 80ms standard |
-| Button hover (primary) | Background shift + glow appears | 140ms standard |
-| Card hover | `translate: 0 -2px`, border strengthens, elevation rises to `raised` | 140ms standard |
+| Button hover (primary) | Light: background shift, 1px rise and a deeper shadow. Dark: no rise, and a refraction bloom at `--sy-refract-bloom-spread` in the button's own tone — a halo is invisible on a white page, so light uses shadow and only dark can use light | 140ms standard |
+| Card hover | `translate: 0 -2px` and elevation rises to `raised`. The border strengthens in dark theme only, because an elevated surface in light theme has no border to strengthen | 140ms standard |
 | Card press | Returns to `translate: 0` | 140ms |
 | Chip press | `scale: 0.96` | 80ms |
 | Tab bar item press | `scale: 0.92` | 80ms |
 | Switch toggle | Thumb translates 18px | 200ms **spring** — the overshoot makes it feel mechanical |
 | Checkbox check | Background and border fill | 80ms |
 | Slider grab | Thumb `scale: 1.15` | 80ms |
-| Input focus | Border to accent + 3px translucent ring | 140ms |
+| Input focus | Border to accent, a 3px ring at 20% accent, and the recessed fill lifts from `--sy-bg-canvas` to `--sy-bg-surface` — the well comes up to meet you | 140ms |
 | Tab select (underline) | Indicator `scale: 0 1 → 1 1` | 200ms emphasized |
 | Progress fill | Width interpolates | 200ms enter |
 | Progress ring | `stroke-dashoffset` interpolates | 200ms enter |
@@ -184,8 +191,8 @@ Under `prefers-reduced-motion: reduce`:
 - Every `--sy-transition-*` becomes `120ms linear`.
 - Every `--sy-travel-*` becomes `0px`, so transforms collapse and opacity
   carries the change.
-- Ambient animations (aurora, logo spin, orb rotation, live pulse, skeleton
-  sweep, bar growth) are set to `none`.
+- Ambient animations (the lumen field's drift, the logo's lens rotation, orb
+  rotation, live pulse, skeleton sweep, bar growth) are set to `none`.
 - The brand still communicates state: the AI orb's core drops to 70% opacity
   for `thinking` rather than moving.
 - Smooth scrolling is disabled.
@@ -200,8 +207,15 @@ Sound is used only where a state change happens **outside the user's gaze** — 
 gift arriving, a stream going live, a message received. Confirmation of
 something the user is already looking at gets haptics, not audio.
 
-Frequencies sit in the 400–1000Hz band where small speakers are honest, and
-every cue is under 200ms so it never overlaps the next one.
+Frequencies sit in the 400–1000Hz band where small speakers are honest, and no
+cue runs longer than 200ms so it never overlaps the next one. `error` is the
+deliberate exception at 220Hz: a rejection should sit below the band everything
+else occupies. The source comment in `motion.ts` states the band and the
+duration limit more strictly than the table it annotates.
+
+`SOUND` and `HAPTIC` are token definitions only. Nothing in `src/` imports
+either — the gallery has no audio or vibration layer, so these values are a
+specification awaiting an implementation.
 
 | Cue | ms | Hz | Gain | Trigger |
 |---|---|---|---|---|

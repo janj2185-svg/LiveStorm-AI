@@ -9,10 +9,10 @@ Source of truth for this document:
 |---|---|
 | Shell markup and posture rationale | `src/design-system/patterns/AppShell.tsx` |
 | Shell and layout CSS | `src/design-system/styles/patterns.css` |
-| Layout utilities, glass, focus | `src/design-system/styles/base.css` |
+| Layout utilities, vellum, refraction, focus | `src/design-system/styles/base.css` |
 | Shared screen composites | `src/design-system/styles/screens.css` |
 | Shell dimensions, grid, z-index | `src/design-system/tokens/space.ts` |
-| Elevation, glass and glow recipes | `src/design-system/tokens/elevation.ts` |
+| Elevation, vellum and refraction recipes | `src/design-system/tokens/elevation.ts` |
 | Reference device widths | `src/showcase/devices.ts` |
 
 ---
@@ -129,13 +129,20 @@ These land cleanly either side of the five real widths above:
 |---|---|---|---|
 | 560 | 676, 758, 908 | 393, 412 | `.sy-screen__inner` padding 16 → 24px; `.sy-cols--2/3/4` become 2 columns; `.sy-scroller` bleed widens to 24px |
 | 840 | 908 only | 393, 412, 676, 758 | `.sy-cols` gap 16 → 24px; `.sy-cols--3` becomes 3 columns; `.sy-cols--4` becomes 4 |
-| 880 | 908 only | 393, 412, 676, 758 | `.sy-screen__inner` padding 24 → 32px; `.sy-cols--sidebar` and `--sidebar-start` become two-pane |
+| 880 | 908 only | 393, 412, 676, 758 | `.sy-screen__inner` padding 24 → 32px; `.sy-cols--sidebar` and `.sy-cols--sidebar-start` become two-pane |
 
 The practical reading: **676 and 758 behave the same** (two columns, 24px
 padding, single-pane), and only the 908 desktop column gets three- and
 four-column grids or a sidebar. A screen that needs a different split at 758
 than at 676 must add its own threshold between those two numbers in its group
 stylesheet.
+
+The "fires on" column above assumes a screen that carries a context panel, which
+is where the widths are tightest. Only four screens do — `home`, `assistant`,
+`creator-dashboard` and `wallet`. On the other 27 non-immersive screens the
+expanded posture only deducts the 264px rail, so the columns are 1016 and 1248
+and **all three thresholds fire at both web and desktop**. The panel-bearing case
+is the one worth designing against.
 
 Note that `SCREEN_AUTHORING_GUIDE.md` cites 640 / 768 / 1024 / 1280 as the
 screen breakpoints, and group stylesheets do use those numbers. Measured against
@@ -189,8 +196,8 @@ move behind a "More" affordance owned by the screen.
 | Item radius | `--sy-radius-md` (10px) |
 | Item gap | 12px between icon and label; 2px between items |
 | Icon | 20px, `filled` when active |
-| Badge | 18px pill, `--sy-accent-solid` on `--sy-on-iris`, 11px weight 600; visible only in the expanded posture |
-| Live dot | 7px `--sy-crimson-9` with a 2px `--sy-bg-surface` ring, pulsing at 1.8s |
+| Badge | 18px pill, `--sy-accent-solid` fill with `--sy-on-accent` text, 11px weight 600; visible only in the expanded posture |
+| Live dot | 7px `--sy-rose-9` with a 2px `--sy-bg-surface` ring, pulsing at 1.8s |
 | Footer | `margin-block-start: auto` — pinned to the bottom |
 
 ### 4.3 The active state carries three redundant signals
@@ -217,22 +224,25 @@ non-visual signal.
 | Position | `absolute`, `inset-inline: var(--sy-space-3)` (12px), `inset-block-end: calc(safe-bottom + var(--sy-space-2))` |
 | Stacking | `--sy-z-navigation` (200) |
 | Radius | `--sy-radius-xl` (20px) |
-| Material | `.sy-glass .sy-glass--veil` — 12px blur, 1.4 saturate |
+| Material | `.sy-vellum .sy-vellum--veil` — 14px blur, 1.5 saturate, brightness 1.06 in light and 0.96 in dark |
 | Shadow | `--sy-elevation-overlay` |
 | Item | `flex: 1`, column, 3px gap, icon 22px, label 10px weight 550 truncated |
+| Item rest colour | `--sy-fg-quiet` — a legible text step in both themes, not a border step |
 | Item press | `scale: 0.92` over `--sy-transition-press` |
-| Badge | 16px min-width pill, `--sy-crimson-9` on `--sy-on-crimson`, 10px weight 700, offset `top: -4px; inset-inline-start: 60%` |
-| Live dot | 7px `--sy-crimson-9`, pulsing |
+| Badge | 16px min-width pill, `--sy-rose-9` fill with `--sy-on-danger` text, 10px weight 700, offset `top: -4px; inset-inline-start: 60%` |
+| Live dot | 7px `--sy-rose-9`, pulsing |
 
 **Why navigation moves to the bottom on phones.** The top third of a 6.7-inch
 phone is unreachable without shifting grip. Primary destinations belong under
 the thumb; the top bar keeps only identity, context and low-frequency actions.
 
 **Why it floats rather than sitting flush.** The bar is inset 12px on each side
-and lifted clear of the home indicator, and it is glass, so the feed stays partly
-visible beneath it. That preserves the sense that the content is continuous and
-the navigation is a layer on top of it. The cost is that `.sy-main` must reserve
-the space — see section 5.
+and lifted clear of the home indicator, and it is vellum, so the feed stays
+partly visible beneath it. In light theme the veil's `brightness(1.06)` means
+the feed showing through is *brightened* rather than fogged — the bar reads as a
+sheet of translucent paper over the page, not as a grey smear across it. That
+preserves the sense that the content is continuous and the navigation is a layer
+on top of it. The cost is that `.sy-main` must reserve the space — see section 5.
 
 ### 4.5 Context panel
 
@@ -259,7 +269,7 @@ used by any rule.
 | Height | `calc(64px + safe-top)` (`--sy-shell-topBar` + inset) |
 | Position | `sticky`, `inset-block-start: 0`, `z-index: var(--sy-z-sticky)` (100) |
 | Padding | `padding-block-start: safe-top`, `padding-inline: 16px` |
-| Material | `.sy-glass .sy-glass--veil` |
+| Material | `.sy-vellum .sy-vellum--veil` |
 | Border | 1px `--sy-border-subtle` on the block end |
 | Gap | 12px |
 
@@ -472,7 +482,7 @@ z-index numbers are how stacking contexts become unfixable.
 
 | Token | Value | Used by |
 |---|---|---|
-| `--sy-z-base` | 0 | Default flow, `.sy-aurora` |
+| `--sy-z-base` | 0 | Default flow, `.sy-lumen` |
 | `--sy-z-raised` | 10 | In-card floating elements |
 | `--sy-z-sticky` | 100 | `.sy-topbar`, sticky filter bars |
 | `--sy-z-navigation` | 200 | `.sy-tabbar` |
@@ -495,9 +505,9 @@ global token.
 
 ## 9. Immersive screens
 
-A screen is immersive when the content *is* the interface: the video player, the
-live viewer, stories, and the short-video feed. `ScreenDefinition.immersive`
-marks them, and `AppShell` short-circuits:
+A screen is immersive when there is no product shell around it — either because
+the content *is* the interface, or because the user is not yet inside the
+product. `ScreenDefinition.immersive` marks them, and `AppShell` short-circuits:
 
 ```tsx
 if (immersive) {
@@ -506,12 +516,32 @@ if (immersive) {
 ```
 
 `.sy-shell--immersive` is `display: block`, `block-size: 100%`, background
-`#000`, and it declares `container: screen / inline-size` itself — because there
-is no `.sy-main` to do it. There is no rail, no tab bar, no top bar and no
-context panel: the screen owns the full surface and must therefore supply its
-own back affordance, its own safe-area padding, and its own scroll containment.
+`--sy-bg-canvas`, and it declares `container: screen / inline-size` itself —
+because there is no `.sy-main` to do it. There is no rail, no tab bar, no top
+bar and no context panel: the screen owns the full surface and must therefore
+supply its own back affordance, its own safe-area padding, and its own scroll
+containment.
 
-### 9.1 The chrome budget
+### 9.1 The seven immersive screens, and why they are two different kinds
+
+| Screen | Group | Why immersive |
+|---|---|---|
+| Welcome | Entry | Pre-authentication. There is nothing to navigate to yet, so navigation chrome would be a promise the product cannot keep. |
+| Authentication | Entry | Same. |
+| Onboarding | Entry | Same. |
+| Video player | Media | The picture is the product. |
+| Stories | Media | The picture is the product. |
+| Shorts | Media | The picture is the product. |
+| Live viewer | Live | The picture is the product. |
+
+**The default fill is the page canvas, not black**, and that is the single
+decision that keeps both kinds working. The two groups sit at opposite ends of
+the range: the entry screens are the *brightest* pages in the product, and the
+media screens are the *darkest*. Media screens set their own dark theme on their
+own root (section 9.3); defaulting the frame to black instead would have made
+every landing page flash dark before its own styles applied.
+
+### 9.2 The chrome budget
 
 Chrome on an immersive screen is borrowed pixels that must be handed back.
 
@@ -529,119 +559,241 @@ Both use absolute layers over the media, with the safe-area insets folded into
 the padding of each strip rather than into the stage. The stage is never
 letterboxed by chrome.
 
-### 9.2 When glass is and is not appropriate
+### 9.3 Media surfaces stay dark in both themes
 
-Glass is correct here and almost nowhere else. The live viewer's own comment
-states the rule: the layer genuinely floats over moving photographic content, and
-blurring it is what keeps a caption legible when the scene behind it cuts from
-dark to bright.
+The product is light-native everywhere except where a picture is playing. A
+playback surface is not a page that happens to be dark — it is a *light source*,
+and the interface around a light source has to be darker than it or the picture
+stops being the brightest thing in the frame.
 
-**Use glass when** the surface floats over media, over a scrolling feed, or over
-a blurred backdrop — stream overlays, media chrome, the top bar, the tab bar, the
-AI command surface.
+So those surfaces re-declare the theme on their own subtree rather than
+hard-coding colours:
 
-**Do not use glass when** the surface sits on a flat background. Applying it to
+| Element | Declared on | Effect |
+|---|---|---|
+| `.sy-player` | `data-theme="dark"` on the screen root | Whole player, both stage and transport |
+| `.sy-stories-screen` | `data-theme="dark"` on the screen root | Whole stories surface |
+| `.sy-shorts` | `data-theme="dark"` on the screen root | Whole shorts reel |
+| `.sy-live-viewer__stage` | `data-theme="dark"` on the stage only | The stage is dark; the chat rail beside it stays in the room's theme |
+| `.sy-monitor__screen` | `data-theme="dark"` per monitor | The studio's programme and preview monitors are dark; the tool around them is not |
+| `.sy-disc__hero-top`, `.sy-disc__hero-body` | `data-theme="dark"` on the overlay layers | Discover's hero sits on a scrimmed cover, so its foregrounds resolve against dark |
+
+The mechanism matters as much as the result. `data-theme="dark"` re-points every
+`--sy-*` token on that subtree, so a caption over video asks for
+`--sy-fg-default` exactly as it would anywhere else and gets the dark ramp's
+answer. Writing `color: #fff` would have produced the same pixels and none of
+the theming.
+
+Two related tokens do the same job from the other direction:
+`--sy-fg-on-media` and `--sy-fg-on-media-muted` resolve to the **dark** ramp's
+text colours *regardless of the active theme*, because photographic and
+generative covers are darkened by the same scrim in both themes. Text over an
+image must not flip with the theme; without these, every caption over a cover
+would become invisible in light mode.
+
+### 9.4 When vellum is and is not appropriate
+
+Vellum is correct here and almost nowhere else. The layer genuinely floats over
+moving photographic content, and blurring it is what keeps a caption legible
+when the scene behind it cuts from dark to bright.
+
+**Use vellum when** the surface floats over media, over a scrolling feed, or
+over a blurred backdrop — stream overlays, media chrome, the top bar, the tab
+bar, the AI command surface.
+
+**Do not use vellum when** the surface sits on a flat background. Applying it to
 ordinary cards produces blur with nothing to blur, at real GPU cost, and reduces
 text contrast for no reason.
 
-Immersive screens also drop surface tokens for their chrome: a surface token
-assumes a canvas underneath it, and here the backdrop is a live picture, so the
-media group uses translucent whites instead.
+Immersive media screens also drop surface tokens for their chrome: a surface
+token assumes a canvas underneath it, and here the backdrop is a live picture,
+so the media group uses translucent whites instead.
 
 ---
 
-## 10. Elevation and glass
+## 10. Depth: elevation, vellum and refraction
+
+The two themes express depth through different physics, because the same physics
+do not exist in both.
+
+**Light is the primary, and there depth is occlusion and illumination.** A
+raised surface moves closer to white while casting a soft, wide, cool-tinted
+shadow — the behaviour of a pale object lit from above under a blue sky. Two
+rules follow, and both are load-bearing:
+
+- **Shadows are never black.** `--shadow-color-NN` in light theme is
+  `oklch(34% 0.042 266 / a)`. Under real daylight a shadow is lit by the sky, so
+  it takes the sky's colour; a neutral black shadow over a warm-white page reads
+  as dirt, while a cool one reads as air. This is the same physics that gives
+  the porcelain ramp its warm-to-cool shift.
+- **An elevated surface has no border.** Shadow alone carries the edge.
+  Border-plus-shadow is the single most reliable way to make a light interface
+  look like a form from 2012, and removing it is most of what separates "clean"
+  from "premium".
+
+**Dark is optional, and there shadows barely exist** — you cannot darken
+near-black. Depth comes instead from surface lightness rising with elevation, a
+1px rim highlight as if lit from above, and a soft dark halo detaching the
+surface from its backdrop. The hairline stays, because a shadow on near-black
+cannot define an edge on its own.
 
 ### 10.1 Six elevation levels
 
 Six, because more than six and the differences stop being perceptible; fewer and
 modals cannot separate from drawers.
 
-| Level | Surface step | Usage |
-|---|---|---|
-| `flat` | 1 | Page canvas. Never has depth. |
-| `sunken` | 1 | Input wells, track grooves, inset media. |
-| `surface` | 2 | Cards, list rows, panels resting on the canvas. |
-| `raised` | 3 | Hovered cards, dropdowns, popovers, floating controls. |
-| `overlay` | 3 | Dialogs, sheets, command palette. |
-| `lifted` | 4 | Dragged objects, the single focused element in a spotlight state. |
+| Level | Fill in light | Fill in dark | Usage |
+|---|---|---|---|
+| `flat` | transparent | transparent | Page canvas. Never has depth. |
+| `sunken` | `--sy-bg-sunken` (`porcelain.2`) | `--sy-bg-sunken` (`porcelain.1`) | Input wells, track grooves, inset media, segmented-control tracks. |
+| `surface` | `--sy-bg-surface` (`porcelain.1`) | `--sy-bg-surface` (`porcelain.2`) | Cards, list rows, panels resting on the page. |
+| `raised` | `--sy-bg-raised` (`porcelain.1`) | `--sy-bg-raised` (`porcelain.3`) | Hovered cards, dropdowns, popovers, floating controls. |
+| `overlay` | `--sy-bg-raised` | `--sy-bg-raised` | Dialogs, sheets, command palette. |
+| `lifted` | `--sy-bg-surface` | `--sy-bg-surface` | Dragged objects, the single focused element in a spotlight state. |
 
-Every level ships a light and a dark recipe, because the physics differ:
+In light theme `bg-surface` and `bg-raised` both resolve to `porcelain.1`, so
+`surface`, `raised`, `overlay` and `lifted` separate by **shadow alone**. In
+dark they are different ramp steps and the fill does the separating. That
+asymmetry is the per-theme structural mapping, not a component decision — see
+`FOUNDATIONS.md`.
+
+Every level ships a light and a dark recipe. Light-mode shadows are built from
+two layers, a tight contact shadow and a wide ambient one, because a single
+shadow always looks either too hard or too vague; the pair is what reads as a
+real object on a real surface.
 
 | Level | Light shadow | Dark shadow | Dark rim |
 |---|---|---|---|
-| `sunken` | `inset 0 1px 2px 0 var(--shadow-color-08)` | `inset 0 1px 3px 0 var(--shadow-color-32)` | `inset 0 -1px 0 0 var(--rim-color-04)` |
-| `surface` | `0 1px 2px -1px …-08, 0 1px 3px 0 …-06` | `0 1px 2px 0 var(--shadow-color-24)` | `inset 0 1px 0 0 var(--rim-color-06)` |
-| `raised` | `0 2px 4px -2px …-10, 0 6px 12px -4px …-10` | `0 2px 6px -1px …-32, 0 8px 20px -6px …-24` | `inset 0 1px 0 0 var(--rim-color-08)` |
-| `overlay` | `0 8px 16px -8px …-12, 0 20px 40px -12px …-14` | `0 10px 24px -6px …-40, 0 28px 56px -16px …-32` | `inset 0 1px 0 0 var(--rim-color-10)` |
-| `lifted` | `0 16px 32px -12px …-16, 0 40px 72px -24px …-16` | `0 18px 40px -12px …-48, 0 48px 96px -32px …-40` | `inset 0 1px 0 0 var(--rim-color-12)` |
+| `sunken` | `inset 0 1px 2px 0 …-06, inset 0 0 0 1px …-04` | `inset 0 1px 3px 0 …-32` | `inset 0 -1px 0 0 var(--rim-color-04)` |
+| `surface` | `0 1px 2px -1px …-08, 0 4px 10px -4px …-06` | `0 1px 2px 0 …-24` | `inset 0 1px 0 0 var(--rim-color-06)` |
+| `raised` | `0 2px 4px -2px …-08, 0 10px 24px -8px …-10` | `0 2px 6px -1px …-32, 0 8px 20px -6px …-24` | `inset 0 1px 0 0 var(--rim-color-08)` |
+| `overlay` | `0 8px 16px -10px …-10, 0 28px 56px -20px …-14` | `0 10px 24px -6px …-40, 0 28px 56px -16px …-32` | `inset 0 1px 0 0 var(--rim-color-10)` |
+| `lifted` | `0 16px 32px -16px …-12, 0 48px 88px -32px …-16` | `0 18px 40px -12px …-48, 0 48px 96px -32px …-40` | `inset 0 1px 0 0 var(--rim-color-12)` |
 
-**Why dark mode does not use shadows.** In light mode, depth is *occlusion*: a
-raised object blocks light and casts a shadow. Shadows are tinted with the
-neutral hue rather than pure black, because a black shadow over a violet-tinted
-surface reads as a smudge. In dark mode shadows are nearly invisible — you cannot
-darken near-black — so depth comes from three cooperating signals instead:
+`…-NN` is `var(--shadow-color-NN)`. Rim highlights are **dark-mode only**: every
+level declares `rim.light: 'none'`, and the build composes rim and shadow into a
+single `--sy-elevation-{level}` value per theme.
 
-1. **Surface lightness.** The ramp step rises with elevation (`surfaceStep` 1 →
-   4), so a raised card is genuinely lighter than the canvas.
-2. **Rim light.** A 1px top highlight, as if lit from above, growing from 4% to
-   12% alpha with elevation.
-3. **Ambient occlusion.** A soft dark halo that detaches the object from the
-   backdrop.
+Light and dark also read the shadow scale differently. Light uses alphas from
+4% to 16%; dark reaches 48%, because a shadow on near-black has to work much
+harder to be seen at all.
 
 Components ask for `elevation="raised"`, never for a shadow string.
 
-### 10.2 The four glass recipes
+**Inputs are the exception, in one direction only.** `.sy-input` is the single
+place the light theme goes *down*: a field takes `--sy-bg-canvas` and
+`--sy-elevation-sunken` while every other control sits above the page.
+Everything raised is a control; everything recessed is a place to type.
 
-Every glass recipe is three layers: a backdrop filter (blur plus a saturation
-lift, so colour survives blur), a translucent fill (which keeps text contrast
-above threshold), and a rim (a hairline highlight that defines the edge).
+### 10.2 The four vellum recipes
 
-| Recipe | Class | Blur | Saturate | Fill alpha (dark / light) | Rim alpha (dark / light) | Usage |
-|---|---|---|---|---|---|---|
-| `veil` | `.sy-glass--veil` | 12px | 1.4 | 0.62 / 0.68 | 0.08 / 0.5 | Sticky top bars, tab bars over feeds |
-| `panel` | `.sy-glass` (base) | 24px | 1.6 | 0.72 / 0.76 | 0.10 / 0.6 | Stream chrome, player controls, floating toolbars |
-| `dome` | `.sy-glass--dome` | 40px | 1.8 | 0.82 / 0.86 | 0.14 / 0.7 | Command palette, AI surface, media-context dialogs |
-| `scrim` | tokens only | 8px | 1.0 | 0.64 / 0.48 | 0 / 0 | Behind dialogs, drawers and sheets. Blurs so the background reads as out of focus |
+Vellum is SYLORA's translucent material, named for what it behaves like rather
+than for the CSS property that produces it. It is not "frosted glass over a dark
+scene": on a bright ground it is a sheet of fine translucent paper, so it
+**brightens** what is behind it rather than dimming it. That is the difference
+between a light interface that looks lit and one that looks fogged.
 
-`panel` is the base `.sy-glass` class — there is no `.sy-glass--panel`. The
-`scrim` recipe exists as tokens (`--sy-glass-scrim-*`) but has no utility class;
-screens that need it apply the tokens directly.
+Three cooperating layers: a backdrop filter that blurs and lifts brightness and
+saturation, a translucent fill that keeps text contrast above threshold, and a
+rim that defines the edge.
+
+| Recipe | Class | Blur | Saturate | Brightness (light / dark) | Fill alpha (light / dark) | Rim alpha (light / dark) | Usage |
+|---|---|---|---|---|---|---|---|
+| `veil` | `.sy-vellum--veil` | 14px | 1.5 | 1.06 / 0.96 | 0.66 / 0.62 | 0.72 / 0.08 | Sticky top bars, tab bars over feeds |
+| `panel` | `.sy-vellum` (base) | 26px | 1.7 | 1.08 / 0.94 | 0.74 / 0.72 | 0.80 / 0.10 | Stream chrome, player controls, floating toolbars |
+| `dome` | `.sy-vellum--dome` | 44px | 1.9 | 1.10 / 0.92 | 0.86 / 0.82 | 0.90 / 0.14 | Command palette, AI surface, media-context dialogs |
+| `scrim` | tokens only | 10px | 1.0 | 1.00 / 1.00 | 0.42 / 0.64 | 0 / 0 | Behind dialogs, drawers and sheets. Blurs so the background reads as out of focus |
+
+The brightness column is the whole trick, and it is the one number that inverts
+between themes. Above 1 in light, below 1 in dark.
+
+Two more per-theme facts about how the tokens are built:
+
+- The **fill** is drawn from `bg-surface`, so vellum brightens toward the card
+  colour in light and toward the panel colour in dark.
+- The **rim** is drawn from `porcelain.1` in light and `porcelain.12` in dark —
+  in both cases the end of the ramp that reads as "more light" against that
+  theme's ground. This is why light rim alphas (0.72–0.90) look enormous next to
+  dark ones (0.08–0.14): they are near-white on near-white, not white on black.
+
+`panel` is the base `.sy-vellum` class — there is no `.sy-vellum--panel`. The
+`scrim` recipe exists as tokens (`--sy-vellum-scrim-*`) but has no utility class
+and is not reachable from `Surface`'s `glass` prop; screens that need it apply
+the tokens directly.
 
 Fill opacity is the accessibility control:
 
 - The whole effect sits behind `@supports (backdrop-filter: blur(1px))`. Without
-  support the surface becomes opaque `--sy-bg-surface` rather than unreadable.
+  support the surface becomes opaque `--sy-bg-surface` with a
+  `--sy-border-subtle` edge, rather than unreadable.
 - Under `prefers-contrast: more` all three classes are forced opaque with a
-  `--sy-border-interactive` border, and `.sy-aurora` is hidden entirely.
-  Translucency is the first thing to go, because it is the only place the system
-  knowingly trades contrast for depth.
+  `--sy-border-interactive` border, `.sy-refract` loses its spectral edge for a
+  solid one, and `.sy-lumen` is hidden entirely. Translucency and hue-varying
+  hairlines are the two places the system knowingly trades contrast for
+  character, so they are the first to go.
 
-### 10.3 Glow
+### 10.3 Refraction, not glow
 
-Glow marks things that are *active*: live, generating, focused, earning. It is
-never decorative on a resting element, because if everything glows nothing is
-emphasised.
+There is no glow language in SYLORA, and no `GLOW` token. A halo is invisible on
+white, so emphasis on a bright ground comes from the other thing light does when
+it meets a surface: it *separates*. A refraction edge is a hairline whose hue
+travels along its length in the order light actually splits — cyan, indigo,
+magenta — using `--sy-gradient-prism` as a `border-box` background.
 
-| Token | Spread | Alpha | Usage |
-|---|---|---|---|
-| `--sy-glow-subtle-*` | 8px | 0.24 | Focused input, selected chip |
-| `--sy-glow-base-*` | 16px | 0.32 | Primary button hover, active nav item |
-| `--sy-glow-strong-*` | 28px | 0.42 | Live indicator, AI generating state |
-| `--sy-glow-halo-*` | 48px | 0.28 | Hero brand mark, celebration moments |
+At 1px it is nearly subliminal: the eye registers that an edge is *alive* before
+it registers that it is coloured. It is the one visual device unique to SYLORA,
+so it is rationed hard — brand surfaces, AI-authored content, and the single
+most important action in a view. Nothing else. If everything refracts, nothing
+is emphasised.
 
-The colour is supplied by the consuming component from its semantic family, so a
-live badge glows flux and an AI action glows iris without duplicating the recipe.
+| Token | Weight | Spread | Alpha | Usage |
+|---|---|---|---|---|
+| `--sy-refract-hairline-*` | 1px | 0 | 0.9 | Brand surfaces, AI-authored cards |
+| `--sy-refract-edge-*` | 1px | 10px | 0.55 | Focused brand controls, active states |
+| `--sy-refract-bloom-*` | 1.5px | 24px | 0.42 | Live indicators, generating states |
+| `--sy-refract-halo-*` | 2px | 48px | 0.3 | Hero brand mark, celebration moments |
 
-### 10.4 The aurora field
+`weight` is the border width and `spread` is the optional bloom *behind* the
+edge, which only becomes visible in dark mode where a true glow is possible.
 
-`.sy-aurora` is the brand's ambient backdrop: three large, slowly drifting
-radial gradients, absolutely positioned, `pointer-events: none`, at
-`z-index: 0`. Blur is baked into the gradient stops rather than applied as a
-filter, because filters on full-viewport elements are expensive. It drifts over
-24s (`--sy-aurora-duration`), drops to 0.22 opacity in light mode, and stops
-animating under reduced motion. It is atmosphere — never place text directly on
-it without a surface.
+Three classes consume these:
+
+| Class | What it does |
+|---|---|
+| `.sy-refract` | The spectral hairline border. Fill comes from `--refract-fill`, defaulting to `--sy-bg-surface`, so a refracting surface can still choose its own background. |
+| `.sy-refract--bloom` | Adds `0 0 var(--sy-refract-bloom-spread)` of `--sy-aether-9` behind the edge. Perceptible in dark mode only. |
+| `.sy-refract-rule` | The same hairline as a standalone 1px divider at `opacity: 0.75`, used to open a section belonging to the brand or the assistant. |
+
+`.sy-refract` composes with elevation because the elevation *fills* are declared
+inside `:where()`, which strips their specificity to zero. Without that, a
+surface could be raised or refracting but not both, and the later stylesheet
+would silently win.
+
+### 10.4 The lumen field
+
+`.sy-lumen` is the brand's ambient backdrop and the light theme's answer to a
+dark theme's glow: rather than colour emitted *onto* a dark page, it is colour
+caught *in* a bright one.
+
+| Property | Value |
+|---|---|
+| Layers | Two pseudo-elements, `::before` and `::after` |
+| Size | 92vmax circles, positioned off-frame at each corner |
+| Colours | `--sy-aether-9` (top-inline-start) and `--sy-bloom-9` (bottom-inline-end), each as a `radial-gradient` fading to transparent at 64% |
+| Opacity, light | 0.10 and 0.08 |
+| Opacity, dark | 0.40 and 0.32 |
+| Motion | `sy-lumen-a` / `sy-lumen-b`, alternating `ease-in-out`, `var(--sy-lumen-duration, 26s)` |
+| Stacking | `position: absolute; inset: 0; pointer-events: none; z-index: 0` |
+
+The values are deliberately extreme in one direction — enormous radius, tiny
+opacity. A saturated wash on white reads as a stain; a 10% wash across 92vmax
+reads as light in the room. Dark mode can afford four times the presence because
+there is no white to stain. Blur is baked into the gradient stops rather than
+applied as a filter, because filters on full-viewport elements are expensive.
+
+It stops animating under `prefers-reduced-motion` and is removed entirely under
+`prefers-contrast: more`. It is atmosphere — never place text directly on it
+without a surface.
 
 ---
 
@@ -750,12 +902,12 @@ One column, a sticky filter bar, heterogeneous items.
     </Media>
 
     <header className="sy-live-viewer__top">           {/* ≤12%, padding folds in --safe-top */}
-      <div className="sy-live-viewer__identity sy-glass">…</div>
+      <div className="sy-live-viewer__identity sy-vellum">…</div>
       <div className="sy-live-viewer__status"><LiveBadge viewers="…" />…</div>
     </header>
 
     <footer className="sy-live-viewer__bottom">        {/* padding folds in --safe-bottom */}
-      <div className="sy-live-viewer__controls sy-glass">…</div>
+      <div className="sy-live-viewer__controls sy-vellum">…</div>
       <div className="sy-gift-rail">…</div>
     </footer>
   </div>
@@ -766,9 +918,13 @@ One column, a sticky filter bar, heterogeneous items.
 
 - The stage is `position: relative` with `overflow: hidden`; every chrome layer
   is absolutely positioned inside it with a local `z-index` of 1 or 2.
+- `data-theme="dark"` goes on the **stage**, not on the screen root: the video
+  is the light source, and the chat rail beside it belongs to the room. The
+  player, stories and shorts put it on the root instead, because they have no
+  non-media region.
 - Each strip folds the safe-area inset into its own padding — the stage never
   shrinks for the notch.
-- Glass is applied per chrome element, not to the stage.
+- Vellum is applied per chrome element, not to the stage.
 - Give the media an `.sy-sr-only` description; `Media` has no accessible name.
 - The screen owns its own exit control, because there is no shell chrome to
   provide one.
@@ -788,5 +944,6 @@ Every screen must be correct at all five content widths:
 | 908 | expanded | Full layout. Three- and four-column grids and sidebars appear. Content still capped; do not let text run to 200 characters. |
 
 Plus: no `@media` queries in screen stylesheets, no literal colours, sizes or
-durations, no z-index outside the scale, no glass over a flat background, and no
-state carried by colour alone.
+durations, no z-index outside the scale, no vellum over a flat background, no
+border on an elevated surface in light theme, and no state carried by colour
+alone. If the screen uses `.sy-refract`, it should be on exactly one element.

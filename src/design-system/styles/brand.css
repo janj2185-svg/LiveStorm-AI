@@ -104,7 +104,10 @@
 
 .sy-logo-wordmark {
   font-family: var(--sy-font-display);
-  font-weight: 600;
+  /* The display face has a single weight. Requesting more synthesises a
+     smeared bold, which is the one thing a wordmark cannot afford. */
+  font-weight: 400;
+  font-synthesis: none;
   /* Wide tracking is the wordmark's signature; it is never reduced. */
   letter-spacing: 0.14em;
   /* Compensate for the trailing letter-space so the lockup stays optically centred. */
@@ -263,7 +266,7 @@
  * a static ring carry "thinking" for users who cannot tolerate motion.
  */
 @media (prefers-reduced-motion: reduce) {
-  .sy-logo-mark__blades,
+  .sy-logo-mark__lenses,
   .sy-logo-mark__core,
   .sy-ai-orb__ring,
   .sy-ai-orb__core {

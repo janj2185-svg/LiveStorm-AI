@@ -129,7 +129,7 @@ export interface ColorFamilyDefinition {
 /**
  * The SYLORA spectrum.
  *
- * Six hues, spaced 46-74 degrees apart so no two are ever mistaken for each
+ * Six hues, spaced 44-76 degrees apart so no two are ever mistaken for each
  * other, each owning exactly one job. Colour communicates meaning before a word
  * is read.
  *

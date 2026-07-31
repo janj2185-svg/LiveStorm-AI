@@ -143,6 +143,10 @@
   --sy-travel-small: 8px;
   --sy-travel-medium: 16px;
   --sy-travel-large: 32px;
+  --sy-ambient-lumenDrift: 26000ms;
+  --sy-ambient-livePulse: 1800ms;
+  --sy-ambient-thinkingSweep: 1600ms;
+  --sy-ambient-skeletonSweep: 1400ms;
 
   /* Layout shell */
   --sy-shell-railCollapsed: 76px;
@@ -166,7 +170,7 @@
   --sy-z-tooltip: 800;
   --sy-z-spotlight: 900;
 
-  /* Glass */
+  /* Vellum */
   --sy-vellum-veil-blur: 14px;
   --sy-vellum-veil-saturate: 1.5;
   --sy-vellum-panel-blur: 26px;
@@ -176,7 +180,7 @@
   --sy-vellum-scrim-blur: 10px;
   --sy-vellum-scrim-saturate: 1;
 
-  /* Glow spreads */
+  /* Refraction */
   --sy-refract-hairline-weight: 1px;
   --sy-refract-hairline-spread: 0px;
   --sy-refract-hairline-alpha: 0.9;
@@ -367,6 +371,8 @@
   --sy-danger-solid: #c22d39;
   --sy-danger-solid-hover: #ad172b;
   --sy-danger-fg: #910b20;
+
+  --sy-weight-body: 410;
 
   --sy-on-aether: #fffef9;
   --sy-on-pulse: #fffef9;
@@ -587,6 +593,8 @@
   --sy-danger-solid: #e14950;
   --sy-danger-solid-hover: #f26164;
   --sy-danger-fg: #ff9a97;
+
+  --sy-weight-body: 380;
 
   --sy-on-aether: #0d0d13;
   --sy-on-pulse: #0d0d13;
@@ -810,6 +818,8 @@
     --sy-danger-solid-hover: oklch(48.20% 0.1813 22);
     --sy-danger-fg: oklch(42.00% 0.1628 22);
 
+    --sy-weight-body: 410;
+
     --sy-on-aether: #fffef9;
     --sy-on-pulse: #fffef9;
     --sy-on-bloom: #fffef9;
@@ -1029,6 +1039,8 @@
     --sy-danger-solid: oklch(62.00% 0.1880 22);
     --sy-danger-solid-hover: oklch(67.80% 0.1786 22);
     --sy-danger-fg: oklch(79.00% 0.1354 22);
+
+    --sy-weight-body: 380;
 
     --sy-on-aether: #0d0d13;
     --sy-on-pulse: #0d0d13;

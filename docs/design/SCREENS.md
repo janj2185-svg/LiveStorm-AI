@@ -53,27 +53,41 @@ Two consequences the code comments call out repeatedly:
 `wallet`. For those four the expanded columns are 676 and 908 exactly as
 `patterns.css` documents.
 
-For the other 30 non-immersive screens the panel is never rendered, so the
+For the other 27 non-immersive screens the panel is never rendered, so the
 expanded posture only deducts the 264px rail and the columns are **1016** (web
 1280) and **1248** (desktop 1512). This matters: a `min-width: 960px` query
-fires on those 30 screens at web and desktop, and would not fire on a
+fires on those 27 screens at web and desktop, and would not fire on a
 panel-bearing screen at either.
 
 | Screen class | 393 | 412 | 834 | 1280 | 1512 |
 |---|---|---|---|---|---|
-| Non-immersive, no context panel (30 screens) | 393 | 412 | 758 | **1016** | **1248** |
+| Non-immersive, no context panel (27 screens) | 393 | 412 | 758 | **1016** | **1248** |
 | Non-immersive, with context panel (4 screens) | 393 | 412 | 758 | **676** | **908** |
-| Immersive (4 screens) | 393 | 412 | **834** | **1280** | **1512** |
+| Immersive (7 screens) | 393 | 412 | **834** | **1280** | **1512** |
+
+The immersive set is `welcome`, `auth`, `onboarding`, `live-viewer`, `player`,
+`stories` and `shorts`. The three entry screens are immersive for a different
+reason from the four media ones: a navigation rail and a tab bar around a
+sign-in form advertise a product the user has not entered yet, while the media
+screens *are* the content.
 
 Immersive screens take the whole frame: `AppShell` returns
 `.sy-shell-frame.sy-shell--immersive` before any chrome is built, and that
 element establishes the `screen` container itself.
 
 Each entry below lists the container queries the screen actually declares and
-which of the five reference columns they fire at. The authoring guide names
-560 / 640 / 768 / 840 / 880 / 1024 / 1280 as the house thresholds; individual
-group stylesheets frequently choose other values (700, 720, 900, 960, 992,
-1100, 1152) and say why in a comment. The values below are the ones in the CSS.
+which of the five reference columns they fire at. **Every screen stylesheet in
+the product now uses exactly three thresholds — 560, 840 and 880** — and nothing
+else. The ladder straddles the real column widths rather than landing on top of
+them, which is the whole reason device-shaped numbers were abandoned: 768 misses
+the tablet's 758px column, and 1024 misses a 1280 web posture carrying a context
+panel.
+
+Where a layout needs to keep changing between thresholds it uses a container
+unit rather than another breakpoint. The studio's side columns, the chat panes
+and the communities sidebar are all `clamp(min, Ncqi, max)`: held to the
+narrowest width their content survives at, allowed to grow with the room, and
+capped once the primary region has all the pixels it can use.
 
 ### What "implemented" means here
 
@@ -151,8 +165,24 @@ declares `Account` and `Foundations`; no screen currently uses `Account`, and
 
 ## Entry
 
-Three screens, all unauthenticated, all without a context panel. Content
-columns: 393 / 412 / 758 / 1016 / 1248. Stylesheet: `src/screens/entry/entry.css`.
+Three screens, all unauthenticated, all without a context panel, and **all
+three immersive**: no top bar, no rail, no tab bar. A navigation rail around a
+sign-in form advertises a product the user has not entered yet.
+
+Because there is no shell chrome to subtract, the content column *is* the
+device: 393 / 412 / **834** / **1280** / **1512**. Two things follow, and
+`entry.css` opens by stating both. The screen owns its scroll, since the shell's
+scrolling main region does not exist here — each root is a fixed-height box with
+its own scroller inside it, or the fold becomes a hard edge. And the screen owns
+its safe areas, via `--entry-safe-top` / `--entry-safe-bottom`, because with no
+top bar the content starts at y=0, straight under the status bar.
+
+All three share one visual device: the `.sy-lumen` field with a single opaque
+object floating on it. The field sits *outside* the scrolling box — an ambient
+wash that slides up and off the top with the content stops reading as light in
+the room and starts reading as a very large sticker.
+
+Stylesheet: `src/screens/entry/entry.css`.
 
 ### 1. Welcome
 
@@ -161,7 +191,7 @@ columns: 393 / 412 / 758 / 1016 / 1248. Stylesheet: `src/screens/entry/entry.css
 | id | `welcome` |
 | Group | Entry |
 | navId | `home` |
-| Immersive | No |
+| Immersive | **Yes** |
 | Context panel | None |
 | Component | `src/screens/entry/WelcomeScreen.tsx` |
 
@@ -186,25 +216,36 @@ built from the shipping primitives rather than a screenshot.
 
 **Anatomy.**
 
-- `.sy-aurora` ambient brand field (decorative, absolutely positioned).
+- `.sy-lumen` ambient brand field (decorative, absolutely positioned, outside
+  the scroller).
+- `.sy-welcome__scroll` — the screen's own scrolling box, `justify-content: safe
+  center` so the composition is centred while it fits and top-aligned the moment
+  it does not, because overflow above the start edge cannot be scrolled to.
 - `.sy-welcome__hero` — brand lockup, `.sy-display-2` headline, lede,
   `.sy-welcome__cta` button pair, cost note, `.sy-welcome__props` list,
   `.sy-welcome__proof` row.
 - `.sy-welcome__preview` — three stacked `Surface` cards from three different
-  product surfaces, proving the "one system" claim instead of repeating it.
+  product surfaces, proving the "one system" claim instead of repeating it. The
+  assistant card is `.sy-refract`, and it is the only refraction on the screen.
 
 **Responsive behaviour.**
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | CTA pair goes from a stacked full-width column to a row with auto-width buttons; value props become two columns; the proof row goes horizontal. |
-| `min-width: 768px` | 1016, 1248 | `.sy-welcome__inner` becomes a `1.1fr / minmax(320px, 0.9fr)` grid: hero left-aligned, preview beside it, and the stat and assistant cards overhang the column edges. |
-| `min-width: 1024px` | 1248 | Column gap grows to `--sy-space-16`; the prop grid gains column gap. |
+| `min-width: 560px` | 834, 1280, 1512 | CTA pair goes from a stacked full-width column to a centred row with auto-width buttons; value props become two columns; the proof row goes horizontal. |
+| `min-width: 880px` | 1280, 1512 | `.sy-welcome__inner` becomes a `minmax(0, 1.1fr) / minmax(340px, 0.9fr)` grid: hero left-aligned, preview beside it. The headline steps up to `--sy-type-display1-size`. |
 
 At 393 and 412 the whole column is centred and stacked, the preview sitting
-under the hero. At 758 the composition stays the phone's, at a larger scale —
-the 768px query deliberately does not fire in the medium posture, because
-splitting there would leave a display-scale headline in a ~360px column.
+under the hero. **A tablet at 834 gets the phone's composition at a larger
+scale**, because 880 is the threshold and an immersive screen has no rail to
+subtract — splitting at 834 would cut the layout into a ~390px hero and a ~380px
+preview, where the live tile stops being a live tile and starts being a
+thumbnail.
+
+The 880 rule is also why the headline only reaches `display1` on a
+desktop-width frame. It is the one place in the product with nothing competing
+for the eye, so the serif is allowed its largest size rather than the
+section-heading size it takes everywhere else.
 
 **Key interactions.** Presentational only. The CTA pair, the preview's Approve
 and Not now buttons and the proof avatars carry no handlers.
@@ -212,9 +253,17 @@ and Not now buttons and the proof avatars carry no handlers.
 **Empty, loading and error.** None. The screen has no variable content.
 
 **Accessibility.** `LogoMark` takes `title="SYLORA"` so the mark is named. The
-aurora field is decorative and not announced. Headline is the `h1`; each value
+lumen field is decorative and not announced. Headline is the `h1`; each value
 proposition title is an `h2`. The cost note is `--sy-fg-muted` rather than
 `--sy-fg-quiet` because it is load-bearing text, not a footnote.
+
+**Light-first detail.** The bloom behind the preview stack cannot share a recipe
+between themes. In light it is a radial of `--sy-bg-surface` — the stack sits in
+a pool of near-white, brighter than the page around it — because a saturated
+accent radial behind near-white cards on porcelain reads as a smudge under them
+rather than a halo. Dark keeps the accent glow, which is the only theme where
+emission is real. The live tile's caption takes `--sy-fg-on-media`, a
+theme-invariant foreground, because the media scrim is dark in both themes.
 
 ### 2. Authentication
 
@@ -223,7 +272,7 @@ proposition title is an `h2`. The cost note is `--sy-fg-muted` rather than
 | id | `auth` |
 | Group | Entry |
 | navId | none |
-| Immersive | No |
+| Immersive | **Yes** |
 | Context panel | None |
 | Component | `src/screens/entry/AuthScreen.tsx` |
 
@@ -242,23 +291,35 @@ ordering as a security decision, not a layout one.
    Settings.
 7. A mode-switch line beneath the card for anyone who read past it.
 
-**Anatomy.** `.sy-aurora` field; `.sy-auth__card` (the only opaque object on
-the field); inside it `.sy-auth__head`, `Tabs`, `.sy-auth__passkey`, an "or"
+**Anatomy.** `.sy-lumen` field; `.sy-auth__scroll` (the screen's own scroller);
+`.sy-auth__card` (the only opaque object on the field); inside it
+`.sy-auth__head`, `.sy-auth__rule`, `Tabs`, `.sy-auth__passkey`, an "or"
 divider, `.sy-auth__form`, an "or continue with" divider,
 `.sy-auth__providers`, `.sy-auth__legal`; then `.sy-auth__switch` outside the
 card.
+
+`.sy-auth__rule` is a `.sy-refract-rule` and the single refraction on the
+screen: a spectral hairline closing the brand head, which is the only part of
+the card that belongs to SYLORA rather than to the form.
 
 **Responsive behaviour.**
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-auth__inner` gains inline padding. |
+| `min-width: 560px` | 834, 1280, 1512 | The card becomes a real object: `--sy-bg-raised` fill, `--sy-radius-2xl`, `--sy-elevation-overlay`, `--sy-space-8` padding. Inner column caps at 500px. |
+| `min-width: 880px` | 1280, 1512 | Inner column caps at 560px; card padding grows to `--sy-space-10`. A landing page at desktop width should not look like a phone screenshot pasted onto a wall. |
 
-The card itself is the main responsive move: below 640px it sheds its border,
-background and radius and fills the width, because a bordered card inside a
-bordered device frame is two frames doing one job and the inner one steals
-horizontal space from the inputs. At 758, 1016 and 1248 the card is a centred,
-raised object on the aurora field; it does not widen indefinitely.
+The card itself is the main responsive move: below 560px it sheds its fill,
+radius and shadow entirely and the screen becomes the card, because a bordered
+card inside a bordered device frame is two frames doing one job and the inner
+one steals horizontal space from the inputs.
+
+Above 560px the card is where the light-first elevation rule is most visible.
+It carries `--sy-elevation-overlay` and, in light theme, **no border** — the
+shadow is the edge, and a hairline underneath it is what makes a bright
+interface look like a 2012 web form. `[data-theme='dark'] .sy-auth__card`
+restores `--sy-border-subtle`, because a shadow on near-black cannot describe an
+edge on its own.
 
 **Key interactions (stateful).**
 
@@ -293,7 +354,7 @@ the field.
 | id | `onboarding` |
 | Group | Entry |
 | navId | none |
-| Immersive | No |
+| Immersive | **Yes** |
 | Context panel | None |
 | Component | `src/screens/entry/OnboardingScreen.tsx` |
 
@@ -316,26 +377,40 @@ the chronological feed.
    surface, plus the picks themselves as removable chips.
 7. Pinned footer: Back, count, Continue.
 
-**Anatomy.** `.sy-onboard__steps` (sticky header with `.sy-steps` ordered
-list) → `.sy-onboard__body` containing `.sy-onboard__main`
-(intro, `.sy-onboard__count` live region, `.sy-onboard__chips`, `details.sy-why`)
-and `aside.sy-onboard__aside` (`.sy-onboard__preview` with matches and picks)
-→ `footer.sy-onboard__footer`.
+**Anatomy.** Three bands, of which only the middle one scrolls:
+`.sy-onboard__steps` (progress header with the `.sy-steps` ordered list) →
+`.sy-onboard__scroll` wrapping `.sy-onboard__body`, which contains
+`.sy-onboard__main` (intro, `.sy-onboard__count` live region,
+`.sy-onboard__chips`, `details.sy-why`) and `aside.sy-onboard__aside`
+(`.sy-onboard__preview` with matches and picks) → `footer.sy-onboard__footer`.
+Letting the whole screen scroll as one would lose both the progress indicator
+and the Continue button.
+
+The `.sy-lumen` field is the first child and paints behind all three bands, so
+the bands are promoted with `z-index` rather than given opaque fills — an
+ambient wash that stops at a hairline is not ambient.
 
 **Responsive behaviour.**
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | Per-step names appear in the progress indicator (`.sy-step__name`); body gains vertical padding; the footer's "N of M interests" count becomes visible. |
-| `min-width: 700px` | 758, 1016, 1248 | `.sy-onboard__body` becomes `1fr / minmax(260px, 300px)`; the preview moves beside the chips and becomes sticky, so a pick and its consequence are never a scroll apart. |
-| `min-width: 1024px` | 1248 | Aside fixes at 320px; gap grows to `--sy-space-8`. |
+| `min-width: 560px` | 834, 1280, 1512 | Per-step names appear in the progress indicator (`.sy-step__name`); body gains vertical padding; the footer's "N of M interests" count becomes visible; the preview's matches go to two columns as a wide band under the chips. |
+| `min-width: 840px` | 1280, 1512 | `.sy-onboard__body` becomes `minmax(0, 1fr) / minmax(280px, 320px)`; the preview moves beside the chips and becomes sticky, so a pick and its consequence are never a scroll apart. |
+| `min-width: 880px` | 1280, 1512 | The three bands cap at 1100px and centre. A setup step is a single question, and sixteen chips across the full 1440px column read as a table of contents. |
 
-The 700px threshold is chosen over 768 precisely so it fires in the medium
-posture, where the icon rail leaves the screen roughly 758px.
+The aside cannot arrive before 840: it needs 300px and the chip grid needs the
+rest, and below that the chips get a column too narrow to hold a two-word label
+without wrapping.
 
-At 393 and 412 the steps are numbered dots without names, the preview stacks
+At 393 and 412 the steps are progress segments without names, the preview stacks
 below the chips, and Back / Continue stay outside the scrolling region so
 Continue is never something you have to scroll to find.
+
+**Light-first detail.** The current step's segment carries
+`--sy-gradient-prism` plus a `--sy-refract-edge-spread` bloom — the one place in
+the flow where the eye should land first, and one of the few refractions outside
+brand and AI surfaces. Completed segments are solid `--sy-accent-solid`; the
+track is `--sy-bg-active`.
 
 **Key interactions (stateful).** `selected` is an array of interest ids.
 Chips toggle on click; the picks list in the aside renders each selection as a
@@ -408,8 +483,8 @@ perishability: things that expire soonest sit highest.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 560px` | 758, 676, 908 | `.sy-home__search` is hidden — search has moved into the shell top bar, and showing both would be a duplicate control costing 40px of a 393px screen. |
-| `min-width: 1024px` | none of the five | `.sy-live-tile` would widen to 268px. With a context panel the widest column is 908, so this rule does not fire on any reference device. |
+| `min-width: 560px` | 758, 676, 908 | `.sy-home__search` is hidden — search has moved into the shell top bar, and showing both would be a duplicate control costing 40px of a 393px screen. The stories rail and the shared scrollers widen their edge bleed to `--sy-space-6`. |
+| `min-width: 880px` | 908 | `.sy-live-tile` widens to 268px. With a context panel the widest column is 908, so this only fires on desktop. |
 
 At 393 and 412 the in-screen search is present and the live shelf scrolls
 horizontally with edge bleed. At 676 (web) the column is the tightest expanded
@@ -465,10 +540,8 @@ reordered — ranking lives on Discover, which is labelled as such.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-composer__hint` ("Posting as @handle") becomes visible. |
-| `min-width: 768px` | 1016, 1248 | The sticky bar's negative margin and padding widen to `--sy-space-6` so it bleeds to the column edge. |
-| `min-width: 960px` | 1016, 1248 | `.sy-fdscreen__layout` becomes `1fr / 300px` and `.sy-fdscreen__side` appears, sticky. |
-| `min-width: 1280px` | none of the five | Bar bleed would widen again to `--sy-space-8`. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-composer__hint` ("Posting as @handle") becomes visible; the sticky bar's negative margin and padding widen to `--sy-space-6` so it bleeds to the column edge. |
+| `min-width: 880px` | 1016, 1248 | `.sy-fdscreen__layout` becomes `minmax(0, 1fr) / 300px` and `.sy-fdscreen__side` appears, sticky. The bar's bleed widens again to `--sy-space-8`. |
 
 The 960px threshold is documented in `core.css`: the shell hands the screen 948
 at a 1100px window, 1016 at 1280 once the rail expands to 264px, and 1248 at
@@ -535,7 +608,7 @@ active result panel. Result rows are type-specific: `.sy-result--creator`,
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 768px` | 1016, 1248 | `.sy-search__chiprow` gains negative margin and padding so the chip scroller bleeds to the column edge. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-search__chiprow` gains negative margin and padding so the chip scroller bleeds to the column edge. |
 
 Otherwise the screen is a single column at every width; the result rows are
 flex rows that reflow, and the chip rows scroll horizontally rather than
@@ -600,11 +673,16 @@ category badge, title, creator row, three actions, then `.sy-disc__hero-why`)
 `header.sy-shelf__head` + optional `.sy-shelf__reason` panel + a
 `.sy-scroller` of cards.
 
+`.sy-disc__hero-top` and `.sy-disc__hero-body` both carry `data-theme="dark"`.
+The scrim is dark in both themes, so the light theme's dark-on-light
+foregrounds would be unreadable over it; re-declaring the theme on the subtree
+keeps that tokenised instead of hard-coding white.
+
 **Responsive behaviour.**
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 768px` | 1016, 1248 | Hero scrim content gains `--sy-space-6` padding and the hero title takes a `max-inline-size`, so the headline keeps a readable measure instead of running the full width. |
+| `min-width: 560px` | 758, 1016, 1248 | Hero scrim content gains `--sy-space-6` padding and the hero title caps at 26ch, so the headline keeps a readable measure instead of running the full width. The shelf scrollers widen their scroll padding to match the column's. |
 
 The shelves are horizontal scrollers at every width, so the screen degrades by
 showing fewer cards per shelf rather than by rewrapping.
@@ -662,8 +740,13 @@ memory.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | Banner grows to 180px; avatar goes to 112px with a larger negative offset; `.sy-profile__actions` becomes a wrapping flex row; the tier grid becomes three columns; the Shop tab's feature block becomes `280px / 1fr`. |
-| `min-width: 1024px` | 1248 | Banner grows again to 232px. |
+| `min-width: 560px` | 758, 1016, 1248 | Banner grows to 180px; avatar goes to 112px with a −60px offset and 40px initials; `.sy-profile__actions` becomes a wrapping flex row; the tier grid becomes three columns; the Shop tab's feature block becomes `280px / minmax(0, 1fr)`. |
+| `min-width: 880px` | 1016, 1248 | Banner grows again to 232px. |
+
+The tier grid goes three-across at the *first* threshold rather than the second.
+A tablet only hands the screen 758px once the rail is subtracted, and three
+tiers side by side is the entire point of the card — stacked, they stop being
+comparable.
 
 At 393 and 412 the banner is short, the avatar drops a size and the four
 actions become a two-up grid. Buttons in a row at 393px would either wrap
@@ -716,8 +799,12 @@ every other category renders a `ListRow` list from its `rows` definition.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | Category rows gain their summary line (`.sy-settings__navsummary`); the theme grid becomes three columns; the accent grid becomes six. |
-| `min-width: 960px` | 1016, 1248 | `.sy-settings__layout` becomes `288px / 1fr` and the nav becomes sticky. |
+| `min-width: 560px` | 758, 1016, 1248 | Category rows gain their summary line (`.sy-settings__navsummary`); the theme grid becomes three columns; the accent grid becomes six. |
+| `min-width: 880px` | 1016, 1248 | `.sy-settings__layout` becomes `288px / minmax(0, 1fr)` and the nav becomes sticky. |
+
+880 rather than a device-shaped number for the same reason as the Feed sidebar:
+measured on the `screen` container, the shell's rail has already taken 76px
+(collapsed) or 264px (expanded) before the query ever sees the width.
 
 The 960px value is chosen for the same monotonicity reason as the Feed sidebar
 and is commented as such. At 393, 412 and 758 the list stays and the detail
@@ -782,8 +869,8 @@ is new, what needs a reply, what can be ignored forever.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-notif__avatar` is displayed alongside the type tile. |
-| `min-width: 768px` | 1016, 1248 | Row actions fade in on hover but stay in the tab order, so a keyboard reveals them with focus rather than needing a different path. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-notif__avatar` is displayed alongside the type tile. |
+| `min-width: 840px` | 1016, 1248 | Row actions drop to `opacity: 0` and fade in on hover, but stay in the tab order and reappear on `:focus-within`, so a keyboard reveals them with focus rather than needing a different path. |
 
 **Key interactions (stateful).**
 
@@ -851,8 +938,8 @@ conversations, capability notes.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 676, 908 | The mode selector moves back into its natural order in the composer bar and the separator rule appears; thread gap increases. |
-| `min-width: 1024px` | none of the five | Would cap `.sy-thread`, `.sy-assistant__head` and `.sy-composer` at a maximum measure. With a context panel the widest column is 908, so this does not fire on any reference device. |
+| `min-width: 560px` | 758, 676, 908 | The mode selector moves back into its natural order in the composer bar and `.sy-composer__rule` — the refraction hairline — appears; thread gap grows to `--sy-space-10`. |
+| `min-width: 880px` | 908 | `.sy-thread`, `.sy-assistant__head` and `.sy-composer` cap at 820px. The thread stops widening before the measure does: an assistant answer at 110 characters per line is unreadable no matter how much room there is. |
 
 The header's scope note wraps onto its own line rather than squeezing the title
 row, so it survives 393px without truncation. The composer dock sits outside
@@ -893,8 +980,9 @@ executing anything.
 answer"; the generating turn is labelled "Assistant is answering". The mode
 note is `aria-live="polite"`, so changing mode announces the new contract.
 Citations are real buttons with a visible index. Dismiss controls name the
-action they dismiss. The aurora hairline is reserved for surfaces the assistant
-authored, so generated content is always separable from the user's own.
+action they dismiss. The refraction hairline (`.sy-refract`, the spectral
+cyan → indigo → magenta edge) is reserved for surfaces the assistant authored,
+so generated content is always separable from the user's own.
 
 ---
 
@@ -1012,7 +1100,7 @@ so the remaining count is readable without counting.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 600px` | 834, 1280, 1512 | `.sy-stories-screen__stage` stops filling the width: it keeps a 9:16 aspect ratio, takes the full height, centres in black and gains a corner radius. |
+| `min-width: 560px` | 834, 1280, 1512 | `.sy-stories-screen__stage` stops filling the width: it keeps a 9:16 aspect ratio, takes the full height, centres and gains an `xl` corner radius. A story stretched to a tablet's full width is no longer the object the author framed — the poll sticker ends up a metre wide and the reaction row spreads past the reach of either thumb. |
 
 At 393 and 412 the card is the viewport. On anything wider the card is the
 object the author framed — stretched to a tablet's full width the poll sticker
@@ -1057,9 +1145,10 @@ thumb travel *along* the arc instead of across it.
 
 **Anatomy.** `.sy-shorts__reel` → active `.sy-shorts__item` containing the
 `Media`, `header.sy-shorts__top` (For you / Following, search), the follow
-affordance, `.sy-shorts__actions` (like with count, comments, share, gift,
-more, then the audio disc at the far end because it is browsed rather than
-tapped in a hurry), `footer.sy-shorts__meta` (creator, clamped caption, music),
+affordance, `.sy-shorts__rail` of `.sy-shorts__action` buttons (like with count,
+comments, share, gift, more, then the audio disc at the far end because it is
+browsed rather than tapped in a hurry), `footer.sy-shorts__meta` (creator,
+clamped caption, music),
 and a playback progress bar → `.sy-shorts__peek` showing the next item.
 
 The caption is clamped to two lines — the most text that can sit over a moving
@@ -1071,7 +1160,7 @@ to read about the video is the wrong trade.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 600px` | 834, 1280, 1512 | `.sy-shorts__reel` stops stretching: it keeps a 9:17 aspect ratio (9:16 for the item plus the peek strip on top of it), takes the full height and centres. |
+| `min-width: 560px` | 834, 1280, 1512 | `.sy-shorts__reel` stops stretching: it keeps a 9:17 aspect ratio (9:16 for the item plus the peek strip on top of it), takes the full height and centres. The letterbox either side becomes `--sy-porcelain-1` rather than black — a lit near-black keeps the surround related to the rest of the product instead of punching a hole in it. |
 
 **Key interactions.** No component state. Every rail control is a labelled
 button; the like button renders in its `is-liked` state so the active
@@ -1122,8 +1211,8 @@ a composer and threaded comments) and `aside.sy-watch__side`.
 | Container query | Fires at | Change |
 |---|---|---|
 | `max-width: 519px` | 393, 412 | Chapter thumbnails are hidden and the timecode column narrows to 56px, so a chapter row stays a timecode plus a title. |
-| `min-width: 700px` | 758, 1016, 1248 | `.sy-watch__bar` becomes a wrapping flex row: creator identity and the action group share a line while both fit and split cleanly when they do not — wrapping, never overlapping, because the related rail can take 372px out of this column without warning. |
-| `min-width: 960px` | 1016, 1248 | `.sy-watch` becomes `1fr / 372px` and `.sy-watch__side` appears, sticky. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-watch__bar` becomes a wrapping flex row: creator identity (`flex: 1 1 340px`) and the action group share a line while both fit and split cleanly when they do not — wrapping, never overlapping, because the related rail can take 372px out of this column without warning. |
+| `min-width: 880px` | 1016, 1248 | `.sy-watch` becomes `minmax(0, 1fr) / 372px` and `.sy-watch__side` appears, sticky. The related rail only earns its place once the video column can still hold a comfortable measure without it. |
 
 The file comment says the related list appears "at 1024px and above"; the CSS
 threshold is **960px**, chosen so the video column can still hold a comfortable
@@ -1177,8 +1266,11 @@ the middle band at all times.
 
 **Anatomy.**
 
-- `.sy-live-viewer__stage` — the video, plus:
-  - `header.sy-live-viewer__top` — creator identity on glass, viewer count,
+- `.sy-live-viewer__stage` — the video. It carries `data-theme="dark"` on the
+  element itself, so it stays dark in both themes: the picture is the light
+  source, and chrome around it should recede. Everything outside the stage is
+  light-native. It contains:
+  - `header.sy-live-viewer__top` — creator identity on vellum, viewer count,
     connection state, follow, leave.
   - the stream title block.
   - `footer.sy-live-viewer__bottom` — pause, volume, quality, captions,
@@ -1187,10 +1279,14 @@ the middle band at all times.
   messages in the creator tone and system messages in the accent tone), and a
   composer whose trailing control is a gift button in the creator hue.
 
-Glassmorphism is used here and almost nowhere else: this is the canonical case,
-a layer genuinely floating over moving photographic content, where blurring is
-what keeps a caption legible when the scene cuts from dark to bright. Fill
-opacity is set high enough that text contrast holds against a white frame.
+**Vellum** is used here and almost nowhere else: this is the canonical case, a
+layer genuinely floating over moving photographic content, where blurring is
+what keeps a caption legible when the scene cuts from dark to bright. On a flat
+page it would be blur with nothing to blur, at real GPU cost. The identity
+strip, the duration pill and the control bar all take the bare `.sy-vellum`
+class, which is the `panel` recipe: 26px blur, 1.7 saturate, fill alpha 0.74 in
+light and 0.72 in dark. Fill opacity is set high enough that text contrast holds
+when the scene cuts to white.
 
 The gift rail is the product's highest-intent action, so on phones it sits in
 the bottom-right corner — the single easiest point to reach with a right thumb
@@ -1200,7 +1296,7 @@ the bottom-right corner — the single easiest point to reach with a right thumb
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 1024px` | 1280, 1512 | `.sy-live-viewer` becomes a row: chat docks to the side at a fixed 360px with a leading border instead of a top border, and the title moves from the top of the stage to sit 104px above the bottom edge. |
+| `min-width: 880px` | 1280, 1512 | `.sy-live-viewer` becomes a row: chat docks to the side at a fixed 360px with a leading border instead of a top border, and the title moves out of the top of the stage to sit just above the bottom chrome, because on a wide stage the picture's subject sits centre-frame. |
 
 At 393, 412 and 834 the layout is stacked: video above, chat below, with the
 45% cap governing. At 1280 and 1512 the stream keeps the full remaining width
@@ -1231,7 +1327,7 @@ tone *and* an icon *and* the word, not by colour alone.
 
 **Purpose.** The broadcaster's control room. Unlike every other screen in
 SYLORA this one is not trying to be calm: the operator is live to fourteen
-thousand people and needs every number on the glass at once. Density is the
+thousand people and needs every number in view at once. Density is the
 feature.
 
 **Information hierarchy.** The three columns are three time horizons, and
@@ -1269,9 +1365,20 @@ tells you nothing when the question is "is 4.1% dropped frames bad".
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 700px` | 758, 1016, 1248 | `.sy-studio__monitors` pairs programme and preview at `1.65fr / 1fr`; the mixer goes to three columns. |
-| `min-width: 992px` | 1016, 1248 | The full three-column room: `216px / 1fr / 288px`, `overflow: hidden` so the page itself stops scrolling and only the panels meant to scroll do, the compact switch is hidden, and every region is shown regardless of the `data-panel` value. Scene thumbnails shrink to 44px, because in the narrow room the scene name matters more than the scene picture. |
-| `min-width: 1152px` | 1248 | Columns widen to `268px / 1fr / 344px` with a larger gap and 56px scene thumbnails. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-studio__monitors` pairs programme and preview at `1.65fr / 1fr`; the mixer goes to three columns. |
+| `min-width: 880px` | 1016, 1248 | The full three-column room, `overflow: hidden` so the page itself stops scrolling and only the panels meant to scroll do, the compact Scenes / Chat / Audio switch is hidden, and every region is shown regardless of the `data-panel` value. |
+
+There is no second wide threshold. The side columns are sized from the
+container instead — `clamp(204px, 19cqi, 268px)` and
+`clamp(272px, 25cqi, 344px)` — held to the narrowest width their content
+survives at, allowed to grow with the room, and capped once the programme
+monitor has all the pixels it can use. Every pixel they give up goes to the
+picture. Scene thumbnails follow the same pattern at
+`clamp(44px, 5cqi, 56px)`, because in the narrow room the scene name matters
+more than the scene picture.
+
+Both monitors carry `data-theme="dark"` on `.sy-monitor__screen`, so programme
+and preview stay dark in a light-theme control room.
 
 Below 992px the room collapses to one column with the monitor pinned first and
 the tab pair swapping Scenes / Chat / Audio underneath. That is a deliberate
@@ -1343,8 +1450,12 @@ media grid).
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 700px` | 758, 1016, 1248 | Two columns, `288px / 1fr`: the conversation list returns as a permanent index and the thread's back button is hidden. |
-| `min-width: 1152px` | 1248 | Three columns, `300px / 1fr / 300px`: the details pane appears. |
+| `min-width: 560px` | 758, 1016, 1248 | Two columns, `clamp(240px, 30cqi, 300px) / minmax(0, 1fr)`: the conversation list returns as a permanent index and the thread's back button is hidden, since Back is only an affordance when the list is not already on screen. |
+| `min-width: 880px` | 1016, 1248 | Three columns, adding `clamp(260px, 24cqi, 300px)` for the details pane. |
+
+The side panes are sized from the container rather than stepped again at a third
+breakpoint: they take the least width their rows survive at, grow with the room,
+and stop once the transcript has all the measure it can use.
 
 The screen definition describes the index arriving "at 768px"; the implemented
 threshold is **700px**, which is what actually fires in the medium posture.
@@ -1520,7 +1631,7 @@ cannot see into.
 | Container query | Fires at | Change |
 |---|---|---|
 | `max-width: 899px` | 393, 412, 758 | `.sy-space-detail__identity` wraps, so the crest, the name block and the Following control stack instead of crushing. |
-| `min-width: 700px` | 758, 1016, 1248 | `.sy-space-detail` becomes `1fr / 264px`, moving the channel list beside the space content. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-space-detail` becomes `minmax(0, 1fr) / clamp(216px, 22cqi, 264px)`, moving the channel list beside the space content. |
 
 Note the overlap at 758: the identity row wraps *and* the detail is two columns
 on a tablet, which is the intended combination.
@@ -1579,7 +1690,7 @@ reminder count, countdown, Go live and Edit) → "Watch time" bar chart →
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 676, 908 | The range control stops being full width and takes a minimum inline size; `.sy-cd__stats` goes from two columns to four. |
+| `min-width: 560px` | 758, 676, 908 | The range control stops being full width and takes a minimum inline size; `.sy-cd__stats` goes from two columns to four. |
 
 At 393 and 412 the range control spans the width and the metrics are a two-up
 grid. The uploads table is wrapped in `.sy-table-scroll`, so it keeps its
@@ -1651,9 +1762,8 @@ Three decisions shape the screen and are documented in the file:
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | The metric `Select` is hidden — it exists only in the compact posture, where the tiles scroll horizontally and the current selection can end up off-screen — and `.sy-an__tiles` becomes a five-column grid. Breakdown panels go to two columns. |
-| `min-width: 768px` | 1016, 1248 | Chart heights increase (trend and retention independently); the chart callout becomes absolutely positioned over the plot instead of sitting beneath it. |
-| `min-width: 1024px` | 1248 | Breakdown panels go to three columns. |
+| `min-width: 560px` | 758, 1016, 1248 | The metric `Select` is hidden — the tile row is the primary metric switcher, and the select is the same state under a second control that only earns its place while the tiles scroll — and `.sy-an__tiles` becomes a five-column grid. Breakdown panels go to two columns, with the last spanning the full row. |
+| `min-width: 840px` | 1016, 1248 | Chart heights increase (trend and retention independently); the chart callout becomes absolutely positioned over the plot with `--sy-elevation-overlay` instead of sitting beneath it; breakdown panels go to three columns. |
 
 This is the screen most likely to be read on a 676px column with a context
 panel stealing the rest — the file says so — even though `analytics` itself
@@ -1718,9 +1828,9 @@ that disagrees with the revenue list beside it is impossible by construction.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-mz__streams` goes to two columns. |
-| `min-width: 768px` | 1016, 1248 | `.sy-mz__summary` becomes `1fr / 1.1fr`, putting the gross figure beside the donut. |
-| `min-width: 960px` | 1016, 1248 | `.sy-mz__streams` goes to three columns; `.sy-mz__split` becomes `1fr / 0.82fr`, moving eligibility and the fee breakdown into a right column. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-mz__streams` goes to two columns. |
+| `min-width: 840px` | 1016, 1248 | `.sy-mz__summary` becomes `minmax(0, 1fr) / minmax(0, 1.1fr)`, putting the gross figure beside the donut. |
+| `min-width: 880px` | 1016, 1248 | `.sy-mz__streams` goes to three columns; `.sy-mz__split` becomes `minmax(0, 1fr) / minmax(0, 0.82fr)`, moving eligibility and the fee breakdown into a right column. |
 
 At 393, 412 and 758 everything is a single column and the fee breakdown sits at
 the bottom, which is where it belongs in the reading order regardless.
@@ -1772,8 +1882,8 @@ containing `.sy-pr__table` → `.sy-pr__faq` → `.sy-pr__checkout`.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-pr__plans` goes from one column to three. |
-| `min-width: 768px` | 1016, 1248 | The FAQ goes to two columns. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-pr__plans` goes from one column to three. |
+| `min-width: 840px` | 1016, 1248 | The FAQ goes to two columns. |
 
 The comparison table keeps its shape and scrolls horizontally at every width
 with the capability column pinned, rather than collapsing into three per-plan
@@ -1843,9 +1953,11 @@ identical as stars.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | The hero becomes `5fr / 6fr` with a stretched media panel; the filter surface goes to two columns. |
-| `min-width: 900px` | 1016, 1248 | `.sy-market-grid` goes to three columns. |
-| `min-width: 1024px` | 1248 | Filters become a four-column row (`1.4fr / 1fr / 1fr / 1.1fr`); creator-pick cards widen to 300px. |
+| `min-width: 560px` | 758, 1016, 1248 | The hero becomes `5fr / 6fr` with a stretched media panel; the filter surface goes to two columns. |
+| `min-width: 880px` | 1016, 1248 | `.sy-market-grid` goes to three columns; filters become a four-column row (`1.4fr / 1fr / 1fr / 1.1fr`); creator-pick cards widen to 300px. |
+
+The product grid stops climbing at three. Six products divide cleanly into two
+or three columns; a fourth would just leave a ragged half-row.
 
 **Key interactions (stateful).** `category` (chips), `maxPrice` (a slider whose
 value is echoed in mono as "€0 – €160"), and `freeOnly` (a switch). The grid is
@@ -1892,10 +2004,8 @@ containing the edit surfaces and `Surface.sy-dp-check`.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 560px` (`.sy-cols--4`) | 758, 1016, 1248 | Stats go from one column to two. |
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-dp-pricing` becomes `1fr / 1.4fr`, putting price beside licence. |
-| `min-width: 768px` | 1016, 1248 | `.sy-dp-table__head` and `.sy-dp-row` become a real grid with right-aligned numerics; the column headers stop being decorative. |
-| `min-width: 840px` (`.sy-cols--4`) | 1016, 1248 | Stats go to four columns. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-dp-pricing` becomes `minmax(0, 1fr) / minmax(0, 1.4fr)`, putting price beside licence; `.sy-cols--4` takes the stats from one column to two. |
+| `min-width: 840px` | 1016, 1248 | `.sy-dp-table__head` and `.sy-dp-row` become a real six-column grid with right-aligned numerics; the column headers stop being decorative and the per-cell `::before` labels are dropped. `.sy-cols--4` takes the stats to four columns. |
 | `min-width: 880px` (`.sy-cols--sidebar`) | 1016, 1248 | The edit panel and the publish checklist sit side by side. |
 
 Below 768px the row folds into a two-line block and the column headers retire,
@@ -1964,10 +2074,14 @@ for a currency with a real exchange rate — no country has that mark.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 676, 908 | Transaction filters become `1fr / 1fr / auto`; transaction rows become a four-column grid. |
-| `min-width: 768px` | 758, 908 | `.sy-balance__body` padding increases to `--sy-space-8`. **Does not fire at 676**, the web expanded column. |
-| `min-width: 900px` | 908 | `.sy-topups` becomes four columns. |
-| `min-width: 1024px` | none of the five | Would make `.sy-wallet-credits` `260px / 1fr`. With a context panel the widest column is 908, so the credits section stays stacked on every reference device. |
+| `min-width: 560px` | 758, 676, 908 | Transaction filters become `1fr / 1fr / auto`; transaction rows become a four-column grid with the amount right-aligned at a 108px minimum. |
+| `min-width: 840px` | 908 | `.sy-balance__body` padding increases to `--sy-space-8`. **Does not fire at 676**, the web expanded column, or at 758. |
+| `min-width: 880px` | 908 | `.sy-topups` becomes four columns; `.sy-wallet-credits` becomes `260px / minmax(0, 1fr)`. |
+
+Wallet is the clearest case of why the thresholds are measured on the content
+column. It carries a context panel, so its widest reference column is 908 —
+narrower than the 1016 an ordinary screen gets at web. Everything above 840
+fires on desktop only.
 
 The 676px column is the tightest case in the product and this screen shows why:
 two of its four thresholds land above it, so web at 1280 gets a *narrower*
@@ -2021,14 +2135,21 @@ balance together before the send button is reachable.
 
 Rarity carries four independent signals: the written tier name on both the
 section and the tile, a pip count (one to four diamonds) countable in
-greyscale, a border that thickens with tier, and finally hue. Legendary adds a
-halo glow, which survives as a luminance difference.
+greyscale, a border that thickens with tier, and finally hue. Legendary is the
+only tier singled out further, and the signal is theme-specific because the
+physics are. On near-black a halo works: the tile emits and the field absorbs,
+so dark gets a refraction bloom plus a text glow on the glyph. On porcelain
+there is nothing for a halo to land on, so light gets **foil** — the tier's tint
+printed on the stock with a clear diagonal band cut through it, which is what
+light looks like crossing a metallic surface — plus one step more elevation, so
+the tile is physically nearer as well as more decorated. Both survive in
+greyscale as a luminance difference.
 
 **Responsive behaviour.**
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-gift-featured` becomes `240px / 1fr`, putting the artwork beside the description. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-gift-featured` becomes `240px / minmax(0, 1fr)`, putting the artwork beside the description. |
 | `min-width: 880px` (`.sy-cols--sidebar`) | 1016, 1248 | The composer and the preview column sit side by side. |
 
 Tier grids are `.sy-grid` with `--min: 124px`, so they reflow without
@@ -2085,8 +2206,8 @@ now" before "what do I own".
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | Expiring rows become `auto / 1fr / auto / auto`, putting the countdown and Extend on the same line as the item. |
-| `min-width: 768px` | 1016, 1248 | The rarity legend goes to two columns. |
+| `min-width: 560px` | 758, 1016, 1248 | Expiring rows become `auto / 1fr / auto / auto`, putting the countdown and Extend on the same line as the item. |
+| `min-width: 840px` | 1016, 1248 | The rarity legend goes to two columns. |
 
 Loadout slots use `--min: 152px` and collection cards `--min: 158px`, so both
 grids reflow continuously rather than at breakpoints.
@@ -2152,10 +2273,8 @@ a stack of `.sy-enrol`, `.sy-instructor` and the certificate card.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 560px` | 758, 1016, 1248 | `.sy-course-grid` goes to two columns. |
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-resume` becomes `5fr / 6fr`, putting the cover beside the lesson details. |
-| `min-width: 880px` (`.sy-cols--sidebar`) | 1016, 1248 | Curriculum and the enrolment column sit side by side. |
-| `min-width: 1024px` | 1248 | The outcomes list goes to two columns. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-course-grid` goes to two columns; `.sy-resume` becomes `5fr / 6fr`, putting the cover beside the lesson details. |
+| `min-width: 880px` | 1016, 1248 | `.sy-cols--sidebar` puts curriculum and the enrolment column side by side; the outcomes list goes to two columns. |
 
 **Key interactions (stateful).**
 
@@ -2217,10 +2336,9 @@ about where the weekends fall.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 560px` (`.sy-cols--2`) | 758, 1016, 1248 | Hosting and attending go side by side. |
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-event-hero` becomes `5fr / 7fr`. |
-| `min-width: 768px` | 1016, 1248 | `.sy-event-row` becomes `auto / 1fr / auto` so the date tile, the details and the register control share one line; calendar day cells grow to a 74px minimum height. |
-| `min-width: 1024px` | 1248 | `.sy-event-detail__grid` becomes `1fr / 300px`, moving host and ticket terms into an aside. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-cols--2` puts hosting and attending side by side; `.sy-event-hero` becomes `5fr / 7fr`. |
+| `min-width: 840px` | 1016, 1248 | `.sy-event-row` becomes `auto / minmax(0, 1fr) / auto` so the date tile, the details and the register control share one line; calendar day cells grow to a 74px minimum height. |
+| `min-width: 880px` | 1016, 1248 | `.sy-event-detail__grid` becomes `minmax(0, 1fr) / 300px`, moving host and ticket terms into an aside with a leading rule. |
 
 **Key interactions (stateful).**
 
@@ -2286,9 +2404,8 @@ the next rank is the only number that makes a leaderboard actionable.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-lb-controls` becomes `1fr / 180px`; `.sy-lb-row` and `.sy-lb-you` become `40px / 1fr / 110px / 84px`, which is what makes the movement column visible. |
-| `min-width: 720px` | 758, 1016, 1248 | The podium stage is capped at 620px and centred, so it does not sprawl. |
-| `min-width: 768px` | 1016, 1248 | Podium padding and gap increase, and the first- and second-place blocks grow taller. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-lb-controls` becomes `minmax(0, 1fr) / 180px`; `.sy-lb-row` and `.sy-lb-you` become `40px / minmax(0, 1fr) / 110px / 84px`, which is what makes the movement column visible. |
+| `min-width: 840px` | 1016, 1248 | Podium padding and gap increase and the three pedestals grow to 148 / 108 / 82px, then the stage is capped at 620px and centred. Past that point the pedestals would stretch into flat bars; capping keeps the silhouette of a podium. |
 
 At 393 and 412 rows drop the movement column and the podium fills the width.
 
@@ -2337,15 +2454,20 @@ exact "x of y" count.
 `ScreenSection` achievement detail.
 
 Medals are built in CSS rather than shipped as art: four tiers, one shape, and
-a fill that changes — metal ramps for Bronze, Silver and Gold, and the aurora
-gradient for Prism, the only place in gamification the brand gradient appears,
-which is what makes it read as the top of the ladder.
+a fill that changes — metal ramps for Bronze, Silver and Gold, and
+`--sy-gradient-prism` for Prism, the only badge in the product allowed the brand
+gradient, which is what makes it read as the top of the ladder.
+
+The top-edge sheen flips with the theme. It is a *highlight*, so it has to be
+the light end of the ramp in both: `porcelain.1` in light, `porcelain.12` in
+dark. Written as one value it was a light catch in dark and a dark smear in
+light — the difference between a struck disc and a dented one.
 
 **Responsive behaviour.**
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 1024px` | 1248 | `.sy-ach-summary` becomes `auto / 1fr / auto`, moving the tier block out of the stacked flow and onto the same row as the ring and the text; `.sy-ach-detail__grid` goes to three columns. |
+| `min-width: 880px` | 1016, 1248 | `.sy-ach-summary` becomes `auto / minmax(0, 1fr) / auto`, moving the tier block out of the stacked flow and onto the same row as the ring and the text, separated by a leading rule instead of a top one; `.sy-ach-detail__grid` goes to three columns. |
 
 Everything else is handled by the auto-fill card grid, which goes from one
 column at 393 to five at 1248 without a breakpoint.
@@ -2405,7 +2527,7 @@ progress and a days-left badge) → `ScreenSection "Daily streak"`
 | Container query | Fires at | Change |
 |---|---|---|
 | `min-width: 560px` | 758, 1016, 1248 | `.sy-mission-grid` goes to two columns. |
-| `min-width: 768px` | 1016, 1248 | `.sy-streak` becomes `auto / 1fr`, putting the streak count beside the week strip. |
+| `min-width: 840px` | 1016, 1248 | `.sy-streak` becomes `auto / minmax(0, 1fr)`, putting the streak count beside the week strip. |
 
 The track itself is a horizontal scroller at every width, so nodes are never
 compressed below a legible size.
@@ -2415,8 +2537,13 @@ count badge; the mission list is re-sorted by completion ratio on every switch.
 The Claim button on the claimable node is present but inert.
 
 **Empty, loading and error.** None. Node states — claimed, claimable, locked —
-each carry an icon and a word; the claimable node adds a glow, which is
-decoration on top of a label that already says "Claim".
+each carry an icon and a word; the claimable node adds a pulsing ring, which is
+decoration on top of a label that already says "Claim". The ring is
+theme-specific: light uses concentric hard rings of the accent at 18% and 8%,
+because a soft halo on porcelain has nothing to land on, and dark swaps them for
+a real refraction spread at `--sy-refract-edge-spread` and
+`--sy-refract-halo-spread`. Under reduced motion the pulse stops and the ring
+remains.
 
 **Accessibility.** Streak days carry a visually hidden "complete" / "not yet
 complete" per day. The track rail is `aria-hidden` and the progress is
@@ -2452,7 +2579,7 @@ panel: 393 / 412 / 758 / 1016 / 1248. Stylesheet: `src/screens/ops/ops.css`.
 4. **Users** — the slow work: accounts, appeals, verification.
 5. **Flags and audit** — what we changed, and who changed it.
 
-Nothing here is celebratory: no gradient, no glow, no entrance animation. An
+Nothing here is celebratory: no gradient, no refraction, no entrance animation. An
 operator reading a latency figure at 03:00 should not have to wait for it to
 arrive, and an admin surface that looks pleased with itself teaches people to
 skim it.
@@ -2470,10 +2597,8 @@ stops anyone reading either of them.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 480px` | 758, 1016, 1248 | Per-service sparklines become visible. |
-| `min-width: 640px` | 758, 1016, 1248 | Health tiles go from two columns to three. |
-| `min-width: 960px` | 1016, 1248 | `.sy-ad__split` becomes `1.15fr / 1fr`, putting the incident card beside the service list. |
-| `min-width: 1100px` | 1248 | Health tiles go to six columns — the full single-row scoreboard, which is the composition the screen is designed for. |
+| `min-width: 560px` | 758, 1016, 1248 | Per-service sparklines become visible; health tiles go from two columns to three. |
+| `min-width: 880px` | 1016, 1248 | Health tiles go to six columns — the full single-row scoreboard, which is the composition the screen is designed for. `.sy-ad__split` becomes `1.15fr / 1fr`, putting the incident card beside the service list, and `.sy-ad__split--even` becomes an even pair for flags and audit. |
 
 At 393 and 412 the screen is a readable single column with two-up health tiles
 and no sparklines, which is the "check it from a phone" posture rather than the
@@ -2548,9 +2673,9 @@ sentence you cannot write about a badge.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | Queue stats go from two columns to four. |
-| `min-width: 768px` | 1016, 1248 | `.sy-mod-detail__cols` splits reporter notes and target history into two columns. |
-| `min-width: 960px` | 1016, 1248 | `.sy-mod__work` becomes `0.78fr / 1.22fr` and the queue becomes sticky — the two-pane triage layout the screen is designed for. |
+| `min-width: 560px` | 758, 1016, 1248 | Queue stats go from two columns to four. |
+| `min-width: 840px` | 1016, 1248 | `.sy-mod-detail__cols` splits reporter notes and target history into two columns. |
+| `min-width: 880px` | 1016, 1248 | `.sy-mod__work` becomes `0.78fr / 1.22fr` and the queue becomes sticky — the two-pane triage layout the screen is designed for. The queue outlives the case: it stays put while the evidence scrolls. |
 
 Below 960 the queue and the detail stack, which keeps the screen usable but is
 not the working posture; `preferredDevice: 'desktop'` reflects that.
@@ -2624,8 +2749,8 @@ panel over a follower count, ended up past the edge of a horizontal scroll.
 
 | Container query | Fires at | Change |
 |---|---|---|
-| `min-width: 640px` | 758, 1016, 1248 | `.sy-bz__stats` goes from two columns to four. |
-| `min-width: 960px` | 1016, 1248 | `.sy-bz__split` becomes `1.4fr / 1fr`, putting billing beside the pacing chart. |
+| `min-width: 560px` | 758, 1016, 1248 | `.sy-bz__stats` goes from two columns to four. |
+| `min-width: 880px` | 1016, 1248 | `.sy-bz__split` becomes `1.4fr / 1fr`, putting billing beside the pacing chart. |
 
 Both tables live in `.sy-table-scroll`, so they keep their designed column
 widths and scroll horizontally at 393, 412 and 758 rather than clipping

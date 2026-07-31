@@ -7,8 +7,8 @@
  *   technology product sets its headlines in a serif, which is exactly why
  *   SYLORA does: it is the fastest way to be recognisable at a glance, and the
  *   modulation between thick and thin strokes is what makes a headline read as
- *   *considered* rather than merely large. It is used only above 27px, where
- *   that modulation is visible; below that it would simply be a serif.
+ *   *considered* rather than merely large. It runs down to 21px, where that
+ *   modulation is still visible; below that it would simply be a serif.
  *
  * Instrument Sans (text) — the serif's designed companion. A precise, slightly
  *   narrow neo-grotesque with a tall x-height and open counters, so it holds up
@@ -95,7 +95,7 @@ export const TYPE_SCALE = {
     family: 'display',
     role: 'Page title.',
   },
-  /** In-product headings, set in the text face. */
+  /** In-product headings. Still the serif — see the note on `title2`. */
   /**
    * Section headings stay in the serif. This is the decision that gives the
    * product its voice: a live-streaming interface whose section headings are

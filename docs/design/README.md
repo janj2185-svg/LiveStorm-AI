@@ -15,49 +15,69 @@ thing.
 
 | Document | What it covers |
 |---|---|
-| [BRAND.md](./BRAND.md) | Brand idea, the aperture mark, wordmark, lockup, AI orb, palette rationale, voice, signature treatments |
-| [FOUNDATIONS.md](./FOUNDATIONS.md) | Colour (OKLCH, the 12-step contract, WCAG solving), typography, space, shape, elevation, glass, glow, grid, z-index |
+| [BRAND.md](./BRAND.md) | Brand idea, the three-lens mark and its per-theme blending physics, wordmark, lockup, AI orb, the Lumen palette, gradients, the `.sy-lumen` field, voice, signature treatments |
+| [FOUNDATIONS.md](./FOUNDATIONS.md) | Colour (OKLCH, the 12-step contract, the hue-shifting porcelain ramp, per-theme semantic mapping, WCAG solving), typography, space, shape, elevation, vellum, refraction, grid, z-index |
 | [MOTION.md](./MOTION.md) | The five laws, duration and easing scales, choreography, the full interaction catalogue, reduced motion, sound, haptics |
-| [PATTERNS.md](./PATTERNS.md) | The posture model, container queries, the content-column table, navigation, safe areas, layout utilities, composition recipes |
-| [COMPONENTS.md](./COMPONENTS.md) | Every primitive and composite: props, variants, states, sizing, accessibility contract, do and don't |
+| [PATTERNS.md](./PATTERNS.md) | The posture model, container queries, the content-column table, navigation, immersive screens, safe areas, depth, layout utilities, composition recipes |
+| [COMPONENTS.md](./COMPONENTS.md) | Every primitive and composite: props, variants, states, sizing, light-first behaviours, accessibility contract, do and don't |
 | [SCREENS.md](./SCREENS.md) | All 38 screens: purpose, hierarchy, anatomy, responsive behaviour, interactions |
 | [FLOWS.md](./FLOWS.md) | Twelve end-to-end user flows with diagrams, branches, edge cases and honest implementation status |
-| [ACCESSIBILITY.md](./ACCESSIBILITY.md) | WCAG 2.2 AA conformance, what is guaranteed automatically, what is verified and what is not |
-| [FIGMA.md](./FIGMA.md) | Importing the tokens, library structure, frame sizes, the content-column trap, handoff annotation |
+| [ACCESSIBILITY.md](./ACCESSIBILITY.md) | WCAG 2.2 AA conformance, what is guaranteed automatically, what is specific to the light theme, what is verified and what is not |
+| [FIGMA.md](./FIGMA.md) | Importing the tokens, the per-theme semantic mapping, library structure, frame sizes, the content-column trap, handoff annotation |
 | [SCREEN_AUTHORING_GUIDE.md](./SCREEN_AUTHORING_GUIDE.md) | How to build a new screen so it matches every other one |
 
 ---
 
 ## The five decisions everything else follows from
 
-**1. Colour is generated, never picked.**
+**1. Light is the theme the system is designed for.**
+`:root` is light, `index.html` ships `data-theme="light"`, and `DEFAULT_THEME`
+is `'light'`. Dark is a supported option, derived to match the light curve's
+rhythm — not the canonical expression with a light skin bolted on. This is a
+structural decision, not a default value, because a bright ground fails
+differently: elevation has to mean *more light* rather than less, shadows have
+to be sky-lit rather than black, emphasis cannot be a halo, and ink thins
+instead of blooming. Each of those has a specific answer in the system, and each
+is documented where it applies.
+
+The one deliberate exception is media playback. The player, stories, shorts, the
+live viewer's stage and the studio's monitors carry `data-theme="dark"` on the
+element itself, in both themes, because the picture is the light source and
+chrome around it should recede. Everything else is light-native.
+
+**2. Colour is generated, never picked.**
 Ramps are computed in OKLCH from one hue and one peak chroma per family. That is
 what makes contrast a property of the *step index* rather than something audited
 per colour. Where OKLCH and WCAG disagree — and they do, because WCAG's
 luminance formula weights green at 0.7152 — the one step that carries text is
-solved numerically against WCAG. 82 contrast assertions run on every build and
+solved numerically against WCAG. 86 contrast assertions run on every build and
 fail it on regression.
 
-**2. Space is one number.**
+The neutral is the exception that proves the rule: `porcelain` shifts hue across
+its own ramp, warm at the light end and cool at the dark end, because that is
+what warm light and sky-lit shadow actually do. It is interpolated through OKLab
+so the midtones pass through true neutral rather than detouring through green.
+
+**3. Space is one number.**
 Everything is a multiple of 4. A shared divisor makes optical alignment
 automatic rather than something a designer nudges into place.
 
-**3. Layout responds to its container, not the viewport.**
+**4. Layout responds to its container, not the viewport.**
 The shell and every screen are driven by container queries. A screen receives a
 *content column*, and on a 1280px display with a context panel that column is
 676px — narrower than a tablet's. Designing to device widths produces layouts
 that break in exactly the postures nobody tested.
 
-**4. Motion explains causality.**
+**5. Motion explains causality.**
 Things enter from where they came from, duration follows distance, exits are
 faster than entrances, and nothing important waits on an animation. Reduced
 motion is a real mode, not a downgrade.
 
-**5. Nothing is communicated by colour alone.**
-Every state carries at least two signals. Live is crimson *and* a pulsing dot
-*and* the word LIVE. A rising metric is green *and* an arrow *and* a signed
-number — and `Stat` takes a `polarity` prop, because a rising error rate is not
-good news.
+Running underneath all five: **nothing is communicated by colour alone.** Every
+state carries at least two signals. Live is `rose` *and* a pulsing dot *and* the
+word LIVE. A rising metric is green *and* an arrow *and* a signed number — and
+`Stat` takes a `polarity` prop, because a rising error rate is not good news.
+[ACCESSIBILITY.md](./ACCESSIBILITY.md) has the full table.
 
 ---
 
@@ -74,10 +94,11 @@ pnpm capture    # screenshot every screen in every posture and theme
 Every view in the gallery is deep-linkable:
 
 ```
-#/<screenId>?device=<iphone|android|tablet|web|desktop>&theme=<dark|light>
+#/<screenId>?device=<iphone|android|tablet|web|desktop>&theme=<light|dark>
 ```
 
-Add `&chrome=0` to render the device alone.
+Add `&chrome=0` to render the device alone. Omitted parameters default to
+`theme=light` and `device=desktop`.
 
 ---
 
@@ -114,7 +135,7 @@ design/
 | Token system, both themes | Complete, build-enforced |
 | Brand marks and motion | Complete |
 | Icon set | 113 icons on a documented 24×24 grid |
-| Primitives | 28 components, 9 shared composites |
+| Primitives | 26 controls in `primitives/index.tsx` plus `Icon`, and 9 shared composites in `screens/components.tsx` |
 | Shell and layout | Three postures, container-query driven |
 | Screens | 38, all rendering real content |
 | Documentation | Complete |

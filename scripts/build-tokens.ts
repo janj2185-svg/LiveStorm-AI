@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   ALPHA_STEPS,
+  AMBIENT,
   COLOR_FAMILIES,
   COLOR_FAMILY_NAMES,
   DURATION,
@@ -40,6 +41,7 @@ import {
   TRANSITION,
   TRAVEL,
   TYPE_SCALE,
+  WEIGHT_DELTA,
   Z_INDEX,
   buildRamp,
   type ColorFamily,
@@ -179,9 +181,10 @@ const resolveSemantic = (mode: ThemeMode, alias: string): MaterialStep => {
 /**
  * Text placed on a solid step-9 fill.
  *
- * Computed, not chosen: for each family we measure black and white against the
- * rendered step-9 hex and keep whichever wins. This is why a solar button gets
- * dark text while an iris button gets light text without anyone deciding it.
+ * Computed, not chosen: for each family the two ends of the porcelain ramp are
+ * measured against the rendered step-9 hex and whichever wins is emitted. No
+ * one decides that a given button takes light or dark text; the palette does,
+ * and it re-decides automatically whenever a hue moves.
  */
 function onSolidColor(mode: ThemeMode, family: ColorFamily): string {
   const solid = materialised[mode][family][8].hex;
@@ -262,6 +265,10 @@ for (const [key, value] of Object.entries(STAGGER)) {
 for (const [key, value] of Object.entries(TRAVEL)) {
   push(`  --sy-travel-${key}: ${value}px;`);
 }
+// Ambient loop durations, so a stylesheet never restates one.
+for (const [key, value] of Object.entries(AMBIENT)) {
+  push(`  --sy-ambient-${key}: ${value}ms;`);
+}
 push();
 push('  /* Layout shell */');
 for (const [key, value] of Object.entries(SHELL)) {
@@ -273,13 +280,13 @@ for (const [key, value] of Object.entries(Z_INDEX)) {
   push(`  --sy-z-${key}: ${value};`);
 }
 push();
-push('  /* Glass */');
+push('  /* Vellum */');
 for (const [key, recipe] of Object.entries(VELLUM)) {
   push(`  --sy-vellum-${key}-blur: ${recipe.blur}px;`);
   push(`  --sy-vellum-${key}-saturate: ${recipe.saturate};`);
 }
 push();
-push('  /* Glow spreads */');
+push('  /* Refraction */');
 for (const [key, recipe] of Object.entries(REFRACTION)) {
   push(`  --sy-refract-${key}-weight: ${recipe.weight}px;`);
   push(`  --sy-refract-${key}-spread: ${recipe.spread}px;`);
@@ -326,6 +333,11 @@ function emitTheme(mode: ThemeMode, selector: string, useOklch: boolean) {
     const resolved = resolveSemantic(mode, alias);
     push(`  --sy-${alias}: ${useOklch ? resolved.oklch : resolved.hex};`);
   }
+  push();
+
+  // Body weight, corrected per theme. Ink thins on a bright ground; light text
+  // blooms on a dark one, so the two corrections run in opposite directions.
+  push(`  --sy-weight-body: ${TYPE_SCALE.body.weight + WEIGHT_DELTA[mode]};`);
   push();
 
   for (const family of COLOR_FAMILY_NAMES) {
@@ -605,13 +617,15 @@ for (const mode of THEMES) {
   // per theme — auditing raw step indices would test the wrong pairs in light.
   const canvas = resolveSemantic(mode, 'bg-canvas').hex;
   const surface = resolveSemantic(mode, 'bg-surface').hex;
-  const raised = resolveSemantic(mode, 'bg-hover').hex;
+  const raised = resolveSemantic(mode, 'bg-raised').hex;
+  const hover = resolveSemantic(mode, 'bg-hover').hex;
 
   // Body and secondary text against all three background steps.
   for (const [bgName, bg] of [
     ['canvas', canvas],
     ['surface', surface],
     ['raised', raised],
+    ['hover', hover],
   ] as const) {
     check(mode, `fg-default on bg-${bgName}`, resolveSemantic(mode, 'fg-default').hex, bg, 7, 'AAA body');
     check(mode, `fg-muted on bg-${bgName}`, resolveSemantic(mode, 'fg-muted').hex, bg, 4.5, 'AA body');

@@ -174,9 +174,9 @@ hr {
 /* ------------------------------------------------------------------ */
 
 /**
- * The display face stops at `title-1`. Below roughly 30px a high-contrast serif
- * loses the thick/thin modulation that justifies using it, and becomes a serif
- * for its own sake — so `title-2` and everything under it switch to the sans.
+ * The display face runs down to `title-3` at 21px, which is the floor: below it
+ * a high-contrast serif loses the thick/thin modulation that justifies using
+ * it. `headline` at 17px and everything under it is the sans.
  */
 .sy-display-1,
 .sy-display-2,
@@ -295,12 +295,7 @@ hr {
 .sy-body,
 .sy-body-lg,
 .sy-body-sm {
-  font-weight: 410;
-}
-[data-theme='dark'] .sy-body,
-[data-theme='dark'] .sy-body-lg,
-[data-theme='dark'] .sy-body-sm {
-  font-weight: 380;
+  font-weight: var(--sy-weight-body);
 }
 
 /* Colour helpers */
@@ -539,14 +534,14 @@ hr {
   inset-inline-start: -26vmax;
   background: radial-gradient(circle at center, var(--sy-aether-9) 0%, transparent 64%);
   opacity: 0.1;
-  animation: sy-lumen-a var(--sy-lumen-duration, 26s) ease-in-out infinite alternate;
+  animation: sy-lumen-a var(--sy-lumen-duration, var(--sy-ambient-lumenDrift, 26s)) ease-in-out infinite alternate;
 }
 .sy-lumen::after {
   inset-block-end: -42vmax;
   inset-inline-end: -30vmax;
   background: radial-gradient(circle at center, var(--sy-bloom-9) 0%, transparent 64%);
   opacity: 0.08;
-  animation: sy-lumen-b var(--sy-lumen-duration, 26s) ease-in-out infinite alternate;
+  animation: sy-lumen-b var(--sy-lumen-duration, var(--sy-ambient-lumenDrift, 26s)) ease-in-out infinite alternate;
 }
 /* Dark mode can afford more presence, because there is no white to stain. */
 [data-theme='dark'] .sy-lumen::before {

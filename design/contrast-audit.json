@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-07-31T07:26:27.017Z",
+  "generatedAt": "2026-07-31T08:42:06.533Z",
   "standard": "WCAG 2.2",
   "note": "Ratios computed from gamut-mapped sRGB hex, which is what a display actually renders. Wide-gamut OKLCH rendering has equal or greater separation.",
   "summary": {
-    "total": 86,
-    "passed": 86,
+    "total": 90,
+    "passed": 90,
     "failed": 0
   },
   "results": [
@@ -43,7 +43,7 @@
     {
       "theme": "light",
       "pair": "fg-default on bg-raised",
-      "ratio": 15.11,
+      "ratio": 17.81,
       "requirement": 7,
       "level": "AAA body",
       "pass": true
@@ -51,6 +51,22 @@
     {
       "theme": "light",
       "pair": "fg-muted on bg-raised",
+      "ratio": 8.42,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-default on bg-hover",
+      "ratio": 15.11,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "pair": "fg-muted on bg-hover",
       "ratio": 7.14,
       "requirement": 4.5,
       "level": "AA body",
@@ -387,7 +403,7 @@
     {
       "theme": "dark",
       "pair": "fg-default on bg-raised",
-      "ratio": 14.06,
+      "ratio": 15.43,
       "requirement": 7,
       "level": "AAA body",
       "pass": true
@@ -395,6 +411,22 @@
     {
       "theme": "dark",
       "pair": "fg-muted on bg-raised",
+      "ratio": 8.75,
+      "requirement": 4.5,
+      "level": "AA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "fg-default on bg-hover",
+      "ratio": 14.06,
+      "requirement": 7,
+      "level": "AAA body",
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "pair": "fg-muted on bg-hover",
       "ratio": 7.97,
       "requirement": 4.5,
       "level": "AA body",

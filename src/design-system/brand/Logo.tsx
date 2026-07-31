@@ -156,7 +156,7 @@ export interface LogoWordmarkProps {
 /**
  * Wordmark.
  *
- * Set in Sora at weight 600 with +0.14em tracking. The wide tracking is the
+ * Set in the display serif with +0.14em tracking. The wide tracking is the
  * point: at six letters, generous spacing reads as confidence and keeps the
  * word legible when it sits beside the mark at small sizes. The letters are
  * rendered as live text rather than outlines so the wordmark stays crisp at
@@ -229,7 +229,7 @@ export function LogoLockup({
  * logo is the company, the orb is a participant in the conversation. Sharing
  * the palette but not the geometry keeps that distinction legible.
  *
- * Three nested rings at different rotation speeds produce an organic,
+ * Two counter-rotating rings at unrelated speeds produce an organic,
  * non-repeating motion from purely deterministic parts.
  */
 export interface AiOrbProps {

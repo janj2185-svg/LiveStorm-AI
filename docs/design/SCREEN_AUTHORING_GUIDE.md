@@ -46,18 +46,59 @@ every group; you only fill in your own `index.ts`.
    sentences, believable numbers, including some that are awkwardly long.
 3. **No images.** There are no photographic assets. Use `<Media seed="..." />`,
    which synthesises deterministic cover art. Never render a grey box.
-4. **Container queries, not media queries.** Screens sit inside `.sy-screen`,
-   which declares `container: screen / inline-size`. Write
-   `@container screen (min-width: 768px)`. A `@media` query in a screen
+4. **Container queries, not media queries.** Write
+   `@container screen (min-width: 560px)`. A `@media` query in a screen
    stylesheet is a bug — it would respond to the browser window instead of the
-   device frame.
-5. **Accessibility is not optional.** Every icon-only control gets an
+   device frame. See section 7 for which thresholds to use; device-shaped
+   numbers such as 768 do not fire on a content column.
+
+   The `screen` container is declared by `.sy-main`, or by
+   `.sy-shell--immersive` for an immersive screen — deliberately *not* by
+   `.sy-screen`. An element can never match a container query it declares
+   itself, so putting it one level up is what lets a screen's own root be
+   restyled by the query.
+5. **Design in light.** Light is the primary theme: `:root` is light,
+   `index.html` ships `data-theme="light"`, and the gallery opens light unless
+   the URL says otherwise. Build and review a screen in light first, then check
+   dark. A screen that was designed in dark and skinned for light is
+   recognisable on sight — grey cards on a white page, black shadows, and a
+   halo where the emphasis should be.
+6. **Accessibility is not optional.** Every icon-only control gets an
    `aria-label`. Every input gets a label. State is never carried by colour
    alone — pair it with an icon, a weight change, or text. Headings descend in
    order.
-6. **Comment the design decision, not the code.** Explain *why* a layout,
+7. **Comment the design decision, not the code.** Explain *why* a layout,
    ordering or interaction was chosen. Never write comments like
    "// map over posts".
+
+### The light-first rules
+
+Six behaviours the system already implements. You do not have to write any of
+them — you have to avoid overriding them.
+
+| Rule | What that means when you author |
+|---|---|
+| Elevation means **more light**, in both themes | In light, a card is `--sy-bg-surface` (`porcelain.1`) on a `--sy-bg-canvas` page (`porcelain.2`) — brighter than its page. Never hard-code a grey card fill; use `Surface` or the semantic token |
+| An elevated surface has **no border** in light | `.sy-surface` sets `border: 1px solid transparent` and only `[data-theme='dark']` gives it a colour. Adding your own `border: 1px solid var(--sy-border-subtle)` to a card re-introduces the 2012 form look in light theme |
+| Shadows are **cool, never black** | Use `--sy-elevation-*`. A hand-written `rgba(0,0,0,.1)` reads as dirt on a warm-white page |
+| Emphasis is **refraction, not glow** | A halo is invisible on white. Use `.sy-refract` / `.sy-refract-rule`, and use them rarely — brand surfaces, AI-authored content, and the one most important action in the view |
+| Inputs **invert**: they are recessed wells | `.sy-input` already does this. Do not restyle a field to sit above the page; the raised-is-a-control, recessed-is-a-place-to-type distinction is what makes a form scannable |
+| Vellum **brightens** what is behind it in light | Only apply `.sy-vellum` where something genuinely moving or photographic is behind it. On a flat page it is blur with nothing to blur, at real GPU cost |
+
+The one deliberate exception is media. A playback surface stays dark in both
+themes, because the picture is the light source and chrome around it should
+recede. Scope it with `data-theme="dark"` on **that element**, never on the
+page:
+
+```tsx
+<div className="sy-live-viewer__stage" data-theme="dark">…</div>
+```
+
+Everything outside that element stays light-native. The live viewer scopes it to
+`.sy-live-viewer__stage`, the studio to each `.sy-monitor__screen`, and Discover
+to its hero. Where the *whole* screen is a playback surface — the player,
+stories and shorts — the attribute sits on the screen root itself, which is the
+same decision one level up rather than a different one.
 
 ---
 
@@ -108,6 +149,13 @@ export const EXAMPLE_SCREENS: ScreenDefinition[] = [
 ];
 ```
 
+`immersive` is for screens that are not *in* the product yet or that *are* the
+content. Seven screens set it: Welcome, Authentication and Onboarding, because
+a rail and a tab bar around a sign-in form advertise a product the user has not
+entered; and the player, stories, shorts and the live viewer, because the media
+is the screen. An immersive screen still gets `.sy-screen`, so the `screen`
+container query still works — it just gets the whole frame to fill.
+
 ---
 
 ## 4. Available primitives
@@ -116,20 +164,20 @@ From `../../design-system/primitives`:
 
 | Component | Notes |
 |---|---|
-| `Button` | `variant`: primary, secondary, ghost, outline, glass, link. `tone`, `size`, `icon`, `iconEnd`, `loading`, `fullWidth` |
+| `Button` | `variant`: primary, secondary, ghost, outline, glass, link. `tone`, `size`, `icon`, `iconEnd`, `loading`, `fullWidth`. `variant="glass"` applies the **vellum** classes — the prop name predates the rename |
 | `IconButton` | requires `icon` and `label` |
-| `Surface` | `elevation`: flat, sunken, surface, raised, overlay, lifted. `glass`: veil, panel, dome. `padding`, `radius`, `interactive`, `as` |
+| `Surface` | `elevation`: flat, sunken, surface, raised, overlay, lifted. `glass`: veil, panel, dome — again, applies `.sy-vellum*`. `padding`, `radius`, `interactive`, `as` |
 | `Badge` | `tone`, `variant`: soft, solid, outline |
-| `LiveBadge` | pulsing LIVE pill, optional `viewers` |
-| `Chip` | `selected`, `onRemove` |
-| `Avatar` | `name` (required), `size`, `ring`: story/live, `presence`, `verified` |
+| `LiveBadge` | pulsing LIVE pill, optional `viewers`. Fills with `--sy-rose-9`, not the `live` family |
+| `Chip` | `selected`, `onRemove`. With `onRemove` it renders **two sibling buttons**, not a nested one |
+| `Avatar` | `name` (required), `size`, `ring`: story/live, `presence`, `verified`. `ring="story"` draws the `prism` gradient |
 | `AvatarGroup` | `people`, `max`, `size` |
 | `Input` `Textarea` `Select` `SearchInput` | all wired for labels, hints, errors |
 | `Switch` `Checkbox` `Slider` | `label` required |
 | `Tabs` | `variant`: underline, segmented, pill. Full arrow-key support |
 | `Progress` `ProgressRing` `Spinner` | omit `value` on Progress for indeterminate |
 | `Skeleton` | loading placeholders |
-| `EmptyState` `Stat` `Tooltip` `Toast` `SectionHeader` `Field` | |
+| `EmptyState` `Stat` `Tooltip` `Toast` `SectionHeader` `Field` | `Stat` takes `polarity`: `higher-is-better` (default), `lower-is-better`, `neutral`. Set it — green-for-positive is wrong on error rate, latency and cost |
 | `Icon` | see `ICON_PATHS` in `src/design-system/icons/Icon.tsx` for the full name list |
 
 From `../components`:
@@ -148,18 +196,22 @@ From `../../design-system/brand/Logo`:
 
 ```css
 /* Colour — semantic (prefer these) */
---sy-bg-canvas  --sy-bg-surface  --sy-bg-raised  --sy-bg-hover  --sy-bg-active
+--sy-bg-canvas  --sy-bg-surface  --sy-bg-raised  --sy-bg-sunken
+--sy-bg-hover  --sy-bg-active  --sy-bg-selected
 --sy-border-subtle  --sy-border-default  --sy-border-strong  --sy-border-interactive
 --sy-fg-default  --sy-fg-muted  --sy-fg-quiet
---sy-accent-{bg,border,solid,solid-hover,fg}
---sy-{live,creator,success,warning,danger}-{bg,border,solid,fg}
---sy-on-{iris,flux,nova,verdant,solar,crimson}   text colour for a solid fill
+--sy-fg-on-media  --sy-fg-on-media-muted        text over a photograph, both themes
+--sy-accent-{bg,bg-hover,border,solid,solid-hover,fg}
+--sy-{live,creator,success,warning,danger}-{bg,bg-hover,border,solid,solid-hover,fg}
+--sy-on-{accent,brand,live,creator,success,warning,danger}   text on a solid fill
+--sy-on-{aether,pulse,bloom,verdigris,solar,rose}            same, by family name
 
 /* Colour — raw ramps, steps 1-12 */
---sy-{neutral,iris,flux,nova,verdant,solar,crimson}-{1..12}
+--sy-{porcelain,aether,pulse,bloom,verdigris,solar,rose}-{1..12}
+--sy-alpha-{hi,lo}-{04,08,12,16,24,32,48,64,80,92}   veils; dark-scoped surfaces only
 
 /* Gradients */
---sy-gradient-{aurora,signal,ember,depth}
+--sy-gradient-{prism,beam,ember,daylight}
 
 /* Space — 4px lattice. Dots become underscores: 1.5 -> 1_5 */
 --sy-space-{0,px,0_5,1,1_5,2,2_5,3,4,5,6,7,8,10,12,14,16,20,24,32,40}
@@ -167,28 +219,48 @@ From `../../design-system/brand/Logo`:
 /* Radius */
 --sy-radius-{none,xs,sm,md,lg,xl,2xl,3xl,pill}
 
+/* Grid — these change per breakpoint; .sy-container and .sy-grid read them */
+--sy-grid-{columns,margin,gutter,max}
+
 /* Type */
 --sy-type-{display1,display2,display3,title1,title2,title3,headline,
            bodyLarge,body,bodySmall,label,caption,overline,mono,monoLarge}-{size,line,weight,tracking}
 --sy-font-{display,text,mono}
+--sy-measure-{tight,comfortable,wide}
 
 /* Motion */
 --sy-dur-{instant,fast,base,moderate,slow,slower,ambient}
 --sy-ease-{enter,exit,standard,emphasized,spring,anticipate,linear}
 --sy-transition-{hover,press,enter,exit,popover,sheet,page,celebrate}
+--sy-stagger-{tight,base,loose}   --sy-travel-{micro,small,medium,large}
 
 /* Depth */
 --sy-elevation-{flat,sunken,surface,raised,overlay,lifted}
---sy-glass-{veil,panel,dome}-{blur,saturate,fill,rim}
---sy-glow-{subtle,base,strong,halo}-{spread,alpha}
+--sy-vellum-{veil,panel,dome,scrim}-{blur,saturate,brightness,fill,rim}
+--sy-refract-{hairline,edge,bloom,halo}-{weight,spread,alpha}
+--sy-shell-{railCollapsed,railExpanded,contextPanel,contextPanelWide,topBar,tabBar,safeAreaFallback}
 --sy-z-{base,raised,sticky,navigation,overlayScrim,drawer,modal,popover,toast,tooltip,spotlight}
 ```
+
+There is no `--sy-glass-*` and no `--sy-glow-*`. Glass became vellum and glow
+became refraction; if you find either name, the file predates the current
+direction. The family names moved at the same time: `neutral` → `porcelain`,
+`iris` → `aether`, `flux` → `pulse`, `nova` → `bloom`, `verdant` → `verdigris`,
+`crimson` → `rose`. Gradients too: `aurora` → `prism`, `signal` → `beam`,
+`depth` → `daylight`.
+
+**One trap in that list.** `--sy-alpha-hi-*` and `--sy-alpha-lo-*` are drawn
+from step 12 and step 1 of the *active* theme, so `hi` is a near-white veil in
+dark and near-black ink in light. Use them only inside an element that sets
+`data-theme="dark"` — every current use in the product is a media surface. On a
+light-native surface reach for `--sy-bg-*` and `--sy-border-*` instead.
 
 ## 6. Typography and layout classes
 
 ```
-.sy-display-1/2/3  .sy-title-1/2/3  .sy-headline
-.sy-body-lg  .sy-body  .sy-body-sm  .sy-label  .sy-caption  .sy-overline
+.sy-display-1/2/3  .sy-title-1/2/3     Instrument Serif, weight 400
+.sy-headline  .sy-body-lg  .sy-body  .sy-body-sm  .sy-label  .sy-caption
+.sy-overline                            the only uppercase style, max 3 words
 .sy-mono  .sy-mono-lg  .sy-gradient-text
 .sy-fg-default/muted/quiet/accent/success/warning/danger/live/creator
 .sy-truncate  .sy-clamp-2  .sy-clamp-3  .sy-measure
@@ -198,16 +270,28 @@ From `../../design-system/brand/Logo`:
 .sy-grid            auto-fill grid, set --min for the minimum card width
 .sy-cols .sy-cols--2/3/4/sidebar/sidebar-start
 .sy-scroller        horizontal snap scroller with edge bleed
-.sy-divider
+.sy-divider  .sy-divider--vertical
+.sy-container       the max-width wrapper
 .sy-screen__inner   the responsive content column
 .sy-enter           cascades children in at 40ms intervals
 .sy-sr-only         visually hidden, still announced
-.sy-glass  .sy-glass--veil  .sy-glass--dome
-.sy-aurora          ambient brand backdrop (absolutely positioned)
+.sy-touch-target    expands the hit area to 44px without inflating the box
+.sy-vellum  .sy-vellum--veil  .sy-vellum--dome    (bare .sy-vellum is the panel recipe)
+.sy-refract  .sy-refract--bloom  .sy-refract-rule
+.sy-lumen           ambient brand backdrop (absolutely positioned)
 .sy-tile-icon  .sy-tile-icon--lg
 .sy-kv  .sy-kv__key  .sy-kv__value
-.sy-list-row
+.sy-list-row  .sy-list-row--wrap
 ```
+
+Two notes on the depth classes:
+
+- `.sy-refract` sets its own fill through `--refract-fill`, defaulting to
+  `--sy-bg-surface`. Set that variable rather than a `background`, or the
+  gradient border will be painted over.
+- The elevation fills on `.sy-surface` are declared inside `:where()` so their
+  specificity is zero. That is deliberate: a surface must be able to be raised
+  **and** refracting at once. Do not "fix" it by raising the specificity.
 
 ---
 
@@ -245,6 +329,19 @@ than on top of them:
 | `840` | 1016, 1248, 908 | Three columns, wider gaps |
 | `880` | 1016, 1248, 908 | Sidebar layouts |
 
+Two containers are declared, and they measure different boxes. Query the right
+one:
+
+| Container | Measures | Thresholds in use |
+|---|---|---|
+| `screen` | Your content column | 560, 840, 880 |
+| `shell` | The whole viewport, before chrome is taken out | 768, 1280 |
+
+`shell` belongs to `AppShell` — it is what decides whether the rail replaces the
+bottom tab bar and whether the context panel appears. A screen stylesheet should
+almost never query it; if you find yourself wanting to, the decision probably
+belongs in the shell.
+
 Every screen must hold at **393**, **758**, **676** and **1248**. Nothing may
 be pinned to a fixed width, tap targets stay at or above 44px, and the bottom
 84px of the compact posture is reserved for the floating tab bar.
@@ -258,5 +355,22 @@ export PATH="/home/ubuntu/.nvm/versions/node/v24.17.0/bin:$PATH"
 pnpm build     # must exit 0 — runs token build, typecheck and bundle
 ```
 
+`pnpm build` runs `pnpm tokens` first, which regenerates `tokens.css`,
+`tokens.figma.json` and `contrast-audit.json` and **fails the build** if any of
+the 86 contrast assertions regress. A screen cannot cause that failure by
+composing tokens correctly; if it fires, something changed a ramp.
+
 Fix every TypeScript error. Do not leave unused imports; the build treats them
 as errors.
+
+Then look at the screen in both themes, in that order:
+
+1. **Light, at 676px.** The tightest multi-column width in the product, and the
+   theme the system is designed for.
+2. **Light, at 393px.** Compact posture, with the bottom 84px reserved.
+3. **Dark, at whichever width the screen is most complex.** You are checking
+   that nothing was hard-coded, not redesigning.
+
+```
+#/<screenId>?device=web&theme=light
+```

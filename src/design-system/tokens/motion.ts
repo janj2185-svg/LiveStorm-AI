@@ -150,8 +150,8 @@ export const TRAVEL = {
  * first thing disabled under reduced motion or low battery.
  */
 export const AMBIENT = {
-  /** Aurora field drift. Deliberately slow enough to be felt, not watched. */
-  auroraDrift: 24000,
+  /** Lumen field drift. Deliberately slow enough to be felt, not watched. */
+  lumenDrift: 26000,
   /** Live indicator pulse. Matched to a resting heart rate for calm urgency. */
   livePulse: 1800,
   /** AI processing shimmer sweep. */

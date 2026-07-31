@@ -212,8 +212,10 @@
 }
 @supports (backdrop-filter: blur(1px)) {
   .sy-btn--glass {
-    -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
-    backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate));
+    -webkit-backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate))
+      brightness(var(--sy-vellum-panel-brightness));
+    backdrop-filter: blur(var(--sy-vellum-panel-blur)) saturate(var(--sy-vellum-panel-saturate))
+      brightness(var(--sy-vellum-panel-brightness));
   }
 }
 .sy-btn--glass:hover:not(:disabled) {

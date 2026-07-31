@@ -67,6 +67,13 @@ other screens by design, and from nowhere in the gallery.
 | **Exit state** | Signed in, interests recorded, landed on `home` |
 | **Screens** | `welcome` → `auth` → `onboarding` → `home` |
 
+All three entry screens are **immersive**: they render full-bleed with no rail,
+top bar or tab bar, and each owns its own scroll and safe-area insets. The first
+product chrome the person sees is at `home`. A navigation rail around a sign-in
+form advertises a product they have not entered yet, and the immersive frame is
+also why these three get the whole device width — 834 on a tablet rather than
+the 758 a shell-bearing screen receives.
+
 ```mermaid
 flowchart TD
   A["welcome: claim, four capabilities, product preview"] --> B{"Create account or sign in?"}
@@ -916,7 +923,7 @@ contract rather than silently changing it.
 | The assistant proposes something dangerous | Structural: proposals are a separate bordered block, per-action, with approval required. Autopilot's own copy carves out payouts, deletions and going live. |
 | Quota exhausted | The context panel shows a usage stat and a quota progress bar. No exhausted state is implemented. |
 | Inference fails or times out | **Not designed.** There is no error turn. |
-| Generated content mistaken for the user's own | The aurora hairline is reserved for surfaces the assistant authored, so generated content is always separable. |
+| Generated content mistaken for the user's own | The refraction hairline (`.sy-refract`) is reserved for surfaces the assistant authored, so generated content is always separable. |
 
 ### Exit state
 
@@ -944,7 +951,7 @@ flowchart TD
   A["missions: season name, days remaining, 'Unclaimed rewards expire with it'"] --> B["Season pass track: eight tiers on a physical rail"]
   B --> C{"Node state?"}
   C -->|"Claimed, check icon"| D["Tiers 1 to 4"]
-  C -->|"Claimable, gift icon plus glow"| E["Tier 5: 2,000 credits, the only Claim button on screen"]
+  C -->|"Claimable, gift icon plus pulsing ring"| E["Tier 5: 2,000 credits, the only Claim button on screen"]
   C -->|"Locked, lock icon"| F["Tiers 6 to 8"]
   E --> G["Claim"]
   G -.->|"ABSENT"| H["Reward granted"]
@@ -966,7 +973,7 @@ flowchart TD
 | 1 | `missions` | The header states the season name, the days remaining, the expiry rule ("Unclaimed rewards expire with it") and the credits earned this season. | Rendered |
 | 2 | `missions` | The season pass track is the hero because it is the only thing on the screen that shows **distance**: how far you have come and what the next node costs. Missions are the mechanism; the track is the reason anyone runs them. | Rendered |
 | 3 | `missions` | Exactly one node is claimable at a time — tier 5, "2,000 credits" — because a screen with six glowing buttons has no call to action at all. Tiers 1–4 are claimed, 6–8 are locked. | Rendered |
-| 4 | `missions` | Every node state carries an icon *and* a word: Claimed (check), Ready to claim (gift), Locked (lock). The claimable node adds a glow, which is decoration on top of a label that already says "Claim". | Rendered |
+| 4 | `missions` | Every node state carries an icon *and* a word: Claimed (check), Ready to claim (gift), Locked (lock). The claimable node adds a pulsing ring — concentric hard rings in light theme, a refraction spread in dark, since a soft halo on porcelain has nothing to land on — which is decoration on top of a label that already says "Claim". | Rendered |
 | 5 | `missions` | The rail's filled portion is the same width as the progress, so there is one truth on screen rather than a bar and a track that can disagree. The rail itself is `aria-hidden`, with progress duplicated as a labelled `Progress` plus an exact "11,400 of 20,000 season points" line. | Rendered |
 | 6 | `missions` | Checks the daily streak. Each day carries a visually hidden "complete" / "not yet complete", and the note states the reset rule in words. | Rendered |
 | 7 | `missions` | Switches mission tabs: Daily / Weekly / Seasonal, each with a count badge. The list is re-sorted by completion ratio on every switch — sorting by proximity rather than reward size, because finishing something is a stronger pull than earning more, and sorting by reward would bury a mission sitting at 18 of 25. | **Working** |

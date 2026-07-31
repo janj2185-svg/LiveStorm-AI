@@ -15,14 +15,14 @@ Source of truth for this document:
 | Icons | `src/design-system/icons/Icon.tsx` |
 | Sizing, radius, z-index | `src/design-system/tokens/space.ts` |
 | Motion | `src/design-system/tokens/motion.ts` |
-| Depth, glass, focus ring | `src/design-system/tokens/elevation.ts` |
+| Depth, vellum, refraction, focus ring | `src/design-system/tokens/elevation.ts` |
 | Base reset, focus, utilities | `src/design-system/styles/base.css` |
 
 ---
 
 ## 1. Tone indirection
 
-A component never names a colour family. It reads four custom properties, and
+A component never names a colour family. It reads six custom properties, and
 the `.sy-tone-*` classes supply them. That is why one `Button` implementation
 covers seven tones, and why adding an eighth tone would require no component
 change at all — only a new `.sy-tone-*` rule.
@@ -40,25 +40,32 @@ The seven tones and exactly what they resolve to:
 
 | Tone class | `--tone-solid` | `--tone-solid-hover` | `--tone-on-solid` | `--tone-fg` | `--tone-bg` | `--tone-border` |
 |---|---|---|---|---|---|---|
-| `.sy-tone-accent` | `--sy-accent-solid` | `--sy-accent-solid-hover` | `--sy-on-iris` | `--sy-accent-fg` | `--sy-accent-bg` | `--sy-accent-border` |
-| `.sy-tone-live` | `--sy-live-solid` | `--sy-flux-10` | `--sy-on-flux` | `--sy-live-fg` | `--sy-live-bg` | `--sy-live-border` |
-| `.sy-tone-creator` | `--sy-creator-solid` | `--sy-nova-10` | `--sy-on-nova` | `--sy-creator-fg` | `--sy-creator-bg` | `--sy-creator-border` |
-| `.sy-tone-success` | `--sy-success-solid` | `--sy-verdant-10` | `--sy-on-verdant` | `--sy-success-fg` | `--sy-success-bg` | `--sy-success-border` |
-| `.sy-tone-warning` | `--sy-warning-solid` | `--sy-solar-10` | `--sy-on-solar` | `--sy-warning-fg` | `--sy-warning-bg` | `--sy-warning-border` |
-| `.sy-tone-danger` | `--sy-danger-solid` | `--sy-crimson-10` | `--sy-on-crimson` | `--sy-danger-fg` | `--sy-danger-bg` | `--sy-danger-border` |
-| `.sy-tone-neutral` | `--sy-neutral-9` | `--sy-neutral-10` | `--sy-bg-canvas` | `--sy-fg-default` | `--sy-bg-raised` | `--sy-border-default` |
+| `.sy-tone-accent` | `--sy-accent-solid` | `--sy-accent-solid-hover` | `--sy-on-accent` | `--sy-accent-fg` | `--sy-accent-bg` | `--sy-accent-border` |
+| `.sy-tone-live` | `--sy-live-solid` | `--sy-pulse-10` | `--sy-on-live` | `--sy-live-fg` | `--sy-live-bg` | `--sy-live-border` |
+| `.sy-tone-creator` | `--sy-creator-solid` | `--sy-bloom-10` | `--sy-on-creator` | `--sy-creator-fg` | `--sy-creator-bg` | `--sy-creator-border` |
+| `.sy-tone-success` | `--sy-success-solid` | `--sy-verdigris-10` | `--sy-on-success` | `--sy-success-fg` | `--sy-success-bg` | `--sy-success-border` |
+| `.sy-tone-warning` | `--sy-warning-solid` | `--sy-solar-10` | `--sy-on-warning` | `--sy-warning-fg` | `--sy-warning-bg` | `--sy-warning-border` |
+| `.sy-tone-danger` | `--sy-danger-solid` | `--sy-rose-10` | `--sy-on-danger` | `--sy-danger-fg` | `--sy-danger-bg` | `--sy-danger-border` |
+| `.sy-tone-neutral` | `--sy-porcelain-9` | `--sy-porcelain-10` | `--sy-bg-canvas` | `--sy-fg-default` | `--sy-bg-raised` | `--sy-border-default` |
 
-Semantic meaning of each tone, and the underlying colour family:
+`--sy-on-accent` is emitted alongside `--sy-on-brand` specifically because
+`.sy-tone-accent` reads it. Without it, every primary button in the product fell
+back to inherited page ink on a saturated fill, at 2.98:1.
+
+Semantic meaning of each tone, and the underlying Lumen family:
 
 | Tone | Family | Hue | Means |
 |---|---|---|---|
-| `accent` | iris | 285 | Brand, AI, generated content, focus rings |
-| `live` | flux | 203 | Realtime: broadcasting, presence, connection health |
-| `creator` | nova | 335 | Human expression: creators, gifting, reactions |
-| `success` | verdant | 158 | Positive outcome, upward metrics, earnings, verification |
-| `warning` | solar | 78 | Attention without alarm, achievements, premium, scarcity |
-| `danger` | crimson | 24 | Destructive actions, errors, moderation removal |
-| `neutral` | neutral | 282 | No judgement. Structure, counts, categories |
+| `accent` | `aether` | 196 | Brand, AI, generated content, focus rings |
+| `live` | `pulse` | 272 | Realtime: broadcasting, presence, connection health, sync |
+| `creator` | `bloom` | 328 | Human expression: creators, gifting, reactions |
+| `success` | `verdigris` | 152 | Positive outcome, upward metrics, earnings, verification |
+| `warning` | `solar` | 78 | Attention without alarm, achievements, premium, scarcity |
+| `danger` | `rose` | 22 | Destructive actions, errors, moderation removal |
+| `neutral` | `porcelain` | hue-shifting | No judgement. Structure, counts, categories |
+
+`--tone-bg` resolves to step **2** of the family in light and step 3 in dark: on
+a bright ground step 3 is already enough colour to read as a filled block.
 
 Two consequences worth internalising:
 
@@ -141,6 +148,31 @@ State always carries a second channel: an icon, a fill change, a weight change,
 a border, or text. Selected navigation swaps stroke for fill. Field errors are
 always text with an icon. Connection health is a dot *and* a number.
 
+### 2.7 Light-first behaviours
+
+SYLORA is light-first, and the two themes do not share physics. Five rules run
+through every component below; each is implemented once, in `components.css`,
+under a `[data-theme='dark']` override rather than the other way round.
+
+| Rule | Light (`:root`) | Dark |
+|---|---|---|
+| Elevated surfaces have no border | `.sy-surface` border is `transparent`; the shadow carries the edge | `--sy-border-subtle` hairline, because a shadow on near-black cannot define an edge |
+| Shadows are cool, never black | `--shadow-color-NN` is `oklch(34% 0.042 266 / a)` | `oklch(3% 0.012 268 / a)` |
+| Elevation means more light | Raised surfaces move *toward white*: `bg-canvas` is `porcelain.2` and a card is `porcelain.1` | Raised surfaces climb the ramp: canvas is `porcelain.1`, a card `porcelain.2` |
+| Emphasis is a shadow, not a glow | Primary buttons rise and their shadow deepens, tinted with their own fill | Primary buttons keep a halo at `--sy-refract-bloom-spread` |
+| Inputs invert | Fields are recessed wells: `--sy-bg-canvas` fill plus `--sy-elevation-sunken` | `--sy-bg-raised` fill, no inset shadow |
+
+The inversion in the last row is the one that changes how a screen is read.
+Everything raised is a control; everything recessed is a place to type. A form
+is scannable at a glance because of it, and that only works if no screen
+overrides it.
+
+The signature treatment for *importance* is refraction, not glow: `.sy-refract`
+draws a spectral hairline whose hue travels cyan to indigo to magenta. No
+component in this document applies it — it is rationed to brand surfaces,
+AI-authored content and the single most important action in a view, and screens
+apply it deliberately. See `FOUNDATIONS.md`.
+
 ---
 
 ## 3. Icon system
@@ -161,7 +193,7 @@ See `src/design-system/icons/Icon.tsx`.
 
 ### 3.2 Why stroke and not fill
 
-Stroked icons hold their weight next to 15px Inter body text. Filled icons at
+Stroked icons hold their weight next to 15px Instrument Sans body text. Filled icons at
 the same size read roughly 40% heavier and pull the eye away from content. Fill
 is reserved for *selected* navigation, where the weight change **is** the state
 change — which is why the rail and tab bar swap stroke for fill rather than only
@@ -173,9 +205,12 @@ the existing stroke, not a different glyph.
 
 ### 3.3 Why 1.6, and optical scaling
 
-At 1.5 the icons look frail beside Inter at weight 400; at 2 they compete with
-headings. 1.6 sits on the same optical weight as body text, which is what makes
-an icon-and-label pair read as one object.
+At 1.5 the icons look frail beside Instrument Sans at the light theme's body
+weight of 410; at 2 they compete with headings. 1.6 sits on the same optical
+weight as body text, which is what makes an icon-and-label pair read as one
+object. The same 1.6 holds in dark theme, where body copy drops to 380: the
+stroke is a rendered length, and a hairline does not bloom the way a letterform
+does.
 
 Stroke width is derived from the rendered size:
 `strokeWidth = 1.6 * 24 / size`. The viewBox is always `0 0 24 24`, so this
@@ -307,12 +342,33 @@ button.sy-btn.sy-btn--{variant}.sy-btn--{size}.sy-tone-{tone}
 
 | Variant | Background | Foreground | Border | Hover |
 |---|---|---|---|---|
-| `primary` | `--tone-solid` | `--tone-on-solid` | transparent | background `--tone-solid-hover`, plus `box-shadow: 0 0 var(--sy-glow-base-spread) color-mix(in oklab, var(--tone-solid) 45%, transparent)` — a 16px glow |
-| `secondary` | `--sy-bg-raised` | `--sy-fg-default` | `--sy-border-default` | background `--sy-bg-hover`, border `--sy-border-strong` |
+| `primary` | `--tone-solid` | `--tone-on-solid` | transparent | background `--tone-solid-hover`, and in light theme it *rises*: `translate: 0 -1px` with the shadow deepening and spreading |
+| `secondary` | `--sy-bg-surface` (light) / `--sy-bg-raised` (dark) | `--sy-fg-default` | `--sy-border-default` | light: border `--sy-border-strong`, shadow `--sy-elevation-raised`; dark: background `--sy-bg-hover` |
 | `outline` | transparent | `--tone-fg` | `--tone-border` | background `--tone-bg` |
 | `ghost` | transparent | `--sy-fg-muted` | transparent | background `--sy-bg-hover`, foreground `--sy-fg-default` |
-| `glass` | `--sy-glass-panel-fill` + `blur(24px) saturate(1.6)` behind an `@supports` guard | `--sy-fg-default` | `--sy-glass-panel-rim` | border `--sy-border-strong` |
+| `glass` | `--sy-vellum-panel-fill` + `blur(26px) saturate(1.7)` behind an `@supports` guard | `--sy-fg-default` | `--sy-vellum-panel-rim` | border `--sy-border-strong` |
 | `link` | transparent | `--tone-fg` | none | underline decoration goes from `color-mix(in oklab, currentColor 35%, transparent)` to `currentColor`; `text-underline-offset: 3px` |
+
+**Primary is a shadow in light and a halo in dark.** A glow is invisible on
+white, so on a bright ground the primary button behaves the way a physical
+object does — it sits above the page and its shadow deepens as it lifts. The
+shadow is mixed from the button's own fill rather than from the neutral shadow
+colour, because that is what light does when it bounces off a saturated surface
+onto the paper beneath it:
+
+| Theme | Rest | Hover |
+|---|---|---|
+| Light (`:root`) | `0 1px 2px -1px` at 40% of `--tone-solid`, plus `0 4px 12px -4px` at 32% | `translate: 0 -1px`; `0 2px 4px -2px` at 44%, plus `0 10px 22px -6px` at 40% |
+| Dark | `box-shadow: none` | no translate; `0 0 var(--sy-refract-bloom-spread)` (24px) at 42% of `--tone-solid` |
+
+`:active` returns `translate` to `0` in both themes, so the press cancels the
+lift and the button reads as pushed back into the page.
+
+**Secondary sits above the page, it is not cut into it.** In light theme the
+fill is `--sy-bg-surface` — the near-white card colour, *brighter* than the
+canvas — with a hairline edge and the same soft contact shadow a card gets. A
+flat grey fill on porcelain would read as a disabled key. Dark theme keeps the
+old behaviour: `--sy-bg-raised` fill, no shadow, background change on hover.
 
 **States.**
 
@@ -348,8 +404,9 @@ button.sy-btn.sy-btn--{variant}.sy-btn--{size}.sy-tone-{tone}
 
 - Don't use `tone` to decorate. `tone="danger"` means the action destroys
   something.
-- Don't use `variant="glass"` over a flat background — glass with nothing to
-  blur costs GPU time and contrast for no visual gain.
+- Don't use `variant="glass"` over a flat background — the prop still applies
+  the vellum recipe, and vellum with nothing behind it costs GPU time and
+  contrast for no visual gain.
 - Don't hand-roll a full-width button with CSS; use `fullWidth`.
 
 ### 4.2 IconButton
@@ -562,7 +619,7 @@ o'clock, and uses `stroke-linecap: round`.
 ### 6.1 Surface
 
 **What it is for.** Every panel, card, sheet and well in the product. `Surface`
-owns background, border, radius, padding, elevation and the optional glass
+owns background, border, radius, padding, elevation and the optional vellum
 treatment, so no screen has to assemble those four things consistently by hand.
 
 **When not to use it.** Do not wrap plain text sections in a `Surface` just to
@@ -573,7 +630,7 @@ focusable or operable by keyboard.
 
 **Anatomy.** A single polymorphic element carrying
 `.sy-surface`, `.sy-surface--{elevation}`, `.sy-surface--radius-{radius}`,
-optionally `.sy-glass` (+ modifier) and `.sy-surface--interactive`, with
+optionally `.sy-vellum` (+ modifier) and `.sy-surface--interactive`, with
 `--sy-surface-padding` set inline.
 
 **Props.**
@@ -581,7 +638,7 @@ optionally `.sy-glass` (+ modifier) and `.sy-surface--interactive`, with
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `elevation` | `'flat' \| 'sunken' \| 'surface' \| 'raised' \| 'overlay' \| 'lifted'` | `'surface'` | Depth level. |
-| `glass` | `false \| 'veil' \| 'panel' \| 'dome'` | `false` | Glass recipe. Only correct over media or a scrolling backdrop. |
+| `glass` | `false \| 'veil' \| 'panel' \| 'dome'` | `false` | Vellum recipe. The prop kept its old name; the classes and tokens it applies are all `vellum`. Only correct over media or a scrolling backdrop. |
 | `padding` | `'none' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | `'md'` | Maps to a space token. |
 | `radius` | `'md' \| 'lg' \| 'xl' \| '2xl'` | `'lg'` | Corner radius. |
 | `interactive` | `boolean` | `false` | Adds hover lift and pointer cursor. |
@@ -607,35 +664,63 @@ computes it — never guess. A 20px-radius card with 12px padding holds an
 
 | `elevation` | Background | Shadow token | Typical use |
 |---|---|---|---|
-| `flat` | transparent, transparent border | none | Page canvas and cards that only need layout, not depth. |
-| `sunken` | `--sy-bg-canvas` | `--sy-elevation-sunken` | Input wells, track grooves, inset media. |
-| `surface` | `--sy-bg-surface` (base) | `--sy-elevation-surface` | Cards, list rows, panels resting on the canvas. |
+| `flat` | transparent | none | Page canvas and cards that only need layout, not depth. |
+| `sunken` | `--sy-bg-sunken` | `--sy-elevation-sunken` | Input wells, track grooves, inset media, segmented-control tracks. |
+| `surface` | `--sy-bg-surface` (the base `.sy-surface` fill) | `--sy-elevation-surface` | Cards, list rows, panels resting on the page. |
 | `raised` | `--sy-bg-raised` | `--sy-elevation-raised` | Hovered cards, dropdowns, popovers, floating controls. |
 | `overlay` | `--sy-bg-raised` | `--sy-elevation-overlay` | Dialogs, sheets, command palette. |
-| `lifted` | `--sy-bg-hover` | `--sy-elevation-lifted` | Dragged objects, the single focused element in a spotlight state. |
+| `lifted` | `--sy-bg-surface` | `--sy-elevation-lifted` | Dragged objects, the single focused element in a spotlight state. |
 
-All levels keep the base `1px solid var(--sy-border-subtle)` border except
-`flat`, which makes it transparent.
+**An elevated surface has no border in light theme.** `.sy-surface` declares
+`border: 1px solid transparent`, and only `[data-theme='dark'] .sy-surface`
+paints it `--sy-border-subtle`. Shadow carries the edge on a bright ground,
+exactly as it does for a real object on paper; border-plus-shadow is the single
+most reliable way to make a light interface look like a form from 2012. Dark
+theme keeps the hairline, because a shadow on near-black cannot define an edge
+on its own. `flat` is transparent in both.
 
-**Glass mapping.**
+`--sy-bg-raised` and `--sy-bg-surface` both resolve to `porcelain.1` in light,
+so `raised` and `overlay` separate from `surface` by shadow alone. In dark they
+are two different steps (`porcelain.3` and `porcelain.2`) and the fill does the
+work. This is the per-theme structural mapping in `build-tokens.ts`, not a
+component decision.
 
-| `glass` value | Classes applied | Blur / saturate | Fill / rim tokens |
-|---|---|---|---|
-| `'veil'` | `.sy-glass .sy-glass--veil` | 12px / 1.4 | `--sy-glass-veil-fill`, `--sy-glass-veil-rim` |
-| `'panel'` | `.sy-glass` only | 24px / 1.6 | `--sy-glass-panel-fill`, `--sy-glass-panel-rim` |
-| `'dome'` | `.sy-glass .sy-glass--dome` | 40px / 1.8 | `--sy-glass-dome-fill`, `--sy-glass-dome-rim` |
+The fills are declared inside `:where()`, which strips their specificity to
+zero. Depth and *material* are two separate decisions, and a surface must be
+able to be raised **and** refracting at the same time — without the zero-
+specificity wrapper, `.sy-surface--raised` and `.sy-refract` are both one class
+deep, the later stylesheet wins, and the spectral edge silently never paints.
+Shadows keep their normal specificity, because they compose rather than
+conflict.
 
-`.sy-glass` *is* the panel recipe; there is no `.sy-glass--panel` class. Without
-`backdrop-filter` support the surface falls back to opaque `--sy-bg-surface`
-rather than becoming unreadable, and under `prefers-contrast: more` all glass
-becomes opaque with a `--sy-border-interactive` border.
+**Vellum mapping.** The prop is still called `glass`; everything it applies is
+named `vellum`.
+
+| `glass` value | Classes applied | Blur / saturate | Brightness (light / dark) | Fill / rim tokens |
+|---|---|---|---|---|
+| `'veil'` | `.sy-vellum .sy-vellum--veil` | 14px / 1.5 | 1.06 / 0.96 | `--sy-vellum-veil-fill`, `--sy-vellum-veil-rim` |
+| `'panel'` | `.sy-vellum` only | 26px / 1.7 | 1.08 / 0.94 | `--sy-vellum-panel-fill`, `--sy-vellum-panel-rim` |
+| `'dome'` | `.sy-vellum .sy-vellum--dome` | 44px / 1.9 | 1.10 / 0.92 | `--sy-vellum-dome-fill`, `--sy-vellum-dome-rim` |
+
+`.sy-vellum` *is* the panel recipe; there is no `.sy-vellum--panel` class. The
+brightness above 1 in light theme is the whole point of the material: ordinary
+frosted glass darkens what is behind it, which on a bright product reads as a
+grey smear, while lifting brightness under the blur reproduces fine translucent
+paper held over an image. A fourth recipe, `scrim` (10px blur, no brightness
+change), exists in `elevation.ts` for the backdrop behind a modal and is not
+reachable from this prop.
+
+Without `backdrop-filter` support the surface falls back to opaque
+`--sy-bg-surface` with a `--sy-border-subtle` edge rather than becoming
+unreadable, and under `prefers-contrast: more` all vellum becomes opaque with a
+`--sy-border-interactive` border.
 
 **States.**
 
 | State | Rendering | Timing |
 |---|---|---|
 | Rest | Per elevation row. | — |
-| Hover (`interactive`) | `translate: 0 -2px`, border `--sy-border-strong`, shadow `--sy-elevation-raised`. The lift is 2px — enough to read as a response, small enough that a grid of cards does not feel like it is boiling as the pointer crosses it. | `--sy-transition-hover` |
+| Hover (`interactive`) | `translate: 0 -2px` and shadow `--sy-elevation-raised`; in dark theme the border also goes to `--sy-border-strong`. The lift is 2px — enough to read as a response, small enough that a grid of cards does not feel like it is boiling as the pointer crosses it. | `--sy-transition-hover` |
 | Active (`interactive`) | `translate: 0 0` — the card settles back under the press. | `--sy-transition-hover` |
 | Focus-visible | Only if the element itself is focusable. A `Surface` is not focusable by default. | — |
 | Disabled / loading / error | Not modelled. Compose with `Skeleton`, `EmptyState` or a disabled control inside. | — |
@@ -660,8 +745,10 @@ becomes opaque with a `--sy-border-interactive` border.
 
 **Don't**
 
-- Don't apply `glass` to an ordinary card on a flat background: blur with
-  nothing to blur, at real GPU cost, and reduced text contrast for no reason.
+- Don't apply `glass` to an ordinary card on a flat background: vellum with
+  nothing behind it is blur with nothing to blur, at real GPU cost, and reduced
+  text contrast for no reason. It belongs over *moving or photographic* content
+  — stream chrome, media controls, navigation above a scrolling feed.
 - Don't nest more than two elevations deep; beyond that the steps stop being
   perceptible.
 - Don't use `interactive` on a surface containing several independent actions —
@@ -760,8 +847,8 @@ span.sy-live-badge
 | Height | 22px |
 | Padding-inline | 8px (`--sy-space-2`) |
 | Radius | `--sy-radius-sm` (6px) |
-| Background | `--sy-crimson-9` |
-| Foreground | `--sy-on-crimson` |
+| Background | `--sy-rose-9` |
+| Foreground | `--sy-on-danger` |
 | Type | 11px (`--sy-type-overline-size`), weight 700, tracking 0.08em |
 | Dot | 6px circle, `currentColor` |
 | Count divider | 1px inline-start border at `color-mix(in oklab, currentColor 30%, transparent)`, tabular figures |
@@ -782,7 +869,11 @@ does not jump width as it ticks.
 
 - Do place it in the top-left of stream media, where the eye lands first.
 - Do pass `viewers` rather than rendering a second count beside it.
-- Don't recolour it per tone; it is deliberately a single fixed treatment.
+- Don't recolour it per tone; it is deliberately a single fixed treatment. It
+  is `rose` — the danger family — rather than the `pulse` family that
+  `tone="live"` resolves to, because `pulse` marks realtime *state* (presence,
+  sync, connection health) while a red record light is a fifty-year-old
+  convention viewers read without decoding.
 - Don't animate anything else nearby — one pulsing element per card.
 
 ### 7.3 Chip
@@ -797,11 +888,25 @@ switches where only one may be active (`Tabs` with `variant="pill"` or
 
 **Anatomy.**
 
+Without `onRemove`, a chip is one button:
+
 ```
 button.sy-chip[.is-selected].sy-tone-{tone}   aria-pressed
 ├── Icon                     (optional, 14px)
-├── span                     (children)
-└── span.sy-chip__remove     (optional; role="button", tabIndex -1, close icon 12px)
+└── span                     (children)
+```
+
+With `onRemove`, it is **two independent buttons inside a shared pill**. A
+removable chip is two controls, so it is two buttons rather than a button nested
+in a button: nesting is invalid HTML and forces the inner control out of the tab
+order, which leaves keyboard users with no way to remove anything.
+
+```
+span.sy-chip.sy-chip--removable[.is-selected].sy-tone-{tone}
+├── button.sy-chip__main     aria-pressed; receives ...rest
+│   ├── Icon                 (optional, 14px)
+│   └── span                 (children)
+└── button.sy-chip__remove   aria-label; close icon 12px; stops propagation
 ```
 
 **Props.**
@@ -820,11 +925,12 @@ button.sy-chip[.is-selected].sy-tone-{tone}   aria-pressed
 | Property | Value |
 |---|---|
 | Height | 32px |
-| Padding-inline | 12px (`--sy-space-3`) |
-| Gap | 6px (`--sy-space-1_5`) |
+| Padding-inline | 12px (`--sy-space-3`); 4px (`--sy-space-1`) when removable, so the remove control sits inside the pill |
+| Gap | 6px (`--sy-space-1_5`); 4px when removable |
 | Radius | `--sy-radius-pill` |
 | Type | 13.5px (`--sy-type-label-size`), weight 500 |
-| Icon | 14px; remove glyph 12px inside a 16px circle |
+| Icon | 14px; remove glyph 12px inside a 20px circle filled with `color-mix(in oklab, currentColor 14%, transparent)`, rising to 26% on hover |
+| `.sy-chip__main` | Full-height, `padding-inline: var(--sy-space-2)`, `border-radius: var(--sy-radius-pill)`, `font: inherit` |
 
 **States.**
 
@@ -841,12 +947,18 @@ button.sy-chip[.is-selected].sy-tone-{tone}   aria-pressed
 **Accessibility contract.**
 
 - `aria-pressed` communicates selection; the border and fill change is the
-  visual redundancy, so selection is not colour-only.
-- The remove affordance is `role="button"` with `tabIndex={-1}`: it is
-  pointer-reachable and named, but **not** in the tab order, and it lives inside
-  the chip button element. Keyboard-only removal must therefore be provided by
-  the screen (for example a Backspace handler on the surrounding field).
-- `removeLabel` should name the thing being removed.
+  visual redundancy, so selection is not colour-only. When the chip is
+  removable, `aria-pressed` lives on `.sy-chip__main`, not on the wrapper.
+- The remove affordance is a real sibling `button` in the tab order, so keyboard
+  users can remove a chip without the screen adding a Backspace handler. Its
+  click handler calls `stopPropagation` before `onRemove`, so removing does not
+  also toggle selection.
+- `removeLabel` should name the thing being removed. It defaults to
+  `` `Remove ${children}` `` when `children` is a string, so a screen reader
+  announces "Remove Photography" rather than a bare "Remove" repeated once per
+  chip.
+- `...rest` is spread onto `.sy-chip__main` in the removable form and onto the
+  chip button itself otherwise, so `onClick` lands on the toggle either way.
 
 **Do**
 
@@ -855,7 +967,8 @@ button.sy-chip[.is-selected].sy-tone-{tone}   aria-pressed
 
 **Don't**
 
-- Don't rely on the remove affordance as the only way to deselect.
+- Don't rely on the remove affordance as the only way to deselect — removing a
+  token and unselecting a filter are different intents.
 - Don't mix selected and unselected chips of different tones in the same row —
   the tone should encode the group, not the item.
 
@@ -888,7 +1001,7 @@ span.sy-avatar[.sy-avatar--ring-story|--ring-live]     (--avatar-size, --avatar-
 | `name` | `string` | — | Required. Drives initials and the fallback hue. |
 | `src` | `string` | — | Image URL. Rendered with `alt=""`, `loading="lazy"`, `decoding="async"`. |
 | `size` | `number` | `40` | Diameter in px, applied as `--avatar-size`. |
-| `ring` | `false \| 'story' \| 'live'` | `false` | Draws a ring outside the avatar. |
+| `ring` | `false \| 'story' \| 'live'` | `false` | Draws a ring outside the avatar. `'story'` uses the `prism` gradient; `'live'` is solid `rose`. |
 | `presence` | `'online' \| 'away' \| 'offline'` | — | Presence dot. |
 | `verified` | `boolean` | — | Verified check badge. |
 | `className` | `string` | — | |
@@ -900,8 +1013,16 @@ deterministically from their name (`hash = (hash * 31 + charCode) % 360`). A
 directory of 400 people therefore looks like 400 individuals rather than 400
 identical grey circles, with zero extra data, and the same person gets the same
 colour in every session. The fill is
-`linear-gradient(140deg, oklch(58% 0.14 H), oklch(46% 0.16 H+48))` with white
-text at `fontSize = size * 0.36`.
+`linear-gradient(140deg, oklch(52% 0.105 H), oklch(43% 0.12 H+48))` with white
+text at `fontSize = size * 0.36`, set in the display face
+(`--sy-font-display`, Instrument Serif) at weight 600.
+
+Both the lightness and the chroma are pinned lower than they look like they
+need to be, and for two different reasons. Lightness is low enough that the
+white initials clear 4.5:1 at *every* hue — a fill tuned by eye passes on violet
+and fails on yellow, because WCAG luminance weights green at 0.7152 and blue at
+0.0722. Chroma is restrained because a column of fully saturated discs on
+porcelain out-shouts the names beside them.
 
 **Sizing.** Size is applied through `--avatar-size` rather than a fixed width,
 so a screen stylesheet can make an avatar responsive without out-specifying an
@@ -910,9 +1031,9 @@ inline style. Sizes used across the product: 28 (`AvatarGroup` default), 34–36
 
 | Sub-element | Geometry |
 |---|---|
-| Ring | `::before` at `inset: -3px`, `padding: 2px`, masked so only the ring paints. `story` uses `--sy-gradient-aurora`; `live` uses `--sy-crimson-9`. Drawn outside the avatar so it never crops it. |
-| Presence dot | 28% of the avatar, minimum 8 x 8px, 2px `--sy-bg-surface` border. `online` `--sy-verdant-9`, `away` `--sy-solar-9`, `offline` `--sy-neutral-8`. |
-| Verified | Bottom-inline-end, `verified` icon at `max(12, size * 0.34)`, `--sy-iris-9` on a `--sy-bg-surface` disc. |
+| Ring | `::before` at `inset: -3px`, `padding: 2px`, masked so only the ring paints. `story` uses `--sy-gradient-prism`; `live` uses `--sy-rose-9`. Drawn outside the avatar so it never crops it. |
+| Presence dot | 28% of the avatar, minimum 8 x 8px, 2px `--sy-bg-surface` border. `online` `--sy-verdigris-9`, `away` `--sy-solar-9`, `offline` `--sy-porcelain-8`. |
+| Verified | Bottom-inline-end, `verified` icon at `max(12, size * 0.34)`, `--sy-aether-9` on a `--sy-bg-surface` disc. |
 
 **States.** No hover, press or focus state — `Avatar` is not interactive. Wrap
 it in a `Button` or `a` when it must be clickable.
@@ -1082,18 +1203,26 @@ Field
 | `xl` | 56px | `.sy-input--xl` |
 
 Shared: `padding-inline: var(--sy-space-3)` (12px), `gap: var(--sy-space-2)`
-(8px), `border-radius: var(--sy-radius-md)` (10px), background
-`--sy-bg-raised`, border `1px solid var(--sy-border-default)`, text at
-`--sy-type-body-size` (15px).
+(8px), `border-radius: var(--sy-radius-md)` (10px), border
+`1px solid var(--sy-border-default)`, text at `--sy-type-body-size` (15px).
+
+**Inputs are the one place the light theme goes down rather than up.** A field
+is a well you write into, so it takes the *page* colour — `--sy-bg-canvas`,
+which in light is a step darker than the card it sits on — plus
+`--sy-elevation-sunken`, a faint inset edge. Every other control in the product
+sits above the page. That inversion is what makes a form scannable at a glance:
+everything raised is a control, everything recessed is a place to type. Dark
+theme cannot express a well by darkening, so `[data-theme='dark'] .sy-input`
+fills with `--sy-bg-raised` and drops the inset shadow entirely.
 
 **States.**
 
 | State | Rendering | Timing |
 |---|---|---|
-| Rest | Border `--sy-border-default`, placeholder `--sy-fg-quiet`, icon and trailing `--sy-fg-quiet`. | — |
+| Rest | Light: `--sy-bg-canvas` fill with `--sy-elevation-sunken`. Dark: `--sy-bg-raised`, no shadow. Border `--sy-border-default`, placeholder `--sy-fg-quiet`, icon and trailing `--sy-fg-quiet`. | — |
 | Hover | Border `--sy-border-strong`. | `--sy-transition-hover` |
-| Focus | `:focus-within` on the wrapper: border `--sy-accent-solid` plus `0 0 0 3px color-mix(in oklab, var(--sy-accent-solid) 24%, transparent)`. Focus-within rather than focus, because the visible ring belongs to the whole field while the actual focus is on the inner input — without it the ring would only appear around a 1px caret. | `--sy-transition-hover` |
-| Invalid | Border `--sy-danger-solid`; when also focused the ring becomes the danger colour at 24%. | `--sy-transition-hover` |
+| Focus | `:focus-within` on the wrapper: background lifts to `--sy-bg-surface` — the field comes up to meet you — border `--sy-accent-solid`, plus `0 0 0 3px color-mix(in oklab, var(--sy-accent-solid) 20%, transparent)`. Focus-within rather than focus, because the visible ring belongs to the whole field while the actual focus is on the inner input — without it the ring would only appear around a 1px caret. | `--sy-transition-hover` |
+| Invalid | Border `--sy-danger-solid`; when also focused the ring becomes the danger colour at 20%. | `--sy-transition-hover` |
 | Disabled | Native `disabled` on the inner input; the wrapper is not restyled, so pair it with visibly reduced content when a field is unavailable. | — |
 | Loading | Not modelled; put a `Spinner` in `trailing`. | — |
 
@@ -1101,6 +1230,10 @@ Shared: `padding-inline: var(--sy-space-3)` (12px), `gap: var(--sy-space-2)`
 `aria-invalid` is set when `error` is present; `required` propagates to the real
 input. The inner input's outline is removed because the ring is drawn on the
 wrapper — the wrapper ring is the focus indicator and must never be removed.
+Placeholders, the leading icon and trailing adornments all sit on
+`--sy-fg-quiet`, which is a *text* step in both themes (`porcelain.9`) and is
+audited at 4.5:1 against canvas and surface. It used to be a border step, which
+is how placeholders ended up at roughly 2:1.
 
 **Do / Don't**
 
@@ -1223,8 +1356,10 @@ div.sy-input.sy-input--search
 | `className` | `string` | — | |
 
 **Sizing.** 40px tall (inherits `.sy-input`), `border-radius:
-var(--sy-radius-pill)`, background `--sy-bg-surface` (one step *below*
-`--sy-bg-raised`, so it reads as a well in a chrome bar). The `kbd` is 11px
+var(--sy-radius-pill)`, background `--sy-bg-surface`. It is the one input that
+overrides the recessed fill: search in a chrome bar sits *on* the bar rather
+than being cut into it, and in light theme `--sy-bg-surface` is a step brighter
+than the `--sy-bg-canvas` every other field takes. The `kbd` is 11px
 mono on `--sy-bg-active` with a `--sy-radius-xs` corner and a
 `--sy-border-subtle` border. The native search cancel button is suppressed.
 
@@ -1286,8 +1421,8 @@ div.sy-switch-row
 
 | State | Rendering | Timing |
 |---|---|---|
-| Off | Track `--sy-bg-active` with `--sy-border-default`; thumb `--sy-neutral-11`. | — |
-| On | Track and border `--sy-accent-solid`; thumb `--sy-on-iris`, translated 18px. | thumb `--sy-dur-base` (200ms) with `--sy-ease-spring`, which gives a small overshoot so it feels mechanical |
+| Off | Track `--sy-bg-active` with `--sy-border-default`; thumb `--sy-porcelain-11`. | — |
+| On | Track and border `--sy-accent-solid`; thumb `--sy-on-accent`, translated 18px. | thumb `--sy-dur-base` (200ms) with `--sy-ease-spring`, which gives a small overshoot so it feels mechanical |
 | Hover | Track colours transition on `--sy-transition-hover`; no dedicated hover fill. | 140ms |
 | Focus-visible | Global double ring on the track. | instant |
 | Disabled | Native `disabled`; not tone-restyled. | — |
@@ -1339,7 +1474,7 @@ div.sy-check-row
 |---|---|
 | Box | 20 x 20px, `--sy-radius-xs` (4px) |
 | Border | 1.5px `--sy-border-interactive` |
-| Check glyph | 13px, colour `--sy-on-iris` |
+| Check glyph | 13px, colour `--sy-on-accent` |
 | Row gap | 10px (`--sy-space-2_5`) |
 
 **States.**
@@ -1395,7 +1530,7 @@ native `input[type=range]`. Track and thumb are styled through
 |---|---|
 | Track | 6px tall, `--sy-radius-pill` |
 | Filled portion | `--tone-solid` up to `--percent`, `--sy-bg-active` beyond it |
-| Thumb | 16 x 16px, `--sy-neutral-12`, `0 1px 4px var(--shadow-color-32)` |
+| Thumb | 16 x 16px, `--sy-porcelain-12`, `0 1px 4px var(--shadow-color-32)` |
 
 `--percent` is computed as `((value - min) / (max - min)) * 100` and is what
 paints the filled section of the gradient.
@@ -1626,7 +1761,7 @@ div.sy-stat.sy-tone-{tone}
 │   ├── span.sy-stat__icon      (22px tile, Icon 15px)
 │   ├── span.sy-caption.sy-fg-muted   (label)
 │   └── span.sy-stat__status    (pushed to the end)
-├── div.sy-stat__value.sy-mono-lg     (28px mono, tabular)
+├── div.sy-stat__value.sy-mono-lg     (30px mono, tabular)
 └── div.sy-stat__delta[.is-up|.is-down]
     └── Icon trendUp | trendDown (13px) + delta text
 ```
@@ -1662,10 +1797,11 @@ in every polarity, including `neutral`; only the colour is withheld.
 
 | Part | Value |
 |---|---|
-| Column gap | 4px (`--sy-space-1`) |
+| Stack gap | 4px (`--sy-space-1`) between label row, value and delta |
+| Head row gap | 6px (`--sy-space-1_5`) |
 | Icon tile | 22 x 22px, `--sy-radius-xs`, `--tone-bg` fill, `--tone-fg` glyph |
-| Value | `.sy-mono-lg` — 28px, line 34px, weight 500, tabular figures |
-| Delta | 12px caption, weight 550 |
+| Value | `.sy-mono-lg` — 30px, line 36px, weight 500, tracking -0.014em, tabular figures |
+| Delta | 12px caption, weight 550, 3px gap to its arrow |
 
 **States.** No interactive states. The only variation is up / down / no
 judgement, above.
@@ -1689,15 +1825,15 @@ typically naming a dense icon control on a pointer-driven surface.
 
 **When not to use it.** Never for information a user needs to complete a task,
 and never as the only label of a control: tooltips do not exist on touch, and
-this implementation is not wired to the trigger with `aria-describedby`.
-`IconButton`'s `label` is the correct way to name an icon control.
+this implementation puts `aria-describedby` on the wrapper rather than on the
+trigger. `IconButton`'s `label` is the correct way to name an icon control.
 
 **Anatomy.**
 
 ```
-span.sy-tooltip-wrap
+span.sy-tooltip-wrap      aria-describedby={id}
 ├── children              (the trigger)
-└── span.sy-tooltip       role="tooltip"
+└── span.sy-tooltip       role="tooltip" id={id}
 ```
 
 **Props.**
@@ -1714,7 +1850,7 @@ span.sy-tooltip-wrap
 | Position | Above the trigger, `calc(100% + 8px)`, centred |
 | Padding | `6px 10px` (`--sy-space-1_5` / `--sy-space-2_5`) |
 | Radius | `--sy-radius-sm` |
-| Background / foreground | `--sy-neutral-12` on `--sy-bg-canvas` text — a deliberate inversion |
+| Background / foreground | `--sy-porcelain-12` fill with `--sy-bg-canvas` text — a deliberate inversion of the page |
 | Type | 12px caption, weight 500, `white-space: nowrap` |
 | Stacking | `z-index: var(--sy-z-tooltip)` (800) |
 
@@ -1727,9 +1863,13 @@ span.sy-tooltip-wrap
 
 **Accessibility contract.**
 
-- The tooltip element carries `role="tooltip"` but is **not** referenced by
-  `aria-describedby` on the trigger. Assistive technology will encounter the
-  text as ordinary content, not as the trigger's description.
+- The tooltip element carries `role="tooltip"` and an `id`, and
+  `aria-describedby` pointing at that `id` sits on the **wrapper span**, not on
+  the trigger the user actually focuses. A `role="tooltip"` element that nothing
+  references is invisible to screen readers, and describing a non-focusable
+  wrapper is close to the same failure: most assistive technology will not
+  announce the description when focus lands on the inner control. Treat the
+  tooltip as visual reinforcement only.
 - It appears on `:focus-within`, so keyboard users see it — but it cannot be
   dismissed with Escape, and it cannot be hovered.
 - Because `white-space: nowrap` is set, long labels will overflow their
@@ -1842,11 +1982,15 @@ header.sy-section-header
 
 **Size map.**
 
-| `size` | Title class | Size / line |
-|---|---|---|
-| `sm` | `.sy-headline` | 18px / 24px |
-| `md` | `.sy-title-3` | 22px / 28px |
-| `lg` | `.sy-title-2` | 27px / 34px |
+| `size` | Title class | Size / line | Face |
+|---|---|---|---|
+| `sm` | `.sy-headline` | 17px / 23px, weight 600 | Instrument Sans |
+| `md` | `.sy-title-3` | 21px / 27px, weight 400 | Instrument Serif |
+| `lg` | `.sy-title-2` | 27px / 33px, weight 400 | Instrument Serif |
+
+`sm` is the step where the face changes. 21px is the floor for the serif: below
+it the thick/thin modulation stops resolving and the sans takes over, so
+`size="sm"` is not merely a smaller title, it is a different voice.
 
 **Layout.** `display: flex`, `align-items: flex-end`, `justify-content:
 space-between`, `gap: var(--sy-space-4)`, `margin-block-end:
@@ -1874,6 +2018,10 @@ screens are a stack of these.
 **When not to use it.** Do not use it for a card — that is `Surface`. Do not use
 it when you need a description under the title; use `SectionHeader` inside it,
 or beside it.
+
+It is documented here rather than in section 13 because it is structural rather
+than content-bearing, but it is exported from `src/screens/components.tsx`
+alongside the composites, not from `primitives/index.tsx`.
 
 **Anatomy.**
 
@@ -1932,10 +2080,11 @@ they encode the exact anatomy of a post, a stream, a creator and a chart.
 ### 13.1 Media
 
 **What it is for.** Every image slot in the product. There are no photographic
-assets, so `Media` synthesises deterministic cover art from a seed: a two-stop
-aurora gradient at a seeded hue, a conic light sweep, and a faint grain layer.
-The same seed always produces the same artwork, so screenshots are stable and
-layouts are stress-tested with real visual weight in every image slot.
+assets, so `Media` synthesises deterministic cover art from a seed: two radial
+washes at a seeded hue over a linear base, a conic light sweep, and a faint
+grain layer. The same seed always produces the same artwork, so screenshots are
+stable and layouts are stress-tested with real visual weight in every image
+slot.
 
 **When not to use it.** Do not use `Media` where a real asset exists. Do not use
 it as a decorative background for text — the `scrim` exists for overlaid text,
@@ -1962,10 +2111,40 @@ div.sy-media.sy-media--radius-{radius}[.sy-media--scrim]   (--seed-hue, aspect-r
 | `scrim` | `boolean` | `false` | Bottom-weighted darkening so overlaid captions stay legible. |
 | `radius` | `'md' \| 'lg' \| 'xl' \| 'none'` | `'lg'` | |
 
-**Layers.** The grain layer exists specifically to stop the large flat gradients
-from banding on 8-bit displays; it is an inline SVG turbulence filter, so there
-is no network request and no asset pipeline. The scrim runs
-`oklch(12% 0.02 282 / 0.82)` at the bottom to transparent at 68%.
+**The art is generated per theme, not tinted per theme.** The light recipe is
+not the dark one lightened; it inverts the construction. Light art is a pale,
+high-lightness ground with colour arriving only at the edges, like light passing
+through the corner of a lens. Dark, saturated artwork on a porcelain page pulls
+every eye to the images and turns a feed into a contact sheet — content should
+sit *in* the page, not on top of it.
+
+| Layer | Light (`:root`) | Dark |
+|---|---|---|
+| Base | `linear-gradient(152deg, oklch(96.5% 0.022 H+18), oklch(93% 0.03 H+64))` | `linear-gradient(152deg, oklch(32% 0.11 H+40), oklch(20% 0.07 H+260))` |
+| Wash 1 | `radial-gradient(124% 104% at 14% 6%, oklch(90% 0.072 H), transparent 64%)` | `radial-gradient(120% 100% at 12% 8%, oklch(66% 0.19 H), transparent 58%)` |
+| Wash 2 | `radial-gradient(118% 116% at 88% 94%, oklch(84% 0.078 H+46), transparent 68%)` | `radial-gradient(110% 110% at 88% 92%, oklch(58% 0.17 H+128), transparent 62%)` |
+
+Two rules govern the light recipe. Chroma is held at roughly half, because on
+white saturation reads as loudness and a premium surface is never loud. And the
+hues within one cover stay *analogous* — 18, 46 and 64 degrees apart rather than
+complementary — because two opposed hues blended across a soft gradient pass
+through their desaturated midpoint, which is grey-brown, and that is where a
+gradient spends most of its area. Analogous hues never cross it, so every
+generated cover is harmonious by construction rather than by luck of the seed.
+
+**Layers.** The sweep is a conic highlight at `mix-blend-mode: overlay`, giving
+the surface a sense of direction. The grain layer exists specifically to stop
+the large flat gradients from banding on 8-bit displays; it is an inline SVG
+turbulence filter at `opacity: 0.14`, so there is no network request and no
+asset pipeline.
+
+**The scrim is dark in both themes.** Overlaid captions are white in both
+themes — they resolve through `--sy-fg-on-media`, which is pinned to the dark
+ramp regardless of the active theme — so the surface they sit on cannot flip.
+It runs `oklch(16% 0.03 266 / 0.78)` at the bottom, `oklch(16% 0.03 266 / 0.24)`
+at 34%, and transparent from 58% up, reaching full strength only in the bottom
+fifth. That leaves pale light-theme artwork pale everywhere a caption is not
+actually sitting.
 
 **Sub-elements screens compose inside it.**
 
@@ -2094,8 +2273,8 @@ title at `--sy-type-label-size` weight 600 line-height 1.35, clamped to two
 lines. The duration pill is `oklch(10% 0 0 / 0.66)` at 11px.
 
 **States.** `interactive` on the `Surface`: hover lifts 2px with
-`--sy-elevation-raised` and a `--sy-border-strong` border; active settles back
-to `translate: 0`.
+`--sy-elevation-raised` (plus a `--sy-border-strong` border in dark theme only);
+active settles back to `translate: 0`.
 
 **Accessibility contract.** Renders as `article` with an `h3` title. The card is
 visually interactive but is not itself a control — the screen must place a real
@@ -2283,7 +2462,8 @@ time series.
 div.sy-donut                     (inline width/height)
 ├── svg (aria-hidden)
 │   └── circle × segments        (stroked arcs on one shared circle)
-└── div.sy-donut__centre         (centre content, absolutely centred)
+├── div.sy-donut__centre         (centre content, absolutely centred)
+└── table.sy-sr-only             (caption "Breakdown", one row per segment)
 ```
 
 **Props.**
@@ -2303,9 +2483,11 @@ o'clock. Segments are drawn in array order, clockwise.
 
 **States.** Static. Segments do not respond to hover.
 
-**Accessibility contract.** The `svg` is `aria-hidden` and — unlike `BarChart` —
-there is **no** hidden data table. The screen must render a legend with the same
-labels and values as text; the `segments[].label` is used only for React keys.
+**Accessibility contract.** The `svg` is `aria-hidden`; the same breakdown is
+rendered as a `.sy-sr-only` `<table>` with the caption "Breakdown", a
+`<th scope="row">` per label and the share as a percentage to one decimal place.
+The percentages in that table are computed from `value / total`, so the arc and
+the announced figure cannot drift apart.
 
 **Do / Don't**
 
@@ -2389,11 +2571,15 @@ Documented so nobody spends an afternoon looking for these:
 |---|---|
 | `StreamCard` `size="lg"` | Accepted by the type, no `.sy-stream-card--lg` rule exists; renders as `md`. |
 | `.sy-progress--md`, `.sy-badge--sm`, `.sy-input--md` | Classes are emitted but have no CSS rule; the defaults come from the base custom-property values (6px, 20px, 40px). Harmless, but the class list implies more than it does. |
-| `LiveBadge` colour family | Uses `--sy-crimson-9` (the danger family), not the `live` / flux family that `tone="live"` resolves to. The rail and tab-bar live dots do the same. This is a deliberate-looking choice that is not written down anywhere in the source. |
+| `LiveBadge` doc comment | The comment in `primitives/index.tsx` still says "deliberately crimson rather than the flux family". Both families were renamed: the CSS uses `--sy-rose-9`, and `tone="live"` now resolves to `pulse`. The behaviour is unchanged and correct; only the names in the comment are stale. |
+| `Surface` `glass` prop | The prop, its union values and the `SurfaceProps` comment still say "glass"; every class and token it applies is `vellum`. Renaming the prop is the only outstanding half of that migration. |
 | `Donut` `segments[].tone` | Named `tone` but takes a raw CSS colour, unlike every other `tone` prop in the system. |
-| `Donut` accessibility | No hidden data table, while `BarChart` has one. |
-| `Tooltip` wiring | `role="tooltip"` is present but no `aria-describedby` links it to the trigger. |
-| `Chip` remove control | `role="button"` with `tabIndex={-1}` nested inside a `button`, so it is unreachable by keyboard and is nested-interactive markup. |
+| `Sparkline` accessibility | `aria-hidden` with no data table, unlike `BarChart` and `Donut`. Deliberate — its doc comment says the precise number is always shown as text beside it — but it is the one chart whose contract depends on the calling screen. |
+| `Tooltip` wiring | `aria-describedby` is on `span.sy-tooltip-wrap` rather than on the trigger element, so the description is attached to something that is never focused. |
+| `Avatar` `ring` prop comment | Documented as "Draws the aurora story ring"; the CSS uses `--sy-gradient-prism`. `aurora` no longer exists as a gradient name. |
 | `Avatar` `presence` / `verified` | `aria-label` on a plain `span` with no role; not reliably announced. |
-| `FOCUS_RING` token vs CSS | `FOCUS_RING` declares `outerWidth: 1`, while `base.css` draws a 4px outer ring. The CSS is what ships. |
+| `Tabs` doc comment | Claims the underline variant "animates its indicator between tabs"; the CSS comment beside the implementation is honest that each tab owns its own rule and scales it open in place, because a travelling indicator needs JavaScript measurement on every resize and font swap. |
 | `Tabs` panels | The component renders no panel and sets no `aria-controls`; screens must supply both. |
+| `ThemeContext` default | `createContext` defaults to `{ theme: 'dark' }` while the product is light-first and `DEFAULT_THEME` is `'light'`. Only reachable by a consumer rendered outside `ThemeProvider`. |
+| `Button` `variant="glass"` | Applies the vellum panel fill and rim, but its `backdrop-filter` is `blur()` and `saturate()` only. It omits the `brightness()` lift that `.sy-vellum` applies, so a glass button does not transmit the way every other vellum surface does. |
+| `Chip` `--tone-*` on a `span` | A removable chip's `.sy-tone-*` class lands on the wrapping `span`, not on either button. That is correct for inheritance, but it means the outer element carries a tone class while having no interactive role of its own. |
