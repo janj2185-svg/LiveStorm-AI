@@ -515,6 +515,91 @@ report simulated success. The API does not claim that any real external
 payment, media processing job, PDF rendering job, or S3 operation was verified
 without deployment credentials and a configured real adapter.
 
+## Business workspaces and platform administration
+
+Migration `20260731_0007_business_admin` adds tenant workspaces, memberships,
+hashed single-use invitations, teams, CRM, tasks, calendar events, documents,
+budgets, expenses, invoices, feature flags, versioned settings, account
+administration actions, application-submitted service health reports, and
+append-only business audit and financial evidence. Every business domain row
+contains `workspace_id`; API lookups combine that identifier with an active
+membership check and return no cross-workspace record.
+
+The built-in `business` role receives `workspaces:create`, `business:access`,
+`business:documents`, and `business:finance`. Workspace owner/admin/manager/
+member/viewer roles are evaluated independently for each tenant, including
+bounded per-membership permission overrides. Removing, suspending, or demoting
+the last active owner is rejected. Account deletion likewise requires
+ownership transfer, removes personal memberships, unused invitations, and
+unversioned private drafts, while retaining business, finance, and audit
+history against the pseudonymized account.
+
+Principal business APIs are:
+
+- `/v1/business/workspaces`, `/{id}/members`, `/{id}/invitations`, and
+  `/{id}/teams` for workspace lifecycle, switching, membership, invitations,
+  and teams;
+- `/v1/business/crm/contacts`, `/companies`, `/deals`,
+  `/pipeline-stages`, and `/jobs` for cursor search, assignment, configurable
+  stages, append-only deal activity, and persisted queued import/export
+  requests;
+- `/v1/business/tasks` for optimistic-version task updates, parent/dependency
+  cycle prevention, completion prerequisites, and append-only comments and
+  activity;
+- `/v1/business/calendar` and `/calendar/events` for bounded timezone-aware
+  ranges, attendee conflict detection, reminders, and a validated
+  `DAILY`/`WEEKLY`/`MONTHLY` recurrence subset;
+- `/v1/business/documents`, `/documents/folders`, version upload/verify/
+  download, and approval endpoints for S3-only object storage, immutable
+  verified versions, rights declarations, classification ACLs, and persisted
+  approval decisions;
+- `/v1/business/finance/budgets`, `/budget-categories`, `/expenses`,
+  `/invoices`, and `/v1/business/reports/finance` for integer-minor-unit
+  records and aggregate reporting from persisted rows.
+
+CRM import/export endpoints persist a real `queued` job boundary and do not
+report completion. No worker implementation is bundled in this service.
+External calendar sync, e-signature, and accounting export use provider
+protocols injected by the deployment. Their default implementations return
+`503 calendar_provider_unavailable`, `503 esignature_provider_unavailable`, or
+`503 accounting_provider_unavailable`; they never record provider success.
+
+Document object keys are server generated. Version creation obtains a real
+presigned S3 PUT before persisting the declaration, verification performs a
+real S3 `HEAD`, and download returns only a short-lived presigned GET.
+Unconfigured S3 returns `503 object_storage_unavailable` without a successful
+version record.
+
+Expense approval is limited to submitted expenses and appends a decision.
+Invoices move from `draft` to `sent`, then to `paid` only through a
+signature-verified configured payment webhook or an authorized manual bank
+reconciliation with exact amount/currency, evidence, an external reference,
+and audit. A browser return or direct invoice patch cannot mark an invoice
+paid. Fiat business records are not represented as `SYLORA_CREDIT` ledger
+entries. Existing immutable ledger operations remain the source of truth only
+for actual platform-credit activity.
+
+Administration APIs under `/v1/admin` include:
+
+- cursor user search/detail and audited suspend/restore with session
+  revocation, self-suspension prevention, and last-active-admin protection;
+- `/feature-flags` with optimistic versions, environment and allow/deny
+  subjects, and deterministic server-side HMAC rollout evaluation;
+- `/settings` with immutable versions and encrypted write-only secret values;
+- `/audit` for an opaque-cursor view over security and selected business audit
+  events;
+- `/analytics` for counts and sums computed from persisted users, content,
+  live sessions, orders, gifts, moderation records, and AI usage;
+- `/service-health` for HMAC/timestamp-protected application report ingestion
+  and admin reads; these reports supplement and do not replace Prometheus; and
+- `/security` plus `/moderation/summary` for actual session, account,
+  persisted security-event, integration, queue, and decision counts.
+
+Set `SERVICE_HEALTH_HMAC_SECRET` to enable service-health ingestion. Producers
+sign `X-Service-Timestamp + "." + raw_request_body` with HMAC-SHA256 and send
+the lowercase hexadecimal digest in `X-Service-Signature`. If the secret is
+absent, ingestion returns `503 service_health_ingestion_unavailable`.
+
 ## Security model
 
 Access tokens are short-lived bearer JWTs supplied only in the

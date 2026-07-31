@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import from_url as redis_from_url
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -14,6 +14,15 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.ai_providers import ProviderRegistry
 from app.ai_service import AIEventHub, seed_ai_tool_definitions
+from app.business_service import (
+    AccountingProvider,
+    CalendarSyncProvider,
+    ESignatureProvider,
+    UnconfiguredAccountingProvider,
+    UnconfiguredCalendarSyncProvider,
+    UnconfiguredESignatureProvider,
+    business_rate_limit_dependency,
+)
 from app.config import Settings, get_settings
 from app.database import (
     check_database,
@@ -42,8 +51,11 @@ from app.platform_service import (
 from app.routers import (
     admin,
     admin_ai,
+    admin_operations,
     ai,
     auth,
+    business,
+    business_operations,
     creator_platform,
     gift_authoring,
     gifts,
@@ -75,6 +87,9 @@ def create_app(
     content_processor: ContentProcessor | None = None,
     certificate_renderer: CertificateRenderer | None = None,
     content_publish_dispatcher: (Callable[[uuid.UUID, Any], Awaitable[None]] | None) = None,
+    esignature_provider: ESignatureProvider | None = None,
+    accounting_provider: AccountingProvider | None = None,
+    calendar_sync_provider: CalendarSyncProvider | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     resolved_engine = engine or create_engine(resolved_settings)
@@ -201,6 +216,11 @@ def create_app(
     app.state.content_processor = content_processor or UnconfiguredContentProcessor()
     app.state.certificate_renderer = certificate_renderer or UnconfiguredCertificateRenderer()
     app.state.content_publish_dispatcher = content_publish_dispatcher or dispatch_content_publish
+    app.state.esignature_provider = esignature_provider or UnconfiguredESignatureProvider()
+    app.state.accounting_provider = accounting_provider or UnconfiguredAccountingProvider()
+    app.state.calendar_sync_provider = (
+        calendar_sync_provider or UnconfiguredCalendarSyncProvider()
+    )
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)
@@ -216,6 +236,8 @@ def create_app(
                 "Idempotency-Key",
                 "X-Payment-Signature",
                 "X-Request-ID",
+                "X-Service-Signature",
+                "X-Service-Timestamp",
             ],
             expose_headers=["X-Request-ID"],
             max_age=600,
@@ -229,6 +251,7 @@ def create_app(
     app.include_router(oauth.router, prefix=resolved_settings.api_prefix)
     app.include_router(users.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin.router, prefix=resolved_settings.api_prefix)
+    app.include_router(admin_operations.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin_ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
@@ -244,6 +267,16 @@ def create_app(
     app.include_router(creator_platform.router, prefix=resolved_settings.api_prefix)
     app.include_router(marketplace.router, prefix=resolved_settings.api_prefix)
     app.include_router(learning.router, prefix=resolved_settings.api_prefix)
+    app.include_router(
+        business.router,
+        prefix=resolved_settings.api_prefix,
+        dependencies=[Depends(business_rate_limit_dependency)],
+    )
+    app.include_router(
+        business_operations.router,
+        prefix=resolved_settings.api_prefix,
+        dependencies=[Depends(business_rate_limit_dependency)],
+    )
     install_exception_handlers(app)
     return app
 

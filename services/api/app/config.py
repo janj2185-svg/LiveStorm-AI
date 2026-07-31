@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     learning_progress_rate_limit: int = Field(default=120, ge=1, le=10_000)
     learning_quiz_rate_limit: int = Field(default=60, ge=1, le=5000)
     platform_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
+    business_mutation_rate_limit: int = Field(default=120, ge=1, le=10_000)
+    admin_mutation_rate_limit: int = Field(default=60, ge=1, le=5000)
+    service_health_hmac_secret: SecretStr | None = None
+    service_health_max_clock_skew_seconds: int = Field(default=300, ge=30, le=3600)
     ip_hash_key: SecretStr | None = None
 
     s3_endpoint_url: str | None = None

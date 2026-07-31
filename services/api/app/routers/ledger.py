@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_audit_event
+from app.business_service import settle_finance_invoice_webhook
 from app.config import Settings
 from app.dependencies import (
     AuthContext,
@@ -633,6 +634,12 @@ async def payment_webhook(
                     new_status=new_status,
                 )
         await settle_external_commerce(
+            db,
+            provider_name=provider_name,
+            operation_id=verified.operation_id,
+            operation_status=verified.operation_status,
+        )
+        await settle_finance_invoice_webhook(
             db,
             provider_name=provider_name,
             operation_id=verified.operation_id,

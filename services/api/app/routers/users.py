@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai_service import scrub_ai_user_records
 from app.audit import add_audit_event
+from app.business_service import scrub_business_user_records
 from app.config import Settings
 from app.dependencies import AuthContext, current_auth, get_session, get_settings, has_permission
 from app.errors import APIError
@@ -243,6 +244,7 @@ async def delete_own_account(
 
     now = utcnow()
     original_email = user.email
+    await scrub_business_user_records(db, user.id, original_email)
     add_audit_event(
         db,
         request,
