@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+import asyncio
+import uuid
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -10,6 +12,8 @@ from redis.asyncio import from_url as redis_from_url
 from sqlalchemy.ext.asyncio import AsyncEngine
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from app.ai_providers import ProviderRegistry
+from app.ai_service import AIEventHub, seed_ai_tool_definitions
 from app.config import Settings, get_settings
 from app.database import (
     check_database,
@@ -29,6 +33,8 @@ from app.middleware import (
 from app.payments import PaymentProvider, configured_payment_provider
 from app.routers import (
     admin,
+    admin_ai,
+    ai,
     auth,
     gift_authoring,
     gifts,
@@ -50,6 +56,8 @@ def create_app(
     redis_client: Any | None = None,
     payment_provider: PaymentProvider | None = None,
     object_storage: S3ObjectStorage | None = None,
+    ai_provider_registry: ProviderRegistry | None = None,
+    ai_job_dispatcher: Callable[[uuid.UUID], Awaitable[None]] | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     resolved_engine = engine or create_engine(resolved_settings)
@@ -61,6 +69,16 @@ def create_app(
         health_check_interval=30,
     )
     session_factory = create_session_factory(resolved_engine)
+    resolved_ai_registry = ai_provider_registry or ProviderRegistry()
+
+    async def dispatch_ai_job(job_id: uuid.UUID) -> None:
+        from app.celery_app import celery_app
+
+        await asyncio.to_thread(
+            celery_app.send_task,
+            "sylora.ai.process_generation_job",
+            args=[str(job_id)],
+        )
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -69,6 +87,9 @@ def create_app(
         async with session_factory() as session:
             await seed_rbac(session)
             await seed_platform_accounts(session)
+            await seed_ai_tool_definitions(session)
+            if ai_provider_registry is None:
+                await resolved_ai_registry.refresh_from_database(session, resolved_settings)
         application.state.ready = True
         try:
             yield
@@ -101,6 +122,10 @@ def create_app(
             {"name": "Payments", "description": "Configured external payment boundary"},
             {"name": "Gifts", "description": "Gift catalog, inventory, sends, and events"},
             {"name": "Gift authoring", "description": "Versioned gift runtime contracts"},
+            {
+                "name": "AI Brain",
+                "description": "Consent-gated provider-neutral assistant and generation",
+            },
             {"name": "Administration", "description": "Server-enforced RBAC"},
             {"name": "Operations", "description": "Health and telemetry"},
         ],
@@ -112,9 +137,12 @@ def create_app(
     app.state.redis = resolved_redis
     app.state.message_hub = MessageConnectionHub()
     app.state.gift_hub = GiftConnectionHub()
+    app.state.ai_event_hub = AIEventHub()
     app.state.financial_operation_locks = FinancialOperationLockPool()
     app.state.payment_provider = payment_provider or configured_payment_provider(resolved_settings)
     app.state.object_storage = object_storage or S3ObjectStorage(resolved_settings)
+    app.state.ai_provider_registry = resolved_ai_registry
+    app.state.ai_job_dispatcher = ai_job_dispatcher or dispatch_ai_job
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)
@@ -143,6 +171,8 @@ def create_app(
     app.include_router(oauth.router, prefix=resolved_settings.api_prefix)
     app.include_router(users.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin.router, prefix=resolved_settings.api_prefix)
+    app.include_router(admin_ai.router, prefix=resolved_settings.api_prefix)
+    app.include_router(ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
     app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
     app.include_router(ledger.router, prefix=resolved_settings.api_prefix)

@@ -33,6 +33,9 @@ PERMISSION_DESCRIPTIONS = {
     "gifts:publish": "Publish and retire gift versions",
     "gifts:refund": "Refund gift purchases and sends",
     "gifts:moderate": "Emergency-retire gift versions",
+    "ai:providers:manage": "Manage encrypted AI provider configurations",
+    "ai:prompts:manage": "Manage and publish versioned AI prompt templates",
+    "ai:usage:read:any": "Read AI usage records for any user",
 }
 
 ROLE_MATRIX = {

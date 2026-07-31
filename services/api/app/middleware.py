@@ -113,7 +113,7 @@ class BodySizeLimitMiddleware:
                 message = messages[index]
                 index += 1
                 return message
-            return {"type": "http.request", "body": b"", "more_body": False}
+            return await receive()
 
         await self.app(scope, replay, send)
 

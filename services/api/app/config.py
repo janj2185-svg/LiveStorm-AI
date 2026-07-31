@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     purchase_rate_limit: int = Field(default=20, ge=1, le=1000)
     gift_send_rate_limit: int = Field(default=30, ge=1, le=2000)
     topup_rate_limit: int = Field(default=5, ge=1, le=100)
+    ai_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
+    ai_chat_rate_limit: int = Field(default=30, ge=1, le=1000)
+    ai_generation_rate_limit: int = Field(default=10, ge=1, le=1000)
+    ai_tool_rate_limit: int = Field(default=30, ge=1, le=1000)
     ip_hash_key: SecretStr | None = None
 
     s3_endpoint_url: str | None = None

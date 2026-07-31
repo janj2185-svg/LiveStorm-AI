@@ -95,6 +95,16 @@ def api_factory(tmp_path: Path):
     async def factory(**overrides: Any) -> AsyncIterator[APIHarness]:
         nonlocal counter
         counter += 1
+        app_options = {
+            key: overrides.pop(key)
+            for key in (
+                "ai_provider_registry",
+                "ai_job_dispatcher",
+                "object_storage",
+                "payment_provider",
+            )
+            if key in overrides
+        }
         database_path = tmp_path / f"api-{counter}.db"
         values: dict[str, Any] = {
             "environment": "test",
@@ -119,7 +129,12 @@ def api_factory(tmp_path: Path):
         async with engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
         fake_redis = FakeRedis()
-        application = create_app(settings, engine=engine, redis_client=fake_redis)
+        application = create_app(
+            settings,
+            engine=engine,
+            redis_client=fake_redis,
+            **app_options,
+        )
         async with application.router.lifespan_context(application):
             transport = httpx.ASGITransport(app=application)
             async with httpx.AsyncClient(

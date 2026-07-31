@@ -7,6 +7,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai_service import scrub_ai_user_records
 from app.audit import add_audit_event
 from app.config import Settings
 from app.dependencies import AuthContext, current_auth, get_session, get_settings, has_permission
@@ -292,5 +293,6 @@ async def delete_own_account(
             EmailOutbox.sent_at.is_(None),
         )
     )
+    await scrub_ai_user_records(db, user.id, settings)
     await db.commit()
     return MessageResponse(status="deleted")

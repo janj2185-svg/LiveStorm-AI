@@ -2,7 +2,8 @@
 
 FastAPI modular-monolith foundation for SYLORA identity, account security, RBAC,
 profiles, first-party social networking, persisted messaging, an immutable
-wallet ledger, and versioned gift authoring, catalog, inventory, and delivery.
+wallet ledger, versioned gift authoring, catalog, inventory, and delivery, and
+the consent-gated provider-neutral SYLORA AI Brain.
 PostgreSQL and Redis are required at runtime.
 SQLite is accepted only when `ENVIRONMENT=test`.
 
@@ -65,8 +66,9 @@ can be wrapped by a Celery task without changing email behavior.
 ## Tests and compilation
 
 Tests create isolated SQLite databases and an in-process Redis behavior double.
-They do not alter product runtime configuration or simulate external provider
-success.
+AI contract tests inject a deterministic `TestProvider` only through
+`create_app` or service boundaries. Product runtime configuration remains
+unconfigured; no test provider is available to product code.
 
 ```bash
 cd services/api
@@ -208,6 +210,126 @@ delivery infrastructure are implemented. Production AAA CGI still requires
 authored or licensed Blender/Unreal/Unity content, renderer clients, and device
 validation. Those assets, clients, engines, and validation programs are not
 present in this backend repository, and this API does not claim that they are.
+
+## SYLORA AI Brain
+
+Migration `20260731_0004_ai_brain` adds provider configurations, per-user
+consent/privacy/budget settings, conversations and messages, source citations,
+tool definitions/proposals/immutable execution records, encrypted memory,
+append-only usage, generation jobs, durable user events, immutable published
+prompt versions, and export requests. PostgreSQL triggers reject updates and
+deletes of usage and tool execution rows and reject mutation of published
+prompt versions.
+
+No provider credentials are bundled. Product runtime starts with an empty
+provider registry and returns `503 ai_provider_unavailable` before persisting a
+successful message, translation, moderation result, or generation job when no
+real enabled provider supports the requested capability. Tests may inject a
+deterministic `TestProvider` into `create_app`; this is not a product runtime
+adapter.
+
+Administrators with `ai:providers:manage` configure providers at
+`/v1/admin/ai/providers`. Credentials are accepted only on create/rotation,
+encrypted with `DATA_ENCRYPTION_KEY`, never returned, and never logged.
+Configuration requires an explicit capability list, a model for every
+capability, and optional integer-micro pricing entries:
+
+```json
+{
+  "name": "openai-compatible",
+  "base_url": "https://provider.example/v1",
+  "api_credential": "write-only-secret",
+  "enabled": true,
+  "capabilities": ["chat", "embeddings", "image", "voice", "moderation"],
+  "model_mapping": {
+    "chat": "deployed-chat-model",
+    "embeddings": "deployed-embedding-model",
+    "image": "deployed-image-model",
+    "voice": "deployed-tts-model",
+    "moderation": "deployed-moderation-model"
+  },
+  "pricing_config": {
+    "deployed-chat-model": {
+      "prompt_micros_per_million": 0,
+      "completion_micros_per_million": 0,
+      "unit_micros": 0
+    }
+  }
+}
+```
+
+The bundled real OpenAI-compatible HTTP adapter supports only explicitly
+configured `chat`, `embeddings`, `image`, `voice` (TTS), and `moderation`.
+It enforces HTTPS in production, bounded responses, timeouts, and retry with
+jitter for rate-limit and transient server failures. It does not infer
+capabilities from a provider name. Translation requires a separately injected
+real adapter implementing the translation contract. Video, music, and avatar
+have provider-neutral asynchronous adapter contracts, but no implementation is
+bundled. Video, music, and avatar therefore remain unavailable until a real
+configured adapter exists. This repository does not claim live provider or
+model verification.
+
+Generated binary output is transient and must be written to configured S3.
+Only server-generated object keys, verified size/content type/SHA-256, and
+bounded safe metadata are stored in `AIJob.output_refs`; provider URLs and
+binary bodies are never persisted. Celery task
+`sylora.ai.process_generation_job` loads enabled encrypted provider
+configurations, invokes the real adapter, writes output to S3, and appends
+durable lifecycle events.
+
+Authenticated user APIs are:
+
+- `GET /v1/ai/providers/status` and `GET/PATCH /v1/ai/settings`
+- `/v1/ai/conversations` create/list/get/update/delete, signed-cursor message
+  history, non-stream send, and SSE send at `/{id}/stream`
+- `/v1/ai/conversations/{id}/proposals` list/approve/reject/execute
+- `/v1/ai/memory` list/create/edit/delete/delete-all/export
+- `POST /v1/ai/translate` and `POST /v1/ai/moderate`
+- `/v1/ai/jobs` create/list/status/cancel/retry
+- `/v1/ai/usage` history and `/v1/ai/usage/summary`
+- SSE `GET /v1/ai/events` with signed durable replay cursors and optional live
+  follow
+
+Admin prompt publication is under `/v1/admin/ai/prompts` and requires
+`ai:prompts:manage`; cross-user usage access requires `ai:usage:read:any`.
+RBAC seeding is idempotent and grants these permissions only through the
+built-in admin role by default.
+
+Every AI invocation requires explicit consent, an enabled per-capability flag,
+Redis rate-limit approval, and remaining user token/spend quota. Production
+rate limiting fails closed. Context contains only that user's authorized
+conversation, optional encrypted memory, own social/creator aggregates, and
+own ledger accounts. Citations are accepted only when they match a source
+resolved by the server. Provider text cannot invoke tools: only separate
+strict-schema proposals for registered tools are accepted, and unknown tools
+or fields reject the provider response.
+
+Copilot leaves proposals for approval. Autopilot may execute only a low-risk
+definition that allows autopilot and appears in the user's explicit allowlist.
+Medium, high, and critical risk always require explicit human approval;
+critical is never auto-approved. Manual conversations never execute tools.
+Built-in transactional tools update bounded own-profile/account-setting
+fields, create draft-only posts, mark an owned notification read, and create an
+export request. They cannot publish a post. Tool decisions and terminal
+effects are audited without logging prompts or provider responses.
+
+AI memory requires both AI consent and memory enablement. Text is encrypted;
+users can list, edit, export, delete individual items, disable memory (which
+deletes all items), or delete all explicitly. Account deletion removes AI
+content and jobs while retaining only append-only usage/tool audit linked to
+the already-pseudonymized deleted account and a precomputed pseudonymous
+subject hash.
+
+Chat provider tokens may be transient during collection, but the final
+assistant message, citations, proposals, usage, and durable completion event
+commit before the API emits the SSE completion event. Provider raw payloads
+are never stored. Moderation results are explicitly non-binding
+recommendations; human moderation actions remain separate.
+
+The optional live AI event hub is bounded and process-local. `AIEvent` rows and
+signed cursors provide replay, but multi-replica live fan-out still requires
+Redis Streams, Kafka, or equivalent committed-event transport and consumer
+recovery.
 
 ## Security model
 
