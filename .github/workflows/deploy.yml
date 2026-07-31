@@ -67,6 +67,10 @@ jobs:
       AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      CLOUD_PROVIDER_INPUT: ${{ inputs.cloud_provider }}
+      RESOURCE_GROUP_INPUT: ${{ inputs.resource_group }}
+      REGISTRY_INPUT: ${{ inputs.registry }}
+      API_BASE_URL_INPUT: ${{ inputs.api_base_url }}
       IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}:${{ github.sha }}
       OVERLAY: infrastructure/kubernetes/overlays/${{ inputs.environment }}
     steps:
@@ -78,7 +82,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          case "${{ inputs.cloud_provider }}" in
+          case "${CLOUD_PROVIDER_INPUT}" in
             aws)
               [[ -n "${AWS_ROLE_ARN}" ]] || {
                 echo "::error::Set AWS_DEPLOY_ROLE_ARN in the protected GitHub environment"
@@ -96,7 +100,7 @@ jobs:
                 echo "::error::Set AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_SUBSCRIPTION_ID"
                 exit 1
               }
-              [[ -n "${{ inputs.resource_group }}" ]] || {
+              [[ -n "${RESOURCE_GROUP_INPUT}" ]] || {
                 echo "::error::resource_group is required for Azure"
                 exit 1
               }
@@ -106,14 +110,13 @@ jobs:
               exit 1
               ;;
           esac
-          [[ "${{ inputs.registry }}" != http* ]] || {
-            echo "::error::registry must be a hostname without a scheme"
-            exit 1
-          }
-          [[ "${{ inputs.api_base_url }}" == https://* ]] || {
-            echo "::error::api_base_url must use HTTPS"
-            exit 1
-          }
+          case "${REGISTRY_INPUT}" in
+            http*) echo "::error::registry must be a hostname without a scheme"; exit 1 ;;
+          esac
+          case "${API_BASE_URL_INPUT}" in
+            https://*) ;;
+            *) echo "::error::api_base_url must use HTTPS"; exit 1 ;;
+          esac
 
       - name: Authenticate to AWS with OIDC
         if: inputs.cloud_provider == 'aws'
@@ -258,7 +261,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 20); do
+          for _ in {1..20}; do
             if curl --fail --silent --show-error \
               --max-time 10 \
               "${{ inputs.api_base_url }}/health/ready"; then
