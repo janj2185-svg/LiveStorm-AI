@@ -36,11 +36,20 @@ PERMISSION_DESCRIPTIONS = {
     "ai:providers:manage": "Manage encrypted AI provider configurations",
     "ai:prompts:manage": "Manage and publish versioned AI prompt templates",
     "ai:usage:read:any": "Read AI usage records for any user",
+    "live:manage": "Manage owned live sessions, personas, rules, and actions",
+    "live:moderate": "Moderate live sessions and record decisions",
+    "live:integrations:manage": "Manage owned official live integrations",
+    "live:admin": "Read and administer all live integration status",
 }
 
 ROLE_MATRIX = {
     "user": set(),
-    "creator": {"creator:access", "gifts:author"},
+    "creator": {
+        "creator:access",
+        "gifts:author",
+        "live:manage",
+        "live:integrations:manage",
+    },
     "business": {"business:access"},
     "moderator": {
         "users:read",
@@ -48,6 +57,7 @@ ROLE_MATRIX = {
         "profile:read:any",
         "gifts:review",
         "gifts:moderate",
+        "live:moderate",
     },
     "admin": set(PERMISSION_DESCRIPTIONS),
 }

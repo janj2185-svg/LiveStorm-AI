@@ -186,8 +186,10 @@ jobs:
         run: python infrastructure/scripts/validate-static.py
       - name: Validate shell scripts
         run: |
-          shellcheck infrastructure/scripts/*.sh
-          for script in infrastructure/scripts/*.sh; do
+          shopt -s globstar nullglob
+          scripts=(infrastructure/**/*.sh)
+          shellcheck "${scripts[@]}"
+          for script in "${scripts[@]}"; do
             bash -n "$script"
           done
       - uses: azure/setup-kubectl@v4

@@ -1,0 +1,48 @@
+# Apply only when the Prometheus Operator monitoring.coreos.com/v1 CRD exists.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sylora-mediamtx
+  namespace: sylora
+  labels:
+    app.kubernetes.io/name: sylora-mediamtx
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - sylora
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-mediamtx
+      app.kubernetes.io/component: media-plane
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+    - port: upload-metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sylora-coturn
+  namespace: sylora
+  labels:
+    app.kubernetes.io/name: sylora-coturn
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - sylora
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-coturn
+      app.kubernetes.io/component: nat-traversal
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

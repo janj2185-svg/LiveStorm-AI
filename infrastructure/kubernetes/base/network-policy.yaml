@@ -102,3 +102,123 @@ spec:
           port: 587
         - protocol: TCP
           port: 465
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mediamtx-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-mediamtx
+      app.kubernetes.io/component: media-plane
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 1935
+        - protocol: TCP
+          port: 8888
+        - protocol: TCP
+          port: 8889
+        - protocol: TCP
+          port: 9996
+        - protocol: UDP
+          port: 8189
+        - protocol: UDP
+          port: 8890
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sylora-api
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: 9997
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9998
+        - protocol: TCP
+          port: 5572
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mediamtx-recording-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-mediamtx
+      app.kubernetes.io/component: media-plane
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: coturn-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-coturn
+      app.kubernetes.io/component: nat-traversal
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 3478
+        - protocol: UDP
+          port: 3478
+        - protocol: UDP
+          port: 49160
+          endPort: 49200
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9641
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: coturn-relay-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-coturn
+      app.kubernetes.io/component: nat-traversal
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32
+      ports:
+        - protocol: UDP

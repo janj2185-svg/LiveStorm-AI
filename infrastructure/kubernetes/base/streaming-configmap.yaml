@@ -1,0 +1,217 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sylora-streaming-config
+  labels:
+    app.kubernetes.io/name: sylora-streaming
+    app.kubernetes.io/component: media-plane
+data:
+  MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS: "127.0.0.1"
+  TURN_REALM: "sylora.local"
+  TURN_PUBLIC_IP: "127.0.0.1"
+  RECORDING_S3_PROVIDER: "Other"
+  RECORDING_S3_REGION: "us-east-1"
+  RECORDING_S3_BUCKET: "sylora-recordings"
+  RECORDING_S3_PREFIX: "streams"
+  RECORDING_UPLOAD_INTERVAL_SECONDS: "30"
+  mediamtx.yml: |
+    logLevel: info
+    logDestinations:
+      - stdout
+    readTimeout: 10s
+    writeTimeout: 10s
+    writeQueueSize: 1024
+
+    authMethod: internal
+    authInternalUsers:
+      - user: disabled-publisher-without-runtime-secret
+        pass: sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+        ips: []
+        permissions:
+          - action: publish
+            path:
+      - user: disabled-viewer-without-runtime-secret
+        pass: sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+        ips: []
+        permissions:
+          - action: read
+            path:
+          - action: playback
+            path:
+      - user: disabled-operator-without-runtime-secret
+        pass: sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+        ips: []
+        permissions:
+          - action: api
+      - user: any
+        pass:
+        ips: []
+        permissions:
+          - action: metrics
+
+    api: true
+    apiAddress: :9997
+    apiEncryption: false
+    apiAllowOrigins: []
+
+    metrics: true
+    metricsAddress: :9998
+    metricsEncryption: false
+
+    playback: true
+    playbackAddress: :9996
+    playbackEncryption: false
+    playbackAllowOrigins: []
+
+    rtsp: false
+
+    rtmp: true
+    rtmpAddress: :1935
+    rtmpEncryption: "no"
+
+    hls: true
+    hlsAddress: :8888
+    hlsEncryption: false
+    hlsVariant: lowLatency
+    hlsSegmentCount: 7
+    hlsSegmentDuration: 1s
+    hlsPartDuration: 200ms
+    hlsAllowOrigins: []
+
+    webrtc: true
+    webrtcAddress: :8889
+    webrtcEncryption: false
+    webrtcAllowOrigins: []
+    webrtcLocalUDPAddress: :8189
+    webrtcLocalTCPAddress: ""
+    webrtcIPsFromInterfaces: true
+    webrtcAdditionalHosts:
+      - 127.0.0.1
+    webrtcICEServers2:
+      - url: turn:127.0.0.1:3478?transport=udp
+        username: disabled-without-runtime-secret
+        password: disabled-without-runtime-secret
+        clientOnly: true
+
+    srt: true
+    srtAddress: :8890
+
+    pathDefaults:
+      source: publisher
+      overridePublisher: true
+      record: true
+      recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+      recordFormat: fmp4
+      recordPartDuration: 1s
+      recordMaxPartSize: 50M
+      recordSegmentDuration: 1m
+      recordDeleteAfter: 168h
+
+    paths:
+      all_others:
+  turnserver.conf: |
+    listening-port=3478
+    listening-ip=0.0.0.0
+    min-port=49160
+    max-port=49200
+    fingerprint
+    lt-cred-mech
+    stale-nonce=600
+    no-cli
+    no-tls
+    no-dtls
+    no-tcp-relay
+    no-multicast-peers
+    user-quota=4
+    total-quota=40
+    max-bps=20000000
+    bps-capacity=1000000000
+    prometheus
+    prometheus-address=0.0.0.0
+    prometheus-port=9641
+    prometheus-path=/metrics
+    log-file=stdout
+    simple-log
+  start-coturn.sh: |
+    #!/bin/sh
+    set -eu
+    : "${TURN_REALM:?TURN_REALM is required}"
+    : "${TURN_USERNAME:?TURN_USERNAME is required}"
+    : "${TURN_SECRET:?TURN_SECRET is required}"
+    : "${TURN_PUBLIC_IP:?TURN_PUBLIC_IP is required}"
+    case "${TURN_REALM}" in
+      *[!A-Za-z0-9.-]*)
+        echo "TURN_REALM must contain only letters, digits, dots, and hyphens" >&2
+        exit 64
+        ;;
+    esac
+    case "${TURN_USERNAME}" in
+      *[!A-Za-z0-9_.-]*)
+        echo "TURN_USERNAME must be URL-safe" >&2
+        exit 64
+        ;;
+    esac
+    case "${TURN_SECRET}" in
+      *[!A-Fa-f0-9]*)
+        echo "TURN_SECRET must be a hexadecimal value" >&2
+        exit 64
+        ;;
+    esac
+    case "${TURN_PUBLIC_IP}" in
+      *[!0-9.]*)
+        echo "TURN_PUBLIC_IP must be an IPv4 address" >&2
+        exit 64
+        ;;
+    esac
+    runtime_config=/tmp/turnserver.runtime.conf
+    cp /etc/coturn/turnserver.conf "${runtime_config}"
+    {
+      printf 'realm=%s\n' "${TURN_REALM}"
+      printf 'user=%s:%s\n' "${TURN_USERNAME}" "${TURN_SECRET}"
+      printf 'external-ip=%s\n' "${TURN_PUBLIC_IP}"
+    } >>"${runtime_config}"
+    chmod 600 "${runtime_config}"
+    exec /usr/bin/turnserver -c "${runtime_config}"
+  upload-recordings.sh: |
+    #!/bin/sh
+    set -eu
+    : "${RECORDING_S3_BUCKET:?RECORDING_S3_BUCKET is required}"
+    : "${UPLOAD_INTERVAL_SECONDS:=30}"
+    : "${RECORDING_S3_PREFIX:=streams}"
+    case "${UPLOAD_INTERVAL_SECONDS}" in
+      *[!0-9]* | 0)
+        echo "UPLOAD_INTERVAL_SECONDS must be a positive integer" >&2
+        exit 64
+        ;;
+    esac
+    rc_url=http://127.0.0.1:5572
+    rclone rcd \
+      --rc-addr=0.0.0.0:5572 \
+      --rc-no-auth \
+      --rc-enable-metrics \
+      --log-level=INFO &
+    rcd_pid=$!
+    shutdown() {
+      kill "${rcd_pid}" 2>/dev/null || true
+      wait "${rcd_pid}" 2>/dev/null || true
+    }
+    trap shutdown EXIT INT TERM
+    until rclone rc --url "${rc_url}" core/version >/dev/null 2>&1; do
+      if ! kill -0 "${rcd_pid}" 2>/dev/null; then
+        wait "${rcd_pid}"
+        exit $?
+      fi
+      sleep 1
+    done
+    while kill -0 "${rcd_pid}" 2>/dev/null; do
+      if ! rclone rc \
+        --url "${rc_url}" \
+        sync/copy \
+        srcFs=/recordings \
+        dstFs="recordings:${RECORDING_S3_BUCKET}/${RECORDING_S3_PREFIX}" \
+        '_filter={"MinAge":"2m"}'; then
+        echo "recording upload pass failed; files remain on persistent storage" >&2
+      fi
+      sleep "${UPLOAD_INTERVAL_SECONDS}"
+    done
+    wait "${rcd_pid}"

@@ -116,3 +116,137 @@ groups:
         annotations:
           summary: SYLORA Redis is unavailable
           description: The Redis exporter cannot connect to Redis.
+
+  - name: sylora-streaming
+    interval: 30s
+    rules:
+      - alert: SyloraMediaMTXUnavailable
+        expr: max(up{job="mediamtx"}) < 1 or absent(up{job="mediamtx"})
+        for: 2m
+        labels:
+          severity: critical
+          service: streaming
+        annotations:
+          summary: MediaMTX metrics are unavailable
+          description: Prometheus cannot scrape the MediaMTX media plane.
+
+      - alert: SyloraStreamPathUnavailable
+        expr: max(paths{job="mediamtx",state="notReady"}) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: streaming
+        annotations:
+          summary: A configured media path is unavailable
+          description: MediaMTX reports at least one path without an available source.
+
+      - alert: SyloraStreamingIngestDown
+        expr: sum(paths{job="mediamtx",state="ready"}) < 1 or absent(paths{job="mediamtx",state="ready"})
+        for: 5m
+        labels:
+          severity: warning
+          service: streaming
+        annotations:
+          summary: No live streaming ingest is active
+          description: MediaMTX has reported no ready publisher path for five minutes.
+
+      - alert: SyloraStreamingInboundBitrateLow
+        expr: |
+          (
+            sum(rate(paths_inbound_bytes{job="mediamtx",state="ready"}[2m])) * 8 < 100000
+          )
+          and
+          (
+            sum(paths{job="mediamtx",state="ready"}) > 0
+          )
+        for: 5m
+        labels:
+          severity: warning
+          service: streaming
+        annotations:
+          summary: Active ingest bitrate is anomalously low
+          description: At least one path is ready while aggregate inbound media is below 100 kbit/s.
+
+      - alert: SyloraStreamingInboundFrameErrors
+        expr: sum(increase(paths_inbound_frames_in_error{job="mediamtx"}[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: streaming
+        annotations:
+          summary: MediaMTX is receiving malformed frames
+          description: One or more inbound media frames failed validation in the last five minutes.
+
+      - alert: SyloraStreamingViewerSpike
+        expr: sum(paths_readers{job="mediamtx"}) > 200
+        for: 5m
+        labels:
+          severity: warning
+          service: streaming
+        annotations:
+          summary: Streaming viewer count exceeds the local capacity baseline
+          description: More than 200 readers have remained connected for five minutes.
+
+      - alert: SyloraStreamingViewerDrop
+        expr: |
+          (
+            sum(paths_readers{job="mediamtx"})
+            <
+            0.2 * max_over_time((sum(paths_readers{job="mediamtx"}))[30m:1m])
+          )
+          and
+          (
+            max_over_time((sum(paths_readers{job="mediamtx"}))[30m:1m]) > 10
+          )
+        for: 5m
+        labels:
+          severity: warning
+          service: streaming
+        annotations:
+          summary: Streaming viewer count dropped abruptly
+          description: Readers fell below 20% of the preceding 30-minute peak after a peak above ten.
+
+      - alert: SyloraRecordingUploaderUnavailable
+        expr: max(up{job="recording-uploader"}) < 1 or absent(up{job="recording-uploader"})
+        for: 5m
+        labels:
+          severity: critical
+          service: recording
+        annotations:
+          summary: Recording uploader metrics are unavailable
+          description: The rclone recording uploader cannot be scraped.
+
+      - alert: SyloraRecordingUploadFailure
+        expr: sum(increase(rclone_errors_total{job="recording-uploader"}[10m])) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: recording
+        annotations:
+          summary: Recording upload failed
+          description: rclone reported an object-storage transfer error; source segments remain on persistent storage.
+
+      - alert: SyloraRecordingVolumeLow
+        expr: |
+          (
+            kubelet_volume_stats_available_bytes{namespace="sylora",persistentvolumeclaim="sylora-mediamtx-recordings"}
+            /
+            kubelet_volume_stats_capacity_bytes{namespace="sylora",persistentvolumeclaim="sylora-mediamtx-recordings"}
+          ) < 0.10
+        for: 10m
+        labels:
+          severity: critical
+          service: recording
+        annotations:
+          summary: Recording persistent volume has less than 10% free
+          description: Upload lag or recording growth is close to exhausting the MediaMTX recording volume.
+
+      - alert: SyloraCoturnUnavailable
+        expr: max(up{job="coturn"}) < 1 or absent(up{job="coturn"})
+        for: 5m
+        labels:
+          severity: warning
+          service: streaming
+        annotations:
+          summary: Coturn metrics are unavailable
+          description: Prometheus cannot scrape the TURN/STUN service.

@@ -100,6 +100,8 @@ def api_factory(tmp_path: Path):
             for key in (
                 "ai_provider_registry",
                 "ai_job_dispatcher",
+                "live_adapter_registry",
+                "live_webhook_dispatcher",
                 "object_storage",
                 "payment_provider",
             )

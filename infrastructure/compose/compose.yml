@@ -218,8 +218,11 @@ services:
     environment:
       MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in infrastructure/.env}"
       MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in infrastructure/.env}"
+      RECORDING_S3_ACCESS_KEY_ID: "${RECORDING_S3_ACCESS_KEY_ID:?Set RECORDING_S3_ACCESS_KEY_ID in infrastructure/.env}"
+      RECORDING_S3_SECRET_ACCESS_KEY: "${RECORDING_S3_SECRET_ACCESS_KEY:?Set RECORDING_S3_SECRET_ACCESS_KEY in infrastructure/.env}"
     volumes:
       - ./minio/cors.json:/config/cors.json:ro
+      - ./minio/recordings-policy.json:/config/recordings-policy.json:ro
     entrypoint:
       - /bin/sh
       - -ec
@@ -228,9 +231,15 @@ services:
         mc mb --ignore-existing local/sylora-private
         mc mb --ignore-existing local/sylora-backups
         mc mb --ignore-existing local/milvus
+        mc mb --ignore-existing local/sylora-recordings
         mc anonymous set none local/sylora-private
         mc anonymous set none local/sylora-backups
         mc anonymous set none local/milvus
+        mc anonymous set none local/sylora-recordings
+        mc admin user add local "$${RECORDING_S3_ACCESS_KEY_ID}" "$${RECORDING_S3_SECRET_ACCESS_KEY}"
+        mc admin policy create local sylora-recordings-rw /config/recordings-policy.json
+        mc admin policy detach local sylora-recordings-rw --user "$${RECORDING_S3_ACCESS_KEY_ID}" >/dev/null 2>&1 || true
+        mc admin policy attach local sylora-recordings-rw --user "$${RECORDING_S3_ACCESS_KEY_ID}"
         mc cors set local/sylora-private /config/cors.json
         if mc ilm rule ls --json local/sylora-backups | grep -Eq '"id"[[:space:]]*:[[:space:]]*"backup-expiration-30d"'; then
           mc ilm rule edit --id backup-expiration-30d --expire-days 30 local/sylora-backups
@@ -437,6 +446,149 @@ services:
           cpus: "0.1"
           memory: 128m
 
+  mediamtx:
+    image: bluenviron/mediamtx:1.19.3-ffmpeg
+    environment:
+      MTX_AUTHINTERNALUSERS_0_USER: "${STREAM_PUBLISH_USERNAME:?Set STREAM_PUBLISH_USERNAME in infrastructure/.env}"
+      MTX_AUTHINTERNALUSERS_0_PASS: "${STREAM_PUBLISH_PASSWORD:?Set STREAM_PUBLISH_PASSWORD in infrastructure/.env}"
+      MTX_AUTHINTERNALUSERS_1_USER: "${STREAM_READ_USERNAME:?Set STREAM_READ_USERNAME in infrastructure/.env}"
+      MTX_AUTHINTERNALUSERS_1_PASS: "${STREAM_READ_PASSWORD:?Set STREAM_READ_PASSWORD in infrastructure/.env}"
+      MTX_AUTHINTERNALUSERS_2_USER: "${MEDIAMTX_API_USERNAME:?Set MEDIAMTX_API_USERNAME in infrastructure/.env}"
+      MTX_AUTHINTERNALUSERS_2_PASS: "${MEDIAMTX_API_PASSWORD:?Set MEDIAMTX_API_PASSWORD in infrastructure/.env}"
+      MTX_WEBRTCADDITIONALHOSTS: "${MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS:?Set MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS in infrastructure/.env}"
+      MTX_WEBRTCICESERVERS2_0_URL: "turn:${TURN_PUBLIC_HOST:?Set TURN_PUBLIC_HOST in infrastructure/.env}:3478?transport=udp"
+      MTX_WEBRTCICESERVERS2_0_USERNAME: "${TURN_USERNAME:?Set TURN_USERNAME in infrastructure/.env}"
+      MTX_WEBRTCICESERVERS2_0_PASSWORD: "${TURN_SECRET:?Set TURN_SECRET in infrastructure/.env}"
+    volumes:
+      - ../streaming/mediamtx.yml:/mediamtx.yml:ro
+      - mediamtx-recordings:/recordings
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "1935"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    ports:
+      - "127.0.0.1:1935:1935"
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:8889:8889"
+      - "127.0.0.1:9996:9996"
+      - "127.0.0.1:8189:8189/udp"
+      - "127.0.0.1:8890:8890/udp"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - application
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 2g
+        reservations:
+          cpus: "0.5"
+          memory: 256m
+
+  coturn:
+    image: coturn/coturn:4.16.0
+    entrypoint: ["/bin/sh", "/etc/coturn/start-coturn.sh"]
+    environment:
+      TURN_REALM: "${TURN_REALM:?Set TURN_REALM in infrastructure/.env}"
+      TURN_USERNAME: "${TURN_USERNAME:?Set TURN_USERNAME in infrastructure/.env}"
+      TURN_SECRET: "${TURN_SECRET:?Set TURN_SECRET in infrastructure/.env}"
+      TURN_PUBLIC_IP: "${TURN_PUBLIC_IP:?Set TURN_PUBLIC_IP in infrastructure/.env}"
+    volumes:
+      - ../streaming/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ../streaming/start-coturn.sh:/etc/coturn/start-coturn.sh:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9641/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    ports:
+      - "127.0.0.1:3478:3478/tcp"
+      - "127.0.0.1:3478:3478/udp"
+      - "127.0.0.1:49160-49200:49160-49200/udp"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 512m
+        reservations:
+          cpus: "0.1"
+          memory: 64m
+
+  recording-uploader:
+    image: rclone/rclone:1.74.4
+    entrypoint: ["/bin/sh", "/etc/sylora/upload-recordings.sh"]
+    environment:
+      RECORDING_S3_BUCKET: "${RECORDING_S3_BUCKET:?Set RECORDING_S3_BUCKET in infrastructure/.env}"
+      RECORDING_S3_PREFIX: "${RECORDING_S3_PREFIX:-streams}"
+      UPLOAD_INTERVAL_SECONDS: "${RECORDING_UPLOAD_INTERVAL_SECONDS:-30}"
+      RCLONE_CONFIG_RECORDINGS_TYPE: s3
+      RCLONE_CONFIG_RECORDINGS_PROVIDER: "${RECORDING_S3_PROVIDER:-Minio}"
+      RCLONE_CONFIG_RECORDINGS_ENV_AUTH: "false"
+      RCLONE_CONFIG_RECORDINGS_ACCESS_KEY_ID: "${RECORDING_S3_ACCESS_KEY_ID:?Set RECORDING_S3_ACCESS_KEY_ID in infrastructure/.env}"
+      RCLONE_CONFIG_RECORDINGS_SECRET_ACCESS_KEY: "${RECORDING_S3_SECRET_ACCESS_KEY:?Set RECORDING_S3_SECRET_ACCESS_KEY in infrastructure/.env}"
+      RCLONE_CONFIG_RECORDINGS_ENDPOINT: "${RECORDING_S3_ENDPOINT:?Set RECORDING_S3_ENDPOINT in infrastructure/.env}"
+      RCLONE_CONFIG_RECORDINGS_REGION: "${RECORDING_S3_REGION:-us-east-1}"
+      RCLONE_CONFIG_RECORDINGS_ACL: private
+    volumes:
+      - mediamtx-recordings:/recordings
+      - ../streaming/upload-recordings.sh:/etc/sylora/upload-recordings.sh:ro
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+      mediamtx:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "rclone", "rc", "--url", "http://127.0.0.1:5572", "core/version"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /config:size=16m,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - data
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
+        reservations:
+          cpus: "0.1"
+          memory: 64m
+
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.17.1
     profiles: ["observability"]
@@ -562,6 +714,12 @@ services:
     depends_on:
       api:
         condition: service_healthy
+      mediamtx:
+        condition: service_healthy
+      coturn:
+        condition: service_healthy
+      recording-uploader:
+        condition: service_healthy
     ports:
       - "127.0.0.1:9090:9090"
     restart: unless-stopped
@@ -617,6 +775,7 @@ volumes:
   mailpit-data:
   prometheus-data:
   grafana-data:
+  mediamtx-recordings:
 
 networks:
   edge:

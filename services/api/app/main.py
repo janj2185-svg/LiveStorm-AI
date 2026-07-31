@@ -24,6 +24,8 @@ from app.database import (
 from app.errors import install_exception_handlers
 from app.gift_service import GiftConnectionHub
 from app.ledger_service import FinancialOperationLockPool, seed_platform_accounts
+from app.live_adapters import AdapterRegistry
+from app.live_service import LiveEventHub
 from app.logging import configure_logging
 from app.middleware import (
     BodySizeLimitMiddleware,
@@ -40,6 +42,7 @@ from app.routers import (
     gifts,
     health,
     ledger,
+    live,
     messaging,
     oauth,
     social,
@@ -58,6 +61,8 @@ def create_app(
     object_storage: S3ObjectStorage | None = None,
     ai_provider_registry: ProviderRegistry | None = None,
     ai_job_dispatcher: Callable[[uuid.UUID], Awaitable[None]] | None = None,
+    live_adapter_registry: AdapterRegistry | None = None,
+    live_webhook_dispatcher: Callable[[uuid.UUID], Awaitable[None]] | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     resolved_engine = engine or create_engine(resolved_settings)
@@ -78,6 +83,15 @@ def create_app(
             celery_app.send_task,
             "sylora.ai.process_generation_job",
             args=[str(job_id)],
+        )
+
+    async def dispatch_live_webhook(delivery_id: uuid.UUID) -> None:
+        from app.celery_app import celery_app
+
+        await asyncio.to_thread(
+            celery_app.send_task,
+            "sylora.live.process_webhook",
+            args=[str(delivery_id)],
         )
 
     @asynccontextmanager
@@ -102,7 +116,7 @@ def create_app(
     configure_logging()
     app = FastAPI(
         title="SYLORA API",
-        summary="SYLORA identity, social, wallet, and gift platform API",
+        summary="SYLORA identity, social, wallet, AI, and live platform API",
         description=(
             "Production API foundation for SYLORA. Authentication uses bearer access "
             "tokens in the Authorization header; tokens are never stored in cookies, "
@@ -126,6 +140,10 @@ def create_app(
                 "name": "AI Brain",
                 "description": "Consent-gated provider-neutral assistant and generation",
             },
+            {
+                "name": "AI Live Hub",
+                "description": "Official live integrations and durable control plane",
+            },
             {"name": "Administration", "description": "Server-enforced RBAC"},
             {"name": "Operations", "description": "Health and telemetry"},
         ],
@@ -138,11 +156,18 @@ def create_app(
     app.state.message_hub = MessageConnectionHub()
     app.state.gift_hub = GiftConnectionHub()
     app.state.ai_event_hub = AIEventHub()
+    app.state.live_event_hub = LiveEventHub()
     app.state.financial_operation_locks = FinancialOperationLockPool()
     app.state.payment_provider = payment_provider or configured_payment_provider(resolved_settings)
     app.state.object_storage = object_storage or S3ObjectStorage(resolved_settings)
     app.state.ai_provider_registry = resolved_ai_registry
     app.state.ai_job_dispatcher = ai_job_dispatcher or dispatch_ai_job
+    app.state.live_adapter_registry = live_adapter_registry or AdapterRegistry(
+        resolved_settings
+    )
+    app.state.live_webhook_dispatcher = (
+        live_webhook_dispatcher or dispatch_live_webhook
+    )
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)
@@ -176,6 +201,9 @@ def create_app(
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
     app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
     app.include_router(ledger.router, prefix=resolved_settings.api_prefix)
+    app.include_router(live.router, prefix=resolved_settings.api_prefix)
+    app.include_router(live.admin_router, prefix=resolved_settings.api_prefix)
+    app.include_router(live.websocket_router, prefix=resolved_settings.api_prefix)
     app.include_router(gift_authoring.router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.admin_router, prefix=resolved_settings.api_prefix)

@@ -1,0 +1,102 @@
+logLevel: info
+logDestinations:
+  - stdout
+readTimeout: 10s
+writeTimeout: 10s
+writeQueueSize: 1024
+
+authMethod: internal
+authInternalUsers:
+  - user: disabled-publisher-without-runtime-secret
+    pass: sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    ips: []
+    permissions:
+      - action: publish
+        path:
+  - user: disabled-viewer-without-runtime-secret
+    pass: sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    ips: []
+    permissions:
+      - action: read
+        path:
+      - action: playback
+        path:
+  - user: disabled-operator-without-runtime-secret
+    pass: sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    ips: []
+    permissions:
+      - action: api
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: metrics
+
+api: true
+apiAddress: :9997
+apiEncryption: false
+apiAllowOrigins:
+  - http://localhost:*
+  - http://127.0.0.1:*
+
+metrics: true
+metricsAddress: :9998
+metricsEncryption: false
+
+playback: true
+playbackAddress: :9996
+playbackEncryption: false
+playbackAllowOrigins:
+  - http://localhost:*
+  - http://127.0.0.1:*
+
+rtsp: false
+
+rtmp: true
+rtmpAddress: :1935
+rtmpEncryption: "no"
+
+hls: true
+hlsAddress: :8888
+hlsEncryption: false
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsAllowOrigins:
+  - http://localhost:*
+  - http://127.0.0.1:*
+
+webrtc: true
+webrtcAddress: :8889
+webrtcEncryption: false
+webrtcAllowOrigins:
+  - http://localhost:*
+  - http://127.0.0.1:*
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ""
+webrtcIPsFromInterfaces: true
+webrtcAdditionalHosts:
+  - 127.0.0.1
+webrtcICEServers2:
+  - url: turn:127.0.0.1:3478?transport=udp
+    username: disabled-without-runtime-secret
+    password: disabled-without-runtime-secret
+    clientOnly: true
+
+srt: true
+srtAddress: :8890
+
+pathDefaults:
+  source: publisher
+  overridePublisher: true
+  record: true
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordPartDuration: 1s
+  recordMaxPartSize: 50M
+  recordSegmentDuration: 1m
+  recordDeleteAfter: 168h
+
+paths:
+  all_others:

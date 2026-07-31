@@ -12,6 +12,7 @@ from app.audit import add_audit_event
 from app.config import Settings
 from app.dependencies import AuthContext, current_auth, get_session, get_settings, has_permission
 from app.errors import APIError
+from app.live_service import scrub_live_user_records
 from app.models import (
     AccessSession,
     AccountSettings,
@@ -294,5 +295,6 @@ async def delete_own_account(
         )
     )
     await scrub_ai_user_records(db, user.id, settings)
+    await scrub_live_user_records(db, user.id, settings)
     await db.commit()
     return MessageResponse(status="deleted")

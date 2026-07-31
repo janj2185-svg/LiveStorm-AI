@@ -1,10 +1,12 @@
 # SYLORA infrastructure
 
 This directory defines the local dependency stack, application image,
-Kubernetes deployment, observability, backup tooling, and CI/CD templates.
-Local Compose is for development only. Production uses managed stateful
-services; the Kubernetes manifests intentionally deploy only the API, Celery
-workers, Celery beat, and a migration Job.
+Kubernetes deployment, local streaming media plane, observability, backup
+tooling, and CI/CD templates. Local Compose is for development only.
+Production uses managed stateful services. Kubernetes includes the API workers
+plus a deliberately single-replica MediaMTX recording origin and Coturn
+foundation; production media routing constraints are documented rather than
+hidden behind unsafe replica counts.
 
 ## Prerequisites
 
@@ -72,7 +74,10 @@ docker compose \
 
 The observability profile is optional because cAdvisor requires privileged host
 mounts and is Docker-specific. All stateful application dependencies remain in
-the default profile.
+the default profile. MediaMTX, Coturn, persistent fMP4 recording, and the
+S3-compatible recording uploader are also in the default profile. Detailed OBS,
+WHIP/WHEP, SRT, TURN, codec, and test guidance is in
+`streaming/README.md`.
 
 Stop services without deleting data:
 
@@ -105,11 +110,25 @@ All published ports bind to loopback.
 | Mailpit UI | `http://127.0.0.1:8025` | No local authentication |
 | Prometheus | `http://127.0.0.1:9090` | Local profile only |
 | Grafana | `http://127.0.0.1:3001` | `.env` admin credentials |
+| RTMP ingest | `rtmp://127.0.0.1:1935` | `.env` publisher credentials |
+| LL-HLS | `http://127.0.0.1:8888` | `.env` viewer credentials |
+| WHIP/WHEP signaling | `http://127.0.0.1:8889` | `.env` publisher/viewer credentials |
+| WebRTC ICE | `127.0.0.1:8189/udp` | DTLS/ICE session |
+| SRT | `127.0.0.1:8890/udp` | `.env` publisher/viewer credentials |
+| Recording playback | `http://127.0.0.1:9996` | `.env` viewer credentials |
+| TURN/STUN | `127.0.0.1:3478` TCP/UDP | `.env` realm/user/secret |
+| TURN relay | `127.0.0.1:49160-49200/udp` | Allocated through TURN |
 
 Kafka's `INTERNAL` listener is used by containers and its `HOST` listener by
 host tools. Elasticsearch security is enabled, but HTTP TLS and Kafka transport
 encryption are deliberately omitted from this loopback-only local stack. They
 are not production settings.
+
+The MediaMTX control API (`9997`), MediaMTX metrics (`9998`), Coturn metrics
+(`9641`), and recording-uploader metrics (`5572`) are internal container
+endpoints and are not published to the host. Local HLS and WebRTC signaling use
+HTTP explicitly; production requires trusted TLS termination. No extra edge
+proxy is needed for loopback development.
 
 The MinIO image is pinned to the last publicly distributed official community
 container used by this stack. Scan it continuously and replace it with an
@@ -133,7 +152,9 @@ curl --fail http://127.0.0.1:9090/-/ready
 Dependency-aware startup waits for PostgreSQL, Redis, Kafka, Elasticsearch,
 MinIO initialization, etcd, and Milvus health before starting the application
 processes. MinIO initialization creates private buckets, applies CORS to the
-application bucket, and applies 30-day local backup expiration.
+application bucket, creates the private recording bucket, and applies 30-day
+local backup expiration. It also creates or rotates the dedicated recording
+uploader identity and limits that identity to the recording bucket.
 
 Linux hosts may need `vm.max_map_count=262144` for Elasticsearch. cAdvisor
 mounts Docker-specific host paths and may need adjustments under rootless
@@ -161,12 +182,17 @@ Production requires:
 - an ingress controller and TLS issuer;
 - Metrics Server for HPA;
 - a pre-provisioned `sylora-api-secrets`;
+- a pre-provisioned `sylora-streaming-secrets`;
+- static public media/TURN addresses and provider-specific UDP load balancing;
+- path-aware routing before MediaMTX is allowed to scale above one replica;
+- a recording StorageClass with snapshots and measured capacity;
 - an OpenTelemetry Collector when OTLP export is enabled;
 - a CNI implementation that enforces NetworkPolicy.
 
-`base/servicemonitor.yaml` is optional. Add it to the kustomization only when
-the Prometheus Operator CRD exists. Stateful systems are deliberately absent;
-single-node manifests would present false production resilience.
+`base/servicemonitor.yaml` and `base/streaming-servicemonitor.yaml` are
+optional. Add them only when the Prometheus Operator CRD exists. The streaming
+StatefulSet and HPA are intentionally capped at one origin; see
+`kubernetes/overlays/production/STREAMING.md` before changing this.
 
 The migration Job is applied with each release. Migrations must preserve
 compatibility with the previous application version during a rolling update.
@@ -194,6 +220,8 @@ repository, workflow, branch, and GitHub Environment before first use.
   boundaries.
 - `docs/OBSERVABILITY.md` defines metrics, structured logging, tracing, and
   alert-routing contracts.
+- `streaming/OBS_COMPANION.md` defines the signed outbound local companion
+  boundary for OBS WebSocket 5.x control.
 - `scripts/backup-postgres.sh`, `restore-postgres.sh`, and
   `verify-backup.sh` operate entirely from injected environment credentials.
 
@@ -210,6 +238,8 @@ kubectl kustomize infrastructure/kubernetes/overlays/production >/dev/null
 
 Docker is not installed in the current implementation runner. Compose image
 pulls, builds, container health checks, application startup, Prometheus
-`promtool`, Kubernetes API dry runs, migrations, backup/restore operations, and
-end-to-end smoke tests were therefore not executed there. CI performs the
-container-backed validations once the backend build context exists.
+`promtool`, MediaMTX/Coturn/rclone runtime checks, media ingest/playback,
+WebRTC/TURN traversal, Kubernetes API dry runs, migrations, backup/restore
+operations, and end-to-end smoke tests were therefore not executed there. CI
+performs the container-backed manifest validations once the backend build
+context exists.

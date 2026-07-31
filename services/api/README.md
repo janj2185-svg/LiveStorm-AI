@@ -3,7 +3,7 @@
 FastAPI modular-monolith foundation for SYLORA identity, account security, RBAC,
 profiles, first-party social networking, persisted messaging, an immutable
 wallet ledger, versioned gift authoring, catalog, inventory, and delivery, and
-the consent-gated provider-neutral SYLORA AI Brain.
+the consent-gated provider-neutral SYLORA AI Brain and AI Live Hub.
 PostgreSQL and Redis are required at runtime.
 SQLite is accepted only when `ENVIRONMENT=test`.
 
@@ -330,6 +330,126 @@ The optional live AI event hub is bounded and process-local. `AIEvent` rows and
 signed cursors provide replay, but multi-replica live fan-out still requires
 Redis Streams, Kafka, or equivalent committed-event transport and consumer
 recovery.
+
+## SYLORA AI Live Hub
+
+Migration `20260731_0005_ai_live_hub` adds the official-integration and
+live-control schema. Connections contain encrypted access, refresh, webhook,
+and OBS credentials; explicit scopes; external account/channel identifiers;
+health state; and verified capabilities. API responses expose only
+credential-configured booleans. Capability snapshots record what an adapter
+fetched and verified at a point in time. A platform name never enables a
+capability.
+
+Live sessions persist their state machine, owner/workspace, title/language,
+moderation and AI modes, recording preference, random ingest path, and only a
+SHA-256 stream-key hash. The raw key is returned once on session creation or
+rotation. `GET /v1/live/sessions/{id}/stream-key` deliberately returns
+`410 live_stream_key_not_recoverable`. Destinations persist independently
+verified publish/chat/event/moderation/analytics switches, external broadcast
+IDs, bounded exponential reconnect state, and terminal manual-intervention
+errors.
+
+The durable event and action model includes:
+
+- ordered `LiveNormalizedEvent` rows with per-session sequence numbers and
+  per-connection provider-event deduplication;
+- `AILivePersona`, strict-schema `AILiveRule`, consent-gated `AILiveTurn`, and
+  existing AI Brain conversation/message/job references;
+- non-binding `LiveModerationDecision` recommendations, consent/retention
+  records for platform-local viewer memory, and no cross-platform identity
+  merge without a verified link;
+- idempotent `LiveAction` commands and append-only state transitions, with only
+  a hash of the official API response reference;
+- durable `LiveEvent` replay/outbox rows and verified webhook deliveries; and
+- deterministic quiz/game sessions, questions, one answer per platform
+  participant, and persisted scores.
+
+PostgreSQL triggers reject update/delete of normalized events, moderation
+decisions, action transitions, and replay events. Live action commands cannot
+be deleted and their target, type, idempotency key, and typed payload cannot be
+changed; state changes append a transition row. Account deletion revokes and
+scrubs credentials, external IDs, stream keys, personas, rules, and viewer
+memory while retaining pseudonymized operational event/action audit.
+
+### Official adapter matrix
+
+| Platform | Implemented official mechanism | Capability and exact limitation |
+| --- | --- | --- |
+| YouTube | Data API v3 and Live Streaming API over bounded `httpx`; OAuth 2.0 authorization code + PKCE; `liveChatMessages.list/insert`; `liveBroadcasts` create/transition | Chat, events/analytics metadata, and broadcast-control capabilities are granted only after token/channel/scope verification. This API does not push media to YouTube and does not claim a `publish` capability. Quota and permission errors remain explicit. |
+| Twitch | Helix over bounded `httpx`; signed EventSub webhook; official EventSub WebSocket over `websockets` | Chat read/send, EventSub events, analytics, message deletion, and timeout are scope-gated. Twitch has no Helix “create broadcast” operation; video starts through Twitch ingest outside this API, so no video-publish capability is claimed. |
+| Discord | Bot REST, Gateway v10, and Ed25519-verified Interactions | Channel visibility and effective guild role/channel overwrites are resolved before chat/moderation capabilities are granted. Discord is chat/events only and is never represented as a video destination. Automatic ban is forbidden. |
+| OBS Studio | obs-websocket 5.x over `websockets`, including official challenge authentication | Scene switching, source visibility, stream status/start/stop, and record status/start/stop. The endpoint must match the deployment allowlist; plaintext `ws://` is accepted only for an allowlisted loopback/private local companion. |
+| MediaMTX | Deployment-configured Control API v3 over bounded `httpx` | First-party RTMP/WebRTC path provisioning, health, random key rotation, and path removal. The control URL is deployment settings only and must be HTTPS in production. FastAPI does not transcode, relay, package, or render media. |
+| Plugin SDK | Ed25519-signed schema `1.0` manifest, allowlisted HTTPS callback/webhook hosts, secret/OAuth references, HMAC webhook, and idempotent HTTPS action callbacks | Only signed declared capabilities are considered, followed by callback health verification. No plugin code loads or executes in the API process. |
+| TikTok, Kick, Facebook, Instagram | Capability descriptor only | Status is `requires_provider_review`. No scraping, reverse-engineered WebSocket, browser automation, unofficial endpoint, synthetic event, or simulated success exists. A deployment must inject a real approved official adapter with explicit endpoints, scopes, and capability grants. |
+
+No external integration in this repository was live-verified without real
+credentials, the applicable platform approval, and the deployment's
+Docker/media plane. Adapter presence is not evidence that a customer account,
+scope, quota, channel permission, OBS companion, MediaMTX instance, or plugin
+endpoint is available. Unconfigured dependencies return explicit
+unavailable/degraded status.
+
+### Live API and processing
+
+Creators receive `live:manage` and `live:integrations:manage` for owned
+resources. Moderators receive `live:moderate`; admins receive all live
+permissions, including `live:admin`. Principal APIs are:
+
+- `/v1/live/integrations` for connection list/detail, connect, official OAuth
+  start/callback, health/capability snapshots, and credential-scrubbing
+  disconnect;
+- `/v1/live/sessions` for create/configuration, destinations, preflight,
+  start/reconnect/end, status, and one-time stream-key rotation;
+- `/v1/live/personas` and `/v1/live/rules` CRUD, including explicit active and
+  enabled switches;
+- signed-cursor session event, action, moderation, and AI-turn history, plus
+  action approval/execution;
+- `/v1/live/games` create/start/answer/score/end with server-side deterministic
+  scoring;
+- `/v1/live/webhooks/{platform}/{connection_id}`, which verifies the untouched
+  body before deduplicating and durably queueing normalization; and
+- `/v1/admin/live/platforms` and `/v1/admin/live/integrations`, which never
+  expose secrets.
+
+Preflight rechecks the deployment MediaMTX path and every enabled destination
+capability and health endpoint. Start is rejected unless all required checks
+pass. Permission revocations are terminal and are not retried forever.
+Transient connection/action failures use bounded exponential backoff with
+jitter and a maximum retry count. Celery beat schedules token refresh,
+connection health, and destination reconnect tasks; verified webhook delivery
+processing is a separate durable Celery task.
+
+Rule conditions use a bounded typed tree (`all`, `any`, `not`, and allowlisted
+comparisons) with no `eval`, arbitrary expressions, or executable code. Rules
+respect cooldown, rate, and event/rule idempotency. Medium/high/critical,
+moderation, OBS scene, and custom-tool rules require human approval. Autopilot
+can bypass approval only for an explicitly enabled low-risk rule. Moderation
+providers produce recommendations. A narrowly configured policy may queue
+only a high-confidence message deletion or timeout; it never automatically
+bans.
+
+Live AI responses use the existing consent, quota, provider, citation,
+conversation, tool, generation-job, and S3 boundaries. A persona references a
+published prompt key/version rather than storing a raw prompt. Language is
+taken from verified platform metadata or an explicitly configured provider;
+the service never invents detection or translation. Voice creates a real
+existing AI Brain voice job; text fallback occurs only when the rule explicitly
+allows it and a chat destination exists. With missing consent/provider/S3/voice
+capability the turn records an explicit unavailable code.
+
+First-party `GiftEvent` delivery can normalize to a `custom` live event for
+overlay/rule handling. It never becomes an external donation and never mints
+credits. External platform donation/gift amounts remain external normalized
+events and do not enter the SYLORA ledger.
+
+`/v1/ws/live/{session_id}` authenticates only by bearer header, authorizes only
+the requested owned/admin session, replays committed `LiveEvent` rows from a
+signed cursor, sends heartbeats, and uses a bounded queue. Its fan-out is
+process-local. Multi-replica deployments still require Redis Streams, Kafka,
+or equivalent committed-event fan-out and recovery; arbitrary socket
+subscriptions are not accepted.
 
 ## Security model
 

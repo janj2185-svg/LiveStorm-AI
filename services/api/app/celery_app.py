@@ -4,12 +4,22 @@ import asyncio
 import uuid
 
 from celery import Celery
+from sqlalchemy import select
 
 from app.ai_providers import ProviderRegistry
 from app.ai_service import process_generation_job
 from app.config import get_settings
 from app.database import create_engine, create_session_factory
 from app.email import drain_outbox
+from app.live_adapters import AdapterRegistry
+from app.live_models import LiveSession, LiveSessionState
+from app.live_service import (
+    check_connection_health,
+    process_webhook_delivery,
+    reconcile_live_voice_turns,
+    reconnect_session,
+    refresh_due_connections,
+)
 from app.storage import S3ObjectStorage
 
 settings = get_settings()
@@ -34,7 +44,27 @@ celery_app.conf.update(
             "task": "sylora.email.drain_outbox",
             "schedule": 30.0,
             "options": {"expires": 25},
-        }
+        },
+        "live-refresh-integration-tokens": {
+            "task": "sylora.live.refresh_tokens",
+            "schedule": 300.0,
+            "options": {"expires": 240},
+        },
+        "live-integration-health": {
+            "task": "sylora.live.health",
+            "schedule": 120.0,
+            "options": {"expires": 100},
+        },
+        "live-reconnect-destinations": {
+            "task": "sylora.live.reconnect",
+            "schedule": 30.0,
+            "options": {"expires": 25},
+        },
+        "live-reconcile-voice-turns": {
+            "task": "sylora.live.reconcile_voice",
+            "schedule": 15.0,
+            "options": {"expires": 12},
+        },
     },
 )
 
@@ -107,3 +137,106 @@ def process_ai_generation_job(job_id: str) -> dict[str, str | int]:
             countdown=10,
         )
     return result
+
+
+async def _process_live_webhook(delivery_id: uuid.UUID) -> dict[str, str | int]:
+    engine = create_engine(settings)
+    try:
+        async with create_session_factory(engine)() as session:
+            records = await process_webhook_delivery(session, delivery_id)
+            return {"delivery_id": str(delivery_id), "events": len(records)}
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(
+    name="sylora.live.process_webhook",
+    autoretry_for=(ConnectionError, TimeoutError),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    retry_jitter=True,
+    max_retries=5,
+)
+def process_live_webhook(delivery_id: str) -> dict[str, str | int]:
+    """Process a verified, deduplicated official integration webhook."""
+    return asyncio.run(_process_live_webhook(uuid.UUID(delivery_id)))
+
+
+async def _refresh_live_tokens() -> dict[str, int]:
+    engine = create_engine(settings)
+    try:
+        async with create_session_factory(engine)() as session:
+            return await refresh_due_connections(
+                session, AdapterRegistry(settings), settings
+            )
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="sylora.live.refresh_tokens")
+def refresh_live_tokens() -> dict[str, int]:
+    return asyncio.run(_refresh_live_tokens())
+
+
+async def _check_live_health() -> dict[str, int]:
+    engine = create_engine(settings)
+    try:
+        async with create_session_factory(engine)() as session:
+            return await check_connection_health(
+                session, AdapterRegistry(settings), settings
+            )
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="sylora.live.health")
+def check_live_health() -> dict[str, int]:
+    return asyncio.run(_check_live_health())
+
+
+async def _reconnect_live_sessions() -> dict[str, int]:
+    engine = create_engine(settings)
+    reconnected = 0
+    pending = 0
+    try:
+        registry = AdapterRegistry(settings)
+        async with create_session_factory(engine)() as session:
+            records = list(
+                (
+                    await session.scalars(
+                        select(LiveSession).where(
+                            LiveSession.state == LiveSessionState.reconnecting
+                        )
+                    )
+                ).all()
+            )
+            for record in records:
+                result = await reconnect_session(
+                    session, registry, settings, record
+                )
+                if result.state == LiveSessionState.live:
+                    reconnected += 1
+                else:
+                    pending += 1
+        return {"reconnected": reconnected, "pending": pending}
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="sylora.live.reconnect")
+def reconnect_live_sessions() -> dict[str, int]:
+    return asyncio.run(_reconnect_live_sessions())
+
+
+async def _reconcile_live_voice() -> dict[str, int]:
+    engine = create_engine(settings)
+    try:
+        async with create_session_factory(engine)() as session:
+            return await reconcile_live_voice_turns(session)
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="sylora.live.reconcile_voice")
+def reconcile_live_voice() -> dict[str, int]:
+    return asyncio.run(_reconcile_live_voice())

@@ -1,0 +1,27 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sylora-mediamtx
+  labels:
+    app.kubernetes.io/name: sylora-mediamtx
+spec:
+  maxUnavailable: 0
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-mediamtx
+      app.kubernetes.io/component: media-plane
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sylora-coturn
+  labels:
+    app.kubernetes.io/name: sylora-coturn
+spec:
+  maxUnavailable: 0
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sylora-coturn
+      app.kubernetes.io/component: nat-traversal

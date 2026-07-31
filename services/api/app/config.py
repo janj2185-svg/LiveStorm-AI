@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     ai_chat_rate_limit: int = Field(default=30, ge=1, le=1000)
     ai_generation_rate_limit: int = Field(default=10, ge=1, le=1000)
     ai_tool_rate_limit: int = Field(default=30, ge=1, le=1000)
+    live_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
+    live_manage_rate_limit: int = Field(default=60, ge=1, le=5000)
+    live_webhook_rate_limit: int = Field(default=600, ge=1, le=100_000)
     ip_hash_key: SecretStr | None = None
 
     s3_endpoint_url: str | None = None
@@ -70,6 +73,22 @@ class Settings(BaseSettings):
     s3_access_key_id: str | None = None
     s3_secret_access_key: SecretStr | None = None
     s3_presign_seconds: int = Field(default=900, ge=60, le=3600)
+
+    youtube_client_id: str | None = None
+    youtube_client_secret: SecretStr | None = None
+    youtube_redirect_uri: str | None = None
+    twitch_client_id: str | None = None
+    twitch_client_secret: SecretStr | None = None
+    twitch_redirect_uri: str | None = None
+    discord_application_id: str | None = None
+    mediamtx_control_url: str | None = None
+    mediamtx_control_username: str | None = None
+    mediamtx_control_password: SecretStr | None = None
+    live_obs_allowed_hosts: list[str] = Field(
+        default_factory=lambda: ["127.0.0.1", "::1", "localhost"]
+    )
+    live_plugin_allowed_hosts: list[str] = Field(default_factory=list)
+    live_plugin_signing_keys: dict[str, str] = Field(default_factory=dict)
 
     smtp_host: str | None = None
     smtp_port: int = Field(default=587, ge=1, le=65535)
@@ -102,6 +121,32 @@ class Settings(BaseSettings):
             raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")
         if bool(self.smtp_username) != bool(self.smtp_password):
             raise ValueError("SMTP_USERNAME and SMTP_PASSWORD must be configured together")
+        if bool(self.youtube_client_id) != bool(self.youtube_client_secret):
+            raise ValueError(
+                "YOUTUBE_CLIENT_ID and YOUTUBE_CLIENT_SECRET must be configured together"
+            )
+        if bool(self.twitch_client_id) != bool(self.twitch_client_secret):
+            raise ValueError(
+                "TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET must be configured together"
+            )
+        if bool(self.mediamtx_control_username) != bool(self.mediamtx_control_password):
+            raise ValueError(
+                "MEDIAMTX_CONTROL_USERNAME and MEDIAMTX_CONTROL_PASSWORD "
+                "must be configured together"
+            )
+        if (
+            self.mediamtx_control_url
+            and self.environment == "production"
+            and not self.mediamtx_control_url.startswith("https://")
+        ):
+            raise ValueError("production MEDIAMTX_CONTROL_URL must use HTTPS")
+        for redirect_uri in (self.youtube_redirect_uri, self.twitch_redirect_uri):
+            if (
+                redirect_uri
+                and self.environment == "production"
+                and not redirect_uri.startswith("https://")
+            ):
+                raise ValueError("production live OAuth redirect URIs must use HTTPS")
 
         if self.environment == "production":
             if not self.database_url.startswith("postgresql+asyncpg://"):

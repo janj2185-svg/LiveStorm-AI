@@ -2,23 +2,27 @@
 
 ## Buckets and access
 
-The local initializer creates private `sylora-private`, `sylora-backups`, and
-`milvus` buckets. Production should use separate managed buckets and identities
-for application objects, database backups, and Milvus. Deny public access at
-the account and bucket layers. Grant the API only object-level access to its
-application prefix; grant the backup principal write/list/delete access only to
-the backup prefix. Enable versioning, server-side encryption, access logging,
-and object-lock retention where policy requires it.
+The local initializer creates private `sylora-private`, `sylora-backups`,
+`sylora-recordings`, and `milvus` buckets. Production should use separate
+managed buckets and identities for application objects, database backups,
+stream recordings, and Milvus. Deny public access at the account and bucket
+layers. Grant the API only object-level access to its application prefix;
+grant the backup principal write/list/delete access only to the backup prefix;
+grant the recording uploader multipart/read/write access only to the
+recording bucket and configured prefix. Enable versioning, server-side
+encryption, access logging, and object-lock retention where policy requires it.
 
 ## Inventory
 
-Enable the provider's native S3 Inventory for application and backup buckets.
+Enable the provider's native S3 Inventory for application, backup, and
+recording buckets.
 Deliver daily CSV or Parquet reports to a dedicated audit bucket in a different
 account or project. Include object size, ETag, encryption status, version ID,
 replication status, and object-lock status. Alert when:
 
 - an application or backup object is unencrypted;
 - a current backup has not replicated within the RPO;
+- a completed recording has not uploaded within the streaming recovery window;
 - inventory delivery is more than 36 hours old;
 - delete markers or non-current versions grow unexpectedly.
 
@@ -48,9 +52,12 @@ replication topology.
 
 ## Lifecycle
 
-The local backup bucket expires objects after 30 days. In production, manage
+The local backup bucket expires objects after 30 days. The local recording
+bucket has no automatic object lifecycle; local disk segments remain available
+for seven days while the uploader copies completed segments. In production, manage
 lifecycle as provider infrastructure so retention cannot silently diverge from
 policy. Keep enough daily, weekly, and monthly restore points to satisfy the
-documented RPO and legal requirements. Ensure lifecycle applies to payload and
+documented RPO and legal requirements. Define recording retention from tenant,
+privacy, and legal-hold policy. Ensure backup lifecycle applies to payload and
 `.sha256` objects together. Object-lock retention takes precedence over
 deletion attempted by the backup script.
