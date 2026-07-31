@@ -314,6 +314,18 @@ export function Donut({
         })}
       </svg>
       {centre && <div className="sy-donut__centre">{centre}</div>}
+      {/* The same data as text, so the breakdown is not sighted-only. */}
+      <table className="sy-sr-only">
+        <caption>Breakdown</caption>
+        <tbody>
+          {segments.map((segment) => (
+            <tr key={segment.label}>
+              <th scope="row">{segment.label}</th>
+              <td>{((segment.value / total) * 100).toFixed(1)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

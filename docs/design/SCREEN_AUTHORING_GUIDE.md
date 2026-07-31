@@ -209,22 +209,45 @@ From `../../design-system/brand/Logo`:
 .sy-list-row
 ```
 
-Breakpoints used inside `@container screen (...)`: **640**, **768**, **1024**,
-**1280**.
-
 ---
 
 ## 7. Responsive expectations
 
-Every screen must be correct at all of these container widths:
+**Screens respond to their content column, not to the device.** The shell takes
+its chrome out first, and how much it takes depends on whether the screen
+supplies a `contextPanel`:
 
-| Width | Posture | What must be true |
+| Device | Frame | Column, no context panel | Column, with context panel |
+|---|---|---|---|
+| iPhone | 393 | 393 | 393 |
+| Android | 412 | 412 | 412 |
+| Tablet | 834 | 758 | 758 |
+| Web | 1280 | 1016 | **676** |
+| Desktop | 1512 | 1248 | 908 |
+
+The rail costs 76px collapsed and 264px expanded; the context panel costs
+340px and only appears in the expanded posture.
+
+Two traps this creates:
+
+- With a context panel, **web at 1280 is narrower than tablet at 834**. 676px
+  is the tightest multi-column case in the product.
+- **Device-shaped numbers do not work.** `min-width: 768px` never fires on the
+  tablet's 758px column. `min-width: 1024px` never fires at web when a context
+  panel is present.
+
+Use these thresholds instead, which sit either side of the real widths rather
+than on top of them:
+
+| Threshold | Fires at | Use for |
 |---|---|---|
-| 393 | compact | Single column. Nothing clipped. Tap targets ≥ 44px. Bottom 84px is reserved for the floating tab bar. |
-| 412 | compact | Same, 19px wider — nothing may be pinned to a fixed width. |
-| 834 | medium | Two columns where it helps. Icon rail is visible, so the screen has ~758px. |
-| 1280 | expanded | Rail + content + context panel. The screen gets ~676px — the tightest expanded case, and the easiest to break. |
-| 1512 | expanded | Full layout. Content still capped by `--sy-grid-max`; do not let text run to 200 characters. |
+| `560` | 758, 1016, 1248 (and 676/908 with panel) | Two columns, denser padding, retiring in-screen search |
+| `840` | 1016, 1248, 908 | Three columns, wider gaps |
+| `880` | 1016, 1248, 908 | Sidebar layouts |
+
+Every screen must hold at **393**, **758**, **676** and **1248**. Nothing may
+be pinned to a fixed width, tap targets stay at or above 44px, and the bottom
+84px of the compact posture is reserved for the floating tab bar.
 
 ---
 

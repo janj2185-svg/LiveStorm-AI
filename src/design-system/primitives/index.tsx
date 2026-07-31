@@ -314,9 +314,15 @@ export function Badge({
 
 /**
  * Live badge.
+ *
  * The pulsing dot is the product's most repeated signal, so it gets a
  * dedicated component: one implementation, one timing, one reduced-motion
  * fallback. The dot is `aria-hidden` and the word LIVE carries the meaning.
+ *
+ * Deliberately crimson rather than the flux family that `tone="live"` resolves
+ * to. Flux marks realtime *state* — presence, sync, connection health — while
+ * a red record light is a fifty-year-old convention that viewers read without
+ * decoding. Fighting that convention would cost recognition and buy nothing.
  */
 export function LiveBadge({ label = 'LIVE', viewers }: { label?: string; viewers?: string }) {
   return (
@@ -352,30 +358,49 @@ export function Chip({
   children,
   ...rest
 }: ChipProps) {
-  return (
-    <button
-      type="button"
-      className={cx('sy-chip', selected && 'is-selected', `sy-tone-${tone}`, className)}
-      aria-pressed={selected}
-      {...rest}
-    >
+  const body = (
+    <>
       {icon && <Icon name={icon} size={14} />}
       <span>{children}</span>
-      {onRemove && (
-        <span
-          className="sy-chip__remove"
-          role="button"
-          tabIndex={-1}
-          aria-label={removeLabel ?? (typeof children === 'string' ? `Remove ${children}` : 'Remove')}
-          onClick={(event) => {
-            event.stopPropagation();
-            onRemove();
-          }}
-        >
-          <Icon name="close" size={12} />
-        </span>
-      )}
-    </button>
+    </>
+  );
+
+  if (!onRemove) {
+    return (
+      <button
+        type="button"
+        className={cx('sy-chip', selected && 'is-selected', `sy-tone-${tone}`, className)}
+        aria-pressed={selected}
+        {...rest}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  /*
+    A removable chip is two controls, so it is two buttons inside a shared
+    pill rather than a button nested in a button. Nesting is invalid HTML and
+    forces the inner control out of the tab order, which leaves keyboard users
+    with no way to remove anything.
+  */
+  return (
+    <span className={cx('sy-chip', 'sy-chip--removable', selected && 'is-selected', `sy-tone-${tone}`, className)}>
+      <button type="button" className="sy-chip__main" aria-pressed={selected} {...rest}>
+        {body}
+      </button>
+      <button
+        type="button"
+        className="sy-chip__remove"
+        aria-label={removeLabel ?? (typeof children === 'string' ? `Remove ${children}` : 'Remove')}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRemove();
+        }}
+      >
+        <Icon name="close" size={12} />
+      </button>
+    </span>
   );
 }
 
@@ -898,11 +923,22 @@ export function Stat({
   );
 }
 
+/**
+ * Tooltip.
+ *
+ * The tip is associated with its trigger via `aria-describedby`, so assistive
+ * technology announces it. A `role="tooltip"` element that nothing references
+ * is invisible to screen readers — a very common and very quiet failure.
+ *
+ * A tooltip never carries information that exists nowhere else. It supplements;
+ * it does not inform.
+ */
 export function Tooltip({ label, children }: { label: string; children: ReactNode }) {
+  const id = useId();
   return (
-    <span className="sy-tooltip-wrap">
+    <span className="sy-tooltip-wrap" aria-describedby={id}>
       {children}
-      <span className="sy-tooltip" role="tooltip">
+      <span className="sy-tooltip" role="tooltip" id={id}>
         {label}
       </span>
     </span>

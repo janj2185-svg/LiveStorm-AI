@@ -181,7 +181,10 @@ export type GlowToken = keyof typeof GLOW;
  * 3px total meets WCAG 2.2 focus-appearance minimums with room to spare.
  */
 export const FOCUS_RING = {
+  /** Inner ring, drawn in the brand colour. */
   width: 2,
+  /** Gap between the element and the inner ring. */
   offset: 2,
-  outerWidth: 1,
+  /** Outer ring, drawn in the canvas colour. Wide enough to read on any fill. */
+  outerWidth: 4,
 } as const;

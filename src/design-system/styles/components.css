@@ -414,14 +414,34 @@
   border-color: var(--tone-solid);
   color: var(--tone-fg);
 }
+/* A removable chip is a shared pill holding two independent controls. */
+.sy-chip--removable {
+  padding-inline: var(--sy-space-1);
+  gap: var(--sy-space-1);
+}
+.sy-chip__main {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1_5);
+  padding-inline: var(--sy-space-2);
+  block-size: 100%;
+  color: inherit;
+  font: inherit;
+  border-radius: var(--sy-radius-pill);
+}
 .sy-chip__remove {
   display: inline-grid;
   place-items: center;
-  inline-size: 16px;
-  block-size: 16px;
+  inline-size: 20px;
+  block-size: 20px;
   border-radius: 50%;
-  background: color-mix(in oklab, currentColor 16%, transparent);
+  color: inherit;
+  background: color-mix(in oklab, currentColor 14%, transparent);
   cursor: pointer;
+  transition: background-color var(--sy-transition-hover);
+}
+.sy-chip__remove:hover {
+  background: color-mix(in oklab, currentColor 26%, transparent);
 }
 
 /* ------------------------------------------------------------------ */
@@ -810,7 +830,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Underline variant: an animated 2px rule under the active tab. */
+/*
+  Underline variant. Each tab owns its own 2px rule, which scales open from the
+  centre when selected. A single indicator travelling between tabs would read
+  better, but it requires measuring tab positions in JavaScript on every
+  resize and font swap; growing in place is honest about what it costs.
+*/
 .sy-tabs--underline {
   border-block-end: 1px solid var(--sy-border-subtle);
   gap: var(--sy-space-4);
@@ -829,7 +854,7 @@
 }
 .sy-tabs--underline .sy-tabs__tab.is-active::after { scale: 1 1; }
 
-/* Segmented variant: a sliding pill inside a sunken track. */
+/* Segmented variant: a raised pill inside a sunken track. */
 .sy-tabs--segmented {
   padding: 3px;
   gap: 2px;

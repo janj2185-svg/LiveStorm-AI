@@ -477,25 +477,32 @@
 
 /**
  * These thresholds are measured against the *content column*, not the device.
- * The shell subtracts its own chrome first, so the width a screen actually
- * receives on each reference device is:
+ * The shell subtracts its own chrome first, and how much it subtracts depends
+ * on whether the screen supplies a context panel:
  *
- *   iPhone   393  ->  393   (no chrome)
- *   Android  412  ->  412
- *   Tablet   834  ->  758   (minus the 76px collapsed rail)
- *   Web     1280  ->  676   (minus 264 rail + 340 context panel)
- *   Desktop 1512  ->  908   (minus 264 rail + 340 context panel)
+ *                        no context panel     with context panel
+ *   iPhone   393   ->            393                  393
+ *   Android  412   ->            412                  412
+ *   Tablet   834   ->            758                  758
+ *   Web     1280   ->           1016                  676
+ *   Desktop 1512   ->           1248                  908
  *
- * Two consequences that are easy to get wrong:
+ * (Compact and medium never show the panel; the rail costs 76px collapsed and
+ * 264px expanded, the panel 340px.)
  *
- * 1. Web at 1280 is NARROWER than tablet at 834. The widest device is not the
- *    widest content column, because the expanded posture spends 604px on
- *    navigation. 676px is the tightest multi-column case in the product.
+ * Three consequences that are easy to get wrong:
  *
- * 2. A `min-width: 768px` container query fires on NEITHER the tablet nor the
- *    1280 web posture. Device-shaped numbers are the wrong numbers here. The
- *    system uses 560 / 840 / 880 instead, which land cleanly either side of
- *    the five real widths above.
+ * 1. With a context panel, web at 1280 is NARROWER than tablet at 834. The
+ *    widest device is not the widest content column, because the expanded
+ *    posture can spend 604px on navigation. 676px is the tightest
+ *    multi-column case in the product and the one most worth testing.
+ *
+ * 2. A `min-width: 768px` container query fires on the tablet's 758px column
+ *    in neither case, and a `min-width: 1024px` query never fires at web when
+ *    a context panel is present. Device-shaped numbers are the wrong numbers.
+ *
+ * 3. The system therefore uses 560 / 840 / 880, which land cleanly either side
+ *    of the real widths above rather than on top of them.
  */
 @container screen (min-width: 560px) {
   .sy-screen__inner {
