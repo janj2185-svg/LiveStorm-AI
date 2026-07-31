@@ -3,7 +3,8 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import delete, update
+from sqlalchemy import delete, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_audit_event
@@ -90,8 +91,9 @@ async def patch_own_profile(
     db: AsyncSession = Depends(get_session),
 ) -> Profile:
     profile = await profile_for(db, auth.user.id)
+    await ensure_handle_available(db, payload.handle, profile.user_id)
     apply_profile_patch(profile, payload)
-    await db.commit()
+    await commit_profile_patch(db)
     await db.refresh(profile)
     return profile
 
@@ -136,8 +138,9 @@ async def patch_user_profile(
 ) -> Profile:
     await authorize_owner_or(db, auth, user_id, "profile:write:any")
     profile = await profile_for(db, user_id)
+    await ensure_handle_available(db, payload.handle, profile.user_id)
     apply_profile_patch(profile, payload)
-    await db.commit()
+    await commit_profile_patch(db)
     await db.refresh(profile)
     return profile
 
@@ -170,9 +173,37 @@ async def patch_user_settings(
 def apply_profile_patch(profile: Profile, payload: ProfilePatch) -> None:
     values = payload.model_dump(exclude_unset=True)
     for field, value in values.items():
-        if field in {"display_name", "locale", "timezone"} and value is None:
+        if field in {"handle", "display_name", "locale", "timezone"} and value is None:
             continue
         setattr(profile, field, str(value) if field == "avatar_url" and value else value)
+
+
+async def ensure_handle_available(
+    db: AsyncSession, handle: str | None, target_user_id: uuid.UUID
+) -> None:
+    if handle is None:
+        return
+    owner_id = await db.scalar(select(Profile.user_id).where(Profile.handle == handle))
+    if owner_id is not None and owner_id != target_user_id:
+        raise APIError(
+            409,
+            "handle_unavailable",
+            "Handle unavailable",
+            "That public handle is already in use.",
+        )
+
+
+async def commit_profile_patch(db: AsyncSession) -> None:
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise APIError(
+            409,
+            "handle_unavailable",
+            "Handle unavailable",
+            "That public handle is already in use.",
+        ) from exc
 
 
 def apply_settings_patch(account_settings: AccountSettings, payload: AccountSettingsPatch) -> None:
@@ -225,6 +256,7 @@ async def delete_own_account(
 
     profile = await db.get(Profile, user.id)
     if profile:
+        profile.handle = None
         profile.display_name = "Deleted user"
         profile.bio = None
         profile.avatar_url = None

@@ -1,7 +1,8 @@
 # SYLORA API
 
 FastAPI modular-monolith foundation for SYLORA identity, account security, RBAC,
-profiles, and account settings. PostgreSQL and Redis are required at runtime.
+profiles, first-party social networking, persisted messaging, and account
+settings. PostgreSQL and Redis are required at runtime.
 SQLite is accepted only when `ENVIRONMENT=test`.
 
 ## Local setup
@@ -133,3 +134,43 @@ outbox contains the message needed for later SMTP delivery and must receive the
 same database access controls and encryption-at-rest policy as other sensitive
 production data. Tokens, TOTP secrets, recovery codes, passwords, and message
 bodies are never written to application logs.
+
+## Social and messaging API
+
+Authenticated social APIs are mounted at `/v1/social`. They cover public
+handles and privacy-aware profiles, follows and follow requests, canonical
+friendships, blocks and mutes, communities and channels, memberships and roles,
+posts and feeds, polls, comments, reactions, reposts, bookmarks, search,
+notifications, reports, and the RBAC-protected moderation queue. Feed,
+notification, report, and post listing cursors are signed and opaque.
+
+Authenticated messaging APIs are mounted at `/v1/messages`. Direct
+conversations use one canonical pair key and non-friend conversations enter a
+message-request state. Message and channel history use signed cursor
+pagination. Message bodies and attachments, edits, soft deletion, delivery/read
+receipts, and user-specific transport events are durable database records.
+`/v1/ws/messages` accepts an access token only through the
+`Authorization: Bearer` header, subscribes the socket only to that authenticated
+user, supports replay through its signed `since` cursor, and uses a bounded
+outgoing queue.
+
+Media and message attachment references are metadata only. They must use
+`https://` or `s3://bucket/key`; this service does not accept binary uploads.
+Bodies are treated as plain text and HTML markup is rejected.
+
+Search currently uses portable SQL `ILIKE`, including the SQLite behavior used
+by tests. For larger PostgreSQL deployments, migrate the same authorization
+predicates into indexed `tsvector` queries before changing ranking. At a scale
+where an external search index is justified, publish committed content changes
+through an outbox into Elasticsearch/OpenSearch and reapply privacy, community,
+and block filters at query time. No Elasticsearch integration is currently
+active.
+
+WebSocket queues and connection bookkeeping are intentionally process-local;
+the database remains the source of truth and every transport event is committed
+before publication. Multi-replica deployments require Redis Streams, Kafka, or
+equivalent fan-out plus consumer recovery to deliver committed events to
+sockets attached to other replicas. No cross-replica Kafka/Redis fan-out is
+currently implemented. Recommendation scoring is also local SQL/application
+logic, transparently combining followed authors, joined communities, category
+affinity, and recency; it is not represented as an AI model.

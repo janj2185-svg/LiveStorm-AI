@@ -4,9 +4,10 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
 from app.models import UserStatus
+from app.social_schemas import validate_handle
 
 
 class MessageResponse(BaseModel):
@@ -90,6 +91,7 @@ class ProfileResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     user_id: uuid.UUID
+    handle: str | None
     display_name: str
     bio: str | None
     avatar_url: str | None
@@ -99,11 +101,16 @@ class ProfileResponse(BaseModel):
 
 
 class ProfilePatch(BaseModel):
+    handle: str | None = Field(default=None, min_length=3, max_length=30)
     display_name: str | None = Field(default=None, min_length=1, max_length=100)
     bio: str | None = Field(default=None, max_length=2000)
     avatar_url: HttpUrl | None = None
     locale: str | None = Field(default=None, min_length=2, max_length=16)
     timezone: str | None = Field(default=None, min_length=1, max_length=64)
+
+    _valid_handle = field_validator("handle")(
+        lambda value: validate_handle(value) if value else value
+    )
 
 
 class AccountSettingsResponse(BaseModel):

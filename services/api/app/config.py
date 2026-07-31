@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     max_body_bytes: int = Field(default=1_048_576, ge=16_384, le=10_485_760)
     auth_rate_limit: int = Field(default=10, ge=1, le=1000)
     auth_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
+    social_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
+    post_rate_limit: int = Field(default=10, ge=1, le=1000)
+    comment_rate_limit: int = Field(default=30, ge=1, le=2000)
+    message_rate_limit: int = Field(default=60, ge=1, le=5000)
+    reaction_rate_limit: int = Field(default=120, ge=1, le=10_000)
     ip_hash_key: SecretStr | None = None
 
     smtp_host: str | None = None

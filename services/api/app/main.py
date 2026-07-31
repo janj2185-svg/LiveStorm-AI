@@ -24,7 +24,8 @@ from app.middleware import (
     RequestContextMiddleware,
     SecurityHeadersMiddleware,
 )
-from app.routers import admin, auth, health, oauth, users
+from app.routers import admin, auth, health, messaging, oauth, social, users
+from app.routers.messaging import MessageConnectionHub
 
 
 def create_app(
@@ -76,6 +77,8 @@ def create_app(
             {"name": "Identity", "description": "Registration and authentication"},
             {"name": "OAuth", "description": "Configured OIDC provider flows"},
             {"name": "Profiles", "description": "Owned and RBAC-managed user data"},
+            {"name": "Social", "description": "First-party social graph and content"},
+            {"name": "Messaging", "description": "Persisted direct and community messaging"},
             {"name": "Administration", "description": "Server-enforced RBAC"},
             {"name": "Operations", "description": "Health and telemetry"},
         ],
@@ -85,6 +88,7 @@ def create_app(
     app.state.engine = resolved_engine
     app.state.session_factory = session_factory
     app.state.redis = resolved_redis
+    app.state.message_hub = MessageConnectionHub()
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)
@@ -107,6 +111,8 @@ def create_app(
     app.include_router(oauth.router, prefix=resolved_settings.api_prefix)
     app.include_router(users.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin.router, prefix=resolved_settings.api_prefix)
+    app.include_router(social.router, prefix=resolved_settings.api_prefix)
+    app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
     install_exception_handlers(app)
     return app
 

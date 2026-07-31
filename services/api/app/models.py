@@ -72,6 +72,7 @@ class Profile(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
+    handle: Mapped[str | None] = mapped_column(String(30), unique=True, index=True)
     display_name: Mapped[str] = mapped_column(String(100))
     bio: Mapped[str | None] = mapped_column(Text)
     avatar_url: Mapped[str | None] = mapped_column(String(2048))
@@ -298,3 +299,7 @@ Index(
     EmailOutbox.sent_at,
     EmailOutbox.next_attempt_at,
 )
+
+# Import the modular social model registry after the identity models exist. This
+# guarantees Base.metadata is complete for test create_all and Alembic.
+from app import social_models as _social_models  # noqa: E402, F401
