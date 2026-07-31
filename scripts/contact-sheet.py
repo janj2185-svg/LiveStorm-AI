@@ -29,7 +29,7 @@ LABEL_HEIGHT = 30
 def load_font(size: int) -> ImageFont.FreeTypeFont:
     """Prefer the project's own typeface so sheets look like the product."""
     candidates = [
-        "node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
+        "apps/sylora/assets/fonts/InstrumentSans-Variable.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     ]

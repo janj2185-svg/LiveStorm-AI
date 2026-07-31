@@ -38,6 +38,88 @@ jobs:
       - name: Build frontend
         run: pnpm build
 
+  flutter-linux-android-web:
+    name: Flutter Linux, Android and Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/sylora
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v7
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.7
+          channel: stable
+          cache: true
+      - name: Install Linux desktop toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev libstdc++-14-dev
+      - name: Resolve Flutter dependencies
+        run: flutter pub get
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyze Flutter
+        run: flutter analyze
+      - name: Test Flutter
+        run: flutter test
+      - name: Build Flutter Web
+        run: flutter build web --release --dart-define=SYLORA_API_BASE_URL=https://api.example.invalid
+      - name: Build Flutter Linux
+        run: flutter build linux --release --dart-define=SYLORA_API_BASE_URL=https://api.example.invalid
+      - name: Build runnable Android debug APK
+        run: flutter build apk --debug --dart-define=SYLORA_API_BASE_URL=http://10.0.2.2:8000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flutter-linux-android-web
+          if-no-files-found: error
+          path: |
+            apps/sylora/build/web
+            apps/sylora/build/linux/x64/release/bundle
+            apps/sylora/build/app/outputs/flutter-apk/app-debug.apk
+
+  flutter-apple:
+    name: Flutter iOS and macOS compile
+    runs-on: macos-15
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/sylora
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.7
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build iOS without signing
+        run: flutter build ios --release --no-codesign --dart-define=SYLORA_API_BASE_URL=https://api.example.invalid
+      - name: Build macOS
+        run: flutter build macos --release --dart-define=SYLORA_API_BASE_URL=https://api.example.invalid
+
+  flutter-windows:
+    name: Flutter Windows compile
+    runs-on: windows-2025
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/sylora
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.7
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build windows --release --dart-define=SYLORA_API_BASE_URL=https://api.example.invalid
+
   backend:
     name: Backend
     runs-on: ubuntu-latest
@@ -73,6 +155,9 @@ jobs:
       CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
       JWT_SECRET: ci-only-high-entropy-value-32-characters-minimum
       DATA_ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+      RUN_EXTERNAL_INTEGRATION_TESTS: "1"
+      SYLORA_INTEGRATION_DATABASE_URL: postgresql+asyncpg://sylora:ci-only-password@127.0.0.1:5432/sylora_test
+      SYLORA_INTEGRATION_REDIS_URL: redis://127.0.0.1:6379/15
     steps:
       - uses: actions/checkout@v7
       - name: Require backend project
@@ -93,14 +178,15 @@ jobs:
       - name: Typecheck backend
         working-directory: services/api
         run: mypy app
-      - name: Test backend
+      - name: Apply migrations
+        working-directory: services/api
+        run: alembic upgrade head
+      - name: Test backend with PostgreSQL and Redis integration
         working-directory: services/api
         run: pytest -q
-      - name: Apply and verify migrations
+      - name: Verify migration model drift
         working-directory: services/api
-        run: |
-          alembic upgrade head
-          alembic check
+        run: alembic check
 
   security:
     name: Security

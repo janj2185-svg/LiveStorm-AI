@@ -11,15 +11,15 @@
     "typecheck": "tsc -b",
     "tokens": "tsx scripts/build-tokens.ts",
     "test": "vitest run",
+    "test:backend": "cd services/api && python3 -m pytest -q",
+    "test:flutter": "cd apps/sylora && flutter test",
     "test:watch": "vitest",
-    "capture": "tsx scripts/capture.ts"
+    "capture": "tsx scripts/capture.ts",
+    "verify": "pnpm test && pnpm build && pnpm test:backend"
   },
   "dependencies": {
     "@fontsource-variable/instrument-sans": "^5.3.0",
-    "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
-    "@fontsource-variable/manrope": "^5.3.0",
-    "@fontsource-variable/sora": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
@@ -33,5 +33,5 @@
     "vite": "^8.1.5",
     "vitest": "^4.1.10"
   },
-  "description": "SYLORA design system — brand, tokens, components, motion and every product screen, as running code."
+  "description": "SYLORA multi-platform creator ecosystem: Flutter client, FastAPI backend, realtime media plane and Lumen design system."
 }
