@@ -26,13 +26,26 @@ PERMISSION_DESCRIPTIONS = {
     "users:moderate": "Suspend or restore user accounts",
     "creator:access": "Access creator capabilities",
     "business:access": "Access business capabilities",
+    "ledger:issue": "Issue and reverse platform credits",
+    "ledger:read:any": "Read any user's ledger history",
+    "gifts:author": "Author gift definitions and runtime versions",
+    "gifts:review": "Review gift versions and publication validation",
+    "gifts:publish": "Publish and retire gift versions",
+    "gifts:refund": "Refund gift purchases and sends",
+    "gifts:moderate": "Emergency-retire gift versions",
 }
 
 ROLE_MATRIX = {
     "user": set(),
-    "creator": {"creator:access"},
+    "creator": {"creator:access", "gifts:author"},
     "business": {"business:access"},
-    "moderator": {"users:read", "users:moderate", "profile:read:any"},
+    "moderator": {
+        "users:read",
+        "users:moderate",
+        "profile:read:any",
+        "gifts:review",
+        "gifts:moderate",
+    },
     "admin": set(PERMISSION_DESCRIPTIONS),
 }
 

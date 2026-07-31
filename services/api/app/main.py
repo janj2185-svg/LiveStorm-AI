@@ -18,14 +18,29 @@ from app.database import (
     seed_rbac,
 )
 from app.errors import install_exception_handlers
+from app.gift_service import GiftConnectionHub
+from app.ledger_service import FinancialOperationLockPool, seed_platform_accounts
 from app.logging import configure_logging
 from app.middleware import (
     BodySizeLimitMiddleware,
     RequestContextMiddleware,
     SecurityHeadersMiddleware,
 )
-from app.routers import admin, auth, health, messaging, oauth, social, users
+from app.payments import PaymentProvider, configured_payment_provider
+from app.routers import (
+    admin,
+    auth,
+    gift_authoring,
+    gifts,
+    health,
+    ledger,
+    messaging,
+    oauth,
+    social,
+    users,
+)
 from app.routers.messaging import MessageConnectionHub
+from app.storage import S3ObjectStorage
 
 
 def create_app(
@@ -33,6 +48,8 @@ def create_app(
     *,
     engine: AsyncEngine | None = None,
     redis_client: Any | None = None,
+    payment_provider: PaymentProvider | None = None,
+    object_storage: S3ObjectStorage | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     resolved_engine = engine or create_engine(resolved_settings)
@@ -51,6 +68,7 @@ def create_app(
         await resolved_redis.ping()
         async with session_factory() as session:
             await seed_rbac(session)
+            await seed_platform_accounts(session)
         application.state.ready = True
         try:
             yield
@@ -63,7 +81,7 @@ def create_app(
     configure_logging()
     app = FastAPI(
         title="SYLORA API",
-        summary="SYLORA identity and platform API",
+        summary="SYLORA identity, social, wallet, and gift platform API",
         description=(
             "Production API foundation for SYLORA. Authentication uses bearer access "
             "tokens in the Authorization header; tokens are never stored in cookies, "
@@ -79,6 +97,10 @@ def create_app(
             {"name": "Profiles", "description": "Owned and RBAC-managed user data"},
             {"name": "Social", "description": "First-party social graph and content"},
             {"name": "Messaging", "description": "Persisted direct and community messaging"},
+            {"name": "Wallet", "description": "Immutable double-entry credit ledger"},
+            {"name": "Payments", "description": "Configured external payment boundary"},
+            {"name": "Gifts", "description": "Gift catalog, inventory, sends, and events"},
+            {"name": "Gift authoring", "description": "Versioned gift runtime contracts"},
             {"name": "Administration", "description": "Server-enforced RBAC"},
             {"name": "Operations", "description": "Health and telemetry"},
         ],
@@ -89,6 +111,10 @@ def create_app(
     app.state.session_factory = session_factory
     app.state.redis = resolved_redis
     app.state.message_hub = MessageConnectionHub()
+    app.state.gift_hub = GiftConnectionHub()
+    app.state.financial_operation_locks = FinancialOperationLockPool()
+    app.state.payment_provider = payment_provider or configured_payment_provider(resolved_settings)
+    app.state.object_storage = object_storage or S3ObjectStorage(resolved_settings)
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)
@@ -98,7 +124,13 @@ def create_app(
             allow_origins=resolved_settings.cors_origins,
             allow_credentials=False,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+            allow_headers=[
+                "Authorization",
+                "Content-Type",
+                "Idempotency-Key",
+                "X-Payment-Signature",
+                "X-Request-ID",
+            ],
             expose_headers=["X-Request-ID"],
             max_age=600,
         )
@@ -113,6 +145,11 @@ def create_app(
     app.include_router(admin.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
     app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
+    app.include_router(ledger.router, prefix=resolved_settings.api_prefix)
+    app.include_router(gift_authoring.router, prefix=resolved_settings.api_prefix)
+    app.include_router(gifts.router, prefix=resolved_settings.api_prefix)
+    app.include_router(gifts.admin_router, prefix=resolved_settings.api_prefix)
+    app.include_router(gifts.websocket_router, prefix=resolved_settings.api_prefix)
     install_exception_handlers(app)
     return app
 

@@ -54,7 +54,18 @@ class Settings(BaseSettings):
     comment_rate_limit: int = Field(default=30, ge=1, le=2000)
     message_rate_limit: int = Field(default=60, ge=1, le=5000)
     reaction_rate_limit: int = Field(default=120, ge=1, le=10_000)
+    wallet_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
+    purchase_rate_limit: int = Field(default=20, ge=1, le=1000)
+    gift_send_rate_limit: int = Field(default=30, ge=1, le=2000)
+    topup_rate_limit: int = Field(default=5, ge=1, le=100)
     ip_hash_key: SecretStr | None = None
+
+    s3_endpoint_url: str | None = None
+    s3_bucket: str | None = None
+    s3_region: str = "us-east-1"
+    s3_access_key_id: str | None = None
+    s3_secret_access_key: SecretStr | None = None
+    s3_presign_seconds: int = Field(default=900, ge=60, le=3600)
 
     smtp_host: str | None = None
     smtp_port: int = Field(default=587, ge=1, le=65535)
@@ -115,6 +126,15 @@ class Settings(BaseSettings):
     @property
     def smtp_configured(self) -> bool:
         return bool(self.smtp_host and self.smtp_from_email)
+
+    @property
+    def s3_configured(self) -> bool:
+        return bool(
+            self.s3_endpoint_url
+            and self.s3_bucket
+            and self.s3_access_key_id
+            and self.s3_secret_access_key
+        )
 
     @property
     def effective_celery_broker_url(self) -> str:

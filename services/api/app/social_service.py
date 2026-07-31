@@ -313,7 +313,8 @@ def apply_cursor(
         return statement
     created_at, record_id = cursor_value
     return statement.where(
-        or_(created_column < created_at, and_(created_column == created_at, id_column < record_id))
+        id_column != record_id,
+        or_(created_column < created_at, and_(created_column == created_at, id_column < record_id)),
     )
 
 

@@ -1,0 +1,188 @@
+from __future__ import annotations
+
+import asyncio
+import base64
+from dataclasses import dataclass
+from typing import Any
+
+import boto3
+from botocore.config import Config
+from botocore.exceptions import BotoCoreError, ClientError
+
+from app.config import Settings
+from app.errors import APIError
+
+
+@dataclass(frozen=True)
+class PresignedUpload:
+    url: str
+    headers: dict[str, str]
+    expires_in_seconds: int
+
+
+@dataclass(frozen=True)
+class VerifiedObject:
+    content_type: str
+    byte_size: int
+    sha256: str
+
+
+class S3ObjectStorage:
+    """Real S3-compatible storage boundary; no local or simulated success path."""
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self._client: Any | None = None
+
+    def require_configured(self) -> None:
+        if not self.settings.s3_configured:
+            raise APIError(
+                503,
+                "object_storage_unavailable",
+                "Object storage unavailable",
+                "S3-compatible object storage is not configured for this deployment.",
+            )
+
+    def _s3_client(self) -> Any:
+        self.require_configured()
+        if self._client is None:
+            secret = self.settings.s3_secret_access_key
+            assert secret is not None
+            self._client = boto3.client(
+                "s3",
+                endpoint_url=self.settings.s3_endpoint_url,
+                region_name=self.settings.s3_region,
+                aws_access_key_id=self.settings.s3_access_key_id,
+                aws_secret_access_key=secret.get_secret_value(),
+                config=Config(signature_version="s3v4"),
+            )
+        return self._client
+
+    @property
+    def bucket(self) -> str:
+        self.require_configured()
+        assert self.settings.s3_bucket is not None
+        return self.settings.s3_bucket
+
+    async def presign_put(
+        self,
+        *,
+        object_key: str,
+        content_type: str,
+        sha256_hex: str,
+    ) -> PresignedUpload:
+        client = self._s3_client()
+        checksum = base64.b64encode(bytes.fromhex(sha256_hex)).decode("ascii")
+
+        def create_url() -> str:
+            return str(
+                client.generate_presigned_url(
+                    "put_object",
+                    Params={
+                        "Bucket": self.bucket,
+                        "Key": object_key,
+                        "ContentType": content_type,
+                        "ChecksumSHA256": checksum,
+                        "Metadata": {"sha256": sha256_hex},
+                    },
+                    ExpiresIn=self.settings.s3_presign_seconds,
+                    HttpMethod="PUT",
+                )
+            )
+
+        try:
+            url = await asyncio.to_thread(create_url)
+        except (BotoCoreError, ClientError, ValueError) as exc:
+            raise APIError(
+                503,
+                "object_storage_unavailable",
+                "Object storage unavailable",
+                "The configured object storage could not issue an upload authorization.",
+            ) from exc
+        return PresignedUpload(
+            url=url,
+            headers={
+                "Content-Type": content_type,
+                "x-amz-checksum-sha256": checksum,
+                "x-amz-meta-sha256": sha256_hex,
+            },
+            expires_in_seconds=self.settings.s3_presign_seconds,
+        )
+
+    async def presign_get(self, *, object_key: str) -> str:
+        client = self._s3_client()
+
+        def create_url() -> str:
+            return str(
+                client.generate_presigned_url(
+                    "get_object",
+                    Params={"Bucket": self.bucket, "Key": object_key},
+                    ExpiresIn=self.settings.s3_presign_seconds,
+                    HttpMethod="GET",
+                )
+            )
+
+        try:
+            return await asyncio.to_thread(create_url)
+        except (BotoCoreError, ClientError) as exc:
+            raise APIError(
+                503,
+                "object_storage_unavailable",
+                "Object storage unavailable",
+                "The configured object storage could not issue a download authorization.",
+            ) from exc
+
+    async def verify_object(
+        self,
+        *,
+        object_key: str,
+        expected_content_type: str,
+        expected_byte_size: int,
+        expected_sha256: str,
+    ) -> VerifiedObject:
+        client = self._s3_client()
+        try:
+            result = await asyncio.to_thread(
+                client.head_object,
+                Bucket=self.bucket,
+                Key=object_key,
+                ChecksumMode="ENABLED",
+            )
+        except (BotoCoreError, ClientError) as exc:
+            raise APIError(
+                422,
+                "asset_object_not_verified",
+                "Asset object could not be verified",
+                "The uploaded object is missing or its metadata cannot be verified.",
+            ) from exc
+
+        byte_size = int(result.get("ContentLength", -1))
+        content_type = str(result.get("ContentType", "")).split(";", maxsplit=1)[0].strip().lower()
+        metadata = {
+            str(key).lower(): str(value).lower()
+            for key, value in result.get("Metadata", {}).items()
+        }
+        checksum_b64 = result.get("ChecksumSHA256")
+        checksum_hex: str | None = None
+        if checksum_b64:
+            try:
+                checksum_hex = base64.b64decode(str(checksum_b64), validate=True).hex()
+            except ValueError:
+                checksum_hex = None
+        object_sha256 = checksum_hex or metadata.get("sha256")
+        if (
+            byte_size != expected_byte_size
+            or content_type != expected_content_type.lower()
+            or object_sha256 != expected_sha256.lower()
+        ):
+            raise APIError(
+                422,
+                "asset_metadata_mismatch",
+                "Asset metadata mismatch",
+                "Object size, content type, or SHA-256 does not match the upload declaration.",
+            )
+        return VerifiedObject(
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=object_sha256,
+        )

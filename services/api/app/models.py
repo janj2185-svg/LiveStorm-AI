@@ -302,4 +302,6 @@ Index(
 
 # Import the modular social model registry after the identity models exist. This
 # guarantees Base.metadata is complete for test create_all and Alembic.
+from app import gift_models as _gift_models  # noqa: E402, F401
+from app import ledger_models as _ledger_models  # noqa: E402, F401
 from app import social_models as _social_models  # noqa: E402, F401
