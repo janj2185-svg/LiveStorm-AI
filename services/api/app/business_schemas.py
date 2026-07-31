@@ -106,9 +106,7 @@ def plain_text(value: str | None) -> str | None:
 def validate_permission_overrides(value: dict[str, bool] | None) -> dict[str, bool] | None:
     if value is None:
         return value
-    if len(value) > 50 or any(
-        not re.fullmatch(r"^[a-z][a-z0-9_.:-]{1,63}$", key) for key in value
-    ):
+    if len(value) > 50 or any(not re.fullmatch(r"^[a-z][a-z0-9_.:-]{1,63}$", key) for key in value):
         raise ValueError("invalid permission override")
     return value
 

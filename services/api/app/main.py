@@ -218,9 +218,7 @@ def create_app(
     app.state.content_publish_dispatcher = content_publish_dispatcher or dispatch_content_publish
     app.state.esignature_provider = esignature_provider or UnconfiguredESignatureProvider()
     app.state.accounting_provider = accounting_provider or UnconfiguredAccountingProvider()
-    app.state.calendar_sync_provider = (
-        calendar_sync_provider or UnconfiguredCalendarSyncProvider()
-    )
+    app.state.calendar_sync_provider = calendar_sync_provider or UnconfiguredCalendarSyncProvider()
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)

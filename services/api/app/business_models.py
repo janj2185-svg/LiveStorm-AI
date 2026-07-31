@@ -676,9 +676,7 @@ class BudgetStatus(enum.StrEnum):
 
 class BusinessBudget(Base):
     __tablename__ = "business_budgets"
-    __table_args__ = (
-        CheckConstraint("amount_minor >= 0", name="ck_business_budget_amount"),
-    )
+    __table_args__ = (CheckConstraint("amount_minor >= 0", name="ck_business_budget_amount"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     workspace_id: Mapped[uuid.UUID] = mapped_column(
@@ -860,7 +858,9 @@ class FinanceTransactionReference(Base):
     __tablename__ = "business_finance_transaction_references"
     __table_args__ = (
         UniqueConstraint(
-            "workspace_id", "reference_type", "external_reference",
+            "workspace_id",
+            "reference_type",
+            "external_reference",
             name="uq_business_finance_external_reference",
         ),
     )

@@ -52,6 +52,21 @@ class FakeRedis:
         self.values[key] = value
         return True
 
+    async def get(self, key: str) -> str | None:
+        if not self.available:
+            raise ConnectionError("test Redis unavailable")
+        return self.values.get(key)
+
+    async def delete(self, key: str) -> int:
+        if not self.available:
+            raise ConnectionError("test Redis unavailable")
+        return 1 if self.values.pop(key, None) is not None else 0
+
+    async def getdel(self, key: str) -> str | None:
+        if not self.available:
+            raise ConnectionError("test Redis unavailable")
+        return self.values.pop(key, None)
+
     async def aclose(self) -> None:
         return None
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import secrets
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
@@ -66,6 +68,8 @@ from app.gift_schemas import (
     GiftPurchaseRequest,
     GiftRefundRequest,
     GiftRefundResponse,
+    GiftRuntimeAsset,
+    GiftRuntimeResponse,
     GiftSendPage,
     GiftSendRequest,
     GiftSendResponse,
@@ -73,6 +77,8 @@ from app.gift_schemas import (
     InventoryPage,
     RecommendationItem,
     RecommendationResponse,
+    RuntimeManifest,
+    WebSocketTicketResponse,
 )
 from app.gift_service import (
     GiftConnectionHub,
@@ -82,6 +88,7 @@ from app.gift_service import (
     gift_is_eligible,
     gift_preference,
     is_available,
+    manifest_asset_ids,
     published_version,
     record_affinity,
 )
@@ -257,6 +264,70 @@ async def catalog_detail(
             "The requested gift is not currently available.",
         )
     return await catalog_gift_response(db, gift)
+
+
+@router.get("/catalog/{slug}/runtime", response_model=GiftRuntimeResponse)
+async def catalog_runtime(
+    slug: str,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> GiftRuntimeResponse:
+    gift = await db.scalar(select(GiftDefinition).where(GiftDefinition.slug == slug))
+    if gift is None or not is_available(gift):
+        raise APIError(
+            404,
+            "gift_not_available",
+            "Gift not available",
+            "The requested gift is not currently available.",
+        )
+    eligible, _ = await gift_is_eligible(db, auth.user.id, gift)
+    if not eligible:
+        raise APIError(
+            404,
+            "gift_not_available",
+            "Gift not available",
+            "The requested gift is not currently available.",
+        )
+    version = await published_version(db, gift.id)
+    manifest = RuntimeManifest.model_validate(version.runtime_manifest)
+    asset_ids = manifest_asset_ids(manifest)
+    assets = list(
+        (
+            await db.scalars(
+                select(GiftAsset)
+                .where(
+                    GiftAsset.gift_version_id == version.id,
+                    GiftAsset.id.in_(asset_ids),
+                    GiftAsset.state == GiftAssetState.verified,
+                )
+                .order_by(GiftAsset.id)
+            )
+        ).all()
+    )
+    if {asset.id for asset in assets} != asset_ids:
+        raise APIError(
+            503,
+            "gift_runtime_incomplete",
+            "Gift runtime unavailable",
+            "One or more verified runtime assets are unavailable.",
+        )
+    return GiftRuntimeResponse(
+        gift_definition_id=gift.id,
+        gift_version_id=version.id,
+        version_number=version.version_number,
+        manifest=manifest,
+        assets=[
+            GiftRuntimeAsset(
+                id=asset.id,
+                content_type=asset.content_type,
+                byte_size=asset.byte_size,
+                sha256=asset.sha256,
+                platform=asset.platform,
+                quality_tier=asset.quality_tier,
+            )
+            for asset in assets
+        ],
+    )
 
 
 @router.post("/catalog/{slug}/view", response_model=CatalogGiftResponse)
@@ -859,10 +930,83 @@ async def gift_events(
     )
 
 
+@router.post("/events/ticket", response_model=WebSocketTicketResponse)
+async def create_gift_websocket_ticket(
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+) -> WebSocketTicketResponse:
+    await rate_limit(
+        request,
+        bucket="gift-socket-ticket",
+        subject=str(auth.user.id),
+        limit=20,
+        window_seconds=60,
+        unavailable_detail="Gift realtime authorization is temporarily unavailable.",
+    )
+    raw_ticket = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(raw_ticket.encode()).hexdigest()
+    try:
+        stored = await request.app.state.redis.set(
+            f"sylora:gift-ws-ticket:{digest}",
+            str(auth.user.id),
+            ex=60,
+            nx=True,
+        )
+    except Exception as exc:
+        raise APIError(
+            503,
+            "gift_realtime_unavailable",
+            "Gift realtime unavailable",
+            "The one-time realtime ticket store is unavailable.",
+        ) from exc
+    if not stored:
+        raise APIError(
+            503,
+            "gift_realtime_unavailable",
+            "Gift realtime unavailable",
+            "A one-time realtime ticket could not be issued.",
+        )
+    return WebSocketTicketResponse(ticket=raw_ticket, expires_in_seconds=60)
+
+
+async def websocket_ticket_user(websocket: WebSocket, ticket: str) -> uuid.UUID:
+    digest = hashlib.sha256(ticket.encode()).hexdigest()
+    key = f"sylora:gift-ws-ticket:{digest}"
+    redis = websocket.app.state.redis
+    try:
+        if hasattr(redis, "getdel"):
+            value = await redis.getdel(key)
+        else:
+            value = await redis.get(key)
+            if value is not None:
+                await redis.delete(key)
+    except Exception as exc:
+        raise APIError(
+            503,
+            "gift_realtime_unavailable",
+            "Gift realtime unavailable",
+            "The one-time realtime ticket could not be consumed.",
+        ) from exc
+    try:
+        return uuid.UUID(str(value))
+    except (TypeError, ValueError) as exc:
+        raise APIError(
+            401,
+            "invalid_realtime_ticket",
+            "Invalid realtime ticket",
+            "Request a new one-time gift realtime ticket.",
+        ) from exc
+
+
 @websocket_router.websocket("/ws/gifts")
 async def gift_websocket(websocket: WebSocket) -> None:
     try:
-        user_id = await websocket_user(websocket)
+        ticket = websocket.query_params.get("ticket")
+        user_id = (
+            await websocket_ticket_user(websocket, ticket)
+            if ticket
+            else await websocket_user(websocket)
+        )
         settings: Settings = websocket.app.state.settings
         since = decode_cursor(settings, "gift-events", websocket.query_params.get("since"))
     except APIError:

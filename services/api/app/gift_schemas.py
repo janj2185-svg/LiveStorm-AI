@@ -337,7 +337,10 @@ class GiftDefinitionResponse(BaseModel):
 
 
 class GiftVersionCreate(StrictSchema):
-    manifest: RuntimeManifest
+    # A draft version must exist before the API can issue asset IDs and
+    # presigned uploads. The strict manifest is attached after those assets are
+    # verified and is mandatory before review submission.
+    manifest: RuntimeManifest | None = None
 
 
 class GiftManifestPatch(StrictSchema):
@@ -359,6 +362,28 @@ class GiftVersionResponse(BaseModel):
     submitted_at: datetime | None
     published_at: datetime | None
     retired_at: datetime | None
+
+
+class GiftRuntimeAsset(StrictSchema):
+    id: uuid.UUID
+    content_type: str
+    byte_size: int
+    sha256: str
+    platform: GiftAssetPlatform
+    quality_tier: GiftQualityTier
+
+
+class GiftRuntimeResponse(StrictSchema):
+    gift_definition_id: uuid.UUID
+    gift_version_id: uuid.UUID
+    version_number: int
+    manifest: RuntimeManifest
+    assets: list[GiftRuntimeAsset]
+
+
+class WebSocketTicketResponse(StrictSchema):
+    ticket: str
+    expires_in_seconds: int
 
 
 class GiftAssetUploadRequest(StrictSchema):

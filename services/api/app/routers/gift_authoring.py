@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,6 +44,7 @@ from app.gift_schemas import (
     GiftValidationResponse,
     GiftVersionCreate,
     GiftVersionResponse,
+    RuntimeManifest,
 )
 from app.gift_service import validate_publishable_version
 from app.security import utcnow
@@ -102,6 +103,106 @@ def ensure_draft(version: GiftVersion) -> None:
             "Gift version is not editable",
             "Only a draft gift version can be edited.",
         )
+
+
+@router.get("/author/categories", response_model=list[GiftCategoryResponse])
+async def list_author_categories(
+    include_inactive: bool = False,
+    _: AuthContext = Depends(require_permission("gifts:author")),
+    db: AsyncSession = Depends(get_session),
+) -> list[GiftCategory]:
+    statement = select(GiftCategory)
+    if not include_inactive:
+        statement = statement.where(GiftCategory.active.is_(True))
+    return list((await db.scalars(statement.order_by(GiftCategory.name))).all())
+
+
+@router.get("/author/definitions", response_model=list[GiftDefinitionResponse])
+async def list_authored_definitions(
+    state: GiftLifecycle | None = None,
+    limit: int = Query(default=100, ge=1, le=200),
+    auth: AuthContext = Depends(require_permission("gifts:author")),
+    db: AsyncSession = Depends(get_session),
+) -> list[GiftDefinition]:
+    statement = select(GiftDefinition)
+    if not await has_permission(db, auth.user.id, "gifts:publish"):
+        statement = statement.where(GiftDefinition.author_user_id == auth.user.id)
+    if state is not None:
+        statement = statement.where(GiftDefinition.state == state)
+    return list(
+        (
+            await db.scalars(
+                statement.order_by(
+                    GiftDefinition.updated_at.desc(),
+                    GiftDefinition.id.desc(),
+                ).limit(limit)
+            )
+        ).all()
+    )
+
+
+@router.get(
+    "/author/definitions/{gift_definition_id}",
+    response_model=GiftDefinitionResponse,
+)
+async def get_authored_definition(
+    gift_definition_id: uuid.UUID,
+    auth: AuthContext = Depends(require_permission("gifts:author")),
+    db: AsyncSession = Depends(get_session),
+) -> GiftDefinition:
+    return await authored_definition(db, gift_definition_id, auth)
+
+
+@router.get(
+    "/author/definitions/{gift_definition_id}/versions",
+    response_model=list[GiftVersionResponse],
+)
+async def list_authored_versions(
+    gift_definition_id: uuid.UUID,
+    auth: AuthContext = Depends(require_permission("gifts:author")),
+    db: AsyncSession = Depends(get_session),
+) -> list[GiftVersion]:
+    gift = await authored_definition(db, gift_definition_id, auth)
+    return list(
+        (
+            await db.scalars(
+                select(GiftVersion)
+                .where(GiftVersion.gift_definition_id == gift.id)
+                .order_by(GiftVersion.version_number.desc())
+            )
+        ).all()
+    )
+
+
+@router.get("/author/versions/{version_id}", response_model=GiftVersionResponse)
+async def get_authored_version(
+    version_id: uuid.UUID,
+    auth: AuthContext = Depends(require_permission("gifts:author")),
+    db: AsyncSession = Depends(get_session),
+) -> GiftVersion:
+    version, _ = await authored_version(db, version_id, auth)
+    return version
+
+
+@router.get(
+    "/author/versions/{version_id}/assets",
+    response_model=list[GiftAssetResponse],
+)
+async def list_authored_assets(
+    version_id: uuid.UUID,
+    auth: AuthContext = Depends(require_permission("gifts:author")),
+    db: AsyncSession = Depends(get_session),
+) -> list[GiftAsset]:
+    version, _ = await authored_version(db, version_id, auth)
+    return list(
+        (
+            await db.scalars(
+                select(GiftAsset)
+                .where(GiftAsset.gift_version_id == version.id)
+                .order_by(GiftAsset.created_at, GiftAsset.id)
+            )
+        ).all()
+    )
 
 
 @router.post(
@@ -199,7 +300,9 @@ async def create_version(
         gift_definition_id=gift.id,
         version_number=int(latest or 0) + 1,
         state=GiftLifecycle.draft,
-        runtime_manifest=payload.manifest.model_dump(mode="json"),
+        runtime_manifest=(
+            payload.manifest.model_dump(mode="json") if payload.manifest is not None else {}
+        ),
         created_by_id=auth.user.id,
     )
     db.add(version)
@@ -348,6 +451,15 @@ async def submit_version(
 ) -> GiftVersion:
     version, gift = await authored_version(db, version_id, auth)
     ensure_draft(version)
+    try:
+        RuntimeManifest.model_validate(version.runtime_manifest)
+    except ValueError as exc:
+        raise APIError(
+            422,
+            "invalid_runtime_manifest",
+            "Runtime manifest required",
+            "Attach a complete, strictly valid RuntimeManifest before review.",
+        ) from exc
     version.state = GiftLifecycle.review
     version.submitted_by_id = auth.user.id
     version.submitted_at = utcnow()

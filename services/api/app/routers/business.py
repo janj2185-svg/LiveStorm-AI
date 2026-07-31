@@ -90,9 +90,7 @@ async def mutation_limit(request: Request, user_id: uuid.UUID, bucket: str) -> N
     )
 
 
-async def commit_or_conflict(
-    db: AsyncSession, *, code: str, title: str, detail: str
-) -> None:
+async def commit_or_conflict(db: AsyncSession, *, code: str, title: str, detail: str) -> None:
     try:
         await db.commit()
     except IntegrityError as exc:
@@ -369,9 +367,7 @@ async def remove_member(
     auth: AuthContext = Depends(current_auth),
     db: AsyncSession = Depends(get_session),
 ) -> dict[str, str]:
-    workspace, actor_membership = await require_workspace(
-        db, auth.user.id, workspace_id
-    )
+    workspace, actor_membership = await require_workspace(db, auth.user.id, workspace_id)
     if (
         user_id != auth.user.id
         and actor_membership is not None
@@ -505,9 +501,7 @@ async def accept_workspace_invitation(
     db: AsyncSession = Depends(get_session),
 ) -> WorkspaceMembership:
     await mutation_limit(request, auth.user.id, "workspace-invite-accept")
-    invitation, membership = await accept_invitation(
-        db, user=auth.user, raw_token=payload.token
-    )
+    invitation, membership = await accept_invitation(db, user=auth.user, raw_token=payload.token)
     add_business_audit(
         db,
         request,
@@ -565,9 +559,7 @@ async def list_teams(
     teams = list(
         (
             await db.scalars(
-                select(Team)
-                .where(Team.workspace_id == workspace_id)
-                .order_by(Team.name, Team.id)
+                select(Team).where(Team.workspace_id == workspace_id).order_by(Team.name, Team.id)
             )
         ).all()
     )
@@ -633,11 +625,7 @@ async def add_team_member(
         )
     )
     if existing is None:
-        db.add(
-            TeamMembership(
-                workspace_id=workspace_id, team_id=team_id, user_id=payload.user_id
-            )
-        )
+        db.add(TeamMembership(workspace_id=workspace_id, team_id=team_id, user_id=payload.user_id))
         await db.commit()
     return {"status": "assigned"}
 
@@ -713,12 +701,16 @@ async def list_companies(
             or_(CRMCompany.name.ilike(f"%{q}%"), CRMCompany.domain.ilike(f"%{q}%"))
         )
     scope = f"business-companies:{workspace_id}:{q or ''}"
-    statement = apply_cursor(
-        statement,
-        CRMCompany.created_at,
-        CRMCompany.id,
-        decode_cursor(settings, scope, cursor),
-    ).order_by(CRMCompany.created_at.desc(), CRMCompany.id.desc()).limit(limit + 1)
+    statement = (
+        apply_cursor(
+            statement,
+            CRMCompany.created_at,
+            CRMCompany.id,
+            decode_cursor(settings, scope, cursor),
+        )
+        .order_by(CRMCompany.created_at.desc(), CRMCompany.id.desc())
+        .limit(limit + 1)
+    )
     rows = list((await db.scalars(statement)).all())
     visible, next_cursor = page_result(
         rows,
@@ -753,9 +745,7 @@ async def create_company(
     db: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:
     await require_workspace_permission(db, auth.user.id, workspace_id, "crm.write")
-    await crm_reference_checks(
-        db, workspace_id, user_ids=[payload.owner_user_id]
-    )
+    await crm_reference_checks(db, workspace_id, user_ids=[payload.owner_user_id])
     company = CRMCompany(
         workspace_id=workspace_id,
         created_by_id=auth.user.id,
@@ -911,12 +901,16 @@ async def list_contacts(
             )
         )
     scope = f"business-contacts:{workspace_id}:{q or ''}"
-    statement = apply_cursor(
-        statement,
-        CRMContact.created_at,
-        CRMContact.id,
-        decode_cursor(settings, scope, cursor),
-    ).order_by(CRMContact.created_at.desc(), CRMContact.id.desc()).limit(limit + 1)
+    statement = (
+        apply_cursor(
+            statement,
+            CRMContact.created_at,
+            CRMContact.id,
+            decode_cursor(settings, scope, cursor),
+        )
+        .order_by(CRMContact.created_at.desc(), CRMContact.id.desc())
+        .limit(limit + 1)
+    )
     rows = list((await db.scalars(statement)).all())
     visible, next_cursor = page_result(
         rows,
@@ -1161,12 +1155,16 @@ async def list_deals(
     if q:
         statement = statement.where(CRMDeal.name.ilike(f"%{q}%"))
     scope = f"business-deals:{workspace_id}:{q or ''}"
-    statement = apply_cursor(
-        statement,
-        CRMDeal.created_at,
-        CRMDeal.id,
-        decode_cursor(settings, scope, cursor),
-    ).order_by(CRMDeal.created_at.desc(), CRMDeal.id.desc()).limit(limit + 1)
+    statement = (
+        apply_cursor(
+            statement,
+            CRMDeal.created_at,
+            CRMDeal.id,
+            decode_cursor(settings, scope, cursor),
+        )
+        .order_by(CRMDeal.created_at.desc(), CRMDeal.id.desc())
+        .limit(limit + 1)
+    )
     rows = list((await db.scalars(statement)).all())
     visible, next_cursor = page_result(
         rows,

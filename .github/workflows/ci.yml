@@ -120,6 +120,57 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows --release --dart-define=SYLORA_API_BASE_URL=https://api.example.invalid
 
+  gift-tools:
+    name: Gift runtime and Studio
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            packages/gift-runtime/package-lock.json
+            apps/gift-studio/package-lock.json
+      - name: Verify gift runtime
+        working-directory: packages/gift-runtime
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+      - name: Verify Gift Studio
+        working-directory: apps/gift-studio
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+
+  obs-companion:
+    name: OBS companion
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/companion/pyproject.toml
+      - name: Install companion
+        working-directory: services/companion
+        run: python -m pip install -e '.[dev]'
+      - name: Lint and typecheck companion
+        working-directory: services/companion
+        run: |
+          ruff check .
+          mypy src
+      - name: Test companion
+        working-directory: services/companion
+        run: pytest
+
   backend:
     name: Backend
     runs-on: ubuntu-latest

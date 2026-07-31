@@ -331,10 +331,7 @@ async def test_documents_finance_and_provider_boundaries(api_factory: Any) -> No
         )
         assert failed.status_code == 503
         async with unavailable.app.state.session_factory() as db:
-            assert (
-                await db.scalar(select(func.count()).select_from(BusinessDocumentVersion))
-                == 0
-            )
+            assert await db.scalar(select(func.count()).select_from(BusinessDocumentVersion)) == 0
 
     async with api_factory(object_storage=BusinessStorage()) as api:
         owner, headers = await member(api, "finance@example.com", role="business")
@@ -477,10 +474,7 @@ async def test_documents_finance_and_provider_boundaries(api_factory: Any) -> No
         ]
         async with api.app.state.session_factory() as db:
             assert (
-                await db.scalar(
-                    select(func.count()).select_from(FinanceTransactionReference)
-                )
-                == 1
+                await db.scalar(select(func.count()).select_from(FinanceTransactionReference)) == 1
             )
             assert (
                 await db.scalar(
@@ -573,9 +567,7 @@ async def test_admin_flags_users_analytics_audit_and_health(api_factory: Any) ->
         assert analytics.status_code == 200
         assert analytics.json()["users"]["active"] == 1
         assert analytics.json()["basis"] == "persisted_platform_records"
-        audit = await api.client.get(
-            "/v1/admin/audit", params={"limit": 1}, headers=admin_headers
-        )
+        audit = await api.client.get("/v1/admin/audit", params={"limit": 1}, headers=admin_headers)
         assert audit.status_code == 200
         assert len(audit.json()["items"]) == 1
         assert audit.json()["next_cursor"]
@@ -610,9 +602,7 @@ async def test_admin_flags_users_analytics_audit_and_health(api_factory: Any) ->
         # A non-admin operator with only admin:users cannot suspend the sole active admin.
         operator, operator_headers = await member(api, "operator-admin@example.com")
         async with api.app.state.session_factory() as db:
-            permission = await db.scalar(
-                select(Permission).where(Permission.name == "admin:users")
-            )
+            permission = await db.scalar(select(Permission).where(Permission.name == "admin:users"))
             assert permission is not None
             role = Role(
                 name="user-operator",

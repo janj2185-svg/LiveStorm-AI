@@ -1,97 +1,145 @@
 # SYLORA
 
-A complete design system and product surface for **SYLORA** — an AI-first
-ecosystem combining live streaming, social networking, content creation, AI
-assistants, education, business tools, creator monetization, a marketplace and
-communities.
+SYLORA is a multi-platform creator ecosystem with a Flutter client, FastAPI
+backend, social network, creator commerce, AI Brain, AI Live Hub, gift runtime,
+OBS companion and production infrastructure.
 
-Thirty-eight fully designed screens, a generated colour system with
-build-enforced contrast, an original brand identity and icon set, a motion
-system, and a design gallery that renders every screen in true-resolution device
-chrome in both themes.
+The light-first Lumen design system remains available as an independent visual
+specification and gallery under `src/` and `docs/design/`.
 
-**The full specification lives in [`docs/design/`](./docs/design/README.md).**
+## Repository
 
----
+```text
+apps/sylora/             Flutter app: Android, iOS, Web, Windows, macOS, Linux
+apps/gift-studio/        Browser gift authoring and Three.js preview
+packages/gift-runtime/   Strict gift manifest and rendering runtime
+services/api/            FastAPI, PostgreSQL, Redis and Celery application
+services/companion/      Localhost-only OBS WebSocket 5.x companion
+infrastructure/          Compose, Kubernetes, monitoring, backups and media plane
+src/                     Lumen design system and 38-screen reference gallery
+docs/                    Design, implementation and production documentation
+```
 
-## Quick start
+## Implemented platform capabilities
+
+- Registration, email verification, login, rotating JWT sessions, password
+  reset, OAuth/OIDC, TOTP 2FA, profiles and RBAC.
+- Social graph, private follow requests, friendships, blocks/mutes,
+  communities/channels, posts, comments, reactions, bookmarks, reposts,
+  notifications, moderation, direct messages and durable realtime replay.
+- Immutable double-entry credit ledger, wallet, gift catalog/inventory,
+  purchases, sends, refunds, versioned manifests, verified assets and
+  author-review-publish separation.
+- Provider-neutral AI conversations, citations, consent, encrypted memory,
+  quotas, usage accounting, approved tools, translation/moderation boundaries
+  and multimodal job orchestration.
+- AI Live Hub with capability-verified YouTube, Twitch, Discord, OBS and
+  MediaMTX adapters; normalized events, rules, moderation, personas, games,
+  reconnects and replay.
+- Creator accounts, content lifecycle, subscriptions and analytics.
+- Marketplace stores, products, carts, orders, credit checkout, entitlements,
+  downloads, service bookings, reviews and refunds.
+- Courses, curriculum, enrollments, progress, quizzes and verifiable
+  certificates.
+- Multi-tenant workspaces, teams, CRM, tasks, calendar, documents, budgets,
+  expenses, invoices, reports, feature flags and admin/security dashboards.
+- RTMP, HLS, WHIP/WHEP WebRTC, SRT, TURN, recording upload, Prometheus and
+  Grafana infrastructure.
+
+## Run the backend
+
+The local infrastructure requires explicit secrets; copy the example first.
+
+```bash
+cp infrastructure/.env.example infrastructure/.env
+# Fill every value marked as required.
+docker compose \
+  --env-file infrastructure/.env \
+  -f infrastructure/compose/compose.yml up --build
+```
+
+API documentation is exposed at `http://localhost:8000/docs`. Detailed backend
+configuration and endpoints are in `services/api/README.md`.
+
+## Run Flutter
+
+Flutter 3.44.7 is the supported SDK.
+
+```bash
+cd apps/sylora
+flutter pub get
+flutter run -d chrome \
+  --dart-define=SYLORA_API_BASE_URL=http://localhost:8000
+```
+
+Production builds require an HTTPS API origin. Android release signing, Apple
+signing/provisioning and platform secure-storage requirements are documented in
+`apps/sylora/README.md`.
+
+## Run Gift Studio
+
+```bash
+cd packages/gift-runtime
+npm ci
+npm run build
+
+cd ../../apps/gift-studio
+npm ci
+npm run dev
+```
+
+Gift Studio keeps its bearer token in memory, uploads assets through real
+presigned S3 grants and follows the draft → assets → strict manifest → review →
+publish workflow. No gift assets are bundled.
+
+## Run the OBS companion
+
+```bash
+cd services/companion
+python3 -m pip install -e '.[dev]'
+python3 -m sylora_companion run
+```
+
+The companion binds to loopback by default and controls OBS only through the
+official WebSocket 5.x protocol. See `services/companion/README.md`.
+
+## Design gallery
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open the gallery, pick a screen from the left, and switch device and theme from
-the top bar. Every view is deep-linkable:
+`pnpm build` regenerates tokens, enforces all contrast assertions, typechecks
+and builds the gallery. Edit authoritative TypeScript tokens under
+`src/design-system/tokens/`; generated CSS and Figma exports must not be edited
+directly.
 
-```
-#/<screenId>?device=<iphone|android|tablet|web|desktop>&theme=<dark|light>
-```
+## Verification
 
-Append `&chrome=0` to render the device on its own.
+```bash
+pnpm test
+pnpm build
+pnpm test:backend
 
-## Scripts
-
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Design gallery with hot reload |
-| `pnpm build` | Compile tokens, typecheck, bundle. **Fails on any contrast regression** |
-| `pnpm tokens` | Regenerate `tokens.css`, `tokens.figma.json` and `contrast-audit.json` |
-| `pnpm capture` | Screenshot every screen in every posture and theme, and report horizontal overflow |
-| `pnpm typecheck` | TypeScript only |
-| `pnpm preview` | Serve the production build |
-
-## Layout
-
-```
-src/design-system/
-  tokens/       colour, typography, space, motion, elevation   (authoritative)
-  styles/       tokens.css (GENERATED), base, brand, components, patterns, screens
-  brand/        LogoMark, LogoWordmark, LogoLockup, AiOrb
-  icons/        113 icons on a documented 24×24 construction grid
-  primitives/   28 components
-  patterns/     AppShell, PageHeader
-
-src/screens/    38 product screens grouped by area, plus shared composites
-src/showcase/   the design gallery and device frames
-
-scripts/
-  build-tokens.ts     token compiler and WCAG auditor
-  capture.ts          headless screenshot and overflow harness (no browser dependency)
-  contact-sheet.py    tiles captures into reviewable sheets
-
-design/
-  tokens.figma.json   W3C DTCG export for Figma / Tokens Studio
-  contrast-audit.json WCAG evidence, regenerated on every build
+cd apps/sylora && flutter analyze && flutter test
+cd packages/gift-runtime && npm test && npm run build
+cd apps/gift-studio && npm test && npm run build
+cd services/companion && python3 -m pytest
 ```
 
-## How it works
+CI additionally compiles Flutter Web/Linux/Android, iOS/macOS without signing
+and Windows.
 
-Colour is **generated, not picked**. Each family is one hue and one peak chroma;
-a shared lightness curve produces a 12-step ramp where the step index has a
-fixed meaning. Because OKLCH is perceptually uniform, contrast becomes a
-property of the step rather than something audited per colour — and where OKLCH
-and WCAG's green-weighted luminance formula disagree, the one step that carries
-text is solved numerically against WCAG.
+## External capability boundaries
 
-Layout responds to a **container, not the viewport**. The shell and every screen
-are driven by container queries, so one implementation is correct at 393px
-inside a phone frame and at 1512px full-screen. A screen receives a *content
-column* — and on a 1280px display with a context panel, that column is 676px,
-narrower than a tablet's.
+The repository does not contain production credentials, licensed CGI assets,
+payment processor configuration, email delivery credentials, cloud S3
+credentials, Apple/Google signing keys or platform review approvals.
 
-Nothing is communicated by **colour alone**. Every state carries at least two
-signals.
-
-`src/design-system/styles/tokens.css` is generated. Edit the TypeScript token
-modules and run `pnpm tokens`.
-
-## Status
-
-A complete, production-grade design system and a fully designed product surface.
-
-It is **not** a working application: there is no router, data layer, network or
-backend. Screens render realistic fixture data, and controls that would call a
-service are designed and styled but inert.
-[`docs/design/FLOWS.md`](./docs/design/FLOWS.md) marks every step of every user
-flow as Working, Rendered, Handoff or Absent, so the boundary is explicit.
+Unconfigured payment, storage, AI, transcoding, PDF, e-signature and external
+platform capabilities fail explicitly; they never return simulated success.
+TikTok, Kick, Facebook and Instagram Live remain unavailable until approved
+official APIs and scopes are supplied. AAA gift content requires authored and
+licensed Blender/Unity/Unreal assets plus real device QA; the runtime and editor
+do not imply that such an asset library is bundled.

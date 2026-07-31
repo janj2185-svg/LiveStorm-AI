@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from datetime import timedelta
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -47,6 +48,7 @@ from app.ledger_service import (
     user_account,
 )
 from app.models import Role, UserRole
+from app.routers.gifts import websocket_ticket_user
 from app.security import utcnow
 from app.social_models import Block
 from tests.conftest import APIHarness, bearer, login, register_and_verify
@@ -873,6 +875,109 @@ async def test_concurrent_idempotent_purchase_and_supply_cap(
         )
         wallet = await user_account(db, buyer.id, LedgerAccountType.user_wallet)
         assert await account_balance(db, wallet) == 400
+
+
+@pytest.mark.asyncio
+async def test_authoring_bootstrap_lists_and_requires_manifest_before_review(
+    api: APIHarness,
+) -> None:
+    author, tokens = await create_member(
+        api,
+        email="bootstrap-author@sylora.dev",
+        display_name="Bootstrap Author",
+        role="creator",
+    )
+    headers = bearer(tokens["access_token"])
+    category = await api.client.post(
+        "/v1/gifts/author/categories",
+        headers=headers,
+        json={"slug": "bootstrap", "name": "Bootstrap"},
+    )
+    definition = await api.client.post(
+        "/v1/gifts/author/definitions",
+        headers=headers,
+        json={
+            "category_id": category.json()["id"],
+            "slug": "asset-first-gift",
+            "name": "Asset First Gift",
+            "description": "A draft whose assets are uploaded before its strict manifest.",
+            "price_minor": 100,
+            "creator_revenue_share_bps": 7000,
+            "tier": "simple",
+        },
+    )
+    version = await api.client.post(
+        f"/v1/gifts/author/definitions/{definition.json()['id']}/versions",
+        headers=headers,
+        json={},
+    )
+    assert version.status_code == 201, version.text
+    assert version.json()["runtime_manifest"] == {}
+
+    listed_definitions = await api.client.get(
+        "/v1/gifts/author/definitions",
+        headers=headers,
+    )
+    assert [item["id"] for item in listed_definitions.json()] == [definition.json()["id"]]
+    listed_versions = await api.client.get(
+        f"/v1/gifts/author/definitions/{definition.json()['id']}/versions",
+        headers=headers,
+    )
+    assert listed_versions.json()[0]["id"] == version.json()["id"]
+    assert (
+        await api.client.get(
+            f"/v1/gifts/author/versions/{version.json()['id']}/assets",
+            headers=headers,
+        )
+    ).json() == []
+
+    submit = await api.client.post(
+        f"/v1/gifts/author/versions/{version.json()['id']}/submit",
+        headers=headers,
+    )
+    assert submit.status_code == 422
+    assert submit.json()["code"] == "invalid_runtime_manifest"
+    assert author.id
+
+
+@pytest.mark.asyncio
+async def test_catalog_runtime_contract_and_one_time_browser_socket_ticket(
+    api: APIHarness,
+) -> None:
+    author, _ = await create_member(
+        api,
+        email="runtime-author@sylora.dev",
+        display_name="Runtime Author",
+    )
+    viewer, tokens = await create_member(
+        api,
+        email="runtime-viewer@sylora.dev",
+        display_name="Runtime Viewer",
+    )
+    gift_id, version_id, asset_id = await create_gift(
+        api,
+        author_id=author.id,
+        slug="runtime-contract",
+    )
+    headers = bearer(tokens["access_token"])
+    runtime = await api.client.get(
+        "/v1/gifts/catalog/runtime-contract/runtime",
+        headers=headers,
+    )
+    assert runtime.status_code == 200, runtime.text
+    assert runtime.json()["gift_definition_id"] == str(gift_id)
+    assert runtime.json()["gift_version_id"] == str(version_id)
+    assert runtime.json()["manifest"]["schema_version"] == "1.0"
+    assert runtime.json()["assets"][0]["id"] == str(asset_id)
+
+    issued = await api.client.post("/v1/gifts/events/ticket", headers=headers)
+    assert issued.status_code == 200, issued.text
+    ticket = issued.json()["ticket"]
+    websocket = SimpleNamespace(app=api.app)
+    consumed_user = await websocket_ticket_user(websocket, ticket)  # type: ignore[arg-type]
+    assert consumed_user == viewer.id
+    with pytest.raises(APIError, match="invalid_realtime_ticket"):
+        await websocket_ticket_user(websocket, ticket)  # type: ignore[arg-type]
 
 
 @pytest.mark.asyncio

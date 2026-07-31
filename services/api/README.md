@@ -157,9 +157,13 @@ before returning a normalized event.
 ## Gift authoring, catalog, and delivery
 
 Gift authoring APIs under `/v1/gifts/author` create categories, definitions,
-immutable versions, collections, and S3-backed asset declarations. Draft
-manifests are strict runtime contracts for Three.js, Flutter, Lottie, Unity,
-and Unreal renderer targets; Blender is represented as source metadata.
+immutable versions, collections, and S3-backed asset declarations. The
+bootstrap order is definition → empty draft version → verified assets → strict
+manifest patch → review; this lets manifests reference the server-issued asset
+IDs without a circular dependency. Authoring list/get endpoints expose only
+resources allowed by author or publisher RBAC. Draft manifests are strict
+runtime contracts for Three.js, Flutter, Lottie, Unity, and Unreal renderer
+targets; Blender is represented as source metadata.
 Contracts cover typed layers, timelines, particles, shaders, lighting, spatial
 audio, interaction hooks, combinations, deterministic/client-AI parameters,
 and full-screen/viewer/avatar/streamer effect scopes.
@@ -197,13 +201,16 @@ heuristic. Its response explains the purchase/view counts used in each score;
 it is not an AI model. Combination events use compatible manifest IDs and a
 bounded arrival window and never alter the ledger.
 
-`GET /v1/gifts/events` provides durable signed-cursor replay.
-`/v1/ws/gifts` authenticates through the bearer header, replays committed
-events from `since`, and emits only gift/version/asset references, never binary
-data. The bounded live hub is process-local. Multi-replica deployments still
-require Redis Streams, Kafka, or equivalent committed-event fan-out and
-consumer recovery; this repository does not implement that cross-replica
-transport.
+`GET /v1/gifts/catalog/{slug}/runtime` returns the strict published manifest and
+verified asset metadata; signed binaries remain behind the entitlement-aware
+asset download endpoint. `GET /v1/gifts/events` provides durable signed-cursor
+replay. `/v1/ws/gifts` authenticates through a bearer header for native clients
+or a 60-second, single-use Redis ticket issued by
+`POST /v1/gifts/events/ticket` for browsers. It replays committed events from
+`since` and emits only gift/version/asset references, never binary data. The
+bounded live hub is process-local. Multi-replica deployments still require
+Redis Streams, Kafka, or equivalent committed-event fan-out and consumer
+recovery; this repository does not implement that cross-replica transport.
 
 The authoring/runtime manifest, S3 asset verification, ledger, inventory, and
 delivery infrastructure are implemented. Production AAA CGI still requires

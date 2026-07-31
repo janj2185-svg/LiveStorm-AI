@@ -189,16 +189,18 @@ async def list_admin_users(
         profile_match = select(Profile.user_id).where(
             or_(Profile.handle.ilike(f"%{q}%"), Profile.display_name.ilike(f"%{q}%"))
         )
-        statement = statement.where(
-            or_(User.email.ilike(f"%{q}%"), User.id.in_(profile_match))
-        )
+        statement = statement.where(or_(User.email.ilike(f"%{q}%"), User.id.in_(profile_match)))
     scope = f"admin-users:{account_status}:{q or ''}"
-    statement = apply_cursor(
-        statement,
-        User.created_at,
-        User.id,
-        decode_cursor(settings, scope, cursor),
-    ).order_by(User.created_at.desc(), User.id.desc()).limit(limit + 1)
+    statement = (
+        apply_cursor(
+            statement,
+            User.created_at,
+            User.id,
+            decode_cursor(settings, scope, cursor),
+        )
+        .order_by(User.created_at.desc(), User.id.desc())
+        .limit(limit + 1)
+    )
     rows = list((await db.scalars(statement)).all())
     visible, next_cursor = page_result(
         rows,
@@ -656,18 +658,26 @@ async def list_audit_events(
         business_statement = business_statement.where(
             BusinessAuditEvent.workspace_id == workspace_id
         )
-    security_statement = apply_cursor(
-        security_statement,
-        SecurityAuditEvent.created_at,
-        SecurityAuditEvent.id,
-        cursor_value,
-    ).order_by(SecurityAuditEvent.created_at.desc(), SecurityAuditEvent.id.desc()).limit(limit + 1)
-    business_statement = apply_cursor(
-        business_statement,
-        BusinessAuditEvent.created_at,
-        BusinessAuditEvent.id,
-        cursor_value,
-    ).order_by(BusinessAuditEvent.created_at.desc(), BusinessAuditEvent.id.desc()).limit(limit + 1)
+    security_statement = (
+        apply_cursor(
+            security_statement,
+            SecurityAuditEvent.created_at,
+            SecurityAuditEvent.id,
+            cursor_value,
+        )
+        .order_by(SecurityAuditEvent.created_at.desc(), SecurityAuditEvent.id.desc())
+        .limit(limit + 1)
+    )
+    business_statement = (
+        apply_cursor(
+            business_statement,
+            BusinessAuditEvent.created_at,
+            BusinessAuditEvent.id,
+            cursor_value,
+        )
+        .order_by(BusinessAuditEvent.created_at.desc(), BusinessAuditEvent.id.desc())
+        .limit(limit + 1)
+    )
     security_rows = list((await db.scalars(security_statement)).all())
     business_rows = list((await db.scalars(business_statement)).all())
     combined: list[dict[str, Any]] = [
@@ -712,10 +722,7 @@ async def list_audit_events(
 
 
 async def count(db: AsyncSession, model: type[Any], *filters: Any) -> int:
-    return int(
-        await db.scalar(select(func.count()).select_from(model).where(*filters))
-        or 0
-    )
+    return int(await db.scalar(select(func.count()).select_from(model).where(*filters)) or 0)
 
 
 @router.get("/analytics")
@@ -723,9 +730,7 @@ async def platform_analytics(
     _: AuthContext = Depends(require_permission("admin:analytics")),
     db: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:
-    user_rows = (
-        await db.execute(select(User.status, func.count()).group_by(User.status))
-    ).all()
+    user_rows = (await db.execute(select(User.status, func.count()).group_by(User.status))).all()
     ai = (
         await db.execute(
             select(
@@ -851,8 +856,7 @@ async def read_service_health(
 ) -> dict[str, Any]:
     rows = (
         await db.scalars(
-            select(ServiceHealthReport)
-            .order_by(
+            select(ServiceHealthReport).order_by(
                 ServiceHealthReport.received_at.desc(),
                 ServiceHealthReport.id.desc(),
             )
@@ -886,14 +890,10 @@ async def security_dashboard(
     db: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:
     now = utcnow()
-    status_rows = (
-        await db.execute(select(User.status, func.count()).group_by(User.status))
-    ).all()
+    status_rows = (await db.execute(select(User.status, func.count()).group_by(User.status))).all()
     integration_rows = (
         await db.execute(
-            select(IntegrationConnection.state, func.count()).group_by(
-                IntegrationConnection.state
-            )
+            select(IntegrationConnection.state, func.count()).group_by(IntegrationConnection.state)
         )
     ).all()
     failed_actions = [

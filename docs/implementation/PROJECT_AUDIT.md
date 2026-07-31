@@ -1,9 +1,49 @@
 # Аудит реалізації SYLORA
 
-Дата перевірки: 2026-07-31  
-Область перевірки: фактичний вміст `/workspace`; цей звіт не трактує дизайн-наміри як готову функціональність.
+Дата початкової перевірки: 2026-07-31  
+Область перевірки: початковий вміст `/workspace` до Етапу 2.
 
-## Виконавчий вердикт
+> Цей документ зберігає початковий evidence-based baseline. Висновок нижче
+> стосується стану репозиторію до реалізації Етапу 2 і більше не описує поточну
+> архітектуру.
+
+## Поточний стан після Етапу 2
+
+Початкову React/Vite design gallery збережено як reference, але вона більше не є
+єдиним застосунком. Додано:
+
+- Flutter-клієнт для Android, iOS, Web, Windows, macOS і Linux у
+  `apps/sylora`;
+- FastAPI/PostgreSQL/Redis/Celery backend у `services/api` із сімома
+  послідовними Alembic migrations;
+- Identity/RBAC, social/messaging, wallet/gifts, AI Brain, AI Live Hub,
+  creator/content/subscriptions, marketplace, learning, business CRM і admin
+  operations;
+- MediaMTX/Coturn media plane, Kubernetes, Compose, Prometheus, Grafana,
+  backup/restore і CI;
+- Three.js/Lottie/Web Audio gift runtime та no-code Gift Studio;
+- localhost-only OBS WebSocket 5.x companion.
+
+Поточна production-boundary класифікація:
+
+| Область | Статус | Межа |
+|---|---|---|
+| Identity, RBAC, profiles | `Implemented` | Реальні SMTP/OIDC credentials потрібні для зовнішньої доставки й OAuth. |
+| Social, messaging, moderation | `Implemented` | Multi-replica socket fan-out потребує Redis Streams/Kafka consumer deployment. |
+| Wallet і gift ledger | `Implemented` | External top-up/payout provider не bundled. |
+| Gift authoring/runtime | `Implemented infrastructure` | AAA CGI asset library і device QA не bundled. |
+| AI Brain | `Implemented provider boundary` | Без configured model provider capability повертає 503. |
+| AI Live Hub | `Implemented adapters/control plane` | Live verification потребує platform credentials/approval. |
+| Creator, Marketplace, Learning | `Implemented` | S3, payment, transcoder і PDF provider активуються лише реальною конфігурацією. |
+| Business і Admin | `Implemented` | E-signature/accounting/calendar adapters не bundled. |
+| Flutter | `Implemented` | Web/Linux/Android зібрано локально; Apple/Windows перевіряються окремими CI runners. |
+| Infrastructure | `Implemented static configuration` | Docker runtime недоступний у цьому agent environment. |
+
+Актуальні команди, capability boundaries і структура описані у кореневому
+`README.md`, `services/api/README.md`, `apps/sylora/README.md` та
+`infrastructure/README.md`.
+
+## Початковий виконавчий вердикт
 
 Репозиторій є якісно деталізованою React/Vite-галереєю дизайну, а не реалізацією production-платформи. Він містить 38 зареєстрованих екранів, 113 SVG-іконок, дизайн-систему, адаптивні стилі й локальну інтерактивність для огляду станів. Водночас немає product router, API client, доменного або data-access шару, backend, бази даних, постійного сховища, real-time transport, media pipeline, платіжної інтеграції, Flutter-клієнтів, інфраструктури розгортання чи тестових файлів.
 

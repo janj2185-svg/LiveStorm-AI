@@ -309,8 +309,7 @@ def invitation_message(
     settings: Settings,
 ) -> EmailOutbox:
     link = (
-        f"{settings.web_base_url.rstrip('/')}/business/invitations/accept"
-        f"?token={quote(raw_token)}"
+        f"{settings.web_base_url.rstrip('/')}/business/invitations/accept?token={quote(raw_token)}"
     )
     safe_link = html.escape(link, quote=True)
     text = (
@@ -697,14 +696,17 @@ async def require_document_access(
 async def next_document_version(
     db: AsyncSession, document: BusinessDocument, actor_user_id: uuid.UUID, **values: Any
 ) -> BusinessDocumentVersion:
-    number = int(
-        await db.scalar(
-            select(func.max(BusinessDocumentVersion.version_number)).where(
-                BusinessDocumentVersion.document_id == document.id
+    number = (
+        int(
+            await db.scalar(
+                select(func.max(BusinessDocumentVersion.version_number)).where(
+                    BusinessDocumentVersion.document_id == document.id
+                )
             )
+            or 0
         )
-        or 0
-    ) + 1
+        + 1
+    )
     version_id = uuid.uuid4()
     version = BusinessDocumentVersion(
         id=version_id,
@@ -784,9 +786,7 @@ async def scrub_business_user_records(
             if workspace is not None and workspace.owner_user_id == user_id:
                 workspace.owner_user_id = other_owner.user_id
         await db.delete(membership)
-    await db.execute(
-        delete(TeamMembership).where(TeamMembership.user_id == user_id)
-    )
+    await db.execute(delete(TeamMembership).where(TeamMembership.user_id == user_id))
     await db.execute(
         delete(WorkspaceInvitation).where(
             WorkspaceInvitation.email == original_email,

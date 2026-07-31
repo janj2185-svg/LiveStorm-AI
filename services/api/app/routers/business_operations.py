@@ -154,12 +154,16 @@ async def list_tasks(
     if assignee_user_id is not None:
         statement = statement.where(WorkspaceTask.assignee_user_id == assignee_user_id)
     scope = f"business-tasks:{workspace_id}:{task_status}:{assignee_user_id}"
-    statement = apply_cursor(
-        statement,
-        WorkspaceTask.created_at,
-        WorkspaceTask.id,
-        decode_cursor(settings, scope, cursor),
-    ).order_by(WorkspaceTask.created_at.desc(), WorkspaceTask.id.desc()).limit(limit + 1)
+    statement = (
+        apply_cursor(
+            statement,
+            WorkspaceTask.created_at,
+            WorkspaceTask.id,
+            decode_cursor(settings, scope, cursor),
+        )
+        .order_by(WorkspaceTask.created_at.desc(), WorkspaceTask.id.desc())
+        .limit(limit + 1)
+    )
     rows = list((await db.scalars(statement)).all())
     visible, next_cursor = page_result(
         rows,
@@ -319,9 +323,7 @@ async def patch_task(
             )
     resulting_status = values.get("status", task.status)
     completed_at = (
-        task.completed_at or utcnow()
-        if resulting_status == TaskStatus.completed
-        else None
+        task.completed_at or utcnow() if resulting_status == TaskStatus.completed else None
     )
     next_version = task.version + 1
     result = await db.execute(
@@ -432,9 +434,7 @@ async def create_task_dependency(
         actor_user_id=auth.user.id,
     )
     await db.commit()
-    return record(
-        dependency, "id", "workspace_id", "task_id", "depends_on_task_id", "created_at"
-    )
+    return record(dependency, "id", "workspace_id", "task_id", "depends_on_task_id", "created_at")
 
 
 @router.delete("/tasks/{task_id}/dependencies/{depends_on_task_id}")
@@ -778,8 +778,7 @@ async def list_folders(
         )
     ).all()
     return [
-        record(item, "id", "workspace_id", "parent_id", "name", "created_at")
-        for item in folders
+        record(item, "id", "workspace_id", "parent_id", "name", "created_at") for item in folders
     ]
 
 
@@ -893,9 +892,7 @@ async def get_document(
     auth: AuthContext = Depends(current_auth),
     db: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:
-    document, _ = await require_document_access(
-        db, auth.user.id, workspace_id, document_id
-    )
+    document, _ = await require_document_access(db, auth.user.id, workspace_id, document_id)
     versions = (
         await db.scalars(
             select(BusinessDocumentVersion)
@@ -1096,9 +1093,7 @@ async def download_document(
     auth: AuthContext = Depends(current_auth),
     db: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:
-    document, _ = await require_document_access(
-        db, auth.user.id, workspace_id, document_id
-    )
+    document, _ = await require_document_access(db, auth.user.id, workspace_id, document_id)
     if document.current_version_id is None:
         raise APIError(
             409,
@@ -1203,9 +1198,7 @@ async def decide_document_approval(
             "The approval does not belong to this document.",
         )
     if approval.approver_user_id != auth.user.id:
-        await require_workspace_permission(
-            db, auth.user.id, workspace_id, "documents.approve"
-        )
+        await require_workspace_permission(db, auth.user.id, workspace_id, "documents.approve")
     if approval.status != "pending":
         raise APIError(
             409,
@@ -1987,8 +1980,6 @@ async def finance_report(
             {"status": row[0], "currency": row[1], "amount_minor": int(row[2] or 0)}
             for row in invoice_rows
         ],
-        "budgets": [
-            {"currency": row[0], "amount_minor": int(row[1] or 0)} for row in budget_rows
-        ],
+        "budgets": [{"currency": row[0], "amount_minor": int(row[1] or 0)} for row in budget_rows],
         "basis": "persisted_business_records",
     }
