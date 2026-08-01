@@ -54,6 +54,39 @@ void main() {
     });
   });
 
+  group('PlatformTokenStore', () {
+    test('falls back to memory when durable vault write fails', () async {
+      final store = PlatformTokenStore(refreshVault: _FailingRefreshVault());
+      await store.save(
+        const AuthTokens(
+          accessToken: 'access-memory',
+          refreshToken: 'refresh-memory',
+          expiresIn: 900,
+        ),
+      );
+      expect(store.accessToken, 'access-memory');
+      expect(await store.readRefreshToken(), 'refresh-memory');
+      await store.clear();
+      expect(store.accessToken, isNull);
+      expect(await store.readRefreshToken(), isNull);
+    });
+
+    test('reads durable vault when available', () async {
+      final vault = _MemoryRefreshVault('persisted-refresh');
+      final store = PlatformTokenStore(refreshVault: vault);
+      expect(await store.readRefreshToken(), 'persisted-refresh');
+      await store.save(
+        const AuthTokens(
+          accessToken: 'a',
+          refreshToken: 'new-refresh',
+          expiresIn: 60,
+        ),
+      );
+      expect(vault.value, 'new-refresh');
+      expect(await store.readRefreshToken(), 'new-refresh');
+    });
+  });
+
   group('ApiProblem', () {
     test('parses RFC7807 fields and validation metadata', () {
       final problem = ApiProblem.fromJson(<String, dynamic>{
@@ -393,6 +426,34 @@ final class _MemoryTokenStore implements TokenStore {
     _accessToken = tokens.accessToken;
     _refreshToken = tokens.refreshToken;
   }
+}
+
+final class _FailingRefreshVault implements SecureRefreshVault {
+  @override
+  Future<void> write(String value) =>
+      Future<void>.error(StateError('KeyringLocked'));
+
+  @override
+  Future<String?> read() => Future<String?>.error(StateError('KeyringLocked'));
+
+  @override
+  Future<void> delete() =>
+      Future<void>.error(StateError('KeyringLocked'));
+}
+
+final class _MemoryRefreshVault implements SecureRefreshVault {
+  _MemoryRefreshVault([this.value]);
+
+  String? value;
+
+  @override
+  Future<void> write(String next) async => value = next;
+
+  @override
+  Future<String?> read() async => value;
+
+  @override
+  Future<void> delete() async => value = null;
 }
 
 final class _OnlineMonitor implements NetworkMonitor {

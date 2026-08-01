@@ -36,43 +36,89 @@ abstract interface class TokenStore {
   Future<void> clear();
 }
 
-final class PlatformTokenStore implements TokenStore {
-  PlatformTokenStore({FlutterSecureStorage? secureStorage})
+abstract interface class SecureRefreshVault {
+  Future<void> write(String value);
+  Future<String?> read();
+  Future<void> delete();
+}
+
+final class LibSecretRefreshVault implements SecureRefreshVault {
+  LibSecretRefreshVault({FlutterSecureStorage? secureStorage})
     : _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   static const _refreshKey = 'sylora.refresh_token';
   final FlutterSecureStorage _secureStorage;
+
+  @override
+  Future<void> write(String value) =>
+      _secureStorage.write(key: _refreshKey, value: value);
+
+  @override
+  Future<String?> read() => _secureStorage.read(key: _refreshKey);
+
+  @override
+  Future<void> delete() => _secureStorage.delete(key: _refreshKey);
+}
+
+final class PlatformTokenStore implements TokenStore {
+  PlatformTokenStore({
+    FlutterSecureStorage? secureStorage,
+    SecureRefreshVault? refreshVault,
+  }) : _refreshVault =
+           refreshVault ?? LibSecretRefreshVault(secureStorage: secureStorage);
+
+  final SecureRefreshVault _refreshVault;
   String? _accessToken;
-  String? _webRefreshToken;
+  String? _memoryRefreshToken;
+  bool _preferMemoryRefresh = false;
 
   @override
   String? get accessToken => _accessToken;
 
   @override
-  Future<String?> readRefreshToken() {
-    if (kIsWeb) {
-      return SynchronousFuture(_webRefreshToken);
+  Future<String?> readRefreshToken() async {
+    if (kIsWeb || _preferMemoryRefresh) {
+      return _memoryRefreshToken;
     }
-    return _secureStorage.read(key: _refreshKey);
+    try {
+      return await _refreshVault.read() ?? _memoryRefreshToken;
+    } on Object {
+      // Locked/unavailable OS keyrings must not strand an otherwise valid
+      // in-memory session (common in CI / headless Linux desktops).
+      return _memoryRefreshToken;
+    }
   }
 
   @override
   Future<void> save(AuthTokens tokens) async {
+    // Always keep the access token in process memory first so a subsequent
+    // authenticated call can proceed even if durable storage fails.
+    _accessToken = tokens.accessToken;
+    _memoryRefreshToken = tokens.refreshToken;
     if (kIsWeb) {
-      _webRefreshToken = tokens.refreshToken;
-      _accessToken = tokens.accessToken;
+      _preferMemoryRefresh = true;
       return;
     }
-    await _secureStorage.write(key: _refreshKey, value: tokens.refreshToken);
-    _accessToken = tokens.accessToken;
+    try {
+      await _refreshVault.write(tokens.refreshToken);
+      _preferMemoryRefresh = false;
+    } on Object {
+      _preferMemoryRefresh = true;
+    }
   }
 
   @override
   Future<void> clear() async {
     _accessToken = null;
-    _webRefreshToken = null;
-    if (!kIsWeb) {
-      await _secureStorage.delete(key: _refreshKey);
+    _memoryRefreshToken = null;
+    _preferMemoryRefresh = false;
+    if (kIsWeb) {
+      return;
+    }
+    try {
+      await _refreshVault.delete();
+    } on Object {
+      // Keyring may be locked or unavailable; in-memory state is already cleared.
     }
   }
 }

@@ -422,6 +422,15 @@ String messageFor(Object error) {
   if (error is FormatException) {
     return 'The server returned an unexpected response.';
   }
+  final detail = error.toString().trim();
+  if (detail.isNotEmpty && detail != "Instance of '${error.runtimeType}'") {
+    // Surface actionable platform failures (e.g. locked keyring) in local QA.
+    if (detail.contains('Keyring') ||
+        detail.contains('secure storage') ||
+        detail.contains('libsecret')) {
+      return 'Secure storage is unavailable on this device. $detail';
+    }
+  }
   return 'The request could not be completed.';
 }
 
