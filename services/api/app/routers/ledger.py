@@ -120,11 +120,16 @@ async def transaction_history_for(
     await db.commit()
     scope = f"wallet-history:{user_id}"
     cursor_value = decode_cursor(settings, scope, cursor)
-    statement = (
-        select(LedgerTransaction)
-        .join(LedgerEntry, LedgerEntry.transaction_id == LedgerTransaction.id)
+    # Distinct on LedgerTransaction itself fails on PostgreSQL because the
+    # metadata JSON column has no equality operator. Distinct the entry
+    # transaction ids first, then load full transactions.
+    account_txn_ids = (
+        select(LedgerEntry.transaction_id)
         .where(LedgerEntry.account_id.in_([wallet.id, earnings.id]))
         .distinct()
+    )
+    statement = select(LedgerTransaction).where(
+        LedgerTransaction.id.in_(account_txn_ids)
     )
     statement = apply_cursor(
         statement,
