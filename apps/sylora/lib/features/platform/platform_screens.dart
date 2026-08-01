@@ -141,6 +141,10 @@ final liveIntegrationsProvider =
       (ref) => ref.watch(liveRepositoryProvider).integrations(),
     );
 
+final tiktokControlPanelProvider = FutureProvider.autoDispose<JsonObject>(
+  (ref) => ref.watch(liveRepositoryProvider).tiktokControlPanel(),
+);
+
 @immutable
 final class LiveControlSnapshot {
   const LiveControlSnapshot({
@@ -1939,6 +1943,8 @@ final class LiveScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 12),
+            const _TikTokLiveControlPanel(),
+            const SizedBox(height: 16),
             if (snapshot.integrationsError != null)
               LumenSurface(
                 child: Row(
@@ -2740,6 +2746,72 @@ final class _StatusPanel extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(message, style: TextStyle(color: color)),
+      ),
+    );
+  }
+}
+
+final class _TikTokLiveControlPanel extends ConsumerWidget {
+  const _TikTokLiveControlPanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final value = ref.watch(tiktokControlPanelProvider);
+    return LumenSurface(
+      child: value.when(
+        loading: () => const Text('Loading TikTok LIVE control panel…'),
+        error: (error, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('TikTok LIVE', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(messageFor(error)),
+            TextButton(
+              onPressed: () => ref.invalidate(tiktokControlPanelProvider),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+        data: (panel) {
+          final status = '${panel['integration_status'] ?? 'unknown'}';
+          final adapter = '${panel['adapter_status'] ?? 'unknown'}';
+          final limitation = '${panel['limitation'] ?? ''}';
+          final personalities = (panel['personalities'] as List<dynamic>? ?? const [])
+              .map((item) => '$item')
+              .join(', ');
+          final events = (panel['supported_events'] as List<dynamic>? ?? const [])
+              .map((item) => '$item')
+              .take(8)
+              .join(', ');
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('TikTok LIVE', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              Text('Status: $status'),
+              Text('Adapter: $adapter'),
+              if (limitation.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 8),
+                Text(limitation),
+              ],
+              const SizedBox(height: 8),
+              Text('Personalities: $personalities'),
+              Text('Events (sample): $events'),
+              const SizedBox(height: 8),
+              Text(
+                'Mute AI · Interrupt AI · TTS volume · Host mode · Reconnect · Diagnostics are reserved until an approved provider transport is connected.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => ref.invalidate(tiktokControlPanelProvider),
+                  child: const Text('Refresh diagnostics'),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

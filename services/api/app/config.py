@@ -99,6 +99,12 @@ class Settings(BaseSettings):
     )
     live_plugin_allowed_hosts: list[str] = Field(default_factory=list)
     live_plugin_signing_keys: dict[str, str] = Field(default_factory=dict)
+    # TikTok LIVE — blocked until an approved provider is configured.
+    # Do not put unofficial webcast scraping credentials here.
+    tiktok_live_provider_approved: bool = False
+    tiktok_live_provider_name: str | None = None
+    tiktok_live_provider_api_key: SecretStr | None = None
+    tiktok_live_provider_endpoint: str | None = None
 
     smtp_host: str | None = None
     smtp_port: int = Field(default=587, ge=1, le=65535)

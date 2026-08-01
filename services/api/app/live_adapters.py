@@ -27,7 +27,6 @@ from app.live_models import (
     LiveCapability,
     LiveNormalizedEventType,
 )
-
 MAX_ADAPTER_RESPONSE_BYTES = 4 * 1024 * 1024
 YOUTUBE_API = "https://www.googleapis.com/youtube/v3"
 YOUTUBE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -2069,7 +2068,9 @@ class AdapterRegistry:
             OBSAdapter(settings),
             MediaMTXAdapter(settings),
             PluginAdapter(settings),
-            UnavailablePlatformAdapter(IntegrationPlatform.tiktok, "requires_provider_review"),
+            # TikTok uses the dedicated package; default status is
+            # blocked_by_provider_access until an approved transport is wired.
+            _tiktok_live_adapter(settings),
             UnavailablePlatformAdapter(IntegrationPlatform.kick, "requires_provider_review"),
             UnavailablePlatformAdapter(IntegrationPlatform.facebook, "requires_provider_review"),
             UnavailablePlatformAdapter(IntegrationPlatform.instagram, "requires_provider_review"),
@@ -2095,3 +2096,9 @@ def retry_delay_seconds(attempt: int, *, base: float = 2, maximum: float = 300) 
     bounded_attempt = max(0, min(attempt, 20))
     ceiling = min(maximum, base * (2**bounded_attempt))
     return random.uniform(ceiling / 2, ceiling)
+
+
+def _tiktok_live_adapter(settings: Settings):
+    from app.tiktok_live.adapter import TikTokLiveAdapter
+
+    return TikTokLiveAdapter(settings)

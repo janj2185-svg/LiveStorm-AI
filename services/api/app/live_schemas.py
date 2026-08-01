@@ -674,6 +674,16 @@ class PlatformStatusResponse(StrictSchema):
     limitation: str | None = None
 
 
+class TikTokControlPanelResponse(StrictSchema):
+    integration_status: str
+    adapter_status: str
+    limitation: str | None = None
+    connection: dict[str, Any] = Field(default_factory=dict)
+    controls: dict[str, bool] = Field(default_factory=dict)
+    personalities: list[str] = Field(default_factory=list)
+    supported_events: list[str] = Field(default_factory=list)
+
+
 class WebhookAccepted(StrictSchema):
     status: Literal["accepted", "duplicate"]
     delivery_id: uuid.UUID

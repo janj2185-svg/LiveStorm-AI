@@ -82,6 +82,7 @@ from app.live_schemas import (
     RulePatch,
     RuleResponse,
     StreamKeyRevealResponse,
+    TikTokControlPanelResponse,
     TurnPage,
     WebhookAccepted,
 )
@@ -246,6 +247,38 @@ async def list_integrations(
         )
     ).all()
     return [integration_response(item) for item in records]
+
+
+@router.get("/tiktok/control-panel", response_model=TikTokControlPanelResponse)
+async def tiktok_control_panel(
+    request: Request,
+    _: IntegrationAuth,
+) -> TikTokControlPanelResponse:
+    from app.tiktok_live.cohost import PERSONALITY_PROFILES
+    from app.tiktok_live.events import TikTokEventType
+    from app.tiktok_live.status import ADAPTER_LIMITATION, current_status
+
+    adapter = registry(request).resolve(IntegrationPlatform.tiktok)
+    snapshot = (
+        adapter.control_panel_snapshot()
+        if hasattr(adapter, "control_panel_snapshot")
+        else {
+            "integration_status": current_status().value,
+            "adapter_status": adapter.descriptor().status,
+            "limitation": ADAPTER_LIMITATION,
+            "connection": {},
+            "controls": {},
+        }
+    )
+    return TikTokControlPanelResponse(
+        integration_status=str(snapshot.get("integration_status") or current_status().value),
+        adapter_status=str(snapshot.get("adapter_status") or adapter.descriptor().status),
+        limitation=snapshot.get("limitation") or ADAPTER_LIMITATION,
+        connection=dict(snapshot.get("connection") or {}),
+        controls={str(k): bool(v) for k, v in dict(snapshot.get("controls") or {}).items()},
+        personalities=sorted(PERSONALITY_PROFILES),
+        supported_events=sorted(item.value for item in TikTokEventType),
+    )
 
 
 @router.post(

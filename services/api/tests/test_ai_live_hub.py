@@ -281,7 +281,7 @@ async def test_platform_capability_gating_and_secret_redaction(
             json={"platform": "tiktok"},
         )
         assert denied.status_code == 409
-        assert denied.json()["code"] == "requires_provider_review"
+        assert denied.json()["code"] == "blocked_by_provider_access"
 
 
 @pytest.mark.asyncio

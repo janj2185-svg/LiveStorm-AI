@@ -1256,6 +1256,7 @@ final class DioAiRepository implements AiRepository {
 
 abstract interface class LiveRepository {
   Future<List<NamedResource>> integrations();
+  Future<JsonObject> tiktokControlPanel();
   Future<JsonObject> integrationHealth(String connectionId);
   Future<void> disconnectIntegration(String connectionId);
   Future<JsonObject> startIntegrationOAuth(
@@ -1314,6 +1315,12 @@ final class DioLiveRepository implements LiveRepository {
           ),
         )
         .toList(growable: false);
+  }
+
+  @override
+  Future<JsonObject> tiktokControlPanel() async {
+    final response = await _client.request('live/tiktok/control-panel');
+    return requireObject(response.data, 'tiktok control panel');
   }
 
   @override
