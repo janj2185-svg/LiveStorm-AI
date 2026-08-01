@@ -157,6 +157,11 @@ Each template includes: **slug**, **name**, **price**, **rarity**, **one-line ef
 | 7 | world-without-cliché | 2800000 | brand statement Divine |
 | 8 | sylora-eternal-listening | 10000000 | top halo gift |
 
+## Concept art
+
+Wave 1 posters (20): see `SYLORA_GIFT_CONCEPT_ART.md` and `artifacts/sylora-gift-concepts/`.  
+These are artist mood references — not runtime GLB/WAV and not READY catalog gifts.
+
 ## Implementation note
 
 These are **templates** (name, price, effect brief, hook). They become READY only after GLB/poster/WAV + Gift Studio publish + send/WS proof — same pipeline as `GIFT_LIBRARY_SEED.md`.
