@@ -29,6 +29,7 @@ import {
 } from '../../design-system/primitives';
 import { Donut, ScreenSection } from '../components';
 import { TRANSACTIONS } from '../data';
+import { LiveProbePanel } from '../lib/LiveProbePanel';
 
 /**
  * The credit glyph.
@@ -304,6 +305,8 @@ export function WalletScreen() {
             </button>
           </Surface>
         </ScreenSection>
+
+        <LiveProbePanel kind="wallet" />
       </div>
     </div>
   );

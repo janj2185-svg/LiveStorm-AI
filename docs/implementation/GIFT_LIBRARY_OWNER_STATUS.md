@@ -10,6 +10,12 @@
 
 Owner testing gallery should only treat PARTIAL gifts as previewable (local files). None are READY for wallet publish.
 
+Gap report (honest, never flips READY):
+
+```bash
+python3 scripts/gift-library/report_readiness_gaps.py
+```
+
 ## PARTIAL — previewable locally
 
 ### Lumen Seed (`lumen-seed`)

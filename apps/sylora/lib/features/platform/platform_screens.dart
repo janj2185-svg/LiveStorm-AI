@@ -362,7 +362,10 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
                     _operationMessage =
                         error is ApiProblem &&
                             error.code == 'payment_provider_unavailable'
-                        ? 'Payment provider unavailable: ${error.detail}'
+                        ? 'Payment provider unavailable: ${error.detail}. '
+                            'Local sandbox (not card charges): '
+                            'python3 scripts/sandbox_topup.py '
+                            '--email user@sylora.dev --amount 25000'
                         : messageFor(error);
                     _operationError = true;
                   });

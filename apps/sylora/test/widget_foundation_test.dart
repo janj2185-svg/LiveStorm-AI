@@ -155,6 +155,7 @@ void main() {
       find.textContaining('No payment provider is configured.'),
       findsOneWidget,
     );
+    expect(find.textContaining('sandbox_topup.py'), findsOneWidget);
   });
 
   testWidgets('AI requires consent before exposing conversations', (

@@ -19,6 +19,7 @@ import { useState } from 'react';
 
 import { LogoMark } from '../../design-system/brand/Logo';
 import { Button, Checkbox, Icon, IconButton, Input, Surface, Tabs } from '../../design-system/primitives';
+import { LiveProbePanel } from '../lib/LiveProbePanel';
 
 type Mode = 'create' | 'signin';
 
@@ -182,6 +183,8 @@ export function AuthScreen() {
               {creating ? 'Sign in instead' : 'Create an account'}
             </Button>
           </p>
+
+          <LiveProbePanel kind="auth" />
         </div>
       </div>
     </div>

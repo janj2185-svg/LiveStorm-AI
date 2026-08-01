@@ -214,6 +214,21 @@ Default API origin: `http://127.0.0.1:8000` via `--dart-define=SYLORA_API_BASE_U
 
 To change Phase 2 defaults (Stripe / OpenAI / Flutter-only focus), update the confirmation log in `OWNER_PRODUCT_ROADMAP.md`.
 
+**Live probes** (fixture UI stays demo; button hits real API): `#/auth`, `#/feed`, `#/wallet` → “Run live probe”.
+
+**Phase 3 without keys:**
+
+```bash
+./verify-phase3-nokeys.sh
+# Asserts: MediaMTX missing, AI 503, live ingest not provisioned
+```
+
+**Gift readiness gaps (never promotes READY):**
+
+```bash
+python3 scripts/gift-library/report_readiness_gaps.py
+```
+
 ---
 
 ## G. Testing gifts

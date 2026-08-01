@@ -37,6 +37,7 @@ import {
 } from '../../design-system/primitives';
 import { Media, PostCard, ScreenSection } from '../components';
 import { COMMUNITIES, CREATORS, ME, POSTS } from '../data';
+import { LiveProbePanel } from '../lib/LiveProbePanel';
 
 /** Post types the composer can open. Ordered by how often they are used. */
 const COMPOSER_TYPES: { id: string; label: string; icon: IconName }[] = [
@@ -240,6 +241,7 @@ export function FeedScreen() {
             </Surface>
           </aside>
         </div>
+        <LiveProbePanel kind="feed" />
       </div>
     </div>
   );

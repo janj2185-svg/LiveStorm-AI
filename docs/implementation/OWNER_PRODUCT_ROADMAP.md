@@ -1,66 +1,63 @@
 # SYLORA — Product Roadmap (beyond gifts)
 
 **Goal:** raise platform from ~4.5 → 7 → 9+ without pretending gifts are DONE.  
-**Rule:** owner confirms each phase gate before spend on keys/hiring.
+**Mode:** owner asked agent to proceed sequentially (`Роби сам послідовно`). Keys/hiring still blocked until provided.
 
 ---
 
-## Phase 1 — Product loops that work locally (NOW)
-
-**No API keys. No hiring.**
+## Phase 1 — Product loops that work locally — DONE
 
 | Deliverable | Status |
 |---|---|
-| Roadmap + confirmation gates | done |
-| Seed handles, follows, posts, DMs, wallet balances for test accounts | `scripts/seed_product_demo.py` |
-| Automated product-loop verify | `scripts/verify_product_loop.py` + `./verify-product-loop.sh` |
-| Hook into `./start-local.sh --host` + `./verify-local.sh` | done |
-| Diagnostics shows product-loop summary | `GET /v1/diagnostics` → `product_loop` |
+| Seed handles / wallets / follows / posts / DMs | `scripts/seed_product_demo.py` |
+| Product-loop verify | `./verify-product-loop.sh` |
+| Hooked into start/verify-local | done |
+| Diagnostics `product_loop` | done |
 
-**Exit criteria (you confirm):**
-- [x] `./verify-product-loop.sh` or `python3 scripts/verify_product_loop.py` = PASS (agent verified 2026-08-01)
-- [ ] Owner can login, see balance > 0, see a feed post, open DM path (your local check)
-- [x] Still honest: gifts READY = 0
+Exit: verify PASS · gifts READY=0.
 
 ---
 
-## Phase 2 — Live client + money path (IN PROGRESS)
-
-**Owner signal 2026-08-01:** reply `2` → start Phase 2.  
-**Defaults until you override:** payment stay fail-closed · AI skip · gallery + Flutter prep (no Stripe/OpenAI keys).
+## Phase 2 — Live client + money path — DONE (no Stripe/OpenAI)
 
 | Deliverable | Status |
 |---|---|
-| Documented sandbox top-up (admin issuance; not real card charges) | `scripts/sandbox_topup.py` |
-| Gallery Demo data / Live API / Static catalog badges | `src/showcase/App.tsx` + `dataSource` on key screens |
-| Flutter local API runner | `scripts/run-flutter-local.sh` (+ `.ps1`) |
-| Payment stays fail-closed | yes — `POST /v1/wallet/topups` still Provider not configured |
-| AI provider | skipped (no key) |
+| Sandbox top-up (admin issuance) | `scripts/sandbox_topup.py` |
+| Gallery Demo / Live / Catalog badges | done |
+| Live probes on Auth / Feed / Wallet (fixture UI kept) | `src/screens/lib/LiveProbePanel.tsx` |
+| Flutter local runner | `scripts/run-flutter-local.sh` |
+| Flutter wallet fail-closed + sandbox hint | `platform_screens.dart` |
+| Payment | fail-closed (no provider) |
+| AI | skipped (no key) |
 
-Confirm to change defaults:
-1. **Payment provider?** Stripe / another / ~~stay fail-closed~~ (current)
-2. **AI provider?** OpenAI key / ~~skip~~ (current)
-3. **Flutter focus?** Yes on your machine / gallery-only for now
-
-Work remaining when you override:
-- Wire Stripe (or other) payment provider
-- Add OpenAI key for AI routes
-- Owner runs Flutter SDK + `./scripts/run-flutter-local.sh`
+Override later: Stripe · OpenAI key · Flutter SDK on owner machine.
 
 ---
 
-## Phase 3 — Live streaming + AI (NEEDS KEYS + HARDWARE QA)
+## Phase 3 — Live + AI fail-closed scaffolding — DONE (no keys)
 
-- MediaMTX path verified on phone
-- AI mic → text → voice with real provider
-- Device FPS/RAM for gifts still separate track
+| Deliverable | Status |
+|---|---|
+| Verify without MediaMTX/OpenAI | `./verify-phase3-nokeys.sh` |
+| Live create → `ingest_provisioned=false` | asserted |
+| Live preflight → not ready | asserted |
+| AI message → `503 ai_provider_unavailable` | asserted |
+| Diagnostics lists `openai_api_key` + `mediamtx_control` missing | asserted |
+
+Still needs keys + phone QA for real streaming/AI:
+- Configure `MEDIAMTX_CONTROL_URL` + run MediaMTX
+- Configure `OPENAI_API_KEY`
+- Phone FPS/RAM for gifts (separate)
 
 ---
 
-## Phase 4 — Gift content quality (NEEDS HIRING APPROVAL)
+## Phase 4 — Gift content quality — PREP ONLY (hiring pending)
 
-- Pilot 3 READY gifts with art team
-- Scale only after accept
+| Deliverable | Status |
+|---|---|
+| Honest gap report (never promotes READY) | `scripts/gift-library/report_readiness_gaps.py` |
+| READY count | **0** (unchanged) |
+| Hiring pilot 3 gifts | **blocked** until owner approves budget |
 
 ---
 
@@ -68,8 +65,9 @@ Work remaining when you override:
 
 | Date | Gate | Decision |
 |---|---|---|
-| 2026-08-01 | Start Phase 1 | Owner: start; will confirm further |
-| 2026-08-01 | Start Phase 2 | Owner reply `2`; defaults: fail-closed payment, AI skip, gallery+Flutter prep |
-| | Phase 2 payment | fail-closed (override anytime) |
-| | Phase 2 AI | skip (override anytime) |
+| 2026-08-01 | Start Phase 1 | Owner: start |
+| 2026-08-01 | Start Phase 2 | Owner reply `2` |
+| 2026-08-01 | Proceed sequentially | Owner: `Роби сам послідовно` — agent continues without keys/hiring |
+| | Payment | fail-closed |
+| | AI | skip until key |
 | | Phase 4 hiring | _pending_ |

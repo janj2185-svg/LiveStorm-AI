@@ -87,6 +87,27 @@ if [[ -f scripts/verify_product_loop.py ]]; then
   fi
 fi
 
+# Phase 3 fail-closed (no keys) — live ingest + AI provider honesty
+if [[ -f scripts/verify_phase3_nokeys.py ]]; then
+  echo ""
+  echo "--- Phase 3 no-keys verify ---"
+  PY=python3
+  [[ -x services/api/.venv/bin/python ]] && PY=services/api/.venv/bin/python
+  if $PY scripts/verify_phase3_nokeys.py; then
+    echo "✔ Phase 3 no-keys verify"
+  else
+    echo "✖ Phase 3 no-keys verify failed"
+    FAIL=1
+  fi
+fi
+
+# Gift readiness honesty (never claims READY)
+if [[ -f scripts/gift-library/report_readiness_gaps.py ]]; then
+  echo ""
+  echo "--- Gift readiness gaps ---"
+  python3 scripts/gift-library/report_readiness_gaps.py || FAIL=1
+fi
+
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
   echo "VERIFY OK — stack is usable for owner testing."
