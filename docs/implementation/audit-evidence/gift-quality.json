@@ -1,0 +1,362 @@
+[
+  {
+    "slug": "lumen-seed",
+    "blender_open": true,
+    "blender_objs": "OBJS 8",
+    "blender_actions": "ACTIONS 6",
+    "glb_bytes": 90580,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 141120,
+    "wav_duration_s": 3.2,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "3.200000",
+        "size": "89094"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "3.260000",
+        "size": "62532"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "501663"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 3200,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "paper-koi",
+    "blender_open": true,
+    "blender_objs": "OBJS 8",
+    "blender_actions": "ACTIONS 6",
+    "glb_bytes": 14744,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 176400,
+    "wav_duration_s": 4.0,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "4.000000",
+        "size": "122451"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "4.010000",
+        "size": "90688"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "506340"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 4000,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "signal-ribbon",
+    "blender_open": true,
+    "blender_objs": "OBJS 7",
+    "blender_actions": "ACTIONS 5",
+    "glb_bytes": 119020,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 158760,
+    "wav_duration_s": 3.6,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "3.600000",
+        "size": "118190"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "3.630000",
+        "size": "156187"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "503541"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 3600,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "tea-steam-heart",
+    "blender_open": true,
+    "blender_objs": "OBJS 8",
+    "blender_actions": "ACTIONS 6",
+    "glb_bytes": 95996,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 185220,
+    "wav_duration_s": 4.2,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "4.200000",
+        "size": "113610"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "4.260000",
+        "size": "69511"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "508543"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 4200,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "constellation-pin",
+    "blender_open": true,
+    "blender_objs": "OBJS 12",
+    "blender_actions": "ACTIONS 10",
+    "glb_bytes": 376436,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 167580,
+    "wav_duration_s": 3.8,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "3.800000",
+        "size": "104220"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "3.760000",
+        "size": "55417"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "502388"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 3800,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "stage-curtain-rise",
+    "blender_open": true,
+    "blender_objs": "OBJS 9",
+    "blender_actions": "ACTIONS 7",
+    "glb_bytes": 24312,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 308700,
+    "wav_duration_s": 7.0,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "7.000000",
+        "size": "246248"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "7.010000",
+        "size": "193463"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "506150"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 7000,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "opera-mask-reveal",
+    "blender_open": true,
+    "blender_objs": "OBJS 13",
+    "blender_actions": "ACTIONS 10",
+    "glb_bytes": 263448,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 485100,
+    "wav_duration_s": 11.0,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "11.000000",
+        "size": "352147"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "11.010000",
+        "size": "261149"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "515897"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 11000,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "worldfold-letter",
+    "blender_open": true,
+    "blender_objs": "OBJS 13",
+    "blender_actions": "ACTIONS 10",
+    "glb_bytes": 275252,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 705600,
+    "wav_duration_s": 16.0,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "16.000000",
+        "size": "492671"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "16.010000",
+        "size": "280096"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "530855"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 16000,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  },
+  {
+    "slug": "sylora-genesis-spire",
+    "blender_open": true,
+    "blender_objs": "OBJS 13",
+    "blender_actions": "ACTIONS 10",
+    "glb_bytes": 59784,
+    "glb_has_animations": true,
+    "wav_channels": 2,
+    "wav_rate": 44100,
+    "wav_frames": 1102500,
+    "wav_duration_s": 25.0,
+    "wav_non_silent": true,
+    "preview.mp4": {
+      "format": {
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "duration": "25.000000",
+        "size": "786118"
+      }
+    },
+    "preview.gif": {
+      "format": {
+        "format_name": "gif",
+        "duration": "25.010000",
+        "size": "450606"
+      }
+    },
+    "poster.png": {
+      "format": {
+        "format_name": "png_pipe",
+        "size": "523552"
+      }
+    },
+    "manifest_schema": "1.0",
+    "manifest_duration": 25000,
+    "manifest_assets": 4,
+    "fps": "NOT_MEASURED",
+    "ram": "NOT_MEASURED",
+    "gpu": "NOT_MEASURED",
+    "load_time": "NOT_MEASURED"
+  }
+]
