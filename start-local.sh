@@ -125,6 +125,12 @@ echo "Seeding product demo (handles / wallet / feed / DM)..."
   services/api/.venv/bin/python scripts/seed_product_demo.py
 ) || echo "WARN: product demo seed failed — run: python3 scripts/seed_product_demo.py"
 
+if grep -q '^OPENAI_API_KEY=sk-' services/api/.env 2>/dev/null || grep -q '^OPENAI_API_KEY=sk-' .env.local 2>/dev/null; then
+  echo "Configuring OpenAI provider from local env (key never printed)..."
+  services/api/.venv/bin/python scripts/configure_openai_provider.py \
+    || echo "WARN: OpenAI configure failed — run: python3 scripts/configure_openai_provider.py"
+fi
+
 echo ""
 echo "SYLORA host stack started."
 echo "  Gallery:      http://127.0.0.1:5173"

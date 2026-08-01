@@ -34,20 +34,19 @@ Override later: Stripe · OpenAI key · Flutter SDK on owner machine.
 
 ---
 
-## Phase 3 — Live + AI fail-closed scaffolding — DONE (no keys)
+## Phase 3 — Live + AI
 
 | Deliverable | Status |
 |---|---|
-| Verify without MediaMTX/OpenAI | `./verify-phase3-nokeys.sh` |
-| Live create → `ingest_provisioned=false` | asserted |
-| Live preflight → not ready | asserted |
-| AI message → `503 ai_provider_unavailable` | asserted |
-| Diagnostics lists `openai_api_key` + `mediamtx_control` missing | asserted |
+| Verify without MediaMTX | `./verify-phase3-nokeys.sh` |
+| Live create → ingest not provisioned | asserted |
+| OpenAI key in gitignored env | wired (not committed) |
+| Admin `openai` provider | `scripts/configure_openai_provider.py` |
+| AI verify | `./verify-ai.sh` |
+| Live chat | **blocked by OpenAI `insufficient_quota`** until billing topped up |
+| MediaMTX | still unconfigured |
 
-Still needs keys + phone QA for real streaming/AI:
-- Configure `MEDIAMTX_CONTROL_URL` + run MediaMTX
-- Configure `OPENAI_API_KEY`
-- Phone FPS/RAM for gifts (separate)
+Owner action: add OpenAI billing/credits → re-run `./verify-ai.sh` until live chat ✔.
 
 ---
 
@@ -68,6 +67,7 @@ Still needs keys + phone QA for real streaming/AI:
 | 2026-08-01 | Start Phase 1 | Owner: start |
 | 2026-08-01 | Start Phase 2 | Owner reply `2` |
 | 2026-08-01 | Proceed sequentially | Owner: `Роби сам послідовно` — agent continues without keys/hiring |
+| 2026-08-01 | OpenAI key provided | Wired to gitignored env + admin provider; live chat blocked by OpenAI insufficient_quota |
 | | Payment | fail-closed |
-| | AI | skip until key |
+| | AI | key present; needs OpenAI billing |
 | | Phase 4 hiring | _pending_ |

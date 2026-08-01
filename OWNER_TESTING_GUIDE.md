@@ -220,8 +220,18 @@ To change Phase 2 defaults (Stripe / OpenAI / Flutter-only focus), update the co
 
 ```bash
 ./verify-phase3-nokeys.sh
-# Asserts: MediaMTX missing, AI 503, live ingest not provisioned
+# Asserts: MediaMTX missing, live ingest not provisioned, AI honest response
 ```
+
+**OpenAI (after you put key in gitignored `services/api/.env`):**
+
+```bash
+# Never commit the key
+python3 scripts/configure_openai_provider.py
+./verify-ai.sh
+```
+
+If verify reports `insufficient_quota`, add billing at https://platform.openai.com — wiring is already done.
 
 **Gift readiness gaps (never promotes READY):**
 

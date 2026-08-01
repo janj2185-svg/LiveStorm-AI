@@ -101,6 +101,20 @@ if [[ -f scripts/verify_phase3_nokeys.py ]]; then
   fi
 fi
 
+# AI provider wiring (when OPENAI_API_KEY present in gitignored env)
+if [[ -f scripts/verify_ai_provider.py ]]; then
+  echo ""
+  echo "--- AI provider verify ---"
+  PY=python3
+  [[ -x services/api/.venv/bin/python ]] && PY=services/api/.venv/bin/python
+  if $PY scripts/verify_ai_provider.py; then
+    echo "✔ AI provider verify"
+  else
+    echo "✖ AI provider verify failed"
+    FAIL=1
+  fi
+fi
+
 # Gift readiness honesty (never claims READY)
 if [[ -f scripts/gift-library/report_readiness_gaps.py ]]; then
   echo ""

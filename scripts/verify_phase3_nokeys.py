@@ -33,10 +33,15 @@ def main() -> int:
             diag = client.get(f"{BASE}/diagnostics")
             check("Diagnostics", diag.status_code == 200)
             missing = (diag.json().get("missing_providers") or []) if diag.status_code == 200 else []
+            configured = (
+                (diag.json().get("configured_providers") or []) if diag.status_code == 200 else []
+            )
+            # openai_api_key may be present after owner wires a key — either state is honest
+            openai_honest = ("openai_api_key" in missing) or ("openai_api_key" in configured)
             check(
-                "openai_api_key listed missing",
-                "openai_api_key" in missing,
-                str(missing),
+                "openai_api_key listed in diagnostics",
+                openai_honest,
+                f"missing={missing} configured={configured}",
             )
             check(
                 "mediamtx_control listed missing",
@@ -100,7 +105,7 @@ def main() -> int:
                             str(pre.json())[:240],
                         )
 
-            # AI: grant consent then expect provider 503 on message
+            # AI: grant consent then message — fail-closed if no provider, or live if configured
             settings = client.patch(
                 f"{BASE}/ai/settings",
                 headers=headers,
@@ -134,9 +139,18 @@ def main() -> int:
                         code = msg.json().get("code")
                     except Exception:
                         code = None
+                    ok = msg.status_code in (200, 201) or (
+                        msg.status_code == 503
+                        and code
+                        in {
+                            "ai_provider_unavailable",
+                            "provider_temporarily_unavailable",
+                            "provider_request_rejected",
+                        }
+                    )
                     check(
-                        "AI message fail-closed 503",
-                        msg.status_code == 503 and code == "ai_provider_unavailable",
+                        "AI message live or honest fail-closed",
+                        ok,
                         f"HTTP {msg.status_code} code={code}",
                     )
 
