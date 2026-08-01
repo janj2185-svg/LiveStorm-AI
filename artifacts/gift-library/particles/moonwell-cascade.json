@@ -1,0 +1,10 @@
+{
+  "slug": "moonwell-cascade",
+  "emitters": [
+    "water",
+    "moon",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

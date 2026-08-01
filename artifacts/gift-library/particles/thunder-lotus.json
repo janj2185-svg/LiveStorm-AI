@@ -1,0 +1,10 @@
+{
+  "slug": "thunder-lotus",
+  "emitters": [
+    "lightning",
+    "nature",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "chrono-phoenix",
+  "emitters": [
+    "phoenix",
+    "time",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

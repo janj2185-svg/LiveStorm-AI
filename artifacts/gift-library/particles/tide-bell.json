@@ -1,0 +1,10 @@
+{
+  "slug": "tide-bell",
+  "emitters": [
+    "water",
+    "sound",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

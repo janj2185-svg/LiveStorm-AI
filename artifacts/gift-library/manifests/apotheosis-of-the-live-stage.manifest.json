@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 91,
+  "slug": "apotheosis-of-the-live-stage",
+  "name": "Apotheosis of the Live Stage",
+  "rarity": "divine",
+  "priceCoins": 5000000,
+  "durationSec": 12.0,
+  "entry": {
+    "glb": "glb/apotheosis-of-the-live-stage.glb",
+    "proceduralSeed": 4047885712,
+    "vfx": {
+      "primaryElement": "sacred",
+      "secondaryElement": "stage",
+      "particles": [
+        "sacred",
+        "stage",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.8,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": true,
+        "chromaticAberration": true
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_sacred",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_sacred_divine"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.24000000000000002
+      },
+      {
+        "t": 0.65,
+        "shot": "crane_up_godray",
+        "fov": 28,
+        "shake": 0.12
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/apotheosis-of-the-live-stage/bed.ogg",
+      "whooshes": "sounds/apotheosis-of-the-live-stage/whoosh.ogg",
+      "impact": "sounds/apotheosis-of-the-live-stage/impact.ogg",
+      "voiceFx": true,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 60000,
+      "desktopTris": 400000,
+      "particles": 5000,
+      "targetFps": 45
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 1,
+      "tone": "awe",
+      "promptHint": "React to the original Sylora gift 'Apotheosis of the Live Stage' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "divine",
+        "apotheosis"
+      ],
+      "globalEvent": true
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "divine",
+      "apotheosis"
+    ],
+    "globalEvent": true
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

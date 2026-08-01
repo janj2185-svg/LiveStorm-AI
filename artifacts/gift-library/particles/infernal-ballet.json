@@ -1,0 +1,10 @@
+{
+  "slug": "infernal-ballet",
+  "emitters": [
+    "fire",
+    "dance",
+    "sparks",
+    "ember"
+  ],
+  "budget": 1800
+}

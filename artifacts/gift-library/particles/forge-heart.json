@@ -1,0 +1,10 @@
+{
+  "slug": "forge-heart",
+  "emitters": [
+    "fire",
+    "metal",
+    "sparks",
+    "ember"
+  ],
+  "budget": 900
+}

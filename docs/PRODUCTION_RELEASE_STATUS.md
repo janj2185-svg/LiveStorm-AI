@@ -54,8 +54,8 @@ Repo: LiveStorm AI (this codebase). User-facing name “SYLORA” is aspirationa
 | Flutter / Android / Linux mobile apps | Missing |
 | Redis | Missing |
 | WebRTC / RTMP streaming stack | Design stubs only |
-| First-party Gift Gallery / Store / Wallet / purchase | Missing |
-| AAA gift 3D / particles / shaders / physics packs | Concept PNGs only |
+| First-party Gift Gallery / Store / Wallet / purchase | Gift Store UI + 100-gift library ✅; Wallet/purchase ❌ |
+| AAA gift 3D / particles / shaders / physics packs | Procedural Blender/GLB v1 ✅ (100); studio remaster optional |
 | Marketplace | Missing |
 | Business CRM | Missing |
 | Education platform | Missing (only AI content type label) |

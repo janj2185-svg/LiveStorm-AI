@@ -1,0 +1,10 @@
+{
+  "slug": "pulse-coin",
+  "emitters": [
+    "metal",
+    "energy",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

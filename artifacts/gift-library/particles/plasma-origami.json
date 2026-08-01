@@ -1,0 +1,10 @@
+{
+  "slug": "plasma-origami",
+  "emitters": [
+    "energy",
+    "origami",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

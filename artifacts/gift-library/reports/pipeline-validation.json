@@ -1,0 +1,1756 @@
+{
+  "ok": true,
+  "totals": {
+    "gifts": 100,
+    "glb": 100,
+    "blend": 100,
+    "thumb": 100,
+    "poster": 100,
+    "mp4": 100,
+    "gif": 100,
+    "manifest": 100,
+    "uniqueNames": 100,
+    "uniqueSlugs": 100
+  },
+  "rarityPrices": {
+    "rare": [
+      10,
+      25,
+      50,
+      100,
+      250,
+      500
+    ],
+    "epic": [
+      500,
+      1000,
+      2500,
+      5000,
+      10000,
+      25000
+    ],
+    "legendary": [
+      10000,
+      25000,
+      50000,
+      100000,
+      250000,
+      500000
+    ],
+    "mythic": [
+      250000,
+      500000,
+      1000000,
+      2500000
+    ],
+    "divine": [
+      1000000,
+      2500000,
+      5000000,
+      10000000
+    ]
+  },
+  "failed": [],
+  "items": [
+    {
+      "id": 1,
+      "slug": "ember-seed",
+      "rarity": "rare",
+      "price": 10,
+      "glbBytes": 79988,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 2,
+      "slug": "tide-bell",
+      "rarity": "rare",
+      "price": 25,
+      "glbBytes": 78104,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 3,
+      "slug": "frost-quill",
+      "rarity": "rare",
+      "price": 50,
+      "glbBytes": 234920,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 4,
+      "slug": "pulse-coin",
+      "rarity": "rare",
+      "price": 100,
+      "glbBytes": 184824,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 5,
+      "slug": "moss-lantern",
+      "rarity": "rare",
+      "price": 250,
+      "glbBytes": 79864,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 6,
+      "slug": "sky-ribbon",
+      "rarity": "rare",
+      "price": 500,
+      "glbBytes": 90692,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 7,
+      "slug": "echo-drum",
+      "rarity": "rare",
+      "price": 10,
+      "glbBytes": 90696,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 8,
+      "slug": "solar-petal",
+      "rarity": "rare",
+      "price": 25,
+      "glbBytes": 110028,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 9,
+      "slug": "quartz-nest",
+      "rarity": "rare",
+      "price": 50,
+      "glbBytes": 79860,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 10,
+      "slug": "comet-marble",
+      "rarity": "rare",
+      "price": 100,
+      "glbBytes": 90708,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 11,
+      "slug": "volt-sprout",
+      "rarity": "rare",
+      "price": 250,
+      "glbBytes": 80000,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 12,
+      "slug": "pearl-orbit",
+      "rarity": "rare",
+      "price": 500,
+      "glbBytes": 184828,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 13,
+      "slug": "ash-phoenixling",
+      "rarity": "rare",
+      "price": 10,
+      "glbBytes": 235072,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 14,
+      "slug": "glyph-kite",
+      "rarity": "rare",
+      "price": 25,
+      "glbBytes": 90700,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 15,
+      "slug": "honey-nova",
+      "rarity": "rare",
+      "price": 50,
+      "glbBytes": 79992,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 16,
+      "slug": "iron-bloom",
+      "rarity": "rare",
+      "price": 100,
+      "glbBytes": 79852,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 17,
+      "slug": "rain-prism",
+      "rarity": "rare",
+      "price": 250,
+      "glbBytes": 234912,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 18,
+      "slug": "star-thimble",
+      "rarity": "rare",
+      "price": 500,
+      "glbBytes": 78120,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 19,
+      "slug": "wind-chime-gate",
+      "rarity": "rare",
+      "price": 10,
+      "glbBytes": 79880,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 20,
+      "slug": "cinder-bookmark",
+      "rarity": "rare",
+      "price": 25,
+      "glbBytes": 90860,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 21,
+      "slug": "nebula-loom",
+      "rarity": "epic",
+      "price": 2500,
+      "glbBytes": 225888,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 22,
+      "slug": "leviathan-scale",
+      "rarity": "epic",
+      "price": 5000,
+      "glbBytes": 225912,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 23,
+      "slug": "obsidian-choir",
+      "rarity": "epic",
+      "price": 10000,
+      "glbBytes": 119196,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 24,
+      "slug": "clockwork-aurora",
+      "rarity": "epic",
+      "price": 25000,
+      "glbBytes": 131796,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 25,
+      "slug": "storm-quillstorm",
+      "rarity": "epic",
+      "price": 500,
+      "glbBytes": 119344,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 26,
+      "slug": "crystal-behemoth-cub",
+      "rarity": "epic",
+      "price": 1000,
+      "glbBytes": 276020,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 27,
+      "slug": "void-orchid",
+      "rarity": "epic",
+      "price": 2500,
+      "glbBytes": 150960,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 28,
+      "slug": "forge-heart",
+      "rarity": "epic",
+      "price": 5000,
+      "glbBytes": 151100,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 29,
+      "slug": "mirror-tide",
+      "rarity": "epic",
+      "price": 10000,
+      "glbBytes": 225892,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 30,
+      "slug": "rune-avalanche",
+      "rarity": "epic",
+      "price": 25000,
+      "glbBytes": 120944,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 31,
+      "slug": "photon-dancer",
+      "rarity": "epic",
+      "price": 500,
+      "glbBytes": 131924,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 32,
+      "slug": "thunder-lotus",
+      "rarity": "epic",
+      "price": 1000,
+      "glbBytes": 121080,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 33,
+      "slug": "celestial-abacus",
+      "rarity": "epic",
+      "price": 2500,
+      "glbBytes": 149504,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 34,
+      "slug": "ember-symphony",
+      "rarity": "epic",
+      "price": 5000,
+      "glbBytes": 226044,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 35,
+      "slug": "glacier-crown",
+      "rarity": "epic",
+      "price": 10000,
+      "glbBytes": 140064,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 36,
+      "slug": "sandstorm-sphinx",
+      "rarity": "epic",
+      "price": 25000,
+      "glbBytes": 120956,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 37,
+      "slug": "plasma-origami",
+      "rarity": "epic",
+      "price": 500,
+      "glbBytes": 121080,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 38,
+      "slug": "harbinger-belltower",
+      "rarity": "epic",
+      "price": 1000,
+      "glbBytes": 224452,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 39,
+      "slug": "lumen-serpent",
+      "rarity": "epic",
+      "price": 2500,
+      "glbBytes": 119332,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 40,
+      "slug": "arcane-hourglass",
+      "rarity": "epic",
+      "price": 5000,
+      "glbBytes": 140080,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 41,
+      "slug": "worldtree-spark",
+      "rarity": "legendary",
+      "price": 250000,
+      "glbBytes": 267152,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 42,
+      "slug": "dragonforge-relic",
+      "rarity": "legendary",
+      "price": 500000,
+      "glbBytes": 174520,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 43,
+      "slug": "abyssal-crown",
+      "rarity": "legendary",
+      "price": 10000,
+      "glbBytes": 165136,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 44,
+      "slug": "solar-cathedral",
+      "rarity": "legendary",
+      "price": 25000,
+      "glbBytes": 268768,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 45,
+      "slug": "tempest-throne",
+      "rarity": "legendary",
+      "price": 50000,
+      "glbBytes": 195168,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 46,
+      "slug": "chrono-phoenix",
+      "rarity": "legendary",
+      "price": 100000,
+      "glbBytes": 163396,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 47,
+      "slug": "mythic-atlas-sphere",
+      "rarity": "legendary",
+      "price": 250000,
+      "glbBytes": 176012,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 48,
+      "slug": "eclipse-masquerade",
+      "rarity": "legendary",
+      "price": 500000,
+      "glbBytes": 165160,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 49,
+      "slug": "siren-observatory",
+      "rarity": "legendary",
+      "price": 10000,
+      "glbBytes": 270116,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 50,
+      "slug": "gilded-leviathan",
+      "rarity": "legendary",
+      "price": 25000,
+      "glbBytes": 161924,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 51,
+      "slug": "arc-reactor-bloom",
+      "rarity": "legendary",
+      "price": 50000,
+      "glbBytes": 195320,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 52,
+      "slug": "winter-sovereign",
+      "rarity": "legendary",
+      "price": 100000,
+      "glbBytes": 195176,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 53,
+      "slug": "infernal-ballet",
+      "rarity": "legendary",
+      "price": 250000,
+      "glbBytes": 195312,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 54,
+      "slug": "oracle-spire",
+      "rarity": "legendary",
+      "price": 500000,
+      "glbBytes": 270092,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 55,
+      "slug": "celestine-warhorn",
+      "rarity": "legendary",
+      "price": 10000,
+      "glbBytes": 318728,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 56,
+      "slug": "emerald-behemoth",
+      "rarity": "legendary",
+      "price": 25000,
+      "glbBytes": 175996,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 57,
+      "slug": "rift-ballet",
+      "rarity": "legendary",
+      "price": 50000,
+      "glbBytes": 318696,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 58,
+      "slug": "stormwright-anvil",
+      "rarity": "legendary",
+      "price": 100000,
+      "glbBytes": 163548,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 59,
+      "slug": "moonwell-cascade",
+      "rarity": "legendary",
+      "price": 250000,
+      "glbBytes": 165152,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 60,
+      "slug": "aether-colossus",
+      "rarity": "legendary",
+      "price": 500000,
+      "glbBytes": 270104,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 61,
+      "slug": "genesis-loom-eternal",
+      "rarity": "mythic",
+      "price": 250000,
+      "glbBytes": 229320,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 62,
+      "slug": "primordial-tidewyrm",
+      "rarity": "mythic",
+      "price": 500000,
+      "glbBytes": 210176,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 63,
+      "slug": "singularity-rose-garden",
+      "rarity": "mythic",
+      "price": 1000000,
+      "glbBytes": 229336,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 64,
+      "slug": "astral-tribunal",
+      "rarity": "mythic",
+      "price": 2500000,
+      "glbBytes": 222492,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 65,
+      "slug": "phoenix-empire-dawn",
+      "rarity": "mythic",
+      "price": 250000,
+      "glbBytes": 229320,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 66,
+      "slug": "quantum-mythos-engine",
+      "rarity": "mythic",
+      "price": 500000,
+      "glbBytes": 209932,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 67,
+      "slug": "oceanus-coronation",
+      "rarity": "mythic",
+      "price": 1000000,
+      "glbBytes": 313672,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 68,
+      "slug": "helios-forge-god",
+      "rarity": "mythic",
+      "price": 2500000,
+      "glbBytes": 210316,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 69,
+      "slug": "nyx-veil-unbound",
+      "rarity": "mythic",
+      "price": 250000,
+      "glbBytes": 208700,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 70,
+      "slug": "thunder-pantheon",
+      "rarity": "mythic",
+      "price": 500000,
+      "glbBytes": 366840,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 71,
+      "slug": "world-end-garden",
+      "rarity": "mythic",
+      "price": 1000000,
+      "glbBytes": 211656,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 72,
+      "slug": "infinite-library-gate",
+      "rarity": "mythic",
+      "price": 2500000,
+      "glbBytes": 366728,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 73,
+      "slug": "celestial-behemoth-choir",
+      "rarity": "mythic",
+      "price": 250000,
+      "glbBytes": 209948,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 74,
+      "slug": "mirror-multiverse-waltz",
+      "rarity": "mythic",
+      "price": 500000,
+      "glbBytes": 210216,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 75,
+      "slug": "dragon-eclipse-covenant",
+      "rarity": "mythic",
+      "price": 1000000,
+      "glbBytes": 222532,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 76,
+      "slug": "fate-spindle-absolute",
+      "rarity": "mythic",
+      "price": 2500000,
+      "glbBytes": 208456,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 77,
+      "slug": "abyss-cathedral-rising",
+      "rarity": "mythic",
+      "price": 250000,
+      "glbBytes": 209936,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 78,
+      "slug": "starforge-apocalypse-key",
+      "rarity": "mythic",
+      "price": 500000,
+      "glbBytes": 240244,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 79,
+      "slug": "eternal-ember-throneworld",
+      "rarity": "mythic",
+      "price": 1000000,
+      "glbBytes": 210092,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 80,
+      "slug": "mythweaver-final-quill",
+      "rarity": "mythic",
+      "price": 2500000,
+      "glbBytes": 229332,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 81,
+      "slug": "first-light-of-sylora",
+      "rarity": "divine",
+      "price": 1000000,
+      "glbBytes": 282940,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 82,
+      "slug": "omega-aurora-godseed",
+      "rarity": "divine",
+      "price": 2500000,
+      "glbBytes": 284144,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 83,
+      "slug": "holographic-eden-genesis",
+      "rarity": "divine",
+      "price": 5000000,
+      "glbBytes": 387912,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 84,
+      "slug": "chronos-endgame-spiral",
+      "rarity": "divine",
+      "price": 10000000,
+      "glbBytes": 314448,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 85,
+      "slug": "leviathan-of-a-thousand-suns",
+      "rarity": "divine",
+      "price": 1000000,
+      "glbBytes": 282972,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 86,
+      "slug": "the-last-symphony-of-worlds",
+      "rarity": "divine",
+      "price": 2500000,
+      "glbBytes": 282700,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 87,
+      "slug": "divine-mirror-of-all-viewers",
+      "rarity": "divine",
+      "price": 5000000,
+      "glbBytes": 279748,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 88,
+      "slug": "sylora-pantheon-ascension",
+      "rarity": "divine",
+      "price": 10000000,
+      "glbBytes": 302084,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 89,
+      "slug": "infinity-phoenix-rebirth-gate",
+      "rarity": "divine",
+      "price": 1000000,
+      "glbBytes": 282708,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 90,
+      "slug": "cosmic-ocean-throne-eternal",
+      "rarity": "divine",
+      "price": 2500000,
+      "glbBytes": 303572,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 91,
+      "slug": "apotheosis-of-the-live-stage",
+      "rarity": "divine",
+      "price": 5000000,
+      "glbBytes": 281228,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 92,
+      "slug": "prime-mover-gift-cascade",
+      "rarity": "divine",
+      "price": 10000000,
+      "glbBytes": 436520,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 93,
+      "slug": "unbound-creation-anvil",
+      "rarity": "divine",
+      "price": 1000000,
+      "glbBytes": 282672,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 94,
+      "slug": "eternal-night-bloom-daybreak",
+      "rarity": "divine",
+      "price": 2500000,
+      "glbBytes": 389412,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 95,
+      "slug": "worldsoul-resonance-choir",
+      "rarity": "divine",
+      "price": 5000000,
+      "glbBytes": 314460,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 96,
+      "slug": "hypernova-covenant-seal",
+      "rarity": "divine",
+      "price": 10000000,
+      "glbBytes": 303552,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 97,
+      "slug": "the-gift-that-remembers-you",
+      "rarity": "divine",
+      "price": 1000000,
+      "glbBytes": 295288,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 98,
+      "slug": "sylora-final-horizon",
+      "rarity": "divine",
+      "price": 2500000,
+      "glbBytes": 387892,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 99,
+      "slug": "absolute-radiance-crown",
+      "rarity": "divine",
+      "price": 5000000,
+      "glbBytes": 312976,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    },
+    {
+      "id": 100,
+      "slug": "myth-of-forever-live",
+      "rarity": "divine",
+      "price": 10000000,
+      "glbBytes": 386416,
+      "checks": {
+        "glb": true,
+        "blend": true,
+        "thumb": true,
+        "poster": true,
+        "mp4": true,
+        "gif": true,
+        "manifest": true
+      },
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 41,
+  "slug": "worldtree-spark",
+  "name": "Worldtree Spark",
+  "rarity": "legendary",
+  "priceCoins": 250000,
+  "durationSec": 7.0,
+  "entry": {
+    "glb": "glb/worldtree-spark.glb",
+    "proceduralSeed": 1852079182,
+    "vfx": {
+      "primaryElement": "nature",
+      "secondaryElement": "cosmos",
+      "particles": [
+        "nature",
+        "cosmos",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.6000000000000001,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": false,
+        "chromaticAberration": false
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_nature",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_nature_legendary"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.24000000000000002
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/worldtree-spark/bed.ogg",
+      "whooshes": "sounds/worldtree-spark/whoosh.ogg",
+      "impact": "sounds/worldtree-spark/impact.ogg",
+      "voiceFx": false,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 25000,
+      "desktopTris": 150000,
+      "particles": 1800,
+      "targetFps": 55
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 2,
+      "tone": "hype",
+      "promptHint": "React to the original Sylora gift 'Worldtree Spark' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "legendary",
+        "worldtree"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "legendary",
+      "worldtree"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

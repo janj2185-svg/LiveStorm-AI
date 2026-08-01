@@ -1,0 +1,11 @@
+{
+  "slug": "forge-heart",
+  "spatial": true,
+  "layers": [
+    "bed",
+    "whoosh",
+    "impact"
+  ],
+  "generated": false,
+  "note": "Procedural WebAudio synth used until studio SFX imported"
+}

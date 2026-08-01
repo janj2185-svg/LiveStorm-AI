@@ -1,0 +1,10 @@
+{
+  "slug": "first-light-of-sylora",
+  "emitters": [
+    "creation",
+    "brand",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

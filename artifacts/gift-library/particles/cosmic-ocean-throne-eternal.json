@@ -1,0 +1,10 @@
+{
+  "slug": "cosmic-ocean-throne-eternal",
+  "emitters": [
+    "water",
+    "royalty",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

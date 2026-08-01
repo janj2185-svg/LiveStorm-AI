@@ -1,0 +1,10 @@
+{
+  "slug": "unbound-creation-anvil",
+  "emitters": [
+    "creation",
+    "forge",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

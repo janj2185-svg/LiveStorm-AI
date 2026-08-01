@@ -1,0 +1,10 @@
+{
+  "slug": "solar-cathedral",
+  "emitters": [
+    "light",
+    "sacred",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

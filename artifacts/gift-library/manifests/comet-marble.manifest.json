@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 10,
+  "slug": "comet-marble",
+  "name": "Comet Marble",
+  "rarity": "rare",
+  "priceCoins": 100,
+  "durationSec": 3.5,
+  "entry": {
+    "glb": "glb/comet-marble.glb",
+    "proceduralSeed": 1153931769,
+    "vfx": {
+      "primaryElement": "space",
+      "secondaryElement": "ice",
+      "particles": [
+        "space",
+        "ice",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.4,
+        "motionBlur": false,
+        "dof": false,
+        "lensFlare": true,
+        "chromaticAberration": false
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_space",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_space_rare"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.28
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/comet-marble/bed.ogg",
+      "whooshes": "sounds/comet-marble/whoosh.ogg",
+      "impact": "sounds/comet-marble/impact.ogg",
+      "voiceFx": false,
+      "dynamicMusic": false
+    },
+    "lod": {
+      "mobileTris": 8000,
+      "desktopTris": 40000,
+      "particles": 400,
+      "targetFps": 60
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 4,
+      "tone": "hype",
+      "promptHint": "React to the original Sylora gift 'Comet Marble' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction",
+      "emotion": "happy"
+    },
+    "streamer": {
+      "overlayFlash": false,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "rare",
+        "comet"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "rare",
+      "comet"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 48,
+  "slug": "eclipse-masquerade",
+  "name": "Eclipse Masquerade",
+  "rarity": "legendary",
+  "priceCoins": 500000,
+  "durationSec": 7.0,
+  "entry": {
+    "glb": "glb/eclipse-masquerade.glb",
+    "proceduralSeed": 2288067689,
+    "vfx": {
+      "primaryElement": "space",
+      "secondaryElement": "mask",
+      "particles": [
+        "space",
+        "mask",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.6000000000000001,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": true,
+        "chromaticAberration": false
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_space",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_space_legendary"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.28
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/eclipse-masquerade/bed.ogg",
+      "whooshes": "sounds/eclipse-masquerade/whoosh.ogg",
+      "impact": "sounds/eclipse-masquerade/impact.ogg",
+      "voiceFx": false,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 25000,
+      "desktopTris": 150000,
+      "particles": 1800,
+      "targetFps": 55
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 2,
+      "tone": "hype",
+      "promptHint": "React to the original Sylora gift 'Eclipse Masquerade' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "legendary",
+        "eclipse"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "legendary",
+      "eclipse"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

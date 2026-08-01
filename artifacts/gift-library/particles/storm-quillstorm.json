@@ -1,0 +1,10 @@
+{
+  "slug": "storm-quillstorm",
+  "emitters": [
+    "lightning",
+    "storm",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "rain-prism",
+  "emitters": [
+    "water",
+    "light",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

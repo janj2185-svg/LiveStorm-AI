@@ -1,0 +1,10 @@
+{
+  "slug": "glacier-crown",
+  "emitters": [
+    "ice",
+    "royalty",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

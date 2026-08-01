@@ -1,0 +1,10 @@
+{
+  "slug": "worldsoul-resonance-choir",
+  "emitters": [
+    "aether",
+    "soul",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

@@ -42,6 +42,7 @@ import { StormPass } from "@/pages/storm-pass";
 import { PassEntry } from "@/pages/pass-entry";
 import { ObsStormPassQR } from "@/pages/obs/storm-pass-qr";
 import { GiftReactions } from "@/pages/gift-reactions";
+import { GiftStore } from "@/pages/gift-store";
 
 const queryClient = new QueryClient();
 
@@ -256,6 +257,9 @@ function AppRoutes() {
         <ProtectedRoute><Layout><Gamification /></Layout></ProtectedRoute>
       </Route>
       <Route path="/gifts">
+        <ProtectedRoute><Layout><GiftStore /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/gifts/reactions">
         <ProtectedRoute><Layout><GiftReactions /></Layout></ProtectedRoute>
       </Route>
       <Route path="/automation">

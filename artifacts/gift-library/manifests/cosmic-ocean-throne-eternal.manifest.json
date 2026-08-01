@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 90,
+  "slug": "cosmic-ocean-throne-eternal",
+  "name": "Cosmic Ocean Throne Eternal",
+  "rarity": "divine",
+  "priceCoins": 2500000,
+  "durationSec": 12.0,
+  "entry": {
+    "glb": "glb/cosmic-ocean-throne-eternal.glb",
+    "proceduralSeed": 3929105305,
+    "vfx": {
+      "primaryElement": "water",
+      "secondaryElement": "royalty",
+      "particles": [
+        "water",
+        "royalty",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.8,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": true,
+        "chromaticAberration": true
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_water",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_water_divine"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.2
+      },
+      {
+        "t": 0.65,
+        "shot": "crane_up_godray",
+        "fov": 28,
+        "shake": 0.12
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/cosmic-ocean-throne-eternal/bed.ogg",
+      "whooshes": "sounds/cosmic-ocean-throne-eternal/whoosh.ogg",
+      "impact": "sounds/cosmic-ocean-throne-eternal/impact.ogg",
+      "voiceFx": true,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 60000,
+      "desktopTris": 400000,
+      "particles": 5000,
+      "targetFps": 45
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 1,
+      "tone": "awe",
+      "promptHint": "React to the original Sylora gift 'Cosmic Ocean Throne Eternal' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "divine",
+        "cosmic"
+      ],
+      "globalEvent": true
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "divine",
+      "cosmic"
+    ],
+    "globalEvent": true
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "mythic-atlas-sphere",
+  "emitters": [
+    "myth",
+    "world",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

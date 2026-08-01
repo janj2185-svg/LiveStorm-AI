@@ -1,0 +1,10 @@
+{
+  "slug": "pearl-orbit",
+  "emitters": [
+    "water",
+    "orbit",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

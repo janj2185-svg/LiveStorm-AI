@@ -1,0 +1,10 @@
+{
+  "slug": "abyssal-crown",
+  "emitters": [
+    "water",
+    "royalty",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

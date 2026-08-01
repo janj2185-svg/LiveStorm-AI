@@ -1,0 +1,10 @@
+{
+  "slug": "oceanus-coronation",
+  "emitters": [
+    "water",
+    "royalty",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

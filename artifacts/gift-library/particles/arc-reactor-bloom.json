@@ -1,0 +1,10 @@
+{
+  "slug": "arc-reactor-bloom",
+  "emitters": [
+    "energy",
+    "tech",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

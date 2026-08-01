@@ -1,0 +1,10 @@
+{
+  "slug": "mirror-multiverse-waltz",
+  "emitters": [
+    "mirror",
+    "multiverse",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

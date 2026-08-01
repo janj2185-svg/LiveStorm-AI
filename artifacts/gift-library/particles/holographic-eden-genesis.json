@@ -1,0 +1,10 @@
+{
+  "slug": "holographic-eden-genesis",
+  "emitters": [
+    "nature",
+    "eden",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

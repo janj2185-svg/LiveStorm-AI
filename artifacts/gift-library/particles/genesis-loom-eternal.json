@@ -1,0 +1,10 @@
+{
+  "slug": "genesis-loom-eternal",
+  "emitters": [
+    "creation",
+    "fabric",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

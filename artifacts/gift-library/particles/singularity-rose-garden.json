@@ -1,0 +1,10 @@
+{
+  "slug": "singularity-rose-garden",
+  "emitters": [
+    "void",
+    "garden",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

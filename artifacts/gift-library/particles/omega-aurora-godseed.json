@@ -1,0 +1,10 @@
+{
+  "slug": "omega-aurora-godseed",
+  "emitters": [
+    "aurora",
+    "deity",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

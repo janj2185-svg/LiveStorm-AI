@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 85,
+  "slug": "leviathan-of-a-thousand-suns",
+  "name": "Leviathan of a Thousand Suns",
+  "rarity": "divine",
+  "priceCoins": 1000000,
+  "durationSec": 12.0,
+  "entry": {
+    "glb": "glb/leviathan-of-a-thousand-suns.glb",
+    "proceduralSeed": 1182579872,
+    "vfx": {
+      "primaryElement": "space",
+      "secondaryElement": "beast",
+      "particles": [
+        "space",
+        "beast",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.8,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": true,
+        "chromaticAberration": true
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_space",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_space_divine"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.24000000000000002
+      },
+      {
+        "t": 0.65,
+        "shot": "crane_up_godray",
+        "fov": 28,
+        "shake": 0.12
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/leviathan-of-a-thousand-suns/bed.ogg",
+      "whooshes": "sounds/leviathan-of-a-thousand-suns/whoosh.ogg",
+      "impact": "sounds/leviathan-of-a-thousand-suns/impact.ogg",
+      "voiceFx": true,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 60000,
+      "desktopTris": 400000,
+      "particles": 5000,
+      "targetFps": 45
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 1,
+      "tone": "awe",
+      "promptHint": "React to the original Sylora gift 'Leviathan of a Thousand Suns' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "divine",
+        "leviathan"
+      ],
+      "globalEvent": true
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "divine",
+      "leviathan"
+    ],
+    "globalEvent": true
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "void-orchid",
+  "emitters": [
+    "void",
+    "nature",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

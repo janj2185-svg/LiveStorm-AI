@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 43,
+  "slug": "abyssal-crown",
+  "name": "Abyssal Crown",
+  "rarity": "legendary",
+  "priceCoins": 10000,
+  "durationSec": 7.0,
+  "entry": {
+    "glb": "glb/abyssal-crown.glb",
+    "proceduralSeed": 3089009446,
+    "vfx": {
+      "primaryElement": "water",
+      "secondaryElement": "royalty",
+      "particles": [
+        "water",
+        "royalty",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.6000000000000001,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": false,
+        "chromaticAberration": false
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_water",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_water_legendary"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.22
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/abyssal-crown/bed.ogg",
+      "whooshes": "sounds/abyssal-crown/whoosh.ogg",
+      "impact": "sounds/abyssal-crown/impact.ogg",
+      "voiceFx": false,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 25000,
+      "desktopTris": 150000,
+      "particles": 1800,
+      "targetFps": 55
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 2,
+      "tone": "hype",
+      "promptHint": "React to the original Sylora gift 'Abyssal Crown' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "legendary",
+        "abyssal"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "legendary",
+      "abyssal"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

@@ -26,6 +26,7 @@ import emotionRouter from "./emotion";
 import micRouter from "./mic";
 import youtubeRouter from "./youtube";
 import stormPassRouter from "./stormPass";
+import giftsRouter from "./gifts";
 
 const router: IRouter = Router();
 
@@ -56,5 +57,6 @@ router.use(emotionRouter);
 router.use(micRouter);
 router.use(youtubeRouter);
 router.use(stormPassRouter);
+router.use(giftsRouter);
 
 export default router;

@@ -1,0 +1,10 @@
+{
+  "slug": "chronos-endgame-spiral",
+  "emitters": [
+    "time",
+    "meta",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "volt-sprout",
+  "emitters": [
+    "lightning",
+    "nature",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

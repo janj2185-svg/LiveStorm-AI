@@ -1,0 +1,10 @@
+{
+  "slug": "tempest-throne",
+  "emitters": [
+    "storm",
+    "royalty",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "hypernova-covenant-seal",
+  "emitters": [
+    "space",
+    "seal",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

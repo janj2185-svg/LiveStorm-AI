@@ -1,0 +1,10 @@
+{
+  "slug": "quantum-mythos-engine",
+  "emitters": [
+    "quantum",
+    "meta",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

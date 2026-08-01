@@ -1,0 +1,10 @@
+{
+  "slug": "obsidian-choir",
+  "emitters": [
+    "sound",
+    "stone",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

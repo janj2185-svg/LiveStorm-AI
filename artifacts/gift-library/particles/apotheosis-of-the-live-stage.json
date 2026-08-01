@@ -1,0 +1,10 @@
+{
+  "slug": "apotheosis-of-the-live-stage",
+  "emitters": [
+    "sacred",
+    "stage",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

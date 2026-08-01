@@ -1,0 +1,10 @@
+{
+  "slug": "dragon-eclipse-covenant",
+  "emitters": [
+    "dragon",
+    "eclipse",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

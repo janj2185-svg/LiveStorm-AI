@@ -48,11 +48,12 @@ Fill these before a real friend-test / production launch.
 
 ## Animated Gift Store / Wallet / Marketplace
 
-| Item | Status | Needs your approval |
+| Item | Status | Needs |
 |---|---|---|
-| First-party Gift Gallery / Store / Wallet | ❌ Not in codebase | See `docs/GIFTS_AAA_PIPELINE_PLAN.md` |
-| AAA 3D gift assets (Blender / Unreal / Houdini / studio) | ❌ Concept PNGs only | Paid production pipeline — **requires your approval** |
-| Payment for gift packs | ❌ | Stripe products + compliance |
+| SYLORA Gift Library (100 original gifts) | ✅ Catalog + Blender/GLB/preview/runtime | See `docs/GIFT_LIBRARY_STATUS.md` |
+| Gallery Gift Store UI | ✅ `/gifts` | — |
+| Wallet / coin purchase | ❌ Not built | Stripe + your approval |
+| Hand-sculpted Pixar-level remaster | ⚠️ Procedural v1 shipped | Studio art pass (budget) |
 
 ---
 

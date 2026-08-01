@@ -1,0 +1,10 @@
+{
+  "slug": "leviathan-scale",
+  "emitters": [
+    "water",
+    "beast",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

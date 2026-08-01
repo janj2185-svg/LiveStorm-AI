@@ -1,0 +1,10 @@
+{
+  "slug": "nyx-veil-unbound",
+  "emitters": [
+    "void",
+    "dream",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

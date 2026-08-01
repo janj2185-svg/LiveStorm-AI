@@ -1,0 +1,10 @@
+{
+  "slug": "sylora-pantheon-ascension",
+  "emitters": [
+    "deity",
+    "brand",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

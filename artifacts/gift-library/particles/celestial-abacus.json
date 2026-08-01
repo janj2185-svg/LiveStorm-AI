@@ -1,0 +1,10 @@
+{
+  "slug": "celestial-abacus",
+  "emitters": [
+    "space",
+    "math",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "oracle-spire",
+  "emitters": [
+    "magic",
+    "future",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

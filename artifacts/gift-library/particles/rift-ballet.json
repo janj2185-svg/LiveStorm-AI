@@ -1,0 +1,10 @@
+{
+  "slug": "rift-ballet",
+  "emitters": [
+    "void",
+    "dance",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

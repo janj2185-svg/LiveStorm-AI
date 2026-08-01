@@ -1,0 +1,10 @@
+{
+  "slug": "moss-lantern",
+  "emitters": [
+    "nature",
+    "light",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

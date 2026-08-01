@@ -1,0 +1,10 @@
+{
+  "slug": "star-thimble",
+  "emitters": [
+    "space",
+    "craft",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}
