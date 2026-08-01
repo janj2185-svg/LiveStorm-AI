@@ -1,0 +1,10 @@
+{
+  "slug": "celestial-behemoth-choir",
+  "emitters": [
+    "sound",
+    "titan",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

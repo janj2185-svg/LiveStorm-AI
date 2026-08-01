@@ -1,0 +1,10 @@
+{
+  "slug": "quartz-nest",
+  "emitters": [
+    "crystal",
+    "life",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

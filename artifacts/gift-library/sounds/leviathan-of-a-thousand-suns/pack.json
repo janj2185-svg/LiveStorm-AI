@@ -1,0 +1,11 @@
+{
+  "slug": "leviathan-of-a-thousand-suns",
+  "spatial": true,
+  "layers": [
+    "bed",
+    "whoosh",
+    "impact"
+  ],
+  "generated": false,
+  "note": "Procedural WebAudio synth used until studio SFX imported"
+}

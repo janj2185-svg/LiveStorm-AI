@@ -1,0 +1,10 @@
+{
+  "slug": "lumen-serpent",
+  "emitters": [
+    "light",
+    "beast",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

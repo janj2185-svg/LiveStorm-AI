@@ -1160,6 +1160,16 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   const sessionRecentReplies  = state.recentReplies.get(sessionId)  ?? [];
   const sessionRecentOpeners  = state.recentOpeners.get(sessionId)  ?? [];
 
+  // Skip OpenAI host generation when no dashboard/OBS client is listening.
+  // Prevents silent API billing after server restart or when the browser tab is closed.
+  const listenersBeforeHost = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+  if (listenersBeforeHost === 0) {
+    console.log(
+      `[Agent:Host] ⛔ skipping GPT — no sockets in ${roomId} | event=${event.type} | session=${sessionId}`,
+    );
+    return;
+  }
+
   console.log(`[HostAgentStarted] event=${event.type} | session=${sessionId} | streamer=${streamerId}${event.type === "streamer_speech" ? ` | speech="${((event.data.text as string) ?? "").slice(0, 60)}"` : ` | viewer="${event.username ?? "anon"}"`}`);
   let hostResult = await runHostAgent({
     event: eventForHost,
@@ -1431,6 +1441,17 @@ export async function getRecentTasks(streamerId: number, sessionId?: number, lim
     orderBy: [desc(aiAgentTasksTable.createdAt)],
     limit,
   });
+}
+
+/**
+ * Re-seed session→streamer map after server restart so silence fillers and
+ * orchestrator lookups work before the next TikTok event arrives.
+ */
+export function seedSessionStreamerMap(entries: Array<{ sessionId: number; streamerId: number }>): void {
+  for (const { sessionId, streamerId } of entries) {
+    state.sessionToStreamer.set(sessionId, streamerId);
+  }
+  console.log(`[Orchestrator] Seeded sessionToStreamer for ${entries.length} active session(s)`);
 }
 
 export function clearSessionHistory(sessionId: number): void {

@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 61,
+  "slug": "genesis-loom-eternal",
+  "name": "Genesis Loom Eternal",
+  "rarity": "mythic",
+  "priceCoins": 250000,
+  "durationSec": 9.0,
+  "entry": {
+    "glb": "glb/genesis-loom-eternal.glb",
+    "proceduralSeed": 1758348927,
+    "vfx": {
+      "primaryElement": "creation",
+      "secondaryElement": "fabric",
+      "particles": [
+        "creation",
+        "fabric",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.7000000000000001,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": true,
+        "chromaticAberration": true
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_creation",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_creation_mythic"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.24000000000000002
+      },
+      {
+        "t": 0.65,
+        "shot": "crane_up_godray",
+        "fov": 28,
+        "shake": 0.12
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/genesis-loom-eternal/bed.ogg",
+      "whooshes": "sounds/genesis-loom-eternal/whoosh.ogg",
+      "impact": "sounds/genesis-loom-eternal/impact.ogg",
+      "voiceFx": true,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 40000,
+      "desktopTris": 250000,
+      "particles": 3200,
+      "targetFps": 50
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 1,
+      "tone": "awe",
+      "promptHint": "React to the original Sylora gift 'Genesis Loom Eternal' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "mythic",
+        "genesis"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "mythic",
+      "genesis"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

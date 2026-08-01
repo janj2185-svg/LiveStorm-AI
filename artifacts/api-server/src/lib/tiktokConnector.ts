@@ -472,11 +472,6 @@ export async function cleanupStaleSessions(): Promise<void> {
  * real connections and silently fall back to "demo" for existing sessions.
  */
 export async function recoverActiveSessions(io: SocketServer): Promise<void> {
-  if (!isRealModeEnabled) {
-    console.log("[TikTok] Demo mode — skipping active session recovery.");
-    return;
-  }
-
   console.log("[TikTok] Scanning for active sessions to recover after restart...");
   try {
     const rows = await db
@@ -494,6 +489,20 @@ export async function recoverActiveSessions(io: SocketServer): Promise<void> {
 
     if (rows.length === 0) {
       console.log("[TikTok] No active sessions found — nothing to recover.");
+      return;
+    }
+
+    // Always re-seed orchestrator session→streamer map (demo + real) so silence
+    // fillers survive restarts even when TikTok connectors are not recovered.
+    try {
+      const { seedSessionStreamerMap } = await import("../agents/agentOrchestrator");
+      seedSessionStreamerMap(rows.map((r) => ({ sessionId: r.sessionId, streamerId: r.streamerId })));
+    } catch (err) {
+      console.warn("[TikTok] Failed to seed orchestrator session map:", err);
+    }
+
+    if (!isRealModeEnabled) {
+      console.log("[TikTok] Demo mode — session map seeded; skipping TikTok connector recovery.");
       return;
     }
 

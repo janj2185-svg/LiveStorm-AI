@@ -1,0 +1,10 @@
+{
+  "slug": "sky-ribbon",
+  "emitters": [
+    "aurora",
+    "air",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "world-end-garden",
+  "emitters": [
+    "nature",
+    "apocalypse",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "arcane-hourglass",
+  "emitters": [
+    "magic",
+    "time",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

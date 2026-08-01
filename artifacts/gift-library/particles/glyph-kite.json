@@ -1,0 +1,10 @@
+{
+  "slug": "glyph-kite",
+  "emitters": [
+    "air",
+    "magic",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

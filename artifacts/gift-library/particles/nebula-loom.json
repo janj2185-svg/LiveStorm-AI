@@ -1,0 +1,10 @@
+{
+  "slug": "nebula-loom",
+  "emitters": [
+    "space",
+    "fabric",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

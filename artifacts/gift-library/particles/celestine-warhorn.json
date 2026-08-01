@@ -1,0 +1,10 @@
+{
+  "slug": "celestine-warhorn",
+  "emitters": [
+    "space",
+    "war",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

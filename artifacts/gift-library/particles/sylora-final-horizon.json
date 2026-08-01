@@ -1,0 +1,10 @@
+{
+  "slug": "sylora-final-horizon",
+  "emitters": [
+    "meta",
+    "horizon",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

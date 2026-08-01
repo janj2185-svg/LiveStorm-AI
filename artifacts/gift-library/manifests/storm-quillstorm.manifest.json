@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 25,
+  "slug": "storm-quillstorm",
+  "name": "Storm Quillstorm",
+  "rarity": "epic",
+  "priceCoins": 500,
+  "durationSec": 5.0,
+  "entry": {
+    "glb": "glb/storm-quillstorm.glb",
+    "proceduralSeed": 4151525052,
+    "vfx": {
+      "primaryElement": "lightning",
+      "secondaryElement": "storm",
+      "particles": [
+        "lightning",
+        "storm",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.5,
+        "motionBlur": false,
+        "dof": true,
+        "lensFlare": false,
+        "chromaticAberration": false
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_lightning",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_lightning_epic"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.24000000000000002
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/storm-quillstorm/bed.ogg",
+      "whooshes": "sounds/storm-quillstorm/whoosh.ogg",
+      "impact": "sounds/storm-quillstorm/impact.ogg",
+      "voiceFx": false,
+      "dynamicMusic": false
+    },
+    "lod": {
+      "mobileTris": 15000,
+      "desktopTris": 80000,
+      "particles": 900,
+      "targetFps": 60
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 3,
+      "tone": "hype",
+      "promptHint": "React to the original Sylora gift 'Storm Quillstorm' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "happy"
+    },
+    "streamer": {
+      "overlayFlash": false,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "epic",
+        "storm"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "epic",
+      "storm"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

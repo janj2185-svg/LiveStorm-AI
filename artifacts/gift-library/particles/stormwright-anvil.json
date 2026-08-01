@@ -1,0 +1,10 @@
+{
+  "slug": "stormwright-anvil",
+  "emitters": [
+    "lightning",
+    "forge",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

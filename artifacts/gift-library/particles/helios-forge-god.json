@@ -1,0 +1,10 @@
+{
+  "slug": "helios-forge-god",
+  "emitters": [
+    "fire",
+    "deity",
+    "sparks",
+    "ember"
+  ],
+  "budget": 3200
+}

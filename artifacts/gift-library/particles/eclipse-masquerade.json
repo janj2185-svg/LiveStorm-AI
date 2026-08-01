@@ -1,0 +1,10 @@
+{
+  "slug": "eclipse-masquerade",
+  "emitters": [
+    "space",
+    "mask",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

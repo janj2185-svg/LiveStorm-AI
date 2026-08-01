@@ -7,7 +7,7 @@ import type { VRM } from "@pixiv/three-vrm";
 import { Boxes, Upload, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getAvatarVRMPath } from "./avatarAssets";
+import { PRESENTER_SLOTS, type PresenterSlotKey } from "./avatarAssets";
 import type { AnimationState } from "./avatarAnimationMachine";
 import { ANIMATION_EMOJI } from "./avatarAnimationMachine";
 
@@ -934,9 +934,12 @@ export function AvatarCanvas({
     avatarUrl.endsWith(".glb")
   );
 
+  const slotVrm = (avatarKey in PRESENTER_SLOTS)
+    ? PRESENTER_SLOTS[avatarKey as PresenterSlotKey].vrmPath
+    : undefined;
   const effectiveVrmUrl = avatarUrl && !isRpmUrl
     ? avatarUrl
-    : getAvatarVRMPath(avatarKey);
+    : (slotVrm ?? null);
 
   const rpmUrl = isRpmUrl ? avatarUrl : null;
 

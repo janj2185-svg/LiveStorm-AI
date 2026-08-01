@@ -1,0 +1,10 @@
+{
+  "slug": "mirror-tide",
+  "emitters": [
+    "water",
+    "mirror",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

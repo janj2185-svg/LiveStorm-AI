@@ -1,0 +1,10 @@
+{
+  "slug": "comet-marble",
+  "emitters": [
+    "space",
+    "ice",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

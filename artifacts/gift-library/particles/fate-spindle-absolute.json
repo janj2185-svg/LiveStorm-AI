@@ -1,0 +1,10 @@
+{
+  "slug": "fate-spindle-absolute",
+  "emitters": [
+    "fate",
+    "craft",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

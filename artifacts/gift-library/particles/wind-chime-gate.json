@@ -1,0 +1,10 @@
+{
+  "slug": "wind-chime-gate",
+  "emitters": [
+    "air",
+    "sound",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

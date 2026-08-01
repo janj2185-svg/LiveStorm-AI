@@ -1,0 +1,10 @@
+{
+  "slug": "honey-nova",
+  "emitters": [
+    "light",
+    "sweet",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

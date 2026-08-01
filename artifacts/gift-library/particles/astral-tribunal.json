@@ -1,0 +1,10 @@
+{
+  "slug": "astral-tribunal",
+  "emitters": [
+    "space",
+    "law",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

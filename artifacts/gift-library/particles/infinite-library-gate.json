@@ -1,0 +1,10 @@
+{
+  "slug": "infinite-library-gate",
+  "emitters": [
+    "story",
+    "portal",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

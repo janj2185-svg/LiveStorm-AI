@@ -1,0 +1,10 @@
+{
+  "slug": "infinity-phoenix-rebirth-gate",
+  "emitters": [
+    "phoenix",
+    "portal",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

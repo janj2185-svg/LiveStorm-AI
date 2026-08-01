@@ -1,0 +1,10 @@
+{
+  "slug": "echo-drum",
+  "emitters": [
+    "sound",
+    "shockwave",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

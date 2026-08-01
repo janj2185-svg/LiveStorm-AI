@@ -1,0 +1,10 @@
+{
+  "slug": "mythweaver-final-quill",
+  "emitters": [
+    "story",
+    "legend",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "gilded-leviathan",
+  "emitters": [
+    "beast",
+    "metal",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

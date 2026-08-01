@@ -48,17 +48,31 @@ if (process.env.NODE_ENV !== "production") {
   });
 
   // ── Dev login ────────────────────────────────────────────────────────────────
-  router.get("/dev/login", async (_req: any, res: any) => {
+  router.get("/dev/login", async (req: any, res: any) => {
     try {
-      const streamer = await db.query.streamersTable.findFirst({
-        where: eq(streamersTable.id, 4),
-      });
-      if (!streamer) return res.status(404).json({ error: "Dev streamer not found" });
+      const requestedClerkId = typeof req.query.clerkId === "string" ? req.query.clerkId.trim() : "";
+      let user =
+        requestedClerkId
+          ? await db.query.usersTable.findFirst({ where: eq(usersTable.clerkId, requestedClerkId) })
+          : null;
 
-      const user = await db.query.usersTable.findFirst({
-        where: eq(usersTable.id, streamer.userId),
-      });
-      if (!user) return res.status(404).json({ error: "Dev user not found" });
+      let streamer = null as Awaited<ReturnType<typeof db.query.streamersTable.findFirst>>;
+      if (user) {
+        streamer = await db.query.streamersTable.findFirst({
+          where: eq(streamersTable.userId, user.id),
+        });
+      } else {
+        // Backward-compatible fallback: first streamer (or historic id=4 when present)
+        streamer =
+          (await db.query.streamersTable.findFirst({ where: eq(streamersTable.id, 4) })) ??
+          (await db.query.streamersTable.findFirst());
+        if (!streamer) return res.status(404).json({ error: "Dev streamer not found — run seed-demo-users.ts" });
+        user = await db.query.usersTable.findFirst({
+          where: eq(usersTable.id, streamer.userId),
+        });
+      }
+
+      if (!user) return res.status(404).json({ error: "Dev user not found — run seed-demo-users.ts" });
 
       const cookieOpts = {
         httpOnly: true,
@@ -67,7 +81,15 @@ if (process.env.NODE_ENV !== "production") {
         path: "/",
       };
       res.cookie("dev_auth_clerk_id", user.clerkId, cookieOpts);
-      res.json({ ok: true, streamerId: streamer.id, userId: user.id });
+      res.json({
+        ok: true,
+        streamerId: streamer?.id ?? null,
+        userId: user.id,
+        clerkId: user.clerkId,
+        email: user.email,
+        role: user.role,
+        plan: user.plan,
+      });
     } catch (err) {
       res.status(500).json({ error: String(err) });
     }

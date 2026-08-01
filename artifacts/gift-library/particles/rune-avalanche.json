@@ -1,0 +1,10 @@
+{
+  "slug": "rune-avalanche",
+  "emitters": [
+    "magic",
+    "stone",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

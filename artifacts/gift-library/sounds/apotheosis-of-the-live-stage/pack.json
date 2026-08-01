@@ -1,0 +1,11 @@
+{
+  "slug": "apotheosis-of-the-live-stage",
+  "spatial": true,
+  "layers": [
+    "bed",
+    "whoosh",
+    "impact"
+  ],
+  "generated": false,
+  "note": "Procedural WebAudio synth used until studio SFX imported"
+}

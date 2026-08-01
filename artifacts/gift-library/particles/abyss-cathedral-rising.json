@@ -1,0 +1,10 @@
+{
+  "slug": "abyss-cathedral-rising",
+  "emitters": [
+    "water",
+    "sacred",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

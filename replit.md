@@ -1,4 +1,9 @@
-# LiveStorm AI
+# LiveStorm AI / SYLORA
+
+> **Production release status:** see [`docs/PRODUCTION_RELEASE_STATUS.md`](docs/PRODUCTION_RELEASE_STATUS.md)  
+> **Local friend-test startup:** see [`docs/LOCAL_STARTUP_GUIDE.md`](docs/LOCAL_STARTUP_GUIDE.md)  
+> **Credentials you must supply:** see [`docs/CREDENTIALS_CHECKLIST.md`](docs/CREDENTIALS_CHECKLIST.md)
+
 
 A production-ready TikTok LIVE interaction SaaS platform that turns live streams into living games — combining real-time gamification, viewer progression, OBS overlays, kingdom building, AI assistants, and boss battles.
 

@@ -1,0 +1,10 @@
+{
+  "slug": "absolute-radiance-crown",
+  "emitters": [
+    "light",
+    "royalty",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

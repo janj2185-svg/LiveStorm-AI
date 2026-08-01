@@ -1,0 +1,10 @@
+{
+  "slug": "dragonforge-relic",
+  "emitters": [
+    "dragon",
+    "fire",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

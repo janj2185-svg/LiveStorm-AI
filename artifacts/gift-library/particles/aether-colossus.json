@@ -1,0 +1,10 @@
+{
+  "slug": "aether-colossus",
+  "emitters": [
+    "aether",
+    "titan",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

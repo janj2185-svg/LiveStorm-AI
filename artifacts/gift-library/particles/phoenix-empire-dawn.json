@@ -1,0 +1,10 @@
+{
+  "slug": "phoenix-empire-dawn",
+  "emitters": [
+    "phoenix",
+    "empire",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

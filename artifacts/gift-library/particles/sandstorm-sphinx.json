@@ -1,0 +1,10 @@
+{
+  "slug": "sandstorm-sphinx",
+  "emitters": [
+    "sand",
+    "myth",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

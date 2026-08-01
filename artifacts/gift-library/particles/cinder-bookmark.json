@@ -1,0 +1,10 @@
+{
+  "slug": "cinder-bookmark",
+  "emitters": [
+    "fire",
+    "story",
+    "sparks",
+    "ember"
+  ],
+  "budget": 400
+}

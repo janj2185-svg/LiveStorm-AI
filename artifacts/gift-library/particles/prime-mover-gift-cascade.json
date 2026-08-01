@@ -1,0 +1,10 @@
+{
+  "slug": "prime-mover-gift-cascade",
+  "emitters": [
+    "meta",
+    "combo",
+    "sparks",
+    "mist"
+  ],
+  "budget": 5000
+}

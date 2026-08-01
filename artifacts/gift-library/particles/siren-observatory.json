@@ -1,0 +1,10 @@
+{
+  "slug": "siren-observatory",
+  "emitters": [
+    "sound",
+    "space",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

@@ -98,27 +98,38 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
  * These are served from a separate path from /public-objects and can optionally
  * be protected with authentication or ACL checks based on the use case.
  */
-router.get("/storage/objects/*path", async (req: Request, res: Response) => {
+router.get("/storage/objects/*path", requireAuth, async (req: Request, res: Response) => {
   try {
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
+    // Path traversal guard — reject absolute paths and ".." segments
+    if (!wildcardPath || wildcardPath.includes("..") || wildcardPath.startsWith("/")) {
+      res.status(400).json({ error: "Invalid object path" });
+      return;
+    }
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
-    // --- Protected route example (uncomment when using replit-auth) ---
-    // if (!req.isAuthenticated()) {
-    //   res.status(401).json({ error: "Unauthorized" });
-    //   return;
-    // }
-    // const canAccess = await objectStorageService.canAccessObjectEntity({
-    //   userId: req.user.id,
-    //   objectFile,
-    //   requestedPermission: ObjectPermission.READ,
-    // });
-    // if (!canAccess) {
-    //   res.status(403).json({ error: "Forbidden" });
-    //   return;
-    // }
+    // Prefer ACL when metadata is present; otherwise require authenticated owner/session.
+    const clerkUserId = (req as any).clerkUserId as string | undefined;
+    if (!clerkUserId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    try {
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        userId: clerkUserId,
+        objectFile,
+        requestedPermission: ObjectPermission.READ,
+      });
+      if (!canAccess) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+    } catch {
+      // ACL metadata may be absent on local/filesystem storage — authenticated
+      // users may still read private objects they uploaded in this deployment.
+    }
 
     const response = await objectStorageService.downloadObject(objectFile);
 

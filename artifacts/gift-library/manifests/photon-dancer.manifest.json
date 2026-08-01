@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 31,
+  "slug": "photon-dancer",
+  "name": "Photon Dancer",
+  "rarity": "epic",
+  "priceCoins": 500,
+  "durationSec": 5.0,
+  "entry": {
+    "glb": "glb/photon-dancer.glb",
+    "proceduralSeed": 3715217076,
+    "vfx": {
+      "primaryElement": "light",
+      "secondaryElement": "dance",
+      "particles": [
+        "light",
+        "dance",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.5,
+        "motionBlur": false,
+        "dof": true,
+        "lensFlare": true,
+        "chromaticAberration": false
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_light",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_light_epic"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.22
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/photon-dancer/bed.ogg",
+      "whooshes": "sounds/photon-dancer/whoosh.ogg",
+      "impact": "sounds/photon-dancer/impact.ogg",
+      "voiceFx": false,
+      "dynamicMusic": false
+    },
+    "lod": {
+      "mobileTris": 15000,
+      "desktopTris": 80000,
+      "particles": 900,
+      "targetFps": 60
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 3,
+      "tone": "hype",
+      "promptHint": "React to the original Sylora gift 'Photon Dancer' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "happy"
+    },
+    "streamer": {
+      "overlayFlash": false,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "epic",
+        "photon"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "epic",
+      "photon"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

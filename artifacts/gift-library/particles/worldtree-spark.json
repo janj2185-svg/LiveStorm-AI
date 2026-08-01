@@ -1,0 +1,10 @@
+{
+  "slug": "worldtree-spark",
+  "emitters": [
+    "nature",
+    "cosmos",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "frost-quill",
+  "emitters": [
+    "ice",
+    "magic",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

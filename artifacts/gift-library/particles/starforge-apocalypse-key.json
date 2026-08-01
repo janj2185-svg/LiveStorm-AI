@@ -1,0 +1,10 @@
+{
+  "slug": "starforge-apocalypse-key",
+  "emitters": [
+    "space",
+    "key",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

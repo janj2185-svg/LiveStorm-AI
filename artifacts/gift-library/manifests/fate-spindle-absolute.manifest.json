@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": 76,
+  "slug": "fate-spindle-absolute",
+  "name": "Fate Spindle Absolute",
+  "rarity": "mythic",
+  "priceCoins": 2500000,
+  "durationSec": 9.0,
+  "entry": {
+    "glb": "glb/fate-spindle-absolute.glb",
+    "proceduralSeed": 4122014459,
+    "vfx": {
+      "primaryElement": "fate",
+      "secondaryElement": "craft",
+      "particles": [
+        "fate",
+        "craft",
+        "sparks",
+        "mist"
+      ],
+      "volumes": [
+        "godrays",
+        "fog"
+      ],
+      "post": {
+        "bloom": 0.7000000000000001,
+        "motionBlur": true,
+        "dof": true,
+        "lensFlare": true,
+        "chromaticAberration": true
+      },
+      "shaders": [
+        "pbr_metallic_roughness",
+        "elemental_fate",
+        "fresnel_rim"
+      ],
+      "hdri": "studio_fate_mythic"
+    },
+    "camera": [
+      {
+        "t": 0.0,
+        "shot": "hero_wide",
+        "fov": 45,
+        "shake": 0.0
+      },
+      {
+        "t": 0.25,
+        "shot": "orbit_in",
+        "fov": 38,
+        "shake": 0.05
+      },
+      {
+        "t": 0.55,
+        "shot": "impact_close",
+        "fov": 32,
+        "shake": 0.28
+      },
+      {
+        "t": 0.65,
+        "shot": "crane_up_godray",
+        "fov": 28,
+        "shake": 0.12
+      },
+      {
+        "t": 0.8,
+        "shot": "slowmo_pullback",
+        "fov": 42,
+        "shake": 0.08
+      },
+      {
+        "t": 1.0,
+        "shot": "resolve_logo",
+        "fov": 45,
+        "shake": 0.0
+      }
+    ],
+    "audio": {
+      "spatial": true,
+      "stereoBed": "sounds/fate-spindle-absolute/bed.ogg",
+      "whooshes": "sounds/fate-spindle-absolute/whoosh.ogg",
+      "impact": "sounds/fate-spindle-absolute/impact.ogg",
+      "voiceFx": true,
+      "dynamicMusic": true
+    },
+    "lod": {
+      "mobileTris": 40000,
+      "desktopTris": 250000,
+      "particles": 3200,
+      "targetFps": 50
+    }
+  },
+  "interactions": {
+    "ai": {
+      "priority": 1,
+      "tone": "awe",
+      "promptHint": "React to the original Sylora gift 'Fate Spindle Absolute' with a short cinematic shout-out. Never mention other platforms' gifts."
+    },
+    "avatar": {
+      "animation": "gift_reaction_epic",
+      "emotion": "amazed"
+    },
+    "streamer": {
+      "overlayFlash": true,
+      "haptic": true
+    },
+    "viewer": {
+      "chatEmoteBurst": true,
+      "comboEligible": true
+    },
+    "chain": {
+      "comboTags": [
+        "mythic",
+        "fate"
+      ],
+      "globalEvent": false
+    }
+  },
+  "combo": {
+    "comboTags": [
+      "mythic",
+      "fate"
+    ],
+    "globalEvent": false
+  },
+  "integrity": {
+    "originalIp": true,
+    "forbiddenReferences": [
+      "tiktok-gift-assets",
+      "licensed-third-party-meshes"
+    ]
+  }
+}

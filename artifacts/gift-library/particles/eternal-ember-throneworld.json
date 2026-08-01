@@ -1,0 +1,10 @@
+{
+  "slug": "eternal-ember-throneworld",
+  "emitters": [
+    "fire",
+    "world",
+    "sparks",
+    "ember"
+  ],
+  "budget": 3200
+}

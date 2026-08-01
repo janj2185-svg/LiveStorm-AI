@@ -1,0 +1,10 @@
+{
+  "slug": "solar-petal",
+  "emitters": [
+    "light",
+    "nature",
+    "sparks",
+    "mist"
+  ],
+  "budget": 400
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "emerald-behemoth",
+  "emitters": [
+    "crystal",
+    "titan",
+    "sparks",
+    "mist"
+  ],
+  "budget": 1800
+}

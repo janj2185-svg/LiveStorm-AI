@@ -11,7 +11,14 @@
     "desktop:build": "pnpm --filter @workspace/desktop run build:desktop",
     "desktop:build:win": "pnpm --filter @workspace/desktop run build:desktop:win",
     "desktop:build:mac": "pnpm --filter @workspace/desktop run build:desktop:mac",
-    "desktop:build:linux": "pnpm --filter @workspace/desktop run build:desktop:linux"
+    "desktop:build:linux": "pnpm --filter @workspace/desktop run build:desktop:linux",
+    "local:seed": "pnpm --filter @workspace/api-server exec tsx src/scripts/seed-demo-users.ts",
+    "local:api": "pnpm --filter @workspace/api-server run dev",
+    "local:web": "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/livestorm-ai run dev",
+    "test:api": "pnpm --filter @workspace/api-server run test",
+    "gifts:catalog": "python3 artifacts/gift-library/scripts/generate_catalog.py",
+    "gifts:validate": "python3 artifacts/gift-library/scripts/validate_pipeline.py",
+    "gifts:previews": "python3 artifacts/gift-library/scripts/generate_previews_ffmpeg.py"
   },
   "private": true,
   "devDependencies": {

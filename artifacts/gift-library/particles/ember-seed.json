@@ -1,0 +1,10 @@
+{
+  "slug": "ember-seed",
+  "emitters": [
+    "fire",
+    "nature",
+    "sparks",
+    "ember"
+  ],
+  "budget": 400
+}

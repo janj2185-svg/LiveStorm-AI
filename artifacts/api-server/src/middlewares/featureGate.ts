@@ -12,10 +12,12 @@ const PLAN_LEVELS: Record<Plan, number> = {
   studio: 3,
 };
 
-export const OWNER_EMAIL = "kvasnytcya21@gmail.com";
+/** Owner email — set OWNER_EMAIL in env for production. Fallback kept for existing owner account. */
+export const OWNER_EMAIL = (process.env.OWNER_EMAIL ?? "kvasnytcya21@gmail.com").trim().toLowerCase();
 
 export function isOwner(userEmail: string | null | undefined): boolean {
-  return userEmail === OWNER_EMAIL;
+  if (!userEmail) return false;
+  return userEmail.trim().toLowerCase() === OWNER_EMAIL;
 }
 
 async function fetchUser(clerkId: string) {

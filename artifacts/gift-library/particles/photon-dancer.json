@@ -1,0 +1,10 @@
+{
+  "slug": "photon-dancer",
+  "emitters": [
+    "light",
+    "dance",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "primordial-tidewyrm",
+  "emitters": [
+    "water",
+    "dragon",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

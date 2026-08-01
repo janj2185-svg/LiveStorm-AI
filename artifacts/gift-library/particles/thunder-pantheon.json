@@ -1,0 +1,10 @@
+{
+  "slug": "thunder-pantheon",
+  "emitters": [
+    "lightning",
+    "deity",
+    "sparks",
+    "mist"
+  ],
+  "budget": 3200
+}

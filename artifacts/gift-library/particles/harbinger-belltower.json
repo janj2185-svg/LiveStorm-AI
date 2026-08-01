@@ -1,0 +1,10 @@
+{
+  "slug": "harbinger-belltower",
+  "emitters": [
+    "sound",
+    "architecture",
+    "sparks",
+    "mist"
+  ],
+  "budget": 900
+}
