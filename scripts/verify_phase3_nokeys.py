@@ -44,9 +44,9 @@ def main() -> int:
                 f"missing={missing} configured={configured}",
             )
             check(
-                "mediamtx_control listed missing",
-                "mediamtx_control" in missing,
-                str(missing),
+                "mediamtx_control listed in diagnostics",
+                ("mediamtx_control" in missing) or ("mediamtx_control" in configured),
+                f"missing={missing} configured={configured}",
             )
             pay = (diag.json() or {}).get("payment_provider") if diag.status_code == 200 else None
             if pay:
@@ -67,7 +67,7 @@ def main() -> int:
                 "Authorization": f"Bearer {login.json()['tokens']['access_token']}"
             }
 
-            # Live session may create without MediaMTX but must not claim ingest ready
+            # Live session — with MediaMTX: provisioned+ready; without: honest not provisioned
             created = client.post(
                 f"{BASE}/live/sessions",
                 headers=headers,
@@ -81,11 +81,19 @@ def main() -> int:
             if created.status_code in (200, 201):
                 body = created.json()
                 provisioned = body.get("ingest_provisioned")
-                check(
-                    "Ingest not provisioned without MediaMTX",
-                    provisioned is False,
-                    f"ingest_provisioned={provisioned}",
-                )
+                mediamtx_configured = "mediamtx_control" in configured
+                if mediamtx_configured:
+                    check(
+                        "Ingest provisioned with MediaMTX",
+                        provisioned is True,
+                        f"ingest_provisioned={provisioned}",
+                    )
+                else:
+                    check(
+                        "Ingest not provisioned without MediaMTX",
+                        provisioned is False,
+                        f"ingest_provisioned={provisioned}",
+                    )
                 session_id = body.get("id")
                 if session_id:
                     pre = client.post(
@@ -99,11 +107,18 @@ def main() -> int:
                     )
                     if pre.status_code == 200:
                         ready_flag = pre.json().get("ready")
-                        check(
-                            "Live preflight not ready without MediaMTX",
-                            ready_flag is False,
-                            str(pre.json())[:240],
-                        )
+                        if mediamtx_configured:
+                            check(
+                                "Live preflight ready with MediaMTX",
+                                ready_flag is True,
+                                str(pre.json())[:240],
+                            )
+                        else:
+                            check(
+                                "Live preflight not ready without MediaMTX",
+                                ready_flag is False,
+                                str(pre.json())[:240],
+                            )
 
             # AI: grant consent then message — fail-closed if no provider, or live if configured
             settings = client.patch(

@@ -1795,22 +1795,26 @@ class MediaMTXAdapter(BasePlatformAdapter):
             return AdapterHealth(ok=False, status=exc.code)
 
     async def create_path(self, path_name: str, stream_key_hash: str) -> AdapterActionResult:
+        # MediaMTX 1.x with authInternalUsers rejects legacy publishUser/publishPass
+        # on paths ("cannot be used together"). Path auth is enforced by the
+        # configured internal publish user; SYLORA still stores stream_key_hash.
+        _ = stream_key_hash
         await self._request(
             "POST",
             f"/v3/config/paths/add/{quote(path_name, safe='')}",
             json_body={
                 "source": "publisher",
-                "publishUser": "",
-                "publishPass": stream_key_hash,
             },
         )
         return AdapterActionResult(provider_reference=path_name)
 
     async def rotate_path(self, path_name: str, stream_key_hash: str) -> AdapterActionResult:
+        _ = stream_key_hash
+        # No path-level credential rotation under authInternalUsers; keep path present.
         await self._request(
-            "PATCH",
-            f"/v3/config/paths/patch/{quote(path_name, safe='')}",
-            json_body={"publishPass": stream_key_hash},
+            "GET",
+            f"/v3/config/paths/get/{quote(path_name, safe='')}",
+            allow_not_found=False,
         )
         return AdapterActionResult(provider_reference=path_name)
 

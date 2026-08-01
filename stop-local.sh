@@ -26,9 +26,11 @@ fi
 stop_pidfile .sylora-local/api.pid api
 stop_pidfile .sylora-local/celery.pid celery
 stop_pidfile .sylora-local/vite.pid vite
+stop_pidfile .sylora-local/mediamtx.pid mediamtx
 
 # Also kill stray listeners if pidfiles missing
 pkill -f "uvicorn app.main:app" 2>/dev/null || true
 pkill -f "vite --host" 2>/dev/null || true
+pkill -f "/.sylora-local/bin/mediamtx" 2>/dev/null || true
 
 echo "SYLORA local stack stopped (volumes preserved)."

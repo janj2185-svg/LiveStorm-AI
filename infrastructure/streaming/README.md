@@ -46,6 +46,17 @@ docker compose \
   up -d minio minio-init mediamtx coturn recording-uploader
 ```
 
+**Host mode (no Docker):** from the repo root:
+
+```bash
+./scripts/start-mediamtx-local.sh
+./verify-live.sh
+```
+
+This downloads MediaMTX v1.19.3 into `.sylora-local/bin/`, writes API credentials to
+`.sylora-local/mediamtx.env`, and sets `MEDIAMTX_CONTROL_*` in the gitignored API `.env`.
+Restart the API after the first run so it loads the control URL.
+
 Add `prometheus` and `grafana` with the `observability` profile when metrics
 and dashboards are needed. These commands are documented procedures and were
 not run in the Docker-unavailable implementation environment.

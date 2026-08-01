@@ -82,6 +82,20 @@ echo "Running migrations..."
   .venv/bin/alembic upgrade head
 )
 
+echo "Starting MediaMTX (local live ingest)..."
+./scripts/start-mediamtx-local.sh || echo "WARN: MediaMTX failed — live ingest will stay unprovisioned"
+
+# Reload API env after MediaMTX wrote MEDIAMTX_* credentials
+while IFS= read -r line || [[ -n "$line" ]]; do
+  [[ -z "$line" || "$line" == \#* ]] && continue
+  key="${line%%=*}"
+  val="${line#*=}"
+  if [[ "$val" == \"*\" ]]; then
+    val="${val:1:${#val}-2}"
+  fi
+  export "${key}=${val}"
+done < services/api/.env
+
 echo "Seeding owner test accounts..."
 services/api/.venv/bin/python scripts/seed_owner_accounts.py
 
@@ -139,5 +153,8 @@ echo "  Gift Library: http://127.0.0.1:5173/#/gift-library-store"
 echo "  API docs:     http://127.0.0.1:8000/docs"
 echo "  Health:       http://127.0.0.1:8000/health/ready"
 echo "  Logs:         .sylora-local/logs/"
+echo "  MediaMTX:     http://127.0.0.1:9997 (control) / rtmp://127.0.0.1:1935"
 echo "Credentials:    OWNER_TESTING_GUIDE.md"
 echo "Verify loops:   ./verify-product-loop.sh"
+echo "Verify live:    ./verify-live.sh"
+echo "Verify AI:      ./verify-ai.sh"

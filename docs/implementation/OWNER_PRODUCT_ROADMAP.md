@@ -34,19 +34,20 @@ Override later: Stripe · OpenAI key · Flutter SDK on owner machine.
 
 ---
 
-## Phase 3 — Live + AI
+## Phase 3 — Live + AI — WORKING (local)
 
 | Deliverable | Status |
 |---|---|
-| Verify without MediaMTX | `./verify-phase3-nokeys.sh` |
-| Live create → ingest not provisioned | asserted |
-| OpenAI key in gitignored env | wired (not committed) |
-| Admin `openai` provider | `scripts/configure_openai_provider.py` |
-| AI verify | `./verify-ai.sh` |
-| Live chat | **PASS** — `./verify-ai.sh` (gpt-4o-mini) |
-| MediaMTX | still unconfigured |
+| MediaMTX host binary | `./scripts/start-mediamtx-local.sh` |
+| Control API wired | `MEDIAMTX_CONTROL_*` in gitignored `.env` |
+| Live create → `ingest_provisioned=true` | PASS |
+| Live preflight → ready | PASS |
+| Adapter fix for MediaMTX 1.19 + authInternalUsers | `live_adapters.py` (no legacy path publishPass) |
+| OpenAI live chat | PASS (`./verify-ai.sh`) |
+| Verify | `./verify-live.sh` |
 
-Re-check anytime: `./verify-ai.sh`
+OBS/ffmpeg publish uses global publish user from `.sylora-local/mediamtx.env`  
+(`MTX_AUTHINTERNALUSERS_0_*`) on `rtmp://127.0.0.1:1935/<ingest_path>?user=…&pass=…`.
 
 ---
 
@@ -69,6 +70,8 @@ Re-check anytime: `./verify-ai.sh`
 | 2026-08-01 | Proceed sequentially | Owner: `Роби сам послідовно` — agent continues without keys/hiring |
 | 2026-08-01 | OpenAI key provided | Wired to gitignored env + admin provider; initially blocked by insufficient_quota |
 | 2026-08-01 | OpenAI billing topped up | Live chat PASS — `./verify-ai.sh` OK (`SYLORA_AI_OK`) |
+| 2026-08-01 | MediaMTX local | Host MediaMTX + ingest provision + preflight ready |
 | | Payment | fail-closed |
 | | AI | **live** (gpt-4o-mini) |
+| | Live ingest | **local MediaMTX working** |
 | | Phase 4 hiring | _pending_ |

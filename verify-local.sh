@@ -115,6 +115,20 @@ if [[ -f scripts/verify_ai_provider.py ]]; then
   fi
 fi
 
+# Live MediaMTX (when control URL configured)
+if [[ -f scripts/verify_live_mediamtx.py ]] && grep -q '^MEDIAMTX_CONTROL_URL=http' services/api/.env 2>/dev/null; then
+  echo ""
+  echo "--- Live MediaMTX verify ---"
+  PY=python3
+  [[ -x services/api/.venv/bin/python ]] && PY=services/api/.venv/bin/python
+  if $PY scripts/verify_live_mediamtx.py; then
+    echo "✔ Live MediaMTX verify"
+  else
+    echo "✖ Live MediaMTX verify failed"
+    FAIL=1
+  fi
+fi
+
 # Gift readiness honesty (never claims READY)
 if [[ -f scripts/gift-library/report_readiness_gaps.py ]]; then
   echo ""

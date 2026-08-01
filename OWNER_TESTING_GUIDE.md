@@ -233,6 +233,22 @@ python3 scripts/configure_openai_provider.py
 
 If verify reports `insufficient_quota`, add billing at https://platform.openai.com — wiring is already done.
 
+**Live / MediaMTX (host mode, no Docker):**
+
+```bash
+./scripts/start-mediamtx-local.sh   # downloads binary once; writes .sylora-local/mediamtx.env
+# restart API so it loads MEDIAMTX_CONTROL_* from services/api/.env
+./verify-live.sh
+```
+
+Create a session via API/docs, then publish with OBS/ffmpeg:
+
+- Server: `rtmp://127.0.0.1:1935`
+- Stream key / path: `<ingest_path>?user=<MTX_AUTHINTERNALUSERS_0_USER>&pass=<MTX_AUTHINTERNALUSERS_0_PASS>`
+- Credentials live in `.sylora-local/mediamtx.env` (gitignored)
+
+HLS preview: `http://127.0.0.1:8888/<ingest_path>/index.m3u8`
+
 **Gift readiness gaps (never promotes READY):**
 
 ```bash
