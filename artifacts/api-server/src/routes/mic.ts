@@ -1,13 +1,13 @@
 import express, { Router } from "express";
-import OpenAI, { toFile } from "openai";
+import { toFile } from "openai";
 import { db, sessionsTable, streamersTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "./users";
+import { getOpenAI } from "../lib/openaiClient";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_KEY ? undefined : process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+function openai() {
+  return getOpenAI();
+}
 const router = Router();
 
 const SUPPORTED_LANGS = new Set([
@@ -98,7 +98,7 @@ router.post(
       const startMs = Date.now();
 
       const file   = await toFile(body, "audio.webm", { type: "audio/webm" });
-      const result = await openai.audio.transcriptions.create({
+      const result = await openai().audio.transcriptions.create({
         file,
         model:           "whisper-1",
         language:        lang,

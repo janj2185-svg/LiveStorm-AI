@@ -1,12 +1,11 @@
-import OpenAI from "openai";
 import { db, aiResponseScoresTable } from "@workspace/db";
 import { eq, desc, and, gte } from "drizzle-orm";
 import { storeMemory } from "./memoryAgent";
+import { getOpenAI } from "../lib/openaiClient";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
-});
+function openai() {
+  return getOpenAI();
+}
 
 export interface StreamMetrics {
   totalGifts: number;
@@ -81,7 +80,7 @@ The AI co-host is "${opts.personaName}". Suggest ONE specific action to boost en
 Return JSON: {"type": "topic|game|engagement|joke|callout", "suggestion": "...", "reasoning": "...", "priority": "high|medium|low"}`;
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 150,
       messages: [

@@ -1,8 +1,8 @@
-import OpenAI from "openai";
+import { getOpenAI, hasOpenAICredentials } from "../lib/openaiClient";
 
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+function openai() {
+  return getOpenAI();
+}
 
 const THROTTLE_MS = 15 * 60 * 1000;
 const MAX_CALLS_PER_STREAM = 30;
@@ -109,14 +109,14 @@ export async function extractViewerFacts(opts: {
   streamerId: number;
   existingFactKeys: string[];
 }): Promise<Array<{ key: string; value: string }> | null> {
-  if (!openai) return null;
+  if (!hasOpenAICredentials()) return null;
   if (!hasPersonalFactSignal(opts.text)) return null;
   if (isThrottled(opts.streamerId, opts.viewerName)) return null;
 
   markCall(opts.streamerId, opts.viewerName);
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 60,
       temperature: 0,

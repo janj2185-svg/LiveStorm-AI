@@ -1,20 +1,7 @@
-import OpenAI from "openai";
+import { getOpenAI, getTtsOpenAI } from "./openaiClient";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
-});
-
-// TTS-only client: uses direct api.openai.com (Replit proxy does NOT support POST /audio/speech)
-const ttsOpenai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
-
-if (!process.env.OPENAI_API_KEY) {
-  console.error(
-    "[TTS] ❌ OPENAI_API_KEY is not set. Voice generation will fail. " +
-    "Add your OpenAI API key as the OPENAI_API_KEY secret."
-  );
+function openai() {
+  return getOpenAI();
 }
 
 const FAST_MODEL = "gpt-4o-mini";
@@ -109,7 +96,7 @@ export async function generateAnnouncement(event: {
   ].filter(Boolean).join(" ");
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: FAST_MODEL,
       messages: [
         { role: "system", content: systemContent },
@@ -164,7 +151,7 @@ export async function generateCommentReply(
   }
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: FAST_MODEL,
       messages: [
         {
@@ -188,7 +175,7 @@ export async function generateCommentReply(
 
 export async function moderateComment(text: string): Promise<{ flagged: boolean; reason: string }> {
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: FAST_MODEL,
       messages: [
         {
@@ -214,7 +201,7 @@ export async function generateQuests(context: {
   persona: { name: string; tone: string };
 }): Promise<Array<{ questText: string; metric: string; target: number; xpReward: number }>> {
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: FAST_MODEL,
       messages: [
         {
@@ -256,7 +243,7 @@ export async function generateEvent(context: {
   persona: { name: string; tone: string };
 }): Promise<{ title: string; description: string; duration: string; mechanic: string }> {
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: SMART_MODEL,
       messages: [
         {
@@ -311,7 +298,7 @@ export async function chatWithAssistant(
     .join(" ");
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: SMART_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
@@ -335,6 +322,8 @@ export async function generateVoice(
   voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "nova",
   speed = 1.0,
 ): Promise<Buffer | null> {
+  // TTS-only client: uses direct api.openai.com (Replit proxy does NOT support POST /audio/speech)
+  const ttsOpenai = getTtsOpenAI();
   if (!ttsOpenai) {
     console.error("[TTS] ❌ generateVoice: OPENAI_API_KEY not set — OpenAI API key required for TTS");
     return null;
@@ -397,7 +386,7 @@ export async function translateComment(text: string, targetLang: string): Promis
   const targetName = TRANSLATE_TARGET_NAMES[targetLang] ?? targetLang;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await openai().chat.completions.create({
       model: FAST_MODEL,
       messages: [
         {
@@ -481,7 +470,7 @@ export async function generateAnalyticsInsights(data: {
   };
 }): Promise<string[]> {
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: SMART_MODEL,
       messages: [
         {
@@ -546,7 +535,7 @@ export async function generateContent(params: {
   const prompt = typePrompts[params.type] ?? typePrompts.ideas;
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: SMART_MODEL,
       messages: [
         {

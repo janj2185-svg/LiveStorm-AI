@@ -1,11 +1,10 @@
-import OpenAI from "openai";
 import { db, aiResponseScoresTable, aiLearningReportsTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
+import { getOpenAI } from "../openaiClient";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
-});
+function openai() {
+  return getOpenAI();
+}
 
 export async function updateEngagementDelta(
   scoreId: number,
@@ -82,7 +81,7 @@ export async function generateLearningReport(
   let personalityAdjustments = "";
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {

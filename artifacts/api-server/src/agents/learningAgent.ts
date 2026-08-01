@@ -1,7 +1,11 @@
-import OpenAI from "openai";
 import { db, aiLearningReportsTable, aiResponseScoresTable, aiPersonaConfigsTable } from "@workspace/db";
 import { eq, and, avg, count } from "drizzle-orm";
 import { storeMemory } from "./memoryAgent";
+import { getOpenAI } from "../lib/openaiClient";
+
+function openai() {
+  return getOpenAI();
+}
 
 const PERSONALITY_KEYWORDS: Record<string, string[]> = {
   savage:       ["more aggressive", "sharper", "edgier", "bolder", "savage", "ruthless wit"],
@@ -19,11 +23,6 @@ function detectPersonalityAdjustment(text: string): string | null {
   }
   return null;
 }
-
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
-});
 
 export interface LearningReport {
   sessionId: number;
@@ -93,7 +92,7 @@ export async function runLearningAgent(opts: {
   };
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model: "gpt-4o",
       max_tokens: 400,
       messages: [

@@ -1,15 +1,14 @@
-import OpenAI from "openai";
 import type { TikTokEvent } from "../lib/tiktokSimulator";
 import type { PersonalityContext } from "./personalityAgent";
 import { buildPersonalityPrompt, getPersonalitySilenceTopics } from "./personalityAgent";
 import { storeMemory } from "./memoryAgent";
 import type { EmotionalState } from "./emotionEngine";
 import { getEmotionPromptContext } from "./emotionEngine";
+import { getOpenAI } from "../lib/openaiClient";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY!,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL!,
-});
+function openai() {
+  return getOpenAI();
+}
 
 // Map short language codes → full English names the LLM understands
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -421,7 +420,7 @@ ${fillerHint}`;
   console.log(`[HostAgent:params] event=${event.type} | emotion=${emotionState?.primary ?? "none"}(${emotionIntensity}) | maxTokens=${maxTokens} | temp=${temperature}`);
 
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model:       "gpt-4o-mini",
       max_tokens:  maxTokens,
       temperature,
@@ -449,7 +448,7 @@ export async function generateWelcomeMessage(opts: {
 }): Promise<string> {
   const systemPrompt = buildPersonalityPrompt(opts.personality, opts.personaName, opts.emotionState);
   try {
-    const resp = await openai.chat.completions.create({
+    const resp = await openai().chat.completions.create({
       model:      "gpt-4o-mini",
       max_tokens: 60,
       messages:   [
