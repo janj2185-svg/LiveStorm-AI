@@ -1,6 +1,7 @@
 /**
  * Live API probe for design-gallery screens that still use demo fixtures.
  * Does not replace fixture UI — only proves the local FastAPI path works.
+ * Mirrors Flutter client surfaces: auth, feed, wallet, messages, live.
  */
 
 import { useState } from 'react';
@@ -13,9 +14,10 @@ const API_BASE =
 const SEED = {
   email: 'owner@sylora.dev',
   password: 'OwnerTest!2026Local',
+  device_label: 'gallery-live-probe',
 } as const;
 
-export type LiveProbeKind = 'auth' | 'feed' | 'wallet';
+export type LiveProbeKind = 'auth' | 'feed' | 'wallet' | 'messages' | 'live';
 
 type ProbeResult = {
   ok: boolean;
@@ -76,14 +78,51 @@ async function runProbe(kind: LiveProbeKind): Promise<ProbeResult> {
       return { ok: false, summary: 'feed/posts unreachable' };
     }
 
-    const bal = await fetch(`${API_BASE}/v1/wallet/balance`, { headers });
-    if (!bal.ok) {
-      return { ok: false, summary: `wallet HTTP ${bal.status}` };
+    if (kind === 'wallet') {
+      const bal = await fetch(`${API_BASE}/v1/wallet/balance`, { headers });
+      if (!bal.ok) {
+        return { ok: false, summary: `wallet HTTP ${bal.status}` };
+      }
+      const body = (await bal.json()) as { spendable_minor?: number };
+      return {
+        ok: true,
+        summary: `spendable_minor=${body.spendable_minor ?? 0}`,
+      };
     }
-    const body = (await bal.json()) as { spendable_minor?: number };
+
+    if (kind === 'messages') {
+      const conv = await fetch(`${API_BASE}/v1/messages/conversations`, { headers });
+      if (!conv.ok) {
+        return { ok: false, summary: `conversations HTTP ${conv.status}` };
+      }
+      const data = (await conv.json()) as unknown[] | { items?: unknown[] };
+      const count = Array.isArray(data) ? data.length : (data.items?.length ?? 0);
+      return { ok: true, summary: `conversations ≈${count}` };
+    }
+
+    // live
+    const created = await fetch(`${API_BASE}/v1/live/sessions`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Gallery live probe', ai_mode: 'off' }),
+    });
+    if (!created.ok) {
+      return { ok: false, summary: `live create HTTP ${created.status}` };
+    }
+    const body = (await created.json()) as {
+      id?: string;
+      ingest_provisioned?: boolean;
+    };
+    const pre = body.id
+      ? await fetch(`${API_BASE}/v1/live/sessions/${body.id}/preflight`, {
+          method: 'POST',
+          headers,
+        })
+      : null;
+    const ready = pre?.ok ? Boolean((await pre.json()).ready) : false;
     return {
       ok: true,
-      summary: `spendable_minor=${body.spendable_minor ?? 0}`,
+      summary: `session ok · provisioned=${Boolean(body.ingest_provisioned)} · preflight_ready=${ready}`,
     };
   } catch (err) {
     return {
@@ -97,6 +136,8 @@ const LABELS: Record<LiveProbeKind, string> = {
   auth: 'Live login probe',
   feed: 'Live feed probe',
   wallet: 'Live wallet probe',
+  messages: 'Live messages probe',
+  live: 'Live session probe',
 };
 
 export function LiveProbePanel({ kind }: { kind: LiveProbeKind }) {
@@ -118,8 +159,8 @@ export function LiveProbePanel({ kind }: { kind: LiveProbeKind }) {
           <p className="sy-caption sy-fg-muted">Owner testing · {API_BASE}</p>
           <p className="sy-label">{LABELS[kind]}</p>
           <p className="sy-caption sy-fg-quiet">
-            Fixture UI above stays demo. This button hits the real local API with seeded
-            credentials.
+            Fixture UI above stays demo. This button hits the real local API (same paths the
+            Flutter client uses).
           </p>
         </div>
         <Button size="sm" variant="outline" disabled={loading} onClick={() => void onRun()}>

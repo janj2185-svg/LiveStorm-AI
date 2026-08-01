@@ -158,6 +158,47 @@ export function DiagnosticsScreen() {
           </Surface>
 
           <Surface padding="lg" className="sy-diag__card">
+            <h2 className="sy-subtitle">Flutter mobile client</h2>
+            <p className="sy-body">
+              The Flutter app under <code>apps/sylora</code> talks to this same API (no demo fixtures).
+              Stripe/top-up stays fail-closed; use sandbox credits.
+            </p>
+            <ul className="sy-body">
+              <li>
+                Desktop / iOS sim: <code>./scripts/run-flutter-local.sh ios</code> →{' '}
+                <code>http://127.0.0.1:8000</code>
+              </li>
+              <li>
+                Android emulator: <code>./scripts/run-flutter-local.sh android</code> →{' '}
+                <code>http://10.0.2.2:8000</code>
+              </li>
+              <li>
+                Physical device: <code>SYLORA_LAN_IP=&lt;pc-ip&gt; ./scripts/run-flutter-local.sh device</code>
+              </li>
+            </ul>
+            <p className="sy-caption sy-fg-muted">
+              Login: <code>owner@sylora.dev</code> / <code>OwnerTest!2026Local</code> · Guide:{' '}
+              <code>docs/implementation/FLUTTER_MOBILE_INTEGRATION.md</code> · Verify:{' '}
+              <code>./verify-flutter-integration.sh</code>
+            </p>
+            <StatusRow
+              label="OpenAI"
+              ok={(data.configured_providers ?? []).includes('openai_api_key')}
+              detail="assistant / AI routes"
+            />
+            <StatusRow
+              label="MediaMTX"
+              ok={(data.configured_providers ?? []).includes('mediamtx_control')}
+              detail="live ingest control"
+            />
+            <StatusRow
+              label="Payment"
+              ok={data.payment_provider?.ok === false}
+              detail="fail-closed expected (Stripe skipped)"
+            />
+          </Surface>
+
+          <Surface padding="lg" className="sy-diag__card">
             <h2 className="sy-subtitle">Notes</h2>
             <ul>
               {(data.notes ?? []).map((n) => (

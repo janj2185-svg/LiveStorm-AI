@@ -36,6 +36,7 @@ import {
 } from '../../design-system/primitives';
 import { PageHeader } from '../../design-system/patterns/AppShell';
 import { CONVERSATIONS } from '../data';
+import { LiveProbePanel } from '../lib/LiveProbePanel';
 
 const PINNED = CONVERSATIONS.slice(0, 2);
 const REST = CONVERSATIONS.slice(2);
@@ -140,6 +141,8 @@ export function MessagesScreen() {
             </section>
           </>
         )}
+
+        <LiveProbePanel kind="messages" />
       </div>
     </div>
   );

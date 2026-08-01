@@ -129,6 +129,20 @@ if [[ -f scripts/verify_live_mediamtx.py ]] && grep -q '^MEDIAMTX_CONTROL_URL=ht
   fi
 fi
 
+# Flutter mobile integration readiness (no Flutter SDK required)
+if [[ -f scripts/verify_flutter_integration.py ]]; then
+  echo ""
+  echo "--- Flutter integration verify ---"
+  PY=python3
+  [[ -x services/api/.venv/bin/python ]] && PY=services/api/.venv/bin/python
+  if $PY scripts/verify_flutter_integration.py; then
+    echo "✔ Flutter integration verify"
+  else
+    echo "✖ Flutter integration verify failed"
+    FAIL=1
+  fi
+fi
+
 # Gift readiness honesty (never claims READY)
 if [[ -f scripts/gift-library/report_readiness_gaps.py ]]; then
   echo ""

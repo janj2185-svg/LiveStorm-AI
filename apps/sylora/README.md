@@ -18,15 +18,25 @@ flutter run -d linux
 flutter run -d chrome
 ```
 
-Owner local helper (prefers `127.0.0.1`, checks API health first):
+Owner local helper (maps device → API origin, checks API health first):
 
 ```sh
 # from repo root — requires Flutter SDK on your PATH
-../scripts/run-flutter-local.sh chrome   # from apps/sylora, use: ../../scripts/...
-# from repo root:
 ./scripts/run-flutter-local.sh chrome
-./scripts/run-flutter-local.sh linux
+./scripts/run-flutter-local.sh ios          # http://127.0.0.1:8000
+./scripts/run-flutter-local.sh android      # http://10.0.2.2:8000 (emulator)
+SYLORA_LAN_IP=192.168.1.20 ./scripts/run-flutter-local.sh device
 ```
+
+| Target | API origin |
+|---|---|
+| Desktop / iOS Simulator | `http://127.0.0.1:8000` |
+| Android Emulator | `http://10.0.2.2:8000` |
+| Physical device | `http://<PC-LAN-IP>:8000` |
+
+Ensure `ALLOWED_HOSTS` includes `10.0.2.2` (and your LAN IP for physical devices). See `docs/implementation/FLUTTER_MOBILE_INTEGRATION.md`.
+
+Seeded accounts: `owner@sylora.dev` / `OwnerTest!2026Local`.
 
 Set another API origin with a Dart define:
 

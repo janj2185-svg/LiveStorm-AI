@@ -5,6 +5,12 @@ final class AppConfig {
   AppConfig({required Uri apiBaseUri, bool production = false})
     : apiBaseUri = _validate(apiBaseUri, production);
 
+  /// Desktop / iOS simulator / Chrome local default.
+  static const String localDesktopOrigin = 'http://127.0.0.1:8000';
+
+  /// Android emulator alias for the host machine loopback.
+  static const String localAndroidEmulatorOrigin = 'http://10.0.2.2:8000';
+
   factory AppConfig.fromEnvironment({bool? production}) {
     const raw = String.fromEnvironment(
       'SYLORA_API_BASE_URL',
@@ -15,6 +21,12 @@ final class AppConfig {
       production: production ?? kReleaseMode,
     );
   }
+
+  /// Explicit local origin helper for scripts/tests (not platform auto-detect).
+  factory AppConfig.local({
+    required String origin,
+    bool production = false,
+  }) => AppConfig(apiBaseUri: Uri.parse(origin), production: production);
 
   final Uri apiBaseUri;
 

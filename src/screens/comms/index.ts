@@ -21,6 +21,7 @@ export const COMMS_SCREENS: ScreenDefinition[] = [
     navId: 'messages',
     purpose:
       'The triage inbox. Unread is carried by tint, weight and a count together, and the policy on messages from strangers is stated in words rather than implied by a tab.',
+    dataSource: 'demo',
     component: MessagesScreen,
   },
   {

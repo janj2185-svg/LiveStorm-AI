@@ -47,6 +47,7 @@ import {
 } from '../../design-system/primitives';
 import { LIVE_CHAT, STREAMS } from '../data';
 import { Media } from '../components';
+import { LiveProbePanel } from '../lib/LiveProbePanel';
 
 const stream = STREAMS[0];
 
@@ -473,6 +474,10 @@ export function LiveStudioScreen() {
             </div>
           </section>
         </aside>
+      </div>
+
+      <div className="sy-screen__inner" style={{ paddingTop: 0 }}>
+        <LiveProbePanel kind="live" />
       </div>
     </div>
   );

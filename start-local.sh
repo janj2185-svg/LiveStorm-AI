@@ -71,6 +71,20 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   export "${key}=${val}"
 done < services/api/.env
 
+# Bash line-parsing mangles JSON list values; restore critical arrays from file.
+eval "$(
+  python3 - <<'PY'
+from pathlib import Path
+text = Path("services/api/.env").read_text()
+for key in ("ALLOWED_HOSTS", "CORS_ORIGINS"):
+    for line in text.splitlines():
+        if line.startswith(f"{key}="):
+            val = line.split("=", 1)[1]
+            print(f"export {key}={val!r}")
+            break
+PY
+)"
+
 redis-cli ping >/dev/null 2>&1 || {
   echo "Starting redis-server..."
   redis-server --daemonize yes --bind 127.0.0.1 --port 6379

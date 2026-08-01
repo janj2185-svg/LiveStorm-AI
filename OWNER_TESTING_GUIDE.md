@@ -205,12 +205,19 @@ python3 scripts/sandbox_topup.py --email user@sylora.dev --amount 25000
 
 ```bash
 ./start-local.sh --host
-./scripts/run-flutter-local.sh chrome
-# Windows: .\scripts\run-flutter-local.ps1 chrome
+./verify-flutter-integration.sh
+./scripts/run-flutter-local.sh android   # or ios / chrome / device
+# Windows: .\scripts\run-flutter-local.ps1 android
 ```
 
-Login with seeded accounts (`owner@sylora.dev` / `OwnerTest!2026Local`, etc.).  
-Default API origin: `http://127.0.0.1:8000` via `--dart-define=SYLORA_API_BASE_URL=…`.
+| Target | API base |
+|---|---|
+| Android emulator | `http://10.0.2.2:8000` |
+| iOS Simulator / desktop | `http://127.0.0.1:8000` |
+| Physical device | `http://<LAN-IP>:8000` via `SYLORA_LAN_IP` |
+
+Login with seeded accounts. Full checklist: `docs/implementation/FLUTTER_MOBILE_INTEGRATION.md`.  
+Gallery: http://127.0.0.1:5173/#/diagnostics (Flutter block) + live probes on Auth/Feed/Wallet/Messages/Live Studio.
 
 To change Phase 2 defaults (Stripe / OpenAI / Flutter-only focus), update the confirmation log in `OWNER_PRODUCT_ROADMAP.md`.
 

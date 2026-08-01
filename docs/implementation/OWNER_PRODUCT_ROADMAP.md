@@ -25,12 +25,12 @@ Exit: verify PASS · gifts READY=0.
 | Sandbox top-up (admin issuance) | `scripts/sandbox_topup.py` |
 | Gallery Demo / Live / Catalog badges | done |
 | Live probes on Auth / Feed / Wallet (fixture UI kept) | `src/screens/lib/LiveProbePanel.tsx` |
-| Flutter local runner | `scripts/run-flutter-local.sh` |
+| Flutter local runner | `scripts/run-flutter-local.sh` (android/ios/device mapping) |
 | Flutter wallet fail-closed + sandbox hint | `platform_screens.dart` |
-| Payment | fail-closed (no provider) |
-| AI | skipped (no key) |
-
-Override later: Stripe · OpenAI key · Flutter SDK on owner machine.
+| Gallery Flutter diagnostics + live probes | `#/diagnostics`, Auth/Feed/Wallet/Messages/Live Studio |
+| Flutter integration verify | `./verify-flutter-integration.sh` |
+| Payment | fail-closed (Stripe skipped) |
+| AI provider | live when key present |
 
 ---
 
@@ -71,7 +71,9 @@ OBS/ffmpeg publish uses global publish user from `.sylora-local/mediamtx.env`
 | 2026-08-01 | OpenAI key provided | Wired to gitignored env + admin provider; initially blocked by insufficient_quota |
 | 2026-08-01 | OpenAI billing topped up | Live chat PASS — `./verify-ai.sh` OK (`SYLORA_AI_OK`) |
 | 2026-08-01 | MediaMTX local | Host MediaMTX + ingest provision + preflight ready |
-| | Payment | fail-closed |
+| 2026-08-01 | Flutter mobile prep | Emulator/LAN URL mapping, gallery live probes, verify-flutter-integration (Stripe skipped) |
+| | Payment | fail-closed (Stripe skipped) |
 | | AI | **live** (gpt-4o-mini) |
 | | Live ingest | **local MediaMTX working** |
+| | Flutter | **prep done** — run on owner machine with SDK |
 | | Phase 4 hiring | _pending_ |

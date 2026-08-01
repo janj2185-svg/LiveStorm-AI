@@ -36,6 +36,22 @@ void main() {
         throwsFormatException,
       );
     });
+
+    test('local mobile origins resolve /v1 endpoints', () {
+      final desktop = AppConfig.local(origin: AppConfig.localDesktopOrigin);
+      final android = AppConfig.local(
+        origin: AppConfig.localAndroidEmulatorOrigin,
+      );
+      expect(desktop.endpoint('auth/login').toString(), endsWith('/v1/auth/login'));
+      expect(
+        android.apiBaseUri.host,
+        '10.0.2.2',
+      );
+      expect(
+        android.websocket('ws/messages').scheme,
+        'ws',
+      );
+    });
   });
 
   group('ApiProblem', () {

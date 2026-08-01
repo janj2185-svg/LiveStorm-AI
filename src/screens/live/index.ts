@@ -22,6 +22,7 @@ export const LIVE_SCREENS: ScreenDefinition[] = [
     preferredDevice: 'desktop',
     purpose:
       'The broadcaster’s control room, laid out left to right as three time horizons: what is staged next, what is on air now, and what the audience just did about it.',
+    dataSource: 'demo',
     component: LiveStudioScreen,
   },
 ];
