@@ -43,10 +43,10 @@ Override later: Stripe · OpenAI key · Flutter SDK on owner machine.
 | OpenAI key in gitignored env | wired (not committed) |
 | Admin `openai` provider | `scripts/configure_openai_provider.py` |
 | AI verify | `./verify-ai.sh` |
-| Live chat | **blocked by OpenAI `insufficient_quota`** until billing topped up |
+| Live chat | **PASS** — `./verify-ai.sh` (gpt-4o-mini) |
 | MediaMTX | still unconfigured |
 
-Owner action: add OpenAI billing/credits → re-run `./verify-ai.sh` until live chat ✔.
+Re-check anytime: `./verify-ai.sh`
 
 ---
 
@@ -67,7 +67,8 @@ Owner action: add OpenAI billing/credits → re-run `./verify-ai.sh` until live 
 | 2026-08-01 | Start Phase 1 | Owner: start |
 | 2026-08-01 | Start Phase 2 | Owner reply `2` |
 | 2026-08-01 | Proceed sequentially | Owner: `Роби сам послідовно` — agent continues without keys/hiring |
-| 2026-08-01 | OpenAI key provided | Wired to gitignored env + admin provider; live chat blocked by OpenAI insufficient_quota |
+| 2026-08-01 | OpenAI key provided | Wired to gitignored env + admin provider; initially blocked by insufficient_quota |
+| 2026-08-01 | OpenAI billing topped up | Live chat PASS — `./verify-ai.sh` OK (`SYLORA_AI_OK`) |
 | | Payment | fail-closed |
-| | AI | key present; needs OpenAI billing |
+| | AI | **live** (gpt-4o-mini) |
 | | Phase 4 hiring | _pending_ |
