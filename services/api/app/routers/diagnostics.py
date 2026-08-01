@@ -127,6 +127,54 @@ async def diagnostics(request: Request) -> dict[str, Any]:
 
     celery_broker = bool(settings.celery_broker_url or settings.redis_url)
 
+    # Product-loop demo seed snapshot (handles + issuance + posts)
+    product_loop: dict[str, Any] = {
+        "ok": False,
+        "demo_handles": 0,
+        "issuance_txns": 0,
+        "published_posts": 0,
+        "detail": "not seeded",
+    }
+    try:
+        async with request.app.state.engine.connect() as conn:
+            handles = (
+                await conn.execute(
+                    text("SELECT COUNT(*) FROM profiles WHERE handle LIKE 'sylora.%'")
+                )
+            ).scalar_one()
+            issuance = (
+                await conn.execute(
+                    text(
+                        "SELECT COUNT(*) FROM ledger_transactions "
+                        "WHERE transaction_type = 'issuance' AND status = 'posted'"
+                    )
+                )
+            ).scalar_one()
+            posts = (
+                await conn.execute(
+                    text(
+                        "SELECT COUNT(*) FROM posts "
+                        "WHERE lifecycle = 'published' AND deleted_at IS NULL"
+                    )
+                )
+            ).scalar_one()
+            product_loop["demo_handles"] = int(handles or 0)
+            product_loop["issuance_txns"] = int(issuance or 0)
+            product_loop["published_posts"] = int(posts or 0)
+            seeded = (
+                product_loop["demo_handles"] >= 5
+                and product_loop["issuance_txns"] >= 1
+                and product_loop["published_posts"] >= 1
+            )
+            product_loop["ok"] = seeded
+            product_loop["detail"] = (
+                "demo seed present"
+                if seeded
+                else "run: python3 scripts/seed_product_demo.py"
+            )
+    except Exception as exc:
+        product_loop["detail"] = f"query_failed:{type(exc).__name__}"
+
     return {
         "service": settings.service_name,
         "environment": settings.environment,
@@ -163,11 +211,13 @@ async def diagnostics(request: Request) -> dict[str, Any]:
         "configured_providers": configured,
         "missing_providers": missing,
         "gift_library": gift_summary,
+        "product_loop": product_loop,
         "recent_errors": [],
         "failed_background_jobs": [],
         "notes": [
             "Secrets are never returned by this endpoint.",
             "Unconfigured providers must fail closed with Provider not configured — never fake success.",
             "READY gift count is honest; do not claim 100 READY unless catalog says so.",
+            "Phase 1 product loops: login → handle → wallet → feed → DM. Phase 2+ needs owner confirm.",
         ],
     }

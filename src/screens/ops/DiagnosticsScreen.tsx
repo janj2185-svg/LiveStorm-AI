@@ -22,6 +22,13 @@ type DiagPayload = {
   configured_providers?: string[];
   missing_providers?: string[];
   gift_library?: Record<string, number | string>;
+  product_loop?: {
+    ok?: boolean;
+    demo_handles?: number;
+    issuance_txns?: number;
+    published_posts?: number;
+    detail?: string;
+  };
   notes?: string[];
   recent_errors?: unknown[];
   failed_background_jobs?: unknown[];
@@ -134,6 +141,20 @@ export function DiagnosticsScreen() {
           <Surface padding="lg" className="sy-diag__card">
             <h2 className="sy-subtitle">Gift library (honest)</h2>
             <pre className="sy-diag__pre">{JSON.stringify(data.gift_library ?? {}, null, 2)}</pre>
+          </Surface>
+
+          <Surface padding="lg" className="sy-diag__card">
+            <h2 className="sy-subtitle">Product loop (Phase 1)</h2>
+            <StatusRow
+              label="Demo seed"
+              ok={data.product_loop?.ok}
+              detail={data.product_loop?.detail}
+            />
+            <pre className="sy-diag__pre">{JSON.stringify(data.product_loop ?? {}, null, 2)}</pre>
+            <p className="sy-caption sy-fg-muted">
+              Seed: <code>python3 scripts/seed_product_demo.py</code> · Verify:{' '}
+              <code>./verify-product-loop.sh</code>
+            </p>
           </Surface>
 
           <Surface padding="lg" className="sy-diag__card">

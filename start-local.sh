@@ -37,6 +37,10 @@ if [[ "$MODE" == "docker" ]]; then
       python /app/../../scripts/seed_owner_accounts.py 2>/dev/null \
     || echo "WARN: seed accounts manually: python3 scripts/seed_owner_accounts.py"
 
+  echo "Seeding product demo via host Python (API HTTP)..."
+  python3 scripts/seed_product_demo.py \
+    || echo "WARN: product demo seed failed — run: python3 scripts/seed_product_demo.py"
+
   # Design gallery on host (Compose does not include Vite)
   if command -v pnpm >/dev/null 2>&1; then
     [[ -d node_modules ]] || pnpm install
@@ -115,6 +119,12 @@ for i in $(seq 1 40); do
   sleep 1
 done
 
+echo "Seeding product demo (handles / wallet / feed / DM)..."
+(
+  unset CORS_ORIGINS ALLOWED_HOSTS 2>/dev/null || true
+  services/api/.venv/bin/python scripts/seed_product_demo.py
+) || echo "WARN: product demo seed failed — run: python3 scripts/seed_product_demo.py"
+
 echo ""
 echo "SYLORA host stack started."
 echo "  Gallery:      http://127.0.0.1:5173"
@@ -124,3 +134,4 @@ echo "  API docs:     http://127.0.0.1:8000/docs"
 echo "  Health:       http://127.0.0.1:8000/health/ready"
 echo "  Logs:         .sylora-local/logs/"
 echo "Credentials:    OWNER_TESTING_GUIDE.md"
+echo "Verify loops:   ./verify-product-loop.sh"

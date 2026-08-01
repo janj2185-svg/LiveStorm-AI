@@ -16,21 +16,28 @@ ROOT = Path(__file__).resolve().parents[1]
 API = ROOT / "services" / "api"
 sys.path.insert(0, str(API))
 
-# Load local env before importing app settings
+# Load local env before importing app settings.
+# Prefer file values over a polluted shell env (bash `source` mangled JSON lists).
 for candidate in (ROOT / ".env.local", API / ".env"):
     if candidate.exists():
-        os.environ.setdefault("DOTENV_PATH", str(candidate))
-        # Minimal parse so Settings can find vars when cwd differs
+        os.environ["DOTENV_PATH"] = str(candidate)
         for line in candidate.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line or line.startswith("#") or "=" not in line:
                 continue
             key, _, value = line.partition("=")
-            os.environ.setdefault(key.strip(), value.strip().strip('"'))
+            key = key.strip()
+            value = value.strip()
+            if (value.startswith('"') and value.endswith('"')) or (
+                value.startswith("'") and value.endswith("'")
+            ):
+                value = value[1:-1]
+            os.environ[key] = value
 
 os.environ.setdefault("ENVIRONMENT", "development")
 
 from sqlalchemy import select  # noqa: E402
+from sqlalchemy.orm import selectinload  # noqa: E402
 
 from app.config import get_settings  # noqa: E402
 from app.database import create_engine, create_session_factory, seed_rbac  # noqa: E402
@@ -74,7 +81,11 @@ ACCOUNTS = [
 
 
 async def ensure_user(session, email: str, password: str, display_name: str, role_names: list[str]) -> str:
-    user = await session.scalar(select(User).where(User.email == email))
+    user = await session.scalar(
+        select(User)
+        .where(User.email == email)
+        .options(selectinload(User.profile), selectinload(User.settings))
+    )
     if user is None:
         user = User(
             email=email,
@@ -96,6 +107,8 @@ async def ensure_user(session, email: str, password: str, display_name: str, rol
             user.profile = Profile(display_name=display_name)
         else:
             user.profile.display_name = display_name
+        if user.settings is None:
+            user.settings = AccountSettings()
         action = "updated"
 
     for role_name in role_names:

@@ -73,6 +73,20 @@ if curl -sf http://127.0.0.1:8000/health/live >/dev/null 2>&1; then
   fi
 fi
 
+# Product loops (wallet / feed / messaging) — Phase 1
+if [[ -f scripts/verify_product_loop.py ]]; then
+  echo ""
+  echo "--- Product loop verify ---"
+  PY=python3
+  [[ -x services/api/.venv/bin/python ]] && PY=services/api/.venv/bin/python
+  if $PY scripts/verify_product_loop.py; then
+    echo "✔ Product loop verify"
+  else
+    echo "✖ Product loop verify failed"
+    FAIL=1
+  fi
+fi
+
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
   echo "VERIFY OK — stack is usable for owner testing."

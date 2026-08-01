@@ -145,7 +145,8 @@ pnpm install && pnpm dev
 
 ## F. Test account credentials (local only)
 
-Seeded by `scripts/seed_owner_accounts.py` (run automatically from `start-local.sh --host`).
+Seeded by `scripts/seed_owner_accounts.py` (run automatically from `start-local.sh --host`).  
+Product demo (handles, wallet top-ups, follows, posts, DM) is seeded by `scripts/seed_product_demo.py` (also hooked into `start-local.sh`).
 
 | Role | Email | Password |
 |---|---|---|
@@ -157,6 +158,8 @@ Seeded by `scripts/seed_owner_accounts.py` (run automatically from `start-local.
 
 **Do not use these in production.** They are local testing only.
 
+Demo handles after product seed: `@sylora.owner`, `@sylora.creator`, `@sylora.streamer`, `@sylora.user`, `@sylora.viewer`.
+
 Login smoke test:
 
 ```bash
@@ -164,6 +167,16 @@ curl -s -X POST http://127.0.0.1:8000/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"owner@sylora.dev","password":"OwnerTest!2026Local"}'
 ```
+
+Product-loop verify (login → wallet → feed → messaging; gifts READY still 0):
+
+```bash
+./verify-product-loop.sh
+# or full stack:
+./verify-local.sh
+```
+
+Roadmap / confirmation gates: `docs/implementation/OWNER_PRODUCT_ROADMAP.md`
 
 ---
 
