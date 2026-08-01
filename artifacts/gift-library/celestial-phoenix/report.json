@@ -1,0 +1,85 @@
+{
+  "slug": "celestial-phoenix",
+  "checks": {
+    "exists:scene.blend": true,
+    "exists:model.glb": true,
+    "exists:model_mobile_lod.glb": true,
+    "exists:preview.mp4": true,
+    "exists:preview.gif": true,
+    "exists:poster.png": true,
+    "exists:thumbnail.png": true,
+    "exists:runtime-manifest.json": true,
+    "exists:metadata.json": true,
+    "exists:main.wav": true,
+    "glb_has_animations": true,
+    "glb_not_tiny": true,
+    "blender_reopen": true,
+    "ffprobe:preview.mp4": true,
+    "ffprobe:preview.gif": true,
+    "ffprobe:poster.png": true
+  },
+  "sizes": {
+    "scene.blend": 4425496,
+    "model.glb": 3536564,
+    "model_mobile_lod.glb": 1703464,
+    "preview.mp4": 2038927,
+    "preview.gif": 2009861,
+    "poster.png": 1078985,
+    "thumbnail.png": 288662,
+    "runtime-manifest.json": 4290,
+    "metadata.json": 1245,
+    "main.wav": 2646044
+  },
+  "issues": [],
+  "blender_stdout": [
+    "OBJS 211",
+    "ARMATURES 1",
+    "ACTIONS 31",
+    "OK"
+  ],
+  "probe:preview.mp4": {
+    "format": {
+      "duration": "15.000000",
+      "size": "2038927"
+    }
+  },
+  "probe:preview.gif": {
+    "format": {
+      "duration": "15.000000",
+      "size": "2009861"
+    }
+  },
+  "probe:poster.png": {
+    "format": {
+      "size": "678587"
+    }
+  },
+  "performance": {
+    "fps_desktop": "NOT_MEASURED_ON_DEVICE",
+    "fps_mobile": "NOT_MEASURED_ON_DEVICE",
+    "memory_mb": "NOT_MEASURED_ON_DEVICE",
+    "load_time_ms": "NOT_MEASURED_ON_DEVICE",
+    "target_fps": 60,
+    "target_memory_mb": 120,
+    "glb_bytes": 3536564,
+    "mobile_glb_bytes": 1703464,
+    "within_50mb_budget": true
+  },
+  "quality_gate": {
+    "pixar_blizzard_parity": false,
+    "production_ready_claim": false,
+    "visual_grade": "PROCEDURAL_MID_POLY_CANDIDATE",
+    "reason": "Pipeline-complete Blender EEVEE gift (blend/GLB/audio/MP4/GIF/poster/manifest/2K maps). Avian loft body + feather cards are readable but NOT high-poly sculpt / retopo / cloth-fire-smoke sim / Hollywood lighting. Rejects Pixar/Blizzard/Unreal trailer parity claims. Device FPS/RAM/runtime/wallet E2E not measured."
+  },
+  "asset_pipeline_ok": true,
+  "status": "PARTIAL_PRODUCTION_CANDIDATE",
+  "remaining_issues": [
+    "Visual still mid-poly procedural \u2014 not AAA sculpt quality",
+    "No Mantaflow fire/smoke bake",
+    "Feather cards (not groom/sim)",
+    "Facial = jaw/crest keys only (no blendshapes in GLB)",
+    "Device FPS/memory/load not measured",
+    "Wallet/WS/runtime E2E not run (no Docker)",
+    "Temple pillars are primitive architecture (hidden in hero stills)"
+  ]
+}

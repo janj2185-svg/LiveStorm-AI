@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0",
+  "renderer_targets": [
+    "threejs",
+    "flutter"
+  ],
+  "source_metadata": {
+    "application": "blender",
+    "version": "4.0.2",
+    "source_asset_id": "48bfff99-cb1c-5e88-b70f-7371453987cc",
+    "license_reference": "SYLORA-original-IP-celestial-phoenix"
+  },
+  "duration_ms": 15000,
+  "assets": [
+    {
+      "asset_id": "b90cb0e3-9f03-544d-84bc-85f8ef27fc59",
+      "role": "primary_model"
+    },
+    {
+      "asset_id": "7b2cc37f-4368-5186-a899-159575be81f6",
+      "role": "low_end_fallback"
+    },
+    {
+      "asset_id": "58cff657-696b-58b7-93d5-9e24bcd2cf44",
+      "role": "primary_audio"
+    },
+    {
+      "asset_id": "089fb504-949f-5830-9369-1c7fefe8e260",
+      "role": "poster"
+    }
+  ],
+  "layers": [
+    {
+      "kind": "model",
+      "name": "celestial_phoenix",
+      "asset_id": "b90cb0e3-9f03-544d-84bc-85f8ef27fc59",
+      "transform": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation_degrees": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  ],
+  "timelines": [
+    {
+      "name": "main",
+      "duration_ms": 15000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "celestial_phoenix",
+          "property": "visibility",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": true,
+              "easing": "step"
+            },
+            {
+              "time_ms": 15000,
+              "value": true,
+              "easing": "step"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "particle_systems": [
+    {
+      "name": "solar_feathers",
+      "max_particles": 5000,
+      "spawn_rate_per_second": 220,
+      "texture_asset_id": null,
+      "deterministic_seed": 240801
+    },
+    {
+      "name": "star_burst",
+      "max_particles": 3000,
+      "spawn_rate_per_second": 180,
+      "texture_asset_id": null,
+      "deterministic_seed": 240802
+    }
+  ],
+  "shaders": [],
+  "lighting": [
+    {
+      "kind": "ambient",
+      "color_hex": "#0A0618",
+      "intensity": 0.35,
+      "position": null
+    },
+    {
+      "kind": "directional",
+      "color_hex": "#FFD89A",
+      "intensity": 3.5,
+      "position": {
+        "x": 3,
+        "y": 6,
+        "z": 4
+      }
+    },
+    {
+      "kind": "point",
+      "color_hex": "#7A3CFF",
+      "intensity": 4.0,
+      "position": {
+        "x": 0,
+        "y": 4,
+        "z": 0
+      }
+    }
+  ],
+  "audio": [
+    {
+      "asset_id": "58cff657-696b-58b7-93d5-9e24bcd2cf44",
+      "spatial": true,
+      "peak_dbfs": -6,
+      "autoplay": true
+    }
+  ],
+  "interaction_hooks": [
+    {
+      "hook": "arrival",
+      "action": "sylora.gift.celestial_phoenix.play"
+    },
+    {
+      "hook": "completion",
+      "action": "sylora.gift.celestial_phoenix.complete"
+    },
+    {
+      "hook": "tap",
+      "action": "sylora.gift.celestial_phoenix.replay"
+    }
+  ],
+  "combinations": [
+    {
+      "combination_id": "sylora.gift.celestial-phoenix",
+      "compatible_combination_ids": [
+        "sylora.gift.combo.any",
+        "sylora.gift.combo.divine"
+      ],
+      "window_seconds": 180
+    }
+  ],
+  "procedural_parameters": [
+    {
+      "name": "seed",
+      "source": "deterministic",
+      "value_type": "seed",
+      "minimum": null,
+      "maximum": null,
+      "allowed_values": []
+    }
+  ],
+  "effects": [
+    {
+      "name": "portal_tear",
+      "scope": "full_screen",
+      "timeline_name": "main"
+    },
+    {
+      "name": "streamer_power_up",
+      "scope": "streamer",
+      "timeline_name": "main"
+    },
+    {
+      "name": "avatar_wing_glow",
+      "scope": "avatar",
+      "timeline_name": "main"
+    },
+    {
+      "name": "viewer_cosmic_rain",
+      "scope": "viewer",
+      "timeline_name": "main"
+    }
+  ],
+  "fallbacks": {
+    "low_end_asset_id": "7b2cc37f-4368-5186-a899-159575be81f6",
+    "reduced_motion_asset_id": "089fb504-949f-5830-9369-1c7fefe8e260",
+    "no_audio_asset_id": "b90cb0e3-9f03-544d-84bc-85f8ef27fc59"
+  },
+  "quality_budgets": {
+    "max_download_bytes": 50000000,
+    "max_duration_ms": 16000,
+    "max_particles": 8000,
+    "max_shader_instructions": 1024,
+    "max_audio_peak_dbfs": -1
+  }
+}

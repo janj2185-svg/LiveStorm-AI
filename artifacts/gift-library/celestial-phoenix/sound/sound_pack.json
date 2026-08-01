@@ -1,0 +1,12 @@
+{
+  "slug": "celestial-phoenix",
+  "tracks": [
+    "main.wav",
+    "spatial_bed.wav"
+  ],
+  "original": true,
+  "license": "SYLORA-original-synthesis",
+  "voice_effects": "phoenix cry formant burst @ ~7.5s",
+  "dynamic_soundtrack": true,
+  "spatial": true
+}

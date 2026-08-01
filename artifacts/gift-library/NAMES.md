@@ -1,12 +1,12 @@
 # SYLORA Official Gift Library — 100 Names
+Branch artifacts under `/workspace/artifacts/gift-library`
 
 ## Rare
-
-- 001. **Lumen Seed** (`lumen-seed`) — 10 — ASSETS_BUILT_NOT_READY
-- 002. **Paper Koi** (`paper-koi`) — 25 — ASSETS_BUILT_NOT_READY
-- 003. **Signal Ribbon** (`signal-ribbon`) — 25 — ASSETS_BUILT_NOT_READY
-- 004. **Tea Steam Heart** (`tea-steam-heart`) — 50 — ASSETS_BUILT_NOT_READY
-- 005. **Constellation Pin** (`constellation-pin`) — 50 — ASSETS_BUILT_NOT_READY
+- 001. **Lumen Seed** (`lumen-seed`) — 10 — SPEC_ONLY
+- 002. **Paper Koi** (`paper-koi`) — 25 — SPEC_ONLY
+- 003. **Signal Ribbon** (`signal-ribbon`) — 25 — SPEC_ONLY
+- 004. **Tea Steam Heart** (`tea-steam-heart`) — 50 — SPEC_ONLY
+- 005. **Constellation Pin** (`constellation-pin`) — 50 — SPEC_ONLY
 - 006. **Ink Drop Bloom** (`ink-drop-bloom`) — 100 — SPEC_ONLY
 - 007. **Glass Marbles** (`glass-marbles`) — 100 — SPEC_ONLY
 - 008. **Wind Chime Gate** (`wind-chime-gate`) — 100 — SPEC_ONLY
@@ -24,8 +24,7 @@
 - 020. **Compass Kind** (`compass-kind`) — 100 — SPEC_ONLY
 
 ## Epic
-
-- 021. **Stage Curtain Rise** (`stage-curtain-rise`) — 500 — ASSETS_BUILT_NOT_READY
+- 021. **Stage Curtain Rise** (`stage-curtain-rise`) — 500 — SPEC_ONLY
 - 022. **Kite Festival** (`kite-festival`) — 500 — SPEC_ONLY
 - 023. **Clockwork Bouquet** (`clockwork-bouquet`) — 1000 — SPEC_ONLY
 - 024. **Rain Letter** (`rain-letter`) — 500 — SPEC_ONLY
@@ -47,8 +46,7 @@
 - 040. **Quilt Embrace** (`quilt-embrace`) — 2500 — SPEC_ONLY
 
 ## Legendary
-
-- 041. **Opera Mask Reveal** (`opera-mask-reveal`) — 5000 — ASSETS_BUILT_NOT_READY
+- 041. **Opera Mask Reveal** (`opera-mask-reveal`) — 5000 — SPEC_ONLY
 - 042. **Library of Echoes** (`library-of-echoes`) — 10000 — SPEC_ONLY
 - 043. **Stormglass Captain** (`stormglass-captain`) — 10000 — SPEC_ONLY
 - 044. **Ballet of Sparks** (`ballet-of-sparks`) — 5000 — SPEC_ONLY
@@ -70,8 +68,7 @@
 - 060. **Violin Aurora** (`violin-aurora`) — 5000 — SPEC_ONLY
 
 ## Mythic
-
-- 061. **Worldfold Letter** (`worldfold-letter`) — 50000 — ASSETS_BUILT_NOT_READY
+- 061. **Worldfold Letter** (`worldfold-letter`) — 50000 — SPEC_ONLY
 - 062. **Tide of Voices** (`tide-of-voices`) — 100000 — SPEC_ONLY
 - 063. **Twin Eclipse** (`twin-eclipse`) — 250000 — SPEC_ONLY
 - 064. **Root Network** (`root-network`) — 50000 — SPEC_ONLY
@@ -93,10 +90,9 @@
 - 080. **Moonlit Forge Garden** (`moonlit-forge-garden`) — 500000 — SPEC_ONLY
 
 ## Divine
-
-- 081. **SYLORA Genesis Spire** (`sylora-genesis-spire`) — 1000000 — ASSETS_BUILT_NOT_READY
+- 081. **SYLORA Genesis Spire** (`sylora-genesis-spire`) — 1000000 — SPEC_ONLY
 - 082. **Ocean of Names** (`ocean-of-names`) — 2500000 — SPEC_ONLY
-- 083. **Celestial Atelier Eternal** (`celestial-atelier-eternal`) — 5000000 — SPEC_ONLY
+- 083. **Celestial Phoenix** (`celestial-phoenix`) — 1000000 — SPEC_ONLY
 - 084. **Dream Archipelago** (`dream-archipelago`) — 1000000 — SPEC_ONLY
 - 085. **Protocol of Dawn** (`protocol-of-dawn`) — 2500000 — SPEC_ONLY
 - 086. **Garden Between Universes** (`garden-between-universes`) — 5000000 — SPEC_ONLY
@@ -114,4 +110,3 @@
 - 098. **Ark of Soft Seasons** (`ark-of-soft-seasons`) — 5000000 — SPEC_ONLY
 - 099. **Crown of Shared Silence** (`crown-of-shared-silence`) — 10000000 — SPEC_ONLY
 - 100. **SYLORA Eternal Hearth** (`sylora-eternal-hearth`) — 5000000 — SPEC_ONLY
-

@@ -1,0 +1,30 @@
+{
+  "slug": "celestial-phoenix",
+  "name": "Celestial Phoenix",
+  "rarity": "Divine",
+  "price_minor": 1000000,
+  "duration_s": 15.0,
+  "fps": 24,
+  "total_frames": 360,
+  "preview_frames_rendered": 36,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE",
+  "objects": 212,
+  "meshes": 199,
+  "feathers": 132,
+  "textures": {
+    "phoenix_body_albedo": "/workspace/artifacts/gift-library/celestial-phoenix/textures/phoenix_body_albedo.png",
+    "phoenix_body_roughness": "/workspace/artifacts/gift-library/celestial-phoenix/textures/phoenix_body_roughness.png",
+    "phoenix_body_emission": "/workspace/artifacts/gift-library/celestial-phoenix/textures/phoenix_body_emission.png",
+    "phoenix_wing_albedo": "/workspace/artifacts/gift-library/celestial-phoenix/textures/phoenix_wing_albedo.png",
+    "phoenix_wing_emission": "/workspace/artifacts/gift-library/celestial-phoenix/textures/phoenix_wing_emission.png",
+    "phoenix_body_normal": "/workspace/artifacts/gift-library/celestial-phoenix/textures/phoenix_body_normal.png"
+  },
+  "texture_resolution": 2048,
+  "smoke_domain": false,
+  "notes": [
+    "Multi-part avian loft body (torso/neck/head/beak/crest) + layered wing fans + tail streamers.",
+    "Procedural PBR maps authored to PNG; EEVEE cinematic candidate.",
+    "Not claiming Pixar/Blizzard/Unreal parity."
+  ]
+}

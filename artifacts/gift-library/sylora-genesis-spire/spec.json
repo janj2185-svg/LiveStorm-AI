@@ -74,20 +74,19 @@
     "particle_pack": "artifacts/gift-library/sylora-genesis-spire/particles/",
     "report": "artifacts/gift-library/sylora-genesis-spire/report.json"
   },
-  "status": "ASSETS_BUILT_NOT_READY",
+  "status": "SPEC_ONLY",
   "ready_checklist": {
-    "real_3d_model": true,
-    "real_animation": true,
-    "real_vfx": true,
-    "real_sound": true,
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
     "runtime_preview": false,
     "sylora_integration": false,
-    "video_proof": true,
-    "performance_check": true
+    "video_proof": false,
+    "performance_check": false
   },
   "known_limitations": [
-    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
-    "EEVEE short-frame preview is not a full cinematic art-pass.",
-    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
   ]
 }

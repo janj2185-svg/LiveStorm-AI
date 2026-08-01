@@ -1,0 +1,101 @@
+{
+  "index": 83,
+  "name": "Celestial Phoenix",
+  "slug": "celestial-phoenix",
+  "cost": 1000000,
+  "price_minor": 1000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 15000,
+  "duration_sec": 15.0,
+  "main_idea": "A cosmic portal tears open; a gigantic celestial phoenix emerges, wings ignite into galaxies, solar feathers explode, circles the streamer, lands with a divine halo, golden fire rains, then everything explodes into stars.",
+  "model_description": "Continuous avian loft body, layered wing/tail feather cards, beak, crest, eyes; portal + ritual temple env.",
+  "environment_description": "Dark cosmic void with mid-sequence ritual temple reveal.",
+  "animation_phases": [
+    "portal tear",
+    "emergence",
+    "galaxy wings",
+    "solar feathers",
+    "orbit streamer",
+    "temple transform",
+    "landing",
+    "halo",
+    "golden rain",
+    "star burst"
+  ],
+  "vfx": [
+    "portal energy",
+    "solar fire",
+    "magic particles",
+    "ember trails",
+    "energy waves",
+    "halo bloom"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "solar feathers / star burst / embers / magic sparks",
+  "shaders": [
+    "gold PBR body",
+    "galaxy/fire feathers",
+    "emissive portal"
+  ],
+  "camera": "Hollywood multi-shot: crane, orbit, dolly, zoom, handheld shake",
+  "music": "original cinematic drone + portal tear + wing whoosh + choir + cry + finale",
+  "spatial_sound": "stereo spatial bed with dynamic whoosh imaging",
+  "voice_effects": "phoenix cry formant burst",
+  "ai_reaction": "AI acknowledges 'Celestial Phoenix' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.celestial-phoenix with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "celestial_phoenix",
+  "vfx_family": "solar_galaxy_fire",
+  "asset_ids": {
+    "glb": "b90cb0e3-9f03-544d-84bc-85f8ef27fc59",
+    "audio": "58cff657-696b-58b7-93d5-9e24bcd2cf44",
+    "poster": "089fb504-949f-5830-9369-1c7fefe8e260",
+    "blend": "48bfff99-cb1c-5e88-b70f-7371453987cc",
+    "shader": "a857f59e-0fa5-5eba-8a9c-5d67955a0514"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/celestial-phoenix/model.glb",
+    "blender": "artifacts/gift-library/celestial-phoenix/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/celestial-phoenix/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/celestial-phoenix/metadata.json",
+    "preview_video": "artifacts/gift-library/celestial-phoenix/preview.mp4",
+    "gif_preview": "artifacts/gift-library/celestial-phoenix/preview.gif",
+    "thumbnail": "artifacts/gift-library/celestial-phoenix/poster.png",
+    "sound_pack": "artifacts/gift-library/celestial-phoenix/sound/",
+    "particle_pack": "artifacts/gift-library/celestial-phoenix/particles/",
+    "report": "artifacts/gift-library/celestial-phoenix/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "PARTIAL_PRODUCTION_CANDIDATE \u2014 pipeline complete, not Pixar/Blizzard parity.",
+    "Device FPS/RAM and wallet/WS E2E not verified in this agent environment."
+  ]
+}

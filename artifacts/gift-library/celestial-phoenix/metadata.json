@@ -1,0 +1,34 @@
+{
+  "name": "Celestial Phoenix",
+  "slug": "celestial-phoenix",
+  "tagline": "Where light is reborn.",
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "price_minor": 1000000,
+  "duration_ms": 15000,
+  "scenes": [
+    "cosmic portal tears open",
+    "phoenix emerges",
+    "wings ignite into galaxies",
+    "solar feathers explode",
+    "circles streamer",
+    "background becomes cosmic temple",
+    "lands behind avatar",
+    "gigantic halo forms",
+    "golden fire rain",
+    "explodes into stars"
+  ],
+  "reactions": {
+    "ai": "The Celestial Phoenix has blessed the stream! Unstoppable energy!",
+    "avatar": "Avatar spreads luminous wing silhouette and solar glow.",
+    "streamer": "Screen shake, lighting boost, phoenix cry SFX.",
+    "viewer": "Cosmic particle rain on viewer overlays; chat celebration hooks.",
+    "combo": "sylora.gift.celestial-phoenix combo window 180s."
+  },
+  "sha256": {
+    "glb": "421f7e546befb1ad3bcc8018321b6b54cc04971cc83c3a4f1a345826a40827dd",
+    "glb_mobile": "920220d37da18ba1da8119f0846f3a0edb58d9e03d46b8b2556e1d372cf1000d",
+    "audio": "a8ea4ede3b70591edc51a64ab586160cb8d7a1382cbf5072c1b7ffd6dfdee789",
+    "poster": "57d9573293fa35436884b14ee309029a5105141ebe10093294ee9c402490a336"
+  }
+}
