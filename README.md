@@ -143,3 +143,16 @@ TikTok, Kick, Facebook and Instagram Live remain unavailable until approved
 official APIs and scopes are supplied. AAA gift content requires authored and
 licensed Blender/Unity/Unreal assets plus real device QA; the runtime and editor
 do not imply that such an asset library is bundled.
+
+## Friend-demo launch (read first)
+
+- `docs/implementation/LOCAL_LAUNCH.md` — start locally tomorrow with friends  
+- `docs/implementation/PRODUCTION_STATUS.md` — what works / partial / blocked  
+- `docs/implementation/OWNER_ACTION_CHECKLIST.md` — credentials & approvals you must supply  
+- `docs/implementation/AAA_GIFT_PIPELINE.md` — AAA gift production options needing your approval  
+
+```bash
+# After services/api/.env is filled:
+./scripts/local-demo.sh
+# Demo login: sender@example.com / SyloraDemo2026!
+```

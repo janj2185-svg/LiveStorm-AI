@@ -109,6 +109,56 @@ WebhookDispatcher = Callable[[uuid.UUID], Awaitable[None]]
 AIJobDispatcher = Callable[[uuid.UUID], Awaitable[None]]
 
 
+def synthesize_live_event_prompt(event: LiveNormalizedEvent) -> str | None:
+    """Build a natural-language prompt for non-chat live events.
+
+    Gift, follow, subscription, and similar events often arrive without chat
+    text. Without a prompt the AI turn fails closed as live_event_text_unavailable.
+    """
+    actor = (event.actor_display_name or event.actor_platform_id or "A viewer").strip()
+    metadata = event.safe_metadata or {}
+    event_type = event.event_type
+
+    if event_type == LiveNormalizedEventType.follow:
+        return f"{actor} just followed the stream. React warmly and briefly."
+    if event_type == LiveNormalizedEventType.subscription:
+        tier = metadata.get("tier") or metadata.get("subscription_tier")
+        detail = f" (tier {tier})" if tier else ""
+        return f"{actor} just subscribed{detail}. Thank them naturally."
+    if event_type == LiveNormalizedEventType.donation:
+        amount = event.monetary_minor
+        currency = event.currency or ""
+        money = f" ({amount} {currency})".strip() if amount is not None else ""
+        return f"{actor} donated{money}. Thank them warmly and briefly."
+    if event_type in {
+        LiveNormalizedEventType.platform_gift,
+        LiveNormalizedEventType.custom,
+    }:
+        gift_name = (
+            metadata.get("gift_name")
+            or metadata.get("sticker_name")
+            or metadata.get("source")
+            or "a gift"
+        )
+        amount = event.monetary_minor
+        currency = event.currency or ""
+        money = f" worth {amount} {currency}".strip() if amount is not None else ""
+        if metadata.get("source") == "sylora_first_party_gift":
+            return (
+                f"{actor} sent a first-party SYLORA gift ({gift_name}){money}. "
+                "Celebrate the gift with a short emotional reaction."
+            )
+        return (
+            f"{actor} sent {gift_name}{money}. "
+            "Celebrate the gift with a short emotional reaction."
+        )
+    if event_type == LiveNormalizedEventType.like:
+        return f"{actor} sent likes. Acknowledge them briefly and keep energy high."
+    if event_type == LiveNormalizedEventType.viewer_join:
+        return f"{actor} just joined. Welcome them briefly."
+    return None
+
+
 def live_subject_hash(user_id: uuid.UUID) -> str:
     return hashlib.sha256(f"sylora-live-subject:{user_id}".encode()).hexdigest()
 
@@ -1679,10 +1729,15 @@ async def generate_live_ai_turn(
         await db.commit()
         return turn
     if not event.text:
-        turn.status = LiveTurnStatus.unavailable
-        turn.failure_code = "live_event_text_unavailable"
-        await db.commit()
-        return turn
+        synthesized = synthesize_live_event_prompt(event)
+        if synthesized is None:
+            turn.status = LiveTurnStatus.unavailable
+            turn.failure_code = "live_event_text_unavailable"
+            await db.commit()
+            return turn
+        prompt_text = synthesized
+    else:
+        prompt_text = event.text
     conversation_title = f"live:{live_session.id}:{persona.id}"
     conversation = await db.scalar(
         select(AIConversation).where(
@@ -1725,7 +1780,7 @@ async def generate_live_ai_turn(
             request,
             user_id=live_session.owner_user_id,
             conversation_id=conversation.id,
-            payload=AISendMessageRequest(content=event.text),
+            payload=AISendMessageRequest(content=prompt_text),
         )
         completed_turn = await db.get(AILiveTurn, turn_id)
         assert completed_turn is not None
@@ -2134,13 +2189,17 @@ async def normalize_sylora_gift_event(
                 "platform_event_id": f"sylora-gift:{gift_event.id}",
                 "event_type": LiveNormalizedEventType.custom.value,
                 "occurred_at": gift_event.created_at.isoformat(),
-                "actor_platform_id": None,
-                "actor_display_name": None,
-                "text": None,
+                "actor_platform_id": str(gift_event.user_id),
+                "actor_display_name": "SYLORA viewer",
+                "text": (
+                    "A viewer just sent a first-party SYLORA gift. "
+                    "Celebrate the gift with a short emotional reaction."
+                ),
                 "monetary_minor": None,
                 "currency": None,
                 "safe_metadata": {
                     "source": "sylora_first_party_gift",
+                    "gift_name": "sylora_gift",
                     "gift_event_id": str(gift_event.id),
                     "gift_send_id": str(gift_event.gift_send_id)
                     if gift_event.gift_send_id

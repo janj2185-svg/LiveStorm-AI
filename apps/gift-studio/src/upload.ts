@@ -27,9 +27,12 @@ function ascii(bytes: Uint8Array, start: number, length: number): string {
   return new TextDecoder().decode(bytes.slice(start, start + length));
 }
 
-async function digest(bytes: ArrayBuffer): Promise<string> {
+async function digest(bytes: Uint8Array): Promise<string> {
   if (!crypto.subtle) throw new Error("Web Crypto SHA-256 is required for asset import");
-  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
+  // Allocate a fresh Uint8Array so Node/vitest and browsers always pass a
+  // concrete TypedArray into SubtleCrypto (File polyfills can yield exotic buffers).
+  const material = Uint8Array.from(bytes);
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", material))]
     .map((value) => value.toString(16).padStart(2, "0"))
     .join("");
 }
@@ -175,7 +178,7 @@ export async function prepareAsset(
     extension,
     contentType,
     byteSize: file.size,
-    sha256: await digest(buffer),
+    sha256: await digest(bytes),
     platform: sourceOnly ? "source" : "web",
     qualityTier: sourceOnly ? "source" : qualityTier,
     kind,

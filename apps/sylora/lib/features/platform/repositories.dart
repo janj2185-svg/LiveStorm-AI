@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../core/api.dart';
 import '../../core/config.dart';
@@ -873,9 +874,9 @@ final class DioGiftRepository implements GiftRepository {
 
   @override
   Stream<GiftEventModel> events({String? since}) async* {
-    if (!realtimeSupported) {
+    if (!giftRealtimeSupported) {
       throw UnsupportedError(
-        realtimeUnsupportedReason ?? 'Realtime sockets are unavailable.',
+        realtimeUnsupportedReason ?? 'Gift realtime sockets are unavailable.',
       );
     }
     var cursor = since;
@@ -885,10 +886,38 @@ final class DioGiftRepository implements GiftRepository {
       if (token == null) {
         return;
       }
-      final socket = openAuthorizedSocket(
-        _config.websocket('ws/gifts', <String, dynamic>{'since': cursor}),
-        token,
-      );
+      WebSocketChannel socket;
+      try {
+        // Prefer one-time tickets so Flutter Web works without Authorization
+        // headers on the browser WebSocket API. Native clients can still fall
+        // back to bearer auth if ticket issuance fails.
+        final ticketResponse = await _client.request(
+          'gifts/events/ticket',
+          method: 'POST',
+        );
+        final ticketJson = requireObject(
+          ticketResponse.data,
+          'gift realtime ticket',
+        );
+        final ticket = ticketJson['ticket'];
+        if (ticket is! String || ticket.isEmpty) {
+          throw StateError('Gift realtime ticket was empty.');
+        }
+        socket = openTicketSocket(
+          _config.websocket('ws/gifts', <String, dynamic>{
+            'since': cursor,
+            'ticket': ticket,
+          }),
+        );
+      } on Object {
+        if (!realtimeSupported) {
+          rethrow;
+        }
+        socket = openAuthorizedSocket(
+          _config.websocket('ws/gifts', <String, dynamic>{'since': cursor}),
+          token,
+        );
+      }
       try {
         await for (final payload in socket.stream) {
           final json = requireObject(

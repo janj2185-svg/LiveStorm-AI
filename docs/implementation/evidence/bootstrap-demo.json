@@ -1,0 +1,64 @@
+{
+  "accounts": [
+    {
+      "credits_minor": 1000000,
+      "display_name": "SYLORA Admin",
+      "email": "admin@example.com",
+      "gift_monetization": true,
+      "handle": "sylora_admin",
+      "roles": [
+        "admin",
+        "creator",
+        "moderator"
+      ],
+      "user_id": "343c3dac-b5d1-4366-9466-95c63ca79d06"
+    },
+    {
+      "credits_minor": 250000,
+      "display_name": "Demo Creator",
+      "email": "creator@example.com",
+      "gift_monetization": true,
+      "handle": "demo_creator",
+      "roles": [
+        "creator"
+      ],
+      "user_id": "41bb91bc-b7bc-4a17-a028-27cd5755d030"
+    },
+    {
+      "credits_minor": 500000,
+      "display_name": "Gift Sender",
+      "email": "sender@example.com",
+      "gift_monetization": false,
+      "handle": "gift_sender",
+      "roles": [
+        "user"
+      ],
+      "user_id": "204264ea-37c3-49a6-bf1d-27256ad27612"
+    },
+    {
+      "credits_minor": 50000,
+      "display_name": "Demo Viewer",
+      "email": "viewer@example.com",
+      "gift_monetization": false,
+      "handle": "demo_viewer",
+      "roles": [
+        "user"
+      ],
+      "user_id": "ceacf5db-e3a1-4221-9834-81ad5b5a9e7a"
+    }
+  ],
+  "demo_gift": {
+    "gift_id": "01b823d4-26d0-400a-aebc-49af03c03caa",
+    "slug": "demo-heart",
+    "status": "already_published",
+    "version_id": "a6520368-7245-4bbc-9d43-33a2d631aa88"
+  },
+  "environment": "development",
+  "notes": [
+    "Accounts are local demo fixtures for ENVIRONMENT=development only.",
+    "Gift animation playback is verified in Gift Studio / gift-runtime, not in Flutter Web (Flutter shows catalog/commerce, not VFX).",
+    "AI chat requires a real provider configured via /v1/admin/ai/providers.",
+    "AAA CGI gift libraries are not bundled; see docs/implementation/AAA_GIFT_PIPELINE.md."
+  ],
+  "password": "SyloraDemo2026!"
+}

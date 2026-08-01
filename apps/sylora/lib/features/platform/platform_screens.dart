@@ -421,7 +421,7 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
   @override
   void initState() {
     super.initState();
-    if (realtimeSupported) {
+    if (giftRealtimeSupported) {
       _eventSubscription = ref.read(giftRepositoryProvider).events().listen((
         event,
       ) {
@@ -578,10 +578,12 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
             ),
             Column(
               children: <Widget>[
-                if (!realtimeSupported)
-                  MaterialBanner(
-                    content: Text(realtimeUnsupportedReason!),
-                    actions: const <Widget>[SizedBox.shrink()],
+                if (!giftRealtimeSupported)
+                  const MaterialBanner(
+                    content: Text(
+                      'Gift realtime sockets are unavailable on this platform.',
+                    ),
+                    actions: <Widget>[SizedBox.shrink()],
                   ),
                 Expanded(
                   child: LumenAsyncView<CursorPage<GiftEventModel>>(

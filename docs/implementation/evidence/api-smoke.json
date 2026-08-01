@@ -1,0 +1,84 @@
+{
+    "login": "ok",
+    "wallet": {
+        "asset_code": "SYLORA_CREDIT",
+        "spendable_minor": 499900,
+        "account_id": "65184563-bbeb-479e-b5aa-fa33f90c52d6",
+        "computed_at": "2026-08-01T12:01:29.671075Z"
+    },
+    "catalog": {
+        "items": [
+            {
+                "id": "01b823d4-26d0-400a-aebc-49af03c03caa",
+                "author_user_id": "41bb91bc-b7bc-4a17-a028-27cd5755d030",
+                "category_id": "dc6d8757-d4fd-4368-95a7-a252b4fbde17",
+                "slug": "demo-heart",
+                "name": "Demo Heart",
+                "description": "Local demo gift: PNG sprite primary with Lottie fallback. Not an AAA CGI asset.",
+                "price_minor": 100,
+                "creator_revenue_share_bps": 7000,
+                "tier": "simple",
+                "state": "published",
+                "available_from": null,
+                "available_until": null,
+                "supply_cap": null,
+                "sold_count": 1,
+                "per_user_limit": null,
+                "required_subscription_tier": null,
+                "minimum_level": null,
+                "required_achievement": null,
+                "required_event": null,
+                "search_tags": [
+                    "demo",
+                    "heart",
+                    "lottie"
+                ],
+                "locale_metadata": {
+                    "en": "Demo Heart",
+                    "uk": "\u0414\u0435\u043c\u043e \u0441\u0435\u0440\u0446\u0435",
+                    "pl": "Demo Serce",
+                    "de": "Demo Herz",
+                    "es": "Coraz\u00f3n Demo",
+                    "fr": "C\u0153ur D\u00e9mo",
+                    "it": "Cuore Demo",
+                    "pt": "Cora\u00e7\u00e3o Demo"
+                },
+                "version_id": "a6520368-7245-4bbc-9d43-33a2d631aa88",
+                "version_number": 1,
+                "renderer_targets": [
+                    "threejs",
+                    "lottie"
+                ],
+                "asset_ids": [
+                    "bbf915de-b331-4baf-90f6-8158eb62f1db",
+                    "e707e3ec-b420-4191-8829-2b86e25d2cb5"
+                ]
+            }
+        ],
+        "next_cursor": null
+    },
+    "sent_history": {
+        "items": [
+            {
+                "id": "75458121-f90d-4d52-ae20-109e23cde6b6",
+                "sender_user_id": "204264ea-37c3-49a6-bf1d-27256ad27612",
+                "recipient_user_id": "41bb91bc-b7bc-4a17-a028-27cd5755d030",
+                "gift_definition_id": "01b823d4-26d0-400a-aebc-49af03c03caa",
+                "gift_version_id": "a6520368-7245-4bbc-9d43-33a2d631aa88",
+                "inventory_item_id": "ab652a5b-de7a-4241-822c-baab57ae8a13",
+                "ledger_transaction_id": "800f7b20-e967-4b0d-bf0c-cc977b39d139",
+                "price_minor": 100,
+                "creator_share_minor": 70,
+                "platform_share_minor": 30,
+                "message": "Congrats from the demo!",
+                "status": "delivered",
+                "failure_code": null,
+                "created_at": "2026-08-01T11:59:44.392269Z",
+                "delivered_at": "2026-08-01T11:59:44.416393Z",
+                "failed_at": null,
+                "refunded_at": null
+            }
+        ],
+        "next_cursor": null
+    }
+}
