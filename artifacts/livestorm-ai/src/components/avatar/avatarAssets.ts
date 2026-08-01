@@ -232,7 +232,7 @@ export function getBackgroundGradient(bgId: string): string {
   return BACKGROUND_PRESETS.find((b) => b.id === bgId)?.gradient ?? BACKGROUND_PRESETS[0].gradient;
 }
 
-// ── Backward-compat shims (keep old names so other files compile) ─────────────
+// ── Backward-compat aliases ───────────────────────────────────────────────────
 
 export type BuiltInAvatarKey = PresenterSlotKey;
 export const BUILT_IN_AVATARS = PRESENTER_SLOTS as unknown as Record<PresenterSlotKey, {
@@ -251,7 +251,7 @@ export const BUILT_IN_AVATARS = PRESENTER_SLOTS as unknown as Record<PresenterSl
   outfits?: { id: string; label: string; clothingColor: string }[];
   vrmStatus?: string;
   vrmSource?: string;
-  vrmPath?: null;
+  vrmPath?: string;
   presenterStyle?: string;
   ageRange?: string;
   styleClass?: string;
@@ -263,12 +263,7 @@ export const LEGACY_AVATAR_KEYS: PresenterSlotKey[] = [];
 export function isHumanPresenter(key: string): boolean {
   return key in PRESENTER_SLOTS;
 }
-export function getAvatarVRMPath(_key: string): string | null {
-  return null;
-}
-export function isVRMBacked(_key: string): boolean {
-  return false;
-}
+
 export function formatVRMSize(bytes?: number): string {
   if (!bytes) return "unknown";
   return `${(bytes / 1_048_576).toFixed(1)} MB`;

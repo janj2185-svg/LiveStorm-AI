@@ -41,6 +41,7 @@ import { ObsActivityFeed } from "@/pages/obs/activity-feed";
 import { StormPass } from "@/pages/storm-pass";
 import { PassEntry } from "@/pages/pass-entry";
 import { ObsStormPassQR } from "@/pages/obs/storm-pass-qr";
+import { GiftReactions } from "@/pages/gift-reactions";
 
 const queryClient = new QueryClient();
 
@@ -163,7 +164,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isDevMode) return;
-    fetch("/api/dev/login", { credentials: "include" })
+    const clerkId = new URLSearchParams(window.location.search).get("clerkId") ?? "demo_streamer_clerk";
+    fetch(`/api/dev/login?clerkId=${encodeURIComponent(clerkId)}`, { credentials: "include" })
       .finally(() => setDevAuthReady(true));
   }, [isDevMode]);
 
@@ -252,6 +254,9 @@ function AppRoutes() {
       </Route>
       <Route path="/gamification">
         <ProtectedRoute><Layout><Gamification /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/gifts">
+        <ProtectedRoute><Layout><GiftReactions /></Layout></ProtectedRoute>
       </Route>
       <Route path="/automation">
         <ProtectedRoute><Layout><Automation /></Layout></ProtectedRoute>

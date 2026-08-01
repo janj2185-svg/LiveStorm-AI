@@ -251,11 +251,13 @@ function CommentCard({
   onReply,
   isReplying,
   sessionId,
+  translation,
 }: {
   event: LiveEvent;
   onReply: (event: LiveEvent) => void;
   isReplying: boolean;
   sessionId: number | null;
+  translation?: string;
 }) {
   const text = (event.data.text as string) ?? "";
   return (
@@ -267,6 +269,11 @@ function CommentCard({
           <TimeAgo ts={event.timestamp} />
         </div>
         <p className="text-sm text-foreground/90 leading-snug break-words">{text}</p>
+        {translation && (
+          <p className="text-xs text-cyan-300/90 mt-1 leading-snug break-words">
+            🌐 {translation}
+          </p>
+        )}
         {sessionId && (
           <div className="mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
@@ -422,12 +429,14 @@ function UnifiedChatTab({
   replyingTo,
   sessionId,
   isActive,
+  translations,
 }: {
   events: LiveEvent[];
   onReply: (event: LiveEvent) => void;
   replyingTo: Set<number>;
   sessionId: number | null;
   isActive: boolean;
+  translations: Record<string, string>;
 }) {
   const { t } = useLanguage();
   const chatEvents = useMemo(
@@ -494,6 +503,11 @@ function UnifiedChatTab({
                     onReply={onReply}
                     isReplying={replyingTo.has(event.timestamp)}
                     sessionId={sessionId}
+                    translation={
+                      translations[
+                        String((event.data as { msgId?: string }).msgId ?? event.timestamp)
+                      ]
+                    }
                   />
                 </motion.div>
               );
@@ -728,7 +742,7 @@ function AiActivityTab({
                 ) : (
                   <span className="text-xs text-emerald-400/85 flex items-center gap-1">
                     <Volume2 className="h-2.5 w-2.5" />
-                    TTS {ttsMode === "openai" ? "OpenAI" : "Browser"} · played
+                    TTS {ttsMode === "openai" ? "OpenAI" : "Off"} · played
                   </span>
                 )}
               </div>
@@ -769,6 +783,7 @@ export function AiAssistant() {
     sendStreamerSpeech, ttsModeLive, activeVoiceName,
     isAudioUnlocked, unlockAudio, replayTts, openaiTtsOk,
     lastMicEmit, lastMicBackendAck, coHostLatency,
+    translations,
   } = useLiveSessionContext();
   const initialError = (activeSessionRes as any)?.session?.connectionError ?? null;
   const effectiveMode = tiktokMode ?? (isSessionActive ? "demo" : null);
@@ -1929,6 +1944,7 @@ export function AiAssistant() {
                       replyingTo={replyingTo}
                       sessionId={activeSessionId ?? null}
                       isActive={isSessionActive}
+                      translations={translations}
                     />
                   </div>
                 </div>

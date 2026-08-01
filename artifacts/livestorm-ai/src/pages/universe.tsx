@@ -262,6 +262,12 @@ export function Universe() {
       {/* ДРУЗІ TAB */}
       {activeTab === "friends" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
+            <p className="text-sm font-semibold text-amber-200">Alliances — invite/accept only (Coming Soon gameplay)</p>
+            <p className="text-xs text-amber-100/80 mt-1">
+              You can request and accept alliances today. Shared XP, resource bonuses, and collaborative mechanics are not implemented yet.
+            </p>
+          </div>
           <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-b from-violet-500/[0.06] to-transparent overflow-hidden">
             <div className="px-5 py-4 border-b border-violet-500/15">
               <p className="ls-section">Запросити союз</p>

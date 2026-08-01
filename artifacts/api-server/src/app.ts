@@ -9,6 +9,7 @@ import {
   clerkProxyMiddleware,
   getClerkProxyHost,
 } from "./middlewares/clerkProxyMiddleware";
+import { rateLimit } from "./middlewares/rateLimit";
 import { WebhookHandlers } from "./lib/webhookHandlers";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -57,7 +58,7 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
 app.use(cors({ credentials: true, origin: true }));
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
@@ -67,6 +68,24 @@ app.use(
       process.env.CLERK_PUBLISHABLE_KEY,
     ),
   })),
+);
+
+// Global API rate limit (per IP). Expensive AI routes get a tighter limit below.
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 60_000,
+    max: Number(process.env.API_RATE_LIMIT_PER_MIN ?? 300),
+    keyPrefix: "api",
+  }),
+);
+app.use(
+  ["/api/ai", "/api/mic", "/api/sessions/start"],
+  rateLimit({
+    windowMs: 60_000,
+    max: Number(process.env.AI_RATE_LIMIT_PER_MIN ?? 60),
+    keyPrefix: "ai",
+  }),
 );
 
 // Healthcheck — no auth required, must respond before /api/router (which needs Clerk)
