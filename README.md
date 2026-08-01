@@ -1,5 +1,9 @@
 # SYLORA
 
+**Owner local testing:** see [`OWNER_TESTING_GUIDE.md`](OWNER_TESTING_GUIDE.md) — preferred `docker compose up --build` or `./start-local.sh --host`.
+
+# SYLORA
+
 SYLORA is a multi-platform creator ecosystem with a Flutter client, FastAPI
 backend, social network, creator commerce, AI Brain, AI Live Hub, gift runtime,
 OBS companion and production infrastructure.

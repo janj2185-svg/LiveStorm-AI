@@ -17,9 +17,13 @@ services/api/build/
 .env
 .env.*
 !.env.example
+!.env.local.example
 !**/.env.example
+!**/.env.local.example
 design/captures/
 dump.rdb
+.sylora-local/
+*.pid
 
 # Gift library intermediate render frames (keep final mp4/gif/glb)
 artifacts/gift-library/**/_frames/

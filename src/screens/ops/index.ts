@@ -2,9 +2,19 @@ import type { ScreenDefinition } from '../types';
 
 import { AdminScreen } from './AdminScreen';
 import { BusinessScreen } from './BusinessScreen';
+import { DiagnosticsScreen } from './DiagnosticsScreen';
 import { ModeratorScreen } from './ModeratorScreen';
 
 export const OPS_SCREENS: ScreenDefinition[] = [
+  {
+    id: 'diagnostics',
+    name: 'Diagnostics',
+    group: 'Operations',
+    preferredDevice: 'desktop',
+    purpose:
+      'Owner local testing board: backend, database, Redis, WebSocket, storage, workers, migrations, providers, and honest gift-library counts. Development only.',
+    component: DiagnosticsScreen,
+  },
   {
     id: 'admin',
     name: 'Admin panel',

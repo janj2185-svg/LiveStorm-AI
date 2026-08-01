@@ -1,0 +1,14 @@
+# SYLORA — convenience Compose entrypoint for owner local testing.
+# Preferred command from the repository root:
+#
+#   cp .env.example infrastructure/.env   # or: ./setup-local.sh
+#   # fill REPLACE_WITH_GENERATED_* values (setup-local.sh does this)
+#   docker compose up --build
+#
+# Full stack definition lives in infrastructure/compose/compose.yml.
+# Requires Docker Engine 24+ and Compose v2.20+ (include support).
+
+name: sylora
+
+include:
+  - path: infrastructure/compose/compose.yml

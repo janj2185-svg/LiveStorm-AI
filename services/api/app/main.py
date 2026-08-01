@@ -57,6 +57,7 @@ from app.routers import (
     business,
     business_operations,
     creator_platform,
+    diagnostics,
     gift_authoring,
     gifts,
     health,
@@ -245,6 +246,7 @@ def create_app(
     app.add_middleware(BodySizeLimitMiddleware, max_bytes=resolved_settings.max_body_bytes)
 
     app.include_router(health.router)
+    app.include_router(diagnostics.router, prefix=resolved_settings.api_prefix)
     app.include_router(auth.router, prefix=resolved_settings.api_prefix)
     app.include_router(oauth.router, prefix=resolved_settings.api_prefix)
     app.include_router(users.router, prefix=resolved_settings.api_prefix)
