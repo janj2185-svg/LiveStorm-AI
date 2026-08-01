@@ -2099,6 +2099,6 @@ def retry_delay_seconds(attempt: int, *, base: float = 2, maximum: float = 300) 
 
 
 def _tiktok_live_adapter(settings: Settings):
-    from app.tiktok_live.adapter import TikTokLiveAdapter
+    from app.live_platforms.tiktok.adapter import TikTokLiveAdapter
 
     return TikTokLiveAdapter(settings)

@@ -1,4 +1,4 @@
-"""Connection manager: auth + transport + normalize + reliability."""
+"""LivePlatformConnectionManager: auth + transport + normalize + reliability."""
 
 from __future__ import annotations
 
@@ -9,15 +9,14 @@ import time
 from collections.abc import AsyncIterator, Mapping
 from typing import Any
 
-from app.tiktok_live.events import TikTokConnectionState, TikTokNormalizedEvent
-from app.tiktok_live.interfaces import (
-    TikTokAuthProvider,
-    TikTokConnectRequest,
-    TikTokEventNormalizer,
-    TikTokTransport,
+from app.live_platforms.common.events import LivePlatformConnectionState, NormalizedLiveEvent
+from app.live_platforms.common.interfaces import (
+    LiveConnectRequest,
+    LiveEventNormalizer,
+    LivePlatformAuthProvider,
+    LivePlatformTransport,
 )
-from app.tiktok_live.normalizer import DefaultTikTokEventNormalizer
-from app.tiktok_live.reliability import (
+from app.live_platforms.common.reliability import (
     CircuitBreaker,
     DeadLetterQueue,
     EventDeduplicator,
@@ -26,16 +25,19 @@ from app.tiktok_live.reliability import (
     TokenBucketRateLimiter,
 )
 
-logger = logging.getLogger("sylora.tiktok_live")
+logger = logging.getLogger("sylora.live_platforms")
 
 
-class TikTokLiveConnectionManager:
+class LivePlatformConnectionManager:
+    """Owns connect/reconnect lifecycle for one live-platform session."""
+
     def __init__(
         self,
         *,
-        auth_provider: TikTokAuthProvider,
-        transport: TikTokTransport,
-        normalizer: TikTokEventNormalizer | None = None,
+        auth_provider: LivePlatformAuthProvider,
+        transport: LivePlatformTransport,
+        normalizer: LiveEventNormalizer,
+        platform: str = "live",
         rate_limiter: TokenBucketRateLimiter | None = None,
         reconnect: ExponentialBackoffReconnectManager | None = None,
         health: HealthMonitor | None = None,
@@ -46,18 +48,19 @@ class TikTokLiveConnectionManager:
             raise RuntimeError("fake_test_only transport is forbidden outside tests")
         self._auth = auth_provider
         self._transport = transport
-        self._normalizer = normalizer or DefaultTikTokEventNormalizer()
+        self._normalizer = normalizer
+        self._platform = platform
         self._rate_limiter = rate_limiter or TokenBucketRateLimiter()
         self._reconnect = reconnect or ExponentialBackoffReconnectManager()
         self._health = health or HealthMonitor()
         self._circuit = circuit_breaker or CircuitBreaker()
         self._dedupe = EventDeduplicator()
         self._dlq = DeadLetterQueue()
-        self._state = TikTokConnectionState()
-        self._queue: asyncio.Queue[TikTokNormalizedEvent] = asyncio.Queue()
+        self._state = LivePlatformConnectionState()
+        self._queue: asyncio.Queue[NormalizedLiveEvent] = asyncio.Queue()
         self._task: asyncio.Task[None] | None = None
         self._stop = asyncio.Event()
-        self._request: TikTokConnectRequest | None = None
+        self._request: LiveConnectRequest | None = None
         self.event_loss = 0
         self.metrics: dict[str, Any] = {
             "normalized": 0,
@@ -67,10 +70,10 @@ class TikTokLiveConnectionManager:
         }
 
     @property
-    def state(self) -> TikTokConnectionState:
+    def state(self) -> LivePlatformConnectionState:
         return self._state
 
-    async def start(self, request: TikTokConnectRequest) -> None:
+    async def start(self, request: LiveConnectRequest) -> None:
         if not self._auth.is_approved():
             self._state.last_error = "blocked_by_provider_access"
             self._state.health = "blocked"
@@ -81,14 +84,16 @@ class TikTokLiveConnectionManager:
         self._stop.clear()
         if self._task and not self._task.done():
             return
-        self._task = asyncio.create_task(self._run_loop(), name="tiktok-live-connection")
+        self._task = asyncio.create_task(
+            self._run_loop(), name=f"{self._platform}-live-connection"
+        )
 
     async def stop(self) -> None:
         self._stop.set()
         try:
             await self._transport.disconnect()
         except Exception:  # noqa: BLE001 - graceful shutdown
-            logger.exception("tiktok_transport_disconnect_failed")
+            logger.exception("live_platform_transport_disconnect_failed")
         if self._task:
             self._task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -97,7 +102,7 @@ class TikTokLiveConnectionManager:
         self._state.connected = False
         self._state.health = "stopped"
 
-    async def normalized_events(self) -> AsyncIterator[TikTokNormalizedEvent]:
+    async def normalized_events(self) -> AsyncIterator[NormalizedLiveEvent]:
         while True:
             if self._stop.is_set() and self._queue.empty():
                 break
@@ -110,6 +115,7 @@ class TikTokLiveConnectionManager:
     def diagnostics(self) -> Mapping[str, Any]:
         health = self._health.snapshot()
         return {
+            "platform": self._platform,
             "connected": self._state.connected,
             "account": self._state.account,
             "room_id": self._state.room_id,
@@ -160,7 +166,7 @@ class TikTokLiveConnectionManager:
                 self._state.last_error = str(exc)
                 self._health.note_error(str(exc))
                 self._circuit.failure()
-                logger.warning("tiktok_live_blocked", extra={"error": str(exc)})
+                logger.warning("live_platform_blocked", extra={"error": str(exc), "platform": self._platform})
                 return
             except Exception as exc:  # noqa: BLE001 - reconnect path
                 self._state.connected = False
@@ -173,8 +179,13 @@ class TikTokLiveConnectionManager:
                 attempt += 1
                 delay = self._reconnect.next_delay_seconds(attempt)
                 logger.warning(
-                    "tiktok_live_reconnect_scheduled",
-                    extra={"attempt": attempt, "delay_s": delay, "error": type(exc).__name__},
+                    "live_platform_reconnect_scheduled",
+                    extra={
+                        "attempt": attempt,
+                        "delay_s": delay,
+                        "error": type(exc).__name__,
+                        "platform": self._platform,
+                    },
                 )
                 try:
                     await asyncio.wait_for(self._stop.wait(), timeout=delay)
@@ -183,7 +194,7 @@ class TikTokLiveConnectionManager:
                     continue
 
     async def _handle_raw(self, raw: Mapping[str, Any]) -> None:
-        if not await self._rate_limiter.allow("tiktok-events"):
+        if not await self._rate_limiter.allow(f"{self._platform}-events"):
             self.metrics["rate_limited"] += 1
             self.event_loss += 1
             self._dlq.push("rate_limited", raw=raw)
@@ -208,7 +219,6 @@ class TikTokLiveConnectionManager:
             if isinstance(viewers, int):
                 self._state.viewer_count = viewers
         if event.type.value == "chat_message":
-            # Lightweight EWMA placeholder for chat rate.
             self._state.chat_rate_per_min = min(10_000.0, self._state.chat_rate_per_min * 0.9 + 6.0)
         self.metrics["normalized"] += 1
         await self._queue.put(event)

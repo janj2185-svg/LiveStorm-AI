@@ -254,9 +254,9 @@ async def tiktok_control_panel(
     request: Request,
     _: IntegrationAuth,
 ) -> TikTokControlPanelResponse:
-    from app.tiktok_live.cohost import PERSONALITY_PROFILES
-    from app.tiktok_live.events import TikTokEventType
-    from app.tiktok_live.status import ADAPTER_LIMITATION, current_status
+    from app.live_platforms.common.cohost import PERSONALITY_PROFILES
+    from app.live_platforms.common.events import NormalizedLiveEventType
+    from app.live_platforms.tiktok.status import ADAPTER_LIMITATION, current_status
 
     adapter = registry(request).resolve(IntegrationPlatform.tiktok)
     snapshot = (
@@ -277,7 +277,7 @@ async def tiktok_control_panel(
         connection=dict(snapshot.get("connection") or {}),
         controls={str(k): bool(v) for k, v in dict(snapshot.get("controls") or {}).items()},
         personalities=sorted(PERSONALITY_PROFILES),
-        supported_events=sorted(item.value for item in TikTokEventType),
+        supported_events=sorted(item.value for item in NormalizedLiveEventType),
     )
 
 

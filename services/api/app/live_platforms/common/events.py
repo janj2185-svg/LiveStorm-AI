@@ -1,4 +1,4 @@
-"""Canonical TikTok → LiveEventHub event contracts."""
+"""Normalized live-event contracts shared by all platforms."""
 
 from __future__ import annotations
 
@@ -9,7 +9,9 @@ from typing import Any
 from uuid import uuid4
 
 
-class TikTokEventType(StrEnum):
+class NormalizedLiveEventType(StrEnum):
+    """Canonical event kinds emitted by every live-platform adapter."""
+
     connected = "connected"
     disconnected = "disconnected"
     chat_message = "chat_message"
@@ -26,15 +28,17 @@ class TikTokEventType(StrEnum):
     stream_ended = "stream_ended"
     reconnect = "reconnect"
     provider_error = "provider_error"
+    member = "member"
+    unknown = "unknown"
 
 
 @dataclass(frozen=True)
-class TikTokNormalizedEvent:
-    """Normalized TikTok LIVE event for LiveEventHub ingestion."""
+class NormalizedLiveEvent:
+    """Platform-agnostic live event for LiveEventHub and Co-Host."""
 
     event_id: str
     source: str
-    type: TikTokEventType
+    type: NormalizedLiveEventType
     timestamp: datetime
     room_id: str | None
     user_id: str | None
@@ -57,7 +61,7 @@ class TikTokNormalizedEvent:
 
 
 @dataclass
-class TikTokConnectionState:
+class LivePlatformConnectionState:
     connected: bool = False
     room_id: str | None = None
     account: str | None = None

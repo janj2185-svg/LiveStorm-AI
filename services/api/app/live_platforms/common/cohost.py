@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from app.tiktok_live.events import TikTokEventType, TikTokNormalizedEvent
-from app.tiktok_live.memory import CoHostMemory
+from app.live_platforms.common.events import NormalizedLiveEvent, NormalizedLiveEventType
+from app.live_platforms.common.memory import CoHostMemory
 
 
 class HumorLevel(StrEnum):
@@ -113,7 +113,7 @@ class DialogueScheduler:
         self.config = config or SchedulerConfig()
         self.safety = safety or SafetyPolicy()
         self._last_reply_at = 0.0
-        self._pending_chat: list[TikTokNormalizedEvent] = []
+        self._pending_chat: list[NormalizedLiveEvent] = []
 
     @property
     def personality(self) -> PersonalityProfile:
@@ -142,13 +142,13 @@ class DialogueScheduler:
             )
         return None
 
-    def evaluate(self, event: TikTokNormalizedEvent, *, now: float) -> DialogueDecision:
+    def evaluate(self, event: NormalizedLiveEvent, *, now: float) -> DialogueDecision:
         if self.config.muted:
             return self._no("muted")
         if self.safety.require_host_priority and self.config.host_speaking and self.config.host_mode:
             return self._no("yield_to_host", yield_to_host=True, interrupt_tts=True)
 
-        if event.type is TikTokEventType.chat_message:
+        if event.type is NormalizedLiveEventType.chat_message:
             text = str(event.payload.get("comment") or event.payload.get("text") or "")
             if event.user_id:
                 self.memory.remember_user_message(event.user_id, event.username, text)
@@ -228,7 +228,7 @@ class DialogueScheduler:
                 },
             )
 
-        if event.type in {TikTokEventType.gift, TikTokEventType.gift_streak}:
+        if event.type in {NormalizedLiveEventType.gift, NormalizedLiveEventType.gift_streak}:
             if not self.config.respond_to_gifts or not self.personality.gift_thanks:
                 return self._no("gifts_disabled")
             gift_name = str(event.payload.get("giftName") or "gift")
@@ -259,7 +259,7 @@ class DialogueScheduler:
                 },
             )
 
-        if event.type is TikTokEventType.follow:
+        if event.type is NormalizedLiveEventType.follow:
             self._last_reply_at = now
             return DialogueDecision(
                 should_respond=True,
@@ -277,7 +277,7 @@ class DialogueScheduler:
                 prompt_hints={"nickname": event.display_name or event.username},
             )
 
-        if event.type is TikTokEventType.viewer_join:
+        if event.type is NormalizedLiveEventType.viewer_join:
             if not (self.config.respond_to_new_viewers or self.personality.greet_new_viewers):
                 return self._no("joins_disabled")
             return DialogueDecision(
@@ -296,7 +296,7 @@ class DialogueScheduler:
                 prompt_hints={"nickname": event.display_name or event.username},
             )
 
-        if event.type is TikTokEventType.like:
+        if event.type is NormalizedLiveEventType.like:
             return self._no("likes_ack_only")
 
         return self._no("unsupported_event")

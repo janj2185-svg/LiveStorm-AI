@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from app.tiktok_live.cohost import DialogueDecision
+from app.live_platforms.common.cohost import DialogueDecision
 
 
 class SpeechSynthesizer(Protocol):

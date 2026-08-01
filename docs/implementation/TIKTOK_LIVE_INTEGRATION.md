@@ -1,11 +1,27 @@
-# SYLORA TikTok LIVE — architecture & honest status
+# SYLORA Live Platforms — multi-platform architecture
 
 Date: 2026-08-01  
-Branch: `cursor/sylora-tiktok-live-adapter-5b96`
+Branch: `cursor/sylora-live-platforms-5b96`
 
-## Status
+## Layout
 
-**BLOCKED_BY_PROVIDER_ACCESS**
+TikTok is **not** a top-level isolated module. All streaming platforms live under:
+
+```
+services/api/app/live_platforms/
+  common/          # shared contracts (platform-agnostic names)
+  tiktok/          # TikTok-specific adapter
+  youtube/         # independent package slot
+  twitch/
+  facebook/
+  instagram/
+  discord/
+  obs/
+```
+
+## Status (TikTok)
+
+**BLOCKED_BY_PROVIDER_ACCESS** (`LivePlatformIntegrationStatus`)
 
 Not READY. No real TikTok LIVE connection was validated. Automated tests use `FakeTikTokTransport` only.
 
@@ -13,47 +29,68 @@ Not READY. No real TikTok LIVE connection was validated. Automated tests use `Fa
 
 Reviewed TikTok for Developers public surface (Login Kit, Share Kit, Display API, Content Posting API, Research API). **No official third-party LIVE chat/gift/follow event API** suitable for co-host ingestion was found in the public docs index.
 
-Commercial unofficial webcast proxies (tik.tools, Eulerstream, open-source webcast scrapers) exist but rely on reverse-engineered private transports / signing. Per product requirements they are **not** shipped as production transports.
+Commercial unofficial webcast proxies exist but rely on reverse-engineered private transports. Per product requirements they are **not** shipped as production transports.
 
 ## Architecture
 
 ```
-TikTokAuthProvider ──┐
-TikTokTransport ─────┼─► TikTokConnectionManager ─► TikTokEventNormalizer
-TikTokRateLimiter ───┤            │
-TikTokReconnectMgr ──┤            ▼
-TikTokHealthMonitor ─┘   TikTokNormalizedEvent
-                              │
-                              ▼
-                     hub_bridge.to_adapter_inbound
-                              │
-                              ▼
-                     LiveEventHub / LiveNormalizedEvent
-                              │
-                              ▼
-              DialogueScheduler + CoHostMemory + SafetyPolicy
-                              │
-                              ▼
-           CoHostOutputOrchestrator → TTS / Avatar / OBS / Gift Runtime
+LivePlatformAuthProvider ──┐
+LivePlatformTransport ─────┼─► LivePlatformConnectionManager ─► LiveEventNormalizer
+rate limit / backoff /     │            │
+dedupe / circuit / metrics ┘            ▼
+                               NormalizedLiveEvent
+                                        │
+                                        ▼
+                           hub_bridge.to_adapter_inbound
+                                        │
+                                        ▼
+                           LiveEventHub / LiveNormalizedEvent
+                                        │
+                                        ▼
+                DialogueScheduler + CoHostMemory + SafetyPolicy  (common/)
+                                        │
+                                        ▼
+             CoHostOutputOrchestrator → TTS / Avatar / OBS / Gift Runtime
 ```
 
-### Modules created (`services/api/app/tiktok_live/`)
+New platforms plug in by implementing auth + transport + normalizer and emitting
+`NormalizedLiveEvent` into the same hub. **AI Co-Host, TTS, Avatar, OBS, and
+LiveEventHub do not need changes** for a new platform package.
+
+### Shared contracts (`live_platforms/common/`)
 
 | Module | Responsibility |
 |---|---|
-| `interfaces.py` | TikTokTransport, AuthProvider, EventNormalizer, ConnectionManager, RateLimiter, HealthMonitor, ReconnectManager |
-| `status.py` | Honest status enum + adapter limitation text |
-| `events.py` | Canonical event types + normalized event fields |
+| `interfaces.py` | `LivePlatformAdapter`, `LivePlatformTransport`, `LivePlatformAuthProvider`, `LiveEventNormalizer`, `LiveConnectionManager` / `LivePlatformConnectionManager`, credential request types |
+| `events.py` | `NormalizedLiveEvent`, `NormalizedLiveEventType`, `LivePlatformConnectionState` |
+| `status.py` | `LivePlatformIntegrationStatus`, `LivePlatformStatus`, `LivePlatformId` |
+| `credentials.py` | `LivePlatformCredentials` |
+| `errors.py` | Structured `LivePlatformError*` hierarchy |
+| `metrics.py` | `LivePlatformMetrics` counters/gauges |
+| `reliability.py` | Backoff, rate limit, circuit breaker, dedupe, DLQ, health |
+| `connection.py` | `LivePlatformConnectionManager` loop |
+| `hub_bridge.py` | Map into `AdapterInboundEvent` |
+| `memory.py` / `cohost.py` / `output.py` | Platform-agnostic Co-Host stack |
+
+### TikTok package (`live_platforms/tiktok/`)
+
+| Module | Responsibility |
+|---|---|
+| `status.py` | TikTok current status + limitation text |
 | `auth.py` | Blocked + approved-provider auth seams |
 | `transport.py` | Blocked transport; approved stub; **FakeTikTokTransport (tests only)** |
-| `normalizer.py` | Provider payload → TikTokNormalizedEvent (secret scrubbing) |
-| `reliability.py` | Backoff, rate limit, circuit breaker, dedupe, DLQ, health |
-| `connection.py` | Connection manager loop + graceful shutdown |
-| `hub_bridge.py` | Map into `AdapterInboundEvent` |
-| `memory.py` | Short-term / user / topic / gift / summary memory + TTL |
-| `cohost.py` | Dialogue scheduler + personality profiles + hard safety |
-| `output.py` | TTS interrupt, avatar, OBS, gift sync plan |
+| `normalizer.py` | TikTok payload → `NormalizedLiveEvent` |
 | `adapter.py` | `TikTokLiveAdapter` for `AdapterRegistry` |
+
+TikTok-local aliases (e.g. `TikTokEventType = NormalizedLiveEventType`) may exist
+only inside `tiktok/`. Shared modules must not use TikTok-named classes.
+
+### Other platforms
+
+`youtube/`, `twitch/`, `facebook/`, `instagram/`, `discord/`, `obs/` currently
+expose independent stub packages. Existing production YouTube/Twitch/Discord/OBS
+paths in `live_adapters.py` are unchanged; these packages are extraction slots
+so new work lands under `live_platforms/` without hub rewrites.
 
 ### Live Studio control panel
 
@@ -73,20 +110,12 @@ TIKTOK_LIVE_PROVIDER_ENDPOINT=
 
 `connected`, `disconnected`, `chat_message`, `like`, `gift`, `gift_streak`, `follow`, `share`, `subscribe`, `viewer_join`, `viewer_leave`, `room_statistics`, `moderation`, `stream_ended`, `reconnect`, `provider_error`
 
-Each normalized event includes: `eventId`, `source`, `type`, `timestamp`, `roomId`, `userId`, `username`, `displayName`, `payload`, `rawProviderEvent`, `deduplicationKey`, `sequenceNumber`, `confidence`, `providerLatencyMs`.
+Each `NormalizedLiveEvent` includes: `eventId`, `source`, `type`, `timestamp`, `roomId`, `userId`, `username`, `displayName`, `payload`, `rawProviderEvent`, `deduplicationKey`, `sequenceNumber`, `confidence`, `providerLatencyMs`.
 
 ## Tests
 
-`services/api/tests/test_tiktok_live.py` covers:
-
-- blocked auth/transport
-- fake transport forbidden outside tests
-- normalization + secret scrubbing
-- dedupe / backoff / rate limit / circuit breaker
-- connection manager with fake events
-- dialogue scheduling (host interrupt, gifts, mute, toxicity)
-- TTS interrupt + output sync
-- chat burst load smoke
+- `services/api/tests/test_tiktok_live.py` — TikTok adapter + reliability + co-host
+- `services/api/tests/test_live_platforms.py` — imports, common contract names, stub slots, hub routing
 
 Fake events are **not** production proof.
 
@@ -102,17 +131,6 @@ Missing / blocked:
 | Hub ingest of real events | Not observed |
 | AI reply + TTS + avatar + OBS on real gift | Not observed |
 | Network reconnect proof | Not observed |
-
-### Metrics (real run)
-
-| Metric | Value |
-|---|---|
-| latency | n/a |
-| reconnect time | n/a |
-| event loss | n/a |
-| duplicate count | n/a (test-only dedupe verified) |
-| AI response latency | n/a |
-| TTS latency | n/a (null synthesizer in unit tests only) |
 
 ## What the owner must provide
 

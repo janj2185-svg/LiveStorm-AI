@@ -16,16 +16,17 @@ from app.live_adapters import (
     PlatformDescriptor,
 )
 from app.live_models import IntegrationPlatform, LiveCapability
-from app.tiktok_live.auth import BlockedTikTokAuthProvider, ConfiguredApprovedAuthProvider
-from app.tiktok_live.connection import TikTokLiveConnectionManager
-from app.tiktok_live.hub_bridge import to_adapter_inbound
-from app.tiktok_live.interfaces import TikTokConnectRequest
-from app.tiktok_live.status import ADAPTER_LIMITATION, ADAPTER_STATUS_CODE, current_status
-from app.tiktok_live.transport import ApprovedProviderTransportStub, BlockedTikTokTransport
+from app.live_platforms.common.connection import LivePlatformConnectionManager
+from app.live_platforms.common.hub_bridge import to_adapter_inbound
+from app.live_platforms.common.interfaces import LiveConnectRequest
+from app.live_platforms.tiktok.auth import BlockedTikTokAuthProvider, ConfiguredApprovedAuthProvider
+from app.live_platforms.tiktok.normalizer import DefaultTikTokEventNormalizer
+from app.live_platforms.tiktok.status import ADAPTER_LIMITATION, ADAPTER_STATUS_CODE, current_status
+from app.live_platforms.tiktok.transport import ApprovedProviderTransportStub, BlockedTikTokTransport
 
 
 class TikTokLiveAdapter(BasePlatformAdapter):
-    """Independent TikTok LIVE adapter.
+    """Independent TikTok LIVE adapter under live_platforms/tiktok.
 
     Default state is BLOCKED_BY_PROVIDER_ACCESS. When an approved provider is
     configured in settings, connect still requires a wired transport client.
@@ -42,7 +43,7 @@ class TikTokLiveAdapter(BasePlatformAdapter):
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._manager: TikTokLiveConnectionManager | None = None
+        self._manager: LivePlatformConnectionManager | None = None
         approved = bool(getattr(settings, "tiktok_live_provider_approved", False))
         provider_name = getattr(settings, "tiktok_live_provider_name", None) or "unconfigured"
         api_key_secret = getattr(settings, "tiktok_live_provider_api_key", None)
@@ -71,7 +72,6 @@ class TikTokLiveAdapter(BasePlatformAdapter):
         available = self._auth.is_approved() and bool(
             getattr(self._settings, "tiktok_live_provider_endpoint", None)
         )
-        # Even if credentials exist, READY requires a completed live validation.
         status = ADAPTER_STATUS_CODE if not available else "implemented_not_connected"
         return PlatformDescriptor(
             platform=self.platform,
@@ -92,16 +92,19 @@ class TikTokLiveAdapter(BasePlatformAdapter):
             raise AdapterError("tiktok_account_required")
         if not self._auth.is_approved():
             raise AdapterError(ADAPTER_STATUS_CODE)
-        manager = TikTokLiveConnectionManager(
+        manager = LivePlatformConnectionManager(
             auth_provider=self._auth,
             transport=self._transport,
+            normalizer=DefaultTikTokEventNormalizer(),
+            platform="tiktok",
         )
         try:
             await manager.start(
-                TikTokConnectRequest(
+                LiveConnectRequest(
                     account=account,
                     room_id=_as_optional_str(context.safe_configuration.get("room_id")),
                     session_label=_as_optional_str(context.safe_configuration.get("session_label")),
+                    platform="tiktok",
                 )
             )
         except PermissionError as exc:

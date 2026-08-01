@@ -1,4 +1,4 @@
-"""Normalize provider payloads into TikTokNormalizedEvent."""
+"""Normalize TikTok provider payloads into NormalizedLiveEvent."""
 
 from __future__ import annotations
 
@@ -9,38 +9,38 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
-from app.tiktok_live.events import TikTokEventType, TikTokNormalizedEvent
+from app.live_platforms.common.events import NormalizedLiveEvent, NormalizedLiveEventType
 
-_TYPE_ALIASES: dict[str, TikTokEventType] = {
-    "connected": TikTokEventType.connected,
-    "disconnected": TikTokEventType.disconnected,
-    "chat": TikTokEventType.chat_message,
-    "chat_message": TikTokEventType.chat_message,
-    "comment": TikTokEventType.chat_message,
-    "like": TikTokEventType.like,
-    "gift": TikTokEventType.gift,
-    "gift_streak": TikTokEventType.gift_streak,
-    "gift_combo": TikTokEventType.gift_streak,
-    "follow": TikTokEventType.follow,
-    "share": TikTokEventType.share,
-    "subscribe": TikTokEventType.subscribe,
-    "subscription": TikTokEventType.subscribe,
-    "member": TikTokEventType.viewer_join,
-    "viewer_join": TikTokEventType.viewer_join,
-    "join": TikTokEventType.viewer_join,
-    "viewer_leave": TikTokEventType.viewer_leave,
-    "leave": TikTokEventType.viewer_leave,
-    "room": TikTokEventType.room_statistics,
-    "room_statistics": TikTokEventType.room_statistics,
-    "roomUser": TikTokEventType.room_statistics,
-    "viewerCount": TikTokEventType.room_statistics,
-    "moderation": TikTokEventType.moderation,
-    "stream_ended": TikTokEventType.stream_ended,
-    "streamEnd": TikTokEventType.stream_ended,
-    "control": TikTokEventType.stream_ended,
-    "reconnect": TikTokEventType.reconnect,
-    "error": TikTokEventType.provider_error,
-    "provider_error": TikTokEventType.provider_error,
+_TYPE_ALIASES: dict[str, NormalizedLiveEventType] = {
+    "connected": NormalizedLiveEventType.connected,
+    "disconnected": NormalizedLiveEventType.disconnected,
+    "chat": NormalizedLiveEventType.chat_message,
+    "chat_message": NormalizedLiveEventType.chat_message,
+    "comment": NormalizedLiveEventType.chat_message,
+    "like": NormalizedLiveEventType.like,
+    "gift": NormalizedLiveEventType.gift,
+    "gift_streak": NormalizedLiveEventType.gift_streak,
+    "gift_combo": NormalizedLiveEventType.gift_streak,
+    "follow": NormalizedLiveEventType.follow,
+    "share": NormalizedLiveEventType.share,
+    "subscribe": NormalizedLiveEventType.subscribe,
+    "subscription": NormalizedLiveEventType.subscribe,
+    "member": NormalizedLiveEventType.viewer_join,
+    "viewer_join": NormalizedLiveEventType.viewer_join,
+    "join": NormalizedLiveEventType.viewer_join,
+    "viewer_leave": NormalizedLiveEventType.viewer_leave,
+    "leave": NormalizedLiveEventType.viewer_leave,
+    "room": NormalizedLiveEventType.room_statistics,
+    "room_statistics": NormalizedLiveEventType.room_statistics,
+    "roomUser": NormalizedLiveEventType.room_statistics,
+    "viewerCount": NormalizedLiveEventType.room_statistics,
+    "moderation": NormalizedLiveEventType.moderation,
+    "stream_ended": NormalizedLiveEventType.stream_ended,
+    "streamEnd": NormalizedLiveEventType.stream_ended,
+    "control": NormalizedLiveEventType.stream_ended,
+    "reconnect": NormalizedLiveEventType.reconnect,
+    "error": NormalizedLiveEventType.provider_error,
+    "provider_error": NormalizedLiveEventType.provider_error,
 }
 
 
@@ -53,7 +53,7 @@ class DefaultTikTokEventNormalizer:
         *,
         sequence_number: int,
         received_at_ms: int | None = None,
-    ) -> TikTokNormalizedEvent | None:
+    ) -> NormalizedLiveEvent | None:
         event_type_raw = str(raw.get("type") or raw.get("event") or raw.get("eventType") or "")
         event_type = _TYPE_ALIASES.get(event_type_raw)
         if event_type is None:
@@ -94,11 +94,11 @@ class DefaultTikTokEventNormalizer:
         confidence = float(raw.get("confidence") or 1.0)
         confidence = max(0.0, min(1.0, confidence))
 
-        return TikTokNormalizedEvent(
-            event_id=TikTokNormalizedEvent.new_id(),
+        return NormalizedLiveEvent(
+            event_id=NormalizedLiveEvent.new_id(),
             source=self.source,
             type=event_type,
-            timestamp=occurred or TikTokNormalizedEvent.now(),
+            timestamp=occurred or NormalizedLiveEvent.now(),
             room_id=room_id,
             user_id=user_id,
             username=username,
@@ -155,10 +155,8 @@ def _safe_payload(raw: Mapping[str, Any]) -> dict[str, Any]:
         if str(key).lower() in blocked:
             continue
         if key in {"type", "event", "eventType", "user", "timestamp", "createTime"}:
-            # Keep structured copies below where useful.
             continue
         payload[str(key)] = value
-    # Preserve commonly needed chat/gift fields explicitly.
     for key in (
         "comment",
         "text",

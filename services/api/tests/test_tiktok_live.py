@@ -1,4 +1,7 @@
-"""Unit/contract tests for the new TikTok LIVE package (fake transport is test-only)."""
+"""Unit/contract tests for live_platforms (TikTok adapter + shared contracts).
+
+FakeTikTokTransport is test-only and must never be selected in production.
+"""
 
 from __future__ import annotations
 
@@ -8,35 +11,38 @@ import time
 import pytest
 
 from app.live_models import LiveNormalizedEventType
-from app.tiktok_live.auth import BlockedTikTokAuthProvider, ConfiguredApprovedAuthProvider
-from app.tiktok_live.cohost import DialogueScheduler, SchedulerConfig
-from app.tiktok_live.connection import TikTokLiveConnectionManager
-from app.tiktok_live.events import TikTokEventType
-from app.tiktok_live.hub_bridge import to_adapter_inbound
-from app.tiktok_live.interfaces import TikTokAuthMaterial, TikTokConnectRequest
-from app.tiktok_live.normalizer import DefaultTikTokEventNormalizer
-from app.tiktok_live.output import CoHostOutputOrchestrator
-from app.tiktok_live.reliability import (
+from app.live_platforms.common.cohost import DialogueScheduler, SchedulerConfig
+from app.live_platforms.common.connection import LivePlatformConnectionManager
+from app.live_platforms.common.events import NormalizedLiveEventType
+from app.live_platforms.common.hub_bridge import to_adapter_inbound
+from app.live_platforms.common.interfaces import LiveAuthMaterial, LiveConnectRequest
+from app.live_platforms.common.output import CoHostOutputOrchestrator
+from app.live_platforms.common.reliability import (
     CircuitBreaker,
     EventDeduplicator,
     ExponentialBackoffReconnectManager,
     TokenBucketRateLimiter,
 )
-from app.tiktok_live.status import TikTokIntegrationStatus, current_status
-from app.tiktok_live.transport import BlockedTikTokTransport, FakeTikTokTransport
+from app.live_platforms.common.status import LivePlatformIntegrationStatus
+from app.live_platforms.tiktok.auth import BlockedTikTokAuthProvider, ConfiguredApprovedAuthProvider
+from app.live_platforms.tiktok.normalizer import DefaultTikTokEventNormalizer
+from app.live_platforms.tiktok.status import current_status
+from app.live_platforms.tiktok.transport import BlockedTikTokTransport, FakeTikTokTransport
 
 
 def test_status_is_blocked_by_provider_access() -> None:
-    assert current_status() is TikTokIntegrationStatus.BLOCKED_BY_PROVIDER_ACCESS
+    assert current_status() is LivePlatformIntegrationStatus.BLOCKED_BY_PROVIDER_ACCESS
 
 
 def test_fake_transport_forbidden_outside_tests() -> None:
     with pytest.raises(RuntimeError, match="forbidden"):
-        TikTokLiveConnectionManager(
+        LivePlatformConnectionManager(
             auth_provider=ConfiguredApprovedAuthProvider(
                 provider_name="test", api_key="k", approved=True
             ),
             transport=FakeTikTokTransport(),
+            normalizer=DefaultTikTokEventNormalizer(),
+            platform="tiktok",
             allow_test_transport=False,
         )
 
@@ -46,12 +52,12 @@ async def test_blocked_auth_and_transport() -> None:
     auth = BlockedTikTokAuthProvider()
     assert auth.is_approved() is False
     with pytest.raises(PermissionError):
-        await auth.resolve(TikTokConnectRequest(account="demo"))
+        await auth.resolve(LiveConnectRequest(account="demo"))
     transport = BlockedTikTokTransport()
     with pytest.raises(PermissionError):
         await transport.connect(
-            TikTokConnectRequest(account="demo"),
-            TikTokAuthMaterial(provider="blocked"),
+            LiveConnectRequest(account="demo"),
+            LiveAuthMaterial(provider="blocked"),
         )
 
 
@@ -71,7 +77,8 @@ def test_event_normalization_contract() -> None:
         received_at_ms=1_700_000_000_500,
     )
     assert event is not None
-    assert event.type is TikTokEventType.chat_message
+    assert event.type is NormalizedLiveEventType.chat_message
+    assert event.source == "tiktok"
     assert event.sequence_number == 3
     assert event.username == "alice"
     assert event.display_name == "Alice"
@@ -99,7 +106,7 @@ def test_gift_streak_and_like_normalization() -> None:
         sequence_number=1,
     )
     assert gift is not None
-    assert gift.type is TikTokEventType.gift_streak
+    assert gift.type is NormalizedLiveEventType.gift_streak
     inbound = to_adapter_inbound(gift)
     assert inbound.event_type is LiveNormalizedEventType.platform_gift
     assert inbound.monetary_minor == 1
@@ -171,13 +178,16 @@ async def test_connection_manager_with_fake_events_and_dedupe() -> None:
         ]
     )
     auth = ConfiguredApprovedAuthProvider(provider_name="test", api_key="k", approved=True)
-    manager = TikTokLiveConnectionManager(
+    manager = LivePlatformConnectionManager(
         auth_provider=auth,
         transport=transport,
+        normalizer=DefaultTikTokEventNormalizer(),
+        platform="tiktok",
         allow_test_transport=True,
     )
-    await manager.start(TikTokConnectRequest(account="tester", room_id="r1"))
+    await manager.start(LiveConnectRequest(account="tester", room_id="r1"))
     events = []
+
     async def collect() -> None:
         async for event in manager.normalized_events():
             events.append(event)
@@ -189,9 +199,9 @@ async def test_connection_manager_with_fake_events_and_dedupe() -> None:
     finally:
         await manager.stop()
     types = [event.type for event in events]
-    assert TikTokEventType.connected in types
-    assert TikTokEventType.chat_message in types
-    assert TikTokEventType.gift in types
+    assert NormalizedLiveEventType.connected in types
+    assert NormalizedLiveEventType.chat_message in types
+    assert NormalizedLiveEventType.gift in types
     assert manager.diagnostics()["duplicates"] >= 1
 
 
@@ -291,15 +301,17 @@ async def test_load_chat_burst_rate_limit_does_not_crash() -> None:
             for i in range(200)
         ]
     )
-    manager = TikTokLiveConnectionManager(
+    manager = LivePlatformConnectionManager(
         auth_provider=ConfiguredApprovedAuthProvider(
             provider_name="test", api_key="k", approved=True
         ),
         transport=transport,
+        normalizer=DefaultTikTokEventNormalizer(),
+        platform="tiktok",
         allow_test_transport=True,
         rate_limiter=TokenBucketRateLimiter(rate_per_second=1000, burst=50),
     )
-    await manager.start(TikTokConnectRequest(account="load", room_id="r"))
+    await manager.start(LiveConnectRequest(account="load", room_id="r"))
     seen = 0
 
     async def drain() -> None:

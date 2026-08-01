@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.tiktok_live.events import TikTokNormalizedEvent
+from app.live_platforms.common.events import NormalizedLiveEvent
 
 
 class ExponentialBackoffReconnectManager:
@@ -109,7 +109,7 @@ class EventDeduplicator:
 @dataclass
 class DeadLetterItem:
     reason: str
-    event: TikTokNormalizedEvent | None
+    event: NormalizedLiveEvent | None
     raw: Mapping[str, Any] | None = None
     at: float = field(default_factory=time.time)
 
@@ -122,7 +122,7 @@ class DeadLetterQueue:
         self,
         reason: str,
         *,
-        event: TikTokNormalizedEvent | None = None,
+        event: NormalizedLiveEvent | None = None,
         raw: Mapping[str, Any] | None = None,
     ) -> None:
         self._items.append(DeadLetterItem(reason=reason, event=event, raw=dict(raw or {})))

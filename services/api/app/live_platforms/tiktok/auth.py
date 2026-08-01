@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from app.tiktok_live.interfaces import TikTokAuthMaterial, TikTokConnectRequest
+from app.live_platforms.common.interfaces import LiveAuthMaterial, LiveConnectRequest
 
 
 class BlockedTikTokAuthProvider:
@@ -19,10 +19,10 @@ class BlockedTikTokAuthProvider:
     def is_approved(self) -> bool:
         return False
 
-    async def resolve(self, request: TikTokConnectRequest) -> TikTokAuthMaterial:
+    async def resolve(self, request: LiveConnectRequest) -> LiveAuthMaterial:
         raise PermissionError(self.reason)
 
-    async def refresh(self, material: TikTokAuthMaterial) -> TikTokAuthMaterial:
+    async def refresh(self, material: LiveAuthMaterial) -> LiveAuthMaterial:
         raise PermissionError(self.reason)
 
 
@@ -57,10 +57,10 @@ class ConfiguredApprovedAuthProvider:
     def is_approved(self) -> bool:
         return self._approved and bool(self._api_key or self._access_token)
 
-    async def resolve(self, request: TikTokConnectRequest) -> TikTokAuthMaterial:
+    async def resolve(self, request: LiveConnectRequest) -> LiveAuthMaterial:
         if not self.is_approved():
             raise PermissionError("blocked_by_provider_access")
-        return TikTokAuthMaterial(
+        return LiveAuthMaterial(
             provider=self._provider_name,
             access_token=self._access_token,
             refresh_token=self._refresh_token,
@@ -73,7 +73,7 @@ class ConfiguredApprovedAuthProvider:
             },
         )
 
-    async def refresh(self, material: TikTokAuthMaterial) -> TikTokAuthMaterial:
+    async def refresh(self, material: LiveAuthMaterial) -> LiveAuthMaterial:
         # Approved provider refresh is provider-specific; until a concrete
         # contracted SDK is wired, refresh re-resolves static material.
         return material

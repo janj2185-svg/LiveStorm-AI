@@ -10,7 +10,7 @@ import asyncio
 from collections.abc import AsyncIterator, Mapping
 from typing import Any
 
-from app.tiktok_live.interfaces import TikTokAuthMaterial, TikTokConnectRequest
+from app.live_platforms.common.interfaces import LiveAuthMaterial, LiveConnectRequest
 
 
 class BlockedTikTokTransport:
@@ -24,8 +24,8 @@ class BlockedTikTokTransport:
 
     async def connect(
         self,
-        request: TikTokConnectRequest,
-        auth: TikTokAuthMaterial,
+        request: LiveConnectRequest,
+        auth: LiveAuthMaterial,
     ) -> None:
         raise PermissionError(self.reason)
 
@@ -56,8 +56,8 @@ class FakeTikTokTransport:
 
     async def connect(
         self,
-        request: TikTokConnectRequest,
-        auth: TikTokAuthMaterial,
+        request: LiveConnectRequest,
+        auth: LiveAuthMaterial,
     ) -> None:
         self._connected = True
         await self._queue.put(
@@ -108,8 +108,8 @@ class ApprovedProviderTransportStub:
 
     async def connect(
         self,
-        request: TikTokConnectRequest,
-        auth: TikTokAuthMaterial,
+        request: LiveConnectRequest,
+        auth: LiveAuthMaterial,
     ) -> None:
         if not self.endpoint:
             raise PermissionError("blocked_by_provider_access")
