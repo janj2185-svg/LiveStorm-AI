@@ -102,13 +102,13 @@ function assetFixture(state: "pending" | "verified" = "verified"): GiftAsset {
 }
 
 function fileWithBuffer(name: string, bytes: Uint8Array, type = ""): File {
-  const data = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  const file = new File([data], name, { type });
-  if (!("arrayBuffer" in file)) {
-    Object.defineProperty(file, "arrayBuffer", {
-      value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
-    });
-  }
+  // Copy into a fresh ArrayBuffer so SubtleCrypto receives a real buffer, not a
+  // SharedArrayBuffer slice from a TypedArray literal.
+  const copy = bytes.slice();
+  const file = new File([copy], name, { type });
+  Object.defineProperty(file, "arrayBuffer", {
+    value: async () => copy.buffer.slice(copy.byteOffset, copy.byteOffset + copy.byteLength),
+  });
   return file;
 }
 

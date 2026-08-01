@@ -29,7 +29,7 @@ x-api-image: &api-image
     IP_HASH_KEY: "${IP_HASH_KEY:?Set IP_HASH_KEY in infrastructure/.env}"
     SMTP_HOST: mailpit
     SMTP_PORT: "1025"
-    SMTP_FROM_EMAIL: "${SMTP_FROM_EMAIL:-no-reply@sylora.local}"
+    SMTP_FROM_EMAIL: "${SMTP_FROM_EMAIL:-no-reply@example.com}"
     SMTP_START_TLS: "false"
     SMTP_USE_TLS: "false"
     CORS_ORIGINS: "${API_CORS_ORIGINS:-[\"http://localhost:5173\"]}"

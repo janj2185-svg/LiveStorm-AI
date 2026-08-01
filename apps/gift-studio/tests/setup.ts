@@ -1,6 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 import { webcrypto } from "node:crypto";
 
-if (!globalThis.crypto?.subtle) {
-  Object.defineProperty(globalThis, "crypto", { value: webcrypto });
-}
+// jsdom may expose a partial/broken SubtleCrypto. Always use Node's Web Crypto.
+Object.defineProperty(globalThis, "crypto", {
+  value: webcrypto,
+  configurable: true,
+});

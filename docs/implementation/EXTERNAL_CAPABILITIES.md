@@ -4,7 +4,12 @@
 
 ## Статус репозиторію
 
-У поточному source немає provider SDK/client, OAuth callback, webhook receiver, RTMP/WebRTC session, payment/email/model/push adapter або server-side secret boundary. UI-згадки провайдерів не є інтеграціями. Жодна зовнішня capability не пройшла production verification.
+Stage 2 додав provider-neutral AI Brain, AI Live Hub adapters (YouTube, Twitch,
+Discord, OBS, MediaMTX), OAuth/OIDC boundaries, SMTP outbox, S3 upload grants і
+payment provider injection points. Це **не** означає, що зовнішні сервіси
+підключені або verified. Без credentials/approvals adapters повертають explicit
+unavailable/requires_connection_credential статуси і не симулюють success.
+UI-згадки провайдерів у design gallery залишаються design fixtures.
 
 Усі рядки матриці мають однакові mandatory gates:
 

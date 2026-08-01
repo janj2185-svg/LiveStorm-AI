@@ -20,9 +20,8 @@ hidden behind unsafe replica counts.
 The API build context is `services/api`, with
 `infrastructure/docker/api.Dockerfile` supplied via `-f`. This keeps the image
 context limited to backend source. The Dockerfile-specific ignore file next to
-the Dockerfile excludes development and secret material. The current repository
-does not yet contain `services/api`; image builds and backend CI fail clearly
-until that service is added.
+the Dockerfile excludes development and secret material. The API source lives in `services/api`. Image builds use
+`infrastructure/docker/api.Dockerfile` with that directory as build context.
 
 ## Secrets
 

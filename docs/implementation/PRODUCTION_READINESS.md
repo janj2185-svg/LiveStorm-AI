@@ -1,7 +1,18 @@
 # Production readiness assessment
 
-Assessment date: 2026-07-31  
-Decision: **NO-GO**
+Assessment date: 2026-08-01  
+Decision: **NO-GO for public production** · **GO for local friend testing with limits**
+
+See the latest cut notes in `docs/implementation/PRODUCTION_STATUS.md` and the
+launch checklist in `docs/LOCAL_FRIEND_TESTING.md`.
+
+## Stage 3 reassessment (friend-testing cut)
+
+Local PostgreSQL/Redis + API were launched and smoke-tested. Backend,
+gift-runtime, gift-studio, companion, gallery and Flutter test suites passed in
+this environment. Demo accounts and wallet credits were seeded. Docker Compose
+full-stack boot was not claimed here because this nested VM has no Docker
+daemon. External AI/live/payment/AAA-gift gates remain open.
 
 ## Stage 2 reassessment
 

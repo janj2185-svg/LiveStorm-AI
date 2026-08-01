@@ -46,6 +46,23 @@ docs/                    Design, implementation and production documentation
 - RTMP, HLS, WHIP/WHEP WebRTC, SRT, TURN, recording upload, Prometheus and
   Grafana infrastructure.
 
+## Friend testing tomorrow
+
+Start here: [`docs/LOCAL_FRIEND_TESTING.md`](docs/LOCAL_FRIEND_TESTING.md).
+
+Honest release status:
+[`docs/implementation/PRODUCTION_STATUS.md`](docs/implementation/PRODUCTION_STATUS.md).
+
+Fastest local path **without Docker**:
+
+```bash
+chmod +x scripts/local-dev-up.sh
+./scripts/local-dev-up.sh
+```
+
+This migrates PostgreSQL, seeds demo accounts, and serves the API on
+`http://127.0.0.1:8000`.
+
 ## Run the backend
 
 The local infrastructure requires explicit secrets; copy the example first.
@@ -58,8 +75,9 @@ docker compose \
   -f infrastructure/compose/compose.yml up --build
 ```
 
-API documentation is exposed at `http://localhost:8000/docs`. Detailed backend
-configuration and endpoints are in `services/api/README.md`.
+API documentation is exposed at `http://localhost:8000/docs` when CDN access is
+available. Detailed backend configuration and endpoints are in
+`services/api/README.md`.
 
 ## Run Flutter
 

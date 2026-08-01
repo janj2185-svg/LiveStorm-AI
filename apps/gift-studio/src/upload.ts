@@ -27,9 +27,14 @@ function ascii(bytes: Uint8Array, start: number, length: number): string {
   return new TextDecoder().decode(bytes.slice(start, start + length));
 }
 
-async function digest(bytes: ArrayBuffer): Promise<string> {
+async function digest(bytes: ArrayBuffer | ArrayBufferView): Promise<string> {
   if (!crypto.subtle) throw new Error("Web Crypto SHA-256 is required for asset import");
-  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
+  // Normalize to a Uint8Array so Node, browsers, and test polyfills all accept the input.
+  const view = ArrayBuffer.isView(bytes)
+    ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+    : new Uint8Array(bytes);
+  const copy = new Uint8Array(view);
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", copy))]
     .map((value) => value.toString(16).padStart(2, "0"))
     .join("");
 }
