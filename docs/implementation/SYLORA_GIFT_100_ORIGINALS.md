@@ -159,7 +159,8 @@ Each template includes: **slug**, **name**, **price**, **rarity**, **one-line ef
 
 ## Concept art
 
-Wave 1 posters (20): see `SYLORA_GIFT_CONCEPT_ART.md` and `artifacts/sylora-gift-concepts/`.  
+Waves 1–2 posters (**48**): see `SYLORA_GIFT_CONCEPT_ART.md` and `artifacts/sylora-gift-concepts/`.  
+All Rare + Epic templates covered; selected Legendary/Mythic/Divine signatures included.  
 These are artist mood references — not runtime GLB/WAV and not READY catalog gifts.
 
 ## Implementation note
