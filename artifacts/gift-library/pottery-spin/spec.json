@@ -1,0 +1,90 @@
+{
+  "index": 38,
+  "name": "Pottery Spin",
+  "slug": "pottery-spin",
+  "cost": 500,
+  "price_minor": 500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7800,
+  "duration_sec": 7.8,
+  "main_idea": "Clay on a wheel rises into a vessel that paints itself with viewer color.",
+  "model_description": "Wheel, clay body morph, glaze paint strokes.",
+  "environment_description": "Ceramic studio window light.",
+  "animation_phases": [
+    "lump",
+    "rise form",
+    "paint glaze",
+    "fire kiln glow (story fire, contained)"
+  ],
+  "vfx": [
+    "wheel blur",
+    "kiln glow fire only in kiln"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "clay flecks",
+  "shaders": [
+    "wet clay",
+    "glaze"
+  ],
+  "camera": "wheel macro",
+  "music": "wheel rhythm + soft flute",
+  "spatial_sound": "studio near",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Pottery Spin' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.pottery-spin with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "pottery",
+  "vfx_family": "kiln_glow",
+  "asset_ids": {
+    "glb": "641c5ce5-37a0-5f4d-a16b-f2adda1c9cf0",
+    "audio": "aa68a21f-7970-5ca6-85f6-f501854f1fb2",
+    "poster": "dd8dd982-2a51-56fa-baf7-628a965bda81",
+    "blend": "21523332-89ab-5f7b-9e91-2e9cc6573eb5",
+    "shader": "15fd1b47-526f-5c70-a164-a67ab675c2fc"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/pottery-spin/model.glb",
+    "blender": "artifacts/gift-library/pottery-spin/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/pottery-spin/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/pottery-spin/metadata.json",
+    "preview_video": "artifacts/gift-library/pottery-spin/preview.mp4",
+    "gif_preview": "artifacts/gift-library/pottery-spin/preview.gif",
+    "thumbnail": "artifacts/gift-library/pottery-spin/poster.png",
+    "sound_pack": "artifacts/gift-library/pottery-spin/sound/",
+    "particle_pack": "artifacts/gift-library/pottery-spin/particles/",
+    "report": "artifacts/gift-library/pottery-spin/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

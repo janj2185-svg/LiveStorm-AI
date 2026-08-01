@@ -1,0 +1,92 @@
+{
+  "index": 55,
+  "name": "Glassblower's Heart",
+  "slug": "glassblowers-heart",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12000,
+  "duration_sec": 12.0,
+  "main_idea": "A glassblower shapes molten glass into a transparent heart (fire at glory hole only).",
+  "model_description": "Blowpipe, molten gather, heart vessel; studio bench.",
+  "environment_description": "Glass studio with glory hole fire.",
+  "animation_phases": [
+    "gather melt",
+    "blow shape",
+    "marver",
+    "anneal glow",
+    "present"
+  ],
+  "vfx": [
+    "glory hole fire",
+    "heat shimmer",
+    "glass stretch"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "heat motes",
+  "shaders": [
+    "molten glass",
+    "cooled glass"
+  ],
+  "camera": "hands and gather close-ups",
+  "music": "warm drones + glass tones",
+  "spatial_sound": "studio industrial warm",
+  "voice_effects": "breath blow FX",
+  "ai_reaction": "AI acknowledges 'Glassblower's Heart' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.glassblowers-heart with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "glassblow",
+  "vfx_family": "glory_fire",
+  "asset_ids": {
+    "glb": "f0744ec1-c462-512e-bf3b-f6d65edd1438",
+    "audio": "92516df4-b149-5f44-979f-8e611b7e8bce",
+    "poster": "3779115f-65dc-5f8f-94ad-9c09df32f406",
+    "blend": "73a98ba3-02a8-562c-98fc-3e04afe56395",
+    "shader": "59eeaf91-9a56-5264-93a9-f40b131997a3"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/glassblowers-heart/model.glb",
+    "blender": "artifacts/gift-library/glassblowers-heart/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/glassblowers-heart/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/glassblowers-heart/metadata.json",
+    "preview_video": "artifacts/gift-library/glassblowers-heart/preview.mp4",
+    "gif_preview": "artifacts/gift-library/glassblowers-heart/preview.gif",
+    "thumbnail": "artifacts/gift-library/glassblowers-heart/poster.png",
+    "sound_pack": "artifacts/gift-library/glassblowers-heart/sound/",
+    "particle_pack": "artifacts/gift-library/glassblowers-heart/particles/",
+    "report": "artifacts/gift-library/glassblowers-heart/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

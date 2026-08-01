@@ -1,0 +1,90 @@
+{
+  "index": 17,
+  "name": "Crystal Dice",
+  "slug": "crystal-dice",
+  "cost": 50,
+  "price_minor": 50,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3400,
+  "duration_sec": 3.4,
+  "main_idea": "A translucent d20 rolls and stops on a glowing face.",
+  "model_description": "Beveled icosahedron with engraved numerals.",
+  "environment_description": "Felt table top.",
+  "animation_phases": [
+    "toss",
+    "bounce",
+    "stop",
+    "face glow"
+  ],
+  "vfx": [
+    "face highlight",
+    "micro sparkles"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "crystal dust",
+  "shaders": [
+    "crystal SSS",
+    "engraved emissive"
+  ],
+  "camera": "dice-follow",
+  "music": "crystal clack chord",
+  "spatial_sound": "table bounce stereo",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Crystal Dice' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.crystal-dice with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "polyhedra",
+  "vfx_family": "crystal_glow",
+  "asset_ids": {
+    "glb": "21a4204d-3dd0-539c-9cdf-5b2656739b0d",
+    "audio": "d8913d9d-3e5a-5ceb-9a4f-10d19e3ff6ae",
+    "poster": "4d333e28-f990-5364-97b1-6e392a07f855",
+    "blend": "73aefe49-427a-5272-b6ae-b9de0083d38b",
+    "shader": "1fa9a6ef-f586-55f5-a0b4-9e0dcb8c6982"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/crystal-dice/model.glb",
+    "blender": "artifacts/gift-library/crystal-dice/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/crystal-dice/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/crystal-dice/metadata.json",
+    "preview_video": "artifacts/gift-library/crystal-dice/preview.mp4",
+    "gif_preview": "artifacts/gift-library/crystal-dice/preview.gif",
+    "thumbnail": "artifacts/gift-library/crystal-dice/poster.png",
+    "sound_pack": "artifacts/gift-library/crystal-dice/sound/",
+    "particle_pack": "artifacts/gift-library/crystal-dice/particles/",
+    "report": "artifacts/gift-library/crystal-dice/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

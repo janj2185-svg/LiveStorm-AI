@@ -1,0 +1,92 @@
+{
+  "index": 61,
+  "name": "Worldfold Letter",
+  "slug": "worldfold-letter",
+  "cost": 50000,
+  "price_minor": 50000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 16000,
+  "duration_sec": 16.0,
+  "main_idea": "Reality folds like paper; a letter world opens where streamer and viewers meet.",
+  "model_description": "Folding terrain panels, letter architecture, avatar proxies.",
+  "environment_description": "Transforms from chat UI into folded paper world then back.",
+  "animation_phases": [
+    "UI fold",
+    "world open",
+    "paths meet",
+    "shared plaza",
+    "refold return"
+  ],
+  "vfx": [
+    "world fold seams",
+    "UI particle dissolve"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "fold sparks",
+  "shaders": [
+    "paper world",
+    "UI emissive"
+  ],
+  "camera": "impossible fold transitions",
+  "music": "transforming motif A->B->A",
+  "spatial_sound": "scene-morph spatial remap",
+  "voice_effects": "AI narrator soft line",
+  "ai_reaction": "AI acknowledges 'Worldfold Letter' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.worldfold-letter with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "worldfold",
+  "vfx_family": "reality_fold",
+  "asset_ids": {
+    "glb": "9cf5b4dd-964b-5929-bdd8-1a5288e9613e",
+    "audio": "9f0cc552-8060-5de9-8e2e-37486cfed0cf",
+    "poster": "e8c5ced1-b181-5781-a42f-d00d344c3ba9",
+    "blend": "f2b83284-1aeb-5362-8b20-e0b1e3458763",
+    "shader": "91a74fb7-3140-5252-809b-41997d6a0479"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/worldfold-letter/model.glb",
+    "blender": "artifacts/gift-library/worldfold-letter/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/worldfold-letter/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/worldfold-letter/metadata.json",
+    "preview_video": "artifacts/gift-library/worldfold-letter/preview.mp4",
+    "gif_preview": "artifacts/gift-library/worldfold-letter/preview.gif",
+    "thumbnail": "artifacts/gift-library/worldfold-letter/poster.png",
+    "sound_pack": "artifacts/gift-library/worldfold-letter/sound/",
+    "particle_pack": "artifacts/gift-library/worldfold-letter/particles/",
+    "report": "artifacts/gift-library/worldfold-letter/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

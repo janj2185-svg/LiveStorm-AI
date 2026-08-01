@@ -1,0 +1,91 @@
+{
+  "index": 100,
+  "name": "SYLORA Eternal Hearth",
+  "slug": "sylora-eternal-hearth",
+  "cost": 5000000,
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 28000,
+  "duration_sec": 28.0,
+  "main_idea": "A hearth that never consumes \u2014 warmth without harm \u2014 gathering every creator into one home light.",
+  "model_description": "Eternal hearth architecture, gathering figures, home light orb.",
+  "environment_description": "Home of homes \u2014 many doorways into one hearth hall (contained hearth fire).",
+  "animation_phases": [
+    "doors open",
+    "creators arrive",
+    "hearth kindles (safe fire)",
+    "stories orbit",
+    "home orb gift"
+  ],
+  "vfx": [
+    "safe hearth fire",
+    "story orbits",
+    "home light"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "embers that become fireflies",
+  "shaders": [
+    "warm home materials"
+  ],
+  "camera": "hearth gathering cinema",
+  "music": "home eternal suite",
+  "spatial_sound": "intimate vast hall",
+  "voice_effects": "many soft welcomes",
+  "ai_reaction": "AI acknowledges 'SYLORA Eternal Hearth' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.sylora-eternal-hearth with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "eternal_hearth",
+  "vfx_family": "safe_hearth",
+  "asset_ids": {
+    "glb": "fb219270-94a3-5094-9536-b53a4fb03b39",
+    "audio": "342decd7-29ad-5970-ba97-beff98476703",
+    "poster": "36a85f09-c1f5-5517-9fd2-c187e7d3a3df",
+    "blend": "062b4e5a-3271-5198-bab8-f05e8fa18897",
+    "shader": "6eb71265-e34a-5570-8fb2-de247c990670"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/sylora-eternal-hearth/model.glb",
+    "blender": "artifacts/gift-library/sylora-eternal-hearth/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/sylora-eternal-hearth/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/sylora-eternal-hearth/metadata.json",
+    "preview_video": "artifacts/gift-library/sylora-eternal-hearth/preview.mp4",
+    "gif_preview": "artifacts/gift-library/sylora-eternal-hearth/preview.gif",
+    "thumbnail": "artifacts/gift-library/sylora-eternal-hearth/poster.png",
+    "sound_pack": "artifacts/gift-library/sylora-eternal-hearth/sound/",
+    "particle_pack": "artifacts/gift-library/sylora-eternal-hearth/particles/",
+    "report": "artifacts/gift-library/sylora-eternal-hearth/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

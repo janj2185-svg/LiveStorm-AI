@@ -1,0 +1,91 @@
+{
+  "index": 63,
+  "name": "Twin Eclipse",
+  "slug": "twin-eclipse",
+  "cost": 250000,
+  "price_minor": 250000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 18000,
+  "duration_sec": 18.0,
+  "main_idea": "Two suns eclipse; during totality avatars of streamer and top gifter dance.",
+  "model_description": "Twin suns, lunar occluders, avatar dancers, corona.",
+  "environment_description": "Celestial arena that darkens then returns.",
+  "animation_phases": [
+    "day twin suns",
+    "approach eclipse",
+    "totality dance",
+    "corona gift",
+    "day return"
+  ],
+  "vfx": [
+    "corona",
+    "shadow bands"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "solar dust",
+  "shaders": [
+    "sun volume",
+    "corona additive"
+  ],
+  "camera": "celestial epic coverage",
+  "music": "eclipse choir",
+  "spatial_sound": "sky dome",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Twin Eclipse' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.twin-eclipse with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "eclipse",
+  "vfx_family": "corona",
+  "asset_ids": {
+    "glb": "e8c445a2-92ef-5bdd-965f-65aec66bdce0",
+    "audio": "cab20a7b-037b-5d09-9d16-849ff89c2a24",
+    "poster": "f6c0dfe9-94db-5d49-8ab5-dd294e95e16f",
+    "blend": "aea549ce-fbec-5058-902f-15b35564ecd7",
+    "shader": "6d59a62e-8986-52bd-93dc-35fe06405ab7"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/twin-eclipse/model.glb",
+    "blender": "artifacts/gift-library/twin-eclipse/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/twin-eclipse/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/twin-eclipse/metadata.json",
+    "preview_video": "artifacts/gift-library/twin-eclipse/preview.mp4",
+    "gif_preview": "artifacts/gift-library/twin-eclipse/preview.gif",
+    "thumbnail": "artifacts/gift-library/twin-eclipse/poster.png",
+    "sound_pack": "artifacts/gift-library/twin-eclipse/sound/",
+    "particle_pack": "artifacts/gift-library/twin-eclipse/particles/",
+    "report": "artifacts/gift-library/twin-eclipse/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

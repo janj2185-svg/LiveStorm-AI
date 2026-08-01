@@ -1,0 +1,90 @@
+{
+  "index": 24,
+  "name": "Rain Letter",
+  "slug": "rain-letter",
+  "cost": 500,
+  "price_minor": 500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7200,
+  "duration_sec": 7.2,
+  "main_idea": "Raindrops on a window spell a short thank-you then wash away.",
+  "model_description": "Window frame, glass, and procedural rain droplet meshes.",
+  "environment_description": "Night apartment window (water required).",
+  "animation_phases": [
+    "rain start",
+    "letters form",
+    "read hold",
+    "wash clear"
+  ],
+  "vfx": [
+    "window streaks",
+    "city bokeh"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "rain drops",
+  "shaders": [
+    "wet glass",
+    "rain refraction"
+  ],
+  "camera": "through-window dolly",
+  "music": "soft rain bed + piano",
+  "spatial_sound": "window plane stereo",
+  "voice_effects": "whispered thank-you processed lightly",
+  "ai_reaction": "AI acknowledges 'Rain Letter' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.rain-letter with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "window_rain",
+  "vfx_family": "rain_letters",
+  "asset_ids": {
+    "glb": "ba9d1db1-8263-5716-a7f8-d764e5dc30bf",
+    "audio": "af2d59ba-56fe-5300-a985-d5b0f0227d51",
+    "poster": "a9beded4-6e19-5ef0-8257-2f5ff6ac5544",
+    "blend": "afced3a5-30da-5a72-915a-ae6465ee3135",
+    "shader": "741119d5-11bc-58e3-af5c-f118cdd0ac57"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/rain-letter/model.glb",
+    "blender": "artifacts/gift-library/rain-letter/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/rain-letter/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/rain-letter/metadata.json",
+    "preview_video": "artifacts/gift-library/rain-letter/preview.mp4",
+    "gif_preview": "artifacts/gift-library/rain-letter/preview.gif",
+    "thumbnail": "artifacts/gift-library/rain-letter/poster.png",
+    "sound_pack": "artifacts/gift-library/rain-letter/sound/",
+    "particle_pack": "artifacts/gift-library/rain-letter/particles/",
+    "report": "artifacts/gift-library/rain-letter/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

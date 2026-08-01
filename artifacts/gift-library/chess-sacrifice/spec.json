@@ -1,0 +1,90 @@
+{
+  "index": 35,
+  "name": "Chess Sacrifice",
+  "slug": "chess-sacrifice",
+  "cost": 1000,
+  "price_minor": 1000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7600,
+  "duration_sec": 7.6,
+  "main_idea": "A chess piece sacrifices itself to crown the recipient's king.",
+  "model_description": "Stylized chess set with unique piece silhouettes.",
+  "environment_description": "Marble board with dramatic key.",
+  "animation_phases": [
+    "approach",
+    "sacrifice move",
+    "crown",
+    "board glow"
+  ],
+  "vfx": [
+    "move trails",
+    "crown light"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "marble dust",
+  "shaders": [
+    "marble",
+    "ebony/ivory"
+  ],
+  "camera": "board diagonal drama",
+  "music": "tense then resolve chord",
+  "spatial_sound": "board plane",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Chess Sacrifice' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.chess-sacrifice with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "chess",
+  "vfx_family": "piece_trails",
+  "asset_ids": {
+    "glb": "d206ec99-0781-564a-bb48-e15f3f9588f9",
+    "audio": "d04c2e2b-fe9d-59b5-b116-0e5818bf3864",
+    "poster": "fbbb135a-9ef5-5401-98b5-9983822a66cd",
+    "blend": "223cfd45-16b6-5d47-935d-7dd305b7d8de",
+    "shader": "cbd7132e-a0d3-52d5-895e-20a2638e1975"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/chess-sacrifice/model.glb",
+    "blender": "artifacts/gift-library/chess-sacrifice/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/chess-sacrifice/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/chess-sacrifice/metadata.json",
+    "preview_video": "artifacts/gift-library/chess-sacrifice/preview.mp4",
+    "gif_preview": "artifacts/gift-library/chess-sacrifice/preview.gif",
+    "thumbnail": "artifacts/gift-library/chess-sacrifice/poster.png",
+    "sound_pack": "artifacts/gift-library/chess-sacrifice/sound/",
+    "particle_pack": "artifacts/gift-library/chess-sacrifice/particles/",
+    "report": "artifacts/gift-library/chess-sacrifice/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

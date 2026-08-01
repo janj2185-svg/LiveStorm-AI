@@ -1,0 +1,91 @@
+{
+  "index": 57,
+  "name": "Samurai Ink Slash",
+  "slug": "samurai-ink-slash",
+  "cost": 5000,
+  "price_minor": 5000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 10000,
+  "duration_sec": 10.0,
+  "main_idea": "A calligrapher-samurai draws a single ink slash that becomes a protective circle.",
+  "model_description": "Character with brush-sword hybrid; ink slash ribbons.",
+  "environment_description": "Dojo with paper screens.",
+  "animation_phases": [
+    "stance",
+    "draw slash",
+    "ink hang in air",
+    "circle close",
+    "protect pulse"
+  ],
+  "vfx": [
+    "ink slash",
+    "screen flutter"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "ink mist",
+  "shaders": [
+    "ink",
+    "wood dojo"
+  ],
+  "camera": "dramatic slash follow",
+  "music": "taiko + silence beat",
+  "spatial_sound": "dojo",
+  "voice_effects": "kiai short original",
+  "ai_reaction": "AI acknowledges 'Samurai Ink Slash' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.samurai-ink-slash with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "ink_samurai",
+  "vfx_family": "ink_slash",
+  "asset_ids": {
+    "glb": "340030bf-0888-5744-ab28-225b6a7b4a77",
+    "audio": "728f930a-174a-5092-a020-d0c12ad0d5ec",
+    "poster": "0119f117-d832-5b07-a036-8a2798af9981",
+    "blend": "29c491b4-6e2c-568d-9e69-9b4895e31587",
+    "shader": "998266e7-af20-54bc-82c6-b13af70cbf78"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/samurai-ink-slash/model.glb",
+    "blender": "artifacts/gift-library/samurai-ink-slash/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/samurai-ink-slash/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/samurai-ink-slash/metadata.json",
+    "preview_video": "artifacts/gift-library/samurai-ink-slash/preview.mp4",
+    "gif_preview": "artifacts/gift-library/samurai-ink-slash/preview.gif",
+    "thumbnail": "artifacts/gift-library/samurai-ink-slash/poster.png",
+    "sound_pack": "artifacts/gift-library/samurai-ink-slash/sound/",
+    "particle_pack": "artifacts/gift-library/samurai-ink-slash/particles/",
+    "report": "artifacts/gift-library/samurai-ink-slash/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "slug": "lumen-seed",
+  "steps": {
+    "audio": true,
+    "blender": true,
+    "blend_file": true,
+    "preview_video": true
+  },
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "preview_note": "ok",
+  "performance": {
+    "method": "asset-budget-proxy",
+    "note": "Device FPS/memory require browser/runtime measurement; this records budget compliance only.",
+    "glb_bytes": 90580,
+    "audio_bytes": 564524,
+    "within_download_budget": true,
+    "fps_result": null,
+    "memory_result_mb": null,
+    "load_time_ms": null
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

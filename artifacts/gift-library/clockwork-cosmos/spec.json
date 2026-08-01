@@ -1,0 +1,91 @@
+{
+  "index": 66,
+  "name": "Clockwork Cosmos",
+  "slug": "clockwork-cosmos",
+  "cost": 250000,
+  "price_minor": 250000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 18000,
+  "duration_sec": 18.0,
+  "main_idea": "Planets on brass arms realign; a cosmic key winds the stream's luck.",
+  "model_description": "Orrery with unique planets, brass arms, cosmic key.",
+  "environment_description": "Void workshop becoming cosmos.",
+  "animation_phases": [
+    "still orrery",
+    "arms move",
+    "planets align",
+    "key wind",
+    "luck aurora"
+  ],
+  "vfx": [
+    "orbital trails",
+    "alignment beam"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "cosmic dust",
+  "shaders": [
+    "brass",
+    "planet materials unique"
+  ],
+  "camera": "orrery macro to cosmos pullback",
+  "music": "mechanical cosmos theme",
+  "spatial_sound": "workshop to void",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Clockwork Cosmos' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.clockwork-cosmos with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "orrery",
+  "vfx_family": "orbital_align",
+  "asset_ids": {
+    "glb": "b89a1644-9258-558f-ac0d-4a2bbcfb14ce",
+    "audio": "c56fc7fc-05a1-5a92-a67d-c2e73e5ae6dd",
+    "poster": "f2889e99-8b67-5d0e-bf8c-2a2c40c66048",
+    "blend": "a190b261-4cbe-5554-b752-ea16fe648692",
+    "shader": "edde5d52-ccbb-5c48-acae-6f8db48dbde3"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/clockwork-cosmos/model.glb",
+    "blender": "artifacts/gift-library/clockwork-cosmos/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/clockwork-cosmos/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/clockwork-cosmos/metadata.json",
+    "preview_video": "artifacts/gift-library/clockwork-cosmos/preview.mp4",
+    "gif_preview": "artifacts/gift-library/clockwork-cosmos/preview.gif",
+    "thumbnail": "artifacts/gift-library/clockwork-cosmos/poster.png",
+    "sound_pack": "artifacts/gift-library/clockwork-cosmos/sound/",
+    "particle_pack": "artifacts/gift-library/clockwork-cosmos/particles/",
+    "report": "artifacts/gift-library/clockwork-cosmos/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "index": 16,
+  "name": "Lantern Moth",
+  "slug": "lantern-moth",
+  "cost": 100,
+  "price_minor": 100,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4000,
+  "duration_sec": 4.0,
+  "main_idea": "A paper moth circles a hanging lantern and lands as a gift badge.",
+  "model_description": "Lantern frame with paper panels; moth with wing membranes.",
+  "environment_description": "Evening garden path.",
+  "animation_phases": [
+    "lantern glow",
+    "moth circle",
+    "land",
+    "badge form"
+  ],
+  "vfx": [
+    "lantern warm light",
+    "wing translucency"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "night insects (sparse)",
+  "shaders": [
+    "paper translucency",
+    "warm emissive"
+  ],
+  "camera": "orbit around lantern",
+  "music": "soft flute phrase",
+  "spatial_sound": "garden night",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Lantern Moth' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.lantern-moth with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "lantern_insect",
+  "vfx_family": "warm_lantern",
+  "asset_ids": {
+    "glb": "10fa6335-e62f-5d7b-9d57-f6c92f8a59c2",
+    "audio": "7e04e5d1-078d-5cc3-93c1-d9a84c02b858",
+    "poster": "3864832f-e423-5a48-8adc-2001bafff5d0",
+    "blend": "078378b5-8736-5fce-a835-d9e75d82b7d3",
+    "shader": "30c855ca-a2d0-5739-8b57-55d9b0a148ec"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/lantern-moth/model.glb",
+    "blender": "artifacts/gift-library/lantern-moth/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/lantern-moth/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/lantern-moth/metadata.json",
+    "preview_video": "artifacts/gift-library/lantern-moth/preview.mp4",
+    "gif_preview": "artifacts/gift-library/lantern-moth/preview.gif",
+    "thumbnail": "artifacts/gift-library/lantern-moth/poster.png",
+    "sound_pack": "artifacts/gift-library/lantern-moth/sound/",
+    "particle_pack": "artifacts/gift-library/lantern-moth/particles/",
+    "report": "artifacts/gift-library/lantern-moth/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

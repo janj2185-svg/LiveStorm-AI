@@ -1,0 +1,91 @@
+{
+  "index": 73,
+  "name": "Constellation Circus",
+  "slug": "constellation-circus",
+  "cost": 250000,
+  "price_minor": 250000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 18000,
+  "duration_sec": 18.0,
+  "main_idea": "A circus under a living sky where acts are constellations performing for the chat.",
+  "model_description": "Circus tent, constellation acrobat figures, ring.",
+  "environment_description": "Tent opens to living star circus.",
+  "animation_phases": [
+    "tent rise",
+    "sky open",
+    "acts perform",
+    "finale pyramid",
+    "gift star"
+  ],
+  "vfx": [
+    "constellation performers",
+    "spotlight stars"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "stardust confetti",
+  "shaders": [
+    "tent fabric",
+    "star bodies"
+  ],
+  "camera": "circus show coverage",
+  "music": "circus mythic hybrid",
+  "spatial_sound": "tent to open sky",
+  "voice_effects": "ringmaster AI",
+  "ai_reaction": "AI acknowledges 'Constellation Circus' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.constellation-circus with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "star_circus",
+  "vfx_family": "constellation_acts",
+  "asset_ids": {
+    "glb": "4d25a121-100b-5ded-af79-08ae60a890af",
+    "audio": "f172d70e-b963-5367-bedc-5b7798fa1791",
+    "poster": "0f0be98f-f6e9-57f4-a17a-2c47882c6fa1",
+    "blend": "8449bc91-62ab-58ff-b617-3ffa8dae5ba9",
+    "shader": "70154d96-dfdf-51c9-b7f9-298cf1f1a2e1"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/constellation-circus/model.glb",
+    "blender": "artifacts/gift-library/constellation-circus/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/constellation-circus/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/constellation-circus/metadata.json",
+    "preview_video": "artifacts/gift-library/constellation-circus/preview.mp4",
+    "gif_preview": "artifacts/gift-library/constellation-circus/preview.gif",
+    "thumbnail": "artifacts/gift-library/constellation-circus/poster.png",
+    "sound_pack": "artifacts/gift-library/constellation-circus/sound/",
+    "particle_pack": "artifacts/gift-library/constellation-circus/particles/",
+    "report": "artifacts/gift-library/constellation-circus/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

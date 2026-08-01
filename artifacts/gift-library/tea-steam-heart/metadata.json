@@ -1,0 +1,19 @@
+{
+  "name": "Tea Steam Heart",
+  "slug": "tea-steam-heart",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 50,
+  "duration_ms": 4200,
+  "sha256": {
+    "glb": "aba1bd4bf7e67374d0245099e47d4789101607c57d39b06547cfadb4a6ef3cad",
+    "audio": "db86851d3f087e4ad2107f2258ef003211633de46b5ca69c2eeb5787016ee0ca",
+    "poster": "45fb6877325e94b073b5d67dc6da3b0197154bba104688faf29dcb1482d6b7bf"
+  },
+  "bytes": {
+    "glb": 95996,
+    "audio": 740924,
+    "poster": 508543,
+    "preview_mp4": 113610
+  }
+}

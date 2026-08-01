@@ -1,0 +1,10 @@
+{
+  "slug": "sylora-genesis-spire",
+  "family": "genesis_spire",
+  "vfx": "multi_scene_genesis",
+  "duration": 25.0,
+  "rarity": "Divine",
+  "preview_frames": 20,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE"
+}

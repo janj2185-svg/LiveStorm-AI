@@ -1,0 +1,10 @@
+{
+  "slug": "stage-curtain-rise",
+  "family": "theater",
+  "vfx": "spot_volume",
+  "duration": 7.0,
+  "rarity": "Epic",
+  "preview_frames": 16,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE"
+}

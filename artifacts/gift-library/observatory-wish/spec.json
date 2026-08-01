@@ -1,0 +1,91 @@
+{
+  "index": 46,
+  "name": "Observatory Wish",
+  "slug": "observatory-wish",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12000,
+  "duration_sec": 12.0,
+  "main_idea": "A dome observatory opens; a telescope finds a new star named for the viewer.",
+  "model_description": "Observatory dome, telescope, starfield projection.",
+  "environment_description": "Mountain night observatory.",
+  "animation_phases": [
+    "dome open",
+    "telescope slew",
+    "star find",
+    "nameplate appear",
+    "sky bloom"
+  ],
+  "vfx": [
+    "dome slit light",
+    "star bloom"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "stardust",
+  "shaders": [
+    "metal dome",
+    "lens glass"
+  ],
+  "camera": "exterior dome then through eyepiece",
+  "music": "celestial orchestra sting",
+  "spatial_sound": "mountain night open",
+  "voice_effects": "soft 'New star catalogued' AI VO FX",
+  "ai_reaction": "AI acknowledges 'Observatory Wish' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.observatory-wish with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "observatory",
+  "vfx_family": "star_find",
+  "asset_ids": {
+    "glb": "76492040-96cc-5b06-ad11-ddb1e80fe057",
+    "audio": "a0daf40e-3732-5938-ab22-163448112813",
+    "poster": "3b562b0c-171d-5fbc-8584-17b96838045a",
+    "blend": "e73b83f3-4db1-58cd-b69a-59108ee5d437",
+    "shader": "6f1233d4-f14d-57b9-a85b-624a679319fb"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/observatory-wish/model.glb",
+    "blender": "artifacts/gift-library/observatory-wish/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/observatory-wish/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/observatory-wish/metadata.json",
+    "preview_video": "artifacts/gift-library/observatory-wish/preview.mp4",
+    "gif_preview": "artifacts/gift-library/observatory-wish/preview.gif",
+    "thumbnail": "artifacts/gift-library/observatory-wish/poster.png",
+    "sound_pack": "artifacts/gift-library/observatory-wish/sound/",
+    "particle_pack": "artifacts/gift-library/observatory-wish/particles/",
+    "report": "artifacts/gift-library/observatory-wish/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

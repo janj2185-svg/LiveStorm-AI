@@ -1,0 +1,90 @@
+{
+  "index": 10,
+  "name": "Moon Phase Coin",
+  "slug": "moon-phase-coin",
+  "cost": 250,
+  "price_minor": 250,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4000,
+  "duration_sec": 4.0,
+  "main_idea": "A coin flips through lunar phases and lands on a glowing side.",
+  "model_description": "Double-sided engraved coin with phase relief.",
+  "environment_description": "Deep indigo void.",
+  "animation_phases": [
+    "toss",
+    "phase morph mid-spin",
+    "land",
+    "rim glow"
+  ],
+  "vfx": [
+    "phase silhouette wipe",
+    "rim light"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "silver dust",
+  "shaders": [
+    "brushed metal",
+    "phase emissive"
+  ],
+  "camera": "spin-follow then settle",
+  "music": "metallic spin + soft choir pad",
+  "spatial_sound": "spinning stereo image",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Moon Phase Coin' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.moon-phase-coin with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "coin",
+  "vfx_family": "phase_wipe",
+  "asset_ids": {
+    "glb": "d0971a95-01fb-5322-ba7f-5c04bd302a56",
+    "audio": "28fd2639-eebe-5bcc-b683-50443bef66f0",
+    "poster": "ddd7ec9d-6b59-516d-8059-f9ead89e584f",
+    "blend": "b7de6386-b2d3-5d48-a443-6033509d115c",
+    "shader": "305a61f4-fc4a-527b-bd86-bc286bc6e025"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/moon-phase-coin/model.glb",
+    "blender": "artifacts/gift-library/moon-phase-coin/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/moon-phase-coin/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/moon-phase-coin/metadata.json",
+    "preview_video": "artifacts/gift-library/moon-phase-coin/preview.mp4",
+    "gif_preview": "artifacts/gift-library/moon-phase-coin/preview.gif",
+    "thumbnail": "artifacts/gift-library/moon-phase-coin/poster.png",
+    "sound_pack": "artifacts/gift-library/moon-phase-coin/sound/",
+    "particle_pack": "artifacts/gift-library/moon-phase-coin/particles/",
+    "report": "artifacts/gift-library/moon-phase-coin/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

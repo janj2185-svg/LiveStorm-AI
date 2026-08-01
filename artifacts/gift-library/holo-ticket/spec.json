@@ -1,0 +1,90 @@
+{
+  "index": 27,
+  "name": "Holo Ticket",
+  "slug": "holo-ticket",
+  "cost": 1000,
+  "price_minor": 1000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 6500,
+  "duration_sec": 6.5,
+  "main_idea": "A holographic concert ticket unfolds into a mini stage for 3 seconds.",
+  "model_description": "Ticket card morphing into miniature stage geometry.",
+  "environment_description": "Concert fog light shafts (fog not fire).",
+  "animation_phases": [
+    "ticket float",
+    "hologram scan",
+    "stage unfold",
+    "encore flash"
+  ],
+  "vfx": [
+    "hologram scanlines",
+    "fog shafts"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "confetti light",
+  "shaders": [
+    "holo foil",
+    "scan"
+  ],
+  "camera": "ticket hero then stage wide",
+  "music": "crowd swell sting",
+  "spatial_sound": "arena-ish short",
+  "voice_effects": "announcer 'Admit One' FX",
+  "ai_reaction": "AI acknowledges 'Holo Ticket' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.holo-ticket with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "ticket_holo",
+  "vfx_family": "hologram",
+  "asset_ids": {
+    "glb": "10b3d428-f7de-590b-8b4d-91ba7dd5c1d6",
+    "audio": "44b48287-5c86-5957-a209-7dba23083b26",
+    "poster": "df4ff834-8d48-5d8b-a356-7e3ad57d35f5",
+    "blend": "918bc251-26c0-5067-a3e1-a99546244ba5",
+    "shader": "25427ed4-f0a0-5c20-a377-bafee68b94c9"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/holo-ticket/model.glb",
+    "blender": "artifacts/gift-library/holo-ticket/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/holo-ticket/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/holo-ticket/metadata.json",
+    "preview_video": "artifacts/gift-library/holo-ticket/preview.mp4",
+    "gif_preview": "artifacts/gift-library/holo-ticket/preview.gif",
+    "thumbnail": "artifacts/gift-library/holo-ticket/poster.png",
+    "sound_pack": "artifacts/gift-library/holo-ticket/sound/",
+    "particle_pack": "artifacts/gift-library/holo-ticket/particles/",
+    "report": "artifacts/gift-library/holo-ticket/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

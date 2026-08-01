@@ -1,0 +1,90 @@
+{
+  "index": 39,
+  "name": "Drone Heartbeat",
+  "slug": "drone-heartbeat",
+  "cost": 1000,
+  "price_minor": 1000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7000,
+  "duration_sec": 7.0,
+  "main_idea": "A tiny drone draws a heart path in LED light then lands a gift crate.",
+  "model_description": "Quadcopter with LED strips and mini crate.",
+  "environment_description": "Night rooftop.",
+  "animation_phases": [
+    "launch",
+    "LED heart draw",
+    "crate drop",
+    "land"
+  ],
+  "vfx": [
+    "LED light paint",
+    "prop wash dust"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "dust wash",
+  "shaders": [
+    "matte drone",
+    "LED emissive"
+  ],
+  "camera": "follow drone",
+  "music": "heartbeat pulse synth",
+  "spatial_sound": "rooftop open",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Drone Heartbeat' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.drone-heartbeat with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "drone",
+  "vfx_family": "led_paint",
+  "asset_ids": {
+    "glb": "7c7015d7-3650-5295-b04b-2f57633002d0",
+    "audio": "17ee3282-2b5f-5018-86e4-af81ed4bc70a",
+    "poster": "47ca43b2-2aca-5657-a8ce-3c270ef1de2b",
+    "blend": "6154a859-0232-5afb-bd17-2019ad9f8555",
+    "shader": "ee82a8b6-22b4-58f8-98a5-c4f10300ca4b"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/drone-heartbeat/model.glb",
+    "blender": "artifacts/gift-library/drone-heartbeat/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/drone-heartbeat/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/drone-heartbeat/metadata.json",
+    "preview_video": "artifacts/gift-library/drone-heartbeat/preview.mp4",
+    "gif_preview": "artifacts/gift-library/drone-heartbeat/preview.gif",
+    "thumbnail": "artifacts/gift-library/drone-heartbeat/poster.png",
+    "sound_pack": "artifacts/gift-library/drone-heartbeat/sound/",
+    "particle_pack": "artifacts/gift-library/drone-heartbeat/particles/",
+    "report": "artifacts/gift-library/drone-heartbeat/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "index": 68,
+  "name": "Phoenix of Paper",
+  "slug": "phoenix-of-paper",
+  "cost": 500000,
+  "price_minor": 500000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 19000,
+  "duration_sec": 19.0,
+  "main_idea": "A paper phoenix burns only as glowing ink edges, reforms, and crowns the streamer.",
+  "model_description": "Paper phoenix with wing layers; ash is paper confetti not dirty smoke.",
+  "environment_description": "Sky temple transform.",
+  "animation_phases": [
+    "paper bird",
+    "ink-edge burn (stylized fire)",
+    "ash confetti",
+    "reform",
+    "crown"
+  ],
+  "vfx": [
+    "stylized edge fire",
+    "paper ash",
+    "reform light"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "paper ash",
+  "shaders": [
+    "paper layers",
+    "ink fire edge"
+  ],
+  "camera": "mythic flight coverage",
+  "music": "rebirth theme",
+  "spatial_sound": "sky temple",
+  "voice_effects": "phoenix cry original",
+  "ai_reaction": "AI acknowledges 'Phoenix of Paper' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.phoenix-of-paper with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "paper_phoenix",
+  "vfx_family": "ink_fire_rebirth",
+  "asset_ids": {
+    "glb": "b2dacd2b-a75a-5194-bb6a-ca11ebfe3074",
+    "audio": "ea6c79ba-a10b-5bde-be7e-3349fc25f0d1",
+    "poster": "a61e2820-1610-514a-aa84-50cf297f9969",
+    "blend": "ec80af28-181f-57a4-8b66-b1ef974565b3",
+    "shader": "95dbf087-9b4d-5029-87b0-f41fe9ad4776"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/phoenix-of-paper/model.glb",
+    "blender": "artifacts/gift-library/phoenix-of-paper/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/phoenix-of-paper/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/phoenix-of-paper/metadata.json",
+    "preview_video": "artifacts/gift-library/phoenix-of-paper/preview.mp4",
+    "gif_preview": "artifacts/gift-library/phoenix-of-paper/preview.gif",
+    "thumbnail": "artifacts/gift-library/phoenix-of-paper/poster.png",
+    "sound_pack": "artifacts/gift-library/phoenix-of-paper/sound/",
+    "particle_pack": "artifacts/gift-library/phoenix-of-paper/particles/",
+    "report": "artifacts/gift-library/phoenix-of-paper/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

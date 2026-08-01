@@ -1,0 +1,93 @@
+{
+  "index": 82,
+  "name": "Ocean of Names",
+  "slug": "ocean-of-names",
+  "cost": 2500000,
+  "price_minor": 2500000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 26000,
+  "duration_sec": 26.0,
+  "main_idea": "An ocean where every wave crest is a viewer name; the streamer walks a path of gratitude.",
+  "model_description": "Name-glyph waves, path stones, horizon temple.",
+  "environment_description": "Mythic ocean that responds to live chat density (water required).",
+  "animation_phases": [
+    "shore",
+    "names rise",
+    "path form",
+    "walk",
+    "temple gift",
+    "ocean calm"
+  ],
+  "vfx": [
+    "name waves",
+    "path light",
+    "temple beacon"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "name foam",
+  "shaders": [
+    "glyph water",
+    "temple stone"
+  ],
+  "camera": "epic pilgrimage coverage",
+  "music": "ocean suite",
+  "spatial_sound": "vast ocean imaging",
+  "voice_effects": "name chorus processed safely",
+  "ai_reaction": "AI acknowledges 'Ocean of Names' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.ocean-of-names with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "name_ocean",
+  "vfx_family": "glyph_waves",
+  "asset_ids": {
+    "glb": "bd6f5b87-b0d8-5b3b-9bca-f591384f3796",
+    "audio": "53e3ea1d-4dae-57f8-9235-afebaec965c2",
+    "poster": "9c4bc5a1-32a3-5204-86b7-0bc72b5c3a2a",
+    "blend": "16d23fa1-651a-5fbd-aa93-eeca238ef672",
+    "shader": "2dbc7c6d-7aaa-5870-abe3-cb0fdf462055"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/ocean-of-names/model.glb",
+    "blender": "artifacts/gift-library/ocean-of-names/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/ocean-of-names/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/ocean-of-names/metadata.json",
+    "preview_video": "artifacts/gift-library/ocean-of-names/preview.mp4",
+    "gif_preview": "artifacts/gift-library/ocean-of-names/preview.gif",
+    "thumbnail": "artifacts/gift-library/ocean-of-names/poster.png",
+    "sound_pack": "artifacts/gift-library/ocean-of-names/sound/",
+    "particle_pack": "artifacts/gift-library/ocean-of-names/particles/",
+    "report": "artifacts/gift-library/ocean-of-names/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

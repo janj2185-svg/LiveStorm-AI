@@ -1,0 +1,91 @@
+{
+  "index": 90,
+  "name": "Aurora Leviathan",
+  "slug": "aurora-leviathan",
+  "cost": 1000000,
+  "price_minor": 1000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 25000,
+  "duration_sec": 25.0,
+  "main_idea": "An aurora leviathan whose body is sky; it coils protectively around the entire stream UI.",
+  "model_description": "Leviathan body as aurora volume ribbon with facial crest.",
+  "environment_description": "Entire viewport becomes polar sky.",
+  "animation_phases": [
+    "horizon appear",
+    "rise",
+    "coil protect",
+    "eye contact",
+    "gift scale",
+    "sky remain"
+  ],
+  "vfx": [
+    "body aurora",
+    "global sky override"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "polar glitter",
+  "shaders": [
+    "aurora volume"
+  ],
+  "camera": "god-scale leviathan",
+  "music": "leviathan hymn",
+  "spatial_sound": "full-dome",
+  "voice_effects": "leviathan low hymn",
+  "ai_reaction": "AI acknowledges 'Aurora Leviathan' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.aurora-leviathan with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "aurora_leviathan",
+  "vfx_family": "global_aurora",
+  "asset_ids": {
+    "glb": "77bc726d-ebed-57e7-b9cb-e32837da346b",
+    "audio": "748599dc-e4a4-5e58-ab1e-367ce311fd6c",
+    "poster": "8f205a5b-4416-5e4c-914a-90be7d327519",
+    "blend": "e203958b-dbdc-5301-9315-df47437ef606",
+    "shader": "d3ee6603-2c01-5cef-8b31-724c9003149b"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/aurora-leviathan/model.glb",
+    "blender": "artifacts/gift-library/aurora-leviathan/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/aurora-leviathan/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/aurora-leviathan/metadata.json",
+    "preview_video": "artifacts/gift-library/aurora-leviathan/preview.mp4",
+    "gif_preview": "artifacts/gift-library/aurora-leviathan/preview.gif",
+    "thumbnail": "artifacts/gift-library/aurora-leviathan/poster.png",
+    "sound_pack": "artifacts/gift-library/aurora-leviathan/sound/",
+    "particle_pack": "artifacts/gift-library/aurora-leviathan/particles/",
+    "report": "artifacts/gift-library/aurora-leviathan/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

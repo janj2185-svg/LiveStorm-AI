@@ -1,0 +1,91 @@
+{
+  "index": 64,
+  "name": "Root Network",
+  "slug": "root-network",
+  "cost": 50000,
+  "price_minor": 50000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 16000,
+  "duration_sec": 16.0,
+  "main_idea": "Tree roots connect every viewer node underground then bloom a shared canopy.",
+  "model_description": "Root network geometry, node lights, canopy tree.",
+  "environment_description": "Underground to forest canopy transform.",
+  "animation_phases": [
+    "dig view",
+    "roots connect",
+    "pulse sync",
+    "surface bloom",
+    "canopy gift"
+  ],
+  "vfx": [
+    "root pulse light",
+    "leaf burst"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "soil motes then pollen",
+  "shaders": [
+    "root bark",
+    "leaf SSS"
+  ],
+  "camera": "underground travel then canopy rise",
+  "music": "heartbeat to canopy swell",
+  "spatial_sound": "underground muffling to open canopy",
+  "voice_effects": "AI 'We are connected' FX",
+  "ai_reaction": "AI acknowledges 'Root Network' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.root-network with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "roots",
+  "vfx_family": "network_pulse",
+  "asset_ids": {
+    "glb": "508bb9ad-e4da-5c63-93df-7d3d2191a188",
+    "audio": "1a16ac65-28a7-5a79-859b-c46aba0863ef",
+    "poster": "73f80f1c-22bd-5958-8f59-09647f73c22c",
+    "blend": "2dd21fa3-1918-5401-a37b-d52c960cf483",
+    "shader": "5004b349-66a8-55cb-8e00-357000bc4c64"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/root-network/model.glb",
+    "blender": "artifacts/gift-library/root-network/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/root-network/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/root-network/metadata.json",
+    "preview_video": "artifacts/gift-library/root-network/preview.mp4",
+    "gif_preview": "artifacts/gift-library/root-network/preview.gif",
+    "thumbnail": "artifacts/gift-library/root-network/poster.png",
+    "sound_pack": "artifacts/gift-library/root-network/sound/",
+    "particle_pack": "artifacts/gift-library/root-network/particles/",
+    "report": "artifacts/gift-library/root-network/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

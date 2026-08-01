@@ -1,0 +1,90 @@
+{
+  "index": 6,
+  "name": "Ink Drop Bloom",
+  "slug": "ink-drop-bloom",
+  "cost": 100,
+  "price_minor": 100,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4000,
+  "duration_sec": 4.0,
+  "main_idea": "A drop of luminous ink blooms into a calligraphic flourish.",
+  "model_description": "Fluid metaball drop morphing into ribbon calligraphy stroke.",
+  "environment_description": "Paper grain plane under soft key light.",
+  "animation_phases": [
+    "drop fall",
+    "impact bloom",
+    "stroke draw",
+    "dry settle"
+  ],
+  "vfx": [
+    "ink diffusion",
+    "paper absorb"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "micro ink beads",
+  "shaders": [
+    "viscous ink",
+    "paper fiber"
+  ],
+  "camera": "overhead then slight tilt",
+  "music": "brush stroke whoosh + soft drone",
+  "spatial_sound": "close paper plane",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Ink Drop Bloom' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.ink-drop-bloom with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "fluid_callig",
+  "vfx_family": "ink_diffusion",
+  "asset_ids": {
+    "glb": "e958182a-d944-5804-b0bd-7f8800086fb9",
+    "audio": "5e08373c-b323-5b7c-8311-d46eaf470678",
+    "poster": "dfb940b5-7e04-5897-90b8-6b79a15ddf9c",
+    "blend": "0ce360ce-8409-579d-ac03-849311379a31",
+    "shader": "ee32bbbf-9f5a-545f-9c8b-f19a7fb9d234"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/ink-drop-bloom/model.glb",
+    "blender": "artifacts/gift-library/ink-drop-bloom/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/ink-drop-bloom/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/ink-drop-bloom/metadata.json",
+    "preview_video": "artifacts/gift-library/ink-drop-bloom/preview.mp4",
+    "gif_preview": "artifacts/gift-library/ink-drop-bloom/preview.gif",
+    "thumbnail": "artifacts/gift-library/ink-drop-bloom/poster.png",
+    "sound_pack": "artifacts/gift-library/ink-drop-bloom/sound/",
+    "particle_pack": "artifacts/gift-library/ink-drop-bloom/particles/",
+    "report": "artifacts/gift-library/ink-drop-bloom/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "index": 18,
+  "name": "Bubble Quartet",
+  "slug": "bubble-quartet",
+  "cost": 25,
+  "price_minor": 25,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3800,
+  "duration_sec": 3.8,
+  "main_idea": "Four soap bubbles merge into one iridescent sphere.",
+  "model_description": "Thin-film bubble spheres with merge morph.",
+  "environment_description": "Soft pastel void.",
+  "animation_phases": [
+    "four rise",
+    "orbit",
+    "merge",
+    "pop shimmer"
+  ],
+  "vfx": [
+    "thin-film iridescence",
+    "pop spray"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "micro droplets on pop",
+  "shaders": [
+    "thin film",
+    "fresnel"
+  ],
+  "camera": "float-level tracking",
+  "music": "soft pop tones",
+  "spatial_sound": "airy stereo",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Bubble Quartet' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.bubble-quartet with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "bubbles",
+  "vfx_family": "iridescent_pop",
+  "asset_ids": {
+    "glb": "c1d77dd6-2b71-5bd1-9e4b-0407fde06a91",
+    "audio": "59d92d60-008d-575a-8b2e-0a6d919d4d04",
+    "poster": "7d153493-d834-58e6-8430-5978c12c70d7",
+    "blend": "29205441-d631-5053-aa4e-a1eec918d5ff",
+    "shader": "834d48cb-c638-5a82-bc15-752d561a50b4"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/bubble-quartet/model.glb",
+    "blender": "artifacts/gift-library/bubble-quartet/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/bubble-quartet/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/bubble-quartet/metadata.json",
+    "preview_video": "artifacts/gift-library/bubble-quartet/preview.mp4",
+    "gif_preview": "artifacts/gift-library/bubble-quartet/preview.gif",
+    "thumbnail": "artifacts/gift-library/bubble-quartet/poster.png",
+    "sound_pack": "artifacts/gift-library/bubble-quartet/sound/",
+    "particle_pack": "artifacts/gift-library/bubble-quartet/particles/",
+    "report": "artifacts/gift-library/bubble-quartet/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

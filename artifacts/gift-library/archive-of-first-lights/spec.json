@@ -1,0 +1,91 @@
+{
+  "index": 71,
+  "name": "Archive of First Lights",
+  "slug": "archive-of-first-lights",
+  "cost": 50000,
+  "price_minor": 50000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 16500,
+  "duration_sec": 16.5,
+  "main_idea": "An archive vault opens drawers of first-stream moments reconstructed as dioramas.",
+  "model_description": "Vault, drawers, multiple unique diorama scenes.",
+  "environment_description": "Archive hall transforming drawer-to-world.",
+  "animation_phases": [
+    "vault open",
+    "drawer pull",
+    "diorama grow",
+    "moments play",
+    "seal gift"
+  ],
+  "vfx": [
+    "memory haze",
+    "diorama scale"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "archive dust",
+  "shaders": [
+    "metal vault",
+    "diorama variety"
+  ],
+  "camera": "drawer dive transitions",
+  "music": "nostalgic theme",
+  "spatial_sound": "vault to memory spaces",
+  "voice_effects": "AI archivist",
+  "ai_reaction": "AI acknowledges 'Archive of First Lights' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.archive-of-first-lights with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "archive",
+  "vfx_family": "diorama_grow",
+  "asset_ids": {
+    "glb": "70f5d37c-2a2a-5ebf-83a1-010624df4f2f",
+    "audio": "e484ef28-e995-5eea-8439-00dc953aaca5",
+    "poster": "0afb3f0e-c1e9-5005-b718-b84991f9847f",
+    "blend": "8ce2c582-3f24-5e4a-832c-417ff2397d1b",
+    "shader": "661521b0-ceb7-59ef-b16c-0311f2814fe9"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/archive-of-first-lights/model.glb",
+    "blender": "artifacts/gift-library/archive-of-first-lights/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/archive-of-first-lights/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/archive-of-first-lights/metadata.json",
+    "preview_video": "artifacts/gift-library/archive-of-first-lights/preview.mp4",
+    "gif_preview": "artifacts/gift-library/archive-of-first-lights/preview.gif",
+    "thumbnail": "artifacts/gift-library/archive-of-first-lights/poster.png",
+    "sound_pack": "artifacts/gift-library/archive-of-first-lights/sound/",
+    "particle_pack": "artifacts/gift-library/archive-of-first-lights/particles/",
+    "report": "artifacts/gift-library/archive-of-first-lights/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

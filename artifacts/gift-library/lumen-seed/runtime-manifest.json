@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "renderer_targets": [
+    "threejs",
+    "flutter"
+  ],
+  "source_metadata": {
+    "application": "blender",
+    "version": "4.0.2",
+    "source_asset_id": "b95a8d95-c86e-53de-877d-3655586c146e",
+    "license_reference": "SYLORA-original-IP"
+  },
+  "duration_ms": 3200,
+  "assets": [
+    {
+      "asset_id": "a14f0744-9658-5d52-b1d6-19aa13c07079",
+      "role": "primary_model"
+    },
+    {
+      "asset_id": "445b9275-3621-5fcd-951b-a3c25c8a65f9",
+      "role": "primary_audio"
+    },
+    {
+      "asset_id": "f99da9f8-3729-5c96-a114-4c10993c636e",
+      "role": "poster"
+    },
+    {
+      "asset_id": "a14f0744-9658-5d52-b1d6-19aa13c07079",
+      "role": "low_end_fallback"
+    }
+  ],
+  "layers": [
+    {
+      "kind": "model",
+      "name": "gift_root",
+      "asset_id": "a14f0744-9658-5d52-b1d6-19aa13c07079",
+      "transform": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation_degrees": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  ],
+  "timelines": [
+    {
+      "name": "main",
+      "duration_ms": 3200,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "gift_root",
+          "property": "rotation_z",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": 0,
+              "easing": "ease_in_out"
+            },
+            {
+              "time_ms": 3200,
+              "value": 360,
+              "easing": "ease_in_out"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "particle_systems": [
+    {
+      "name": "particles_light_refract",
+      "max_particles": 200,
+      "spawn_rate_per_second": 20,
+      "texture_asset_id": null,
+      "deterministic_seed": 1558717721
+    }
+  ],
+  "shaders": [],
+  "lighting": [
+    {
+      "kind": "ambient",
+      "color_hex": "#101820",
+      "intensity": 0.4,
+      "position": null
+    },
+    {
+      "kind": "directional",
+      "color_hex": "#FFF2D8",
+      "intensity": 2.2,
+      "position": {
+        "x": 2,
+        "y": 4,
+        "z": 3
+      }
+    }
+  ],
+  "audio": [
+    {
+      "asset_id": "445b9275-3621-5fcd-951b-a3c25c8a65f9",
+      "spatial": true,
+      "peak_dbfs": -6,
+      "autoplay": true
+    }
+  ],
+  "interaction_hooks": [
+    {
+      "hook": "arrival",
+      "action": "sylora.gift.play"
+    },
+    {
+      "hook": "completion",
+      "action": "sylora.gift.complete"
+    },
+    {
+      "hook": "tap",
+      "action": "sylora.gift.replay"
+    }
+  ],
+  "combinations": [
+    {
+      "combination_id": "sylora.gift.lumen-seed",
+      "compatible_combination_ids": [
+        "sylora.gift.combo.any"
+      ],
+      "window_seconds": 120
+    }
+  ],
+  "procedural_parameters": [
+    {
+      "name": "seed",
+      "source": "deterministic",
+      "value_type": "seed",
+      "minimum": null,
+      "maximum": null,
+      "allowed_values": []
+    }
+  ],
+  "effects": [
+    {
+      "name": "lumen-seed_main",
+      "scope": "viewer",
+      "timeline_name": "main"
+    }
+  ],
+  "fallbacks": {
+    "low_end_asset_id": "a14f0744-9658-5d52-b1d6-19aa13c07079",
+    "reduced_motion_asset_id": "f99da9f8-3729-5c96-a114-4c10993c636e",
+    "no_audio_asset_id": "a14f0744-9658-5d52-b1d6-19aa13c07079"
+  },
+  "quality_budgets": {
+    "max_download_bytes": 2000000,
+    "max_duration_ms": 4200,
+    "max_particles": 200,
+    "max_shader_instructions": 256,
+    "max_audio_peak_dbfs": -1
+  }
+}

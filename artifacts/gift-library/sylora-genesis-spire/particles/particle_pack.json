@@ -1,0 +1,7 @@
+{
+  "name": "particles_multi_scene_genesis",
+  "vfx_family": "multi_scene_genesis",
+  "max_particles": 5000,
+  "spawn_rate_per_second": 220,
+  "notes": "Runtime particle system parameters for @sylora/gift-runtime; textures authored per gift."
+}

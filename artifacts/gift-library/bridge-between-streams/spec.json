@@ -1,0 +1,90 @@
+{
+  "index": 79,
+  "name": "Bridge Between Streams",
+  "slug": "bridge-between-streams",
+  "cost": 250000,
+  "price_minor": 250000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 18000,
+  "duration_sec": 18.0,
+  "main_idea": "A luminous bridge builds between two live streams; avatars meet mid-span.",
+  "model_description": "Bridge segments assembling, two stream portals, avatar proxies.",
+  "environment_description": "Void between two live scenes.",
+  "animation_phases": [
+    "portals open",
+    "bridge build",
+    "meet mid",
+    "exchange gifts",
+    "bridge remain as badge"
+  ],
+  "vfx": [
+    "portal frames",
+    "bridge light"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "construction sparks",
+  "shaders": [
+    "light architecture"
+  ],
+  "camera": "cross-bridge tracking",
+  "music": "meeting theme",
+  "spatial_sound": "two rooms connected",
+  "voice_effects": "dual AI greet",
+  "ai_reaction": "AI acknowledges 'Bridge Between Streams' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.bridge-between-streams with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "stream_bridge",
+  "vfx_family": "portal_bridge",
+  "asset_ids": {
+    "glb": "a5db0e67-1a0c-5075-8aaa-61557a65a8c2",
+    "audio": "d817e4c2-49b8-5dfd-bf8a-3a4929a77f52",
+    "poster": "da8e84f7-88eb-5713-b218-78e1766ff4f3",
+    "blend": "34de80fc-5dfa-592b-803c-e5b0045c5020",
+    "shader": "b168546c-9e1e-5b54-ab58-a5059a18e7d7"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/bridge-between-streams/model.glb",
+    "blender": "artifacts/gift-library/bridge-between-streams/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/bridge-between-streams/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/bridge-between-streams/metadata.json",
+    "preview_video": "artifacts/gift-library/bridge-between-streams/preview.mp4",
+    "gif_preview": "artifacts/gift-library/bridge-between-streams/preview.gif",
+    "thumbnail": "artifacts/gift-library/bridge-between-streams/poster.png",
+    "sound_pack": "artifacts/gift-library/bridge-between-streams/sound/",
+    "particle_pack": "artifacts/gift-library/bridge-between-streams/particles/",
+    "report": "artifacts/gift-library/bridge-between-streams/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

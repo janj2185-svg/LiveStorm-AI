@@ -1,0 +1,92 @@
+{
+  "index": 93,
+  "name": "Seed of All Streams",
+  "slug": "seed-of-all-streams",
+  "cost": 10000000,
+  "price_minor": 10000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 30000,
+  "duration_sec": 30.0,
+  "main_idea": "A primordial seed contains every SYLORA stream as floating light; it plants a future forest.",
+  "model_description": "Seed world interior, micro-stream orbs, forest future.",
+  "environment_description": "Interior seed cosmos to exterior forest future.",
+  "animation_phases": [
+    "seed float",
+    "enter interior",
+    "orb streams",
+    "plant",
+    "forest future",
+    "crest"
+  ],
+  "vfx": [
+    "interior cosmos",
+    "forest growth time-lapse"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "stream orbs",
+  "shaders": [
+    "seed shell",
+    "future foliage"
+  ],
+  "camera": "inception-like scale shifts",
+  "music": "primordial to future suite",
+  "spatial_sound": "inside seed to forest",
+  "voice_effects": "origin guide",
+  "ai_reaction": "AI acknowledges 'Seed of All Streams' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.seed-of-all-streams with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "stream_seed",
+  "vfx_family": "seed_cosmos",
+  "asset_ids": {
+    "glb": "a0f4705d-45b1-5e1c-b529-02c5c1c3ce18",
+    "audio": "03589db3-1110-53be-9e86-5c3ae9e45fbf",
+    "poster": "836f82d6-78cf-59a1-96e8-5328171a3d3c",
+    "blend": "34eab3c3-61e3-5e1e-8379-9ea73068cbfa",
+    "shader": "385df0fa-a9d6-50e7-a5d3-8946b9edfe0c"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/seed-of-all-streams/model.glb",
+    "blender": "artifacts/gift-library/seed-of-all-streams/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/seed-of-all-streams/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/seed-of-all-streams/metadata.json",
+    "preview_video": "artifacts/gift-library/seed-of-all-streams/preview.mp4",
+    "gif_preview": "artifacts/gift-library/seed-of-all-streams/preview.gif",
+    "thumbnail": "artifacts/gift-library/seed-of-all-streams/poster.png",
+    "sound_pack": "artifacts/gift-library/seed-of-all-streams/sound/",
+    "particle_pack": "artifacts/gift-library/seed-of-all-streams/particles/",
+    "report": "artifacts/gift-library/seed-of-all-streams/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

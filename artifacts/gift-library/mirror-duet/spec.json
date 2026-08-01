@@ -1,0 +1,90 @@
+{
+  "index": 37,
+  "name": "Mirror Duet",
+  "slug": "mirror-duet",
+  "cost": 500,
+  "price_minor": 500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7200,
+  "duration_sec": 7.2,
+  "main_idea": "A freestanding mirror shows the streamer and viewer dancing a short sync.",
+  "model_description": "Ornate mirror frame with dual silhouette proxies.",
+  "environment_description": "Ballroom soft light.",
+  "animation_phases": [
+    "mirror reveal",
+    "silhouettes sync",
+    "step sequence",
+    "fade smile"
+  ],
+  "vfx": [
+    "mirror ripples",
+    "sync sparks"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "glitter dust",
+  "shaders": [
+    "mirror glass",
+    "gold frame"
+  ],
+  "camera": "front mirror then side",
+  "music": "waltz phrase",
+  "spatial_sound": "ballroom",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Mirror Duet' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.mirror-duet with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "mirror",
+  "vfx_family": "mirror_ripple",
+  "asset_ids": {
+    "glb": "c92a14b1-a5b7-5f4e-8389-09494ef61ce6",
+    "audio": "696bff5b-cf32-5143-9df2-f40b81969e00",
+    "poster": "05bfa82d-ff48-5443-a508-7af5f8db1c39",
+    "blend": "8262aa98-5434-5b41-8ff6-9fb3dae00d62",
+    "shader": "785a871d-f565-5eba-bdca-4b0b8ab7c59a"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/mirror-duet/model.glb",
+    "blender": "artifacts/gift-library/mirror-duet/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/mirror-duet/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/mirror-duet/metadata.json",
+    "preview_video": "artifacts/gift-library/mirror-duet/preview.mp4",
+    "gif_preview": "artifacts/gift-library/mirror-duet/preview.gif",
+    "thumbnail": "artifacts/gift-library/mirror-duet/poster.png",
+    "sound_pack": "artifacts/gift-library/mirror-duet/sound/",
+    "particle_pack": "artifacts/gift-library/mirror-duet/particles/",
+    "report": "artifacts/gift-library/mirror-duet/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

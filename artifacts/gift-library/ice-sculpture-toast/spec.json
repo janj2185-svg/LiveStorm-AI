@@ -1,0 +1,90 @@
+{
+  "index": 28,
+  "name": "Ice Sculpture Toast",
+  "slug": "ice-sculpture-toast",
+  "cost": 2500,
+  "price_minor": 2500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7800,
+  "duration_sec": 7.8,
+  "main_idea": "An ice sculpture of two glasses clinks and refracts a rainbow toast.",
+  "model_description": "Carved ice goblets with internal refraction paths.",
+  "environment_description": "Cold banquet table.",
+  "animation_phases": [
+    "sculpt reveal",
+    "clink",
+    "rainbow refract",
+    "frost settle"
+  ],
+  "vfx": [
+    "ice caustics",
+    "frost bloom"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "frost crystals",
+  "shaders": [
+    "ice volume",
+    "frost"
+  ],
+  "camera": "clink close-up",
+  "music": "glass clink chord",
+  "spatial_sound": "banquet near",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Ice Sculpture Toast' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.ice-sculpture-toast with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "ice_carve",
+  "vfx_family": "ice_caustic",
+  "asset_ids": {
+    "glb": "5d4ed20c-73b6-5547-82ea-857ce36dad5e",
+    "audio": "d6edf71f-aa2a-5de5-b620-0fb0db839073",
+    "poster": "bf2b99ec-1ac1-5855-9e1c-b537aed319d3",
+    "blend": "49000020-0741-5bbf-a2f0-6d19c55749ff",
+    "shader": "cab9fdd0-97dc-5f12-9709-41f149b1cca9"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/ice-sculpture-toast/model.glb",
+    "blender": "artifacts/gift-library/ice-sculpture-toast/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/ice-sculpture-toast/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/ice-sculpture-toast/metadata.json",
+    "preview_video": "artifacts/gift-library/ice-sculpture-toast/preview.mp4",
+    "gif_preview": "artifacts/gift-library/ice-sculpture-toast/preview.gif",
+    "thumbnail": "artifacts/gift-library/ice-sculpture-toast/poster.png",
+    "sound_pack": "artifacts/gift-library/ice-sculpture-toast/sound/",
+    "particle_pack": "artifacts/gift-library/ice-sculpture-toast/particles/",
+    "report": "artifacts/gift-library/ice-sculpture-toast/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

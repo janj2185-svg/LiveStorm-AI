@@ -1,0 +1,90 @@
+{
+  "index": 50,
+  "name": "Mecha Origami Crane",
+  "slug": "mecha-origami-crane",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12000,
+  "duration_sec": 12.0,
+  "main_idea": "An origami crane unfolds into a gentle mecha that kneels and offers a gift.",
+  "model_description": "Crane-to-mecha transformation mesh with hinges; simple mechanical rig.",
+  "environment_description": "Rooftop at dusk.",
+  "animation_phases": [
+    "paper crane",
+    "panel unfold",
+    "mecha stand",
+    "kneel offer",
+    "bow"
+  ],
+  "vfx": [
+    "panel light seams",
+    "servo sparks (contact)"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "paper to metal transition flecks",
+  "shaders": [
+    "paper then metal plates"
+  ],
+  "camera": "transformation hero orbit",
+  "music": "hybrid acoustic-electronic",
+  "spatial_sound": "rooftop city",
+  "voice_effects": "servo voice chirp",
+  "ai_reaction": "AI acknowledges 'Mecha Origami Crane' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.mecha-origami-crane with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "mecha_crane",
+  "vfx_family": "transform_seams",
+  "asset_ids": {
+    "glb": "219f7571-670b-5dc3-9f35-78f3e94237ca",
+    "audio": "5b756bdc-0d4b-5f19-ae80-ac8126d1f806",
+    "poster": "80aa92f3-20a6-506e-87fa-34b501ae5d6f",
+    "blend": "4a39f6ce-c7c9-58b2-9dfd-67c71aff8b2f",
+    "shader": "e06a06be-13ae-542b-ab4b-79360170f88d"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/mecha-origami-crane/model.glb",
+    "blender": "artifacts/gift-library/mecha-origami-crane/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/mecha-origami-crane/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/mecha-origami-crane/metadata.json",
+    "preview_video": "artifacts/gift-library/mecha-origami-crane/preview.mp4",
+    "gif_preview": "artifacts/gift-library/mecha-origami-crane/preview.gif",
+    "thumbnail": "artifacts/gift-library/mecha-origami-crane/poster.png",
+    "sound_pack": "artifacts/gift-library/mecha-origami-crane/sound/",
+    "particle_pack": "artifacts/gift-library/mecha-origami-crane/particles/",
+    "report": "artifacts/gift-library/mecha-origami-crane/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "index": 51,
+  "name": "Underwater Ballroom",
+  "slug": "underwater-ballroom",
+  "cost": 25000,
+  "price_minor": 25000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12500,
+  "duration_sec": 12.5,
+  "main_idea": "A flooded ballroom hosts a waltz of jellyfish lanterns (water required).",
+  "model_description": "Ballroom ruins, jellyfish lantern creatures, dance floor.",
+  "environment_description": "Underwater palace.",
+  "animation_phases": [
+    "descend",
+    "lanterns arrive",
+    "waltz circle",
+    "gift pearl",
+    "ascend light"
+  ],
+  "vfx": [
+    "caustics",
+    "bubble columns"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "bubbles",
+  "shaders": [
+    "wet marble",
+    "biolume jellyfish"
+  ],
+  "camera": "underwater crane dance",
+  "music": "muffled waltz",
+  "spatial_sound": "underwater muffled hall",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Underwater Ballroom' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.underwater-ballroom with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "underwater_ball",
+  "vfx_family": "jellyfish_waltz",
+  "asset_ids": {
+    "glb": "d6c1bd97-3882-59a2-85f7-63c9ecf5a2ac",
+    "audio": "72a27ca6-b364-55d9-9606-78a306a70169",
+    "poster": "5f71cc7b-ca9e-53d4-bcb0-437f31ba15ee",
+    "blend": "ead39dca-be8d-5681-b9b1-eda4be2c4552",
+    "shader": "cb2f0bb5-7c1b-5eda-8146-dabac17abbc8"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/underwater-ballroom/model.glb",
+    "blender": "artifacts/gift-library/underwater-ballroom/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/underwater-ballroom/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/underwater-ballroom/metadata.json",
+    "preview_video": "artifacts/gift-library/underwater-ballroom/preview.mp4",
+    "gif_preview": "artifacts/gift-library/underwater-ballroom/preview.gif",
+    "thumbnail": "artifacts/gift-library/underwater-ballroom/poster.png",
+    "sound_pack": "artifacts/gift-library/underwater-ballroom/sound/",
+    "particle_pack": "artifacts/gift-library/underwater-ballroom/particles/",
+    "report": "artifacts/gift-library/underwater-ballroom/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "index": 43,
+  "name": "Stormglass Captain",
+  "slug": "stormglass-captain",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11500,
+  "duration_sec": 11.5,
+  "main_idea": "A captain inside a storm glass bottle steadies the seas for the stream.",
+  "model_description": "Ship-in-bottle with captain character silhouette and storm fluid.",
+  "environment_description": "Desk that becomes stormy sea (water + controlled lightning inside glass).",
+  "animation_phases": [
+    "calm bottle",
+    "storm brew",
+    "lightning inside glass",
+    "captain steadies",
+    "clear skies"
+  ],
+  "vfx": [
+    "storm water",
+    "contained lightning",
+    "glass fog"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "salt spray inside",
+  "shaders": [
+    "stormglass",
+    "wood ship"
+  ],
+  "camera": "macro bottle then heroic tilt",
+  "music": "sea shanty instrumental original",
+  "spatial_sound": "inside bottle muffling then clear",
+  "voice_effects": "captain 'Steady!' voice FX",
+  "ai_reaction": "AI acknowledges 'Stormglass Captain' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.stormglass-captain with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "ship_bottle",
+  "vfx_family": "contained_storm",
+  "asset_ids": {
+    "glb": "95aaca83-ffee-5f23-bef0-b29b4ba88dc9",
+    "audio": "77f93023-f732-5252-a6af-b25779fc705e",
+    "poster": "54a057cf-d72a-514b-8d0c-0a808b58cb91",
+    "blend": "8d728677-7e8d-563e-b456-9aeb112de785",
+    "shader": "e22577fc-7a6c-5103-98b6-7bd35fdd4fe1"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/stormglass-captain/model.glb",
+    "blender": "artifacts/gift-library/stormglass-captain/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/stormglass-captain/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/stormglass-captain/metadata.json",
+    "preview_video": "artifacts/gift-library/stormglass-captain/preview.mp4",
+    "gif_preview": "artifacts/gift-library/stormglass-captain/preview.gif",
+    "thumbnail": "artifacts/gift-library/stormglass-captain/poster.png",
+    "sound_pack": "artifacts/gift-library/stormglass-captain/sound/",
+    "particle_pack": "artifacts/gift-library/stormglass-captain/particles/",
+    "report": "artifacts/gift-library/stormglass-captain/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

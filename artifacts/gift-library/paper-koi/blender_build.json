@@ -1,0 +1,10 @@
+{
+  "slug": "paper-koi",
+  "family": "origami_animal",
+  "vfx": "water_ripple",
+  "duration": 4.0,
+  "rarity": "Rare",
+  "preview_frames": 12,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE"
+}

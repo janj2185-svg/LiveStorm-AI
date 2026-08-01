@@ -417,6 +417,15 @@ final class GiftsScreen extends ConsumerStatefulWidget {
 
 final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
   StreamSubscription<GiftEventModel>? _eventSubscription;
+  String? _tierFilter;
+
+  static const List<String> _officialTiers = <String>[
+    'rare',
+    'epic',
+    'legendary',
+    'mythical',
+    'ultra_premium',
+  ];
 
   @override
   void initState() {
@@ -472,73 +481,130 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
             LumenAsyncView<CursorPage<GiftModel>>(
               value: catalog,
               onRetry: () => ref.invalidate(giftCatalogProvider),
-              data: (page) => page.items.isEmpty
-                  ? LumenEmptyView(
-                      title: 'No gifts available',
-                      message:
-                          'The catalog API returned no eligible published gifts.',
-                      actionLabel: 'Refresh catalog',
-                      onAction: () => ref.invalidate(giftCatalogProvider),
-                      icon: Icons.card_giftcard_rounded,
+              data: (page) {
+                final items = page.items
+                    .where(
+                      (gift) =>
+                          _tierFilter == null || gift.tier == _tierFilter,
                     )
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(20),
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 360,
-                            mainAxisExtent: 230,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                      itemCount: page.items.length,
-                      itemBuilder: (context, index) {
-                        final gift = page.items[index];
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () => context.pushNamed(
-                            'gift-detail',
-                            pathParameters: <String, String>{'slug': gift.slug},
-                          ),
-                          child: LumenSurface(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Icon(
-                                  Icons.card_giftcard_rounded,
-                                  size: 36,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  gift.name,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.headlineSmall,
-                                ),
-                                Text(
-                                  gift.description,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const Spacer(),
-                                Row(
-                                  children: <Widget>[
-                                    LumenBadge(
-                                      label: gift.tier,
-                                      color: LumenColors.bloom,
-                                    ),
-                                    const Spacer(),
-                                    Text('${gift.priceMinor} LUMEN'),
-                                  ],
-                                ),
-                              ],
+                    .toList(growable: false);
+                if (page.items.isEmpty) {
+                  return LumenEmptyView(
+                    title: 'No gifts available',
+                    message:
+                        'The catalog API returned no eligible published gifts. Publish Official Gift Library items via Gift Studio after assets are READY.',
+                    actionLabel: 'Refresh catalog',
+                    onAction: () => ref.invalidate(giftCatalogProvider),
+                    icon: Icons.card_giftcard_rounded,
+                  );
+                }
+                return Column(
+                  children: <Widget>[
+                    SizedBox(
+                      height: 52,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: const Text('All'),
+                              selected: _tierFilter == null,
+                              onSelected: (_) =>
+                                  setState(() => _tierFilter = null),
                             ),
                           ),
-                        );
-                      },
+                          ..._officialTiers.map(
+                            (tier) => Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: FilterChip(
+                                label: Text(tier),
+                                selected: _tierFilter == tier,
+                                onSelected: (_) =>
+                                    setState(() => _tierFilter = tier),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    Expanded(
+                      child: items.isEmpty
+                          ? LumenEmptyView(
+                              title: 'No gifts in this tier',
+                              message:
+                                  'Try another rarity filter (rare → ultra_premium / Divine).',
+                              actionLabel: 'Clear filter',
+                              onAction: () =>
+                                  setState(() => _tierFilter = null),
+                              icon: Icons.filter_alt_off_rounded,
+                            )
+                          : GridView.builder(
+                              padding: const EdgeInsets.all(20),
+                              gridDelegate:
+                                  const SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 360,
+                                    mainAxisExtent: 230,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                  ),
+                              itemCount: items.length,
+                              itemBuilder: (context, index) {
+                                final gift = items[index];
+                                return InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () => context.pushNamed(
+                                    'gift-detail',
+                                    pathParameters: <String, String>{
+                                      'slug': gift.slug,
+                                    },
+                                  ),
+                                  child: LumenSurface(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Icon(
+                                          Icons.card_giftcard_rounded,
+                                          size: 36,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.secondary,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          gift.name,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.headlineSmall,
+                                        ),
+                                        Text(
+                                          gift.description,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const Spacer(),
+                                        Row(
+                                          children: <Widget>[
+                                            LumenBadge(
+                                              label: gift.tier,
+                                              color: LumenColors.bloom,
+                                            ),
+                                            const Spacer(),
+                                            Text('${gift.priceMinor} LUMEN'),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
             ),
             LumenAsyncView<CursorPage<InventoryItemModel>>(
               value: inventory,

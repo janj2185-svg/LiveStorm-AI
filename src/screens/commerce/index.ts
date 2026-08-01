@@ -1,6 +1,7 @@
 import type { ScreenDefinition } from '../types';
 
 import { DigitalProductsScreen } from './DigitalProductsScreen';
+import { GiftLibraryStoreScreen } from './GiftLibraryStoreScreen';
 import { GiftsScreen } from './GiftsScreen';
 import { InventoryScreen } from './InventoryScreen';
 import { MarketplaceScreen } from './MarketplaceScreen';
@@ -44,6 +45,16 @@ export const COMMERCE_SCREENS: ScreenDefinition[] = [
     purpose:
       'A rarity-first catalogue and a composer that shows recipient, total and remaining balance together, so nobody learns what a gift cost after sending it.',
     component: GiftsScreen,
+  },
+  {
+    id: 'gift-library-store',
+    name: 'Official Gift Library',
+    group: 'Commerce',
+    navId: 'wallet',
+    preferredDevice: 'desktop',
+    purpose:
+      'The Official SYLORA Gift Library of 100 original gifts with Rare–Divine filters, search, honest READY/SPEC status, and no LiveStorm placeholders.',
+    component: GiftLibraryStoreScreen,
   },
   {
     id: 'inventory',

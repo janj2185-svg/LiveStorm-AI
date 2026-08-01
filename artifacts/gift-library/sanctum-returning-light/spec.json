@@ -1,0 +1,91 @@
+{
+  "index": 96,
+  "name": "Sanctum of Returning Light",
+  "slug": "sanctum-returning-light",
+  "cost": 1000000,
+  "price_minor": 1000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 24000,
+  "duration_sec": 24.0,
+  "main_idea": "Lost light from past streams returns to a sanctum and reforms as a living crest.",
+  "model_description": "Sanctum architecture, returning light ribbons, living crest creature.",
+  "environment_description": "Sanctum interior with memory apertures.",
+  "animation_phases": [
+    "dark sanctum",
+    "lights return",
+    "weave crest",
+    "crest awakens",
+    "bless stream"
+  ],
+  "vfx": [
+    "returning ribbons",
+    "crest life"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "memory sparks",
+  "shaders": [
+    "sanctum stone",
+    "living light"
+  ],
+  "camera": "sanctum sacred coverage",
+  "music": "returning light hymn",
+  "spatial_sound": "sacred hall",
+  "voice_effects": "sanctum choir",
+  "ai_reaction": "AI acknowledges 'Sanctum of Returning Light' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.sanctum-returning-light with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "light_sanctum",
+  "vfx_family": "returning_ribbons",
+  "asset_ids": {
+    "glb": "1a0789cf-38e9-59bf-bf92-a49c62412718",
+    "audio": "13e25922-c7b6-59b3-865e-1b44afe63a2b",
+    "poster": "8319907f-bf9e-55b3-a433-575cc2c5118a",
+    "blend": "57e0952f-163e-5d12-84de-4e2ec5f022c6",
+    "shader": "7d313ea6-9429-53e6-92ab-36858db1a34d"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/sanctum-returning-light/model.glb",
+    "blender": "artifacts/gift-library/sanctum-returning-light/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/sanctum-returning-light/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/sanctum-returning-light/metadata.json",
+    "preview_video": "artifacts/gift-library/sanctum-returning-light/preview.mp4",
+    "gif_preview": "artifacts/gift-library/sanctum-returning-light/preview.gif",
+    "thumbnail": "artifacts/gift-library/sanctum-returning-light/poster.png",
+    "sound_pack": "artifacts/gift-library/sanctum-returning-light/sound/",
+    "particle_pack": "artifacts/gift-library/sanctum-returning-light/particles/",
+    "report": "artifacts/gift-library/sanctum-returning-light/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

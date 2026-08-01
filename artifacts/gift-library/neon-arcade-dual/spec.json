@@ -1,0 +1,90 @@
+{
+  "index": 25,
+  "name": "Neon Arcade Dual",
+  "slug": "neon-arcade-dual",
+  "cost": 1000,
+  "price_minor": 1000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7000,
+  "duration_sec": 7.0,
+  "main_idea": "Two neon cabinets duel with light beams then high-five as pixels.",
+  "model_description": "Two stylized arcade cabinets with CRT screens.",
+  "environment_description": "Arcade aisle with reflective floor.",
+  "animation_phases": [
+    "power on",
+    "beam duel",
+    "pixel high-five",
+    "score pop"
+  ],
+  "vfx": [
+    "neon bloom",
+    "pixel burst"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "8-bit cubes",
+  "shaders": [
+    "CRT scan",
+    "neon tube"
+  ],
+  "camera": "low aisle track",
+  "music": "chiptune duel then resolve",
+  "spatial_sound": "arcade L/R cabinets",
+  "voice_effects": "pixelated VOICE FX 'GG'",
+  "ai_reaction": "AI acknowledges 'Neon Arcade Dual' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.neon-arcade-dual with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "arcade",
+  "vfx_family": "neon_pixel",
+  "asset_ids": {
+    "glb": "8757c6e7-ed90-55db-9b40-b46587ca88d9",
+    "audio": "3768a988-d268-58ed-996f-6eaadb8b4ef3",
+    "poster": "e2e686ba-73b7-5173-b6d2-d6ffddf8c1a5",
+    "blend": "d6725d9e-4b97-56a1-9847-776a6ec15877",
+    "shader": "361bcaf9-cb81-5985-9151-96c7b344b934"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/neon-arcade-dual/model.glb",
+    "blender": "artifacts/gift-library/neon-arcade-dual/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/neon-arcade-dual/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/neon-arcade-dual/metadata.json",
+    "preview_video": "artifacts/gift-library/neon-arcade-dual/preview.mp4",
+    "gif_preview": "artifacts/gift-library/neon-arcade-dual/preview.gif",
+    "thumbnail": "artifacts/gift-library/neon-arcade-dual/poster.png",
+    "sound_pack": "artifacts/gift-library/neon-arcade-dual/sound/",
+    "particle_pack": "artifacts/gift-library/neon-arcade-dual/particles/",
+    "report": "artifacts/gift-library/neon-arcade-dual/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "index": 84,
+  "name": "Dream Archipelago",
+  "slug": "dream-archipelago",
+  "cost": 1000000,
+  "price_minor": 1000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 24000,
+  "duration_sec": 24.0,
+  "main_idea": "Viewer dreams become islands; the streamer sails a luminous skiff collecting kindness.",
+  "model_description": "Skiff, dream islands with unique biomes, kindness lanterns.",
+  "environment_description": "Dream sea with biome islands.",
+  "animation_phases": [
+    "embark",
+    "island 1",
+    "island 2",
+    "island 3",
+    "lantern net",
+    "return gift"
+  ],
+  "vfx": [
+    "dream haze",
+    "biome-unique VFX"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "dream pollen variants",
+  "shaders": [
+    "per-biome art"
+  ],
+  "camera": "voyage cinematic",
+  "music": "voyage suite",
+  "spatial_sound": "open dream sea",
+  "voice_effects": "dream guide AI",
+  "ai_reaction": "AI acknowledges 'Dream Archipelago' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.dream-archipelago with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "dream_isles",
+  "vfx_family": "biome_voyage",
+  "asset_ids": {
+    "glb": "0ee6745c-19b7-5723-b10e-c9422fcbc187",
+    "audio": "28eed864-c81e-5e26-b41a-008cb19b9a0f",
+    "poster": "131ad5f6-8225-53e9-8e84-93a23d862c19",
+    "blend": "0b1e37a7-9cfe-5c99-89ac-7e4917ebf54c",
+    "shader": "66ba931e-19db-5c9a-ac04-cfbd72626f29"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/dream-archipelago/model.glb",
+    "blender": "artifacts/gift-library/dream-archipelago/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/dream-archipelago/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/dream-archipelago/metadata.json",
+    "preview_video": "artifacts/gift-library/dream-archipelago/preview.mp4",
+    "gif_preview": "artifacts/gift-library/dream-archipelago/preview.gif",
+    "thumbnail": "artifacts/gift-library/dream-archipelago/poster.png",
+    "sound_pack": "artifacts/gift-library/dream-archipelago/sound/",
+    "particle_pack": "artifacts/gift-library/dream-archipelago/particles/",
+    "report": "artifacts/gift-library/dream-archipelago/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

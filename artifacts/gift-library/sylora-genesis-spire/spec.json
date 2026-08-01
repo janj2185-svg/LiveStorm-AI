@@ -1,0 +1,93 @@
+{
+  "index": 81,
+  "name": "SYLORA Genesis Spire",
+  "slug": "sylora-genesis-spire",
+  "cost": 1000000,
+  "price_minor": 1000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 25000,
+  "duration_sec": 25.0,
+  "main_idea": "A multi-scene origin: void, first light, city of creators, spire gift to streamer.",
+  "model_description": "Unique spire architecture, city modules, light being guide.",
+  "environment_description": "Four linked scenes: void, dawn plain, creator city, spire summit.",
+  "animation_phases": [
+    "void",
+    "first light",
+    "city rise",
+    "ascent",
+    "summit gift",
+    "world pulse"
+  ],
+  "vfx": [
+    "genesis light",
+    "city birth",
+    "summit aurora"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "creation motes staged per scene",
+  "shaders": [
+    "unique per scene art pass"
+  ],
+  "camera": "multi-scene cinematic language",
+  "music": "full original suite with movements",
+  "spatial_sound": "scene-by-scene acoustic design",
+  "voice_effects": "SYLORA guide original VO",
+  "ai_reaction": "AI acknowledges 'SYLORA Genesis Spire' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.sylora-genesis-spire with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "genesis_spire",
+  "vfx_family": "multi_scene_genesis",
+  "asset_ids": {
+    "glb": "431b0231-fb77-526b-a1f1-7c0e7d3cd020",
+    "audio": "8568f706-3289-54fe-a3a7-1b0fa4d969cf",
+    "poster": "199efb61-0719-5e21-bb81-027019e4cffb",
+    "blend": "a34f7584-e30e-5dcb-aa4c-f349f8602e05",
+    "shader": "fecc7a69-ec9e-5593-8d1d-89b5fbfec018"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/sylora-genesis-spire/model.glb",
+    "blender": "artifacts/gift-library/sylora-genesis-spire/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/sylora-genesis-spire/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/sylora-genesis-spire/metadata.json",
+    "preview_video": "artifacts/gift-library/sylora-genesis-spire/preview.mp4",
+    "gif_preview": "artifacts/gift-library/sylora-genesis-spire/preview.gif",
+    "thumbnail": "artifacts/gift-library/sylora-genesis-spire/poster.png",
+    "sound_pack": "artifacts/gift-library/sylora-genesis-spire/sound/",
+    "particle_pack": "artifacts/gift-library/sylora-genesis-spire/particles/",
+    "report": "artifacts/gift-library/sylora-genesis-spire/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

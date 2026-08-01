@@ -1,0 +1,90 @@
+{
+  "index": 9,
+  "name": "Polaroid Flash",
+  "slug": "polaroid-flash",
+  "cost": 250,
+  "price_minor": 250,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3800,
+  "duration_sec": 3.8,
+  "main_idea": "A vintage instant photo ejects and develops the streamer silhouette.",
+  "model_description": "Instant camera body and ejecting photo card with develop shader.",
+  "environment_description": "Soft studio seamless.",
+  "animation_phases": [
+    "camera click",
+    "eject",
+    "develop reveal",
+    "float hold"
+  ],
+  "vfx": [
+    "flash bloom (no lens spam)",
+    "develop dissolve"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "none heavy \u2014 flash residue only",
+  "shaders": [
+    "plastic body",
+    "photo develop mask"
+  ],
+  "camera": "hero product then card close-up",
+  "music": "shutter + warm chord",
+  "spatial_sound": "flash front then card near",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Polaroid Flash' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.polaroid-flash with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "camera_prop",
+  "vfx_family": "photo_develop",
+  "asset_ids": {
+    "glb": "10a3d558-82b8-53e3-99a4-8f1bdfacc206",
+    "audio": "a1034903-ac53-58af-a467-483b85886d3a",
+    "poster": "9fe0a86f-fb7d-5b29-a1d3-adf48a90cd41",
+    "blend": "aee51db6-d0c2-5183-b0dc-25130b9ae47e",
+    "shader": "afe3c063-9c4b-5aa5-8261-ee8f166ce583"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/polaroid-flash/model.glb",
+    "blender": "artifacts/gift-library/polaroid-flash/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/polaroid-flash/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/polaroid-flash/metadata.json",
+    "preview_video": "artifacts/gift-library/polaroid-flash/preview.mp4",
+    "gif_preview": "artifacts/gift-library/polaroid-flash/preview.gif",
+    "thumbnail": "artifacts/gift-library/polaroid-flash/poster.png",
+    "sound_pack": "artifacts/gift-library/polaroid-flash/sound/",
+    "particle_pack": "artifacts/gift-library/polaroid-flash/particles/",
+    "report": "artifacts/gift-library/polaroid-flash/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

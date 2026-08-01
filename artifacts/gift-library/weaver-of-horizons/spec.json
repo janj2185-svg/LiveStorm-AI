@@ -1,0 +1,90 @@
+{
+  "index": 95,
+  "name": "Weaver of Horizons",
+  "slug": "weaver-of-horizons",
+  "cost": 5000000,
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 28000,
+  "duration_sec": 28.0,
+  "main_idea": "A cosmic weaver looms horizons together so separated communities share one sunset.",
+  "model_description": "Weaver character, loom of light, horizon ribbons, community silhouettes.",
+  "environment_description": "Cosmic loom above multiple lands.",
+  "animation_phases": [
+    "lands apart",
+    "loom spin",
+    "horizons weave",
+    "shared sunset",
+    "gift tapestry"
+  ],
+  "vfx": [
+    "horizon ribbons",
+    "sunset merge"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "thread stars",
+  "shaders": [
+    "cosmic textile"
+  ],
+  "camera": "loom god-view to human sunset",
+  "music": "weave suite",
+  "spatial_sound": "cosmic to intimate",
+  "voice_effects": "weaver mantra",
+  "ai_reaction": "AI acknowledges 'Weaver of Horizons' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.weaver-of-horizons with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "horizon_weaver",
+  "vfx_family": "horizon_merge",
+  "asset_ids": {
+    "glb": "1042e796-305d-55c1-9172-e1e90d8ec0a1",
+    "audio": "d4fff170-c11d-59a6-953c-d298a8af7f15",
+    "poster": "ea822af3-e327-5b1f-887b-4385bd3ec746",
+    "blend": "614ab8c5-7a6e-5811-8700-7cb367482209",
+    "shader": "7c8592e9-2080-5ef4-a177-399295b9545c"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/weaver-of-horizons/model.glb",
+    "blender": "artifacts/gift-library/weaver-of-horizons/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/weaver-of-horizons/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/weaver-of-horizons/metadata.json",
+    "preview_video": "artifacts/gift-library/weaver-of-horizons/preview.mp4",
+    "gif_preview": "artifacts/gift-library/weaver-of-horizons/preview.gif",
+    "thumbnail": "artifacts/gift-library/weaver-of-horizons/poster.png",
+    "sound_pack": "artifacts/gift-library/weaver-of-horizons/sound/",
+    "particle_pack": "artifacts/gift-library/weaver-of-horizons/particles/",
+    "report": "artifacts/gift-library/weaver-of-horizons/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

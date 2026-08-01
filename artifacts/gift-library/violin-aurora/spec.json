@@ -1,0 +1,91 @@
+{
+  "index": 60,
+  "name": "Violin Aurora",
+  "slug": "violin-aurora",
+  "cost": 5000,
+  "price_minor": 5000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11000,
+  "duration_sec": 11.0,
+  "main_idea": "A violin bow draws aurora ribbons that form a protective canopy.",
+  "model_description": "Violin, bow, aurora ribbon meshes.",
+  "environment_description": "Cliff overlooking fjord.",
+  "animation_phases": [
+    "first note",
+    "ribbon draw",
+    "canopy weave",
+    "finale chord",
+    "settle"
+  ],
+  "vfx": [
+    "aurora from bow",
+    "note rings"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "note sparkles",
+  "shaders": [
+    "wood violin",
+    "aurora additive"
+  ],
+  "camera": "musician close then sky wide",
+  "music": "solo violin original phrase",
+  "spatial_sound": "cliff open air",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Violin Aurora' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.violin-aurora with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "violin",
+  "vfx_family": "bow_aurora",
+  "asset_ids": {
+    "glb": "cc8a2241-e2c3-5bff-8247-b864d6cbebe4",
+    "audio": "521e7ea1-2414-52ee-ac1c-ea2bd2bae29a",
+    "poster": "a7880a17-abdc-58f3-8ffb-24a4dfad76fe",
+    "blend": "aa88c428-07d6-5e83-99b3-00fd4ad1b429",
+    "shader": "554f665d-5f88-5da3-b40b-80cd27f242df"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/violin-aurora/model.glb",
+    "blender": "artifacts/gift-library/violin-aurora/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/violin-aurora/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/violin-aurora/metadata.json",
+    "preview_video": "artifacts/gift-library/violin-aurora/preview.mp4",
+    "gif_preview": "artifacts/gift-library/violin-aurora/preview.gif",
+    "thumbnail": "artifacts/gift-library/violin-aurora/poster.png",
+    "sound_pack": "artifacts/gift-library/violin-aurora/sound/",
+    "particle_pack": "artifacts/gift-library/violin-aurora/particles/",
+    "report": "artifacts/gift-library/violin-aurora/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

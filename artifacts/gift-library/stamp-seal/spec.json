@@ -1,0 +1,90 @@
+{
+  "index": 12,
+  "name": "Stamp Seal",
+  "slug": "stamp-seal",
+  "cost": 50,
+  "price_minor": 50,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3000,
+  "duration_sec": 3.0,
+  "main_idea": "A wax seal stamp presses and leaves a SYLORA crest impression.",
+  "model_description": "Wooden handle stamp and wax puddle with crest negative.",
+  "environment_description": "Letter desk with parchment.",
+  "animation_phases": [
+    "raise stamp",
+    "press",
+    "lift reveal",
+    "wax cool"
+  ],
+  "vfx": [
+    "wax squash",
+    "cool harden"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "tiny wax flecks",
+  "shaders": [
+    "wax SSS",
+    "wood grain"
+  ],
+  "camera": "top-down press",
+  "music": "soft thud + seal click",
+  "spatial_sound": "desk nearfield",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Stamp Seal' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.stamp-seal with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "stamp",
+  "vfx_family": "wax_press",
+  "asset_ids": {
+    "glb": "28d8d753-6c05-5030-8678-d20f8ed5ffed",
+    "audio": "77df8fec-78e8-5d77-90d9-c794ebc37ed5",
+    "poster": "bde90430-e02e-5eac-b7f1-c72a06fea7c1",
+    "blend": "489a5a52-68c5-5cd3-85d1-cf8925111a6c",
+    "shader": "d46b4a10-0948-590e-a424-ddc5fc948918"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/stamp-seal/model.glb",
+    "blender": "artifacts/gift-library/stamp-seal/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/stamp-seal/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/stamp-seal/metadata.json",
+    "preview_video": "artifacts/gift-library/stamp-seal/preview.mp4",
+    "gif_preview": "artifacts/gift-library/stamp-seal/preview.gif",
+    "thumbnail": "artifacts/gift-library/stamp-seal/poster.png",
+    "sound_pack": "artifacts/gift-library/stamp-seal/sound/",
+    "particle_pack": "artifacts/gift-library/stamp-seal/particles/",
+    "report": "artifacts/gift-library/stamp-seal/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

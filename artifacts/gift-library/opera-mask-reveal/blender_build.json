@@ -1,0 +1,10 @@
+{
+  "slug": "opera-mask-reveal",
+  "family": "character_mask",
+  "vfx": "rose_light",
+  "duration": 11.0,
+  "rarity": "Legendary",
+  "preview_frames": 20,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE"
+}

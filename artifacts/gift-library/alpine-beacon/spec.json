@@ -1,0 +1,92 @@
+{
+  "index": 59,
+  "name": "Alpine Beacon",
+  "slug": "alpine-beacon",
+  "cost": 25000,
+  "price_minor": 25000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11500,
+  "duration_sec": 11.5,
+  "main_idea": "Mountaineers light a beacon network across peaks spelling THANKS.",
+  "model_description": "Peaks, beacon towers, light beams between them.",
+  "environment_description": "Alpine night (beacon fire contained in braziers).",
+  "animation_phases": [
+    "dark peaks",
+    "first beacon fire",
+    "relay lights",
+    "THANKS beams",
+    "aurora tip"
+  ],
+  "vfx": [
+    "beacon fire",
+    "beam network",
+    "light aurora"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "snow wind",
+  "shaders": [
+    "snow rock",
+    "fire emissive"
+  ],
+  "camera": "aerial peak tour",
+  "music": "alpine horns soft",
+  "spatial_sound": "mountain vast",
+  "voice_effects": "distant call FX",
+  "ai_reaction": "AI acknowledges 'Alpine Beacon' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.alpine-beacon with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "alpine",
+  "vfx_family": "beacon_network",
+  "asset_ids": {
+    "glb": "90239def-f6a4-5de8-89bc-124b65576493",
+    "audio": "0d5a2ef6-934b-5d4b-8a9f-d661901b5dcd",
+    "poster": "f67d3b6e-977b-5038-aa33-f41482af23a7",
+    "blend": "ea8fc561-ab6b-587b-bc18-dd30fba89086",
+    "shader": "eaa71d97-52ed-5d33-8c6b-835978e6fdeb"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/alpine-beacon/model.glb",
+    "blender": "artifacts/gift-library/alpine-beacon/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/alpine-beacon/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/alpine-beacon/metadata.json",
+    "preview_video": "artifacts/gift-library/alpine-beacon/preview.mp4",
+    "gif_preview": "artifacts/gift-library/alpine-beacon/preview.gif",
+    "thumbnail": "artifacts/gift-library/alpine-beacon/poster.png",
+    "sound_pack": "artifacts/gift-library/alpine-beacon/sound/",
+    "particle_pack": "artifacts/gift-library/alpine-beacon/particles/",
+    "report": "artifacts/gift-library/alpine-beacon/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

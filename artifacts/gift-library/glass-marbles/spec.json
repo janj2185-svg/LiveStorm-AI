@@ -1,0 +1,90 @@
+{
+  "index": 7,
+  "name": "Glass Marbles",
+  "slug": "glass-marbles",
+  "cost": 100,
+  "price_minor": 100,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3500,
+  "duration_sec": 3.5,
+  "main_idea": "Three glass marbles collide and ring a clear chord.",
+  "model_description": "Three unique swirl-core marbles with different internal ribbons.",
+  "environment_description": "Minimal reflective tray.",
+  "animation_phases": [
+    "roll in",
+    "collide",
+    "bounce settle",
+    "glow pulse"
+  ],
+  "vfx": [
+    "contact sparks (non-fire)",
+    "caustics"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "tiny glass chips (very few)",
+  "shaders": [
+    "glass IOR",
+    "internal swirl"
+  ],
+  "camera": "low angle tracking",
+  "music": "glass bowl chord",
+  "spatial_sound": "impact-centered stereo",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Glass Marbles' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.glass-marbles with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "glass_spheres",
+  "vfx_family": "caustic_glass",
+  "asset_ids": {
+    "glb": "00997277-c124-58d5-abaa-3cf71907a6ef",
+    "audio": "281a2c47-febe-519d-a253-2dc2ba082a7d",
+    "poster": "4a07573e-8444-5c6e-9d12-cf47b90110e9",
+    "blend": "357267b5-e387-5828-89fa-7ea05680659c",
+    "shader": "63c78d28-4007-5b0d-ade3-0adcbca59212"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/glass-marbles/model.glb",
+    "blender": "artifacts/gift-library/glass-marbles/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/glass-marbles/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/glass-marbles/metadata.json",
+    "preview_video": "artifacts/gift-library/glass-marbles/preview.mp4",
+    "gif_preview": "artifacts/gift-library/glass-marbles/preview.gif",
+    "thumbnail": "artifacts/gift-library/glass-marbles/poster.png",
+    "sound_pack": "artifacts/gift-library/glass-marbles/sound/",
+    "particle_pack": "artifacts/gift-library/glass-marbles/particles/",
+    "report": "artifacts/gift-library/glass-marbles/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

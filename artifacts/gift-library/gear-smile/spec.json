@@ -1,0 +1,90 @@
+{
+  "index": 14,
+  "name": "Gear Smile",
+  "slug": "gear-smile",
+  "cost": 25,
+  "price_minor": 25,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3600,
+  "duration_sec": 3.6,
+  "main_idea": "Tiny brass gears assemble into a smiling face then wink.",
+  "model_description": "Interlocking gear set forming facial features.",
+  "environment_description": "Workshop table with soft brass bounce light.",
+  "animation_phases": [
+    "scatter gears",
+    "assemble",
+    "smile",
+    "wink click"
+  ],
+  "vfx": [
+    "metal sparks (non-fire contact)",
+    "oil sheen"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "brass filings",
+  "shaders": [
+    "brass PBR",
+    "oil film"
+  ],
+  "camera": "macro assemble",
+  "music": "tick-tock melody",
+  "spatial_sound": "mechanical center",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Gear Smile' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.gear-smile with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "gear_mech",
+  "vfx_family": "mech_sparks",
+  "asset_ids": {
+    "glb": "db287d91-35b0-5493-ac12-fac46eb94142",
+    "audio": "92cc1302-6fbc-5a58-b6a5-48aea39caf11",
+    "poster": "434dfe49-0908-558e-b0d8-a215134961dd",
+    "blend": "80e21fb2-c9e6-5411-a4cc-7846a2bdacac",
+    "shader": "e35a11bb-6ad6-532c-a8dd-1d5b4d2b6175"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/gear-smile/model.glb",
+    "blender": "artifacts/gift-library/gear-smile/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/gear-smile/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/gear-smile/metadata.json",
+    "preview_video": "artifacts/gift-library/gear-smile/preview.mp4",
+    "gif_preview": "artifacts/gift-library/gear-smile/preview.gif",
+    "thumbnail": "artifacts/gift-library/gear-smile/poster.png",
+    "sound_pack": "artifacts/gift-library/gear-smile/sound/",
+    "particle_pack": "artifacts/gift-library/gear-smile/particles/",
+    "report": "artifacts/gift-library/gear-smile/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

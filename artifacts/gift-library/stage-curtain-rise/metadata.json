@@ -1,0 +1,19 @@
+{
+  "name": "Stage Curtain Rise",
+  "slug": "stage-curtain-rise",
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "price_minor": 500,
+  "duration_ms": 7000,
+  "sha256": {
+    "glb": "36e226e61cd58e8b9600fe3627242617ab6fd97c13ef77e6c9b08a9ed77bbee7",
+    "audio": "531f320e472c09066e4aced53c0dc88bf4769d3afa743b1aaf0731d3d471ed8a",
+    "poster": "b24a7571599f24e9470eeac5df0102d7954ad923c770a1351cf58b19cea53da8"
+  },
+  "bytes": {
+    "glb": 24312,
+    "audio": 1234844,
+    "poster": 506150,
+    "preview_mp4": 246248
+  }
+}

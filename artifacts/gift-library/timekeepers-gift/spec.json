@@ -1,0 +1,91 @@
+{
+  "index": 53,
+  "name": "Timekeeper's Gift",
+  "slug": "timekeepers-gift",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12000,
+  "duration_sec": 12.0,
+  "main_idea": "A grandfather clock opens; gears rearrange into a pocket-watch gift.",
+  "model_description": "Grandfather clock interior, gears, pocket watch finale.",
+  "environment_description": "Antique hall.",
+  "animation_phases": [
+    "chime",
+    "door open",
+    "gear rearrange",
+    "slow-mo assemble",
+    "present watch"
+  ],
+  "vfx": [
+    "time freeze dust",
+    "gear trails"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "clock dust",
+  "shaders": [
+    "wood lacquer",
+    "brass gears"
+  ],
+  "camera": "interior macro with slow-mo",
+  "music": "chimes + ticking motif",
+  "spatial_sound": "hall clock resonance",
+  "voice_effects": "clock tick as metronome VO",
+  "ai_reaction": "AI acknowledges 'Timekeeper's Gift' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.timekeepers-gift with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "clock",
+  "vfx_family": "time_freeze",
+  "asset_ids": {
+    "glb": "31f47d55-614f-515d-86d1-06e80e38bd56",
+    "audio": "9ea55afd-1e2b-506b-af87-185fafa43867",
+    "poster": "e1b34feb-dc75-5a1a-bb30-5a98a816dc93",
+    "blend": "13eb2614-f291-53b1-bdc7-d0bf9383d52c",
+    "shader": "e287cc66-47e3-5af5-aac8-206fdc941b58"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/timekeepers-gift/model.glb",
+    "blender": "artifacts/gift-library/timekeepers-gift/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/timekeepers-gift/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/timekeepers-gift/metadata.json",
+    "preview_video": "artifacts/gift-library/timekeepers-gift/preview.mp4",
+    "gif_preview": "artifacts/gift-library/timekeepers-gift/preview.gif",
+    "thumbnail": "artifacts/gift-library/timekeepers-gift/poster.png",
+    "sound_pack": "artifacts/gift-library/timekeepers-gift/sound/",
+    "particle_pack": "artifacts/gift-library/timekeepers-gift/particles/",
+    "report": "artifacts/gift-library/timekeepers-gift/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

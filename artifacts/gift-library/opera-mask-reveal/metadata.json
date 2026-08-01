@@ -1,0 +1,19 @@
+{
+  "name": "Opera Mask Reveal",
+  "slug": "opera-mask-reveal",
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "price_minor": 5000,
+  "duration_ms": 11000,
+  "sha256": {
+    "glb": "03757c693d86f5b7a5017677debdf10a7463f95bd4bee0b3d17c7f8dd1c4f89c",
+    "audio": "733d0a0ae2f0f1211f8eef9dece9b2a2a07088d4b1d598cec55f81e629515aac",
+    "poster": "c36a7bff19c5ef8bddee129a4c0b700f67a1883f522c12430e1ad8c8d1d5e47a"
+  },
+  "bytes": {
+    "glb": 263448,
+    "audio": 1940444,
+    "poster": 515897,
+    "preview_mp4": 352147
+  }
+}

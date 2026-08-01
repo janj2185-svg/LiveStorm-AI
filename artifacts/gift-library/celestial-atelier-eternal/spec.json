@@ -1,0 +1,90 @@
+{
+  "index": 83,
+  "name": "Celestial Atelier Eternal",
+  "slug": "celestial-atelier-eternal",
+  "cost": 5000000,
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 28000,
+  "duration_sec": 28.0,
+  "main_idea": "Gods of craft collaborate across floating ateliers to forge a unique gift each send.",
+  "model_description": "Multiple artisan characters, floating islands, forge/loom/glass stations.",
+  "environment_description": "Celestial archipelago with scene links.",
+  "animation_phases": [
+    "summon artisans",
+    "each craft beat",
+    "combine artifacts",
+    "unique seal",
+    "deliver"
+  ],
+  "vfx": [
+    "craft-specific VFX per station",
+    "combine nova (non-weapon)"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "craft dusts unique",
+  "shaders": [
+    "premium art pass materials"
+  ],
+  "camera": "island hop cinematic",
+  "music": "suite with artisan leitmotifs",
+  "spatial_sound": "per-island acoustics",
+  "voice_effects": "artisan chorus",
+  "ai_reaction": "AI acknowledges 'Celestial Atelier Eternal' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.celestial-atelier-eternal with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "celestial_atelier",
+  "vfx_family": "multi_craft",
+  "asset_ids": {
+    "glb": "f75a94b4-64e6-53d8-82be-e0b92d7738cf",
+    "audio": "a9b006e9-3f06-58f2-abe6-ed62a4125c4d",
+    "poster": "d0b26452-377a-5337-aca2-5b64a6c3bb76",
+    "blend": "d8bf880a-3008-5446-bbef-cffded06c8cc",
+    "shader": "78442c61-bc77-5791-ac83-e64af83f0751"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/celestial-atelier-eternal/model.glb",
+    "blender": "artifacts/gift-library/celestial-atelier-eternal/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/celestial-atelier-eternal/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/celestial-atelier-eternal/metadata.json",
+    "preview_video": "artifacts/gift-library/celestial-atelier-eternal/preview.mp4",
+    "gif_preview": "artifacts/gift-library/celestial-atelier-eternal/preview.gif",
+    "thumbnail": "artifacts/gift-library/celestial-atelier-eternal/poster.png",
+    "sound_pack": "artifacts/gift-library/celestial-atelier-eternal/sound/",
+    "particle_pack": "artifacts/gift-library/celestial-atelier-eternal/particles/",
+    "report": "artifacts/gift-library/celestial-atelier-eternal/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

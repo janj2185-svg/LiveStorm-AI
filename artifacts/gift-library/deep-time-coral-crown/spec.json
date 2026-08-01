@@ -1,0 +1,91 @@
+{
+  "index": 88,
+  "name": "Deep Time Coral Crown",
+  "slug": "deep-time-coral-crown",
+  "cost": 2500000,
+  "price_minor": 2500000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 26000,
+  "duration_sec": 26.0,
+  "main_idea": "Ages of coral growth compress into a crown gifted from the deep (water required).",
+  "model_description": "Time-lapse coral architectures, crown jewel, deep fauna silhouettes.",
+  "environment_description": "Abyssal to sunlit reef journey.",
+  "animation_phases": [
+    "abyss",
+    "ages pass",
+    "coral city",
+    "crown form",
+    "ascend gift"
+  ],
+  "vfx": [
+    "time-lapse growth",
+    "abyss biolume",
+    "sunlit caustics"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "marine snow",
+  "shaders": [
+    "deep SSS coral"
+  ],
+  "camera": "abyss to surface pilgrimage",
+  "music": "deep time suite",
+  "spatial_sound": "pressure muffling to bright reef",
+  "voice_effects": "deep whale-like FX",
+  "ai_reaction": "AI acknowledges 'Deep Time Coral Crown' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.deep-time-coral-crown with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "coral_crown",
+  "vfx_family": "deep_time",
+  "asset_ids": {
+    "glb": "54e99671-0c05-59d8-9580-98c522922b42",
+    "audio": "93e33d8d-55d3-5b61-bd09-7e9629a88551",
+    "poster": "4d9153ae-daa1-5f4c-b799-9b32e1119601",
+    "blend": "a7706c35-ecfb-5565-83e0-eef826f09079",
+    "shader": "42773dd9-2499-5053-a9e0-253c33e26257"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/deep-time-coral-crown/model.glb",
+    "blender": "artifacts/gift-library/deep-time-coral-crown/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/deep-time-coral-crown/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/deep-time-coral-crown/metadata.json",
+    "preview_video": "artifacts/gift-library/deep-time-coral-crown/preview.mp4",
+    "gif_preview": "artifacts/gift-library/deep-time-coral-crown/preview.gif",
+    "thumbnail": "artifacts/gift-library/deep-time-coral-crown/poster.png",
+    "sound_pack": "artifacts/gift-library/deep-time-coral-crown/sound/",
+    "particle_pack": "artifacts/gift-library/deep-time-coral-crown/particles/",
+    "report": "artifacts/gift-library/deep-time-coral-crown/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

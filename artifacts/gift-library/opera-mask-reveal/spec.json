@@ -1,0 +1,93 @@
+{
+  "index": 41,
+  "name": "Opera Mask Reveal",
+  "slug": "opera-mask-reveal",
+  "cost": 5000,
+  "price_minor": 5000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11000,
+  "duration_sec": 11.0,
+  "main_idea": "A masked figure steps from shadow, removes the mask, and gifts a rose of light.",
+  "model_description": "Character bust with ornate mask, cloak, and light-rose prop; simple facial rig.",
+  "environment_description": "Grand opera box with velvet and gold.",
+  "animation_phases": [
+    "shadow enter",
+    "mask remove",
+    "eye contact",
+    "rose gift",
+    "bow exit"
+  ],
+  "vfx": [
+    "velvet dust",
+    "rose light petals"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "light petals",
+  "shaders": [
+    "velvet",
+    "gold leaf",
+    "skin SSS"
+  ],
+  "camera": "cinematic profile to frontal close-up",
+  "music": "opera motif original (non-copyright)",
+  "spatial_sound": "hall depth",
+  "voice_effects": "soft sung vowel FX (original)",
+  "ai_reaction": "AI acknowledges 'Opera Mask Reveal' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.opera-mask-reveal with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "character_mask",
+  "vfx_family": "rose_light",
+  "asset_ids": {
+    "glb": "9ef20b7e-ff64-500e-a041-0b93987d5948",
+    "audio": "1431996a-f6a4-567c-9e83-499f1f0fd839",
+    "poster": "f1743186-c41a-5b9d-8c11-a8951f4cf4c0",
+    "blend": "df573dab-6085-5b7a-be1e-c0273aa82123",
+    "shader": "abb4a245-745a-5458-9467-638af7738083"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/opera-mask-reveal/model.glb",
+    "blender": "artifacts/gift-library/opera-mask-reveal/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/opera-mask-reveal/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/opera-mask-reveal/metadata.json",
+    "preview_video": "artifacts/gift-library/opera-mask-reveal/preview.mp4",
+    "gif_preview": "artifacts/gift-library/opera-mask-reveal/preview.gif",
+    "thumbnail": "artifacts/gift-library/opera-mask-reveal/poster.png",
+    "sound_pack": "artifacts/gift-library/opera-mask-reveal/sound/",
+    "particle_pack": "artifacts/gift-library/opera-mask-reveal/particles/",
+    "report": "artifacts/gift-library/opera-mask-reveal/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

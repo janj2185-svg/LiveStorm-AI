@@ -1,0 +1,90 @@
+{
+  "index": 85,
+  "name": "Protocol of Dawn",
+  "slug": "protocol-of-dawn",
+  "cost": 2500000,
+  "price_minor": 2500000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 25000,
+  "duration_sec": 25.0,
+  "main_idea": "A living protocol visualizes SYLORA systems as luminous architecture waking at dawn.",
+  "model_description": "Abstract architecture of API/nodes/streams as beautiful structures \u2014 not UI screenshots.",
+  "environment_description": "Digital-physical dawn city.",
+  "animation_phases": [
+    "dark grid",
+    "nodes wake",
+    "bridges form",
+    "dawn hit",
+    "heartbeat gift"
+  ],
+  "vfx": [
+    "node awaken",
+    "data aurora (abstract)"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "packet fireflies",
+  "shaders": [
+    "luminous architecture"
+  ],
+  "camera": "city-scale cinematic",
+  "music": "protocol dawn suite",
+  "spatial_sound": "city network",
+  "voice_effects": "system soft VO",
+  "ai_reaction": "AI acknowledges 'Protocol of Dawn' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.protocol-of-dawn with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "protocol_city",
+  "vfx_family": "node_dawn",
+  "asset_ids": {
+    "glb": "ae32aac7-5de4-5534-b7bd-4beed2c92a42",
+    "audio": "7eff8187-843b-508d-a5a9-6e99a331f367",
+    "poster": "9da2b7ff-8c54-5bad-b5d3-4c93a8176e5f",
+    "blend": "0ebd7372-3505-559d-ac12-feea959e8d51",
+    "shader": "0fc3a2b9-fcb7-560a-8938-5965b9c798e0"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/protocol-of-dawn/model.glb",
+    "blender": "artifacts/gift-library/protocol-of-dawn/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/protocol-of-dawn/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/protocol-of-dawn/metadata.json",
+    "preview_video": "artifacts/gift-library/protocol-of-dawn/preview.mp4",
+    "gif_preview": "artifacts/gift-library/protocol-of-dawn/preview.gif",
+    "thumbnail": "artifacts/gift-library/protocol-of-dawn/poster.png",
+    "sound_pack": "artifacts/gift-library/protocol-of-dawn/sound/",
+    "particle_pack": "artifacts/gift-library/protocol-of-dawn/particles/",
+    "report": "artifacts/gift-library/protocol-of-dawn/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

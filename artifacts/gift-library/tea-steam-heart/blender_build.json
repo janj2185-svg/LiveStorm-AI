@@ -1,0 +1,10 @@
+{
+  "slug": "tea-steam-heart",
+  "family": "ceramic_prop",
+  "vfx": "steam",
+  "duration": 4.2,
+  "rarity": "Rare",
+  "preview_frames": 12,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE"
+}

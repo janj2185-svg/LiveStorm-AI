@@ -1,0 +1,19 @@
+{
+  "name": "Paper Koi",
+  "slug": "paper-koi",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 25,
+  "duration_ms": 4000,
+  "sha256": {
+    "glb": "ddb9793c87bf9b6bdba2dc193c9d1c23d8b51adf85aaf1e4c23e6c57a1a73e13",
+    "audio": "b8ce2096d26641c1790c29899e0274f2b3328ae2866897f8da79d52bfa1766cb",
+    "poster": "0dbf9c49aa4e9dbac79312a34d2f2f03871097cebffc8c3f8e3f5404483b7121"
+  },
+  "bytes": {
+    "glb": 14744,
+    "audio": 705644,
+    "poster": 506340,
+    "preview_mp4": 122451
+  }
+}

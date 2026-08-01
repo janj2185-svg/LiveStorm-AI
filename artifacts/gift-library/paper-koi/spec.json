@@ -1,0 +1,91 @@
+{
+  "index": 2,
+  "name": "Paper Koi",
+  "slug": "paper-koi",
+  "cost": 25,
+  "price_minor": 25,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4000,
+  "duration_sec": 4.0,
+  "main_idea": "An origami koi unfolds mid-air and glides once around the avatar.",
+  "model_description": "Low-poly origami koi with crease normals and paper grain maps.",
+  "environment_description": "Shallow reflective plane suggesting a pond surface.",
+  "animation_phases": [
+    "folded square",
+    "unfold wings",
+    "glide arc",
+    "settle bow"
+  ],
+  "vfx": [
+    "water-ripple rings (story water only)",
+    "paper dust"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "confetti-scale paper flecks",
+  "shaders": [
+    "anisotropic paper",
+    "wet tip specular"
+  ],
+  "camera": "side tracking shot",
+  "music": "plucked koto motif",
+  "spatial_sound": "left-to-right pan with koi",
+  "voice_effects": "soft paper rustle SFX as voice-like texture",
+  "ai_reaction": "AI acknowledges 'Paper Koi' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.paper-koi with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "origami_animal",
+  "vfx_family": "water_ripple",
+  "asset_ids": {
+    "glb": "039b4bf5-8153-5dc2-8cf9-a4b2d6e62046",
+    "audio": "874f08fb-d3c8-517e-a1c9-7e01d9fdcbbb",
+    "poster": "553da0c4-c8d3-5fc4-bb26-6e00f728ff2c",
+    "blend": "63225e64-848e-5102-98fe-f9d1c9ffafb6",
+    "shader": "d595420a-2c32-5ce9-8c63-4f833ae7e9bc"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/paper-koi/model.glb",
+    "blender": "artifacts/gift-library/paper-koi/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/paper-koi/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/paper-koi/metadata.json",
+    "preview_video": "artifacts/gift-library/paper-koi/preview.mp4",
+    "gif_preview": "artifacts/gift-library/paper-koi/preview.gif",
+    "thumbnail": "artifacts/gift-library/paper-koi/poster.png",
+    "sound_pack": "artifacts/gift-library/paper-koi/sound/",
+    "particle_pack": "artifacts/gift-library/paper-koi/particles/",
+    "report": "artifacts/gift-library/paper-koi/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

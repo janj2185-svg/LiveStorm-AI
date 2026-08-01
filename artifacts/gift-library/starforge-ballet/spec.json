@@ -1,0 +1,92 @@
+{
+  "index": 97,
+  "name": "Starforge Ballet",
+  "slug": "starforge-ballet",
+  "cost": 2500000,
+  "price_minor": 2500000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 27000,
+  "duration_sec": 27.0,
+  "main_idea": "Dancers forge stars with their steps; finale plants a new star above the streamer.",
+  "model_description": "Multiple dancer characters, starforge floor, new star.",
+  "environment_description": "Cosmic stage with forge floor (stylized stellar fire under glass).",
+  "animation_phases": [
+    "overture",
+    "dance forge",
+    "star birth",
+    "lift star",
+    "plant above",
+    "bow"
+  ],
+  "vfx": [
+    "stellar forge under glass",
+    "star birth"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "stellar sparks",
+  "shaders": [
+    "dance bodies",
+    "star materials"
+  ],
+  "camera": "ballet cinema",
+  "music": "ballet starforge suite",
+  "spatial_sound": "stage cosmic",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Starforge Ballet' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.starforge-ballet with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "starforge_ballet",
+  "vfx_family": "dance_stars",
+  "asset_ids": {
+    "glb": "2a4081a3-6e6f-586a-bb2c-dc50216472ce",
+    "audio": "d017669f-b583-503a-9f4b-8214077f4b77",
+    "poster": "86695c80-53cc-58a5-af19-5a13e5d69853",
+    "blend": "f3856220-bd87-5af7-9fe6-5cb2ca1adf25",
+    "shader": "dc1cc5ae-8a68-50a6-b166-1e68b1d6358d"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/starforge-ballet/model.glb",
+    "blender": "artifacts/gift-library/starforge-ballet/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/starforge-ballet/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/starforge-ballet/metadata.json",
+    "preview_video": "artifacts/gift-library/starforge-ballet/preview.mp4",
+    "gif_preview": "artifacts/gift-library/starforge-ballet/preview.gif",
+    "thumbnail": "artifacts/gift-library/starforge-ballet/poster.png",
+    "sound_pack": "artifacts/gift-library/starforge-ballet/sound/",
+    "particle_pack": "artifacts/gift-library/starforge-ballet/particles/",
+    "report": "artifacts/gift-library/starforge-ballet/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

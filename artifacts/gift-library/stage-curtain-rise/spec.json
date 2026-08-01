@@ -1,0 +1,92 @@
+{
+  "index": 21,
+  "name": "Stage Curtain Rise",
+  "slug": "stage-curtain-rise",
+  "cost": 500,
+  "price_minor": 500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7000,
+  "duration_sec": 7.0,
+  "main_idea": "Velvet curtains part to reveal a mini spotlight on the avatar.",
+  "model_description": "Layered curtain cloth, proscenium arch, and follow-spot fixture.",
+  "environment_description": "Theater stage with audience silhouette depth.",
+  "animation_phases": [
+    "dark stage",
+    "curtain part",
+    "spot find avatar",
+    "applause swell",
+    "bow"
+  ],
+  "vfx": [
+    "volumetric spot",
+    "dust in beam"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "stage dust",
+  "shaders": [
+    "velvet cloth",
+    "spot gobo"
+  ],
+  "camera": "audience push onto stage",
+  "music": "orchestra swell sting",
+  "spatial_sound": "hall reverb",
+  "voice_effects": "distant crowd cheer bed",
+  "ai_reaction": "AI acknowledges 'Stage Curtain Rise' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.stage-curtain-rise with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "theater",
+  "vfx_family": "spot_volume",
+  "asset_ids": {
+    "glb": "97670a9d-c413-57e3-8269-b18b177cfb62",
+    "audio": "3d6131a5-c659-5afa-ab89-db6d324996d0",
+    "poster": "d66fd2ca-4d47-591c-91a0-22e6efd92cfe",
+    "blend": "009407c1-3430-5892-a1cd-62674e831eea",
+    "shader": "04b15fdb-2df4-53a9-be5f-e9d6d95077b1"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/stage-curtain-rise/model.glb",
+    "blender": "artifacts/gift-library/stage-curtain-rise/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/stage-curtain-rise/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/stage-curtain-rise/metadata.json",
+    "preview_video": "artifacts/gift-library/stage-curtain-rise/preview.mp4",
+    "gif_preview": "artifacts/gift-library/stage-curtain-rise/preview.gif",
+    "thumbnail": "artifacts/gift-library/stage-curtain-rise/poster.png",
+    "sound_pack": "artifacts/gift-library/stage-curtain-rise/sound/",
+    "particle_pack": "artifacts/gift-library/stage-curtain-rise/particles/",
+    "report": "artifacts/gift-library/stage-curtain-rise/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

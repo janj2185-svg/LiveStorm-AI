@@ -1,0 +1,91 @@
+{
+  "index": 87,
+  "name": "Emperor of Paper Suns",
+  "slug": "emperor-of-paper-suns",
+  "cost": 10000000,
+  "price_minor": 10000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 30000,
+  "duration_sec": 30.0,
+  "main_idea": "A paper emperor raises a sun made of a thousand unique paper layers; ultimate premium finale.",
+  "model_description": "Emperor character full costume, thousand-layer paper sun, court.",
+  "environment_description": "Imperial paper palace multi-hall.",
+  "animation_phases": [
+    "court gather",
+    "emperor enter",
+    "sun assemble",
+    "light the world",
+    "kneel gift",
+    "fade to crest"
+  ],
+  "vfx": [
+    "paper sun ignition (light not destructive fire)",
+    "palace gold dust"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "paper sun layers",
+  "shaders": [
+    "imperial art pass"
+  ],
+  "camera": "royal multi-scene",
+  "music": "imperial finale suite",
+  "spatial_sound": "palace halls",
+  "voice_effects": "emperor blessing original",
+  "ai_reaction": "AI acknowledges 'Emperor of Paper Suns' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.emperor-of-paper-suns with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "paper_emperor",
+  "vfx_family": "paper_sun",
+  "asset_ids": {
+    "glb": "faf29349-0a2f-5620-942c-645f28643dd2",
+    "audio": "782975aa-a587-5bd2-883b-8dfcd61aa119",
+    "poster": "d2fe0f0c-5872-50bf-884f-ea5619bc3768",
+    "blend": "d2027790-829a-526a-aa34-70be61f51ca9",
+    "shader": "4d3c86a8-ab35-570d-b3c2-a90d84d47d5d"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/emperor-of-paper-suns/model.glb",
+    "blender": "artifacts/gift-library/emperor-of-paper-suns/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/emperor-of-paper-suns/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/emperor-of-paper-suns/metadata.json",
+    "preview_video": "artifacts/gift-library/emperor-of-paper-suns/preview.mp4",
+    "gif_preview": "artifacts/gift-library/emperor-of-paper-suns/preview.gif",
+    "thumbnail": "artifacts/gift-library/emperor-of-paper-suns/poster.png",
+    "sound_pack": "artifacts/gift-library/emperor-of-paper-suns/sound/",
+    "particle_pack": "artifacts/gift-library/emperor-of-paper-suns/particles/",
+    "report": "artifacts/gift-library/emperor-of-paper-suns/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

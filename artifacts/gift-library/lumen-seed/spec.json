@@ -1,0 +1,91 @@
+{
+  "index": 1,
+  "name": "Lumen Seed",
+  "slug": "lumen-seed",
+  "cost": 10,
+  "price_minor": 10,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3200,
+  "duration_sec": 3.2,
+  "main_idea": "A single luminous seed cracks open into a soft SYLORA crest of light.",
+  "model_description": "Faceted seed pod with translucent shell and internal filament core.",
+  "environment_description": "Floating void with faint radial floor glow; no room geometry.",
+  "animation_phases": [
+    "dormant float",
+    "shell fracture",
+    "filament bloom",
+    "crest settle"
+  ],
+  "vfx": [
+    "caustic refract",
+    "soft spark motes"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "warm pollen motes (low count)",
+  "shaders": [
+    "thin-film shell",
+    "emissive filament"
+  ],
+  "camera": "gentle push-in, slight orbit",
+  "music": "single piano harmonic swell",
+  "spatial_sound": "center-to-wide bloom",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Lumen Seed' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.lumen-seed with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "organic_seed",
+  "vfx_family": "light_refract",
+  "asset_ids": {
+    "glb": "a14f0744-9658-5d52-b1d6-19aa13c07079",
+    "audio": "445b9275-3621-5fcd-951b-a3c25c8a65f9",
+    "poster": "f99da9f8-3729-5c96-a114-4c10993c636e",
+    "blend": "b95a8d95-c86e-53de-877d-3655586c146e",
+    "shader": "e6067b86-68ca-5514-afa9-4b8fa02871e3"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/lumen-seed/model.glb",
+    "blender": "artifacts/gift-library/lumen-seed/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/lumen-seed/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/lumen-seed/metadata.json",
+    "preview_video": "artifacts/gift-library/lumen-seed/preview.mp4",
+    "gif_preview": "artifacts/gift-library/lumen-seed/preview.gif",
+    "thumbnail": "artifacts/gift-library/lumen-seed/poster.png",
+    "sound_pack": "artifacts/gift-library/lumen-seed/sound/",
+    "particle_pack": "artifacts/gift-library/lumen-seed/particles/",
+    "report": "artifacts/gift-library/lumen-seed/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "index": 44,
+  "name": "Ballet of Sparks",
+  "slug": "ballet-of-sparks",
+  "cost": 5000,
+  "price_minor": 5000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11000,
+  "duration_sec": 11.0,
+  "main_idea": "Two dancers of light perform a pas de deux ending in a shared constellation.",
+  "model_description": "Two stylized dancer mannequins with cloth and light trails; simple IK.",
+  "environment_description": "Dark stage with reflective floor.",
+  "animation_phases": [
+    "enter opposite",
+    "approach",
+    "lift",
+    "spin trails",
+    "constellation lock"
+  ],
+  "vfx": [
+    "light body trails",
+    "floor reflections"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "spark ballet (non-fire glitter)",
+  "shaders": [
+    "emissive body",
+    "cloth"
+  ],
+  "camera": "dance cinema coverage (3 angles cut)",
+  "music": "ballet piano original",
+  "spatial_sound": "stage stereo dance positions",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Ballet of Sparks' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.ballet-of-sparks with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "dancers",
+  "vfx_family": "light_trails",
+  "asset_ids": {
+    "glb": "9441238f-ef1d-59f4-923d-3893450bd87a",
+    "audio": "0dfabb12-46f8-534b-b216-c707febde2bf",
+    "poster": "ea8f9bb1-3c5a-585d-a20a-1a9e4db7188c",
+    "blend": "10581ba7-3370-538d-baec-6e5016c0c095",
+    "shader": "ab5fdd1e-706b-5e74-8291-d026acfa9ac7"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/ballet-of-sparks/model.glb",
+    "blender": "artifacts/gift-library/ballet-of-sparks/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/ballet-of-sparks/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/ballet-of-sparks/metadata.json",
+    "preview_video": "artifacts/gift-library/ballet-of-sparks/preview.mp4",
+    "gif_preview": "artifacts/gift-library/ballet-of-sparks/preview.gif",
+    "thumbnail": "artifacts/gift-library/ballet-of-sparks/poster.png",
+    "sound_pack": "artifacts/gift-library/ballet-of-sparks/sound/",
+    "particle_pack": "artifacts/gift-library/ballet-of-sparks/particles/",
+    "report": "artifacts/gift-library/ballet-of-sparks/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

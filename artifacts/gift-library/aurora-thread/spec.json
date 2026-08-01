@@ -1,0 +1,90 @@
+{
+  "index": 13,
+  "name": "Aurora Thread",
+  "slug": "aurora-thread",
+  "cost": 100,
+  "price_minor": 100,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4400,
+  "duration_sec": 4.4,
+  "main_idea": "A single aurora thread weaves a temporary halo above the avatar.",
+  "model_description": "Thin ribbon spline with thickness variation.",
+  "environment_description": "Night hillside silhouette.",
+  "animation_phases": [
+    "thread appear",
+    "weave halo",
+    "color shift",
+    "dissolve"
+  ],
+  "vfx": [
+    "aurora color bands",
+    "soft bloom"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "ice crystal glitter",
+  "shaders": [
+    "additive aurora",
+    "fresnel edge"
+  ],
+  "camera": "low looking up",
+  "music": "high string harmonic",
+  "spatial_sound": "overhead dome",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Aurora Thread' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.aurora-thread with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "thread_ribbon",
+  "vfx_family": "aurora",
+  "asset_ids": {
+    "glb": "4e37c467-4162-5ef9-a74b-f1ee8406c273",
+    "audio": "4e596b3d-cb1a-5a9b-bad4-77dabf18d62f",
+    "poster": "29513a7e-13fe-571a-814e-678d4bfc8a05",
+    "blend": "cb488818-c179-5436-acf8-285a707421ff",
+    "shader": "08e523f3-2483-5f4d-b551-0f1d297c34eb"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/aurora-thread/model.glb",
+    "blender": "artifacts/gift-library/aurora-thread/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/aurora-thread/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/aurora-thread/metadata.json",
+    "preview_video": "artifacts/gift-library/aurora-thread/preview.mp4",
+    "gif_preview": "artifacts/gift-library/aurora-thread/preview.gif",
+    "thumbnail": "artifacts/gift-library/aurora-thread/poster.png",
+    "sound_pack": "artifacts/gift-library/aurora-thread/sound/",
+    "particle_pack": "artifacts/gift-library/aurora-thread/particles/",
+    "report": "artifacts/gift-library/aurora-thread/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

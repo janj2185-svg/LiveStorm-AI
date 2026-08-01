@@ -1,0 +1,92 @@
+{
+  "index": 80,
+  "name": "Moonlit Forge Garden",
+  "slug": "moonlit-forge-garden",
+  "cost": 500000,
+  "price_minor": 500000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 19000,
+  "duration_sec": 19.0,
+  "main_idea": "A forge under moonlight grows metal flowers; fire only in forge, garden otherwise cool.",
+  "model_description": "Moonlit forge, metal flowers with unique blooms, moon.",
+  "environment_description": "Night garden with forge hearth.",
+  "animation_phases": [
+    "moon rise",
+    "forge heat",
+    "metal flowers grow",
+    "cool shine",
+    "bouquet gift"
+  ],
+  "vfx": [
+    "forge fire",
+    "moon caustics",
+    "metal bloom"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "embers contained + moon dust",
+  "shaders": [
+    "hot metal cooling",
+    "petal metal"
+  ],
+  "camera": "forge to garden panorama",
+  "music": "moon + hammer hybrid",
+  "spatial_sound": "garden night",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Moonlit Forge Garden' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.moonlit-forge-garden with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "moon_forge",
+  "vfx_family": "metal_flowers",
+  "asset_ids": {
+    "glb": "a3630f6d-e8d9-5099-b15d-37246ebe008e",
+    "audio": "330a7a12-0ea6-5e80-ad7c-8f0c439670d3",
+    "poster": "1c37ee7a-bebb-561a-9ea8-f14ba064bdf8",
+    "blend": "e8bf5d6c-b4f9-54f2-bf96-426ad5d7edef",
+    "shader": "740a1528-e0d7-5a57-b131-5a4575d2c655"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/moonlit-forge-garden/model.glb",
+    "blender": "artifacts/gift-library/moonlit-forge-garden/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/moonlit-forge-garden/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/moonlit-forge-garden/metadata.json",
+    "preview_video": "artifacts/gift-library/moonlit-forge-garden/preview.mp4",
+    "gif_preview": "artifacts/gift-library/moonlit-forge-garden/preview.gif",
+    "thumbnail": "artifacts/gift-library/moonlit-forge-garden/poster.png",
+    "sound_pack": "artifacts/gift-library/moonlit-forge-garden/sound/",
+    "particle_pack": "artifacts/gift-library/moonlit-forge-garden/particles/",
+    "report": "artifacts/gift-library/moonlit-forge-garden/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

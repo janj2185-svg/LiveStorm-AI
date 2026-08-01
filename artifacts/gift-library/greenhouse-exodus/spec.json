@@ -1,0 +1,91 @@
+{
+  "index": 74,
+  "name": "Greenhouse Exodus",
+  "slug": "greenhouse-exodus",
+  "cost": 50000,
+  "price_minor": 50000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 16000,
+  "duration_sec": 16.0,
+  "main_idea": "A glass greenhouse lifts into sky carrying a garden that seeds the stream overlay.",
+  "model_description": "Greenhouse architecture, plants, sky lift cables of light.",
+  "environment_description": "Garden to sky migration.",
+  "animation_phases": [
+    "doors close",
+    "lift off",
+    "sky travel",
+    "seed overlay",
+    "land as HUD garden"
+  ],
+  "vfx": [
+    "glass reflections",
+    "seed HUD"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "soil and petals in lift",
+  "shaders": [
+    "glasshouse",
+    "foliage"
+  ],
+  "camera": "lift epic",
+  "music": "lift theme",
+  "spatial_sound": "ground to sky",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Greenhouse Exodus' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.greenhouse-exodus with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "greenhouse",
+  "vfx_family": "hud_seed",
+  "asset_ids": {
+    "glb": "cdef98ee-6168-5382-b5e0-16f04bd49e3e",
+    "audio": "f3526233-f660-58a9-bb33-b50ebb7fbc2d",
+    "poster": "905ead94-e284-562b-b573-f5fd4156cca6",
+    "blend": "a0788c29-d26c-55c1-8daf-ce479204ee39",
+    "shader": "09e2fcca-c152-5a5a-85a6-c0e4a926da24"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/greenhouse-exodus/model.glb",
+    "blender": "artifacts/gift-library/greenhouse-exodus/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/greenhouse-exodus/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/greenhouse-exodus/metadata.json",
+    "preview_video": "artifacts/gift-library/greenhouse-exodus/preview.mp4",
+    "gif_preview": "artifacts/gift-library/greenhouse-exodus/preview.gif",
+    "thumbnail": "artifacts/gift-library/greenhouse-exodus/poster.png",
+    "sound_pack": "artifacts/gift-library/greenhouse-exodus/sound/",
+    "particle_pack": "artifacts/gift-library/greenhouse-exodus/particles/",
+    "report": "artifacts/gift-library/greenhouse-exodus/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

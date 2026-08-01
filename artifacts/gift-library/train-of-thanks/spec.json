@@ -1,0 +1,90 @@
+{
+  "index": 29,
+  "name": "Train of Thanks",
+  "slug": "train-of-thanks",
+  "cost": 500,
+  "price_minor": 500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 8000,
+  "duration_sec": 8.0,
+  "main_idea": "A miniature train delivers cars labeled with chat emotes to the streamer.",
+  "model_description": "Locomotive and three unique cargo cars on a loop track.",
+  "environment_description": "Tabletop diorama landscape.",
+  "animation_phases": [
+    "depart",
+    "pass cars",
+    "unload gifts",
+    "whistle bow"
+  ],
+  "vfx": [
+    "steam puff (train steam only)",
+    "sparks on rails"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "steam puffs",
+  "shaders": [
+    "painted metal",
+    "wood cars"
+  ],
+  "camera": "tracking along track",
+  "music": "playful march",
+  "spatial_sound": "diorama stereo along track",
+  "voice_effects": "whistle FX",
+  "ai_reaction": "AI acknowledges 'Train of Thanks' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.train-of-thanks with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "train_diorama",
+  "vfx_family": "train_steam",
+  "asset_ids": {
+    "glb": "38369ed2-bf63-529f-bb14-e9a9cc624224",
+    "audio": "68e19cbc-b9f1-5acf-a510-bc2f304ea284",
+    "poster": "cbb3026f-e8eb-5ed8-a89b-dcd111eec24e",
+    "blend": "941402c9-491b-598b-bdca-6f78474a5d8f",
+    "shader": "c71667cc-5f66-5016-86e1-03f20b633239"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/train-of-thanks/model.glb",
+    "blender": "artifacts/gift-library/train-of-thanks/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/train-of-thanks/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/train-of-thanks/metadata.json",
+    "preview_video": "artifacts/gift-library/train-of-thanks/preview.mp4",
+    "gif_preview": "artifacts/gift-library/train-of-thanks/preview.gif",
+    "thumbnail": "artifacts/gift-library/train-of-thanks/poster.png",
+    "sound_pack": "artifacts/gift-library/train-of-thanks/sound/",
+    "particle_pack": "artifacts/gift-library/train-of-thanks/particles/",
+    "report": "artifacts/gift-library/train-of-thanks/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

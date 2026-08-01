@@ -1,0 +1,91 @@
+{
+  "index": 52,
+  "name": "Painter's Storm",
+  "slug": "painters-storm",
+  "cost": 5000,
+  "price_minor": 5000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11000,
+  "duration_sec": 11.0,
+  "main_idea": "Brush strokes paint a storm that clears into a portrait of gratitude.",
+  "model_description": "Giant brush, paint ribbons becoming landscape then portrait planes.",
+  "environment_description": "Artist loft that becomes painted world.",
+  "animation_phases": [
+    "blank canvas",
+    "storm strokes",
+    "lightning paint flash (painted, not real)",
+    "clear portrait",
+    "frame"
+  ],
+  "vfx": [
+    "paint ribbons",
+    "painted lightning"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "paint flecks",
+  "shaders": [
+    "wet paint",
+    "canvas"
+  ],
+  "camera": "brush POV then reveal",
+  "music": "storm percussion to soft resolve",
+  "spatial_sound": "studio to world",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Painter's Storm' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.painters-storm with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "paint_world",
+  "vfx_family": "paint_storm",
+  "asset_ids": {
+    "glb": "605da7ce-a6ab-59a8-9f51-3907556c8431",
+    "audio": "adf573c1-c599-5d6e-b64b-1fc6080c690a",
+    "poster": "4fcc76ea-fd6c-5f6d-a211-198489970c97",
+    "blend": "50d330c3-e364-5d5c-8738-db6eb1861b45",
+    "shader": "8fec9e15-11b0-51c9-b573-178c841fdfed"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/painters-storm/model.glb",
+    "blender": "artifacts/gift-library/painters-storm/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/painters-storm/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/painters-storm/metadata.json",
+    "preview_video": "artifacts/gift-library/painters-storm/preview.mp4",
+    "gif_preview": "artifacts/gift-library/painters-storm/preview.gif",
+    "thumbnail": "artifacts/gift-library/painters-storm/poster.png",
+    "sound_pack": "artifacts/gift-library/painters-storm/sound/",
+    "particle_pack": "artifacts/gift-library/painters-storm/particles/",
+    "report": "artifacts/gift-library/painters-storm/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

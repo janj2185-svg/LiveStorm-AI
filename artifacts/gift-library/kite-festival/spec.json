@@ -1,0 +1,90 @@
+{
+  "index": 22,
+  "name": "Kite Festival",
+  "slug": "kite-festival",
+  "cost": 500,
+  "price_minor": 500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7500,
+  "duration_sec": 7.5,
+  "main_idea": "A fleet of patterned kites forms the streamer's initials in sky.",
+  "model_description": "Multiple unique kite meshes with tails and frames.",
+  "environment_description": "Open sky and grassy cliff.",
+  "animation_phases": [
+    "launch",
+    "weave formation",
+    "initials lock",
+    "release scatter"
+  ],
+  "vfx": [
+    "wind trails",
+    "sun flare justified once"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "grass seeds in wind",
+  "shaders": [
+    "fabric kite",
+    "sky gradient"
+  ],
+  "camera": "drone-like rise",
+  "music": "festival drums light",
+  "spatial_sound": "open air",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Kite Festival' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.kite-festival with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "kites",
+  "vfx_family": "wind_trails",
+  "asset_ids": {
+    "glb": "5f3c028b-fcd5-5754-91ab-97daec5286e6",
+    "audio": "6cc7d520-76e5-52b6-a4bd-54ad283ce2fe",
+    "poster": "e4869418-2a03-5993-8b88-a4e9ab37238e",
+    "blend": "fd5f1dca-01e7-5ff7-ab68-ac23959f7886",
+    "shader": "92c23ceb-1642-5b42-b8b8-a4a4dc597a7d"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/kite-festival/model.glb",
+    "blender": "artifacts/gift-library/kite-festival/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/kite-festival/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/kite-festival/metadata.json",
+    "preview_video": "artifacts/gift-library/kite-festival/preview.mp4",
+    "gif_preview": "artifacts/gift-library/kite-festival/preview.gif",
+    "thumbnail": "artifacts/gift-library/kite-festival/poster.png",
+    "sound_pack": "artifacts/gift-library/kite-festival/sound/",
+    "particle_pack": "artifacts/gift-library/kite-festival/particles/",
+    "report": "artifacts/gift-library/kite-festival/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

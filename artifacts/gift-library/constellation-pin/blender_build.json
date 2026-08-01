@@ -1,0 +1,10 @@
+{
+  "slug": "constellation-pin",
+  "family": "jewelry_pin",
+  "vfx": "star_draw",
+  "duration": 3.8,
+  "rarity": "Rare",
+  "preview_frames": 12,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE"
+}

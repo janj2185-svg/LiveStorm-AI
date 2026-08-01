@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "renderer_targets": [
+    "threejs",
+    "flutter"
+  ],
+  "source_metadata": {
+    "application": "blender",
+    "version": "4.0.2",
+    "source_asset_id": "f2b83284-1aeb-5362-8b20-e0b1e3458763",
+    "license_reference": "SYLORA-original-IP"
+  },
+  "duration_ms": 16000,
+  "assets": [
+    {
+      "asset_id": "9cf5b4dd-964b-5929-bdd8-1a5288e9613e",
+      "role": "primary_model"
+    },
+    {
+      "asset_id": "9f0cc552-8060-5de9-8e2e-37486cfed0cf",
+      "role": "primary_audio"
+    },
+    {
+      "asset_id": "e8c5ced1-b181-5781-a42f-d00d344c3ba9",
+      "role": "poster"
+    },
+    {
+      "asset_id": "9cf5b4dd-964b-5929-bdd8-1a5288e9613e",
+      "role": "low_end_fallback"
+    }
+  ],
+  "layers": [
+    {
+      "kind": "model",
+      "name": "gift_root",
+      "asset_id": "9cf5b4dd-964b-5929-bdd8-1a5288e9613e",
+      "transform": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation_degrees": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  ],
+  "timelines": [
+    {
+      "name": "main",
+      "duration_ms": 16000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "gift_root",
+          "property": "rotation_z",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": 0,
+              "easing": "ease_in_out"
+            },
+            {
+              "time_ms": 16000,
+              "value": 360,
+              "easing": "ease_in_out"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "particle_systems": [
+    {
+      "name": "particles_reality_fold",
+      "max_particles": 3000,
+      "spawn_rate_per_second": 300,
+      "texture_asset_id": null,
+      "deterministic_seed": 1840962286
+    }
+  ],
+  "shaders": [],
+  "lighting": [
+    {
+      "kind": "ambient",
+      "color_hex": "#101820",
+      "intensity": 0.4,
+      "position": null
+    },
+    {
+      "kind": "directional",
+      "color_hex": "#FFF2D8",
+      "intensity": 2.2,
+      "position": {
+        "x": 2,
+        "y": 4,
+        "z": 3
+      }
+    }
+  ],
+  "audio": [
+    {
+      "asset_id": "9f0cc552-8060-5de9-8e2e-37486cfed0cf",
+      "spatial": true,
+      "peak_dbfs": -6,
+      "autoplay": true
+    }
+  ],
+  "interaction_hooks": [
+    {
+      "hook": "arrival",
+      "action": "sylora.gift.play"
+    },
+    {
+      "hook": "completion",
+      "action": "sylora.gift.complete"
+    },
+    {
+      "hook": "tap",
+      "action": "sylora.gift.replay"
+    }
+  ],
+  "combinations": [
+    {
+      "combination_id": "sylora.gift.worldfold-letter",
+      "compatible_combination_ids": [
+        "sylora.gift.combo.any"
+      ],
+      "window_seconds": 120
+    }
+  ],
+  "procedural_parameters": [
+    {
+      "name": "seed",
+      "source": "deterministic",
+      "value_type": "seed",
+      "minimum": null,
+      "maximum": null,
+      "allowed_values": []
+    }
+  ],
+  "effects": [
+    {
+      "name": "worldfold-letter_main",
+      "scope": "full_screen",
+      "timeline_name": "main"
+    }
+  ],
+  "fallbacks": {
+    "low_end_asset_id": "9cf5b4dd-964b-5929-bdd8-1a5288e9613e",
+    "reduced_motion_asset_id": "e8c5ced1-b181-5781-a42f-d00d344c3ba9",
+    "no_audio_asset_id": "9cf5b4dd-964b-5929-bdd8-1a5288e9613e"
+  },
+  "quality_budgets": {
+    "max_download_bytes": 25000000,
+    "max_duration_ms": 17000,
+    "max_particles": 3000,
+    "max_shader_instructions": 256,
+    "max_audio_peak_dbfs": -1
+  }
+}

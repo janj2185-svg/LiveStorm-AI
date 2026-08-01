@@ -1,0 +1,93 @@
+{
+  "index": 45,
+  "name": "Forge of Kindness",
+  "slug": "forge-of-kindness",
+  "cost": 25000,
+  "price_minor": 25000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12500,
+  "duration_sec": 12.5,
+  "main_idea": "A blacksmith forges a heart-shaped charm; fire only in forge hearth as required.",
+  "model_description": "Blacksmith character arms, anvil, hammer, charm; forge hearth.",
+  "environment_description": "Stone forge workshop.",
+  "animation_phases": [
+    "heat metal (forge fire)",
+    "hammer beats",
+    "quench steam",
+    "present charm",
+    "glow gift"
+  ],
+  "vfx": [
+    "forge fire",
+    "hammer sparks",
+    "quench steam"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "forge sparks",
+  "shaders": [
+    "hot metal",
+    "stone",
+    "leather apron"
+  ],
+  "camera": "hammer impact cuts then gift present",
+  "music": "hammer rhythm to warm theme",
+  "spatial_sound": "workshop industrial",
+  "voice_effects": "blacksmith grunt effort FX",
+  "ai_reaction": "AI acknowledges 'Forge of Kindness' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.forge-of-kindness with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "forge",
+  "vfx_family": "forge_fire",
+  "asset_ids": {
+    "glb": "a5f5a4fb-bb17-50e5-96b0-97034c7efe56",
+    "audio": "cb6ba039-4188-56e4-8d94-c48a3aec6fd2",
+    "poster": "d79f45fc-f4e4-55b1-afae-fd56eac0ba22",
+    "blend": "41990061-3baf-50ed-bf1f-c576ecd2a288",
+    "shader": "005020f1-d5d0-55f4-b3fb-772dde07bf68"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/forge-of-kindness/model.glb",
+    "blender": "artifacts/gift-library/forge-of-kindness/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/forge-of-kindness/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/forge-of-kindness/metadata.json",
+    "preview_video": "artifacts/gift-library/forge-of-kindness/preview.mp4",
+    "gif_preview": "artifacts/gift-library/forge-of-kindness/preview.gif",
+    "thumbnail": "artifacts/gift-library/forge-of-kindness/poster.png",
+    "sound_pack": "artifacts/gift-library/forge-of-kindness/sound/",
+    "particle_pack": "artifacts/gift-library/forge-of-kindness/particles/",
+    "report": "artifacts/gift-library/forge-of-kindness/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

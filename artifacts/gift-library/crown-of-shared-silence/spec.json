@@ -1,0 +1,91 @@
+{
+  "index": 99,
+  "name": "Crown of Shared Silence",
+  "slug": "crown-of-shared-silence",
+  "cost": 10000000,
+  "price_minor": 10000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 30000,
+  "duration_sec": 30.0,
+  "main_idea": "The rarest gift: a shared minute of beautiful silence visualized as a crystal crown forming from quiet.",
+  "model_description": "Crystal crown assembling from silence rings; audience lights dim elegantly.",
+  "environment_description": "World reduces to quiet geometry and breath light.",
+  "animation_phases": [
+    "noise fall away",
+    "silence rings",
+    "crown assemble",
+    "shared hold",
+    "soft return",
+    "crest"
+  ],
+  "vfx": [
+    "silence visualized as clear rings",
+    "soft breath light \u2014 no fireworks"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "almost none \u2014 intentional sparsity",
+  "shaders": [
+    "ultra clear crystal"
+  ],
+  "camera": "ultra slow sacred moves",
+  "music": "near-silence with heart-adjacent pulse",
+  "spatial_sound": "extreme quiet mix",
+  "voice_effects": "none \u2014 silence is the VO",
+  "ai_reaction": "AI acknowledges 'Crown of Shared Silence' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.crown-of-shared-silence with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "silence_crown",
+  "vfx_family": "sacred_quiet",
+  "asset_ids": {
+    "glb": "68d9014e-37b1-51f4-9cb9-2483ecab2f39",
+    "audio": "4ec77861-5f3c-5b9e-98d3-3595bb1d4989",
+    "poster": "4dc2c16b-4d25-58b2-8141-41587d2490b7",
+    "blend": "988d0843-598e-5c98-8ce0-7d1517f73c46",
+    "shader": "938f21fd-3b96-510b-85a6-19b54fc97f09"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/crown-of-shared-silence/model.glb",
+    "blender": "artifacts/gift-library/crown-of-shared-silence/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/crown-of-shared-silence/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/crown-of-shared-silence/metadata.json",
+    "preview_video": "artifacts/gift-library/crown-of-shared-silence/preview.mp4",
+    "gif_preview": "artifacts/gift-library/crown-of-shared-silence/preview.gif",
+    "thumbnail": "artifacts/gift-library/crown-of-shared-silence/poster.png",
+    "sound_pack": "artifacts/gift-library/crown-of-shared-silence/sound/",
+    "particle_pack": "artifacts/gift-library/crown-of-shared-silence/particles/",
+    "report": "artifacts/gift-library/crown-of-shared-silence/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

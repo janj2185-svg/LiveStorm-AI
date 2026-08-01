@@ -1,0 +1,90 @@
+{
+  "index": 33,
+  "name": "Surfboard Salute",
+  "slug": "surfboard-salute",
+  "cost": 1000,
+  "price_minor": 1000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7000,
+  "duration_sec": 7.0,
+  "main_idea": "A surfboard rides a stylized wave and plants a crest salute.",
+  "model_description": "Custom board with unique lamination and wave ribbon mesh.",
+  "environment_description": "Ocean horizon (water required).",
+  "animation_phases": [
+    "wave rise",
+    "ride",
+    "crest salute",
+    "exit splash"
+  ],
+  "vfx": [
+    "wave foam",
+    "splash"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "foam spray",
+  "shaders": [
+    "wet board",
+    "ocean SSS"
+  ],
+  "camera": "wave chase",
+  "music": "surf rock sting original",
+  "spatial_sound": "ocean wide",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Surfboard Salute' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.surfboard-salute with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "surf",
+  "vfx_family": "wave_foam",
+  "asset_ids": {
+    "glb": "216dd755-865b-5c84-907c-5af98cbed0bf",
+    "audio": "1221c2be-580b-5b2b-888f-53af94f0c859",
+    "poster": "e6276c86-b041-573e-be6c-79e07a66e2c0",
+    "blend": "b3cc3602-ad36-51d2-91e9-ebc45016a444",
+    "shader": "34d8f461-eb77-580c-9f64-f8eadc99ed81"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/surfboard-salute/model.glb",
+    "blender": "artifacts/gift-library/surfboard-salute/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/surfboard-salute/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/surfboard-salute/metadata.json",
+    "preview_video": "artifacts/gift-library/surfboard-salute/preview.mp4",
+    "gif_preview": "artifacts/gift-library/surfboard-salute/preview.gif",
+    "thumbnail": "artifacts/gift-library/surfboard-salute/poster.png",
+    "sound_pack": "artifacts/gift-library/surfboard-salute/sound/",
+    "particle_pack": "artifacts/gift-library/surfboard-salute/particles/",
+    "report": "artifacts/gift-library/surfboard-salute/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

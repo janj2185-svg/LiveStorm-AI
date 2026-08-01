@@ -1,0 +1,91 @@
+{
+  "index": 58,
+  "name": "Carousel Confession",
+  "slug": "carousel-confession",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12000,
+  "duration_sec": 12.0,
+  "main_idea": "A night carousel starts; each horse carries a memory lantern to the streamer.",
+  "model_description": "Carousel canopy, unique horses, lanterns.",
+  "environment_description": "Fairground night.",
+  "animation_phases": [
+    "still",
+    "start spin",
+    "lanterns light",
+    "horse bow",
+    "gift drop"
+  ],
+  "vfx": [
+    "fair lights",
+    "motion blur horses"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "fair sparkles",
+  "shaders": [
+    "painted wood",
+    "bulb emissive"
+  ],
+  "camera": "on-carousel then wide",
+  "music": "carousel waltz original",
+  "spatial_sound": "spinning fair",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Carousel Confession' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.carousel-confession with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "carousel",
+  "vfx_family": "fair_lights",
+  "asset_ids": {
+    "glb": "41944133-be0c-58dd-8f81-23eb83b952dc",
+    "audio": "8a589e42-7bd6-55a8-9c8b-5849ae56ff0b",
+    "poster": "8d91297a-3496-5a9e-a803-57748df1cd02",
+    "blend": "f3ceeac4-cc6d-5600-ab7d-8f03efc23183",
+    "shader": "4b71f198-1dac-5a85-8e3f-1b4e9329721c"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/carousel-confession/model.glb",
+    "blender": "artifacts/gift-library/carousel-confession/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/carousel-confession/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/carousel-confession/metadata.json",
+    "preview_video": "artifacts/gift-library/carousel-confession/preview.mp4",
+    "gif_preview": "artifacts/gift-library/carousel-confession/preview.gif",
+    "thumbnail": "artifacts/gift-library/carousel-confession/poster.png",
+    "sound_pack": "artifacts/gift-library/carousel-confession/sound/",
+    "particle_pack": "artifacts/gift-library/carousel-confession/particles/",
+    "report": "artifacts/gift-library/carousel-confession/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

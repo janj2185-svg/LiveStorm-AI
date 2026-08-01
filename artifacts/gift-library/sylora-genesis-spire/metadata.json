@@ -1,0 +1,19 @@
+{
+  "name": "SYLORA Genesis Spire",
+  "slug": "sylora-genesis-spire",
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "price_minor": 1000000,
+  "duration_ms": 25000,
+  "sha256": {
+    "glb": "a46bdc5c0aaf6ae0a70d53c30e6866b85d191390553efd172c9655c51c3a5419",
+    "audio": "4b4760f38002d009c9d4a72e40b45840e1a0242aa3e46c170d791fa138e7dcaf",
+    "poster": "bc7c202e5af3114835224d2dec34949383d5219513fe6cc1d5ada11ce9483fb7"
+  },
+  "bytes": {
+    "glb": 59784,
+    "audio": 4410044,
+    "poster": 523552,
+    "preview_mp4": 786118
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "index": 48,
+  "name": "Dragonfly Courier",
+  "slug": "dragonfly-courier",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11000,
+  "duration_sec": 11.0,
+  "main_idea": "A giant jeweled dragonfly delivers a crystal message orb to the streamer.",
+  "model_description": "Dragonfly with iridescent wings, articulated body, orb payload.",
+  "environment_description": "Wetland morning (water reflections).",
+  "animation_phases": [
+    "distant approach",
+    "wing beats",
+    "orb handoff",
+    "circle exit"
+  ],
+  "vfx": [
+    "wing iridescence",
+    "orb glow"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "morning mist",
+  "shaders": [
+    "chitin",
+    "thin-film wings"
+  ],
+  "camera": "aerial chase",
+  "music": "light wing rhythm",
+  "spatial_sound": "wetland open",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Dragonfly Courier' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.dragonfly-courier with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "dragonfly",
+  "vfx_family": "wing_iridescence",
+  "asset_ids": {
+    "glb": "52489015-f260-59e2-b5ad-0c5b2b3fed16",
+    "audio": "2fa7bc2e-6444-54e3-9422-00374f83f36e",
+    "poster": "31c3776d-6de2-5de5-90b0-ecf96155596b",
+    "blend": "b5d2df2e-3f34-5a24-a9b9-8116ec132920",
+    "shader": "b7704043-58bb-545f-95ff-a1c4bd6cf776"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/dragonfly-courier/model.glb",
+    "blender": "artifacts/gift-library/dragonfly-courier/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/dragonfly-courier/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/dragonfly-courier/metadata.json",
+    "preview_video": "artifacts/gift-library/dragonfly-courier/preview.mp4",
+    "gif_preview": "artifacts/gift-library/dragonfly-courier/preview.gif",
+    "thumbnail": "artifacts/gift-library/dragonfly-courier/poster.png",
+    "sound_pack": "artifacts/gift-library/dragonfly-courier/sound/",
+    "particle_pack": "artifacts/gift-library/dragonfly-courier/particles/",
+    "report": "artifacts/gift-library/dragonfly-courier/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

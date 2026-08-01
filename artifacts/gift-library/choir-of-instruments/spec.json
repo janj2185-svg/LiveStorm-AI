@@ -1,0 +1,90 @@
+{
+  "index": 78,
+  "name": "Choir of Instruments",
+  "slug": "choir-of-instruments",
+  "cost": 100000,
+  "price_minor": 100000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 17000,
+  "duration_sec": 17.0,
+  "main_idea": "Abandoned instruments awaken, float, and form a choir that plays the chat's tempo.",
+  "model_description": "Many unique instruments (violin, drums, flute, harp, horn) with simple rigs.",
+  "environment_description": "Abandoned hall to luminous concert.",
+  "animation_phases": [
+    "dusty hall",
+    "instruments lift",
+    "tune",
+    "choir play",
+    "finale gift score"
+  ],
+  "vfx": [
+    "sound visible ribbons",
+    "dust to light"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "dust to sparkles",
+  "shaders": [
+    "aged wood/metal to restored"
+  ],
+  "camera": "hall coverage concert",
+  "music": "dynamic chat-tempo arrangement",
+  "spatial_sound": "full orchestra imaging",
+  "voice_effects": "none \u2014 instruments speak",
+  "ai_reaction": "AI acknowledges 'Choir of Instruments' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.choir-of-instruments with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "instrument_choir",
+  "vfx_family": "sound_ribbons",
+  "asset_ids": {
+    "glb": "3cc014ca-c647-5412-a96f-d73a3652af43",
+    "audio": "7f855516-e887-5ec8-966e-87ca76958582",
+    "poster": "449ce4e2-a334-5be2-9a7f-2b3648def115",
+    "blend": "0fd28637-4b16-5dfe-84e3-98daa7ed5980",
+    "shader": "72fe0aa6-68c7-5102-878c-b5f28233ee98"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/choir-of-instruments/model.glb",
+    "blender": "artifacts/gift-library/choir-of-instruments/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/choir-of-instruments/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/choir-of-instruments/metadata.json",
+    "preview_video": "artifacts/gift-library/choir-of-instruments/preview.mp4",
+    "gif_preview": "artifacts/gift-library/choir-of-instruments/preview.gif",
+    "thumbnail": "artifacts/gift-library/choir-of-instruments/poster.png",
+    "sound_pack": "artifacts/gift-library/choir-of-instruments/sound/",
+    "particle_pack": "artifacts/gift-library/choir-of-instruments/particles/",
+    "report": "artifacts/gift-library/choir-of-instruments/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

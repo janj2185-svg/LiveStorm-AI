@@ -1,0 +1,90 @@
+{
+  "index": 98,
+  "name": "Ark of Soft Seasons",
+  "slug": "ark-of-soft-seasons",
+  "cost": 5000000,
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 29000,
+  "duration_sec": 29.0,
+  "main_idea": "An ark sails through spring, summer, autumn, winter rooms; each leaves a seasonal gift layer.",
+  "model_description": "Ark vessel, four seasonal chambers with unique flora/props.",
+  "environment_description": "Multi-season ark interior voyage.",
+  "animation_phases": [
+    "embark",
+    "spring",
+    "summer",
+    "autumn",
+    "winter",
+    "combined wreath gift"
+  ],
+  "vfx": [
+    "season-unique (blossoms, heat shimmer, leaves, snow) \u2014 fire only if winter hearth cameo"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "per season",
+  "shaders": [
+    "per season art"
+  ],
+  "camera": "ark voyage",
+  "music": "four seasons original suite",
+  "spatial_sound": "chamber acoustics",
+  "voice_effects": "season heralds",
+  "ai_reaction": "AI acknowledges 'Ark of Soft Seasons' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.ark-of-soft-seasons with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "season_ark",
+  "vfx_family": "four_seasons",
+  "asset_ids": {
+    "glb": "4b6aa32f-724a-5494-9c1e-e4723a9deeb0",
+    "audio": "51a04a8a-57bf-5898-85cf-bf6f84a9c94b",
+    "poster": "5e65436c-1971-5c62-b149-fc60adfc8ecc",
+    "blend": "2676f96b-05af-5465-a91f-60f7a3c81b19",
+    "shader": "9e13c46a-4b54-5081-a67d-1c11d9ab64d0"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/ark-of-soft-seasons/model.glb",
+    "blender": "artifacts/gift-library/ark-of-soft-seasons/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/ark-of-soft-seasons/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/ark-of-soft-seasons/metadata.json",
+    "preview_video": "artifacts/gift-library/ark-of-soft-seasons/preview.mp4",
+    "gif_preview": "artifacts/gift-library/ark-of-soft-seasons/preview.gif",
+    "thumbnail": "artifacts/gift-library/ark-of-soft-seasons/poster.png",
+    "sound_pack": "artifacts/gift-library/ark-of-soft-seasons/sound/",
+    "particle_pack": "artifacts/gift-library/ark-of-soft-seasons/particles/",
+    "report": "artifacts/gift-library/ark-of-soft-seasons/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

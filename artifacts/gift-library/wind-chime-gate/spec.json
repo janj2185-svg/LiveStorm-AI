@@ -1,0 +1,90 @@
+{
+  "index": 8,
+  "name": "Wind Chime Gate",
+  "slug": "wind-chime-gate",
+  "cost": 100,
+  "price_minor": 100,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4500,
+  "duration_sec": 4.5,
+  "main_idea": "Bamboo chimes part like a gate for a soft breeze gift.",
+  "model_description": "Bamboo tubes, cords, and wooden bar with soft cloth ties.",
+  "environment_description": "Outdoor soft daylight haze.",
+  "animation_phases": [
+    "still",
+    "breeze start",
+    "chimes part",
+    "close bow"
+  ],
+  "vfx": [
+    "cloth flutter",
+    "dust motes in sun"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "pollen in breeze",
+  "shaders": [
+    "bamboo anisotropy",
+    "cloth"
+  ],
+  "camera": "through-gate push",
+  "music": "tuned bamboo hits",
+  "spatial_sound": "wide outdoor",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Wind Chime Gate' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.wind-chime-gate with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "bamboo_chime",
+  "vfx_family": "breeze_motes",
+  "asset_ids": {
+    "glb": "383d5578-6efa-51ae-9f7d-b48ca023cfcb",
+    "audio": "97135eb6-a1d1-5cfb-96ee-12e1750691bf",
+    "poster": "fe063db5-c654-59c0-a52e-e106ed36aa98",
+    "blend": "d314ebc5-15f5-52a6-99dc-43815bfe268f",
+    "shader": "e280d2fb-c4fb-5416-bfe6-f893bb2003d1"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/wind-chime-gate/model.glb",
+    "blender": "artifacts/gift-library/wind-chime-gate/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/wind-chime-gate/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/wind-chime-gate/metadata.json",
+    "preview_video": "artifacts/gift-library/wind-chime-gate/preview.mp4",
+    "gif_preview": "artifacts/gift-library/wind-chime-gate/preview.gif",
+    "thumbnail": "artifacts/gift-library/wind-chime-gate/poster.png",
+    "sound_pack": "artifacts/gift-library/wind-chime-gate/sound/",
+    "particle_pack": "artifacts/gift-library/wind-chime-gate/particles/",
+    "report": "artifacts/gift-library/wind-chime-gate/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

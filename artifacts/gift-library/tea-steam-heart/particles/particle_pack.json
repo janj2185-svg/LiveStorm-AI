@@ -1,0 +1,7 @@
+{
+  "name": "particles_steam",
+  "vfx_family": "steam",
+  "max_particles": 200,
+  "spawn_rate_per_second": 40,
+  "notes": "Runtime particle system parameters for @sylora/gift-runtime; textures authored per gift."
+}

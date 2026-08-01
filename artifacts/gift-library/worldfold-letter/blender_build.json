@@ -1,0 +1,10 @@
+{
+  "slug": "worldfold-letter",
+  "family": "worldfold",
+  "vfx": "reality_fold",
+  "duration": 16.0,
+  "rarity": "Mythic",
+  "preview_frames": 20,
+  "blender": "4.0.2",
+  "engine": "BLENDER_EEVEE"
+}

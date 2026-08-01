@@ -1,0 +1,91 @@
+{
+  "index": 69,
+  "name": "Quantum Atelier",
+  "slug": "quantum-atelier",
+  "cost": 100000,
+  "price_minor": 100000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 16000,
+  "duration_sec": 16.0,
+  "main_idea": "An atelier where every brushstroke exists in multiple timelines until viewers vote one.",
+  "model_description": "Studio with split timeline canvases and collapsing choice.",
+  "environment_description": "Splits into parallel ateliers then collapses.",
+  "animation_phases": [
+    "split studio",
+    "parallel paint",
+    "viewer choice pulse",
+    "collapse",
+    "final art gift"
+  ],
+  "vfx": [
+    "timeline ghosts",
+    "collapse flash"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "probability sparks",
+  "shaders": [
+    "ghost overlays",
+    "final paint"
+  ],
+  "camera": "split-screen cinematic then merge",
+  "music": "layered motifs collapsing to one",
+  "spatial_sound": "multi-room then single",
+  "voice_effects": "AI 'Choose a timeline'",
+  "ai_reaction": "AI acknowledges 'Quantum Atelier' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.quantum-atelier with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "quantum_studio",
+  "vfx_family": "timeline_collapse",
+  "asset_ids": {
+    "glb": "a375444b-6001-56b0-95fa-507a2acb9c4c",
+    "audio": "ee61f29f-fbd4-57b3-9dad-d1d382c90f63",
+    "poster": "56e0b14e-8483-5d03-9e86-c2b41d5cfe88",
+    "blend": "2b76a015-a07c-55c7-b6ff-62a85d903583",
+    "shader": "4dab7607-5c7d-5866-9288-b50ee3d6056b"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/quantum-atelier/model.glb",
+    "blender": "artifacts/gift-library/quantum-atelier/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/quantum-atelier/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/quantum-atelier/metadata.json",
+    "preview_video": "artifacts/gift-library/quantum-atelier/preview.mp4",
+    "gif_preview": "artifacts/gift-library/quantum-atelier/preview.gif",
+    "thumbnail": "artifacts/gift-library/quantum-atelier/poster.png",
+    "sound_pack": "artifacts/gift-library/quantum-atelier/sound/",
+    "particle_pack": "artifacts/gift-library/quantum-atelier/particles/",
+    "report": "artifacts/gift-library/quantum-atelier/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

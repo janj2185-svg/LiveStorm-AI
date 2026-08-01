@@ -1,0 +1,90 @@
+{
+  "index": 11,
+  "name": "Coral Whisper",
+  "slug": "coral-whisper",
+  "cost": 250,
+  "price_minor": 250,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4200,
+  "duration_sec": 4.2,
+  "main_idea": "A small coral branch opens polyps that release bioluminescent beads.",
+  "model_description": "Branching coral with animated polyp tips.",
+  "environment_description": "Underwater blue haze (water required by story).",
+  "animation_phases": [
+    "still coral",
+    "polyps open",
+    "beads rise",
+    "fade"
+  ],
+  "vfx": [
+    "underwater godrays",
+    "biolume beads"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "rising luminous beads",
+  "shaders": [
+    "SSS coral",
+    "biolume"
+  ],
+  "camera": "slow underwater drift",
+  "music": "filtered soft pads",
+  "spatial_sound": "muffled underwater",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Coral Whisper' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.coral-whisper with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "coral",
+  "vfx_family": "biolume_water",
+  "asset_ids": {
+    "glb": "d02c1fcf-29f1-5ce5-a5e0-08d0d0c59679",
+    "audio": "b29c6415-b8e2-5eaa-b282-88e0a4f62a87",
+    "poster": "48a9c11f-e932-520a-835a-3703dc54b187",
+    "blend": "9574c90a-2a44-5523-8f1e-7b8c539b20e9",
+    "shader": "867af7b1-3652-57ca-a4b8-89ad7ce9dbad"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/coral-whisper/model.glb",
+    "blender": "artifacts/gift-library/coral-whisper/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/coral-whisper/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/coral-whisper/metadata.json",
+    "preview_video": "artifacts/gift-library/coral-whisper/preview.mp4",
+    "gif_preview": "artifacts/gift-library/coral-whisper/preview.gif",
+    "thumbnail": "artifacts/gift-library/coral-whisper/poster.png",
+    "sound_pack": "artifacts/gift-library/coral-whisper/sound/",
+    "particle_pack": "artifacts/gift-library/coral-whisper/particles/",
+    "report": "artifacts/gift-library/coral-whisper/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "index": 31,
+  "name": "Garden Gate",
+  "slug": "garden-gate",
+  "cost": 2500,
+  "price_minor": 2500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 8200,
+  "duration_sec": 8.2,
+  "main_idea": "An iron garden gate opens onto a sudden bloom path to the avatar.",
+  "model_description": "Wrought iron gate, vines, and blooming path flowers.",
+  "environment_description": "Overgrown garden at golden hour.",
+  "animation_phases": [
+    "locked gate",
+    "vine unlock",
+    "open",
+    "bloom path",
+    "arrive"
+  ],
+  "vfx": [
+    "petal burst",
+    "golden godrays"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "petals",
+  "shaders": [
+    "iron rust",
+    "petal SSS"
+  ],
+  "camera": "walk-through POV",
+  "music": "pastoral strings",
+  "spatial_sound": "outdoor garden",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Garden Gate' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.garden-gate with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "garden_gate",
+  "vfx_family": "petal_path",
+  "asset_ids": {
+    "glb": "d0bfbecd-bec3-5b15-821f-41a676776164",
+    "audio": "0345dc53-ab5c-5362-b65e-0fd9617384ca",
+    "poster": "876f11c2-5add-512f-8178-98e881a212fd",
+    "blend": "c3903fb6-628d-56c7-8e8d-d69c7fb4ee77",
+    "shader": "756525bf-3f27-5828-a8cb-cf1a2563e226"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/garden-gate/model.glb",
+    "blender": "artifacts/gift-library/garden-gate/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/garden-gate/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/garden-gate/metadata.json",
+    "preview_video": "artifacts/gift-library/garden-gate/preview.mp4",
+    "gif_preview": "artifacts/gift-library/garden-gate/preview.gif",
+    "thumbnail": "artifacts/gift-library/garden-gate/poster.png",
+    "sound_pack": "artifacts/gift-library/garden-gate/sound/",
+    "particle_pack": "artifacts/gift-library/garden-gate/particles/",
+    "report": "artifacts/gift-library/garden-gate/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

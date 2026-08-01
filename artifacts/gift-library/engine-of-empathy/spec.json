@@ -1,0 +1,91 @@
+{
+  "index": 76,
+  "name": "Engine of Empathy",
+  "slug": "engine-of-empathy",
+  "cost": 250000,
+  "price_minor": 250000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 18000,
+  "duration_sec": 18.0,
+  "main_idea": "A vast empathy engine converts cheers into visible warmth that shields the streamer.",
+  "model_description": "Engine core, conduits, warmth shield dome.",
+  "environment_description": "Machine cathedral transforming to soft shield world.",
+  "animation_phases": [
+    "engine idle",
+    "cheer intake",
+    "core spin",
+    "shield deploy",
+    "warmth settle"
+  ],
+  "vfx": [
+    "energy conduits",
+    "shield dome"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "cheer sparks",
+  "shaders": [
+    "machine metal",
+    "warmth shield"
+  ],
+  "camera": "engine interior to shield exterior",
+  "music": "machine pulse to human warmth",
+  "spatial_sound": "industrial to soft",
+  "voice_effects": "AI engine status lines",
+  "ai_reaction": "AI acknowledges 'Engine of Empathy' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.engine-of-empathy with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "empathy_engine",
+  "vfx_family": "warmth_shield",
+  "asset_ids": {
+    "glb": "4ab1d8fa-18d0-553d-ac16-876d32c78d89",
+    "audio": "103dbfa6-b232-550f-956a-1d854fae371d",
+    "poster": "fbbac3ab-b404-5907-b4f1-f0dc155f2a97",
+    "blend": "be60e2d5-5911-5c3b-8546-726dede3661e",
+    "shader": "c6619118-2ca4-5593-9b3c-36d606602bea"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/engine-of-empathy/model.glb",
+    "blender": "artifacts/gift-library/engine-of-empathy/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/engine-of-empathy/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/engine-of-empathy/metadata.json",
+    "preview_video": "artifacts/gift-library/engine-of-empathy/preview.mp4",
+    "gif_preview": "artifacts/gift-library/engine-of-empathy/preview.gif",
+    "thumbnail": "artifacts/gift-library/engine-of-empathy/poster.png",
+    "sound_pack": "artifacts/gift-library/engine-of-empathy/sound/",
+    "particle_pack": "artifacts/gift-library/engine-of-empathy/particles/",
+    "report": "artifacts/gift-library/engine-of-empathy/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

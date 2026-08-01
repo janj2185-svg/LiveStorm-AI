@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "renderer_targets": [
+    "threejs",
+    "flutter"
+  ],
+  "source_metadata": {
+    "application": "blender",
+    "version": "4.0.2",
+    "source_asset_id": "009407c1-3430-5892-a1cd-62674e831eea",
+    "license_reference": "SYLORA-original-IP"
+  },
+  "duration_ms": 7000,
+  "assets": [
+    {
+      "asset_id": "97670a9d-c413-57e3-8269-b18b177cfb62",
+      "role": "primary_model"
+    },
+    {
+      "asset_id": "3d6131a5-c659-5afa-ab89-db6d324996d0",
+      "role": "primary_audio"
+    },
+    {
+      "asset_id": "d66fd2ca-4d47-591c-91a0-22e6efd92cfe",
+      "role": "poster"
+    },
+    {
+      "asset_id": "97670a9d-c413-57e3-8269-b18b177cfb62",
+      "role": "low_end_fallback"
+    }
+  ],
+  "layers": [
+    {
+      "kind": "model",
+      "name": "gift_root",
+      "asset_id": "97670a9d-c413-57e3-8269-b18b177cfb62",
+      "transform": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation_degrees": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  ],
+  "timelines": [
+    {
+      "name": "main",
+      "duration_ms": 7000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "gift_root",
+          "property": "rotation_z",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": 0,
+              "easing": "ease_in_out"
+            },
+            {
+              "time_ms": 7000,
+              "value": 360,
+              "easing": "ease_in_out"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "particle_systems": [
+    {
+      "name": "particles_spot_volume",
+      "max_particles": 600,
+      "spawn_rate_per_second": 60,
+      "texture_asset_id": null,
+      "deterministic_seed": 1894925639
+    }
+  ],
+  "shaders": [],
+  "lighting": [
+    {
+      "kind": "ambient",
+      "color_hex": "#101820",
+      "intensity": 0.4,
+      "position": null
+    },
+    {
+      "kind": "directional",
+      "color_hex": "#FFF2D8",
+      "intensity": 2.2,
+      "position": {
+        "x": 2,
+        "y": 4,
+        "z": 3
+      }
+    }
+  ],
+  "audio": [
+    {
+      "asset_id": "3d6131a5-c659-5afa-ab89-db6d324996d0",
+      "spatial": true,
+      "peak_dbfs": -6,
+      "autoplay": true
+    }
+  ],
+  "interaction_hooks": [
+    {
+      "hook": "arrival",
+      "action": "sylora.gift.play"
+    },
+    {
+      "hook": "completion",
+      "action": "sylora.gift.complete"
+    },
+    {
+      "hook": "tap",
+      "action": "sylora.gift.replay"
+    }
+  ],
+  "combinations": [
+    {
+      "combination_id": "sylora.gift.stage-curtain-rise",
+      "compatible_combination_ids": [
+        "sylora.gift.combo.any"
+      ],
+      "window_seconds": 120
+    }
+  ],
+  "procedural_parameters": [
+    {
+      "name": "seed",
+      "source": "deterministic",
+      "value_type": "seed",
+      "minimum": null,
+      "maximum": null,
+      "allowed_values": []
+    }
+  ],
+  "effects": [
+    {
+      "name": "stage-curtain-rise_main",
+      "scope": "viewer",
+      "timeline_name": "main"
+    }
+  ],
+  "fallbacks": {
+    "low_end_asset_id": "97670a9d-c413-57e3-8269-b18b177cfb62",
+    "reduced_motion_asset_id": "d66fd2ca-4d47-591c-91a0-22e6efd92cfe",
+    "no_audio_asset_id": "97670a9d-c413-57e3-8269-b18b177cfb62"
+  },
+  "quality_budgets": {
+    "max_download_bytes": 5000000,
+    "max_duration_ms": 8000,
+    "max_particles": 600,
+    "max_shader_instructions": 256,
+    "max_audio_peak_dbfs": -1
+  }
+}

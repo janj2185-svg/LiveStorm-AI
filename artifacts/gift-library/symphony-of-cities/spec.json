@@ -1,0 +1,90 @@
+{
+  "index": 89,
+  "name": "Symphony of Cities",
+  "slug": "symphony-of-cities",
+  "cost": 5000000,
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 28000,
+  "duration_sec": 28.0,
+  "main_idea": "Five cities play as instruments; their combined skyline becomes a gift monument.",
+  "model_description": "Five unique city kits with different architecture languages.",
+  "environment_description": "Planet panorama with city movements.",
+  "animation_phases": [
+    "city 1 theme",
+    "2",
+    "3",
+    "4",
+    "5",
+    "combine monument"
+  ],
+  "vfx": [
+    "skyline light shows unique per city"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "city-specific",
+  "shaders": [
+    "per-city art"
+  ],
+  "camera": "planetary tour",
+  "music": "five-movement symphony",
+  "spatial_sound": "planetary imaging",
+  "voice_effects": "city heralds",
+  "ai_reaction": "AI acknowledges 'Symphony of Cities' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.symphony-of-cities with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "city_symphony",
+  "vfx_family": "skyline_movements",
+  "asset_ids": {
+    "glb": "90b70f8d-b083-56e4-a339-b025025aadd6",
+    "audio": "b6379619-0c74-5b9f-bd2b-c00b04046055",
+    "poster": "b59643af-f445-5d3b-b4af-e38e2777a2eb",
+    "blend": "1f2e1d9d-2e8d-588b-84d3-9c7336cc7621",
+    "shader": "53c91cd0-3e16-567f-8fdc-856d527bc69b"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/symphony-of-cities/model.glb",
+    "blender": "artifacts/gift-library/symphony-of-cities/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/symphony-of-cities/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/symphony-of-cities/metadata.json",
+    "preview_video": "artifacts/gift-library/symphony-of-cities/preview.mp4",
+    "gif_preview": "artifacts/gift-library/symphony-of-cities/preview.gif",
+    "thumbnail": "artifacts/gift-library/symphony-of-cities/poster.png",
+    "sound_pack": "artifacts/gift-library/symphony-of-cities/sound/",
+    "particle_pack": "artifacts/gift-library/symphony-of-cities/particles/",
+    "report": "artifacts/gift-library/symphony-of-cities/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

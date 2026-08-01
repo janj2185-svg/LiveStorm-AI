@@ -1,0 +1,91 @@
+{
+  "index": 3,
+  "name": "Signal Ribbon",
+  "slug": "signal-ribbon",
+  "cost": 25,
+  "price_minor": 25,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 3600,
+  "duration_sec": 3.6,
+  "main_idea": "A neon ribbon of chat energy wraps the streamer nameplate once.",
+  "model_description": "Parametric ribbon mesh with UV scroll stripes.",
+  "environment_description": "Dark UI depth with soft bokeh dots.",
+  "animation_phases": [
+    "ribbon spawn",
+    "wrap nameplate",
+    "pulse sync",
+    "fade trail"
+  ],
+  "vfx": [
+    "UV scroll glow",
+    "trail afterimage"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "tiny UI pixels",
+  "shaders": [
+    "emissive scroll",
+    "additive trail"
+  ],
+  "camera": "locked framing on lower-third",
+  "music": "soft synth blip arpeggio",
+  "spatial_sound": "stereo wrap L/R",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Signal Ribbon' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.signal-ribbon with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "ribbon",
+  "vfx_family": "ui_glow",
+  "asset_ids": {
+    "glb": "2d720624-98c3-56c7-94c3-05da1ac1643e",
+    "audio": "16cb58d1-0b9f-5419-9b41-01fd6dc3a217",
+    "poster": "400e3bc1-3464-5af8-b1e7-82f620926482",
+    "blend": "a17e92c9-4f35-5498-ad87-31a1a0e520d6",
+    "shader": "cc399dda-ae29-522c-80a1-2a45472b91b2"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/signal-ribbon/model.glb",
+    "blender": "artifacts/gift-library/signal-ribbon/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/signal-ribbon/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/signal-ribbon/metadata.json",
+    "preview_video": "artifacts/gift-library/signal-ribbon/preview.mp4",
+    "gif_preview": "artifacts/gift-library/signal-ribbon/preview.gif",
+    "thumbnail": "artifacts/gift-library/signal-ribbon/poster.png",
+    "sound_pack": "artifacts/gift-library/signal-ribbon/sound/",
+    "particle_pack": "artifacts/gift-library/signal-ribbon/particles/",
+    "report": "artifacts/gift-library/signal-ribbon/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

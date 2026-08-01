@@ -1,0 +1,91 @@
+{
+  "index": 47,
+  "name": "Paper City Dawn",
+  "slug": "paper-city-dawn",
+  "cost": 5000,
+  "price_minor": 5000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11500,
+  "duration_sec": 11.5,
+  "main_idea": "A folded paper city rises and sunrise paints windows one by one.",
+  "model_description": "Modular paper buildings with unique silhouettes.",
+  "environment_description": "Paper diorama table becoming dawn sky.",
+  "animation_phases": [
+    "flat paper",
+    "city unfold",
+    "dawn paint",
+    "windows light",
+    "bird fly"
+  ],
+  "vfx": [
+    "sunrise gradient",
+    "window lights"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "paper birds",
+  "shaders": [
+    "paper buildings",
+    "dawn sky"
+  ],
+  "camera": "city crane",
+  "music": "dawn ambient + soft choir",
+  "spatial_sound": "city wide then intimate street",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Paper City Dawn' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.paper-city-dawn with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "paper_city",
+  "vfx_family": "dawn_windows",
+  "asset_ids": {
+    "glb": "4590f0ae-6bb0-5a4a-b5bc-51294664f4cd",
+    "audio": "3d07fcdc-83a4-5921-b357-7131e8ba2207",
+    "poster": "f00f3d65-038c-564c-bad7-4703a81794ca",
+    "blend": "c42dd272-76e8-5307-a944-680c41479b58",
+    "shader": "f0b7c300-e707-5fdb-9d4d-55d9c2926fc6"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/paper-city-dawn/model.glb",
+    "blender": "artifacts/gift-library/paper-city-dawn/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/paper-city-dawn/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/paper-city-dawn/metadata.json",
+    "preview_video": "artifacts/gift-library/paper-city-dawn/preview.mp4",
+    "gif_preview": "artifacts/gift-library/paper-city-dawn/preview.gif",
+    "thumbnail": "artifacts/gift-library/paper-city-dawn/poster.png",
+    "sound_pack": "artifacts/gift-library/paper-city-dawn/sound/",
+    "particle_pack": "artifacts/gift-library/paper-city-dawn/particles/",
+    "report": "artifacts/gift-library/paper-city-dawn/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

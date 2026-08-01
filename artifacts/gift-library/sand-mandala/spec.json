@@ -1,0 +1,90 @@
+{
+  "index": 26,
+  "name": "Sand Mandala",
+  "slug": "sand-mandala",
+  "cost": 2500,
+  "price_minor": 2500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 8500,
+  "duration_sec": 8.5,
+  "main_idea": "Colored sands assemble a mandala then dissolve in a respectful sweep.",
+  "model_description": "Layered sand piles morphing into radial patterns.",
+  "environment_description": "Monastery floor with soft daylight.",
+  "animation_phases": [
+    "pour grains",
+    "pattern assemble",
+    "hold sacred",
+    "sweep dissolve"
+  ],
+  "vfx": [
+    "grain flow",
+    "color dust"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "sand grains",
+  "shaders": [
+    "sand grain",
+    "floor stone"
+  ],
+  "camera": "overhead to slight angle",
+  "music": "singing bowls",
+  "spatial_sound": "temple quiet",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Sand Mandala' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.sand-mandala with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "sand_art",
+  "vfx_family": "sand_flow",
+  "asset_ids": {
+    "glb": "3726d606-7c02-5e97-a376-9d577e90374c",
+    "audio": "97caf58d-3b92-5ce6-a602-7b927e2cf1f9",
+    "poster": "10614330-b34b-5443-8034-9248841b7799",
+    "blend": "277891e6-f7cc-561e-aaa9-5e6b9723e8b2",
+    "shader": "b9164bf6-2e31-5773-a639-91bb9cc343df"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/sand-mandala/model.glb",
+    "blender": "artifacts/gift-library/sand-mandala/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/sand-mandala/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/sand-mandala/metadata.json",
+    "preview_video": "artifacts/gift-library/sand-mandala/preview.mp4",
+    "gif_preview": "artifacts/gift-library/sand-mandala/preview.gif",
+    "thumbnail": "artifacts/gift-library/sand-mandala/poster.png",
+    "sound_pack": "artifacts/gift-library/sand-mandala/sound/",
+    "particle_pack": "artifacts/gift-library/sand-mandala/particles/",
+    "report": "artifacts/gift-library/sand-mandala/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

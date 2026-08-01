@@ -1,0 +1,91 @@
+{
+  "index": 4,
+  "name": "Tea Steam Heart",
+  "slug": "tea-steam-heart",
+  "cost": 50,
+  "price_minor": 50,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4200,
+  "duration_sec": 4.2,
+  "main_idea": "Steam from a ceramic cup briefly forms a heart silhouette.",
+  "model_description": "Handmade cup, saucer, and volumetric steam proxy mesh.",
+  "environment_description": "Warm desk vignette with soft window light.",
+  "animation_phases": [
+    "cup present",
+    "steam rise",
+    "heart form",
+    "dissolve"
+  ],
+  "vfx": [
+    "steam volume (smoke-like only as steam)",
+    "heat shimmer"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "condensate droplets",
+  "shaders": [
+    "ceramic SSS",
+    "steam opacity"
+  ],
+  "camera": "macro dolly",
+  "music": "soft ceramic chime",
+  "spatial_sound": "near-field cup center",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Tea Steam Heart' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.tea-steam-heart with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "ceramic_prop",
+  "vfx_family": "steam",
+  "asset_ids": {
+    "glb": "815e5d75-17d1-58c9-ac31-c89a265119bd",
+    "audio": "5f1ef4d9-8bd2-509d-89be-b87b3c407065",
+    "poster": "e14c060f-6b6a-57c4-a21a-ba059ee2f165",
+    "blend": "3114e2a2-74bc-5740-943c-cf5e6734eca0",
+    "shader": "c74c1da0-409c-52e9-a5a5-49c90eaa99dc"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/tea-steam-heart/model.glb",
+    "blender": "artifacts/gift-library/tea-steam-heart/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/tea-steam-heart/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/tea-steam-heart/metadata.json",
+    "preview_video": "artifacts/gift-library/tea-steam-heart/preview.mp4",
+    "gif_preview": "artifacts/gift-library/tea-steam-heart/preview.gif",
+    "thumbnail": "artifacts/gift-library/tea-steam-heart/poster.png",
+    "sound_pack": "artifacts/gift-library/tea-steam-heart/sound/",
+    "particle_pack": "artifacts/gift-library/tea-steam-heart/particles/",
+    "report": "artifacts/gift-library/tea-steam-heart/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": true,
+    "performance_check": true
+  },
+  "known_limitations": [
+    "Assets built (Blender/GLB/animation/VFX proxy/audio/preview) but runtime preview + SYLORA wallet/WS integration not verified in this environment.",
+    "EEVEE short-frame preview is not a full cinematic art-pass.",
+    "Procedural unique meshes are original but not hand-sculpted AAA character work."
+  ]
+}

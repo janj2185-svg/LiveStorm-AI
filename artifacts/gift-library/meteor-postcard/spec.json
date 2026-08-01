@@ -1,0 +1,90 @@
+{
+  "index": 36,
+  "name": "Meteor Postcard",
+  "slug": "meteor-postcard",
+  "cost": 2500,
+  "price_minor": 2500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7000,
+  "duration_sec": 7.0,
+  "main_idea": "A postcard rides a gentle meteor trail and lands as a stamped memory.",
+  "model_description": "Postcard card and stylized meteor core (no destructive fire).",
+  "environment_description": "Night sky over quiet town.",
+  "animation_phases": [
+    "sky enter",
+    "trail write",
+    "postcard land",
+    "stamp"
+  ],
+  "vfx": [
+    "meteor trail (plasma glow, not flame burst)",
+    "stamp flash"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "trail sparks",
+  "shaders": [
+    "card paper",
+    "trail additive"
+  ],
+  "camera": "sky chase to desk land",
+  "music": "wistful synth",
+  "spatial_sound": "sky to desk transition",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Meteor Postcard' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.meteor-postcard with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "postcard",
+  "vfx_family": "meteor_trail",
+  "asset_ids": {
+    "glb": "3ae70dde-1ebb-5254-8c39-c7ff7b5e786e",
+    "audio": "5acd751d-7454-55ec-9d7f-5b91c00bc15a",
+    "poster": "14d83dd4-4a21-5683-b258-ef9e4b3bc8e9",
+    "blend": "12acec41-580c-5fcd-ad64-233c7d2c1e0d",
+    "shader": "cf386190-9e2b-5cd3-ac46-828ba3ed473a"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/meteor-postcard/model.glb",
+    "blender": "artifacts/gift-library/meteor-postcard/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/meteor-postcard/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/meteor-postcard/metadata.json",
+    "preview_video": "artifacts/gift-library/meteor-postcard/preview.mp4",
+    "gif_preview": "artifacts/gift-library/meteor-postcard/preview.gif",
+    "thumbnail": "artifacts/gift-library/meteor-postcard/poster.png",
+    "sound_pack": "artifacts/gift-library/meteor-postcard/sound/",
+    "particle_pack": "artifacts/gift-library/meteor-postcard/particles/",
+    "report": "artifacts/gift-library/meteor-postcard/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

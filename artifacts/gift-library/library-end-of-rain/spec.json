@@ -1,0 +1,93 @@
+{
+  "index": 91,
+  "name": "Library at the End of Rain",
+  "slug": "library-end-of-rain",
+  "cost": 2500000,
+  "price_minor": 2500000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 27000,
+  "duration_sec": 27.0,
+  "main_idea": "After an endless rain, a library emerges; each book is a saved stream moment.",
+  "model_description": "Rain world, emerging library, books as memory crystals.",
+  "environment_description": "Rain plains to cathedral library (water then dry).",
+  "animation_phases": [
+    "endless rain",
+    "waters part",
+    "library rise",
+    "books orbit",
+    "choose memory",
+    "gift crystal"
+  ],
+  "vfx": [
+    "rain curtain",
+    "waters part",
+    "memory projections"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "rain then dry dust of light",
+  "shaders": [
+    "wet world",
+    "library sacred"
+  ],
+  "camera": "weather epic to intimate book",
+  "music": "rain to silence to choir",
+  "spatial_sound": "rain muffling to hall",
+  "voice_effects": "librarian of rain",
+  "ai_reaction": "AI acknowledges 'Library at the End of Rain' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.library-end-of-rain with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "rain_library",
+  "vfx_family": "memory_books",
+  "asset_ids": {
+    "glb": "45c1c597-5328-557b-9a19-29e09aa5ef46",
+    "audio": "d322fa0c-c542-5ad1-8a38-f7604e3f6af9",
+    "poster": "11c76b3d-bb9f-5a57-960e-a7302105a5f0",
+    "blend": "c141e1d4-8834-5166-b045-bc054ecdde0f",
+    "shader": "dd774efa-c190-5847-ab4d-ad31b9dc128f"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/library-end-of-rain/model.glb",
+    "blender": "artifacts/gift-library/library-end-of-rain/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/library-end-of-rain/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/library-end-of-rain/metadata.json",
+    "preview_video": "artifacts/gift-library/library-end-of-rain/preview.mp4",
+    "gif_preview": "artifacts/gift-library/library-end-of-rain/preview.gif",
+    "thumbnail": "artifacts/gift-library/library-end-of-rain/poster.png",
+    "sound_pack": "artifacts/gift-library/library-end-of-rain/sound/",
+    "particle_pack": "artifacts/gift-library/library-end-of-rain/particles/",
+    "report": "artifacts/gift-library/library-end-of-rain/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

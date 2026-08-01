@@ -1,0 +1,90 @@
+{
+  "index": 94,
+  "name": "Palace of Soft Thunder",
+  "slug": "palace-of-soft-thunder",
+  "cost": 2500000,
+  "price_minor": 2500000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 26000,
+  "duration_sec": 26.0,
+  "main_idea": "A palace where thunder is gentle light; rooms stage gifts for streamer, AI, and viewers.",
+  "model_description": "Palace wings, soft thunder volumes, three gift altars.",
+  "environment_description": "Multi-wing palace with weather as light.",
+  "animation_phases": [
+    "gate",
+    "hall of streamer",
+    "hall of AI",
+    "hall of viewers",
+    "united altar"
+  ],
+  "vfx": [
+    "soft thunder light (not harsh bolts spam)",
+    "altar blooms"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "palace motes",
+  "shaders": [
+    "palace marble luminous"
+  ],
+  "camera": "palace tour",
+  "music": "soft thunder suite",
+  "spatial_sound": "wing-by-wing",
+  "voice_effects": "palace steward",
+  "ai_reaction": "AI acknowledges 'Palace of Soft Thunder' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.palace-of-soft-thunder with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "soft_thunder_palace",
+  "vfx_family": "gentle_thunder",
+  "asset_ids": {
+    "glb": "b5dc8488-90ef-5b85-8072-deed3d19f461",
+    "audio": "ec772c3c-6cbe-5d97-a771-ba4350ffa683",
+    "poster": "508f92b9-77de-588b-ab7d-484989f73974",
+    "blend": "0b0962e8-2e09-5f1b-94ef-0f321cc960bd",
+    "shader": "b121b5dd-c85b-5cbf-808a-ad3ca60788fc"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/palace-of-soft-thunder/model.glb",
+    "blender": "artifacts/gift-library/palace-of-soft-thunder/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/palace-of-soft-thunder/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/palace-of-soft-thunder/metadata.json",
+    "preview_video": "artifacts/gift-library/palace-of-soft-thunder/preview.mp4",
+    "gif_preview": "artifacts/gift-library/palace-of-soft-thunder/preview.gif",
+    "thumbnail": "artifacts/gift-library/palace-of-soft-thunder/poster.png",
+    "sound_pack": "artifacts/gift-library/palace-of-soft-thunder/sound/",
+    "particle_pack": "artifacts/gift-library/palace-of-soft-thunder/particles/",
+    "report": "artifacts/gift-library/palace-of-soft-thunder/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

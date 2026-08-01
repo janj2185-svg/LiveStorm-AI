@@ -1,0 +1,92 @@
+{
+  "index": 42,
+  "name": "Library of Echoes",
+  "slug": "library-of-echoes",
+  "cost": 10000,
+  "price_minor": 10000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 12000,
+  "duration_sec": 12.0,
+  "main_idea": "Books fly from shelves forming a spiral tower that opens a portal of memories.",
+  "model_description": "Hundreds of unique book covers (procedural titles) and spiral architecture.",
+  "environment_description": "Infinite library atrium.",
+  "animation_phases": [
+    "quiet shelves",
+    "books lift",
+    "spiral form",
+    "portal open",
+    "memory flicker",
+    "close"
+  ],
+  "vfx": [
+    "page flocks",
+    "portal refraction"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "paper flocks",
+  "shaders": [
+    "leather/cloth books",
+    "portal glass"
+  ],
+  "camera": "crane up spiral",
+  "music": "choir pad + soft percussion",
+  "spatial_sound": "atrium reverb",
+  "voice_effects": "layered whisper echoes (non-speech)",
+  "ai_reaction": "AI acknowledges 'Library of Echoes' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.library-of-echoes with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "library",
+  "vfx_family": "book_portal",
+  "asset_ids": {
+    "glb": "b7ae4329-7a08-5b8c-aaea-01fc959f38ea",
+    "audio": "f9e98ac8-8cd3-53f7-9c36-62060e2052ea",
+    "poster": "4b0138cc-ed76-54a4-8539-9a050784c8b3",
+    "blend": "d129126e-189f-5356-ab93-3d1ae6c57a11",
+    "shader": "515f3da0-07f4-5c17-ab48-67d600c29244"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/library-of-echoes/model.glb",
+    "blender": "artifacts/gift-library/library-of-echoes/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/library-of-echoes/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/library-of-echoes/metadata.json",
+    "preview_video": "artifacts/gift-library/library-of-echoes/preview.mp4",
+    "gif_preview": "artifacts/gift-library/library-of-echoes/preview.gif",
+    "thumbnail": "artifacts/gift-library/library-of-echoes/poster.png",
+    "sound_pack": "artifacts/gift-library/library-of-echoes/sound/",
+    "particle_pack": "artifacts/gift-library/library-of-echoes/particles/",
+    "report": "artifacts/gift-library/library-of-echoes/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

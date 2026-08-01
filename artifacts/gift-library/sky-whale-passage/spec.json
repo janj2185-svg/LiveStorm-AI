@@ -1,0 +1,91 @@
+{
+  "index": 56,
+  "name": "Sky Whale Passage",
+  "slug": "sky-whale-passage",
+  "cost": 25000,
+  "price_minor": 25000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 13000,
+  "duration_sec": 13.0,
+  "main_idea": "A gentle sky whale passes overhead trailing gardens that rain seeds of light.",
+  "model_description": "Sky whale creature with garden terraces on back; seed pods.",
+  "environment_description": "Cloud ocean at golden hour.",
+  "animation_phases": [
+    "distant silhouette",
+    "pass overhead",
+    "seed rain",
+    "avatar bloom",
+    "whale exit"
+  ],
+  "vfx": [
+    "cloud wake",
+    "seed light rain"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "light seeds",
+  "shaders": [
+    "whale skin SSS",
+    "cloud volume proxy"
+  ],
+  "camera": "epic under-whale crane",
+  "music": "vast soft choir",
+  "spatial_sound": "sky immense",
+  "voice_effects": "whale song-like FX (original)",
+  "ai_reaction": "AI acknowledges 'Sky Whale Passage' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.sky-whale-passage with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "sky_whale",
+  "vfx_family": "seed_rain",
+  "asset_ids": {
+    "glb": "bd5bb801-21a0-58b6-a747-6d4417ccfd4a",
+    "audio": "7a89a68e-12f5-5184-ae21-52e6da3c9e80",
+    "poster": "9fd4deb7-7589-53c8-8cf3-a77ab40bbc89",
+    "blend": "3d6b9d25-73ab-5e2b-968f-33f548a761db",
+    "shader": "cfef5006-c4ca-5b23-9a6f-241c937e550d"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/sky-whale-passage/model.glb",
+    "blender": "artifacts/gift-library/sky-whale-passage/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/sky-whale-passage/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/sky-whale-passage/metadata.json",
+    "preview_video": "artifacts/gift-library/sky-whale-passage/preview.mp4",
+    "gif_preview": "artifacts/gift-library/sky-whale-passage/preview.gif",
+    "thumbnail": "artifacts/gift-library/sky-whale-passage/poster.png",
+    "sound_pack": "artifacts/gift-library/sky-whale-passage/sound/",
+    "particle_pack": "artifacts/gift-library/sky-whale-passage/particles/",
+    "report": "artifacts/gift-library/sky-whale-passage/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

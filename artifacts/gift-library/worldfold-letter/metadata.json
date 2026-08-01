@@ -1,0 +1,19 @@
+{
+  "name": "Worldfold Letter",
+  "slug": "worldfold-letter",
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "price_minor": 50000,
+  "duration_ms": 16000,
+  "sha256": {
+    "glb": "1bacbf3d92330f7b2d8473ccb6eb80d25456bcc0cda5860f2171f0675bc64df3",
+    "audio": "6a432bff35b283b856bb5114f394a61c4ddd485240370792f803def5a6f7137d",
+    "poster": "2614e327994e45af2b804c37e201d82ea6d2bf8c1a0bed74b84d5a1bc959a0f6"
+  },
+  "bytes": {
+    "glb": 275252,
+    "audio": 2822444,
+    "poster": 530855,
+    "preview_mp4": 492671
+  }
+}

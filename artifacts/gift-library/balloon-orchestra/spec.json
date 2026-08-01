@@ -1,0 +1,89 @@
+{
+  "index": 34,
+  "name": "Balloon Orchestra",
+  "slug": "balloon-orchestra",
+  "cost": 2500,
+  "price_minor": 2500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 8000,
+  "duration_sec": 8.0,
+  "main_idea": "Colored balloons inflate into instrument shapes and play a chord.",
+  "model_description": "Balloon instruments: tuba, violin, drum approximations.",
+  "environment_description": "Festive hall.",
+  "animation_phases": [
+    "inflate",
+    "shape instruments",
+    "play chord",
+    "release float"
+  ],
+  "vfx": [
+    "stretch latex",
+    "sound-visual rings"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "confetti stars",
+  "shaders": [
+    "latex sheen"
+  ],
+  "camera": "orchestra wide then close",
+  "music": "balloon-like squeak orchestra joke resolve",
+  "spatial_sound": "hall instruments L/C/R",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Balloon Orchestra' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.balloon-orchestra with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "balloon_instr",
+  "vfx_family": "sound_rings",
+  "asset_ids": {
+    "glb": "f84aba7d-d038-50ce-8725-1f4dcaa0d2e1",
+    "audio": "a53e4fa7-3108-55db-af52-c0c640e2acd4",
+    "poster": "5b032f19-964b-5720-b9ab-2c23bce8c29e",
+    "blend": "719ee116-6a5e-5803-9544-e32d838e5f25",
+    "shader": "fb9600e4-c924-5336-a58e-b4325ef63064"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/balloon-orchestra/model.glb",
+    "blender": "artifacts/gift-library/balloon-orchestra/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/balloon-orchestra/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/balloon-orchestra/metadata.json",
+    "preview_video": "artifacts/gift-library/balloon-orchestra/preview.mp4",
+    "gif_preview": "artifacts/gift-library/balloon-orchestra/preview.gif",
+    "thumbnail": "artifacts/gift-library/balloon-orchestra/poster.png",
+    "sound_pack": "artifacts/gift-library/balloon-orchestra/sound/",
+    "particle_pack": "artifacts/gift-library/balloon-orchestra/particles/",
+    "report": "artifacts/gift-library/balloon-orchestra/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "index": 32,
+  "name": "Typewriter Love",
+  "slug": "typewriter-love",
+  "cost": 500,
+  "price_minor": 500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7500,
+  "duration_sec": 7.5,
+  "main_idea": "A typewriter types a personalized line that lifts off the page as 3D letters.",
+  "model_description": "Vintage typewriter with flying glyph meshes.",
+  "environment_description": "Writer's desk night lamp.",
+  "animation_phases": [
+    "keys strike",
+    "line forms",
+    "letters lift",
+    "orbit avatar"
+  ],
+  "vfx": [
+    "ink transfer",
+    "letter trails"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "ink mist",
+  "shaders": [
+    "metal typewriter",
+    "paper"
+  ],
+  "camera": "desk macro then lift",
+  "music": "type rhythm + warm pad",
+  "spatial_sound": "desk then lift space",
+  "voice_effects": "typed letters as rhythmic clicks",
+  "ai_reaction": "AI acknowledges 'Typewriter Love' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.typewriter-love with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "typewriter",
+  "vfx_family": "flying_type",
+  "asset_ids": {
+    "glb": "a8ba065a-b7b3-5553-8c6e-bf0832fd47e3",
+    "audio": "26ef48b4-4bf6-543a-abe9-dc28098297b9",
+    "poster": "e18e7bc3-bd98-50a9-9ae3-4dd163dff777",
+    "blend": "c29dad78-c6ae-5883-b417-61aba697e39e",
+    "shader": "1aa16ff2-714d-5c27-bc82-f95e7c0faf90"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/typewriter-love/model.glb",
+    "blender": "artifacts/gift-library/typewriter-love/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/typewriter-love/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/typewriter-love/metadata.json",
+    "preview_video": "artifacts/gift-library/typewriter-love/preview.mp4",
+    "gif_preview": "artifacts/gift-library/typewriter-love/preview.gif",
+    "thumbnail": "artifacts/gift-library/typewriter-love/poster.png",
+    "sound_pack": "artifacts/gift-library/typewriter-love/sound/",
+    "particle_pack": "artifacts/gift-library/typewriter-love/particles/",
+    "report": "artifacts/gift-library/typewriter-love/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

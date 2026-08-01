@@ -1,0 +1,91 @@
+{
+  "index": 70,
+  "name": "Serpent of Rivers",
+  "slug": "serpent-of-rivers",
+  "cost": 250000,
+  "price_minor": 250000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 18000,
+  "duration_sec": 18.0,
+  "main_idea": "River serpent of pure water coils the map and leaves fertile valleys as gifts.",
+  "model_description": "Long water serpent creature; terrain morph valleys.",
+  "environment_description": "Map world that reshapes (water required).",
+  "animation_phases": [
+    "serpent rise",
+    "coil map",
+    "valleys form",
+    "villages light",
+    "serpent rest"
+  ],
+  "vfx": [
+    "water body",
+    "terrain morph"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "spray mist",
+  "shaders": [
+    "water serpent",
+    "terrain"
+  ],
+  "camera": "map god-view to valley intimate",
+  "music": "mythic river theme",
+  "spatial_sound": "world scale",
+  "voice_effects": "serpent rumble",
+  "ai_reaction": "AI acknowledges 'Serpent of Rivers' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.serpent-of-rivers with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "river_serpent",
+  "vfx_family": "terrain_water",
+  "asset_ids": {
+    "glb": "e764b621-0132-5eae-b9c4-3476592c1324",
+    "audio": "ed86eed0-ee50-50ce-8a9d-7dde6f35ca18",
+    "poster": "06a2b4e1-589f-565e-a002-63f977d73ccb",
+    "blend": "1b56e9cf-85c2-56ea-af8e-79443d19083d",
+    "shader": "49bd3f00-3317-5358-960e-187296d92026"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/serpent-of-rivers/model.glb",
+    "blender": "artifacts/gift-library/serpent-of-rivers/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/serpent-of-rivers/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/serpent-of-rivers/metadata.json",
+    "preview_video": "artifacts/gift-library/serpent-of-rivers/preview.mp4",
+    "gif_preview": "artifacts/gift-library/serpent-of-rivers/preview.gif",
+    "thumbnail": "artifacts/gift-library/serpent-of-rivers/poster.png",
+    "sound_pack": "artifacts/gift-library/serpent-of-rivers/sound/",
+    "particle_pack": "artifacts/gift-library/serpent-of-rivers/particles/",
+    "report": "artifacts/gift-library/serpent-of-rivers/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

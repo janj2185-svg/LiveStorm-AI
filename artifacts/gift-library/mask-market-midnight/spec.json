@@ -1,0 +1,91 @@
+{
+  "index": 75,
+  "name": "Mask Market Midnight",
+  "slug": "mask-market-midnight",
+  "cost": 100000,
+  "price_minor": 100000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 17500,
+  "duration_sec": 17.5,
+  "main_idea": "A night market of living masks; the perfect mask chooses the streamer.",
+  "model_description": "Market stalls, many unique masks with micro expressions.",
+  "environment_description": "Alley market that blooms neon then sacred quiet.",
+  "animation_phases": [
+    "enter market",
+    "masks awaken",
+    "trial faces",
+    "mask chooses",
+    "reveal true gift"
+  ],
+  "vfx": [
+    "mask eye lights",
+    "neon then candle"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "lantern ash soft",
+  "shaders": [
+    "lacquer masks",
+    "neon wet street"
+  ],
+  "camera": "market wander to intimate choose",
+  "music": "market bustle to hush",
+  "spatial_sound": "crowd then quiet",
+  "voice_effects": "mask whispers",
+  "ai_reaction": "AI acknowledges 'Mask Market Midnight' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.mask-market-midnight with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "mask_market",
+  "vfx_family": "living_masks",
+  "asset_ids": {
+    "glb": "a5f1b951-0466-56f2-97ea-c80aa7ad5800",
+    "audio": "cc7e5642-437c-546b-b558-9bc96f67e3d1",
+    "poster": "f466ce79-72be-50d1-98e2-b0d3a96cd8d8",
+    "blend": "ee1d1e4f-7ddf-5fd4-82ae-3cccf90f7954",
+    "shader": "e0fdb4b4-36ec-5172-b42f-a5e12d9635f6"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/mask-market-midnight/model.glb",
+    "blender": "artifacts/gift-library/mask-market-midnight/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/mask-market-midnight/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/mask-market-midnight/metadata.json",
+    "preview_video": "artifacts/gift-library/mask-market-midnight/preview.mp4",
+    "gif_preview": "artifacts/gift-library/mask-market-midnight/preview.gif",
+    "thumbnail": "artifacts/gift-library/mask-market-midnight/poster.png",
+    "sound_pack": "artifacts/gift-library/mask-market-midnight/sound/",
+    "particle_pack": "artifacts/gift-library/mask-market-midnight/particles/",
+    "report": "artifacts/gift-library/mask-market-midnight/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

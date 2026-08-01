@@ -1,0 +1,91 @@
+{
+  "index": 65,
+  "name": "Mirror Ocean Trial",
+  "slug": "mirror-ocean-trial",
+  "cost": 100000,
+  "price_minor": 100000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 17500,
+  "duration_sec": 17.5,
+  "main_idea": "Streamer walks a mirror ocean; reflections become allies that lift a gift island.",
+  "model_description": "Mirror ocean plane, reflection allies, rising island.",
+  "environment_description": "Infinite mirror sea (water required).",
+  "animation_phases": [
+    "step onto mirror",
+    "reflections awaken",
+    "walk trial",
+    "island rise",
+    "gift shrine"
+  ],
+  "vfx": [
+    "mirror fractures heal",
+    "island birth"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "mirror shards that rejoin",
+  "shaders": [
+    "perfect mirror",
+    "island rock"
+  ],
+  "camera": "low across mirror then island crane",
+  "music": "trial tension to triumph",
+  "spatial_sound": "infinite reflections",
+  "voice_effects": "reflection whispers",
+  "ai_reaction": "AI acknowledges 'Mirror Ocean Trial' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.mirror-ocean-trial with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "mirror_ocean",
+  "vfx_family": "mirror_allies",
+  "asset_ids": {
+    "glb": "041742f6-fd16-5c7b-8368-26d00d515a44",
+    "audio": "8e13b56c-f492-5a19-b51f-da306e65a5cd",
+    "poster": "9bea98ab-5ce6-5c3a-a0c4-ab281c0b2e08",
+    "blend": "bc4a28ad-914c-5970-8ba2-b55bc54fd29c",
+    "shader": "0ee524b7-bff8-53a9-984c-3009002c19ba"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/mirror-ocean-trial/model.glb",
+    "blender": "artifacts/gift-library/mirror-ocean-trial/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/mirror-ocean-trial/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/mirror-ocean-trial/metadata.json",
+    "preview_video": "artifacts/gift-library/mirror-ocean-trial/preview.mp4",
+    "gif_preview": "artifacts/gift-library/mirror-ocean-trial/preview.gif",
+    "thumbnail": "artifacts/gift-library/mirror-ocean-trial/poster.png",
+    "sound_pack": "artifacts/gift-library/mirror-ocean-trial/sound/",
+    "particle_pack": "artifacts/gift-library/mirror-ocean-trial/particles/",
+    "report": "artifacts/gift-library/mirror-ocean-trial/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

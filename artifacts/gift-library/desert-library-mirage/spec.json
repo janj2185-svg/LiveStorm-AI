@@ -1,0 +1,91 @@
+{
+  "index": 77,
+  "name": "Desert Library Mirage",
+  "slug": "desert-library-mirage",
+  "cost": 500000,
+  "price_minor": 500000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 19000,
+  "duration_sec": 19.0,
+  "main_idea": "A mirage library solidifies; reading a tome rewrites the desert into oasis.",
+  "model_description": "Mirage architecture, tome, oasis morph terrain.",
+  "environment_description": "Desert to oasis transform (water appears).",
+  "animation_phases": [
+    "heat mirage",
+    "library solid",
+    "tome open",
+    "oasis rewrite",
+    "gift spring"
+  ],
+  "vfx": [
+    "heat shimmer",
+    "water birth"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "sand then water spray",
+  "shaders": [
+    "sandstone",
+    "water oasis"
+  ],
+  "camera": "mirage approach then oasis reveal",
+  "music": "desert to water theme",
+  "spatial_sound": "dry to wet acoustic",
+  "voice_effects": "librarian AI",
+  "ai_reaction": "AI acknowledges 'Desert Library Mirage' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.desert-library-mirage with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "mirage_lib",
+  "vfx_family": "oasis_rewrite",
+  "asset_ids": {
+    "glb": "1fc95e88-93b2-5aa5-84a9-2d79d17dafce",
+    "audio": "e2e33edf-5eb8-55f6-8415-89908ee491dd",
+    "poster": "3b5903e7-d92b-5a01-ad17-aa64a16854de",
+    "blend": "943abda7-fc9f-54bf-ab59-638c1a80a27c",
+    "shader": "fe97bffd-310b-5689-ad1f-05f07b3cf431"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/desert-library-mirage/model.glb",
+    "blender": "artifacts/gift-library/desert-library-mirage/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/desert-library-mirage/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/desert-library-mirage/metadata.json",
+    "preview_video": "artifacts/gift-library/desert-library-mirage/preview.mp4",
+    "gif_preview": "artifacts/gift-library/desert-library-mirage/preview.gif",
+    "thumbnail": "artifacts/gift-library/desert-library-mirage/poster.png",
+    "sound_pack": "artifacts/gift-library/desert-library-mirage/sound/",
+    "particle_pack": "artifacts/gift-library/desert-library-mirage/particles/",
+    "report": "artifacts/gift-library/desert-library-mirage/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Lumen Seed",
+  "slug": "lumen-seed",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 10,
+  "duration_ms": 3200,
+  "sha256": {
+    "glb": "23ba6fc2340e7f089377d29ad217ec4272e705a7dcb9eb02f1c7c9d8ed1a8867",
+    "audio": "5d87b584ab1f8cbe8e0304f5cff88e643a7eb8eed28fe7bf7a26892de4055134",
+    "poster": "6ad12b34cb9e4440047e8bc08f10b9665c78c986e06aa9e461667fad22384020"
+  },
+  "bytes": {
+    "glb": 90580,
+    "audio": 564524,
+    "poster": 501663,
+    "preview_mp4": 89094
+  }
+}

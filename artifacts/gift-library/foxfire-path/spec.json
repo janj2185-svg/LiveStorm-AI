@@ -1,0 +1,91 @@
+{
+  "index": 54,
+  "name": "Foxfire Path",
+  "slug": "foxfire-path",
+  "cost": 25000,
+  "price_minor": 25000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "duration_ms": 11500,
+  "duration_sec": 11.5,
+  "main_idea": "A spirit fox of soft foxfire leads a path of mushrooms to a hidden shrine.",
+  "model_description": "Stylized fox character with simple spine rig; mushroom path; shrine.",
+  "environment_description": "Night forest (foxfire glow \u2014 not destructive fire).",
+  "animation_phases": [
+    "fox appear",
+    "path light",
+    "run ahead",
+    "shrine reveal",
+    "gift leave"
+  ],
+  "vfx": [
+    "foxfire glow",
+    "mushroom light"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "spore lights",
+  "shaders": [
+    "fur stylized",
+    "biolume mushrooms"
+  ],
+  "camera": "follow fox through trees",
+  "music": "folk flute night",
+  "spatial_sound": "forest depth",
+  "voice_effects": "fox soft chuff FX",
+  "ai_reaction": "AI acknowledges 'Foxfire Path' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.foxfire-path with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 160,
+    "max_load_ms": 2500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "spirit_fox",
+  "vfx_family": "foxfire",
+  "asset_ids": {
+    "glb": "cbbccf51-cb35-5b62-b952-104e48e56566",
+    "audio": "fd729e6e-c9e7-5792-aba5-817a1a647d0b",
+    "poster": "f552b846-749e-505f-aea1-996d061af8f8",
+    "blend": "788ed928-2980-56f0-bd33-cf7877055551",
+    "shader": "8f47f244-c0f9-5795-8f0d-e9ac0d90edde"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/foxfire-path/model.glb",
+    "blender": "artifacts/gift-library/foxfire-path/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/foxfire-path/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/foxfire-path/metadata.json",
+    "preview_video": "artifacts/gift-library/foxfire-path/preview.mp4",
+    "gif_preview": "artifacts/gift-library/foxfire-path/preview.gif",
+    "thumbnail": "artifacts/gift-library/foxfire-path/poster.png",
+    "sound_pack": "artifacts/gift-library/foxfire-path/sound/",
+    "particle_pack": "artifacts/gift-library/foxfire-path/particles/",
+    "report": "artifacts/gift-library/foxfire-path/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "index": 72,
+  "name": "Thunder Tea Ceremony",
+  "slug": "thunder-tea-ceremony",
+  "cost": 100000,
+  "price_minor": 100000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 17000,
+  "duration_sec": 17.0,
+  "main_idea": "A tea ceremony where each pour summons a distant thunder that becomes soft rain of petals.",
+  "model_description": "Tea set, tatami space, storm beyond screens; lightning only distant as ceremony beat.",
+  "environment_description": "Tea room with storm garden.",
+  "animation_phases": [
+    "prepare",
+    "pour",
+    "distant lightning",
+    "rain petals",
+    "share bowls"
+  ],
+  "vfx": [
+    "distant lightning",
+    "petal rain",
+    "steam"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "petals + steam",
+  "shaders": [
+    "ceramic",
+    "tatami",
+    "storm glass"
+  ],
+  "camera": "ceremony intimate with storm cutaways",
+  "music": "tea silence + thunder timing",
+  "spatial_sound": "room vs storm outdoor",
+  "voice_effects": "soft host greeting",
+  "ai_reaction": "AI acknowledges 'Thunder Tea Ceremony' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.thunder-tea-ceremony with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "tea_storm",
+  "vfx_family": "ceremony_thunder",
+  "asset_ids": {
+    "glb": "9a02fff3-e9dc-5ee7-a039-eeaf877d879b",
+    "audio": "e6f8f18a-64fb-5e64-8187-38d70fc1bcae",
+    "poster": "b783e6cc-7e93-5719-a310-a44f4e0821bb",
+    "blend": "e645102f-6ff5-5ad0-bb61-13079aef12e1",
+    "shader": "7cce8884-337d-5fe2-a677-94cae9300353"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/thunder-tea-ceremony/model.glb",
+    "blender": "artifacts/gift-library/thunder-tea-ceremony/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/thunder-tea-ceremony/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/thunder-tea-ceremony/metadata.json",
+    "preview_video": "artifacts/gift-library/thunder-tea-ceremony/preview.mp4",
+    "gif_preview": "artifacts/gift-library/thunder-tea-ceremony/preview.gif",
+    "thumbnail": "artifacts/gift-library/thunder-tea-ceremony/poster.png",
+    "sound_pack": "artifacts/gift-library/thunder-tea-ceremony/sound/",
+    "particle_pack": "artifacts/gift-library/thunder-tea-ceremony/particles/",
+    "report": "artifacts/gift-library/thunder-tea-ceremony/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

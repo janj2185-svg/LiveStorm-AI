@@ -1,0 +1,90 @@
+{
+  "index": 86,
+  "name": "Garden Between Universes",
+  "slug": "garden-between-universes",
+  "cost": 5000000,
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 28000,
+  "duration_sec": 28.0,
+  "main_idea": "A garden suspended between two universes where gifts grow as living constellations.",
+  "model_description": "Floating garden, universe orbs, constellation flora.",
+  "environment_description": "Liminal garden with dual-sky.",
+  "animation_phases": [
+    "arrive liminal",
+    "universes hum",
+    "flora constellation",
+    "harvest gift",
+    "dual dawn"
+  ],
+  "vfx": [
+    "dual-sky blend",
+    "constellation flora"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "universe pollen",
+  "shaders": [
+    "liminal materials"
+  ],
+  "camera": "impossible garden coverage",
+  "music": "liminal suite",
+  "spatial_sound": "between-worlds acoustic",
+  "voice_effects": "garden keeper",
+  "ai_reaction": "AI acknowledges 'Garden Between Universes' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.garden-between-universes with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "liminal_garden",
+  "vfx_family": "dual_universe",
+  "asset_ids": {
+    "glb": "f06fa335-704a-58e7-9c91-a4acb6e64c39",
+    "audio": "9756ba10-ed42-5845-94c4-4a1715b44322",
+    "poster": "40c379c3-2387-5a82-b6bd-ddf5fdfeb8f4",
+    "blend": "6e5546f7-8c24-572d-8f83-57771d5439f8",
+    "shader": "71e80804-6c45-522e-ad6a-5146e25625a9"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/garden-between-universes/model.glb",
+    "blender": "artifacts/gift-library/garden-between-universes/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/garden-between-universes/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/garden-between-universes/metadata.json",
+    "preview_video": "artifacts/gift-library/garden-between-universes/preview.mp4",
+    "gif_preview": "artifacts/gift-library/garden-between-universes/preview.gif",
+    "thumbnail": "artifacts/gift-library/garden-between-universes/poster.png",
+    "sound_pack": "artifacts/gift-library/garden-between-universes/sound/",
+    "particle_pack": "artifacts/gift-library/garden-between-universes/particles/",
+    "report": "artifacts/gift-library/garden-between-universes/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

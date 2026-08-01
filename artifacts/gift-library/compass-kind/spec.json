@@ -1,0 +1,90 @@
+{
+  "index": 20,
+  "name": "Compass Kind",
+  "slug": "compass-kind",
+  "cost": 100,
+  "price_minor": 100,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "duration_ms": 4000,
+  "duration_sec": 4.0,
+  "main_idea": "A brass compass needle spins then locks toward the recipient.",
+  "model_description": "Open compass with glass, needle, and engraved rose.",
+  "environment_description": "Map table with soft lamp.",
+  "animation_phases": [
+    "open lid",
+    "spin",
+    "lock",
+    "beam tick"
+  ],
+  "vfx": [
+    "needle trail",
+    "soft lock pulse"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "map dust",
+  "shaders": [
+    "brass",
+    "glass dome"
+  ],
+  "camera": "top-down to 3/4",
+  "music": "spin whirr + lock chime",
+  "spatial_sound": "table centered",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Compass Kind' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.compass-kind with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 48,
+    "max_load_ms": 800
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "compass",
+  "vfx_family": "needle_lock",
+  "asset_ids": {
+    "glb": "b9a8e0bd-4729-5a89-9c00-b7a10b02d2ec",
+    "audio": "3f4ec86a-efa9-52ad-9882-32e03d8d1560",
+    "poster": "592e71ff-0816-5550-abfc-7dd9d752a0b0",
+    "blend": "1453faae-f39b-5624-8b20-aa6517c99f73",
+    "shader": "d52b00ed-3c2c-5a3b-a2d7-1d7e55899324"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/compass-kind/model.glb",
+    "blender": "artifacts/gift-library/compass-kind/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/compass-kind/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/compass-kind/metadata.json",
+    "preview_video": "artifacts/gift-library/compass-kind/preview.mp4",
+    "gif_preview": "artifacts/gift-library/compass-kind/preview.gif",
+    "thumbnail": "artifacts/gift-library/compass-kind/poster.png",
+    "sound_pack": "artifacts/gift-library/compass-kind/sound/",
+    "particle_pack": "artifacts/gift-library/compass-kind/particles/",
+    "report": "artifacts/gift-library/compass-kind/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

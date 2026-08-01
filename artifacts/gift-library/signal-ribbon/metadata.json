@@ -1,0 +1,19 @@
+{
+  "name": "Signal Ribbon",
+  "slug": "signal-ribbon",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 25,
+  "duration_ms": 3600,
+  "sha256": {
+    "glb": "c5802c1be35949fca47bea52a6d865d9c1b83db5e1f8d337950ad249fd028ce7",
+    "audio": "2ac554e8a5c85436903899fa9dd8da8a935cf56a183ee28deadeb9cd3d666df2",
+    "poster": "22b7f2e16d8766a9c59abf4e5688267b396a721f21a5d79e5116dfbec17b4763"
+  },
+  "bytes": {
+    "glb": 119020,
+    "audio": 635084,
+    "poster": 503541,
+    "preview_mp4": 118190
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "index": 92,
+  "name": "Clockwork Angel",
+  "slug": "clockwork-angel",
+  "cost": 5000000,
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 28000,
+  "duration_sec": 28.0,
+  "main_idea": "A clockwork angel descends, rewinds a hard moment, and gifts a second chance emblem.",
+  "model_description": "Angel with mechanical wings, clock core, emblem.",
+  "environment_description": "Storm city that rewinds (lightning as storm context).",
+  "animation_phases": [
+    "storm",
+    "descent",
+    "rewind streets",
+    "calm",
+    "emblem gift",
+    "ascent"
+  ],
+  "vfx": [
+    "storm lightning",
+    "rewind trails",
+    "wing gears"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "justified"
+  },
+  "particles": "time shards",
+  "shaders": [
+    "feather-metal hybrid"
+  ],
+  "camera": "descent mythic",
+  "music": "rewind suite",
+  "spatial_sound": "storm to calm",
+  "voice_effects": "angel chime speech",
+  "ai_reaction": "AI acknowledges 'Clockwork Angel' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.clockwork-angel with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 320,
+    "max_load_ms": 6000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "clock_angel",
+  "vfx_family": "rewind_storm",
+  "asset_ids": {
+    "glb": "be2d775f-19fd-53c6-be4d-ec0589d9e614",
+    "audio": "d821d73b-5775-5cd5-a0af-f555408e20fc",
+    "poster": "eba667c5-8df2-5060-b402-ab17274c371f",
+    "blend": "779e1c6c-efc7-5589-bd83-ba69554e933a",
+    "shader": "547b4780-45f3-5d63-9991-3d7b6fd73a32"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/clockwork-angel/model.glb",
+    "blender": "artifacts/gift-library/clockwork-angel/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/clockwork-angel/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/clockwork-angel/metadata.json",
+    "preview_video": "artifacts/gift-library/clockwork-angel/preview.mp4",
+    "gif_preview": "artifacts/gift-library/clockwork-angel/preview.gif",
+    "thumbnail": "artifacts/gift-library/clockwork-angel/poster.png",
+    "sound_pack": "artifacts/gift-library/clockwork-angel/sound/",
+    "particle_pack": "artifacts/gift-library/clockwork-angel/particles/",
+    "report": "artifacts/gift-library/clockwork-angel/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

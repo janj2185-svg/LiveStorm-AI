@@ -1,0 +1,91 @@
+{
+  "index": 67,
+  "name": "Labyrinth of Thanks",
+  "slug": "labyrinth-of-thanks",
+  "cost": 50000,
+  "price_minor": 50000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 17000,
+  "duration_sec": 17.0,
+  "main_idea": "A living labyrinth rearranges so every viewer path leads to one center gift.",
+  "model_description": "Moving hedge/wall modules, center pedestal.",
+  "environment_description": "Labyrinth that reconfigures live.",
+  "animation_phases": [
+    "enter maze",
+    "walls shift",
+    "viewer markers move",
+    "center open",
+    "gift rise"
+  ],
+  "vfx": [
+    "wall shift dust",
+    "path glow"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "hedge leaves",
+  "shaders": [
+    "hedge",
+    "stone"
+  ],
+  "camera": "top-down then POV race",
+  "music": "puzzle motif resolving",
+  "spatial_sound": "maze corridors",
+  "voice_effects": "AI guide hints",
+  "ai_reaction": "AI acknowledges 'Labyrinth of Thanks' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.labyrinth-of-thanks with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "labyrinth",
+  "vfx_family": "shifting_walls",
+  "asset_ids": {
+    "glb": "16872991-d984-543a-9dfe-179ce538bbd1",
+    "audio": "916382f8-d80e-5c09-8bd6-f6efd56d78ca",
+    "poster": "b8b11eee-5d83-5026-bb7f-ad69bd277141",
+    "blend": "fd50cfa2-fa05-5171-96a8-53ffcef703ea",
+    "shader": "8cb36834-f106-5022-b1c1-2c4838afaf7c"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/labyrinth-of-thanks/model.glb",
+    "blender": "artifacts/gift-library/labyrinth-of-thanks/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/labyrinth-of-thanks/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/labyrinth-of-thanks/metadata.json",
+    "preview_video": "artifacts/gift-library/labyrinth-of-thanks/preview.mp4",
+    "gif_preview": "artifacts/gift-library/labyrinth-of-thanks/preview.gif",
+    "thumbnail": "artifacts/gift-library/labyrinth-of-thanks/poster.png",
+    "sound_pack": "artifacts/gift-library/labyrinth-of-thanks/sound/",
+    "particle_pack": "artifacts/gift-library/labyrinth-of-thanks/particles/",
+    "report": "artifacts/gift-library/labyrinth-of-thanks/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Constellation Pin",
+  "slug": "constellation-pin",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 50,
+  "duration_ms": 3800,
+  "sha256": {
+    "glb": "6c4ae85fdc13e22c7c4b449e469c63fd8b06a66daf39b1369fe918d1f9f12707",
+    "audio": "a19ea0e097e51958020b9ee7591e1965e888abdd0bac04da7da2c1f39502e0e1",
+    "poster": "f3c53c8228e2ef7a85dd3cd40a75ff25fb7cb838d1a9821b0c7f4bd2510ce98d"
+  },
+  "bytes": {
+    "glb": 376436,
+    "audio": 670364,
+    "poster": 502388,
+    "preview_mp4": 104220
+  }
+}

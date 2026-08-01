@@ -1,0 +1,91 @@
+{
+  "index": 62,
+  "name": "Tide of Voices",
+  "slug": "tide-of-voices",
+  "cost": 100000,
+  "price_minor": 100000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "duration_ms": 17000,
+  "duration_sec": 17.0,
+  "main_idea": "Viewer chat becomes a luminous tide that the streamer surfs safely to shore.",
+  "model_description": "Wave made of glyph tiles; surfboard of light; shoreline stage.",
+  "environment_description": "Scene transforms from chatroom to ocean of text (water metaphor).",
+  "animation_phases": [
+    "glyphs rise",
+    "tide form",
+    "surf ride",
+    "shore arrive",
+    "glyphs become flowers"
+  ],
+  "vfx": [
+    "glyph tide",
+    "foam of characters"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": true,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "floating glyphs",
+  "shaders": [
+    "glyph emissive",
+    "shore sand"
+  ],
+  "camera": "surf chase multi-scene",
+  "music": "dynamic tide intensity",
+  "spatial_sound": "ocean of voices",
+  "voice_effects": "chorus of processed viewer snippets (privacy-safe tones)",
+  "ai_reaction": "AI acknowledges 'Tide of Voices' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.tide-of-voices with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 220,
+    "max_load_ms": 4000
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "glyph_tide",
+  "vfx_family": "chat_ocean",
+  "asset_ids": {
+    "glb": "cbc7600e-6ca5-542b-a3e7-6ea1e3c2c851",
+    "audio": "2902b13f-7f66-516e-ae28-a9231aa3accf",
+    "poster": "6422ffad-ef67-583c-ac38-edbae06c7f51",
+    "blend": "902fd141-fc46-51d1-9678-d244e209e551",
+    "shader": "1c9da3b2-e829-541a-b8c8-46e360fd07ae"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/tide-of-voices/model.glb",
+    "blender": "artifacts/gift-library/tide-of-voices/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/tide-of-voices/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/tide-of-voices/metadata.json",
+    "preview_video": "artifacts/gift-library/tide-of-voices/preview.mp4",
+    "gif_preview": "artifacts/gift-library/tide-of-voices/preview.gif",
+    "thumbnail": "artifacts/gift-library/tide-of-voices/poster.png",
+    "sound_pack": "artifacts/gift-library/tide-of-voices/sound/",
+    "particle_pack": "artifacts/gift-library/tide-of-voices/particles/",
+    "report": "artifacts/gift-library/tide-of-voices/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

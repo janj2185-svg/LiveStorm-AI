@@ -1,0 +1,7 @@
+{
+  "name": "particles_rose_light",
+  "vfx_family": "rose_light",
+  "max_particles": 1500,
+  "spawn_rate_per_second": 120,
+  "notes": "Runtime particle system parameters for @sylora/gift-runtime; textures authored per gift."
+}

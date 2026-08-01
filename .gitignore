@@ -20,3 +20,6 @@ services/api/build/
 !**/.env.example
 design/captures/
 dump.rdb
+
+# Gift library intermediate render frames (keep final mp4/gif/glb)
+artifacts/gift-library/**/_frames/

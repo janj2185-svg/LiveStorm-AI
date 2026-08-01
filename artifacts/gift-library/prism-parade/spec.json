@@ -1,0 +1,89 @@
+{
+  "index": 30,
+  "name": "Prism Parade",
+  "slug": "prism-parade",
+  "cost": 1000,
+  "price_minor": 1000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "duration_ms": 7000,
+  "duration_sec": 7.0,
+  "main_idea": "A parade of floating prisms splits white light into a color ribbon path.",
+  "model_description": "Multiple unique prism solids with different cut angles.",
+  "environment_description": "White void with single hard key light.",
+  "animation_phases": [
+    "prism enter",
+    "split beam",
+    "ribbon path",
+    "recombine white"
+  ],
+  "vfx": [
+    "spectral split",
+    "beam ribbons"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "none"
+  },
+  "particles": "spectral motes",
+  "shaders": [
+    "dispersion glass"
+  ],
+  "camera": "beam-aligned tracking",
+  "music": "spectral arpeggio",
+  "spatial_sound": "beam-following pan",
+  "voice_effects": "none",
+  "ai_reaction": "AI acknowledges 'Prism Parade' with a rarity-appropriate line and never fabricates delivery.",
+  "streamer_reaction": "Streamer avatar/emote hook on arrival + optional thank-you prompt.",
+  "avatar_reaction": "Avatar glance/emote timed to completion hook.",
+  "viewer_reaction": "Viewer-side fullscreen or scoped effect per rarity.",
+  "chat_reaction": "Chat system message with gift name, sender, and rarity badge.",
+  "combo_reaction": "Combination id sylora.gift.prism-parade with window based on rarity.",
+  "performance_targets": {
+    "mobile_fps_min": 30,
+    "desktop_fps_min": 60,
+    "max_memory_mb": 96,
+    "max_load_ms": 1500
+  },
+  "mobile_lod": "reduced particles, simplified materials, no motion blur",
+  "desktop_ultra": "full particles, HDR, bloom, DoF, motion blur when specified",
+  "form_family": "prisms",
+  "vfx_family": "dispersion",
+  "asset_ids": {
+    "glb": "a3d9aaac-ff3d-5508-b647-4488ee5685bb",
+    "audio": "0e47f4a5-61d7-5177-b27f-0e592b382813",
+    "poster": "b700d050-3605-52da-8e3f-4be43394cca1",
+    "blend": "85990ead-54aa-519b-aa2e-f4194d502634",
+    "shader": "f847cbbd-86be-5228-901a-fec741887c5c"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/prism-parade/model.glb",
+    "blender": "artifacts/gift-library/prism-parade/scene.blend",
+    "runtime_manifest": "artifacts/gift-library/prism-parade/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/prism-parade/metadata.json",
+    "preview_video": "artifacts/gift-library/prism-parade/preview.mp4",
+    "gif_preview": "artifacts/gift-library/prism-parade/preview.gif",
+    "thumbnail": "artifacts/gift-library/prism-parade/poster.png",
+    "sound_pack": "artifacts/gift-library/prism-parade/sound/",
+    "particle_pack": "artifacts/gift-library/prism-parade/particles/",
+    "report": "artifacts/gift-library/prism-parade/report.json"
+  },
+  "status": "SPEC_ONLY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "Specification only until Blender/GLB/audio/preview/runtime evidence is produced and verified.",
+    "AAA art-pass and performance-pass require specialized DCC artists beyond this agent environment."
+  ]
+}

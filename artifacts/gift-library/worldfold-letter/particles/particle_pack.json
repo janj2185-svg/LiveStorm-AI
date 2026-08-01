@@ -1,0 +1,7 @@
+{
+  "name": "particles_reality_fold",
+  "vfx_family": "reality_fold",
+  "max_particles": 3000,
+  "spawn_rate_per_second": 180,
+  "notes": "Runtime particle system parameters for @sylora/gift-runtime; textures authored per gift."
+}
