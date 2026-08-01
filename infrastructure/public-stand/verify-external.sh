@@ -37,7 +37,7 @@ for i in 1 2 3; do
     -H 'Content-Type: application/json' \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\",\"device_label\":\"verify-script\"}")"
   echo "$LOGIN" | grep -q access_token || fail "login $EMAIL"
-  TOKEN="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])' <<<"$LOGIN")"
+  TOKEN="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["tokens"]["access_token"])' <<<"$LOGIN")"
   ME="$(curl -fsS "$BASE/v1/auth/me" -H "Authorization: Bearer $TOKEN")"
   echo "$ME" | grep -q "$EMAIL" || fail "me isolation email"
   # Wrong password
