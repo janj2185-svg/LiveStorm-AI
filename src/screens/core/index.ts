@@ -15,6 +15,7 @@ export const CORE_SCREENS: ScreenDefinition[] = [
     navId: 'home',
     purpose:
       'Answers "what should I do right now?" by ordering content by how quickly it expires: live, then stories, then the chronological feed.',
+    dataSource: 'demo',
     component: HomeScreen,
     contextPanel: HomeContextPanel,
     contextPanelTitle: 'Today',
@@ -26,6 +27,7 @@ export const CORE_SCREENS: ScreenDefinition[] = [
     navId: 'home',
     purpose:
       'The strictly chronological timeline, carrying heterogeneous item types — posts, polls and space digests — without reordering anything.',
+    dataSource: 'demo',
     component: FeedScreen,
   },
   {

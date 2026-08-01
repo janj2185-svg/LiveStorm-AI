@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import httpx
 
 BASE = "http://127.0.0.1:8000/v1"
+ROOT = Path(__file__).resolve().parents[1]
 FAIL = 0
 
 
@@ -53,7 +55,6 @@ def main() -> int:
                 spendable = int(bal.json().get("spendable_minor") or 0)
             check("Wallet funded (>0)", spendable > 0, f"spendable_minor={spendable}")
 
-            # Feed / posts — try common list endpoints
             feed_ok = False
             feed_detail = ""
             for path in (
@@ -65,26 +66,31 @@ def main() -> int:
                 if r.status_code == 200:
                     feed_ok = True
                     data = r.json()
-                    count = len(data) if isinstance(data, list) else len(data.get("items") or data.get("posts") or [])
+                    count = (
+                        len(data)
+                        if isinstance(data, list)
+                        else len(data.get("items") or data.get("posts") or [])
+                    )
                     feed_detail = f"{path} count≈{count}"
                     break
                 feed_detail = f"last {path} HTTP {r.status_code}"
             check("Social feed/posts readable", feed_ok, feed_detail)
 
-            # User login + balance
             user_login = client.post(
                 f"{BASE}/auth/login",
                 json={"email": "user@sylora.dev", "password": "UserTest!2026Local"},
             )
             check("User login", user_login.status_code == 200)
             if user_login.status_code == 200:
-                uh = {"Authorization": f"Bearer {user_login.json()['tokens']['access_token']}"}
+                uh = {
+                    "Authorization": f"Bearer {user_login.json()['tokens']['access_token']}"
+                }
                 ub = client.get(f"{BASE}/wallet/balance", headers=uh)
-                check("User wallet", ub.status_code == 200 and int(ub.json().get("spendable_minor") or 0) > 0)
-
-            # Conversations list
-            if user_login.status_code == 200:
-                uh = {"Authorization": f"Bearer {user_login.json()['tokens']['access_token']}"}
+                check(
+                    "User wallet",
+                    ub.status_code == 200
+                    and int(ub.json().get("spendable_minor") or 0) > 0,
+                )
                 conv = client.get(f"{BASE}/messages/conversations", headers=uh)
                 check(
                     "Messaging conversations list",
@@ -94,18 +100,40 @@ def main() -> int:
 
             diag = client.get(f"{BASE}/diagnostics")
             check("Diagnostics", diag.status_code == 200)
+            diag_json = diag.json() if diag.status_code == 200 else {}
             if diag.status_code == 200:
-                gifts = diag.json().get("gift_library") or {}
-                check("Honest gifts READY=0", int(gifts.get("ready") or 0) == 0, str(gifts))
+                gifts = diag_json.get("gift_library") or {}
+                check(
+                    "Honest gifts READY=0",
+                    int(gifts.get("ready") or 0) == 0,
+                    str(gifts),
+                )
+                pl = diag_json.get("product_loop") or {}
+                check("Product loop seed present", pl.get("ok") is True, str(pl))
 
-            # Payment still fail-closed
-            pay = diag.json().get("payment_provider") if diag.status_code == 200 else None
+            pay = diag_json.get("payment_provider")
             if pay:
                 check(
                     "Payment not faking success",
-                    pay.get("ok") is False or "not configured" in str(pay.get("detail", "")).lower(),
+                    pay.get("ok") is False
+                    or "not configured" in str(pay.get("detail", "")).lower(),
                     str(pay),
                 )
+
+            # Phase 2 tooling
+            check(
+                "Sandbox top-up script",
+                (ROOT / "scripts" / "sandbox_topup.py").is_file(),
+            )
+            check(
+                "Flutter local runner",
+                (ROOT / "scripts" / "run-flutter-local.sh").is_file(),
+            )
+            app_tsx = (ROOT / "src" / "showcase" / "App.tsx").read_text(encoding="utf-8")
+            check(
+                "Gallery Live API badge wired",
+                "Live API" in app_tsx and "Demo data" in app_tsx,
+            )
 
     except Exception as exc:
         check("Exception-free run", False, str(exc))
@@ -113,7 +141,9 @@ def main() -> int:
     print("")
     if FAIL:
         print("PRODUCT LOOP VERIFY FAILED")
-        print("Hint: python3 scripts/seed_owner_accounts.py && python3 scripts/seed_product_demo.py")
+        print(
+            "Hint: python3 scripts/seed_owner_accounts.py && python3 scripts/seed_product_demo.py"
+        )
         return 1
     print("PRODUCT LOOP VERIFY OK")
     return 0

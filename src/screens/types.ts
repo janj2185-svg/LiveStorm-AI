@@ -50,4 +50,11 @@ export interface ScreenDefinition {
   preferredDevice?: 'iphone' | 'android' | 'tablet' | 'desktop' | 'web';
   /** Which shell destination is highlighted while this screen is shown. */
   navId?: string;
+  /**
+   * Honesty flag for the design gallery chrome.
+   * - `demo` — fixture data in `src/screens/data.ts` (default when omitted)
+   * - `live` — hits the real local/staging API
+   * - `catalog` — static gift catalog / artifacts (not the live gift commerce API)
+   */
+  dataSource?: 'demo' | 'live' | 'catalog';
 }

@@ -18,6 +18,16 @@ flutter run -d linux
 flutter run -d chrome
 ```
 
+Owner local helper (prefers `127.0.0.1`, checks API health first):
+
+```sh
+# from repo root — requires Flutter SDK on your PATH
+../scripts/run-flutter-local.sh chrome   # from apps/sylora, use: ../../scripts/...
+# from repo root:
+./scripts/run-flutter-local.sh chrome
+./scripts/run-flutter-local.sh linux
+```
+
 Set another API origin with a Dart define:
 
 ```sh

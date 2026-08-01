@@ -180,6 +180,42 @@ Roadmap / confirmation gates: `docs/implementation/OWNER_PRODUCT_ROADMAP.md`
 
 ---
 
+## F2. Phase 2 — sandbox money + Flutter + gallery honesty
+
+**Payment:** real `POST /v1/wallet/topups` stays **Provider not configured** (fail closed).  
+Local credits use admin issuance only:
+
+```bash
+# Seed full demo balances (handles/feed/DM too)
+python3 scripts/seed_product_demo.py
+
+# Extra sandbox credit for one seeded account
+python3 scripts/sandbox_topup.py --email user@sylora.dev --amount 25000
+```
+
+**Gallery honesty badges** (stage header next to device badges):
+
+| Badge | Meaning | Examples |
+|---|---|---|
+| Demo data | Fixture UI in `src/screens/data.ts` | `#/auth`, `#/feed`, `#/wallet` |
+| Live API | Hits local FastAPI | `#/diagnostics` |
+| Static catalog | Gift library artifacts/JSON | `#/gift-library-store` |
+
+**Flutter** (needs Flutter SDK on *your* machine — not in the cloud agent):
+
+```bash
+./start-local.sh --host
+./scripts/run-flutter-local.sh chrome
+# Windows: .\scripts\run-flutter-local.ps1 chrome
+```
+
+Login with seeded accounts (`owner@sylora.dev` / `OwnerTest!2026Local`, etc.).  
+Default API origin: `http://127.0.0.1:8000` via `--dart-define=SYLORA_API_BASE_URL=…`.
+
+To change Phase 2 defaults (Stripe / OpenAI / Flutter-only focus), update the confirmation log in `OWNER_PRODUCT_ROADMAP.md`.
+
+---
+
 ## G. Testing gifts
 
 1. Open http://127.0.0.1:5173/#/gift-library-store  

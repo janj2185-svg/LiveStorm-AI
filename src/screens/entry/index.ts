@@ -12,6 +12,7 @@ export const ENTRY_SCREENS: ScreenDefinition[] = [
     navId: 'home',
     purpose:
       'The unauthenticated landing surface: states what SYLORA unifies, proves it with four measurable capabilities, and demonstrates it with a preview built from the real product.',
+    dataSource: 'demo',
     component: WelcomeScreen,
   },
   {
@@ -21,6 +22,7 @@ export const ENTRY_SCREENS: ScreenDefinition[] = [
     group: 'Entry',
     purpose:
       'Sign in and account creation on one card, with the phishing-resistant passkey path presented above passwords.',
+    dataSource: 'demo',
     component: AuthScreen,
   },
   {
@@ -30,6 +32,7 @@ export const ENTRY_SCREENS: ScreenDefinition[] = [
     group: 'Entry',
     purpose:
       'Step 2 of 4: choosing interests, with a live preview of what the choice changes and an explicit promise that it never reorders the chronological feed.',
+    dataSource: 'demo',
     component: OnboardingScreen,
   },
 ];

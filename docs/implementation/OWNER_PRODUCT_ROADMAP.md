@@ -24,18 +24,28 @@
 
 ---
 
-## Phase 2 — Live client + money path (NEEDS YOUR CONFIRM)
+## Phase 2 — Live client + money path (IN PROGRESS)
 
-Confirm before start:
+**Owner signal 2026-08-01:** reply `2` → start Phase 2.  
+**Defaults until you override:** payment stay fail-closed · AI skip · gallery + Flutter prep (no Stripe/OpenAI keys).
 
-1. **Payment provider?** Stripe / another / stay fail-closed for now  
-2. **AI provider?** OpenAI key / skip  
-3. **Flutter focus?** Yes (need Flutter SDK on your machine) / browser gallery only for now  
+| Deliverable | Status |
+|---|---|
+| Documented sandbox top-up (admin issuance; not real card charges) | `scripts/sandbox_topup.py` |
+| Gallery Demo data / Live API / Static catalog badges | `src/showcase/App.tsx` + `dataSource` on key screens |
+| Flutter local API runner | `scripts/run-flutter-local.sh` (+ `.ps1`) |
+| Payment stays fail-closed | yes — `POST /v1/wallet/topups` still Provider not configured |
+| AI provider | skipped (no key) |
 
-Work when confirmed:
-- Real top-up or documented sandbox top-up
-- Flutter pointed at local/staging API for login → wallet → feed
-- Push “demo data” vs “live API” badges in gallery
+Confirm to change defaults:
+1. **Payment provider?** Stripe / another / ~~stay fail-closed~~ (current)
+2. **AI provider?** OpenAI key / ~~skip~~ (current)
+3. **Flutter focus?** Yes on your machine / gallery-only for now
+
+Work remaining when you override:
+- Wire Stripe (or other) payment provider
+- Add OpenAI key for AI routes
+- Owner runs Flutter SDK + `./scripts/run-flutter-local.sh`
 
 ---
 
@@ -59,6 +69,7 @@ Work when confirmed:
 | Date | Gate | Decision |
 |---|---|---|
 | 2026-08-01 | Start Phase 1 | Owner: start; will confirm further |
-| | Phase 2 payment | _pending_ |
-| | Phase 2 AI | _pending_ |
+| 2026-08-01 | Start Phase 2 | Owner reply `2`; defaults: fail-closed payment, AI skip, gallery+Flutter prep |
+| | Phase 2 payment | fail-closed (override anytime) |
+| | Phase 2 AI | skip (override anytime) |
 | | Phase 4 hiring | _pending_ |

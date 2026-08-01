@@ -33,6 +33,7 @@ export const COMMERCE_SCREENS: ScreenDefinition[] = [
     navId: 'wallet',
     purpose:
       'One hero answers what is mine, what is pending and how to move it. Euro and credits are kept visually separate so a top-up can never be mistaken for a cash charge.',
+    dataSource: 'demo',
     component: WalletScreen,
     contextPanel: WalletContextPanel,
     contextPanelTitle: 'Earnings',
@@ -44,6 +45,7 @@ export const COMMERCE_SCREENS: ScreenDefinition[] = [
     navId: 'wallet',
     purpose:
       'A rarity-first catalogue and a composer that shows recipient, total and remaining balance together, so nobody learns what a gift cost after sending it.',
+    dataSource: 'demo',
     component: GiftsScreen,
   },
   {
@@ -54,6 +56,7 @@ export const COMMERCE_SCREENS: ScreenDefinition[] = [
     preferredDevice: 'desktop',
     purpose:
       'The Official SYLORA Gift Library of 100 original gifts with Rare–Divine filters, search, honest READY/SPEC status, and no LiveStorm placeholders.',
+    dataSource: 'catalog',
     component: GiftLibraryStoreScreen,
   },
   {

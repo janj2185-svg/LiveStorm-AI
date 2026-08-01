@@ -13,6 +13,7 @@ export const OPS_SCREENS: ScreenDefinition[] = [
     preferredDevice: 'desktop',
     purpose:
       'Owner local testing board: backend, database, Redis, WebSocket, storage, workers, migrations, providers, and honest gift-library counts. Development only.',
+    dataSource: 'live',
     component: DiagnosticsScreen,
   },
   {

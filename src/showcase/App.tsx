@@ -284,6 +284,28 @@ export function App() {
               <Badge tone="accent" variant="soft">
                 {spec.posture}
               </Badge>
+              {(() => {
+                const source = screen.dataSource ?? 'demo';
+                if (source === 'live') {
+                  return (
+                    <Badge tone="success" variant="soft">
+                      Live API
+                    </Badge>
+                  );
+                }
+                if (source === 'catalog') {
+                  return (
+                    <Badge tone="accent" variant="soft">
+                      Static catalog
+                    </Badge>
+                  );
+                }
+                return (
+                  <Badge tone="neutral" variant="outline">
+                    Demo data
+                  </Badge>
+                );
+              })()}
             </div>
           </div>
 
