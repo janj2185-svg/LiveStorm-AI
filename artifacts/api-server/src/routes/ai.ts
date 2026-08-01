@@ -36,7 +36,10 @@ type VoiceOption = (typeof VALID_VOICES)[number];
 
 const VALID_GENDERS = ["male", "female", "neutral"] as const;
 
-const VALID_LANGUAGES = ["auto", "en", "uk", "pl", "de", "ru"] as const;
+const VALID_LANGUAGES = [
+  "auto", "en", "uk", "pl", "de", "ru",
+  "es", "fr", "it", "pt", "nl", "tr", "ar", "hi", "ja", "ko", "zh", "zh-TW", "id", "vi", "th",
+] as const;
 type LangOption = (typeof VALID_LANGUAGES)[number];
 
 const VALID_OPERATING_MODES = ["assistant", "semi-auto", "autopilot"] as const;

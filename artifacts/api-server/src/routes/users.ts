@@ -17,13 +17,21 @@ function requireAuth(req: any, res: any, next: any) {
     req.clerkUserId = req.cookies.dev_auth_clerk_id;
     return next();
   }
-  const auth = getAuth(req);
-  const userId = auth?.sessionClaims?.userId || auth?.userId;
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
+  // When LOCAL_DEV_AUTH skips clerkMiddleware, getAuth() throws — fail closed with 401.
+  try {
+    const auth = getAuth(req);
+    const userId = auth?.sessionClaims?.userId || auth?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    req.clerkUserId = userId;
+    next();
+  } catch {
+    return res.status(401).json({
+      error: "Unauthorized",
+      hint: "Set Clerk keys or use LOCAL_DEV_AUTH=1 with /api/dev/login cookie",
+    });
   }
-  req.clerkUserId = userId;
-  next();
 }
 
 async function fetchClerkEmail(clerkId: string): Promise<string | null> {

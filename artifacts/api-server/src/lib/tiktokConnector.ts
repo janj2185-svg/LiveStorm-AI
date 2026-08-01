@@ -199,13 +199,17 @@ async function startLiveConnector(
   client.on("gift", (ev: TikTokGiftEvent) => {
     const evAny = ev as any;
     const uid: string = evAny.userId || ev.username || "";
-    console.log(`[Pipeline:3] connector→ingest | gift | session=${sessionId} | user=${ev.username} | uid=${uid} | gift=${ev.giftName} coins=${ev.coins}`);
+    // TikTok combo gifts emit many mid-streak events with repeatEnd=false;
+    // only the final streak event (repeatEnd=true) should count coins/stats.
+    const repeatEnd = ev.repeatEnd !== false;
+    console.log(`[Pipeline:3] connector→ingest | gift | session=${sessionId} | user=${ev.username} | uid=${uid} | gift=${ev.giftName} coins=${ev.coins} repeatEnd=${repeatEnd}`);
     void ingestLiveEvent(
       makeEvent("gift", sessionId, ev.username, {
         giftName: ev.giftName,
         coins: ev.coins,
         count: ev.count,
         userId: uid,
+        repeatEnd,
       }),
       userId,
     );

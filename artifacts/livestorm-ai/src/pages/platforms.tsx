@@ -55,7 +55,7 @@ const STAGE_LABELS: Record<number, string> = {
 };
 
 function PlatformCard({ integration }: { integration: IntegrationData }) {
-  const isLive = integration.stage === "live";
+  const isLive = integration.stage === "live" || integration.stage === "beta";
   const stageLabel = integration.roadmapStage ? STAGE_LABELS[integration.roadmapStage] : null;
 
   return (
@@ -84,10 +84,15 @@ function PlatformCard({ integration }: { integration: IntegrationData }) {
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
-            {isLive ? (
+            {integration.stage === "live" ? (
               <Badge className="bg-primary/20 text-primary border-primary/30 border text-xs gap-1 items-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 Live
+              </Badge>
+            ) : integration.stage === "beta" ? (
+              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 border text-xs gap-1 items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                Beta — OAuth required
               </Badge>
             ) : (
               <Badge variant="outline" className="border-white/10 text-muted-foreground text-xs">
@@ -204,8 +209,8 @@ export function Platforms() {
     return () => { cancelled = true; };
   }, [isLoaded]);
 
-  const liveIntegrations = integrations.filter((i) => i.stage === "live");
-  const upcomingIntegrations = integrations.filter((i) => i.stage !== "live");
+  const liveIntegrations = integrations.filter((i) => i.stage === "live" || i.stage === "beta");
+  const upcomingIntegrations = integrations.filter((i) => i.stage === "coming_soon");
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">

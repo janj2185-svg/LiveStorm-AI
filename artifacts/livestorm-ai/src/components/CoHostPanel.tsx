@@ -44,8 +44,12 @@ const LANG_OPTIONS = [
   { code: "uk-UA", flag: "🇺🇦", label: "Ukrainian" },
   { code: "pl-PL", flag: "🇵🇱", label: "Polish"    },
   { code: "en-US", flag: "🇺🇸", label: "English"   },
-  { code: "ru-RU", flag: "🇷🇺", label: "Russian"   },
   { code: "de-DE", flag: "🇩🇪", label: "German"    },
+  { code: "es-ES", flag: "🇪🇸", label: "Spanish"   },
+  { code: "fr-FR", flag: "🇫🇷", label: "French"    },
+  { code: "it-IT", flag: "🇮🇹", label: "Italian"   },
+  { code: "pt-BR", flag: "🇧🇷", label: "Portuguese"},
+  { code: "ru-RU", flag: "🇷🇺", label: "Russian"   },
 ];
 
 // ── Status pill ───────────────────────────────────────────────────────────────
@@ -521,7 +525,7 @@ export function CoHostPanel({
                     ? "bg-blue-500/10 text-blue-400 border-blue-500/25"
                     : "bg-white/5 text-muted-foreground border-white/10",
                 )}>
-                  {ttsModeLive === "openai" ? "OpenAI" : ttsModeLive === "off" ? "Off" : "Browser"}
+                  {ttsModeLive === "openai" ? "OpenAI" : "Off"}
                 </span>
                 {ttsModeLive === "openai" && (
                   openaiTtsOk === true  ? <span className="flex items-center gap-1 text-[10px] text-emerald-400"><CheckCircle2 className="h-3 w-3" />Working</span>

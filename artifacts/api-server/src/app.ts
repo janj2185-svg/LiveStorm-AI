@@ -60,14 +60,22 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
+const localDevAuth =
+  process.env.LOCAL_DEV_AUTH === "1" ||
+  (process.env.NODE_ENV !== "production" && !process.env.CLERK_SECRET_KEY);
+
+if (!localDevAuth) {
+  app.use(
+    clerkMiddleware((req) => ({
+      publishableKey: publishableKeyFromHost(
+        getClerkProxyHost(req) ?? "",
+        process.env.CLERK_PUBLISHABLE_KEY,
+      ),
+    })),
+  );
+} else {
+  logger.warn("LOCAL_DEV_AUTH active — Clerk middleware skipped; cookie /api/dev/login auth only");
+}
 
 // Healthcheck — no auth required, must respond before /api/router (which needs Clerk)
 app.get("/api/health", (_req, res) => {

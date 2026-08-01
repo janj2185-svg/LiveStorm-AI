@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from '@clerk/react';
 import { setAuthTokenGetter } from "@workspace/api-client-react";
-import { publishableKeyFromHost } from '@clerk/react/internal';
+import { publishableKeyFromHost } from '@/lib/clerkPublishableKey';
 import { shadcn } from '@clerk/themes';
 import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from 'wouter';
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +38,7 @@ import { ObsGoals } from "@/pages/obs/goals";
 import { ObsLeaderboard } from "@/pages/obs/leaderboard";
 import { ObsBossBattle } from "@/pages/obs/boss-battle";
 import { ObsActivityFeed } from "@/pages/obs/activity-feed";
+import { Gifts } from "@/pages/gifts";
 import { StormPass } from "@/pages/storm-pass";
 import { PassEntry } from "@/pages/pass-entry";
 import { ObsStormPassQR } from "@/pages/obs/storm-pass-qr";
@@ -249,6 +250,9 @@ function AppRoutes() {
       </Route>
       <Route path="/games">
         <ProtectedRoute><Layout><Games /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/gifts">
+        <ProtectedRoute><Layout><Gifts /></Layout></ProtectedRoute>
       </Route>
       <Route path="/gamification">
         <ProtectedRoute><Layout><Gamification /></Layout></ProtectedRoute>

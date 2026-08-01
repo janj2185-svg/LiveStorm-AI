@@ -19,13 +19,13 @@ export const INTEGRATIONS: Integration[] = [
     name: "YouTube Live",
     tagline: "Connect to YouTube Live streams",
     description:
-      "Capture chat messages, Super Chats, memberships, and viewer counts from YouTube Live. Requires Google OAuth and a YouTube channel.",
-    available: false,
-    stage: "coming_soon",
+      "Capture chat messages, Super Chats, memberships, and viewer counts from YouTube Live. Requires Google OAuth (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, YOUTUBE_REDIRECT_URI) and a YouTube channel with an active live broadcast.",
+    available: true,
+    stage: "beta",
     requiredFields: ["youtubeChannel", "googleOAuth"],
     docsUrl: "https://developers.google.com/youtube/v3/live/getting-started",
     color: "#ff0000",
-    roadmapStage: 2,
+    roadmapStage: 1,
   },
   {
     id: "twitch",

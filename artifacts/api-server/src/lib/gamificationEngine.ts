@@ -791,6 +791,10 @@ export async function processGamification(
     const xp = XP_TABLE[event.type] ?? 0;
     let coins = 0;
     if (event.type === "gift") {
+      // Mid-combo ticks must not award XP/coins repeatedly.
+      if (event.data.repeatEnd === false) {
+        return;
+      }
       const giftCoins = (event.data.coins as number) ?? 0;
       coins = Math.min(giftCoins, 500);
     }

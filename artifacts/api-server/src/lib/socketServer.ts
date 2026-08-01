@@ -404,22 +404,30 @@ export async function ingestLiveEvent(event: TikTokEvent, userId: number) {
         }
       }
     } else if (event.type === "gift") {
-      const coins = (event.data.coins as number) ?? 0;
-      await db
-        .update(sessionsTable)
-        .set({ totalGifts: sql`${sessionsTable.totalGifts} + ${coins}` })
-        .where(eq(sessionsTable.id, event.sessionId));
-      const session = await db.query.sessionsTable.findFirst({
-        where: eq(sessionsTable.id, event.sessionId),
-      });
-      if (session) {
+      // Combo mid-streak events (repeatEnd === false) must not inflate coin totals.
+      // Missing/undefined repeatEnd is treated as final (simulator, YouTube Super Chat).
+      if (event.data.repeatEnd === false) {
+        console.log(
+          `[Pipeline:4] gift mid-combo skipped for stats | session=${event.sessionId} gift=${event.data.giftName ?? "?"}`,
+        );
+      } else {
+        const coins = (event.data.coins as number) ?? 0;
         await db
-          .update(streamersTable)
-          .set({
-            totalGiftsReceived: sql`${streamersTable.totalGiftsReceived} + ${coins}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(streamersTable.id, session.streamerId));
+          .update(sessionsTable)
+          .set({ totalGifts: sql`${sessionsTable.totalGifts} + ${coins}` })
+          .where(eq(sessionsTable.id, event.sessionId));
+        const session = await db.query.sessionsTable.findFirst({
+          where: eq(sessionsTable.id, event.sessionId),
+        });
+        if (session) {
+          await db
+            .update(streamersTable)
+            .set({
+              totalGiftsReceived: sql`${streamersTable.totalGiftsReceived} + ${coins}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(streamersTable.id, session.streamerId));
+        }
       }
     } else if (event.type === "like") {
       const likeCount = (event.data.likeCount as number) ?? 1;

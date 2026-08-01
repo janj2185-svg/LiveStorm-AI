@@ -25,7 +25,7 @@ const SIDEBAR_ITEMS: SimpleNavItem[] = [
   { labelKey: "nav_dashboard",   href: "/dashboard",    icon: LayoutDashboard },
   { labelKey: "nav_live_studio", href: "/live-studio",  icon: Monitor },
   { labelKey: "nav_scenes",      href: "/live-control", icon: Film },
-  { labelKey: "nav_gifts",       href: "/gamification", icon: Gift },
+  { labelKey: "nav_gifts",       href: "/gifts",        icon: Gift },
   { labelKey: "nav_community",   href: "/universe",     icon: Users },
   { labelKey: "nav_ai_storm",    href: "/ai-assistant", icon: Bot },
   { labelKey: "nav_storm_pass",  href: "/pass",         icon: ShieldCheck },
@@ -48,7 +48,7 @@ function routeVariant(path: string): BgVariant {
   if (path.startsWith("/ai-assistant") || path.startsWith("/avatar-studio")) return "ai";
   if (path.startsWith("/dashboard") || path === "/" || path === "") return "dashboard";
   if (path.startsWith("/boss-battle")) return "battle";
-  if (path.startsWith("/gamification") || path.startsWith("/games")) return "gamification";
+  if (path.startsWith("/gamification") || path.startsWith("/games") || path.startsWith("/gifts")) return "gamification";
   if (path.startsWith("/mini-games")) return "gaming";
   if (path.startsWith("/universe") || path.startsWith("/kingdom")) return "universe";
   if (path.startsWith("/live-studio") || path.startsWith("/overlays") || path.startsWith("/automation")) return "studio";

@@ -50,6 +50,12 @@ export default defineConfig({
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
       "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      ...(process.env.VITE_LOCAL_DEV_AUTH === "1"
+        ? {
+            "@clerk/react": path.resolve(import.meta.dirname, "src/lib/clerk-local-mock.tsx"),
+            "@clerk/react/internal": path.resolve(import.meta.dirname, "src/lib/clerk-local-mock.tsx"),
+          }
+        : {}),
     },
     dedupe: ["react", "react-dom"],
   },

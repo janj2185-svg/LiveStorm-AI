@@ -8,7 +8,7 @@ const router = Router();
 
 router.get("/emotion/state", requireAuth, async (req: any, res: any) => {
   try {
-    const clerkId = req.auth?.userId;
+    const clerkId = req.clerkUserId;
     if (!clerkId) return res.status(401).json({ error: "Unauthorized" });
 
     const user = await db.query.usersTable.findFirst({

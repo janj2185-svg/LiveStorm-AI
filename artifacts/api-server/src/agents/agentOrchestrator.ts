@@ -404,6 +404,12 @@ export async function enqueueEvent(event: TikTokEvent, streamerId: number): Prom
 
   // ── 2. Gift events: threshold check + per-session cooldown ─────────────────
   if (event.type === "gift") {
+    // Skip mid-combo TikTok gift ticks — announce only on streak end.
+    if (event.data.repeatEnd === false) {
+      console.log(`[NEW-PIPELINE] gift mid-combo suppressed | session=${event.sessionId}`);
+      trackStreamEvent(event.sessionId, event.type);
+      return;
+    }
     const coins = (event.data.coins as number) ?? 0;
     let giftConfig: typeof import("@workspace/db")["aiPersonaConfigsTable"]["$inferSelect"] | undefined;
     try {
@@ -1246,20 +1252,29 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   state.lastTtsTime = Date.now();
 
   const roomId = `session:${sessionId}`;
+  const socketsInRoom = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
 
-  console.log(
-    `[NEW-PIPELINE] 📢 ai:announcement | type=${event.type} | viewer=${event.username ?? "anon"} | session=${sessionId} | text="${spokenText.slice(0, 80)}"`,
-  );
-  io.to(roomId).emit("ai:announcement", {
-    text: spokenText,
-    type: event.type,
-    viewerName: event.username,
-    emotion: hostResult.emotion,
-    agentType: "host",
-    personality: personality.modeKey,
-    pipeline: "orchestrator",  // proof: every announcement from the new pipeline carries this field
-    streamerLang: config.defaultLanguage ?? "uk", // stream's primary language for TTS selection
-  });
+  if (socketsInRoom === 0) {
+    // No browser tab listening — skip announcement emit so clients don't later
+    // burn OpenAI TTS quota for audio nobody will hear. Host text still logged.
+    console.log(
+      `[NEW-PIPELINE] ⏭️ skip ai:announcement (no sockets in room) | type=${event.type} | session=${sessionId} | text="${spokenText.slice(0, 80)}"`,
+    );
+  } else {
+    console.log(
+      `[NEW-PIPELINE] 📢 ai:announcement | type=${event.type} | viewer=${event.username ?? "anon"} | session=${sessionId} | sockets=${socketsInRoom} | text="${spokenText.slice(0, 80)}"`,
+    );
+    io.to(roomId).emit("ai:announcement", {
+      text: spokenText,
+      type: event.type,
+      viewerName: event.username,
+      emotion: hostResult.emotion,
+      agentType: "host",
+      personality: personality.modeKey,
+      pipeline: "orchestrator",  // proof: every announcement from the new pipeline carries this field
+      streamerLang: config.defaultLanguage ?? "uk", // stream's primary language for TTS selection
+    });
+  }
 
   io.to(roomId).emit("agent:task", {
     agentType: "host",
@@ -1338,7 +1353,6 @@ async function dispatch(item: QueueItem, io: SocketServer): Promise<void> {
   // ── Voice Agent: client-side TTS contract ───────────────────────────────────
   // The browser owns playback after ai:announcement so autoplay unlock, lip-sync,
   // queueing, and billing are single-sourced in useLiveSession.ts.
-  const socketsInRoom = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
   console.log(`[TTSRequested] voiceEnabled=${config.voiceEnabled} | socketsInRoom=${socketsInRoom} | event=${event.type} | voiceKey=${voice.voiceKey}`);
   console.log(
     `[Agent:Voice] client-side TTS delegated via ai:announcement | voiceEnabled=${config.voiceEnabled} | voiceAgent=${state.enabledAgents.has("voice")} | socketsInRoom=${socketsInRoom}`,

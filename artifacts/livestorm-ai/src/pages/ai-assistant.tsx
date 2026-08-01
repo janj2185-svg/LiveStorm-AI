@@ -175,6 +175,10 @@ const LANGUAGE_OPTIONS = [
   { value: "uk", label: "Українська", flag: "🇺🇦" },
   { value: "pl", label: "Polski", flag: "🇵🇱" },
   { value: "de", label: "Deutsch", flag: "🇩🇪" },
+  { value: "es", label: "Español", flag: "🇪🇸" },
+  { value: "fr", label: "Français", flag: "🇫🇷" },
+  { value: "it", label: "Italiano", flag: "🇮🇹" },
+  { value: "pt", label: "Português", flag: "🇧🇷" },
   { value: "ru", label: "Русский", flag: "🇷🇺" },
 ];
 
@@ -728,7 +732,7 @@ function AiActivityTab({
                 ) : (
                   <span className="text-xs text-emerald-400/85 flex items-center gap-1">
                     <Volume2 className="h-2.5 w-2.5" />
-                    TTS {ttsMode === "openai" ? "OpenAI" : "Browser"} · played
+                    TTS {ttsMode === "openai" ? "OpenAI" : "Off"} · played
                   </span>
                 )}
               </div>
