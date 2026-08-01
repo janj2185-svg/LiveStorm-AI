@@ -1,0 +1,154 @@
+# SYLORA public multi-tester stand (staging)
+# Bind publicly via Caddy (HTTPS). Do NOT use this on ephemeral agent VMs.
+#
+# Prerequisites:
+#   1. DNS A/AAAA for STAND_DOMAIN → your VPS
+#   2. Copy .env.example → .env and fill secrets
+#   3. docker compose -f infrastructure/public-stand/docker-compose.yml --env-file infrastructure/public-stand/.env up -d --build
+#
+# Tear down:
+#   docker compose -f infrastructure/public-stand/docker-compose.yml --env-file infrastructure/public-stand/.env down -v
+
+name: sylora-public-stand
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      STAND_DOMAIN: "${STAND_DOMAIN:?Set STAND_DOMAIN}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+      - web-dist:/srv/web:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_completed_successfully
+    networks:
+      - edge
+      - application
+
+  web:
+    image: ghcr.io/cirruslabs/flutter:stable
+    working_dir: /build
+    restart: "no"
+    volumes:
+      - ../../../apps/sylora:/build
+      - web-dist:/out
+    environment:
+      SYLORA_API_BASE_URL: "https://${STAND_DOMAIN}"
+    entrypoint:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        flutter config --enable-web
+        flutter pub get
+        flutter build web --release --dart-define=SYLORA_API_BASE_URL=https://${STAND_DOMAIN}
+        rm -rf /out/*
+        cp -a build/web/. /out/
+        echo "web build complete"
+    networks:
+      - application
+
+  api:
+    build:
+      context: ../../../services/api
+      dockerfile: ../../infrastructure/docker/api.Dockerfile
+    image: sylora-api:public-stand
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: staging
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-sylora}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sylora}"
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+      CELERY_BROKER_URL: "redis://:${REDIS_PASSWORD}@redis:6379/1"
+      CELERY_RESULT_BACKEND: "redis://:${REDIS_PASSWORD}@redis:6379/2"
+      WEB_BASE_URL: "https://${STAND_DOMAIN}"
+      CORS_ORIGINS: "[\"https://${STAND_DOMAIN}\"]"
+      ALLOWED_HOSTS: "[\"${STAND_DOMAIN}\"]"
+      JWT_ISSUER: "https://${STAND_DOMAIN}"
+      JWT_AUDIENCE: sylora-public-stand
+      TEST_STAND_MODE: "true"
+      TEST_STAND_AUTO_VERIFY_EMAIL: "${TEST_STAND_AUTO_VERIFY_EMAIL:-true}"
+      TEST_STAND_SANDBOX_WALLET: "${TEST_STAND_SANDBOX_WALLET:-true}"
+      TEST_STAND_ENDS_AT: "${TEST_STAND_ENDS_AT:-}"
+      TEST_STAND_BUG_REPORT_URL: "${TEST_STAND_BUG_REPORT_URL:-}"
+      LOG_FORMAT: json
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - application
+      - data
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-sylora}"
+      POSTGRES_USER: "${POSTGRES_USER:-sylora}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      [
+        "redis-server",
+        "--requirepass",
+        "${REDIS_PASSWORD:?Set REDIS_PASSWORD}",
+        "--appendonly",
+        "yes",
+      ]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - data
+
+networks:
+  edge:
+  application:
+  data:
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:
+  web-dist:

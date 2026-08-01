@@ -27,7 +27,7 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    environment: Literal["development", "test", "production"] = "development"
+    environment: Literal["development", "test", "staging", "production"] = "development"
     service_name: str = "sylora-api"
     api_prefix: str = "/v1"
 
@@ -106,6 +106,14 @@ class Settings(BaseSettings):
     tiktok_live_provider_api_key: SecretStr | None = None
     tiktok_live_provider_endpoint: str | None = None
 
+    # Public multi-tester stand (staging only). Never enable in production.
+    test_stand_mode: bool = False
+    test_stand_auto_verify_email: bool = False
+    test_stand_sandbox_wallet: bool = False
+    test_stand_sandbox_credit_minor: int = Field(default=5_000, ge=0, le=100_000)
+    test_stand_ends_at: str | None = None  # ISO-8601 date for tester docs
+    test_stand_bug_report_url: str | None = None
+
     smtp_host: str | None = None
     smtp_port: int = Field(default=587, ge=1, le=65535)
     smtp_from_email: EmailStr | None = None
@@ -165,6 +173,8 @@ class Settings(BaseSettings):
                 raise ValueError("production live OAuth redirect URIs must use HTTPS")
 
         if self.environment == "production":
+            if self.test_stand_mode or self.test_stand_auto_verify_email or self.test_stand_sandbox_wallet:
+                raise ValueError("test stand flags are forbidden in production")
             if not self.database_url.startswith("postgresql+asyncpg://"):
                 raise ValueError("production DATABASE_URL must use PostgreSQL with asyncpg")
             if not self.redis_url.startswith(("redis://", "rediss://")):
@@ -181,6 +191,21 @@ class Settings(BaseSettings):
                 raise ValueError("production IP_HASH_KEY is required")
             if "localhost" in self.web_base_url or not self.web_base_url.startswith("https://"):
                 raise ValueError("production WEB_BASE_URL must be an HTTPS deployment URL")
+        elif self.environment == "staging":
+            if not self.database_url.startswith("postgresql+asyncpg://"):
+                raise ValueError("staging DATABASE_URL must use PostgreSQL with asyncpg")
+            if not self.redis_url.startswith(("redis://", "rediss://")):
+                raise ValueError("staging REDIS_URL must use Redis")
+            if not self.cors_origins or "*" in self.cors_origins:
+                raise ValueError("staging CORS_ORIGINS must be explicit and non-empty")
+            if not self.allowed_hosts or "*" in self.allowed_hosts:
+                raise ValueError("staging ALLOWED_HOSTS must be explicit and non-empty")
+            if "localhost" in self.web_base_url or not self.web_base_url.startswith("https://"):
+                raise ValueError("staging WEB_BASE_URL must be an HTTPS deployment URL")
+            if not self.smtp_configured and not self.test_stand_auto_verify_email:
+                raise ValueError(
+                    "staging requires SMTP or TEST_STAND_AUTO_VERIFY_EMAIL=true for registration"
+                )
         elif not self.database_url.startswith(("postgresql+asyncpg://", "sqlite+aiosqlite://")):
             raise ValueError("DATABASE_URL must use PostgreSQL with asyncpg (or SQLite in tests)")
 
@@ -191,6 +216,10 @@ class Settings(BaseSettings):
     @property
     def smtp_configured(self) -> bool:
         return bool(self.smtp_host and self.smtp_from_email)
+
+    @property
+    def is_public_test_stand(self) -> bool:
+        return self.test_stand_mode and self.environment in {"staging", "development", "test"}
 
     @property
     def s3_configured(self) -> bool:

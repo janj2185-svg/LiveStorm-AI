@@ -178,6 +178,14 @@ async def diagnostics(request: Request) -> dict[str, Any]:
     return {
         "service": settings.service_name,
         "environment": settings.environment,
+        "test_stand": {
+            "enabled": settings.is_public_test_stand,
+            "auto_verify_email": settings.test_stand_auto_verify_email,
+            "sandbox_wallet": settings.test_stand_sandbox_wallet,
+            "ends_at": settings.test_stand_ends_at,
+            "bug_report_url": settings.test_stand_bug_report_url,
+            "stand_status_path": "/v1/public/stand-status",
+        },
         "commit": _git(["git", "rev-parse", "HEAD"]),
         "branch": _git(["git", "branch", "--show-current"]),
         "backend": _bool_status(True, "listening"),
@@ -219,5 +227,6 @@ async def diagnostics(request: Request) -> dict[str, Any]:
             "Unconfigured providers must fail closed with Provider not configured — never fake success.",
             "READY gift count is honest; do not claim 100 READY unless catalog says so.",
             "Phase 1 product loops: login → handle → wallet → feed → DM. Phase 2+ needs owner confirm.",
+            "Use GET /v1/public/stand-status for the public READY/PARTIAL/BLOCKED matrix.",
         ],
     }

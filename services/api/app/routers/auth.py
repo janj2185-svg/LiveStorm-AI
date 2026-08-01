@@ -60,7 +60,9 @@ async def register(
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> MessageResponse:
-    await register_user(db, request, payload, settings)
+    user = await register_user(db, request, payload, settings)
+    if settings.is_public_test_stand and settings.test_stand_auto_verify_email and user.email_verified_at:
+        return MessageResponse(status="registered_verified")
     return MessageResponse(status="verification_queued")
 
 

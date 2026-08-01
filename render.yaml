@@ -1,0 +1,54 @@
+# Optional Render blueprint — requires owner Render account linked to GitHub.
+# Does not auto-deploy without credentials.
+
+services:
+  - type: web
+    name: sylora-api-stand
+    runtime: docker
+    dockerfilePath: ./infrastructure/docker/api.Dockerfile
+    dockerContext: ./services/api
+    plan: starter
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: staging
+      - key: TEST_STAND_MODE
+        value: "true"
+      - key: TEST_STAND_AUTO_VERIFY_EMAIL
+        value: "true"
+      - key: TEST_STAND_SANDBOX_WALLET
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sylora-stand-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: sylora-stand-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATA_ENCRYPTION_KEY
+        sync: false
+      - key: IP_HASH_KEY
+        generateValue: true
+      - key: WEB_BASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: JWT_ISSUER
+        sync: false
+      - key: JWT_AUDIENCE
+        value: sylora-public-stand
+
+  - type: redis
+    name: sylora-stand-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+
+databases:
+  - name: sylora-stand-db
+    plan: basic-256mb

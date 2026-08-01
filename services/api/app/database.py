@@ -60,7 +60,18 @@ PERMISSION_DESCRIPTIONS = {
 
 ROLE_MATRIX = {
     "user": set(),
+    "viewer": set(),  # alias role for public testers (same capabilities as user)
     "creator": {
+        "creator:access",
+        "creator:manage",
+        "creator:analytics",
+        "marketplace:sell",
+        "courses:author",
+        "gifts:author",
+        "live:manage",
+        "live:integrations:manage",
+    },
+    "streamer": {
         "creator:access",
         "creator:manage",
         "creator:analytics",
@@ -86,6 +97,7 @@ ROLE_MATRIX = {
         "live:moderate",
     },
     "admin": set(PERMISSION_DESCRIPTIONS),
+    "owner": set(PERMISSION_DESCRIPTIONS),
 }
 
 

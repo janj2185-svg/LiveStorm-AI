@@ -113,7 +113,20 @@ async def register_user(
             "Identity roles have not been initialized.",
         )
     db.add(UserRole(user_id=user.id, role_id=default_role.id))
-    await create_verification(db, user, settings)
+    if settings.is_public_test_stand and settings.test_stand_auto_verify_email:
+        now = utcnow()
+        user.email_verified_at = now
+        user.status = UserStatus.active
+        add_audit_event(
+            db,
+            request,
+            settings,
+            "identity.email_auto_verified_test_stand",
+            actor_user_id=user.id,
+            target_user_id=user.id,
+        )
+    else:
+        await create_verification(db, user, settings)
     add_audit_event(
         db,
         request,

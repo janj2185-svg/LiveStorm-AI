@@ -16,13 +16,16 @@ from app.security import utcnow
 
 
 def require_email_capability(settings: Settings) -> None:
-    if not settings.smtp_configured:
-        raise APIError(
-            503,
-            "email_delivery_unavailable",
-            "Email delivery unavailable",
-            "Email delivery is not configured for this deployment.",
-        )
+    if settings.smtp_configured:
+        return
+    if settings.is_public_test_stand and settings.test_stand_auto_verify_email:
+        return
+    raise APIError(
+        503,
+        "email_delivery_unavailable",
+        "Email delivery unavailable",
+        "Email delivery is not configured for this deployment.",
+    )
 
 
 def verification_message(recipient: str, token: str, settings: Settings) -> EmailOutbox:
@@ -107,6 +110,9 @@ async def drain_outbox(
     *,
     limit: int = 50,
 ) -> tuple[int, int]:
+    if not settings.smtp_configured:
+        # Test-stand auto-verify mode keeps messages in DB outbox without SMTP.
+        return 0, 0
     adapter = SMTPAdapter(settings)
     sent = 0
     failed = 0

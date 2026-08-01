@@ -68,6 +68,7 @@ from app.routers import (
     messaging,
     oauth,
     social,
+    test_stand,
     users,
 )
 from app.routers.messaging import MessageConnectionHub
@@ -247,6 +248,7 @@ def create_app(
 
     app.include_router(health.router)
     app.include_router(diagnostics.router, prefix=resolved_settings.api_prefix)
+    app.include_router(test_stand.router, prefix=resolved_settings.api_prefix)
     app.include_router(auth.router, prefix=resolved_settings.api_prefix)
     app.include_router(oauth.router, prefix=resolved_settings.api_prefix)
     app.include_router(users.router, prefix=resolved_settings.api_prefix)

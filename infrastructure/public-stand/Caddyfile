@@ -1,0 +1,37 @@
+{
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$STAND_DOMAIN} {
+	encode gzip zstd
+
+	# API + health
+	handle /v1/* {
+		reverse_proxy api:8000
+	}
+	handle /health/* {
+		reverse_proxy api:8000
+	}
+	handle /metrics {
+		reverse_proxy api:8000
+	}
+
+	# Flutter web SPA
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
