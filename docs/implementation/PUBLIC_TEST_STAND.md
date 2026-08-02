@@ -93,3 +93,8 @@ Then open `https://YOUR_DOMAIN` on a second phone using **mobile data**.
 - Never publish `.env`, JWT, DB, or Redis secrets.
 - Stripe/real payments stay disabled unless separately approved.
 - Fake TikTok events are tests-only and never prove LIVE.
+
+
+## Production-grade hosting
+
+For Hetzner + Cloudflare + R2, use `infrastructure/production/` (see README there).

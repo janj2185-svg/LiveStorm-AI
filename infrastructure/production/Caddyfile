@@ -1,0 +1,44 @@
+{
+	email {$ACME_EMAIL}
+	admin 0.0.0.0:2019
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+		format json
+	}
+}
+
+{$DOMAIN} {
+	encode gzip zstd
+
+	# Dual API replicas — zero-downtime rolling updates recreate one at a time.
+	@api path /v1/* /health/* /metrics
+	handle @api {
+		reverse_proxy api:8000 api2:8000 {
+			lb_policy round_robin
+			health_uri /health/ready
+			health_interval 5s
+			health_timeout 3s
+			fail_duration 10s
+			flush_interval -1
+			header_up X-Forwarded-Proto {http.request.scheme}
+			header_up X-Real-IP {http.request.remote.host}
+		}
+	}
+
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+}

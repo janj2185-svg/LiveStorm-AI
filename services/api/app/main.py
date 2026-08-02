@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -143,7 +144,9 @@ def create_app(
             await seed_ai_tool_definitions(session)
             if ai_provider_registry is None:
                 await resolved_ai_registry.refresh_from_database(session, resolved_settings)
-            if resolved_settings.is_public_test_stand:
+            if resolved_settings.is_public_test_stand or os.environ.get(
+                "BOOTSTRAP_SOFT_PING", ""
+            ).lower() in {"1", "true", "yes"}:
                 from app.stand_bootstrap import ensure_soft_ping_catalog
 
                 try:
