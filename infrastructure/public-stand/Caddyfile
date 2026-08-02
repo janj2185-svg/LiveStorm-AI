@@ -5,15 +5,12 @@
 {$STAND_DOMAIN} {
 	encode gzip zstd
 
-	# API + health
-	handle /v1/* {
-		reverse_proxy api:8000
-	}
-	handle /health/* {
-		reverse_proxy api:8000
-	}
-	handle /metrics {
-		reverse_proxy api:8000
+	# API + health + websocket upgrades
+	@api path /v1/* /health/* /metrics
+	handle @api {
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
 	}
 
 	# Flutter web SPA

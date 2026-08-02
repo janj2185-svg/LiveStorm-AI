@@ -143,6 +143,15 @@ def create_app(
             await seed_ai_tool_definitions(session)
             if ai_provider_registry is None:
                 await resolved_ai_registry.refresh_from_database(session, resolved_settings)
+            if resolved_settings.is_public_test_stand:
+                from app.stand_bootstrap import ensure_soft_ping_catalog
+
+                try:
+                    await ensure_soft_ping_catalog(session)
+                except Exception:  # noqa: BLE001 - stand must still boot; status endpoint reports honesty
+                    import logging
+
+                    logging.getLogger(__name__).exception("soft-ping stand bootstrap failed")
         application.state.ready = True
         try:
             yield

@@ -20,6 +20,7 @@ services:
       - "443:443"
     environment:
       STAND_DOMAIN: "${STAND_DOMAIN:?Set STAND_DOMAIN}"
+      ACME_EMAIL: "${ACME_EMAIL:-admin@example.com}"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
@@ -57,6 +58,46 @@ services:
     networks:
       - application
 
+  migrate:
+    image: sylora-api:public-stand
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: staging
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-sylora}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sylora}"
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+      WEB_BASE_URL: "https://${STAND_DOMAIN}"
+      CORS_ORIGINS: "[\"https://${STAND_DOMAIN}\"]"
+      ALLOWED_HOSTS: "[\"${STAND_DOMAIN}\"]"
+      JWT_ISSUER: "https://${STAND_DOMAIN}"
+      JWT_AUDIENCE: sylora-public-stand
+      TEST_STAND_MODE: "true"
+      TEST_STAND_AUTO_VERIFY_EMAIL: "${TEST_STAND_AUTO_VERIFY_EMAIL:-true}"
+      TEST_STAND_SANDBOX_WALLET: "${TEST_STAND_SANDBOX_WALLET:-true}"
+    volumes:
+      - ../../../services/api:/src:ro
+    working_dir: /src
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api-image:
+        condition: service_completed_successfully
+    networks:
+      - data
+
+  # Ensure the API image exists before migrate/api start (build-only service).
+  api-image:
+    build:
+      context: ../../../services/api
+      dockerfile: ../../infrastructure/docker/api.Dockerfile
+    image: sylora-api:public-stand
+    entrypoint: ["true"]
+    restart: "no"
+    networks:
+      - application
+
   api:
     build:
       context: ../../../services/api
@@ -79,14 +120,20 @@ services:
       TEST_STAND_MODE: "true"
       TEST_STAND_AUTO_VERIFY_EMAIL: "${TEST_STAND_AUTO_VERIFY_EMAIL:-true}"
       TEST_STAND_SANDBOX_WALLET: "${TEST_STAND_SANDBOX_WALLET:-true}"
+      TEST_STAND_SANDBOX_CREDIT_MINOR: "${TEST_STAND_SANDBOX_CREDIT_MINOR:-5000}"
       TEST_STAND_ENDS_AT: "${TEST_STAND_ENDS_AT:-}"
       TEST_STAND_BUG_REPORT_URL: "${TEST_STAND_BUG_REPORT_URL:-}"
+      STAND_ARTIFACTS_ROOT: /artifacts/sylora-gift-100-originals
       LOG_FORMAT: json
+    volumes:
+      - ../../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test:
         [
@@ -98,7 +145,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
-      start_period: 40s
+      start_period: 60s
     networks:
       - application
       - data

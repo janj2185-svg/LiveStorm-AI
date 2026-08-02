@@ -105,7 +105,7 @@ async def public_stand_status(request: Request) -> dict[str, Any]:
         ),
         "profile": _feature("READY", "GET/PATCH /v1/users/me + public profiles"),
         "feed": _feature("READY", "social posts feed"),
-        "messaging": _feature("READY", "DM + websocket /v1/messaging/ws"),
+        "messaging": _feature("READY", "DM + websocket /v1/ws/messages (ticket or bearer)"),
         "wallet": _feature(
             "PARTIAL" if settings.test_stand_sandbox_wallet or not payments_blocked else "BLOCKED",
             "sandbox issuance only — real payments disabled"
@@ -113,7 +113,25 @@ async def public_stand_status(request: Request) -> dict[str, Any]:
             else "payment provider configured",
             mode="sandbox" if payments_blocked else "provider",
         ),
-        "gift_library": _feature("PARTIAL", "catalog + runtime; READY count is catalog-honest"),
+        "gift_library": _feature(
+            "PARTIAL",
+            "soft-ping seeded on stand boot; catalog + ticket WS; AAA art remaster not claimed",
+        ),
+        "gift_realtime": _feature(
+            "READY",
+            "POST /v1/gifts/events/ticket + /v1/ws/gifts?ticket= for browsers",
+        ),
+        "message_realtime": _feature(
+            "READY",
+            "POST /v1/messages/events/ticket + /v1/ws/messages?ticket= for browsers",
+        ),
+        "email_verification": _feature(
+            "READY" if settings.smtp_configured else "PARTIAL",
+            "SMTP verification"
+            if settings.smtp_configured
+            else "SMTP not connected — TEST_STAND_AUTO_VERIFY_EMAIL auto-verifies on this stand",
+            mode="smtp" if settings.smtp_configured else "auto_verify",
+        ),
         "ai_assistant": _feature(
             "READY" if llm_ok else "PARTIAL",
             "LLM configured" if llm_ok else "Provider not configured",

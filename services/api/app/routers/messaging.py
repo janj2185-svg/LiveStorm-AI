@@ -29,6 +29,7 @@ from app.social_models import (
     MessageReceipt,
     ParticipantState,
 )
+from app.gift_schemas import WebSocketTicketResponse
 from app.social_schemas import (
     ConversationCreate,
     ConversationParticipantResponse,
@@ -41,6 +42,7 @@ from app.social_schemas import (
     ReadReceiptResponse,
     WebSocketEvent,
 )
+from app.ws_tickets import consume_websocket_ticket, mint_websocket_ticket
 from app.social_service import (
     apply_cursor,
     are_friends,
@@ -778,10 +780,40 @@ async def websocket_user(websocket: WebSocket) -> uuid.UUID:
     return user_id
 
 
+@router.post("/messages/events/ticket", response_model=WebSocketTicketResponse)
+async def create_message_websocket_ticket(
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+) -> WebSocketTicketResponse:
+    return await mint_websocket_ticket(
+        request,
+        user_id=auth.user.id,
+        namespace="msg",
+        rate_bucket="message-socket-ticket",
+        unavailable_code="message_realtime_unavailable",
+        unavailable_title="Message realtime unavailable",
+    )
+
+
+async def websocket_ticket_user(websocket: WebSocket, ticket: str) -> uuid.UUID:
+    return await consume_websocket_ticket(
+        websocket,
+        ticket,
+        namespace="msg",
+        unavailable_code="message_realtime_unavailable",
+        unavailable_title="Message realtime unavailable",
+    )
+
+
 @router.websocket("/ws/messages")
 async def message_websocket(websocket: WebSocket) -> None:
     try:
-        user_id = await websocket_user(websocket)
+        ticket = websocket.query_params.get("ticket")
+        user_id = (
+            await websocket_ticket_user(websocket, ticket)
+            if ticket
+            else await websocket_user(websocket)
+        )
         settings: Settings = websocket.app.state.settings
         since = decode_cursor(settings, "ws_events", websocket.query_params.get("since"))
     except APIError:

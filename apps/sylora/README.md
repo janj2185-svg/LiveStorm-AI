@@ -85,12 +85,11 @@ backend. Native OAuth buttons remain visibly disabled until each Runner has an
 application deep-link callback and the backend redirects to it; the UI explains
 this requirement.
 
-The current API authenticates WebSockets with an `Authorization` header. Native
-Flutter sockets can send that header and reconnect with bounded exponential
-backoff plus replay cursors. Browser WebSockets cannot set arbitrary headers, so
-Web explicitly reports realtime sockets as unavailable while HTTP history and
-refresh continue to work. A cookie/BFF or ticket-based socket handshake is
-required to enable browser realtime safely.
+The current API authenticates native WebSockets with an `Authorization`
+header. Browser WebSockets cannot set arbitrary headers, so Flutter web mints a
+one-time ticket over HTTPS (`POST /v1/gifts/events/ticket` or
+`POST /v1/messages/events/ticket`) and connects with `?ticket=`. Native clients
+may still use bearer headers; ticket auth works on every platform.
 
 ## Implemented foundation
 

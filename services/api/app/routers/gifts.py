@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import secrets
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
@@ -935,67 +933,28 @@ async def create_gift_websocket_ticket(
     request: Request,
     auth: AuthContext = Depends(current_auth),
 ) -> WebSocketTicketResponse:
-    await rate_limit(
+    from app.ws_tickets import mint_websocket_ticket
+
+    return await mint_websocket_ticket(
         request,
-        bucket="gift-socket-ticket",
-        subject=str(auth.user.id),
-        limit=20,
-        window_seconds=60,
-        unavailable_detail="Gift realtime authorization is temporarily unavailable.",
+        user_id=auth.user.id,
+        namespace="gift",
+        rate_bucket="gift-socket-ticket",
+        unavailable_code="gift_realtime_unavailable",
+        unavailable_title="Gift realtime unavailable",
     )
-    raw_ticket = secrets.token_urlsafe(32)
-    digest = hashlib.sha256(raw_ticket.encode()).hexdigest()
-    try:
-        stored = await request.app.state.redis.set(
-            f"sylora:gift-ws-ticket:{digest}",
-            str(auth.user.id),
-            ex=60,
-            nx=True,
-        )
-    except Exception as exc:
-        raise APIError(
-            503,
-            "gift_realtime_unavailable",
-            "Gift realtime unavailable",
-            "The one-time realtime ticket store is unavailable.",
-        ) from exc
-    if not stored:
-        raise APIError(
-            503,
-            "gift_realtime_unavailable",
-            "Gift realtime unavailable",
-            "A one-time realtime ticket could not be issued.",
-        )
-    return WebSocketTicketResponse(ticket=raw_ticket, expires_in_seconds=60)
 
 
 async def websocket_ticket_user(websocket: WebSocket, ticket: str) -> uuid.UUID:
-    digest = hashlib.sha256(ticket.encode()).hexdigest()
-    key = f"sylora:gift-ws-ticket:{digest}"
-    redis = websocket.app.state.redis
-    try:
-        if hasattr(redis, "getdel"):
-            value = await redis.getdel(key)
-        else:
-            value = await redis.get(key)
-            if value is not None:
-                await redis.delete(key)
-    except Exception as exc:
-        raise APIError(
-            503,
-            "gift_realtime_unavailable",
-            "Gift realtime unavailable",
-            "The one-time realtime ticket could not be consumed.",
-        ) from exc
-    try:
-        return uuid.UUID(str(value))
-    except (TypeError, ValueError) as exc:
-        raise APIError(
-            401,
-            "invalid_realtime_ticket",
-            "Invalid realtime ticket",
-            "Request a new one-time gift realtime ticket.",
-        ) from exc
+    from app.ws_tickets import consume_websocket_ticket
+
+    return await consume_websocket_ticket(
+        websocket,
+        ticket,
+        namespace="gift",
+        unavailable_code="gift_realtime_unavailable",
+        unavailable_title="Gift realtime unavailable",
+    )
 
 
 @websocket_router.websocket("/ws/gifts")

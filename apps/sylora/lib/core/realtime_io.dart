@@ -11,3 +11,10 @@ WebSocketChannel openAuthorizedSocket(Uri uri, String accessToken) =>
       pingInterval: const Duration(seconds: 20),
       connectTimeout: const Duration(seconds: 12),
     );
+
+WebSocketChannel openTicketSocket(Uri uri) =>
+    IOWebSocketChannel.connect(
+      uri,
+      pingInterval: const Duration(seconds: 20),
+      connectTimeout: const Duration(seconds: 12),
+    );

@@ -529,25 +529,37 @@ final class DioMessagingRepository implements MessagingRepository {
       if (token == null) {
         return;
       }
-      final socket = openAuthorizedSocket(
-        _config.websocket('ws/messages', <String, dynamic>{'since': cursor}),
-        token,
-      );
       try {
-        await for (final payload in socket.stream) {
-          final json = requireObject(
-            jsonDecode(payload as String),
-            'message event',
-          );
-          cursor = optionalString(json, 'cursor') ?? cursor;
-          backoffSeconds = 1;
-          yield json;
+        final ticketResponse = await _client.request(
+          'messages/events/ticket',
+          method: 'POST',
+        );
+        final ticketJson = requireObject(ticketResponse.data, 'message ticket');
+        final ticket = requireString(ticketJson, 'ticket');
+        final socket = openTicketSocket(
+          _config.websocket('ws/messages', <String, dynamic>{
+            'since': cursor,
+            'ticket': ticket,
+          }),
+        );
+        try {
+          await for (final payload in socket.stream) {
+            final json = requireObject(
+              jsonDecode(payload as String),
+              'message event',
+            );
+            cursor = optionalString(json, 'cursor') ?? cursor;
+            backoffSeconds = 1;
+            yield json;
+          }
+        } on Object {
+          // Reconnect below. Transport and malformed-frame failures must not
+          // terminate HTTP-backed messaging.
+        } finally {
+          await socket.sink.close();
         }
       } on Object {
-        // Reconnect below. Transport and malformed-frame failures must not
-        // terminate HTTP-backed messaging.
-      } finally {
-        await socket.sink.close();
+        // Ticket mint or connect failed — backoff and retry.
       }
       await Future<void>.delayed(Duration(seconds: backoffSeconds));
       backoffSeconds = (backoffSeconds * 2).clamp(1, 30);
@@ -885,29 +897,41 @@ final class DioGiftRepository implements GiftRepository {
       if (token == null) {
         return;
       }
-      final socket = openAuthorizedSocket(
-        _config.websocket('ws/gifts', <String, dynamic>{'since': cursor}),
-        token,
-      );
       try {
-        await for (final payload in socket.stream) {
-          final json = requireObject(
-            jsonDecode(payload as String),
-            'gift event',
-          );
-          if (json['event'] == 'heartbeat') {
+        final ticketResponse = await _client.request(
+          'gifts/events/ticket',
+          method: 'POST',
+        );
+        final ticketJson = requireObject(ticketResponse.data, 'gift ticket');
+        final ticket = requireString(ticketJson, 'ticket');
+        final socket = openTicketSocket(
+          _config.websocket('ws/gifts', <String, dynamic>{
+            'since': cursor,
+            'ticket': ticket,
+          }),
+        );
+        try {
+          await for (final payload in socket.stream) {
+            final json = requireObject(
+              jsonDecode(payload as String),
+              'gift event',
+            );
+            if (json['event'] == 'heartbeat') {
+              backoffSeconds = 1;
+              continue;
+            }
+            final event = GiftEventModel.fromJson(json);
+            cursor = event.cursor;
             backoffSeconds = 1;
-            continue;
+            yield event;
           }
-          final event = GiftEventModel.fromJson(json);
-          cursor = event.cursor;
-          backoffSeconds = 1;
-          yield event;
+        } on Object {
+          // Reconnect below after both error and orderly socket closure.
+        } finally {
+          await socket.sink.close();
         }
       } on Object {
-        // Reconnect below after both error and orderly socket closure.
-      } finally {
-        await socket.sink.close();
+        // Ticket mint or connect failed — backoff and retry.
       }
       await Future<void>.delayed(Duration(seconds: backoffSeconds));
       backoffSeconds = (backoffSeconds * 2).clamp(1, 30);

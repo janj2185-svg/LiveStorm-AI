@@ -20,6 +20,7 @@ from app.auth_service import (
     verify_email_token,
     verify_mfa_challenge,
 )
+from app.stand_provisioning import assert_stand_accepting_testers, provision_stand_tester
 from app.config import Settings
 from app.dependencies import AuthContext, current_auth, get_session, get_settings
 from app.errors import APIError
@@ -60,7 +61,10 @@ async def register(
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> MessageResponse:
+    assert_stand_accepting_testers(settings)
     user = await register_user(db, request, payload, settings)
+    if settings.is_public_test_stand and user.email_verified_at is not None:
+        await provision_stand_tester(db, request, settings, user.id)
     if settings.is_public_test_stand and settings.test_stand_auto_verify_email and user.email_verified_at:
         return MessageResponse(status="registered_verified")
     return MessageResponse(status="verification_queued")
@@ -78,6 +82,7 @@ async def request_verification(
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> MessageResponse:
+    assert_stand_accepting_testers(settings)
     await resend_verification(db, request, payload.email, settings)
     return MessageResponse(status="accepted")
 
@@ -104,6 +109,7 @@ async def login(
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> LoginResponse:
+    assert_stand_accepting_testers(settings)
     tokens, challenge = await authenticate_password(db, request, payload, settings)
     if challenge:
         return LoginResponse(mfa_required=True, challenge_token=challenge)
