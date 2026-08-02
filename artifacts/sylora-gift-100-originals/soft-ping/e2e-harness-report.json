@@ -1,0 +1,23 @@
+{
+  "slug": "soft-ping",
+  "harness": "pytest-sqlite-APIHarness",
+  "passed": {
+    "author_definition": true,
+    "review_validate": true,
+    "admin_publish": true,
+    "catalog_list": true,
+    "catalog_runtime": true,
+    "wallet_send": true,
+    "events_ticket": true
+  },
+  "not_proven": {
+    "docker_compose_live_api": true,
+    "real_s3_upload_verify": true,
+    "blender_source_blend": true,
+    "second_client_websocket_delivery": true,
+    "device_fps_memory": true
+  },
+  "local_asset_status": "ASSETS_BUILT_NOT_READY",
+  "product_ready": false,
+  "note": "API contract path for soft-ping works in the unit harness with injected verified assets. Product READY still requires Compose+S3, Blender art pass, and live WS client proof."
+}

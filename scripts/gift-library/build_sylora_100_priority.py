@@ -97,12 +97,8 @@ def build_manifest(spec: dict) -> dict:
     return {
         "schema_version": "1.0",
         "renderer_targets": ["threejs", "flutter"],
-        "source_metadata": {
-            "application": "sylora-minimal-glb",
-            "version": "1.0.0",
-            "source_asset_id": spec["asset_ids"]["blend"],
-            "license_reference": "SYLORA-original-IP",
-        },
+        # Omit source_metadata until a real Blender .blend exists.
+        # RuntimeManifest only accepts application="blender".
         "duration_ms": duration,
         "assets": [
             {"asset_id": glb_id, "role": "primary_model"},

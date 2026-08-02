@@ -166,7 +166,10 @@ These are artist mood references — not runtime GLB/WAV and not READY catalog g
 
 Regenerate with `python3 scripts/gift-library/export_sylora_100_originals_seed.py`.  
 Outputs: `artifacts/sylora-gift-100-originals/` + `SYLORA_GIFT_100_SEED.md`.  
-All entries are **SPEC_ONLY** — publish only via Gift Studio after real assets.
+All entries start **SPEC_ONLY** — publish only via Gift Studio after real assets.
+
+**Official product catalog:** this 100-originals set (not the parallel fantasy `artifacts/gift-library/`).  
+**soft-ping path:** `SYLORA_GIFT_SOFT_PING_READY_PATH.md` (API harness E2E passed; product READY still blocked).
 
 ## Implementation note
 

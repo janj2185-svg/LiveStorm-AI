@@ -4,12 +4,6 @@
     "threejs",
     "flutter"
   ],
-  "source_metadata": {
-    "application": "sylora-minimal-glb",
-    "version": "1.0.0",
-    "source_asset_id": "14d34193-0ee3-50da-8fdc-0e6a3487b555",
-    "license_reference": "SYLORA-original-IP"
-  },
   "duration_ms": 11000,
   "assets": [
     {
@@ -84,7 +78,7 @@
       "max_particles": 5000,
       "spawn_rate_per_second": 500,
       "texture_asset_id": null,
-      "deterministic_seed": 1386282050
+      "deterministic_seed": 993455034
     }
   ],
   "shaders": [],
