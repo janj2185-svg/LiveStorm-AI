@@ -1,0 +1,55 @@
+{
+  "index": 9,
+  "slug": "hush-coin",
+  "name": "Hush Coin",
+  "price_minor": 75,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "effect": "Soft coin lands without clang",
+  "cohost_hook": "Thanks in a whisper tone",
+  "description": "Soft coin lands without clang. Co-Host: Thanks in a whisper tone. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-09-hush-coin.png",
+  "definition_payload": {
+    "slug": "hush-coin",
+    "name": "Hush Coin",
+    "description": "Soft coin lands without clang. Co-Host: Thanks in a whisper tone. Never fabricate delivery.",
+    "price_minor": 75,
+    "creator_revenue_share_bps": 0,
+    "tier": "rare",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "rare",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-09-hush-coin.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

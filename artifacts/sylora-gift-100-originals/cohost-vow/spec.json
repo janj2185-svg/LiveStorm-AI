@@ -1,0 +1,55 @@
+{
+  "index": 53,
+  "slug": "cohost-vow",
+  "name": "Co-Host Vow",
+  "price_minor": 17000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "effect": "Ribbon vow between host & AI",
+  "cohost_hook": "Short loyalty-to-craft line",
+  "description": "Ribbon vow between host & AI. Co-Host: Short loyalty-to-craft line. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-59-cohost-vow.png",
+  "definition_payload": {
+    "slug": "cohost-vow",
+    "name": "Co-Host Vow",
+    "description": "Ribbon vow between host & AI. Co-Host: Short loyalty-to-craft line. Never fabricate delivery.",
+    "price_minor": 17000,
+    "creator_revenue_share_bps": 0,
+    "tier": "legendary",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "legendary",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-59-cohost-vow.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

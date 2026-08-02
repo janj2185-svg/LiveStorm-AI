@@ -1,0 +1,55 @@
+{
+  "index": 36,
+  "slug": "booth-flower",
+  "name": "Booth Flower",
+  "price_minor": 2200,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "effect": "Single abstract bloom in the booth (not a rose)",
+  "cohost_hook": "Nature-metaphor thanks",
+  "description": "Single abstract bloom in the booth (not a rose). Co-Host: Nature-metaphor thanks. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-44-booth-flower.png",
+  "definition_payload": {
+    "slug": "booth-flower",
+    "name": "Booth Flower",
+    "description": "Single abstract bloom in the booth (not a rose). Co-Host: Nature-metaphor thanks. Never fabricate delivery.",
+    "price_minor": 2200,
+    "creator_revenue_share_bps": 0,
+    "tier": "epic",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "epic",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-44-booth-flower.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,55 @@
+{
+  "index": 55,
+  "slug": "signal-cathedral",
+  "name": "Signal Cathedral",
+  "price_minor": 19000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "effect": "Soft cathedral of radio arches",
+  "cohost_hook": "Reverent thanks (no religion push)",
+  "description": "Soft cathedral of radio arches. Co-Host: Reverent thanks (no religion push). Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-61-signal-cathedral.png",
+  "definition_payload": {
+    "slug": "signal-cathedral",
+    "name": "Signal Cathedral",
+    "description": "Soft cathedral of radio arches. Co-Host: Reverent thanks (no religion push). Never fabricate delivery.",
+    "price_minor": 19000,
+    "creator_revenue_share_bps": 0,
+    "tier": "legendary",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "legendary",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-61-signal-cathedral.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

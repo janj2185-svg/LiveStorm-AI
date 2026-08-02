@@ -1,0 +1,55 @@
+{
+  "index": 72,
+  "slug": "shared-rehearsal-world",
+  "name": "Shared Rehearsal World",
+  "price_minor": 250000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "effect": "Host+AI+chat in a rehearsal dimension",
+  "cohost_hook": "Invites a 15s group bit",
+  "description": "Host+AI+chat in a rehearsal dimension. Co-Host: Invites a 15s group bit. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-76-shared-rehearsal-world.png",
+  "definition_payload": {
+    "slug": "shared-rehearsal-world",
+    "name": "Shared Rehearsal World",
+    "description": "Host+AI+chat in a rehearsal dimension. Co-Host: Invites a 15s group bit. Never fabricate delivery.",
+    "price_minor": 250000,
+    "creator_revenue_share_bps": 0,
+    "tier": "mythical",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "mythical",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-76-shared-rehearsal-world.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

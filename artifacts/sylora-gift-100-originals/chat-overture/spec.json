@@ -1,0 +1,55 @@
+{
+  "index": 31,
+  "slug": "chat-overture",
+  "name": "Chat Overture",
+  "price_minor": 1500,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "effect": "Chat bubbles arrange into a chord",
+  "cohost_hook": "Thanks “the room’s overture",
+  "description": "Chat bubbles arrange into a chord. Co-Host: Thanks “the room’s overture. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-40-chat-overture.png",
+  "definition_payload": {
+    "slug": "chat-overture",
+    "name": "Chat Overture",
+    "description": "Chat bubbles arrange into a chord. Co-Host: Thanks “the room’s overture. Never fabricate delivery.",
+    "price_minor": 1500,
+    "creator_revenue_share_bps": 0,
+    "tier": "epic",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "epic",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-40-chat-overture.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

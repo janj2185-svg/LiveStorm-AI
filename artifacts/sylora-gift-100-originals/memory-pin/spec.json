@@ -1,0 +1,55 @@
+{
+  "index": 32,
+  "slug": "memory-pin",
+  "name": "Memory Pin",
+  "price_minor": 1600,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "effect": "Pin drops into a memory corkboard",
+  "cohost_hook": "Stores a safe session memory",
+  "description": "Pin drops into a memory corkboard. Co-Host: Stores a safe session memory. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-05-memory-pin.png",
+  "definition_payload": {
+    "slug": "memory-pin",
+    "name": "Memory Pin",
+    "description": "Pin drops into a memory corkboard. Co-Host: Stores a safe session memory. Never fabricate delivery.",
+    "price_minor": 1600,
+    "creator_revenue_share_bps": 0,
+    "tier": "epic",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "epic",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-05-memory-pin.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

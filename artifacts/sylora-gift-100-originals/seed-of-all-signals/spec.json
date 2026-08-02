@@ -1,0 +1,55 @@
+{
+  "index": 99,
+  "slug": "seed-of-all-signals",
+  "name": "Seed of All Signals",
+  "price_minor": 9000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "effect": "Primordial seed of every future gift signal",
+  "cohost_hook": "Plants platform-level thanks",
+  "description": "Primordial seed of every future gift signal. Co-Host: Plants platform-level thanks. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-100-seed-of-all-signals.png",
+  "definition_payload": {
+    "slug": "seed-of-all-signals",
+    "name": "Seed of All Signals",
+    "description": "Primordial seed of every future gift signal. Co-Host: Plants platform-level thanks. Never fabricate delivery.",
+    "price_minor": 9000000,
+    "creator_revenue_share_bps": 0,
+    "tier": "ultra_premium",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "ultra-premium",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-100-seed-of-all-signals.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

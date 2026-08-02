@@ -1,0 +1,55 @@
+{
+  "index": 19,
+  "slug": "second-take",
+  "name": "Second Take",
+  "price_minor": 220,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "effect": "Clapperboard “Take 2”",
+  "cohost_hook": "Playful redo of thanks",
+  "description": "Clapperboard “Take 2”. Co-Host: Playful redo of thanks. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-31-second-take.png",
+  "definition_payload": {
+    "slug": "second-take",
+    "name": "Second Take",
+    "description": "Clapperboard “Take 2”. Co-Host: Playful redo of thanks. Never fabricate delivery.",
+    "price_minor": 220,
+    "creator_revenue_share_bps": 0,
+    "tier": "rare",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "rare",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-31-second-take.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,55 @@
+{
+  "index": 65,
+  "slug": "night-broadcast",
+  "name": "Night Broadcast",
+  "price_minor": 100000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "effect": "Global night-radio desk",
+  "cohost_hook": "Broadcasting kindness",
+  "description": "Global night-radio desk. Co-Host: Broadcasting kindness. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-14-night-broadcast.png",
+  "definition_payload": {
+    "slug": "night-broadcast",
+    "name": "Night Broadcast",
+    "description": "Global night-radio desk. Co-Host: Broadcasting kindness. Never fabricate delivery.",
+    "price_minor": 100000,
+    "creator_revenue_share_bps": 0,
+    "tier": "mythical",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "mythical",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-14-night-broadcast.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,55 @@
+{
+  "index": 94,
+  "slug": "ship-of-shared-shows",
+  "name": "Ship of Shared Shows",
+  "price_minor": 5000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "effect": "Ship that sails between streams",
+  "cohost_hook": "Voyage metaphor",
+  "description": "Ship that sails between streams. Co-Host: Voyage metaphor. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-96-ship-of-shared-shows.png",
+  "definition_payload": {
+    "slug": "ship-of-shared-shows",
+    "name": "Ship of Shared Shows",
+    "description": "Ship that sails between streams. Co-Host: Voyage metaphor. Never fabricate delivery.",
+    "price_minor": 5000000,
+    "creator_revenue_share_bps": 0,
+    "tier": "ultra_premium",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "ultra-premium",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-96-ship-of-shared-shows.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

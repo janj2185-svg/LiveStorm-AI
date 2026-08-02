@@ -116,12 +116,12 @@ Each template includes: **slug**, **name**, **price**, **rarity**, **one-line ef
 |---:|---|---|---:|---|---|
 | 81 | genesis-of-listening | Genesis of Listening | 1000000 | Origin myth: silence becomes signal | Origin-story thanks |
 | 82 | covenant-of-craft | Covenant of Craft | 1200000 | Covenant scroll between room & creators | Serious gratitude |
-| 83 | pant-of-rooms | Codex of Rooms | 1500000 | Infinite rooms of past lives of the show | “You funded another room” |
+| 83 | codex-of-rooms | Codex of Rooms | 1500000 | Infinite rooms of past lives of the show | “You funded another room” |
 | 84 | architect-of-nights | Architect of Nights | 1800000 | Architecture of night broadcasts | Names sender night-architect |
 | 85 | lumen-apocrypha | Lumen Apocrypha | 2000000 | Rare apocryphal pages of light | “Rare page unlocked” (cosmetic) |
 | 86 | symphony-unfinished | Symphony Unfinished | 2200000 | Unfinished symphony that invites the room | Leaves a musical question |
 | 87 | throne-of-tools | Throne of Tools | 2500000 | Throne built from creator tools | Anti-flex: craft throne |
-| 88 | world-without-cliché | World Without Cliché | 2800000 | Literally shreds rose/rocket/car icons into stardust | Meta-jab at TikTok clichés |
+| 88 | world-without-cliche | World Without Cliché | 2800000 | Literally shreds rose/rocket/car icons into stardust | Meta-jab at TikTok clichés |
 | 89 | oracle-of-honest-status | Oracle of Honest Status | 3000000 | Temple of READY/PARTIAL/BLOCKED truths | Oracle speaks only honest status |
 | 90 | first-audience | First Audience | 3200000 | Primordial audience of light silhouettes | Thanks as “first audience energy” |
 | 91 | bridge-of-voices | Bridge of Voices | 3500000 | Bridge linking chat · AI · host | Celebrates the three-way bond |
@@ -154,13 +154,19 @@ Each template includes: **slug**, **name**, **price**, **rarity**, **one-line ef
 | 4 | open-rehearsal | 500 | Epic studio moment |
 | 5 | memory-pin | 1600 | uses Co-Host memory |
 | 6 | ai-listening-room | 5000 | signature Legendary |
-| 7 | world-without-cliché | 2800000 | brand statement Divine |
+| 7 | world-without-cliche | 2800000 | brand statement Divine |
 | 8 | sylora-eternal-listening | 10000000 | top halo gift |
 
 ## Concept art
 
 Waves 1–3 posters (**100**) cover every template: see `SYLORA_GIFT_CONCEPT_ART.md` and `artifacts/sylora-gift-concepts/`.  
 These are artist mood references — not runtime GLB/WAV and not READY catalog gifts.
+
+## Machine-readable seed
+
+Regenerate with `python3 scripts/gift-library/export_sylora_100_originals_seed.py`.  
+Outputs: `artifacts/sylora-gift-100-originals/` + `SYLORA_GIFT_100_SEED.md`.  
+All entries are **SPEC_ONLY** — publish only via Gift Studio after real assets.
 
 ## Implementation note
 

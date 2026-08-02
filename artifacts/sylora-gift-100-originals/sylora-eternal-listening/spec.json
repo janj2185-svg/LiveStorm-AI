@@ -1,0 +1,55 @@
+{
+  "index": 100,
+  "slug": "sylora-eternal-listening",
+  "name": "SYLORA Eternal Listening",
+  "price_minor": 10000000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "effect": "Final form: endless listening aurora",
+  "cohost_hook": "Highest honor line + long bow",
+  "description": "Final form: endless listening aurora. Co-Host: Highest honor line + long bow. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-08-eternal-listening.png",
+  "definition_payload": {
+    "slug": "sylora-eternal-listening",
+    "name": "SYLORA Eternal Listening",
+    "description": "Final form: endless listening aurora. Co-Host: Highest honor line + long bow. Never fabricate delivery.",
+    "price_minor": 10000000,
+    "creator_revenue_share_bps": 0,
+    "tier": "ultra_premium",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "ultra-premium",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-08-eternal-listening.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

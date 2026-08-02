@@ -1,0 +1,55 @@
+{
+  "index": 37,
+  "slug": "timing-perfect",
+  "name": "Timing Perfect",
+  "price_minor": 2300,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "effect": "Metronome hits a perfect green",
+  "cohost_hook": "Praises timing of the gift",
+  "description": "Metronome hits a perfect green. Co-Host: Praises timing of the gift. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-45-timing-perfect.png",
+  "definition_payload": {
+    "slug": "timing-perfect",
+    "name": "Timing Perfect",
+    "description": "Metronome hits a perfect green. Co-Host: Praises timing of the gift. Never fabricate delivery.",
+    "price_minor": 2300,
+    "creator_revenue_share_bps": 0,
+    "tier": "epic",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "epic",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-45-timing-perfect.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

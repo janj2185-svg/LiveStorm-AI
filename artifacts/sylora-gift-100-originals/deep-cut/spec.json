@@ -1,0 +1,55 @@
+{
+  "index": 38,
+  "slug": "deep-cut",
+  "name": "Deep Cut",
+  "price_minor": 2400,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "effect": "Archive drawer opens a rare clip frame",
+  "cohost_hook": "Deep cut support — noted.",
+  "description": "Archive drawer opens a rare clip frame. Co-Host: Deep cut support — noted.. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-46-deep-cut.png",
+  "definition_payload": {
+    "slug": "deep-cut",
+    "name": "Deep Cut",
+    "description": "Archive drawer opens a rare clip frame. Co-Host: Deep cut support — noted.. Never fabricate delivery.",
+    "price_minor": 2400,
+    "creator_revenue_share_bps": 0,
+    "tier": "epic",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "epic",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-46-deep-cut.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

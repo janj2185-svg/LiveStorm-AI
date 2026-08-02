@@ -1,0 +1,55 @@
+{
+  "index": 42,
+  "slug": "cohost-overture-suite",
+  "name": "Co-Host Overture Suite",
+  "price_minor": 6000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "effect": "Multi-phase overture with avatar sync",
+  "cohost_hook": "Timed avatar + TTS if allowed",
+  "description": "Multi-phase overture with avatar sync. Co-Host: Timed avatar + TTS if allowed. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-49-cohost-overture-suite.png",
+  "definition_payload": {
+    "slug": "cohost-overture-suite",
+    "name": "Co-Host Overture Suite",
+    "description": "Multi-phase overture with avatar sync. Co-Host: Timed avatar + TTS if allowed. Never fabricate delivery.",
+    "price_minor": 6000,
+    "creator_revenue_share_bps": 0,
+    "tier": "legendary",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "legendary",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-49-cohost-overture-suite.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,55 @@
+{
+  "index": 34,
+  "slug": "director-chair",
+  "name": "Director Chair",
+  "price_minor": 2000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "effect": "Director chair with sender’s nick",
+  "cohost_hook": "Calls sender “guest director",
+  "description": "Director chair with sender’s nick. Co-Host: Calls sender “guest director. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-42-director-chair.png",
+  "definition_payload": {
+    "slug": "director-chair",
+    "name": "Director Chair",
+    "description": "Director chair with sender’s nick. Co-Host: Calls sender “guest director. Never fabricate delivery.",
+    "price_minor": 2000,
+    "creator_revenue_share_bps": 0,
+    "tier": "epic",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "epic",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-42-director-chair.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

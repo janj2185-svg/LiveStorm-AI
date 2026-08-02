@@ -1,0 +1,55 @@
+{
+  "index": 26,
+  "slug": "scene-change",
+  "name": "Scene Change",
+  "price_minor": 1000,
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "effect": "Soft wipe to a new backdrop tile",
+  "cohost_hook": "Announces mini scene change",
+  "description": "Soft wipe to a new backdrop tile. Co-Host: Announces mini scene change. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-36-scene-change.png",
+  "definition_payload": {
+    "slug": "scene-change",
+    "name": "Scene Change",
+    "description": "Soft wipe to a new backdrop tile. Co-Host: Announces mini scene change. Never fabricate delivery.",
+    "price_minor": 1000,
+    "creator_revenue_share_bps": 0,
+    "tier": "epic",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "epic",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-36-scene-change.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,55 @@
+{
+  "index": 5,
+  "slug": "lumen-bookmark",
+  "name": "Lumen Bookmark",
+  "price_minor": 30,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "effect": "Bookmark slides into a floating book",
+  "cohost_hook": "Saves moment to short memory",
+  "description": "Bookmark slides into a floating book. Co-Host: Saves moment to short memory. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-22-lumen-bookmark.png",
+  "definition_payload": {
+    "slug": "lumen-bookmark",
+    "name": "Lumen Bookmark",
+    "description": "Bookmark slides into a floating book. Co-Host: Saves moment to short memory. Never fabricate delivery.",
+    "price_minor": 30,
+    "creator_revenue_share_bps": 0,
+    "tier": "rare",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "rare",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-22-lumen-bookmark.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,1020 @@
+{
+  "project": "SYLORA",
+  "library": "SYLORA 100 Originals (anti-TikTok-cliché)",
+  "source_templates": "docs/implementation/SYLORA_GIFT_100_ORIGINALS.md",
+  "source_concept_art": "docs/implementation/SYLORA_GIFT_CONCEPT_ART.md",
+  "total": 100,
+  "rarity_counts": {
+    "Rare": 20,
+    "Epic": 20,
+    "Legendary": 20,
+    "Mythic": 20,
+    "Divine": 20
+  },
+  "ready_count": 0,
+  "spec_only_count": 100,
+  "policy": "READY only after real GLB/WAV, Gift Studio publish, catalog runtime, wallet send, WebSocket delivery, and device performance checks. Concept posters alone never make a gift READY. Do not insert fake API catalog rows.",
+  "parallel_library_note": "Distinct from artifacts/gift-library fantasy Official Gift Library. Decide product catalog ownership before bulk-publishing either set.",
+  "gifts": [
+    {
+      "index": 1,
+      "name": "Soft Ping",
+      "slug": "soft-ping",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 10,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-01-soft-ping.png"
+    },
+    {
+      "index": 2,
+      "name": "Warm Margin",
+      "slug": "warm-margin",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 15,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-17-warm-margin.png"
+    },
+    {
+      "index": 3,
+      "name": "Quiet Clap",
+      "slug": "quiet-clap",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 20,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-18-quiet-clap.png"
+    },
+    {
+      "index": 4,
+      "name": "Ink Check",
+      "slug": "ink-check",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 25,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-21-ink-check.png"
+    },
+    {
+      "index": 5,
+      "name": "Lumen Bookmark",
+      "slug": "lumen-bookmark",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 30,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-22-lumen-bookmark.png"
+    },
+    {
+      "index": 6,
+      "name": "Studio Tape",
+      "slug": "studio-tape",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 40,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-23-studio-tape.png"
+    },
+    {
+      "index": 7,
+      "name": "Focus Ring",
+      "slug": "focus-ring",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 50,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-13-focus-ring.png"
+    },
+    {
+      "index": 8,
+      "name": "Co-Host Nod",
+      "slug": "cohost-nod",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 60,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-02-cohost-nod.png"
+    },
+    {
+      "index": 9,
+      "name": "Hush Coin",
+      "slug": "hush-coin",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 75,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-09-hush-coin.png"
+    },
+    {
+      "index": 10,
+      "name": "Cue Light",
+      "slug": "cue-light",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 80,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-19-cue-light.png"
+    },
+    {
+      "index": 11,
+      "name": "Draft Heart",
+      "slug": "draft-heart",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 90,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-24-draft-heart.png"
+    },
+    {
+      "index": 12,
+      "name": "Room Tone",
+      "slug": "room-tone",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 100,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-25-room-tone.png"
+    },
+    {
+      "index": 13,
+      "name": "Reply Ribbon",
+      "slug": "reply-ribbon",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 120,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-03-reply-ribbon.png"
+    },
+    {
+      "index": 14,
+      "name": "Lumen Stamp",
+      "slug": "lumen-stamp",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 140,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-26-lumen-stamp.png"
+    },
+    {
+      "index": 15,
+      "name": "Soft Cut",
+      "slug": "soft-cut",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 150,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-27-soft-cut.png"
+    },
+    {
+      "index": 16,
+      "name": "Mirror Cue",
+      "slug": "mirror-cue",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 160,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-28-mirror-cue.png"
+    },
+    {
+      "index": 17,
+      "name": "Hold Breath",
+      "slug": "hold-breath",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 180,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-29-hold-breath.png"
+    },
+    {
+      "index": 18,
+      "name": "Kind Edit",
+      "slug": "kind-edit",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 200,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-30-kind-edit.png"
+    },
+    {
+      "index": 19,
+      "name": "Second Take",
+      "slug": "second-take",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 220,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-31-second-take.png"
+    },
+    {
+      "index": 20,
+      "name": "Lumen Passport",
+      "slug": "lumen-passport",
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "price_minor": 250,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-32-lumen-passport.png"
+    },
+    {
+      "index": 21,
+      "name": "Open Rehearsal",
+      "slug": "open-rehearsal",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 500,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-04-open-rehearsal.png"
+    },
+    {
+      "index": 22,
+      "name": "Score Mark",
+      "slug": "score-mark",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 600,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-33-score-mark.png"
+    },
+    {
+      "index": 23,
+      "name": "Live Margin Notes",
+      "slug": "live-margin-notes",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 700,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-34-live-margin-notes.png"
+    },
+    {
+      "index": 24,
+      "name": "Guest Chair",
+      "slug": "guest-chair",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 800,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-10-guest-chair.png"
+    },
+    {
+      "index": 25,
+      "name": "Signal Handshake",
+      "slug": "signal-handshake",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 900,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-35-signal-handshake.png"
+    },
+    {
+      "index": 26,
+      "name": "Scene Change",
+      "slug": "scene-change",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-36-scene-change.png"
+    },
+    {
+      "index": 27,
+      "name": "Encore Ticket",
+      "slug": "encore-ticket",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1100,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-37-encore-ticket.png"
+    },
+    {
+      "index": 28,
+      "name": "Lumen Intercom",
+      "slug": "lumen-intercom",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1200,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-38-lumen-intercom.png"
+    },
+    {
+      "index": 29,
+      "name": "Shared Script",
+      "slug": "shared-script",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1300,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-39-shared-script.png"
+    },
+    {
+      "index": 30,
+      "name": "Soft Spotlight",
+      "slug": "soft-spotlight",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1400,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-20-soft-spotlight.png"
+    },
+    {
+      "index": 31,
+      "name": "Chat Overture",
+      "slug": "chat-overture",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1500,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-40-chat-overture.png"
+    },
+    {
+      "index": 32,
+      "name": "Memory Pin",
+      "slug": "memory-pin",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1600,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-05-memory-pin.png"
+    },
+    {
+      "index": 33,
+      "name": "Co-Host Duet",
+      "slug": "cohost-duet",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 1800,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-41-cohost-duet.png"
+    },
+    {
+      "index": 34,
+      "name": "Director Chair",
+      "slug": "director-chair",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 2000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-42-director-chair.png"
+    },
+    {
+      "index": 35,
+      "name": "Live Subtitle",
+      "slug": "live-subtitle",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 2100,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-43-live-subtitle.png"
+    },
+    {
+      "index": 36,
+      "name": "Booth Flower",
+      "slug": "booth-flower",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 2200,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-44-booth-flower.png"
+    },
+    {
+      "index": 37,
+      "name": "Timing Perfect",
+      "slug": "timing-perfect",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 2300,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-45-timing-perfect.png"
+    },
+    {
+      "index": 38,
+      "name": "Deep Cut",
+      "slug": "deep-cut",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 2400,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-46-deep-cut.png"
+    },
+    {
+      "index": 39,
+      "name": "Lumen Overture",
+      "slug": "lumen-overture",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 2500,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-47-lumen-overture.png"
+    },
+    {
+      "index": 40,
+      "name": "Studio Toast",
+      "slug": "studio-toast",
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "price_minor": 2500,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-48-studio-toast.png"
+    },
+    {
+      "index": 41,
+      "name": "AI Listening Room",
+      "slug": "ai-listening-room",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 5000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-06-ai-listening-room.png"
+    },
+    {
+      "index": 42,
+      "name": "Co-Host Overture Suite",
+      "slug": "cohost-overture-suite",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 6000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-49-cohost-overture-suite.png"
+    },
+    {
+      "index": 43,
+      "name": "Stream Atlas",
+      "slug": "stream-atlas",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 7000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-50-stream-atlas.png"
+    },
+    {
+      "index": 44,
+      "name": "Soft Archive",
+      "slug": "soft-archive",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 8000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-51-soft-archive.png"
+    },
+    {
+      "index": 45,
+      "name": "Lumen Conductor",
+      "slug": "lumen-conductor",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 9000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-52-lumen-conductor.png"
+    },
+    {
+      "index": 46,
+      "name": "Twin Signal",
+      "slug": "twin-signal",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 10000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-53-twin-signal.png"
+    },
+    {
+      "index": 47,
+      "name": "Craft Circle",
+      "slug": "craft-circle",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 11000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-54-craft-circle.png"
+    },
+    {
+      "index": 48,
+      "name": "Night Desk",
+      "slug": "night-desk",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 12000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-55-night-desk.png"
+    },
+    {
+      "index": 49,
+      "name": "Echo Atelier",
+      "slug": "echo-atelier",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 13000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-56-echo-atelier.png"
+    },
+    {
+      "index": 50,
+      "name": "Permission to Pause",
+      "slug": "permission-to-pause",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 14000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-57-permission-to-pause.png"
+    },
+    {
+      "index": 51,
+      "name": "Honest Status",
+      "slug": "honest-status",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 15000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-11-honest-status.png"
+    },
+    {
+      "index": 52,
+      "name": "Viewer Ledger",
+      "slug": "viewer-ledger",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 16000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-58-viewer-ledger.png"
+    },
+    {
+      "index": 53,
+      "name": "Co-Host Vow",
+      "slug": "cohost-vow",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 17000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-59-cohost-vow.png"
+    },
+    {
+      "index": 54,
+      "name": "Live Manuscript",
+      "slug": "live-manuscript",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 18000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-60-live-manuscript.png"
+    },
+    {
+      "index": 55,
+      "name": "Signal Cathedral",
+      "slug": "signal-cathedral",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 19000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-61-signal-cathedral.png"
+    },
+    {
+      "index": 56,
+      "name": "Room of Replies",
+      "slug": "room-of-replies",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 20000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-62-room-of-replies.png"
+    },
+    {
+      "index": 57,
+      "name": "Lumen Oratorio",
+      "slug": "lumen-oratorio",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 21000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-63-lumen-oratorio.png"
+    },
+    {
+      "index": 58,
+      "name": "Stagecraft Crown",
+      "slug": "stagecraft-crown",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 22000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-64-stagecraft-crown.png"
+    },
+    {
+      "index": 59,
+      "name": "Longform Lantern",
+      "slug": "longform-lantern",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 23000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-65-longform-lantern.png"
+    },
+    {
+      "index": 60,
+      "name": "SYLORA Hall Pass",
+      "slug": "sylora-hall-pass",
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "price_minor": 25000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-66-sylora-hall-pass.png"
+    },
+    {
+      "index": 61,
+      "name": "First Principles Forge",
+      "slug": "first-principles-forge",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 50000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-67-first-principles-forge.png"
+    },
+    {
+      "index": 62,
+      "name": "Empathy Engine",
+      "slug": "empathy-engine",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 60000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-68-empathy-engine.png"
+    },
+    {
+      "index": 63,
+      "name": "Chorus of Nicks",
+      "slug": "chorus-of-nicks",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 75000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-69-chorus-of-nicks.png"
+    },
+    {
+      "index": 64,
+      "name": "Unbroken Thread",
+      "slug": "unbroken-thread",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 80000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-70-unbroken-thread.png"
+    },
+    {
+      "index": 65,
+      "name": "Night Broadcast",
+      "slug": "night-broadcast",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 100000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-14-night-broadcast.png"
+    },
+    {
+      "index": 66,
+      "name": "Co-Host Constellation",
+      "slug": "cohost-constellation",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 120000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-71-cohost-constellation.png"
+    },
+    {
+      "index": 67,
+      "name": "Atelier of Futures",
+      "slug": "atelier-of-futures",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 150000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-72-atelier-of-futures.png"
+    },
+    {
+      "index": 68,
+      "name": "Silence Worthy",
+      "slug": "silence-worthy",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 160000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-73-silence-worthy.png"
+    },
+    {
+      "index": 69,
+      "name": "Craft Over Clout",
+      "slug": "craft-over-clout",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 180000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-12-craft-over-clout.png"
+    },
+    {
+      "index": 70,
+      "name": "Lumen Opera House",
+      "slug": "lumen-opera-house",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 200000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-74-lumen-opera-house.png"
+    },
+    {
+      "index": 71,
+      "name": "Memory Garden",
+      "slug": "memory-garden",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 220000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-75-memory-garden.png"
+    },
+    {
+      "index": 72,
+      "name": "Shared Rehearsal World",
+      "slug": "shared-rehearsal-world",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 250000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-76-shared-rehearsal-world.png"
+    },
+    {
+      "index": 73,
+      "name": "Signal Monarch",
+      "slug": "signal-monarch",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 280000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-77-signal-monarch.png"
+    },
+    {
+      "index": 74,
+      "name": "Infinite Desk",
+      "slug": "infinite-desk",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 300000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-78-infinite-desk.png"
+    },
+    {
+      "index": 75,
+      "name": "Soft Revolution",
+      "slug": "soft-revolution",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 320000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-79-soft-revolution.png"
+    },
+    {
+      "index": 76,
+      "name": "Witness Light",
+      "slug": "witness-light",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 350000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-80-witness-light.png"
+    },
+    {
+      "index": 77,
+      "name": "Dialogue Palace",
+      "slug": "dialogue-palace",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 400000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-81-dialogue-palace.png"
+    },
+    {
+      "index": 78,
+      "name": "SYLORA North Star",
+      "slug": "sylora-north-star",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 450000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-82-sylora-north-star.png"
+    },
+    {
+      "index": 79,
+      "name": "Living Manuscript City",
+      "slug": "living-manuscript-city",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 480000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-83-living-manuscript-city.png"
+    },
+    {
+      "index": 80,
+      "name": "Eternal Rehearsal",
+      "slug": "eternal-rehearsal",
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "price_minor": 500000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-84-eternal-rehearsal.png"
+    },
+    {
+      "index": 81,
+      "name": "Genesis of Listening",
+      "slug": "genesis-of-listening",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 1000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-85-genesis-of-listening.png"
+    },
+    {
+      "index": 82,
+      "name": "Covenant of Craft",
+      "slug": "covenant-of-craft",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 1200000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-86-covenant-of-craft.png"
+    },
+    {
+      "index": 83,
+      "name": "Codex of Rooms",
+      "slug": "codex-of-rooms",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 1500000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-87-codex-of-rooms.png"
+    },
+    {
+      "index": 84,
+      "name": "Architect of Nights",
+      "slug": "architect-of-nights",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 1800000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-88-architect-of-nights.png"
+    },
+    {
+      "index": 85,
+      "name": "Lumen Apocrypha",
+      "slug": "lumen-apocrypha",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 2000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-89-lumen-apocrypha.png"
+    },
+    {
+      "index": 86,
+      "name": "Symphony Unfinished",
+      "slug": "symphony-unfinished",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 2200000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-90-symphony-unfinished.png"
+    },
+    {
+      "index": 87,
+      "name": "Throne of Tools",
+      "slug": "throne-of-tools",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 2500000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-91-throne-of-tools.png"
+    },
+    {
+      "index": 88,
+      "name": "World Without Cliché",
+      "slug": "world-without-cliche",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 2800000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-07-world-without-cliche.png"
+    },
+    {
+      "index": 89,
+      "name": "Oracle of Honest Status",
+      "slug": "oracle-of-honest-status",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 3000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-92-oracle-honest-status.png"
+    },
+    {
+      "index": 90,
+      "name": "First Audience",
+      "slug": "first-audience",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 3200000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-93-first-audience.png"
+    },
+    {
+      "index": 91,
+      "name": "Bridge of Voices",
+      "slug": "bridge-of-voices",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 3500000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-15-bridge-of-voices.png"
+    },
+    {
+      "index": 92,
+      "name": "Garden of Unsent Lines",
+      "slug": "garden-of-unsent-lines",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 4000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-94-garden-unsent-lines.png"
+    },
+    {
+      "index": 93,
+      "name": "Clock of Kind Hours",
+      "slug": "clock-of-kind-hours",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 4500000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-95-clock-of-kind-hours.png"
+    },
+    {
+      "index": 94,
+      "name": "Ship of Shared Shows",
+      "slug": "ship-of-shared-shows",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 5000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-96-ship-of-shared-shows.png"
+    },
+    {
+      "index": 95,
+      "name": "Cathedral of Soft Power",
+      "slug": "cathedral-of-soft-power",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 5500000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-97-cathedral-soft-power.png"
+    },
+    {
+      "index": 96,
+      "name": "Mirror of the Room",
+      "slug": "mirror-of-the-room",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 6000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-98-mirror-of-the-room.png"
+    },
+    {
+      "index": 97,
+      "name": "Key to the Inner Studio",
+      "slug": "key-to-the-inner-studio",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 7000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-16-key-inner-studio.png"
+    },
+    {
+      "index": 98,
+      "name": "Myth of the Co-Host",
+      "slug": "myth-of-the-cohost",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 8000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-99-myth-of-the-cohost.png"
+    },
+    {
+      "index": 99,
+      "name": "Seed of All Signals",
+      "slug": "seed-of-all-signals",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 9000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-100-seed-of-all-signals.png"
+    },
+    {
+      "index": 100,
+      "name": "SYLORA Eternal Listening",
+      "slug": "sylora-eternal-listening",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "price_minor": 10000000,
+      "status": "SPEC_ONLY",
+      "concept_file": "gift-08-eternal-listening.png"
+    }
+  ]
+}

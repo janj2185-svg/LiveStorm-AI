@@ -1,0 +1,55 @@
+{
+  "index": 50,
+  "slug": "permission-to-pause",
+  "name": "Permission to Pause",
+  "price_minor": 14000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "effect": "Timer dissolves into calm mist",
+  "cohost_hook": "Explicitly blesses a pause",
+  "description": "Timer dissolves into calm mist. Co-Host: Explicitly blesses a pause. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-57-permission-to-pause.png",
+  "definition_payload": {
+    "slug": "permission-to-pause",
+    "name": "Permission to Pause",
+    "description": "Timer dissolves into calm mist. Co-Host: Explicitly blesses a pause. Never fabricate delivery.",
+    "price_minor": 14000,
+    "creator_revenue_share_bps": 0,
+    "tier": "legendary",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "legendary",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-57-permission-to-pause.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,55 @@
+{
+  "index": 60,
+  "slug": "sylora-hall-pass",
+  "name": "SYLORA Hall Pass",
+  "price_minor": 25000,
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "effect": "Hall pass to “inner studio”",
+  "cohost_hook": "Grants symbolic inner-studio shoutout",
+  "description": "Hall pass to “inner studio”. Co-Host: Grants symbolic inner-studio shoutout. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-66-sylora-hall-pass.png",
+  "definition_payload": {
+    "slug": "sylora-hall-pass",
+    "name": "SYLORA Hall Pass",
+    "description": "Hall pass to “inner studio”. Co-Host: Grants symbolic inner-studio shoutout. Never fabricate delivery.",
+    "price_minor": 25000,
+    "creator_revenue_share_bps": 0,
+    "tier": "legendary",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "legendary",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-66-sylora-hall-pass.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

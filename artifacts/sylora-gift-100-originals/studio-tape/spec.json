@@ -1,0 +1,55 @@
+{
+  "index": 6,
+  "slug": "studio-tape",
+  "name": "Studio Tape",
+  "price_minor": 40,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "effect": "Washi tape seals a tiny card",
+  "cohost_hook": "Reads a one-line compliment",
+  "description": "Washi tape seals a tiny card. Co-Host: Reads a one-line compliment. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-23-studio-tape.png",
+  "definition_payload": {
+    "slug": "studio-tape",
+    "name": "Studio Tape",
+    "description": "Washi tape seals a tiny card. Co-Host: Reads a one-line compliment. Never fabricate delivery.",
+    "price_minor": 40,
+    "creator_revenue_share_bps": 0,
+    "tier": "rare",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "rare",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-23-studio-tape.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

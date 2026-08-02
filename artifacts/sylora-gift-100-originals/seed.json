@@ -1,0 +1,4708 @@
+{
+  "project": "SYLORA",
+  "version": 1,
+  "total": 100,
+  "ready_count": 0,
+  "gifts": [
+    {
+      "index": 1,
+      "slug": "soft-ping",
+      "slug_source": "soft-ping",
+      "name": "Soft Ping",
+      "price_minor": 10,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Tiny lumen pulse at the corner of the stage",
+      "cohost_hook": "Soft “got your ping” nod",
+      "description": "Tiny lumen pulse at the corner of the stage. Co-Host: Soft “got your ping” nod. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-01-soft-ping.png",
+      "concept_art_index": 1,
+      "concept_file": "gift-01-soft-ping.png",
+      "definition_payload": {
+        "slug": "soft-ping",
+        "name": "Soft Ping",
+        "description": "Tiny lumen pulse at the corner of the stage. Co-Host: Soft “got your ping” nod. Never fabricate delivery.",
+        "price_minor": 10,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 2,
+      "slug": "warm-margin",
+      "slug_source": "warm-margin",
+      "name": "Warm Margin",
+      "price_minor": 15,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Page-margin glow underlays chat",
+      "cohost_hook": "Mentions sender by nickname",
+      "description": "Page-margin glow underlays chat. Co-Host: Mentions sender by nickname. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-17-warm-margin.png",
+      "concept_art_index": 17,
+      "concept_file": "gift-17-warm-margin.png",
+      "definition_payload": {
+        "slug": "warm-margin",
+        "name": "Warm Margin",
+        "description": "Page-margin glow underlays chat. Co-Host: Mentions sender by nickname. Never fabricate delivery.",
+        "price_minor": 15,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 3,
+      "slug": "quiet-clap",
+      "slug_source": "quiet-clap",
+      "name": "Quiet Clap",
+      "price_minor": 20,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Soft off-mic applause particles",
+      "cohost_hook": "Short thank-you, no hype yell",
+      "description": "Soft off-mic applause particles. Co-Host: Short thank-you, no hype yell. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-18-quiet-clap.png",
+      "concept_art_index": 18,
+      "concept_file": "gift-18-quiet-clap.png",
+      "definition_payload": {
+        "slug": "quiet-clap",
+        "name": "Quiet Clap",
+        "description": "Soft off-mic applause particles. Co-Host: Short thank-you, no hype yell. Never fabricate delivery.",
+        "price_minor": 20,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 4,
+      "slug": "ink-check",
+      "slug_source": "ink-check",
+      "name": "Ink Check",
+      "price_minor": 25,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Fountain-pen checkmark draws itself",
+      "cohost_hook": "Noted.” + wink",
+      "description": "Fountain-pen checkmark draws itself. Co-Host: Noted.” + wink. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-21-ink-check.png",
+      "concept_art_index": 21,
+      "concept_file": "gift-21-ink-check.png",
+      "definition_payload": {
+        "slug": "ink-check",
+        "name": "Ink Check",
+        "description": "Fountain-pen checkmark draws itself. Co-Host: Noted.” + wink. Never fabricate delivery.",
+        "price_minor": 25,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 5,
+      "slug": "lumen-bookmark",
+      "slug_source": "lumen-bookmark",
+      "name": "Lumen Bookmark",
+      "price_minor": 30,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Bookmark slides into a floating book",
+      "cohost_hook": "Saves moment to short memory",
+      "description": "Bookmark slides into a floating book. Co-Host: Saves moment to short memory. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-22-lumen-bookmark.png",
+      "concept_art_index": 22,
+      "concept_file": "gift-22-lumen-bookmark.png",
+      "definition_payload": {
+        "slug": "lumen-bookmark",
+        "name": "Lumen Bookmark",
+        "description": "Bookmark slides into a floating book. Co-Host: Saves moment to short memory. Never fabricate delivery.",
+        "price_minor": 30,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 6,
+      "slug": "studio-tape",
+      "slug_source": "studio-tape",
+      "name": "Studio Tape",
+      "price_minor": 40,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Washi tape seals a tiny card",
+      "cohost_hook": "Reads a one-line compliment",
+      "description": "Washi tape seals a tiny card. Co-Host: Reads a one-line compliment. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-23-studio-tape.png",
+      "concept_art_index": 23,
+      "concept_file": "gift-23-studio-tape.png",
+      "definition_payload": {
+        "slug": "studio-tape",
+        "name": "Studio Tape",
+        "description": "Washi tape seals a tiny card. Co-Host: Reads a one-line compliment. Never fabricate delivery.",
+        "price_minor": 40,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 7,
+      "slug": "focus-ring",
+      "slug_source": "focus-ring",
+      "name": "Focus Ring",
+      "price_minor": 50,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Camera focus peaking ring blooms",
+      "cohost_hook": "We’re locked in.",
+      "description": "Camera focus peaking ring blooms. Co-Host: We’re locked in.. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-13-focus-ring.png",
+      "concept_art_index": 13,
+      "concept_file": "gift-13-focus-ring.png",
+      "definition_payload": {
+        "slug": "focus-ring",
+        "name": "Focus Ring",
+        "description": "Camera focus peaking ring blooms. Co-Host: We’re locked in.. Never fabricate delivery.",
+        "price_minor": 50,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 8,
+      "slug": "cohost-nod",
+      "slug_source": "cohost-nod",
+      "name": "Co-Host Nod",
+      "price_minor": 60,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Avatar does a precise polite nod",
+      "cohost_hook": "Syncs avatar reaction only",
+      "description": "Avatar does a precise polite nod. Co-Host: Syncs avatar reaction only. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-02-cohost-nod.png",
+      "concept_art_index": 2,
+      "concept_file": "gift-02-cohost-nod.png",
+      "definition_payload": {
+        "slug": "cohost-nod",
+        "name": "Co-Host Nod",
+        "description": "Avatar does a precise polite nod. Co-Host: Syncs avatar reaction only. Never fabricate delivery.",
+        "price_minor": 60,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 9,
+      "slug": "hush-coin",
+      "slug_source": "hush-coin",
+      "name": "Hush Coin",
+      "price_minor": 75,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Soft coin lands without clang",
+      "cohost_hook": "Thanks in a whisper tone",
+      "description": "Soft coin lands without clang. Co-Host: Thanks in a whisper tone. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-09-hush-coin.png",
+      "concept_art_index": 9,
+      "concept_file": "gift-09-hush-coin.png",
+      "definition_payload": {
+        "slug": "hush-coin",
+        "name": "Hush Coin",
+        "description": "Soft coin lands without clang. Co-Host: Thanks in a whisper tone. Never fabricate delivery.",
+        "price_minor": 75,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 10,
+      "slug": "cue-light",
+      "slug_source": "cue-light",
+      "name": "Cue Light",
+      "price_minor": 80,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Red/green studio cue light blinks",
+      "cohost_hook": "You’re on cue.",
+      "description": "Red/green studio cue light blinks. Co-Host: You’re on cue.. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-19-cue-light.png",
+      "concept_art_index": 19,
+      "concept_file": "gift-19-cue-light.png",
+      "definition_payload": {
+        "slug": "cue-light",
+        "name": "Cue Light",
+        "description": "Red/green studio cue light blinks. Co-Host: You’re on cue.. Never fabricate delivery.",
+        "price_minor": 80,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 11,
+      "slug": "draft-heart",
+      "slug_source": "draft-heart",
+      "name": "Draft Heart",
+      "price_minor": 90,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Heart sketched in pencil, then inked",
+      "cohost_hook": "Treats it as a draft compliment",
+      "description": "Heart sketched in pencil, then inked. Co-Host: Treats it as a draft compliment. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-24-draft-heart.png",
+      "concept_art_index": 24,
+      "concept_file": "gift-24-draft-heart.png",
+      "definition_payload": {
+        "slug": "draft-heart",
+        "name": "Draft Heart",
+        "description": "Heart sketched in pencil, then inked. Co-Host: Treats it as a draft compliment. Never fabricate delivery.",
+        "price_minor": 90,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 12,
+      "slug": "room-tone",
+      "slug_source": "room-tone",
+      "name": "Room Tone",
+      "price_minor": 100,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Gentle room-tone waveform",
+      "cohost_hook": "Acknowledges calm energy",
+      "description": "Gentle room-tone waveform. Co-Host: Acknowledges calm energy. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-25-room-tone.png",
+      "concept_art_index": 25,
+      "concept_file": "gift-25-room-tone.png",
+      "definition_payload": {
+        "slug": "room-tone",
+        "name": "Room Tone",
+        "description": "Gentle room-tone waveform. Co-Host: Acknowledges calm energy. Never fabricate delivery.",
+        "price_minor": 100,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 13,
+      "slug": "reply-ribbon",
+      "slug_source": "reply-ribbon",
+      "name": "Reply Ribbon",
+      "price_minor": 120,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Ribbon ties around a chat bubble",
+      "cohost_hook": "Offers to reply to sender’s last chat",
+      "description": "Ribbon ties around a chat bubble. Co-Host: Offers to reply to sender’s last chat. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-03-reply-ribbon.png",
+      "concept_art_index": 3,
+      "concept_file": "gift-03-reply-ribbon.png",
+      "definition_payload": {
+        "slug": "reply-ribbon",
+        "name": "Reply Ribbon",
+        "description": "Ribbon ties around a chat bubble. Co-Host: Offers to reply to sender’s last chat. Never fabricate delivery.",
+        "price_minor": 120,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 14,
+      "slug": "lumen-stamp",
+      "slug_source": "lumen-stamp",
+      "name": "Lumen Stamp",
+      "price_minor": 140,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Wax-seal with SYLORA crest",
+      "cohost_hook": "Stamps “verified thanks",
+      "description": "Wax-seal with SYLORA crest. Co-Host: Stamps “verified thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-26-lumen-stamp.png",
+      "concept_art_index": 26,
+      "concept_file": "gift-26-lumen-stamp.png",
+      "definition_payload": {
+        "slug": "lumen-stamp",
+        "name": "Lumen Stamp",
+        "description": "Wax-seal with SYLORA crest. Co-Host: Stamps “verified thanks. Never fabricate delivery.",
+        "price_minor": 140,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 15,
+      "slug": "soft-cut",
+      "slug_source": "soft-cut",
+      "name": "Soft Cut",
+      "price_minor": 150,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Film slate soft-cuts to thank card",
+      "cohost_hook": "One crisp line, then silence",
+      "description": "Film slate soft-cuts to thank card. Co-Host: One crisp line, then silence. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-27-soft-cut.png",
+      "concept_art_index": 27,
+      "concept_file": "gift-27-soft-cut.png",
+      "definition_payload": {
+        "slug": "soft-cut",
+        "name": "Soft Cut",
+        "description": "Film slate soft-cuts to thank card. Co-Host: One crisp line, then silence. Never fabricate delivery.",
+        "price_minor": 150,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 16,
+      "slug": "mirror-cue",
+      "slug_source": "mirror-cue",
+      "name": "Mirror Cue",
+      "price_minor": 160,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Small mirror flashes audience light",
+      "cohost_hook": "Reflects a viewer compliment",
+      "description": "Small mirror flashes audience light. Co-Host: Reflects a viewer compliment. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-28-mirror-cue.png",
+      "concept_art_index": 28,
+      "concept_file": "gift-28-mirror-cue.png",
+      "definition_payload": {
+        "slug": "mirror-cue",
+        "name": "Mirror Cue",
+        "description": "Small mirror flashes audience light. Co-Host: Reflects a viewer compliment. Never fabricate delivery.",
+        "price_minor": 160,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 17,
+      "slug": "hold-breath",
+      "slug_source": "hold-breath",
+      "name": "Hold Breath",
+      "price_minor": 180,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Stage dims 0.5s then exhales light",
+      "cohost_hook": "Dramatic pause + thank",
+      "description": "Stage dims 0.5s then exhales light. Co-Host: Dramatic pause + thank. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-29-hold-breath.png",
+      "concept_art_index": 29,
+      "concept_file": "gift-29-hold-breath.png",
+      "definition_payload": {
+        "slug": "hold-breath",
+        "name": "Hold Breath",
+        "description": "Stage dims 0.5s then exhales light. Co-Host: Dramatic pause + thank. Never fabricate delivery.",
+        "price_minor": 180,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 18,
+      "slug": "kind-edit",
+      "slug_source": "kind-edit",
+      "name": "Kind Edit",
+      "price_minor": 200,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Red strikethrough becomes gold underline",
+      "cohost_hook": "Reframes a chat as kindness",
+      "description": "Red strikethrough becomes gold underline. Co-Host: Reframes a chat as kindness. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-30-kind-edit.png",
+      "concept_art_index": 30,
+      "concept_file": "gift-30-kind-edit.png",
+      "definition_payload": {
+        "slug": "kind-edit",
+        "name": "Kind Edit",
+        "description": "Red strikethrough becomes gold underline. Co-Host: Reframes a chat as kindness. Never fabricate delivery.",
+        "price_minor": 200,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 19,
+      "slug": "second-take",
+      "slug_source": "second-take",
+      "name": "Second Take",
+      "price_minor": 220,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Clapperboard “Take 2”",
+      "cohost_hook": "Playful redo of thanks",
+      "description": "Clapperboard “Take 2”. Co-Host: Playful redo of thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-31-second-take.png",
+      "concept_art_index": 31,
+      "concept_file": "gift-31-second-take.png",
+      "definition_payload": {
+        "slug": "second-take",
+        "name": "Second Take",
+        "description": "Clapperboard “Take 2”. Co-Host: Playful redo of thanks. Never fabricate delivery.",
+        "price_minor": 220,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 20,
+      "slug": "lumen-passport",
+      "slug_source": "lumen-passport",
+      "name": "Lumen Passport",
+      "price_minor": 250,
+      "rarity": "Rare",
+      "api_tier": "rare",
+      "effect": "Passport stamp “Guest of the Room”",
+      "cohost_hook": "Welcomes as “room guest",
+      "description": "Passport stamp “Guest of the Room”. Co-Host: Welcomes as “room guest. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "rare",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-32-lumen-passport.png",
+      "concept_art_index": 32,
+      "concept_file": "gift-32-lumen-passport.png",
+      "definition_payload": {
+        "slug": "lumen-passport",
+        "name": "Lumen Passport",
+        "description": "Passport stamp “Guest of the Room”. Co-Host: Welcomes as “room guest. Never fabricate delivery.",
+        "price_minor": 250,
+        "creator_revenue_share_bps": 0,
+        "tier": "rare",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "rare",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 21,
+      "slug": "open-rehearsal",
+      "slug_source": "open-rehearsal",
+      "name": "Open Rehearsal",
+      "price_minor": 500,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Curtain opens on a tiny rehearsal room",
+      "cohost_hook": "Invites a 5s “rehearsal bit",
+      "description": "Curtain opens on a tiny rehearsal room. Co-Host: Invites a 5s “rehearsal bit. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-04-open-rehearsal.png",
+      "concept_art_index": 4,
+      "concept_file": "gift-04-open-rehearsal.png",
+      "definition_payload": {
+        "slug": "open-rehearsal",
+        "name": "Open Rehearsal",
+        "description": "Curtain opens on a tiny rehearsal room. Co-Host: Invites a 5s “rehearsal bit. Never fabricate delivery.",
+        "price_minor": 500,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 22,
+      "slug": "score-mark",
+      "slug_source": "score-mark",
+      "name": "Score Mark",
+      "price_minor": 600,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Conductor’s baton draws a glowing bar",
+      "cohost_hook": "Hums a 2-note motif",
+      "description": "Conductor’s baton draws a glowing bar. Co-Host: Hums a 2-note motif. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-33-score-mark.png",
+      "concept_art_index": 33,
+      "concept_file": "gift-33-score-mark.png",
+      "definition_payload": {
+        "slug": "score-mark",
+        "name": "Score Mark",
+        "description": "Conductor’s baton draws a glowing bar. Co-Host: Hums a 2-note motif. Never fabricate delivery.",
+        "price_minor": 600,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 23,
+      "slug": "live-margin-notes",
+      "slug_source": "live-margin-notes",
+      "name": "Live Margin Notes",
+      "price_minor": 700,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Margin notes annotate the stream frame",
+      "cohost_hook": "Quotes sender’s last line if safe",
+      "description": "Margin notes annotate the stream frame. Co-Host: Quotes sender’s last line if safe. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-34-live-margin-notes.png",
+      "concept_art_index": 34,
+      "concept_file": "gift-34-live-margin-notes.png",
+      "definition_payload": {
+        "slug": "live-margin-notes",
+        "name": "Live Margin Notes",
+        "description": "Margin notes annotate the stream frame. Co-Host: Quotes sender’s last line if safe. Never fabricate delivery.",
+        "price_minor": 700,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 24,
+      "slug": "guest-chair",
+      "slug_source": "guest-chair",
+      "name": "Guest Chair",
+      "price_minor": 800,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Empty chair fills with warm light",
+      "cohost_hook": "Offers “guest of the minute",
+      "description": "Empty chair fills with warm light. Co-Host: Offers “guest of the minute. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-10-guest-chair.png",
+      "concept_art_index": 10,
+      "concept_file": "gift-10-guest-chair.png",
+      "definition_payload": {
+        "slug": "guest-chair",
+        "name": "Guest Chair",
+        "description": "Empty chair fills with warm light. Co-Host: Offers “guest of the minute. Never fabricate delivery.",
+        "price_minor": 800,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 25,
+      "slug": "signal-handshake",
+      "slug_source": "signal-handshake",
+      "name": "Signal Handshake",
+      "price_minor": 900,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Two waveform hands shake",
+      "cohost_hook": "Greets as collaborator",
+      "description": "Two waveform hands shake. Co-Host: Greets as collaborator. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-35-signal-handshake.png",
+      "concept_art_index": 35,
+      "concept_file": "gift-35-signal-handshake.png",
+      "definition_payload": {
+        "slug": "signal-handshake",
+        "name": "Signal Handshake",
+        "description": "Two waveform hands shake. Co-Host: Greets as collaborator. Never fabricate delivery.",
+        "price_minor": 900,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 26,
+      "slug": "scene-change",
+      "slug_source": "scene-change",
+      "name": "Scene Change",
+      "price_minor": 1000,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Soft wipe to a new backdrop tile",
+      "cohost_hook": "Announces mini scene change",
+      "description": "Soft wipe to a new backdrop tile. Co-Host: Announces mini scene change. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-36-scene-change.png",
+      "concept_art_index": 36,
+      "concept_file": "gift-36-scene-change.png",
+      "definition_payload": {
+        "slug": "scene-change",
+        "name": "Scene Change",
+        "description": "Soft wipe to a new backdrop tile. Co-Host: Announces mini scene change. Never fabricate delivery.",
+        "price_minor": 1000,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 27,
+      "slug": "encore-ticket",
+      "slug_source": "encore-ticket",
+      "name": "Encore Ticket",
+      "price_minor": 1100,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Ticket tears → confetti of notes",
+      "cohost_hook": "Asks host if encore vibe is ok",
+      "description": "Ticket tears → confetti of notes. Co-Host: Asks host if encore vibe is ok. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-37-encore-ticket.png",
+      "concept_art_index": 37,
+      "concept_file": "gift-37-encore-ticket.png",
+      "definition_payload": {
+        "slug": "encore-ticket",
+        "name": "Encore Ticket",
+        "description": "Ticket tears → confetti of notes. Co-Host: Asks host if encore vibe is ok. Never fabricate delivery.",
+        "price_minor": 1100,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 28,
+      "slug": "lumen-intercom",
+      "slug_source": "lumen-intercom",
+      "name": "Lumen Intercom",
+      "price_minor": 1200,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Studio intercom pop",
+      "cohost_hook": "Speaks as “booth” for 1 line",
+      "description": "Studio intercom pop. Co-Host: Speaks as “booth” for 1 line. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-38-lumen-intercom.png",
+      "concept_art_index": 38,
+      "concept_file": "gift-38-lumen-intercom.png",
+      "definition_payload": {
+        "slug": "lumen-intercom",
+        "name": "Lumen Intercom",
+        "description": "Studio intercom pop. Co-Host: Speaks as “booth” for 1 line. Never fabricate delivery.",
+        "price_minor": 1200,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 29,
+      "slug": "shared-script",
+      "slug_source": "shared-script",
+      "name": "Shared Script",
+      "price_minor": 1300,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Script pages flip between host & AI",
+      "cohost_hook": "Reads a 1-line shared script",
+      "description": "Script pages flip between host & AI. Co-Host: Reads a 1-line shared script. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-39-shared-script.png",
+      "concept_art_index": 39,
+      "concept_file": "gift-39-shared-script.png",
+      "definition_payload": {
+        "slug": "shared-script",
+        "name": "Shared Script",
+        "description": "Script pages flip between host & AI. Co-Host: Reads a 1-line shared script. Never fabricate delivery.",
+        "price_minor": 1300,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 30,
+      "slug": "soft-spotlight",
+      "slug_source": "soft-spotlight",
+      "name": "Soft Spotlight",
+      "price_minor": 1400,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Follow-spot finds the host gently",
+      "cohost_hook": "Compliments host craft",
+      "description": "Follow-spot finds the host gently. Co-Host: Compliments host craft. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-20-soft-spotlight.png",
+      "concept_art_index": 20,
+      "concept_file": "gift-20-soft-spotlight.png",
+      "definition_payload": {
+        "slug": "soft-spotlight",
+        "name": "Soft Spotlight",
+        "description": "Follow-spot finds the host gently. Co-Host: Compliments host craft. Never fabricate delivery.",
+        "price_minor": 1400,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 31,
+      "slug": "chat-overture",
+      "slug_source": "chat-overture",
+      "name": "Chat Overture",
+      "price_minor": 1500,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Chat bubbles arrange into a chord",
+      "cohost_hook": "Thanks “the room’s overture",
+      "description": "Chat bubbles arrange into a chord. Co-Host: Thanks “the room’s overture. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-40-chat-overture.png",
+      "concept_art_index": 40,
+      "concept_file": "gift-40-chat-overture.png",
+      "definition_payload": {
+        "slug": "chat-overture",
+        "name": "Chat Overture",
+        "description": "Chat bubbles arrange into a chord. Co-Host: Thanks “the room’s overture. Never fabricate delivery.",
+        "price_minor": 1500,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 32,
+      "slug": "memory-pin",
+      "slug_source": "memory-pin",
+      "name": "Memory Pin",
+      "price_minor": 1600,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Pin drops into a memory corkboard",
+      "cohost_hook": "Stores a safe session memory",
+      "description": "Pin drops into a memory corkboard. Co-Host: Stores a safe session memory. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-05-memory-pin.png",
+      "concept_art_index": 5,
+      "concept_file": "gift-05-memory-pin.png",
+      "definition_payload": {
+        "slug": "memory-pin",
+        "name": "Memory Pin",
+        "description": "Pin drops into a memory corkboard. Co-Host: Stores a safe session memory. Never fabricate delivery.",
+        "price_minor": 1600,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 33,
+      "slug": "cohost-duet",
+      "slug_source": "cohost-duet",
+      "name": "Co-Host Duet",
+      "price_minor": 1800,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Two voice rings intertwine",
+      "cohost_hook": "Offers a tiny call-and-response",
+      "description": "Two voice rings intertwine. Co-Host: Offers a tiny call-and-response. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-41-cohost-duet.png",
+      "concept_art_index": 41,
+      "concept_file": "gift-41-cohost-duet.png",
+      "definition_payload": {
+        "slug": "cohost-duet",
+        "name": "Co-Host Duet",
+        "description": "Two voice rings intertwine. Co-Host: Offers a tiny call-and-response. Never fabricate delivery.",
+        "price_minor": 1800,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 34,
+      "slug": "director-chair",
+      "slug_source": "director-chair",
+      "name": "Director Chair",
+      "price_minor": 2000,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Director chair with sender’s nick",
+      "cohost_hook": "Calls sender “guest director",
+      "description": "Director chair with sender’s nick. Co-Host: Calls sender “guest director. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-42-director-chair.png",
+      "concept_art_index": 42,
+      "concept_file": "gift-42-director-chair.png",
+      "definition_payload": {
+        "slug": "director-chair",
+        "name": "Director Chair",
+        "description": "Director chair with sender’s nick. Co-Host: Calls sender “guest director. Never fabricate delivery.",
+        "price_minor": 2000,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 35,
+      "slug": "live-subtitle",
+      "slug_source": "live-subtitle",
+      "name": "Live Subtitle",
+      "price_minor": 2100,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Elegant subtitle card under host",
+      "cohost_hook": "Subtitles the thank-you",
+      "description": "Elegant subtitle card under host. Co-Host: Subtitles the thank-you. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-43-live-subtitle.png",
+      "concept_art_index": 43,
+      "concept_file": "gift-43-live-subtitle.png",
+      "definition_payload": {
+        "slug": "live-subtitle",
+        "name": "Live Subtitle",
+        "description": "Elegant subtitle card under host. Co-Host: Subtitles the thank-you. Never fabricate delivery.",
+        "price_minor": 2100,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 36,
+      "slug": "booth-flower",
+      "slug_source": "booth-flower",
+      "name": "Booth Flower",
+      "price_minor": 2200,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Single abstract bloom in the booth (not a rose)",
+      "cohost_hook": "Nature-metaphor thanks",
+      "description": "Single abstract bloom in the booth (not a rose). Co-Host: Nature-metaphor thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-44-booth-flower.png",
+      "concept_art_index": 44,
+      "concept_file": "gift-44-booth-flower.png",
+      "definition_payload": {
+        "slug": "booth-flower",
+        "name": "Booth Flower",
+        "description": "Single abstract bloom in the booth (not a rose). Co-Host: Nature-metaphor thanks. Never fabricate delivery.",
+        "price_minor": 2200,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 37,
+      "slug": "timing-perfect",
+      "slug_source": "timing-perfect",
+      "name": "Timing Perfect",
+      "price_minor": 2300,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Metronome hits a perfect green",
+      "cohost_hook": "Praises timing of the gift",
+      "description": "Metronome hits a perfect green. Co-Host: Praises timing of the gift. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-45-timing-perfect.png",
+      "concept_art_index": 45,
+      "concept_file": "gift-45-timing-perfect.png",
+      "definition_payload": {
+        "slug": "timing-perfect",
+        "name": "Timing Perfect",
+        "description": "Metronome hits a perfect green. Co-Host: Praises timing of the gift. Never fabricate delivery.",
+        "price_minor": 2300,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 38,
+      "slug": "deep-cut",
+      "slug_source": "deep-cut",
+      "name": "Deep Cut",
+      "price_minor": 2400,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Archive drawer opens a rare clip frame",
+      "cohost_hook": "Deep cut support — noted.",
+      "description": "Archive drawer opens a rare clip frame. Co-Host: Deep cut support — noted.. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-46-deep-cut.png",
+      "concept_art_index": 46,
+      "concept_file": "gift-46-deep-cut.png",
+      "definition_payload": {
+        "slug": "deep-cut",
+        "name": "Deep Cut",
+        "description": "Archive drawer opens a rare clip frame. Co-Host: Deep cut support — noted.. Never fabricate delivery.",
+        "price_minor": 2400,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 39,
+      "slug": "lumen-overture",
+      "slug_source": "lumen-overture",
+      "name": "Lumen Overture",
+      "price_minor": 2500,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Full soft overture wash across stage",
+      "cohost_hook": "Short poetic opening line",
+      "description": "Full soft overture wash across stage. Co-Host: Short poetic opening line. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-47-lumen-overture.png",
+      "concept_art_index": 47,
+      "concept_file": "gift-47-lumen-overture.png",
+      "definition_payload": {
+        "slug": "lumen-overture",
+        "name": "Lumen Overture",
+        "description": "Full soft overture wash across stage. Co-Host: Short poetic opening line. Never fabricate delivery.",
+        "price_minor": 2500,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 40,
+      "slug": "studio-toast",
+      "slug_source": "studio-toast",
+      "name": "Studio Toast",
+      "price_minor": 2500,
+      "rarity": "Epic",
+      "api_tier": "epic",
+      "effect": "Two porcelain cups toast (no alcohol mark)",
+      "cohost_hook": "Toasts to the craft",
+      "description": "Two porcelain cups toast (no alcohol mark). Co-Host: Toasts to the craft. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "epic",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-48-studio-toast.png",
+      "concept_art_index": 48,
+      "concept_file": "gift-48-studio-toast.png",
+      "definition_payload": {
+        "slug": "studio-toast",
+        "name": "Studio Toast",
+        "description": "Two porcelain cups toast (no alcohol mark). Co-Host: Toasts to the craft. Never fabricate delivery.",
+        "price_minor": 2500,
+        "creator_revenue_share_bps": 0,
+        "tier": "epic",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "epic",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 41,
+      "slug": "ai-listening-room",
+      "slug_source": "ai-listening-room",
+      "name": "AI Listening Room",
+      "price_minor": 5000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Room transforms into a quiet listening chamber",
+      "cohost_hook": "Switches to “listen mode” 10s",
+      "description": "Room transforms into a quiet listening chamber. Co-Host: Switches to “listen mode” 10s. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-06-ai-listening-room.png",
+      "concept_art_index": 6,
+      "concept_file": "gift-06-ai-listening-room.png",
+      "definition_payload": {
+        "slug": "ai-listening-room",
+        "name": "AI Listening Room",
+        "description": "Room transforms into a quiet listening chamber. Co-Host: Switches to “listen mode” 10s. Never fabricate delivery.",
+        "price_minor": 5000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 42,
+      "slug": "cohost-overture-suite",
+      "slug_source": "cohost-overture-suite",
+      "name": "Co-Host Overture Suite",
+      "price_minor": 6000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Multi-phase overture with avatar sync",
+      "cohost_hook": "Timed avatar + TTS if allowed",
+      "description": "Multi-phase overture with avatar sync. Co-Host: Timed avatar + TTS if allowed. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-49-cohost-overture-suite.png",
+      "concept_art_index": 49,
+      "concept_file": "gift-49-cohost-overture-suite.png",
+      "definition_payload": {
+        "slug": "cohost-overture-suite",
+        "name": "Co-Host Overture Suite",
+        "description": "Multi-phase overture with avatar sync. Co-Host: Timed avatar + TTS if allowed. Never fabricate delivery.",
+        "price_minor": 6000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 43,
+      "slug": "stream-atlas",
+      "slug_source": "stream-atlas",
+      "name": "Stream Atlas",
+      "price_minor": 7000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Atlas unfolds cities of past streams",
+      "cohost_hook": "Mentions “map of nights",
+      "description": "Atlas unfolds cities of past streams. Co-Host: Mentions “map of nights. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-50-stream-atlas.png",
+      "concept_art_index": 50,
+      "concept_file": "gift-50-stream-atlas.png",
+      "definition_payload": {
+        "slug": "stream-atlas",
+        "name": "Stream Atlas",
+        "description": "Atlas unfolds cities of past streams. Co-Host: Mentions “map of nights. Never fabricate delivery.",
+        "price_minor": 7000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 44,
+      "slug": "soft-archive",
+      "slug_source": "soft-archive",
+      "name": "Soft Archive",
+      "price_minor": 8000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Library shelves of glowing session spines",
+      "cohost_hook": "Offers to summarize tonight later",
+      "description": "Library shelves of glowing session spines. Co-Host: Offers to summarize tonight later. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-51-soft-archive.png",
+      "concept_art_index": 51,
+      "concept_file": "gift-51-soft-archive.png",
+      "definition_payload": {
+        "slug": "soft-archive",
+        "name": "Soft Archive",
+        "description": "Library shelves of glowing session spines. Co-Host: Offers to summarize tonight later. Never fabricate delivery.",
+        "price_minor": 8000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 45,
+      "slug": "lumen-conductor",
+      "slug_source": "lumen-conductor",
+      "name": "Lumen Conductor",
+      "price_minor": 9000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Conductor silhouette of light",
+      "cohost_hook": "Conducts chat energy metaphor",
+      "description": "Conductor silhouette of light. Co-Host: Conducts chat energy metaphor. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-52-lumen-conductor.png",
+      "concept_art_index": 52,
+      "concept_file": "gift-52-lumen-conductor.png",
+      "definition_payload": {
+        "slug": "lumen-conductor",
+        "name": "Lumen Conductor",
+        "description": "Conductor silhouette of light. Co-Host: Conducts chat energy metaphor. Never fabricate delivery.",
+        "price_minor": 9000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 46,
+      "slug": "twin-signal",
+      "slug_source": "twin-signal",
+      "name": "Twin Signal",
+      "price_minor": 10000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Host + AI signal towers sync",
+      "cohost_hook": "Dual thank from “booth + stage",
+      "description": "Host + AI signal towers sync. Co-Host: Dual thank from “booth + stage. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-53-twin-signal.png",
+      "concept_art_index": 53,
+      "concept_file": "gift-53-twin-signal.png",
+      "definition_payload": {
+        "slug": "twin-signal",
+        "name": "Twin Signal",
+        "description": "Host + AI signal towers sync. Co-Host: Dual thank from “booth + stage. Never fabricate delivery.",
+        "price_minor": 10000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 47,
+      "slug": "craft-circle",
+      "slug_source": "craft-circle",
+      "name": "Craft Circle",
+      "price_minor": 11000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Creators’ circle of chairs appears",
+      "cohost_hook": "Honors craft over clout",
+      "description": "Creators’ circle of chairs appears. Co-Host: Honors craft over clout. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-54-craft-circle.png",
+      "concept_art_index": 54,
+      "concept_file": "gift-54-craft-circle.png",
+      "definition_payload": {
+        "slug": "craft-circle",
+        "name": "Craft Circle",
+        "description": "Creators’ circle of chairs appears. Co-Host: Honors craft over clout. Never fabricate delivery.",
+        "price_minor": 11000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 48,
+      "slug": "night-desk",
+      "slug_source": "night-desk",
+      "name": "Night Desk",
+      "price_minor": 12000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Late-night desk with lamp & notes",
+      "cohost_hook": "Soft late-show energy",
+      "description": "Late-night desk with lamp & notes. Co-Host: Soft late-show energy. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-55-night-desk.png",
+      "concept_art_index": 55,
+      "concept_file": "gift-55-night-desk.png",
+      "definition_payload": {
+        "slug": "night-desk",
+        "name": "Night Desk",
+        "description": "Late-night desk with lamp & notes. Co-Host: Soft late-show energy. Never fabricate delivery.",
+        "price_minor": 12000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 49,
+      "slug": "echo-atelier",
+      "slug_source": "echo-atelier",
+      "name": "Echo Atelier",
+      "price_minor": 13000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Workshop of echoes / tools of light",
+      "cohost_hook": "Praises “made by hand” vibe",
+      "description": "Workshop of echoes / tools of light. Co-Host: Praises “made by hand” vibe. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-56-echo-atelier.png",
+      "concept_art_index": 56,
+      "concept_file": "gift-56-echo-atelier.png",
+      "definition_payload": {
+        "slug": "echo-atelier",
+        "name": "Echo Atelier",
+        "description": "Workshop of echoes / tools of light. Co-Host: Praises “made by hand” vibe. Never fabricate delivery.",
+        "price_minor": 13000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 50,
+      "slug": "permission-to-pause",
+      "slug_source": "permission-to-pause",
+      "name": "Permission to Pause",
+      "price_minor": 14000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Timer dissolves into calm mist",
+      "cohost_hook": "Explicitly blesses a pause",
+      "description": "Timer dissolves into calm mist. Co-Host: Explicitly blesses a pause. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-57-permission-to-pause.png",
+      "concept_art_index": 57,
+      "concept_file": "gift-57-permission-to-pause.png",
+      "definition_payload": {
+        "slug": "permission-to-pause",
+        "name": "Permission to Pause",
+        "description": "Timer dissolves into calm mist. Co-Host: Explicitly blesses a pause. Never fabricate delivery.",
+        "price_minor": 14000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 51,
+      "slug": "honest-status",
+      "slug_source": "honest-status",
+      "name": "Honest Status",
+      "price_minor": 15000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Status chips: READY / PARTIAL / BLOCKED as art",
+      "cohost_hook": "Jokes gently about honesty",
+      "description": "Status chips: READY / PARTIAL / BLOCKED as art. Co-Host: Jokes gently about honesty. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-11-honest-status.png",
+      "concept_art_index": 11,
+      "concept_file": "gift-11-honest-status.png",
+      "definition_payload": {
+        "slug": "honest-status",
+        "name": "Honest Status",
+        "description": "Status chips: READY / PARTIAL / BLOCKED as art. Co-Host: Jokes gently about honesty. Never fabricate delivery.",
+        "price_minor": 15000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 52,
+      "slug": "viewer-ledger",
+      "slug_source": "viewer-ledger",
+      "name": "Viewer Ledger",
+      "price_minor": 16000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Elegant ledger writes sender’s support",
+      "cohost_hook": "Treats gift as “ledger line",
+      "description": "Elegant ledger writes sender’s support. Co-Host: Treats gift as “ledger line. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-58-viewer-ledger.png",
+      "concept_art_index": 58,
+      "concept_file": "gift-58-viewer-ledger.png",
+      "definition_payload": {
+        "slug": "viewer-ledger",
+        "name": "Viewer Ledger",
+        "description": "Elegant ledger writes sender’s support. Co-Host: Treats gift as “ledger line. Never fabricate delivery.",
+        "price_minor": 16000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 53,
+      "slug": "cohost-vow",
+      "slug_source": "cohost-vow",
+      "name": "Co-Host Vow",
+      "price_minor": 17000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Ribbon vow between host & AI",
+      "cohost_hook": "Short loyalty-to-craft line",
+      "description": "Ribbon vow between host & AI. Co-Host: Short loyalty-to-craft line. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-59-cohost-vow.png",
+      "concept_art_index": 59,
+      "concept_file": "gift-59-cohost-vow.png",
+      "definition_payload": {
+        "slug": "cohost-vow",
+        "name": "Co-Host Vow",
+        "description": "Ribbon vow between host & AI. Co-Host: Short loyalty-to-craft line. Never fabricate delivery.",
+        "price_minor": 17000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 54,
+      "slug": "live-manuscript",
+      "slug_source": "live-manuscript",
+      "name": "Live Manuscript",
+      "price_minor": 18000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Manuscript writes itself in midair",
+      "cohost_hook": "Dedicates a sentence to sender",
+      "description": "Manuscript writes itself in midair. Co-Host: Dedicates a sentence to sender. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-60-live-manuscript.png",
+      "concept_art_index": 60,
+      "concept_file": "gift-60-live-manuscript.png",
+      "definition_payload": {
+        "slug": "live-manuscript",
+        "name": "Live Manuscript",
+        "description": "Manuscript writes itself in midair. Co-Host: Dedicates a sentence to sender. Never fabricate delivery.",
+        "price_minor": 18000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 55,
+      "slug": "signal-cathedral",
+      "slug_source": "signal-cathedral",
+      "name": "Signal Cathedral",
+      "price_minor": 19000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Soft cathedral of radio arches",
+      "cohost_hook": "Reverent thanks (no religion push)",
+      "description": "Soft cathedral of radio arches. Co-Host: Reverent thanks (no religion push). Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-61-signal-cathedral.png",
+      "concept_art_index": 61,
+      "concept_file": "gift-61-signal-cathedral.png",
+      "definition_payload": {
+        "slug": "signal-cathedral",
+        "name": "Signal Cathedral",
+        "description": "Soft cathedral of radio arches. Co-Host: Reverent thanks (no religion push). Never fabricate delivery.",
+        "price_minor": 19000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 56,
+      "slug": "room-of-replies",
+      "slug_source": "room-of-replies",
+      "name": "Room of Replies",
+      "price_minor": 20000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Doors open to rooms of past kind replies",
+      "cohost_hook": "Pulls a safe past compliment theme",
+      "description": "Doors open to rooms of past kind replies. Co-Host: Pulls a safe past compliment theme. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-62-room-of-replies.png",
+      "concept_art_index": 62,
+      "concept_file": "gift-62-room-of-replies.png",
+      "definition_payload": {
+        "slug": "room-of-replies",
+        "name": "Room of Replies",
+        "description": "Doors open to rooms of past kind replies. Co-Host: Pulls a safe past compliment theme. Never fabricate delivery.",
+        "price_minor": 20000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 57,
+      "slug": "lumen-oratorio",
+      "slug_source": "lumen-oratorio",
+      "name": "Lumen Oratorio",
+      "price_minor": 21000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Choral light without fake faces",
+      "cohost_hook": "Elevated thank, short",
+      "description": "Choral light without fake faces. Co-Host: Elevated thank, short. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-63-lumen-oratorio.png",
+      "concept_art_index": 63,
+      "concept_file": "gift-63-lumen-oratorio.png",
+      "definition_payload": {
+        "slug": "lumen-oratorio",
+        "name": "Lumen Oratorio",
+        "description": "Choral light without fake faces. Co-Host: Elevated thank, short. Never fabricate delivery.",
+        "price_minor": 21000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 58,
+      "slug": "stagecraft-crown",
+      "slug_source": "stagecraft-crown",
+      "name": "Stagecraft Crown",
+      "price_minor": 22000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Crown made of tools (mic, pen, keylight) — not gold flex",
+      "cohost_hook": "Crowns “stagecraft",
+      "description": "Crown made of tools (mic, pen, keylight) — not gold flex. Co-Host: Crowns “stagecraft. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-64-stagecraft-crown.png",
+      "concept_art_index": 64,
+      "concept_file": "gift-64-stagecraft-crown.png",
+      "definition_payload": {
+        "slug": "stagecraft-crown",
+        "name": "Stagecraft Crown",
+        "description": "Crown made of tools (mic, pen, keylight) — not gold flex. Co-Host: Crowns “stagecraft. Never fabricate delivery.",
+        "price_minor": 22000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 59,
+      "slug": "longform-lantern",
+      "slug_source": "longform-lantern",
+      "name": "Longform Lantern",
+      "price_minor": 23000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Lantern for long conversations",
+      "cohost_hook": "Thanks for deep attention",
+      "description": "Lantern for long conversations. Co-Host: Thanks for deep attention. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-65-longform-lantern.png",
+      "concept_art_index": 65,
+      "concept_file": "gift-65-longform-lantern.png",
+      "definition_payload": {
+        "slug": "longform-lantern",
+        "name": "Longform Lantern",
+        "description": "Lantern for long conversations. Co-Host: Thanks for deep attention. Never fabricate delivery.",
+        "price_minor": 23000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 60,
+      "slug": "sylora-hall-pass",
+      "slug_source": "sylora-hall-pass",
+      "name": "SYLORA Hall Pass",
+      "price_minor": 25000,
+      "rarity": "Legendary",
+      "api_tier": "legendary",
+      "effect": "Hall pass to “inner studio”",
+      "cohost_hook": "Grants symbolic inner-studio shoutout",
+      "description": "Hall pass to “inner studio”. Co-Host: Grants symbolic inner-studio shoutout. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "legendary",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-66-sylora-hall-pass.png",
+      "concept_art_index": 66,
+      "concept_file": "gift-66-sylora-hall-pass.png",
+      "definition_payload": {
+        "slug": "sylora-hall-pass",
+        "name": "SYLORA Hall Pass",
+        "description": "Hall pass to “inner studio”. Co-Host: Grants symbolic inner-studio shoutout. Never fabricate delivery.",
+        "price_minor": 25000,
+        "creator_revenue_share_bps": 0,
+        "tier": "legendary",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "legendary",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 61,
+      "slug": "first-principles-forge",
+      "slug_source": "first-principles-forge",
+      "name": "First Principles Forge",
+      "price_minor": 50000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Forge of ideas, not weapons",
+      "cohost_hook": "Reframes chat to a clear idea",
+      "description": "Forge of ideas, not weapons. Co-Host: Reframes chat to a clear idea. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-67-first-principles-forge.png",
+      "concept_art_index": 67,
+      "concept_file": "gift-67-first-principles-forge.png",
+      "definition_payload": {
+        "slug": "first-principles-forge",
+        "name": "First Principles Forge",
+        "description": "Forge of ideas, not weapons. Co-Host: Reframes chat to a clear idea. Never fabricate delivery.",
+        "price_minor": 50000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 62,
+      "slug": "empathy-engine",
+      "slug_source": "empathy-engine",
+      "name": "Empathy Engine",
+      "price_minor": 60000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Soft machinery of listening",
+      "cohost_hook": "Prioritizes kindness replies",
+      "description": "Soft machinery of listening. Co-Host: Prioritizes kindness replies. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-68-empathy-engine.png",
+      "concept_art_index": 68,
+      "concept_file": "gift-68-empathy-engine.png",
+      "definition_payload": {
+        "slug": "empathy-engine",
+        "name": "Empathy Engine",
+        "description": "Soft machinery of listening. Co-Host: Prioritizes kindness replies. Never fabricate delivery.",
+        "price_minor": 60000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 63,
+      "slug": "chorus-of-nicks",
+      "slug_source": "chorus-of-nicks",
+      "name": "Chorus of Nicks",
+      "price_minor": 75000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Safe nicknames become a light chorus",
+      "cohost_hook": "Chorus thanks (no PII leaks)",
+      "description": "Safe nicknames become a light chorus. Co-Host: Chorus thanks (no PII leaks). Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-69-chorus-of-nicks.png",
+      "concept_art_index": 69,
+      "concept_file": "gift-69-chorus-of-nicks.png",
+      "definition_payload": {
+        "slug": "chorus-of-nicks",
+        "name": "Chorus of Nicks",
+        "description": "Safe nicknames become a light chorus. Co-Host: Chorus thanks (no PII leaks). Never fabricate delivery.",
+        "price_minor": 75000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 64,
+      "slug": "unbroken-thread",
+      "slug_source": "unbroken-thread",
+      "name": "Unbroken Thread",
+      "price_minor": 80000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Golden thread through the whole UI",
+      "cohost_hook": "Continuity / loyalty line",
+      "description": "Golden thread through the whole UI. Co-Host: Continuity / loyalty line. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-70-unbroken-thread.png",
+      "concept_art_index": 70,
+      "concept_file": "gift-70-unbroken-thread.png",
+      "definition_payload": {
+        "slug": "unbroken-thread",
+        "name": "Unbroken Thread",
+        "description": "Golden thread through the whole UI. Co-Host: Continuity / loyalty line. Never fabricate delivery.",
+        "price_minor": 80000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 65,
+      "slug": "night-broadcast",
+      "slug_source": "night-broadcast",
+      "name": "Night Broadcast",
+      "price_minor": 100000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Global night-radio desk",
+      "cohost_hook": "Broadcasting kindness",
+      "description": "Global night-radio desk. Co-Host: Broadcasting kindness. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-14-night-broadcast.png",
+      "concept_art_index": 14,
+      "concept_file": "gift-14-night-broadcast.png",
+      "definition_payload": {
+        "slug": "night-broadcast",
+        "name": "Night Broadcast",
+        "description": "Global night-radio desk. Co-Host: Broadcasting kindness. Never fabricate delivery.",
+        "price_minor": 100000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 66,
+      "slug": "cohost-constellation",
+      "slug_source": "cohost-constellation",
+      "name": "Co-Host Constellation",
+      "price_minor": 120000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Constellation shaped like dialogue marks",
+      "cohost_hook": "Maps sender into “sky of the room",
+      "description": "Constellation shaped like dialogue marks. Co-Host: Maps sender into “sky of the room. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-71-cohost-constellation.png",
+      "concept_art_index": 71,
+      "concept_file": "gift-71-cohost-constellation.png",
+      "definition_payload": {
+        "slug": "cohost-constellation",
+        "name": "Co-Host Constellation",
+        "description": "Constellation shaped like dialogue marks. Co-Host: Maps sender into “sky of the room. Never fabricate delivery.",
+        "price_minor": 120000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 67,
+      "slug": "atelier-of-futures",
+      "slug_source": "atelier-of-futures",
+      "name": "Atelier of Futures",
+      "price_minor": 150000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Worktables of possible show futures",
+      "cohost_hook": "Asks host one future-show prompt",
+      "description": "Worktables of possible show futures. Co-Host: Asks host one future-show prompt. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-72-atelier-of-futures.png",
+      "concept_art_index": 72,
+      "concept_file": "gift-72-atelier-of-futures.png",
+      "definition_payload": {
+        "slug": "atelier-of-futures",
+        "name": "Atelier of Futures",
+        "description": "Worktables of possible show futures. Co-Host: Asks host one future-show prompt. Never fabricate delivery.",
+        "price_minor": 150000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 68,
+      "slug": "silence-worthy",
+      "slug_source": "silence-worthy",
+      "name": "Silence Worthy",
+      "price_minor": 160000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Beautiful silence with dust motes",
+      "cohost_hook": "Holds silence 3s then thanks",
+      "description": "Beautiful silence with dust motes. Co-Host: Holds silence 3s then thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-73-silence-worthy.png",
+      "concept_art_index": 73,
+      "concept_file": "gift-73-silence-worthy.png",
+      "definition_payload": {
+        "slug": "silence-worthy",
+        "name": "Silence Worthy",
+        "description": "Beautiful silence with dust motes. Co-Host: Holds silence 3s then thanks. Never fabricate delivery.",
+        "price_minor": 160000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 69,
+      "slug": "craft-over-clout",
+      "slug_source": "craft-over-clout",
+      "name": "Craft Over Clout",
+      "price_minor": 180000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Clout meters shatter → craft tools remain",
+      "cohost_hook": "Values craft explicitly",
+      "description": "Clout meters shatter → craft tools remain. Co-Host: Values craft explicitly. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-12-craft-over-clout.png",
+      "concept_art_index": 12,
+      "concept_file": "gift-12-craft-over-clout.png",
+      "definition_payload": {
+        "slug": "craft-over-clout",
+        "name": "Craft Over Clout",
+        "description": "Clout meters shatter → craft tools remain. Co-Host: Values craft explicitly. Never fabricate delivery.",
+        "price_minor": 180000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 70,
+      "slug": "lumen-opera-house",
+      "slug_source": "lumen-opera-house",
+      "name": "Lumen Opera House",
+      "price_minor": 200000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Mini opera house of light (no tragedy gore)",
+      "cohost_hook": "Dedicates a “movement” to sender",
+      "description": "Mini opera house of light (no tragedy gore). Co-Host: Dedicates a “movement” to sender. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-74-lumen-opera-house.png",
+      "concept_art_index": 74,
+      "concept_file": "gift-74-lumen-opera-house.png",
+      "definition_payload": {
+        "slug": "lumen-opera-house",
+        "name": "Lumen Opera House",
+        "description": "Mini opera house of light (no tragedy gore). Co-Host: Dedicates a “movement” to sender. Never fabricate delivery.",
+        "price_minor": 200000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 71,
+      "slug": "memory-garden",
+      "slug_source": "memory-garden",
+      "name": "Memory Garden",
+      "price_minor": 220000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Garden of session memories",
+      "cohost_hook": "Plants a named safe memory",
+      "description": "Garden of session memories. Co-Host: Plants a named safe memory. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-75-memory-garden.png",
+      "concept_art_index": 75,
+      "concept_file": "gift-75-memory-garden.png",
+      "definition_payload": {
+        "slug": "memory-garden",
+        "name": "Memory Garden",
+        "description": "Garden of session memories. Co-Host: Plants a named safe memory. Never fabricate delivery.",
+        "price_minor": 220000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 72,
+      "slug": "shared-rehearsal-world",
+      "slug_source": "shared-rehearsal-world",
+      "name": "Shared Rehearsal World",
+      "price_minor": 250000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Host+AI+chat in a rehearsal dimension",
+      "cohost_hook": "Invites a 15s group bit",
+      "description": "Host+AI+chat in a rehearsal dimension. Co-Host: Invites a 15s group bit. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-76-shared-rehearsal-world.png",
+      "concept_art_index": 76,
+      "concept_file": "gift-76-shared-rehearsal-world.png",
+      "definition_payload": {
+        "slug": "shared-rehearsal-world",
+        "name": "Shared Rehearsal World",
+        "description": "Host+AI+chat in a rehearsal dimension. Co-Host: Invites a 15s group bit. Never fabricate delivery.",
+        "price_minor": 250000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 73,
+      "slug": "signal-monarch",
+      "slug_source": "signal-monarch",
+      "name": "Signal Monarch",
+      "price_minor": 280000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Abstract monarch of signals (not real monarchy flex)",
+      "cohost_hook": "Regal but soft thanks",
+      "description": "Abstract monarch of signals (not real monarchy flex). Co-Host: Regal but soft thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-77-signal-monarch.png",
+      "concept_art_index": 77,
+      "concept_file": "gift-77-signal-monarch.png",
+      "definition_payload": {
+        "slug": "signal-monarch",
+        "name": "Signal Monarch",
+        "description": "Abstract monarch of signals (not real monarchy flex). Co-Host: Regal but soft thanks. Never fabricate delivery.",
+        "price_minor": 280000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 74,
+      "slug": "infinite-desk",
+      "slug_source": "infinite-desk",
+      "name": "Infinite Desk",
+      "price_minor": 300000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Desk extends into horizon of projects",
+      "cohost_hook": "Honors long creator journeys",
+      "description": "Desk extends into horizon of projects. Co-Host: Honors long creator journeys. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-78-infinite-desk.png",
+      "concept_art_index": 78,
+      "concept_file": "gift-78-infinite-desk.png",
+      "definition_payload": {
+        "slug": "infinite-desk",
+        "name": "Infinite Desk",
+        "description": "Desk extends into horizon of projects. Co-Host: Honors long creator journeys. Never fabricate delivery.",
+        "price_minor": 300000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 75,
+      "slug": "soft-revolution",
+      "slug_source": "soft-revolution",
+      "name": "Soft Revolution",
+      "price_minor": 320000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Paper planes rewrite the skyline",
+      "cohost_hook": "Gentle “change the tone",
+      "description": "Paper planes rewrite the skyline. Co-Host: Gentle “change the tone. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-79-soft-revolution.png",
+      "concept_art_index": 79,
+      "concept_file": "gift-79-soft-revolution.png",
+      "definition_payload": {
+        "slug": "soft-revolution",
+        "name": "Soft Revolution",
+        "description": "Paper planes rewrite the skyline. Co-Host: Gentle “change the tone. Never fabricate delivery.",
+        "price_minor": 320000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 76,
+      "slug": "witness-light",
+      "slug_source": "witness-light",
+      "name": "Witness Light",
+      "price_minor": 350000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Light that “witnesses” the stream honestly",
+      "cohost_hook": "Thanks for being present",
+      "description": "Light that “witnesses” the stream honestly. Co-Host: Thanks for being present. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-80-witness-light.png",
+      "concept_art_index": 80,
+      "concept_file": "gift-80-witness-light.png",
+      "definition_payload": {
+        "slug": "witness-light",
+        "name": "Witness Light",
+        "description": "Light that “witnesses” the stream honestly. Co-Host: Thanks for being present. Never fabricate delivery.",
+        "price_minor": 350000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 77,
+      "slug": "dialogue-palace",
+      "slug_source": "dialogue-palace",
+      "name": "Dialogue Palace",
+      "price_minor": 400000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Palace made of speech bubbles & doors",
+      "cohost_hook": "Opens a VIP dialogue beat",
+      "description": "Palace made of speech bubbles & doors. Co-Host: Opens a VIP dialogue beat. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-81-dialogue-palace.png",
+      "concept_art_index": 81,
+      "concept_file": "gift-81-dialogue-palace.png",
+      "definition_payload": {
+        "slug": "dialogue-palace",
+        "name": "Dialogue Palace",
+        "description": "Palace made of speech bubbles & doors. Co-Host: Opens a VIP dialogue beat. Never fabricate delivery.",
+        "price_minor": 400000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 78,
+      "slug": "sylora-north-star",
+      "slug_source": "sylora-north-star",
+      "name": "SYLORA North Star",
+      "price_minor": 450000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Soft north star over the stage",
+      "cohost_hook": "Navigation / guidance metaphor",
+      "description": "Soft north star over the stage. Co-Host: Navigation / guidance metaphor. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-82-sylora-north-star.png",
+      "concept_art_index": 82,
+      "concept_file": "gift-82-sylora-north-star.png",
+      "definition_payload": {
+        "slug": "sylora-north-star",
+        "name": "SYLORA North Star",
+        "description": "Soft north star over the stage. Co-Host: Navigation / guidance metaphor. Never fabricate delivery.",
+        "price_minor": 450000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 79,
+      "slug": "living-manuscript-city",
+      "slug_source": "living-manuscript-city",
+      "name": "Living Manuscript City",
+      "price_minor": 480000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "City whose buildings are books & mics",
+      "cohost_hook": "Big poetic thanks",
+      "description": "City whose buildings are books & mics. Co-Host: Big poetic thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-83-living-manuscript-city.png",
+      "concept_art_index": 83,
+      "concept_file": "gift-83-living-manuscript-city.png",
+      "definition_payload": {
+        "slug": "living-manuscript-city",
+        "name": "Living Manuscript City",
+        "description": "City whose buildings are books & mics. Co-Host: Big poetic thanks. Never fabricate delivery.",
+        "price_minor": 480000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 80,
+      "slug": "eternal-rehearsal",
+      "slug_source": "eternal-rehearsal",
+      "name": "Eternal Rehearsal",
+      "price_minor": 500000,
+      "rarity": "Mythic",
+      "api_tier": "mythical",
+      "effect": "Looping beautiful rehearsal that never fails",
+      "cohost_hook": "We keep practicing together",
+      "description": "Looping beautiful rehearsal that never fails. Co-Host: We keep practicing together. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "mythical",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-84-eternal-rehearsal.png",
+      "concept_art_index": 84,
+      "concept_file": "gift-84-eternal-rehearsal.png",
+      "definition_payload": {
+        "slug": "eternal-rehearsal",
+        "name": "Eternal Rehearsal",
+        "description": "Looping beautiful rehearsal that never fails. Co-Host: We keep practicing together. Never fabricate delivery.",
+        "price_minor": 500000,
+        "creator_revenue_share_bps": 0,
+        "tier": "mythical",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "mythical",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 81,
+      "slug": "genesis-of-listening",
+      "slug_source": "genesis-of-listening",
+      "name": "Genesis of Listening",
+      "price_minor": 1000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Origin myth: silence becomes signal",
+      "cohost_hook": "Origin-story thanks",
+      "description": "Origin myth: silence becomes signal. Co-Host: Origin-story thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-85-genesis-of-listening.png",
+      "concept_art_index": 85,
+      "concept_file": "gift-85-genesis-of-listening.png",
+      "definition_payload": {
+        "slug": "genesis-of-listening",
+        "name": "Genesis of Listening",
+        "description": "Origin myth: silence becomes signal. Co-Host: Origin-story thanks. Never fabricate delivery.",
+        "price_minor": 1000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 82,
+      "slug": "covenant-of-craft",
+      "slug_source": "covenant-of-craft",
+      "name": "Covenant of Craft",
+      "price_minor": 1200000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Covenant scroll between room & creators",
+      "cohost_hook": "Serious gratitude",
+      "description": "Covenant scroll between room & creators. Co-Host: Serious gratitude. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-86-covenant-of-craft.png",
+      "concept_art_index": 86,
+      "concept_file": "gift-86-covenant-of-craft.png",
+      "definition_payload": {
+        "slug": "covenant-of-craft",
+        "name": "Covenant of Craft",
+        "description": "Covenant scroll between room & creators. Co-Host: Serious gratitude. Never fabricate delivery.",
+        "price_minor": 1200000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 83,
+      "slug": "codex-of-rooms",
+      "slug_source": "codex-of-rooms",
+      "name": "Codex of Rooms",
+      "price_minor": 1500000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Infinite rooms of past lives of the show",
+      "cohost_hook": "You funded another room",
+      "description": "Infinite rooms of past lives of the show. Co-Host: You funded another room. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-87-codex-of-rooms.png",
+      "concept_art_index": 87,
+      "concept_file": "gift-87-codex-of-rooms.png",
+      "definition_payload": {
+        "slug": "codex-of-rooms",
+        "name": "Codex of Rooms",
+        "description": "Infinite rooms of past lives of the show. Co-Host: You funded another room. Never fabricate delivery.",
+        "price_minor": 1500000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 84,
+      "slug": "architect-of-nights",
+      "slug_source": "architect-of-nights",
+      "name": "Architect of Nights",
+      "price_minor": 1800000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Architecture of night broadcasts",
+      "cohost_hook": "Names sender night-architect",
+      "description": "Architecture of night broadcasts. Co-Host: Names sender night-architect. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-88-architect-of-nights.png",
+      "concept_art_index": 88,
+      "concept_file": "gift-88-architect-of-nights.png",
+      "definition_payload": {
+        "slug": "architect-of-nights",
+        "name": "Architect of Nights",
+        "description": "Architecture of night broadcasts. Co-Host: Names sender night-architect. Never fabricate delivery.",
+        "price_minor": 1800000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 85,
+      "slug": "lumen-apocrypha",
+      "slug_source": "lumen-apocrypha",
+      "name": "Lumen Apocrypha",
+      "price_minor": 2000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Rare apocryphal pages of light",
+      "cohost_hook": "Rare page unlocked” (cosmetic)",
+      "description": "Rare apocryphal pages of light. Co-Host: Rare page unlocked” (cosmetic). Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-89-lumen-apocrypha.png",
+      "concept_art_index": 89,
+      "concept_file": "gift-89-lumen-apocrypha.png",
+      "definition_payload": {
+        "slug": "lumen-apocrypha",
+        "name": "Lumen Apocrypha",
+        "description": "Rare apocryphal pages of light. Co-Host: Rare page unlocked” (cosmetic). Never fabricate delivery.",
+        "price_minor": 2000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 86,
+      "slug": "symphony-unfinished",
+      "slug_source": "symphony-unfinished",
+      "name": "Symphony Unfinished",
+      "price_minor": 2200000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Unfinished symphony that invites the room",
+      "cohost_hook": "Leaves a musical question",
+      "description": "Unfinished symphony that invites the room. Co-Host: Leaves a musical question. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-90-symphony-unfinished.png",
+      "concept_art_index": 90,
+      "concept_file": "gift-90-symphony-unfinished.png",
+      "definition_payload": {
+        "slug": "symphony-unfinished",
+        "name": "Symphony Unfinished",
+        "description": "Unfinished symphony that invites the room. Co-Host: Leaves a musical question. Never fabricate delivery.",
+        "price_minor": 2200000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 87,
+      "slug": "throne-of-tools",
+      "slug_source": "throne-of-tools",
+      "name": "Throne of Tools",
+      "price_minor": 2500000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Throne built from creator tools",
+      "cohost_hook": "Anti-flex: craft throne",
+      "description": "Throne built from creator tools. Co-Host: Anti-flex: craft throne. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-91-throne-of-tools.png",
+      "concept_art_index": 91,
+      "concept_file": "gift-91-throne-of-tools.png",
+      "definition_payload": {
+        "slug": "throne-of-tools",
+        "name": "Throne of Tools",
+        "description": "Throne built from creator tools. Co-Host: Anti-flex: craft throne. Never fabricate delivery.",
+        "price_minor": 2500000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 88,
+      "slug": "world-without-cliche",
+      "slug_source": "world-without-cliche",
+      "name": "World Without Cliché",
+      "price_minor": 2800000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Literally shreds rose/rocket/car icons into stardust",
+      "cohost_hook": "Meta-jab at TikTok clichés",
+      "description": "Literally shreds rose/rocket/car icons into stardust. Co-Host: Meta-jab at TikTok clichés. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-07-world-without-cliche.png",
+      "concept_art_index": 7,
+      "concept_file": "gift-07-world-without-cliche.png",
+      "definition_payload": {
+        "slug": "world-without-cliche",
+        "name": "World Without Cliché",
+        "description": "Literally shreds rose/rocket/car icons into stardust. Co-Host: Meta-jab at TikTok clichés. Never fabricate delivery.",
+        "price_minor": 2800000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 89,
+      "slug": "oracle-of-honest-status",
+      "slug_source": "oracle-of-honest-status",
+      "name": "Oracle of Honest Status",
+      "price_minor": 3000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Temple of READY/PARTIAL/BLOCKED truths",
+      "cohost_hook": "Oracle speaks only honest status",
+      "description": "Temple of READY/PARTIAL/BLOCKED truths. Co-Host: Oracle speaks only honest status. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-92-oracle-honest-status.png",
+      "concept_art_index": 92,
+      "concept_file": "gift-92-oracle-honest-status.png",
+      "definition_payload": {
+        "slug": "oracle-of-honest-status",
+        "name": "Oracle of Honest Status",
+        "description": "Temple of READY/PARTIAL/BLOCKED truths. Co-Host: Oracle speaks only honest status. Never fabricate delivery.",
+        "price_minor": 3000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 90,
+      "slug": "first-audience",
+      "slug_source": "first-audience",
+      "name": "First Audience",
+      "price_minor": 3200000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Primordial audience of light silhouettes",
+      "cohost_hook": "Thanks as “first audience energy",
+      "description": "Primordial audience of light silhouettes. Co-Host: Thanks as “first audience energy. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-93-first-audience.png",
+      "concept_art_index": 93,
+      "concept_file": "gift-93-first-audience.png",
+      "definition_payload": {
+        "slug": "first-audience",
+        "name": "First Audience",
+        "description": "Primordial audience of light silhouettes. Co-Host: Thanks as “first audience energy. Never fabricate delivery.",
+        "price_minor": 3200000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 91,
+      "slug": "bridge-of-voices",
+      "slug_source": "bridge-of-voices",
+      "name": "Bridge of Voices",
+      "price_minor": 3500000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Bridge linking chat · AI · host",
+      "cohost_hook": "Celebrates the three-way bond",
+      "description": "Bridge linking chat · AI · host. Co-Host: Celebrates the three-way bond. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-15-bridge-of-voices.png",
+      "concept_art_index": 15,
+      "concept_file": "gift-15-bridge-of-voices.png",
+      "definition_payload": {
+        "slug": "bridge-of-voices",
+        "name": "Bridge of Voices",
+        "description": "Bridge linking chat · AI · host. Co-Host: Celebrates the three-way bond. Never fabricate delivery.",
+        "price_minor": 3500000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 92,
+      "slug": "garden-of-unsent-lines",
+      "slug_source": "garden-of-unsent-lines",
+      "name": "Garden of Unsent Lines",
+      "price_minor": 4000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Garden grows lines people almost said",
+      "cohost_hook": "Gentle, no leaking private text",
+      "description": "Garden grows lines people almost said. Co-Host: Gentle, no leaking private text. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-94-garden-unsent-lines.png",
+      "concept_art_index": 94,
+      "concept_file": "gift-94-garden-unsent-lines.png",
+      "definition_payload": {
+        "slug": "garden-of-unsent-lines",
+        "name": "Garden of Unsent Lines",
+        "description": "Garden grows lines people almost said. Co-Host: Gentle, no leaking private text. Never fabricate delivery.",
+        "price_minor": 4000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 93,
+      "slug": "clock-of-kind-hours",
+      "slug_source": "clock-of-kind-hours",
+      "name": "Clock of Kind Hours",
+      "price_minor": 4500000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Clock counts hours of kindness",
+      "cohost_hook": "Marks time gifted to the room",
+      "description": "Clock counts hours of kindness. Co-Host: Marks time gifted to the room. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-95-clock-of-kind-hours.png",
+      "concept_art_index": 95,
+      "concept_file": "gift-95-clock-of-kind-hours.png",
+      "definition_payload": {
+        "slug": "clock-of-kind-hours",
+        "name": "Clock of Kind Hours",
+        "description": "Clock counts hours of kindness. Co-Host: Marks time gifted to the room. Never fabricate delivery.",
+        "price_minor": 4500000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 94,
+      "slug": "ship-of-shared-shows",
+      "slug_source": "ship-of-shared-shows",
+      "name": "Ship of Shared Shows",
+      "price_minor": 5000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Ship that sails between streams",
+      "cohost_hook": "Voyage metaphor",
+      "description": "Ship that sails between streams. Co-Host: Voyage metaphor. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-96-ship-of-shared-shows.png",
+      "concept_art_index": 96,
+      "concept_file": "gift-96-ship-of-shared-shows.png",
+      "definition_payload": {
+        "slug": "ship-of-shared-shows",
+        "name": "Ship of Shared Shows",
+        "description": "Ship that sails between streams. Co-Host: Voyage metaphor. Never fabricate delivery.",
+        "price_minor": 5000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 95,
+      "slug": "cathedral-of-soft-power",
+      "slug_source": "cathedral-of-soft-power",
+      "name": "Cathedral of Soft Power",
+      "price_minor": 5500000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Soft-power cathedral (influence via care)",
+      "cohost_hook": "Power = care",
+      "description": "Soft-power cathedral (influence via care). Co-Host: Power = care. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-97-cathedral-soft-power.png",
+      "concept_art_index": 97,
+      "concept_file": "gift-97-cathedral-soft-power.png",
+      "definition_payload": {
+        "slug": "cathedral-of-soft-power",
+        "name": "Cathedral of Soft Power",
+        "description": "Soft-power cathedral (influence via care). Co-Host: Power = care. Never fabricate delivery.",
+        "price_minor": 5500000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 96,
+      "slug": "mirror-of-the-room",
+      "slug_source": "mirror-of-the-room",
+      "name": "Mirror of the Room",
+      "price_minor": 6000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Mirror shows the room’s best self",
+      "cohost_hook": "Reflects collective mood",
+      "description": "Mirror shows the room’s best self. Co-Host: Reflects collective mood. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-98-mirror-of-the-room.png",
+      "concept_art_index": 98,
+      "concept_file": "gift-98-mirror-of-the-room.png",
+      "definition_payload": {
+        "slug": "mirror-of-the-room",
+        "name": "Mirror of the Room",
+        "description": "Mirror shows the room’s best self. Co-Host: Reflects collective mood. Never fabricate delivery.",
+        "price_minor": 6000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 97,
+      "slug": "key-to-the-inner-studio",
+      "slug_source": "key-to-the-inner-studio",
+      "name": "Key to the Inner Studio",
+      "price_minor": 7000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Mythic key unlocks inner studio doors",
+      "cohost_hook": "Ultimate access shoutout",
+      "description": "Mythic key unlocks inner studio doors. Co-Host: Ultimate access shoutout. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-16-key-inner-studio.png",
+      "concept_art_index": 16,
+      "concept_file": "gift-16-key-inner-studio.png",
+      "definition_payload": {
+        "slug": "key-to-the-inner-studio",
+        "name": "Key to the Inner Studio",
+        "description": "Mythic key unlocks inner studio doors. Co-Host: Ultimate access shoutout. Never fabricate delivery.",
+        "price_minor": 7000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 98,
+      "slug": "myth-of-the-cohost",
+      "slug_source": "myth-of-the-cohost",
+      "name": "Myth of the Co-Host",
+      "price_minor": 8000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Origin myth animation of AI + human craft",
+      "cohost_hook": "Tells SYLORA cohost myth (short)",
+      "description": "Origin myth animation of AI + human craft. Co-Host: Tells SYLORA cohost myth (short). Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-99-myth-of-the-cohost.png",
+      "concept_art_index": 99,
+      "concept_file": "gift-99-myth-of-the-cohost.png",
+      "definition_payload": {
+        "slug": "myth-of-the-cohost",
+        "name": "Myth of the Co-Host",
+        "description": "Origin myth animation of AI + human craft. Co-Host: Tells SYLORA cohost myth (short). Never fabricate delivery.",
+        "price_minor": 8000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 99,
+      "slug": "seed-of-all-signals",
+      "slug_source": "seed-of-all-signals",
+      "name": "Seed of All Signals",
+      "price_minor": 9000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Primordial seed of every future gift signal",
+      "cohost_hook": "Plants platform-level thanks",
+      "description": "Primordial seed of every future gift signal. Co-Host: Plants platform-level thanks. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-100-seed-of-all-signals.png",
+      "concept_art_index": 100,
+      "concept_file": "gift-100-seed-of-all-signals.png",
+      "definition_payload": {
+        "slug": "seed-of-all-signals",
+        "name": "Seed of All Signals",
+        "description": "Primordial seed of every future gift signal. Co-Host: Plants platform-level thanks. Never fabricate delivery.",
+        "price_minor": 9000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    },
+    {
+      "index": 100,
+      "slug": "sylora-eternal-listening",
+      "slug_source": "sylora-eternal-listening",
+      "name": "SYLORA Eternal Listening",
+      "price_minor": 10000000,
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "effect": "Final form: endless listening aurora",
+      "cohost_hook": "Highest honor line + long bow",
+      "description": "Final form: endless listening aurora. Co-Host: Highest honor line + long bow. Never fabricate delivery.",
+      "creator_revenue_share_bps": 0,
+      "category_slug": "official-gift-library",
+      "search_tags": [
+        "official",
+        "sylora-original",
+        "ultra-premium",
+        "anti-cliche"
+      ],
+      "status": "SPEC_ONLY",
+      "ready": false,
+      "concept_poster": "artifacts/sylora-gift-concepts/gift-08-eternal-listening.png",
+      "concept_art_index": 8,
+      "concept_file": "gift-08-eternal-listening.png",
+      "definition_payload": {
+        "slug": "sylora-eternal-listening",
+        "name": "SYLORA Eternal Listening",
+        "description": "Final form: endless listening aurora. Co-Host: Highest honor line + long bow. Never fabricate delivery.",
+        "price_minor": 10000000,
+        "creator_revenue_share_bps": 0,
+        "tier": "ultra_premium",
+        "search_tags": [
+          "official",
+          "sylora-original",
+          "ultra-premium",
+          "anti-cliche"
+        ]
+      },
+      "asset_gaps": {
+        "glb": true,
+        "wav": true,
+        "runtime_manifest": true,
+        "blend_source": true,
+        "concept_poster_only": true
+      },
+      "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+    }
+  ]
+}

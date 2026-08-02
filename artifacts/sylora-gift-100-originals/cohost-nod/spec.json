@@ -1,0 +1,55 @@
+{
+  "index": 8,
+  "slug": "cohost-nod",
+  "name": "Co-Host Nod",
+  "price_minor": 60,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "effect": "Avatar does a precise polite nod",
+  "cohost_hook": "Syncs avatar reaction only",
+  "description": "Avatar does a precise polite nod. Co-Host: Syncs avatar reaction only. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-02-cohost-nod.png",
+  "definition_payload": {
+    "slug": "cohost-nod",
+    "name": "Co-Host Nod",
+    "description": "Avatar does a precise polite nod. Co-Host: Syncs avatar reaction only. Never fabricate delivery.",
+    "price_minor": 60,
+    "creator_revenue_share_bps": 0,
+    "tier": "rare",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "rare",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-02-cohost-nod.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

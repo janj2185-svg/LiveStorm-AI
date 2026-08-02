@@ -1,0 +1,55 @@
+{
+  "index": 90,
+  "slug": "first-audience",
+  "name": "First Audience",
+  "price_minor": 3200000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "effect": "Primordial audience of light silhouettes",
+  "cohost_hook": "Thanks as “first audience energy",
+  "description": "Primordial audience of light silhouettes. Co-Host: Thanks as “first audience energy. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-93-first-audience.png",
+  "definition_payload": {
+    "slug": "first-audience",
+    "name": "First Audience",
+    "description": "Primordial audience of light silhouettes. Co-Host: Thanks as “first audience energy. Never fabricate delivery.",
+    "price_minor": 3200000,
+    "creator_revenue_share_bps": 0,
+    "tier": "ultra_premium",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "ultra-premium",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-93-first-audience.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

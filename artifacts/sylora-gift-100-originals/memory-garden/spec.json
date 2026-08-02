@@ -1,0 +1,55 @@
+{
+  "index": 71,
+  "slug": "memory-garden",
+  "name": "Memory Garden",
+  "price_minor": 220000,
+  "rarity": "Mythic",
+  "api_tier": "mythical",
+  "effect": "Garden of session memories",
+  "cohost_hook": "Plants a named safe memory",
+  "description": "Garden of session memories. Co-Host: Plants a named safe memory. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-75-memory-garden.png",
+  "definition_payload": {
+    "slug": "memory-garden",
+    "name": "Memory Garden",
+    "description": "Garden of session memories. Co-Host: Plants a named safe memory. Never fabricate delivery.",
+    "price_minor": 220000,
+    "creator_revenue_share_bps": 0,
+    "tier": "mythical",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "mythical",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-75-memory-garden.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

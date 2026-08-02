@@ -1,0 +1,55 @@
+{
+  "index": 2,
+  "slug": "warm-margin",
+  "name": "Warm Margin",
+  "price_minor": 15,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "effect": "Page-margin glow underlays chat",
+  "cohost_hook": "Mentions sender by nickname",
+  "description": "Page-margin glow underlays chat. Co-Host: Mentions sender by nickname. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-17-warm-margin.png",
+  "definition_payload": {
+    "slug": "warm-margin",
+    "name": "Warm Margin",
+    "description": "Page-margin glow underlays chat. Co-Host: Mentions sender by nickname. Never fabricate delivery.",
+    "price_minor": 15,
+    "creator_revenue_share_bps": 0,
+    "tier": "rare",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "rare",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-17-warm-margin.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}

@@ -1,0 +1,55 @@
+{
+  "index": 18,
+  "slug": "kind-edit",
+  "name": "Kind Edit",
+  "price_minor": 200,
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "effect": "Red strikethrough becomes gold underline",
+  "cohost_hook": "Reframes a chat as kindness",
+  "description": "Red strikethrough becomes gold underline. Co-Host: Reframes a chat as kindness. Never fabricate delivery.",
+  "status": "SPEC_ONLY",
+  "ready": false,
+  "concept_poster": "artifacts/sylora-gift-concepts/gift-30-kind-edit.png",
+  "definition_payload": {
+    "slug": "kind-edit",
+    "name": "Kind Edit",
+    "description": "Red strikethrough becomes gold underline. Co-Host: Reframes a chat as kindness. Never fabricate delivery.",
+    "price_minor": 200,
+    "creator_revenue_share_bps": 0,
+    "tier": "rare",
+    "search_tags": [
+      "official",
+      "sylora-original",
+      "rare",
+      "anti-cliche"
+    ]
+  },
+  "asset_gaps": {
+    "glb": true,
+    "wav": true,
+    "runtime_manifest": true,
+    "blend_source": true,
+    "concept_poster_only": true
+  },
+  "paths": {
+    "concept_poster": "artifacts/sylora-gift-concepts/gift-30-kind-edit.png",
+    "glb": null,
+    "wav": null,
+    "runtime_manifest": null,
+    "blend": null
+  },
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_manifest": false,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false
+  },
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+}
