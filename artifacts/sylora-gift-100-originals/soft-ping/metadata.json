@@ -1,0 +1,20 @@
+{
+  "name": "Soft Ping",
+  "slug": "soft-ping",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 10,
+  "duration_ms": 3200,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "8ce08ee69aafae2f14e1920f87cc48534555ececc1471f4525f1e64e6364629b",
+    "audio": "a5711144bb5507fb012a6c9edd3eb13bcdd9b948ac50e1b3488534967f8256d2",
+    "poster": "5193b9c43ef5697ca2d4ffe2436f5d1cc821f7f94a8687473022e6c1fbd56d0a"
+  },
+  "bytes": {
+    "glb": 4060,
+    "audio": 564524,
+    "poster": 1205990,
+    "preview_mp4": 271604
+  }
+}

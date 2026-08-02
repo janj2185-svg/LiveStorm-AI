@@ -8,7 +8,7 @@
   "effect": "Literally shreds rose/rocket/car icons into stardust",
   "cohost_hook": "Meta-jab at TikTok clichés",
   "description": "Literally shreds rose/rocket/car icons into stardust. Co-Host: Meta-jab at TikTok clichés. Never fabricate delivery.",
-  "status": "SPEC_ONLY",
+  "status": "ASSETS_BUILT_NOT_READY",
   "ready": false,
   "concept_poster": "artifacts/sylora-gift-concepts/gift-07-world-without-cliche.png",
   "definition_payload": {
@@ -26,30 +26,55 @@
     ]
   },
   "asset_gaps": {
-    "glb": true,
-    "wav": true,
-    "runtime_manifest": true,
+    "glb": false,
+    "wav": false,
+    "runtime_manifest": false,
     "blend_source": true,
-    "concept_poster_only": true
+    "concept_poster_only": false,
+    "blender_art_pass": true,
+    "gift_studio_publish": true,
+    "e2e_send_ws": true
   },
   "paths": {
     "concept_poster": "artifacts/sylora-gift-concepts/gift-07-world-without-cliche.png",
-    "glb": null,
-    "wav": null,
-    "runtime_manifest": null,
+    "poster": "poster.png",
+    "glb": "model.glb",
+    "wav": "sound/main.wav",
+    "runtime_manifest": "runtime-manifest.json",
+    "preview_mp4": "preview.mp4",
     "blend": null
   },
   "ready_checklist": {
-    "real_3d_model": false,
-    "real_animation": false,
-    "real_vfx": false,
-    "real_sound": false,
-    "runtime_manifest": false,
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_manifest": true,
     "gift_studio_publish": false,
     "catalog_runtime": false,
     "wallet_send": false,
     "websocket_delivery": false,
-    "device_performance": false
+    "device_performance": false,
+    "video_proof": true,
+    "performance_check": true,
+    "runtime_preview": false,
+    "sylora_integration": false
   },
-  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof.",
+  "duration_ms": 11000,
+  "form_family": "shatter_icons",
+  "vfx_family": "stardust",
+  "asset_ids": {
+    "glb": "fd015719-dc70-523a-b92a-e37630067f5c",
+    "audio": "c81acfa9-932c-518d-8b92-236f13f428d5",
+    "poster": "d19715f8-7e82-5d1c-9268-441fa1ad3f18",
+    "blend": "14d34193-0ee3-50da-8fdc-0e6a3487b555",
+    "shader": "9a2e9ae2-0768-5873-bc26-e9c73c732634"
+  },
+  "known_limitations": [
+    "Procedural GLB (no Blender art pass / no .blend source).",
+    "Preview is still-image + audio, not EEVEE cinematic render.",
+    "Particle pack is a JSON proxy, not authored VFX.",
+    "Runtime preview, Gift Studio publish, wallet send, and WS delivery not verified."
+  ]
 }

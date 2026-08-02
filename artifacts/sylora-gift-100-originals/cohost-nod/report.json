@@ -1,0 +1,39 @@
+{
+  "slug": "cohost-nod",
+  "steps": {
+    "poster": true,
+    "audio": true,
+    "glb": true,
+    "blend_file": false,
+    "preview_video": true
+  },
+  "ready_checklist": {
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_manifest": true,
+    "gift_studio_publish": false,
+    "catalog_runtime": false,
+    "wallet_send": false,
+    "websocket_delivery": false,
+    "device_performance": false,
+    "video_proof": true,
+    "performance_check": true,
+    "runtime_preview": false,
+    "sylora_integration": false
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "preview_note": "ok",
+  "performance": {
+    "method": "asset-budget-proxy",
+    "within_download_budget": true,
+    "fps_result": null
+  },
+  "known_limitations": [
+    "Procedural GLB (no Blender art pass / no .blend source).",
+    "Preview is still-image + audio, not EEVEE cinematic render.",
+    "Particle pack is a JSON proxy, not authored VFX.",
+    "Runtime preview, Gift Studio publish, wallet send, and WS delivery not verified."
+  ]
+}

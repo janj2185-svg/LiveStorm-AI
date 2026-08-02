@@ -1,0 +1,20 @@
+{
+  "name": "AI Listening Room",
+  "slug": "ai-listening-room",
+  "rarity": "Legendary",
+  "api_tier": "legendary",
+  "price_minor": 5000,
+  "duration_ms": 7000,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "ed346da8dcbcc8f7f1a2cefee6e6e825d4fef2146e2c48533948bf4d92dec50a",
+    "audio": "42aa8a0d5b49f7c090c196435b115847308ea966e6aa79e428f5593b962523b0",
+    "poster": "4dd14dd4163e93ec7ba4360513dd773a3ed8ad7dae3dc56053f06bd09de527e9"
+  },
+  "bytes": {
+    "glb": 3740,
+    "audio": 1234844,
+    "poster": 1693399,
+    "preview_mp4": 388897
+  }
+}

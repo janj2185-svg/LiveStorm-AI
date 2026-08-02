@@ -8,7 +8,7 @@
   "effect": "Tiny lumen pulse at the corner of the stage",
   "cohost_hook": "Soft “got your ping” nod",
   "description": "Tiny lumen pulse at the corner of the stage. Co-Host: Soft “got your ping” nod. Never fabricate delivery.",
-  "status": "SPEC_ONLY",
+  "status": "ASSETS_BUILT_NOT_READY",
   "ready": false,
   "concept_poster": "artifacts/sylora-gift-concepts/gift-01-soft-ping.png",
   "definition_payload": {
@@ -26,30 +26,55 @@
     ]
   },
   "asset_gaps": {
-    "glb": true,
-    "wav": true,
-    "runtime_manifest": true,
+    "glb": false,
+    "wav": false,
+    "runtime_manifest": false,
     "blend_source": true,
-    "concept_poster_only": true
+    "concept_poster_only": false,
+    "blender_art_pass": true,
+    "gift_studio_publish": true,
+    "e2e_send_ws": true
   },
   "paths": {
     "concept_poster": "artifacts/sylora-gift-concepts/gift-01-soft-ping.png",
-    "glb": null,
-    "wav": null,
-    "runtime_manifest": null,
+    "poster": "poster.png",
+    "glb": "model.glb",
+    "wav": "sound/main.wav",
+    "runtime_manifest": "runtime-manifest.json",
+    "preview_mp4": "preview.mp4",
     "blend": null
   },
   "ready_checklist": {
-    "real_3d_model": false,
-    "real_animation": false,
-    "real_vfx": false,
-    "real_sound": false,
-    "runtime_manifest": false,
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_manifest": true,
     "gift_studio_publish": false,
     "catalog_runtime": false,
     "wallet_send": false,
     "websocket_delivery": false,
-    "device_performance": false
+    "device_performance": false,
+    "video_proof": true,
+    "performance_check": true,
+    "runtime_preview": false,
+    "sylora_integration": false
   },
-  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof.",
+  "duration_ms": 3200,
+  "form_family": "pulse_orb",
+  "vfx_family": "ui_glow",
+  "asset_ids": {
+    "glb": "06bc1d62-5c8d-5a2e-bd45-75f13bf8c235",
+    "audio": "6d22edc5-f94a-5c27-8911-85bfe382c304",
+    "poster": "a5d4d228-d3d8-55cb-9a0e-04db2cd80a03",
+    "blend": "16da0085-795c-5343-b49d-70985f666b49",
+    "shader": "4a9e0ed2-f937-5648-a32a-7cd11b9c0894"
+  },
+  "known_limitations": [
+    "Procedural GLB (no Blender art pass / no .blend source).",
+    "Preview is still-image + audio, not EEVEE cinematic render.",
+    "Particle pack is a JSON proxy, not authored VFX.",
+    "Runtime preview, Gift Studio publish, wallet send, and WS delivery not verified."
+  ]
 }

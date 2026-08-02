@@ -1,0 +1,20 @@
+{
+  "name": "Reply Ribbon",
+  "slug": "reply-ribbon",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 120,
+  "duration_ms": 3200,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "0c83abc9bb0c040fe08419ed430de98abc8df48371382bf1b0d4dc5f743ef379",
+    "audio": "cb042c2885826c17ca0f3b69f04c9ec7a9fc528337fd4ee0c8c803200bc5d868",
+    "poster": "b62d5fb6905a4ab8fd6649a19ed20a04a0e9d14b375c0f6eaf9b55c3ad82b03f"
+  },
+  "bytes": {
+    "glb": 3188,
+    "audio": 564524,
+    "poster": 1432357,
+    "preview_mp4": 265768
+  }
+}

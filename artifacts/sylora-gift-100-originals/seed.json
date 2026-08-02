@@ -23,7 +23,7 @@
         "rare",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-01-soft-ping.png",
       "concept_art_index": 1,
@@ -352,7 +352,7 @@
         "rare",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-02-cohost-nod.png",
       "concept_art_index": 2,
@@ -587,7 +587,7 @@
         "rare",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-03-reply-ribbon.png",
       "concept_art_index": 3,
@@ -963,7 +963,7 @@
         "epic",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-04-open-rehearsal.png",
       "concept_art_index": 4,
@@ -1480,7 +1480,7 @@
         "epic",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-05-memory-pin.png",
       "concept_art_index": 5,
@@ -1903,7 +1903,7 @@
         "legendary",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-06-ai-listening-room.png",
       "concept_art_index": 6,
@@ -4112,7 +4112,7 @@
         "ultra-premium",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-07-world-without-cliche.png",
       "concept_art_index": 7,
@@ -4676,7 +4676,7 @@
         "ultra-premium",
         "anti-cliche"
       ],
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "ready": false,
       "concept_poster": "artifacts/sylora-gift-concepts/gift-08-eternal-listening.png",
       "concept_art_index": 8,
@@ -4704,5 +4704,6 @@
       },
       "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
     }
-  ]
+  ],
+  "assets_built_not_ready_count": 8
 }

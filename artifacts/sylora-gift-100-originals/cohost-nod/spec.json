@@ -8,7 +8,7 @@
   "effect": "Avatar does a precise polite nod",
   "cohost_hook": "Syncs avatar reaction only",
   "description": "Avatar does a precise polite nod. Co-Host: Syncs avatar reaction only. Never fabricate delivery.",
-  "status": "SPEC_ONLY",
+  "status": "ASSETS_BUILT_NOT_READY",
   "ready": false,
   "concept_poster": "artifacts/sylora-gift-concepts/gift-02-cohost-nod.png",
   "definition_payload": {
@@ -26,30 +26,55 @@
     ]
   },
   "asset_gaps": {
-    "glb": true,
-    "wav": true,
-    "runtime_manifest": true,
+    "glb": false,
+    "wav": false,
+    "runtime_manifest": false,
     "blend_source": true,
-    "concept_poster_only": true
+    "concept_poster_only": false,
+    "blender_art_pass": true,
+    "gift_studio_publish": true,
+    "e2e_send_ws": true
   },
   "paths": {
     "concept_poster": "artifacts/sylora-gift-concepts/gift-02-cohost-nod.png",
-    "glb": null,
-    "wav": null,
-    "runtime_manifest": null,
+    "poster": "poster.png",
+    "glb": "model.glb",
+    "wav": "sound/main.wav",
+    "runtime_manifest": "runtime-manifest.json",
+    "preview_mp4": "preview.mp4",
     "blend": null
   },
   "ready_checklist": {
-    "real_3d_model": false,
-    "real_animation": false,
-    "real_vfx": false,
-    "real_sound": false,
-    "runtime_manifest": false,
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_manifest": true,
     "gift_studio_publish": false,
     "catalog_runtime": false,
     "wallet_send": false,
     "websocket_delivery": false,
-    "device_performance": false
+    "device_performance": false,
+    "video_proof": true,
+    "performance_check": true,
+    "runtime_preview": false,
+    "sylora_integration": false
   },
-  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof.",
+  "duration_ms": 3200,
+  "form_family": "avatar_cue",
+  "vfx_family": "soft_nod",
+  "asset_ids": {
+    "glb": "a6c66d99-716a-5574-900f-54ae2a4363ba",
+    "audio": "6f93d31b-08b4-55bc-971d-4342a27adb0b",
+    "poster": "df3a3683-b4f8-51b2-8de8-c2be015d8896",
+    "blend": "6f6bb055-498f-5e8e-a994-1263ddf42abd",
+    "shader": "afcd6e07-3984-5c95-8a0b-bb5623ccf515"
+  },
+  "known_limitations": [
+    "Procedural GLB (no Blender art pass / no .blend source).",
+    "Preview is still-image + audio, not EEVEE cinematic render.",
+    "Particle pack is a JSON proxy, not authored VFX.",
+    "Runtime preview, Gift Studio publish, wallet send, and WS delivery not verified."
+  ]
 }

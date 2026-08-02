@@ -12,7 +12,7 @@
     "Divine": 20
   },
   "ready_count": 0,
-  "spec_only_count": 100,
+  "spec_only_count": 92,
   "policy": "READY only after real GLB/WAV, Gift Studio publish, catalog runtime, wallet send, WebSocket delivery, and device performance checks. Concept posters alone never make a gift READY. Do not insert fake API catalog rows.",
   "parallel_library_note": "Distinct from artifacts/gift-library fantasy Official Gift Library. Decide product catalog ownership before bulk-publishing either set.",
   "gifts": [
@@ -23,7 +23,7 @@
       "rarity": "Rare",
       "api_tier": "rare",
       "price_minor": 10,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-01-soft-ping.png"
     },
     {
@@ -93,7 +93,7 @@
       "rarity": "Rare",
       "api_tier": "rare",
       "price_minor": 60,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-02-cohost-nod.png"
     },
     {
@@ -143,7 +143,7 @@
       "rarity": "Rare",
       "api_tier": "rare",
       "price_minor": 120,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-03-reply-ribbon.png"
     },
     {
@@ -223,7 +223,7 @@
       "rarity": "Epic",
       "api_tier": "epic",
       "price_minor": 500,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-04-open-rehearsal.png"
     },
     {
@@ -333,7 +333,7 @@
       "rarity": "Epic",
       "api_tier": "epic",
       "price_minor": 1600,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-05-memory-pin.png"
     },
     {
@@ -423,7 +423,7 @@
       "rarity": "Legendary",
       "api_tier": "legendary",
       "price_minor": 5000,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-06-ai-listening-room.png"
     },
     {
@@ -893,7 +893,7 @@
       "rarity": "Divine",
       "api_tier": "ultra_premium",
       "price_minor": 2800000,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-07-world-without-cliche.png"
     },
     {
@@ -1013,8 +1013,20 @@
       "rarity": "Divine",
       "api_tier": "ultra_premium",
       "price_minor": 10000000,
-      "status": "SPEC_ONLY",
+      "status": "ASSETS_BUILT_NOT_READY",
       "concept_file": "gift-08-eternal-listening.png"
     }
+  ],
+  "assets_built_not_ready_count": 8,
+  "partial_count": 0,
+  "priority_batch": [
+    "soft-ping",
+    "cohost-nod",
+    "reply-ribbon",
+    "open-rehearsal",
+    "memory-pin",
+    "ai-listening-room",
+    "world-without-cliche",
+    "sylora-eternal-listening"
   ]
 }

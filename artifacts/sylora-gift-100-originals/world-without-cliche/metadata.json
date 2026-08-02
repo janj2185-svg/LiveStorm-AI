@@ -1,0 +1,20 @@
+{
+  "name": "World Without Clich\u00e9",
+  "slug": "world-without-cliche",
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "price_minor": 2800000,
+  "duration_ms": 11000,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "7cd43159f5a670c64feebe7409840d6b0c90fe0feaa04626fb0465a56525a386",
+    "audio": "ae01f806e8378dda5e1f6b130f7f572e5c10ccf83be2200ebd87a312e4c1e629",
+    "poster": "a6fae4405dd89bd37dc90629599239153bb113d8ea6864500ae3232a47f2814f"
+  },
+  "bytes": {
+    "glb": 3748,
+    "audio": 1940444,
+    "poster": 1666578,
+    "preview_mp4": 794880
+  }
+}

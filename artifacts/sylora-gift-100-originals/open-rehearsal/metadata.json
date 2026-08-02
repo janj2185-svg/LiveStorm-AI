@@ -1,0 +1,20 @@
+{
+  "name": "Open Rehearsal",
+  "slug": "open-rehearsal",
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "price_minor": 500,
+  "duration_ms": 5200,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "829ac260e951a1b6c1f20c623302a2fc7dade9caf49bcc09f15ce293e848f131",
+    "audio": "1096644a7e69068f47ae0496d00af3aa05ff6c1fa7dfb2634664e5e814921083",
+    "poster": "7e767fbd38dba88765386ac282a641fd64c242d660967f2d88df57268f7b578b"
+  },
+  "bytes": {
+    "glb": 3696,
+    "audio": 917324,
+    "poster": 1522137,
+    "preview_mp4": 327550
+  }
+}

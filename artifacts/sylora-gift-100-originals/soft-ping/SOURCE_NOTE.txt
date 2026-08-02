@@ -1,0 +1,2 @@
+Procedural GLB via write_minimal_glb.py. No Blender .blend in this environment.
+Replace model.glb + add scene.blend before claiming art-complete.

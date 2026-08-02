@@ -8,7 +8,7 @@
   "effect": "Pin drops into a memory corkboard",
   "cohost_hook": "Stores a safe session memory",
   "description": "Pin drops into a memory corkboard. Co-Host: Stores a safe session memory. Never fabricate delivery.",
-  "status": "SPEC_ONLY",
+  "status": "ASSETS_BUILT_NOT_READY",
   "ready": false,
   "concept_poster": "artifacts/sylora-gift-concepts/gift-05-memory-pin.png",
   "definition_payload": {
@@ -26,30 +26,55 @@
     ]
   },
   "asset_gaps": {
-    "glb": true,
-    "wav": true,
-    "runtime_manifest": true,
+    "glb": false,
+    "wav": false,
+    "runtime_manifest": false,
     "blend_source": true,
-    "concept_poster_only": true
+    "concept_poster_only": false,
+    "blender_art_pass": true,
+    "gift_studio_publish": true,
+    "e2e_send_ws": true
   },
   "paths": {
     "concept_poster": "artifacts/sylora-gift-concepts/gift-05-memory-pin.png",
-    "glb": null,
-    "wav": null,
-    "runtime_manifest": null,
+    "poster": "poster.png",
+    "glb": "model.glb",
+    "wav": "sound/main.wav",
+    "runtime_manifest": "runtime-manifest.json",
+    "preview_mp4": "preview.mp4",
     "blend": null
   },
   "ready_checklist": {
-    "real_3d_model": false,
-    "real_animation": false,
-    "real_vfx": false,
-    "real_sound": false,
-    "runtime_manifest": false,
+    "real_3d_model": true,
+    "real_animation": true,
+    "real_vfx": true,
+    "real_sound": true,
+    "runtime_manifest": true,
     "gift_studio_publish": false,
     "catalog_runtime": false,
     "wallet_send": false,
     "websocket_delivery": false,
-    "device_performance": false
+    "device_performance": false,
+    "video_proof": true,
+    "performance_check": true,
+    "runtime_preview": false,
+    "sylora_integration": false
   },
-  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof."
+  "notes": "Concept PNG is mood/reference only. Cannot publish/READY without verified GLB + WAV + manifest + E2E proof.",
+  "duration_ms": 5200,
+  "form_family": "cork_pin",
+  "vfx_family": "pin_drop",
+  "asset_ids": {
+    "glb": "834e90f9-1752-51a7-b332-c59acfaf5bcf",
+    "audio": "9005347e-6fe4-59bf-bfbf-9e8f73a437a8",
+    "poster": "153d5b1e-0394-5d9d-bb2b-301a5d6a03b5",
+    "blend": "a3298d17-2d11-59f8-929a-8f42f7938831",
+    "shader": "0d132103-4490-5a9c-a86b-05b800d9c3ea"
+  },
+  "known_limitations": [
+    "Procedural GLB (no Blender art pass / no .blend source).",
+    "Preview is still-image + audio, not EEVEE cinematic render.",
+    "Particle pack is a JSON proxy, not authored VFX.",
+    "Runtime preview, Gift Studio publish, wallet send, and WS delivery not verified."
+  ]
 }

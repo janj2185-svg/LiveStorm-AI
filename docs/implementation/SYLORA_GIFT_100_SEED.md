@@ -24,6 +24,28 @@ python3 scripts/gift-library/export_sylora_100_originals_seed.py
 
 ## Draft definitions (when API is up)
 
+```bash
+# dry-run payloads
+python3 scripts/gift-library/draft_sylora_100_definitions.py
+
+# create drafts only (never publishes / never READY)
+export SYLORA_API_BASE=http://127.0.0.1:8000
+export SYLORA_AUTHOR_TOKEN=…
+export SYLORA_GIFT_CATEGORY_ID=…   # official-gift-library
+python3 scripts/gift-library/draft_sylora_100_definitions.py --execute
+```
+
+## Priority asset build
+
+```bash
+python3 scripts/gift-library/build_sylora_100_priority.py
+```
+
+Produces procedural GLB + WAV + poster + preview for the launch batch.  
+Status: **ASSETS_BUILT_NOT_READY** (see `SYLORA_GIFT_100_PRIORITY_BUILD.md`). Ready remains **0**.
+
+## Draft definitions (when API is up)
+
 1. Ensure category `official-gift-library` exists.
 2. For each gift, `POST /v1/gifts/author/definitions` using `definition_payload`
    plus `category_id` from step 1.

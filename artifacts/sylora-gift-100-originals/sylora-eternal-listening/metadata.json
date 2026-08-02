@@ -1,0 +1,20 @@
+{
+  "name": "SYLORA Eternal Listening",
+  "slug": "sylora-eternal-listening",
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "price_minor": 10000000,
+  "duration_ms": 11000,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "bc52b55ad48799229aa3eea58da2b79baffc9587760c6157665d86b4e77152ab",
+    "audio": "09dc0372be9255adaf7a0a6dd8324af218a66c74481e5e88cb88b57b3d82a75f",
+    "poster": "58d68201ae8e9f704f61b80cbfce62ffb7de94d29512de972ce176ee9de2b2c6"
+  },
+  "bytes": {
+    "glb": 3488,
+    "audio": 1940444,
+    "poster": 1623945,
+    "preview_mp4": 744667
+  }
+}

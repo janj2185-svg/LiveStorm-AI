@@ -1,0 +1,20 @@
+{
+  "name": "Co-Host Nod",
+  "slug": "cohost-nod",
+  "rarity": "Rare",
+  "api_tier": "rare",
+  "price_minor": 60,
+  "duration_ms": 3200,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "ab1efb5f72c3d4128449c400500d34460cf3294950e16227a8f73c7b5cb5107c",
+    "audio": "0d63b0b831dd13e2a550e99860a5e8cd1ebf7b7166968f9ef5aab8aa17ef8b12",
+    "poster": "5ebd367bf0e4a1243fbfb23ad7341afd3aad5867c6284488ea66b8858f5f0c05"
+  },
+  "bytes": {
+    "glb": 4388,
+    "audio": 564524,
+    "poster": 1305859,
+    "preview_mp4": 231686
+  }
+}

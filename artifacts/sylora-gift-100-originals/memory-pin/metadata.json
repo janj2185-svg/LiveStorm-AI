@@ -1,0 +1,20 @@
+{
+  "name": "Memory Pin",
+  "slug": "memory-pin",
+  "rarity": "Epic",
+  "api_tier": "epic",
+  "price_minor": 1600,
+  "duration_ms": 5200,
+  "build_pipeline": "sylora-100-priority-minimal",
+  "sha256": {
+    "glb": "fe1b57b35be48ab38cf5410ad0e432cf807e1686a8de5e2a0c74803661566443",
+    "audio": "85ecc643bbba41bee103b58398e66229bba25fff2c9d4ef9fb09af50c13d826f",
+    "poster": "9af4b5fac795e8b39568be6a583e7ca0b4c8d7877ea907a50c515e1141d3445a"
+  },
+  "bytes": {
+    "glb": 5064,
+    "audio": 917324,
+    "poster": 1396875,
+    "preview_mp4": 333023
+  }
+}
