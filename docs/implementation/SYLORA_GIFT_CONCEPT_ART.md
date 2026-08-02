@@ -164,5 +164,7 @@ Full gallery of all 100 posters lives in `artifacts/sylora-gift-concepts/`. Belo
 
 ## Next steps
 
-1. Hand posters to 3D artist → produce GLB + WAV per gift.
-2. Publish via Gift Studio → mark READY in catalog.
+1. Regenerate seed anytime: `python3 scripts/gift-library/export_sylora_100_originals_seed.py` → `artifacts/sylora-gift-100-originals/` (SPEC_ONLY).
+2. Hand posters to 3D artist → produce GLB + WAV per gift.
+3. Publish via Gift Studio → mark READY only after send/WS proof.
+4. Do not mark READY from concept posters alone.
