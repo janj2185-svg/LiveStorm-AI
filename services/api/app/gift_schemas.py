@@ -195,6 +195,8 @@ class RuntimeManifest(StrictSchema):
     renderer_targets: list[Literal["threejs", "flutter", "lottie", "unity", "unreal"]] = Field(
         min_length=1, max_length=5
     )
+    animation_tier: Literal["starter", "standard", "premium", "hero"] | None = None
+    particle_hints: dict[str, str | int | bool] = Field(default_factory=dict, max_length=20)
     source_metadata: BlenderSourceMetadata | None = None
     duration_ms: int = Field(gt=0, le=120_000, strict=True)
     assets: list[AssetReference] = Field(min_length=1, max_length=200)
@@ -612,3 +614,18 @@ class GiftEventResponse(StrictSchema):
 class GiftEventPage(StrictSchema):
     items: list[GiftEventResponse]
     next_cursor: str | None
+
+
+class GiftRankingItem(StrictSchema):
+    rank: int
+    sender_user_id: uuid.UUID
+    display_name: str | None
+    gift_count: int
+    total_spent_minor: int
+
+
+class GiftRankingResponse(StrictSchema):
+    scope: Literal["global_daily", "live_session"]
+    live_session_id: uuid.UUID | None = None
+    generated_at: datetime
+    items: list[GiftRankingItem]

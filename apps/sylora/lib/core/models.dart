@@ -419,6 +419,61 @@ final class GiftEventModel {
 }
 
 @immutable
+final class GiftRankingItemModel {
+  const GiftRankingItemModel({
+    required this.rank,
+    required this.senderUserId,
+    required this.giftCount,
+    required this.totalSpentMinor,
+    this.displayName,
+  });
+
+  factory GiftRankingItemModel.fromJson(JsonObject json) =>
+      GiftRankingItemModel(
+        rank: requireInt(json, 'rank'),
+        senderUserId: requireString(json, 'sender_user_id'),
+        displayName: optionalString(json, 'display_name'),
+        giftCount: requireInt(json, 'gift_count'),
+        totalSpentMinor: requireInt(json, 'total_spent_minor'),
+      );
+
+  final int rank;
+  final String senderUserId;
+  final String? displayName;
+  final int giftCount;
+  final int totalSpentMinor;
+}
+
+@immutable
+final class GiftRankingResponseModel {
+  const GiftRankingResponseModel({
+    required this.scope,
+    required this.generatedAt,
+    required this.items,
+    this.liveSessionId,
+  });
+
+  factory GiftRankingResponseModel.fromJson(JsonObject json) =>
+      GiftRankingResponseModel(
+        scope: requireString(json, 'scope'),
+        liveSessionId: optionalString(json, 'live_session_id'),
+        generatedAt: requireDateTime(json, 'generated_at'),
+        items: requireList(json, 'items')
+            .map(
+              (value) => GiftRankingItemModel.fromJson(
+                requireObject(value, 'ranking item'),
+              ),
+            )
+            .toList(growable: false),
+      );
+
+  final String scope;
+  final String? liveSessionId;
+  final DateTime generatedAt;
+  final List<GiftRankingItemModel> items;
+}
+
+@immutable
 final class AiSettingsModel {
   const AiSettingsModel({
     required this.consentGranted,

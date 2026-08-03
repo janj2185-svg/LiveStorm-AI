@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.errors import APIError
@@ -31,10 +31,17 @@ from app.gift_models import (
 from app.gift_schemas import (
     CatalogGiftResponse,
     GiftEventResponse,
+    GiftRankingItem,
     RuntimeManifest,
 )
+from app.live_models import LiveSession, LiveSessionState
+from app.models import Profile
 from app.security import utcnow
 from app.social_service import encode_cursor
+
+SAME_GIFT_COMBO_WINDOW_SECONDS = 15
+SAME_GIFT_COMBO_MAX_MULTIPLIER = 10
+LIVE_RANKING_EVENT_SCAN_LIMIT = 5_000
 
 
 def aware(value: datetime) -> datetime:
@@ -323,6 +330,181 @@ async def creator_monetization(db: AsyncSession, user_id: uuid.UUID) -> CreatorM
     return setting
 
 
+async def active_live_session_ids(db: AsyncSession, owner_user_id: uuid.UUID) -> list[uuid.UUID]:
+    return list(
+        (
+            await db.scalars(
+                select(LiveSession.id)
+                .where(
+                    LiveSession.owner_user_id == owner_user_id,
+                    LiveSession.state == LiveSessionState.live,
+                )
+                .order_by(LiveSession.started_at.desc(), LiveSession.id.desc())
+            )
+        ).all()
+    )
+
+
+async def same_gift_combo_metadata(
+    db: AsyncSession,
+    gift_send: GiftSend,
+    *,
+    delivered_at: datetime,
+) -> tuple[dict[str, str | int | bool | list[str]], GiftCombination | None]:
+    window_start = delivered_at - timedelta(seconds=SAME_GIFT_COMBO_WINDOW_SECONDS)
+    prior_sends = list(
+        (
+            await db.scalars(
+                select(GiftSend)
+                .where(
+                    GiftSend.sender_user_id == gift_send.sender_user_id,
+                    GiftSend.recipient_user_id == gift_send.recipient_user_id,
+                    GiftSend.gift_definition_id == gift_send.gift_definition_id,
+                    GiftSend.id != gift_send.id,
+                    GiftSend.status == GiftSendStatus.delivered,
+                    GiftSend.delivered_at.is_not(None),
+                    GiftSend.delivered_at >= window_start,
+                )
+                .order_by(GiftSend.delivered_at.asc(), GiftSend.id.asc())
+                .limit(SAME_GIFT_COMBO_MAX_MULTIPLIER - 1)
+            )
+        ).all()
+    )
+    combo_count = len(prior_sends) + 1
+    combo_multiplier = min(combo_count, SAME_GIFT_COMBO_MAX_MULTIPLIER)
+    payload: dict[str, str | int | bool | list[str]] = {
+        "combo_count": combo_count,
+        "combo_multiplier": combo_multiplier,
+        "combo_window_seconds": SAME_GIFT_COMBO_WINDOW_SECONDS,
+        "combo_active": combo_count > 1,
+    }
+    if combo_count == 1:
+        return payload, None
+
+    send_ids = [*(str(item.id) for item in prior_sends), str(gift_send.id)]
+    payload.update(
+        {
+            "combo_kind": "same_gift",
+            "combo_gift_send_ids": send_ids,
+        }
+    )
+    combination = GiftCombination(
+        recipient_user_id=gift_send.recipient_user_id,
+        combination_key=f"same_gift:{gift_send.gift_definition_id}",
+        gift_send_ids=send_ids,
+    )
+    db.add(combination)
+    await db.flush()
+    return payload, combination
+
+
+async def gift_sender_rankings(
+    db: AsyncSession,
+    *,
+    scope: str,
+    limit: int,
+    live_session: LiveSession | None = None,
+) -> list[GiftRankingItem]:
+    if scope == "global_daily":
+        day_start = utcnow().astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        gift_count = func.count(GiftSend.id)
+        total_spent = func.coalesce(func.sum(GiftSend.price_minor), 0)
+        rows = list(
+            (
+                await db.execute(
+                    select(
+                        GiftSend.sender_user_id,
+                        Profile.display_name,
+                        gift_count.label("gift_count"),
+                        total_spent.label("total_spent_minor"),
+                    )
+                    .outerjoin(Profile, Profile.user_id == GiftSend.sender_user_id)
+                    .where(
+                        GiftSend.status == GiftSendStatus.delivered,
+                        GiftSend.delivered_at >= day_start,
+                    )
+                    .group_by(GiftSend.sender_user_id, Profile.display_name)
+                    .order_by(gift_count.desc(), total_spent.desc(), GiftSend.sender_user_id)
+                    .limit(limit)
+                )
+            ).all()
+        )
+        return [
+            GiftRankingItem(
+                rank=index,
+                sender_user_id=row.sender_user_id,
+                display_name=row.display_name,
+                gift_count=int(row.gift_count or 0),
+                total_spent_minor=int(row.total_spent_minor or 0),
+            )
+            for index, row in enumerate(rows, start=1)
+        ]
+
+    if scope != "live_session" or live_session is None:
+        return []
+
+    session_id = str(live_session.id)
+    records = list(
+        (
+            await db.scalars(
+                select(GiftEvent)
+                .where(
+                    GiftEvent.user_id == live_session.owner_user_id,
+                    GiftEvent.event_type == "gift_received",
+                )
+                .order_by(GiftEvent.created_at.desc(), GiftEvent.id.desc())
+                .limit(LIVE_RANKING_EVENT_SCAN_LIMIT)
+            )
+        ).all()
+    )
+    send_ids: list[uuid.UUID] = []
+    for record in records:
+        live_session_ids = record.event_payload.get("live_session_ids")
+        if not isinstance(live_session_ids, list) or session_id not in live_session_ids:
+            continue
+        if record.gift_send_id is not None:
+            send_ids.append(record.gift_send_id)
+    if not send_ids:
+        return []
+
+    sends = list(
+        (
+            await db.scalars(
+                select(GiftSend).where(
+                    GiftSend.id.in_(send_ids),
+                    GiftSend.status == GiftSendStatus.delivered,
+                )
+            )
+        ).all()
+    )
+    totals: dict[uuid.UUID, dict[str, int]] = defaultdict(lambda: {"gift_count": 0, "spent": 0})
+    for send in sends:
+        totals[send.sender_user_id]["gift_count"] += 1
+        totals[send.sender_user_id]["spent"] += send.price_minor
+    if not totals:
+        return []
+    profiles = {
+        profile.user_id: profile.display_name
+        for profile in (
+            await db.scalars(select(Profile).where(Profile.user_id.in_(list(totals.keys()))))
+        ).all()
+    }
+    ranked = sorted(
+        totals.items(),
+        key=lambda item: (-item[1]["gift_count"], -item[1]["spent"], str(item[0])),
+    )[:limit]
+    return [
+        GiftRankingItem(
+            rank=index,
+            sender_user_id=sender_id,
+            display_name=profiles.get(sender_id),
+            gift_count=values["gift_count"],
+            total_spent_minor=values["spent"],
+        )
+        for index, (sender_id, values) in enumerate(ranked, start=1)
+    ]
+
+
 class GiftConnectionHub:
     """Bounded process-local fan-out; GiftEvent rows provide durable replay."""
 
@@ -397,6 +579,13 @@ async def deliver_gift_send(
     gift_send.failure_code = None
     delivery.status = DeliveryStatus.delivered
     delivery.completed_at = now
+    await db.flush()
+    combo_payload, same_gift_combination = await same_gift_combo_metadata(
+        db,
+        gift_send,
+        delivered_at=now,
+    )
+    live_session_ids = await active_live_session_ids(db, gift_send.recipient_user_id)
     common_payload = {
         "gift_definition_id": str(gift_send.gift_definition_id),
         "gift_version_id": str(gift_send.gift_version_id),
@@ -404,6 +593,8 @@ async def deliver_gift_send(
             str(item) for item in sorted(manifest_asset_ids(manifest), key=lambda item: item.int)
         ],
         "audio_enabled": recipient_preference.allow_audio,
+        "live_session_ids": [str(item) for item in live_session_ids],
+        **combo_payload,
     }
     records = [
         GiftEvent(
@@ -411,6 +602,7 @@ async def deliver_gift_send(
             event_type="gift_received",
             gift_send_id=gift_send.id,
             gift_version_id=gift_send.gift_version_id,
+            combination_id=same_gift_combination.id if same_gift_combination is not None else None,
             event_payload={
                 **common_payload,
                 "sender_user_id": str(gift_send.sender_user_id),
@@ -421,6 +613,7 @@ async def deliver_gift_send(
             event_type="gift_delivered",
             gift_send_id=gift_send.id,
             gift_version_id=gift_send.gift_version_id,
+            combination_id=same_gift_combination.id if same_gift_combination is not None else None,
             event_payload={
                 **common_payload,
                 "recipient_user_id": str(gift_send.recipient_user_id),

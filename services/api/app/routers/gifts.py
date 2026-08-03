@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import (
     APIRouter,
@@ -64,6 +64,7 @@ from app.gift_schemas import (
     GiftPreferencePatch,
     GiftPreferenceResponse,
     GiftPurchaseRequest,
+    GiftRankingResponse,
     GiftRefundRequest,
     GiftRefundResponse,
     GiftRuntimeAsset,
@@ -85,11 +86,13 @@ from app.gift_service import (
     event_response,
     gift_is_eligible,
     gift_preference,
+    gift_sender_rankings,
     is_available,
     manifest_asset_ids,
     published_version,
     record_affinity,
 )
+from app.live_models import LiveSession
 from app.observability import increment_counter
 from app.push_service import PushMessage, dispatch_push_best_effort
 from app.rate_limit import rate_limit
@@ -776,6 +779,49 @@ async def update_creator_monetization(
     await db.commit()
     await db.refresh(setting)
     return setting
+
+
+@router.get("/rankings", response_model=GiftRankingResponse)
+async def gift_rankings(
+    scope: Literal["global_daily", "live_session"] = "global_daily",
+    scope_id: uuid.UUID | None = Query(default=None, alias="id"),
+    limit: int = Query(default=5, ge=1, le=25),
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> GiftRankingResponse:
+    live_session: LiveSession | None = None
+    if scope == "live_session":
+        if scope_id is None:
+            raise APIError(
+                422,
+                "live_session_id_required",
+                "Live session id required",
+                "Provide id when requesting live session gift rankings.",
+            )
+        live_session = await db.scalar(
+            select(LiveSession).where(
+                LiveSession.id == scope_id,
+                LiveSession.owner_user_id == auth.user.id,
+            )
+        )
+        if live_session is None:
+            raise APIError(
+                404,
+                "live_session_not_found",
+                "Live session not found",
+                "The requested live session does not exist.",
+            )
+    return GiftRankingResponse(
+        scope=scope,
+        live_session_id=live_session.id if live_session is not None else None,
+        generated_at=utcnow(),
+        items=await gift_sender_rankings(
+            db,
+            scope=scope,
+            limit=limit,
+            live_session=live_session,
+        ),
+    )
 
 
 @router.get("/recommendations", response_model=RecommendationResponse)

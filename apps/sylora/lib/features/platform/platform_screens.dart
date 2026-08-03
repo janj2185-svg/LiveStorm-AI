@@ -58,6 +58,18 @@ final giftEventsProvider =
       (ref) => ref.watch(giftRepositoryProvider).eventHistory(),
     );
 
+final giftRankingsProvider =
+    FutureProvider.autoDispose<GiftRankingResponseModel>(
+      (ref) => ref.watch(giftRepositoryProvider).rankings(),
+    );
+
+final liveGiftRankingsProvider = FutureProvider.autoDispose
+    .family<GiftRankingResponseModel, String>(
+      (ref, sessionId) => ref
+          .watch(giftRepositoryProvider)
+          .rankings(scope: 'live_session', id: sessionId),
+    );
+
 final giftProvider = FutureProvider.autoDispose.family<GiftModel, String>(
   (ref, slug) => ref.watch(giftRepositoryProvider).gift(slug),
 );
@@ -417,6 +429,72 @@ final class _BalanceCard extends StatelessWidget {
   );
 }
 
+final class _GiftRankingStrip extends StatelessWidget {
+  const _GiftRankingStrip({required this.value, required this.title});
+
+  final AsyncValue<GiftRankingResponseModel> value;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => value.maybeWhen(
+    data: (ranking) {
+      if (ranking.items.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+        child: LumenSurface(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.leaderboard_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: <Widget>[
+                    for (final item in ranking.items)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: LumenBadge(
+                          label:
+                              '#${item.rank} ${_rankingLabel(item)} · ${item.giftCount} gift${item.giftCount == 1 ? '' : 's'}',
+                          color: item.rank == 1
+                              ? LumenColors.bloom
+                              : LumenColors.aether,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+    orElse: () => const SizedBox.shrink(),
+  );
+
+  static String _rankingLabel(GiftRankingItemModel item) {
+    final name = item.displayName?.trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+    return 'User ${item.senderUserId.substring(0, 8)}';
+  }
+}
+
 final class GiftsScreen extends ConsumerStatefulWidget {
   const GiftsScreen({super.key});
 
@@ -445,6 +523,16 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
       ) {
         ref.invalidate(giftEventsProvider);
         ref.invalidate(giftInventoryProvider);
+        ref.invalidate(giftRankingsProvider);
+        final comboCount = event.payload['combo_count'];
+        if (mounted &&
+            event.payload['combo_active'] == true &&
+            comboCount is int &&
+            comboCount > 1) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gift combo x$comboCount is live.')),
+          );
+        }
       });
     }
   }
@@ -460,6 +548,7 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
     final catalog = ref.watch(giftCatalogProvider);
     final inventory = ref.watch(giftInventoryProvider);
     final events = ref.watch(giftEventsProvider);
+    final rankings = ref.watch(giftRankingsProvider);
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -536,6 +625,10 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
                           ),
                         ],
                       ),
+                    ),
+                    _GiftRankingStrip(
+                      value: rankings,
+                      title: 'Today’s gift leaders',
                     ),
                     Expanded(
                       child: items.isEmpty
@@ -2297,6 +2390,7 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
     final value = ref.watch(liveSessionProvider(widget.sessionId));
     final integrations = ref.watch(liveIntegrationsProvider);
     final controls = ref.watch(liveControlsProvider(widget.sessionId));
+    final giftRankings = ref.watch(liveGiftRankingsProvider(widget.sessionId));
     return Scaffold(
       appBar: AppBar(title: const Text('Live session')),
       body: value.when(
@@ -2445,6 +2539,7 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                 ],
               ),
             ),
+            _GiftRankingStrip(value: giftRankings, title: 'Live gift leaders'),
             const SizedBox(height: 16),
             if (session.replay case final replay?
                 when replay.status == 'ready') ...<Widget>[

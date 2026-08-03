@@ -47,6 +47,11 @@ async def test_ready_starter_seed_catalog_runtime_and_idempotency(api: APIHarnes
     assert runtime.status_code == 200, runtime.text
     body = runtime.json()
     assert body["manifest"]["schema_version"] == "1.0"
+    assert body["manifest"]["animation_tier"] == "starter"
+    assert body["manifest"]["particle_hints"]["quality_note"].startswith(
+        "procedural starter-pack art"
+    )
+    assert body["manifest"]["particle_hints"]["max_particles"] > 0
     assert body["manifest"]["fallbacks"]["low_end_asset_id"]
     assert len(body["assets"]) == 3
     assert {asset["quality_tier"] for asset in body["assets"]} == {"low", "medium"}

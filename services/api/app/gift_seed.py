@@ -249,6 +249,14 @@ def starter_runtime_manifest(candidate: StarterCandidate) -> tuple[dict[str, Any
     manifest = RuntimeManifest(
         schema_version="1.0",
         renderer_targets=["threejs", "flutter"],
+        animation_tier="starter",
+        particle_hints={
+            "quality_note": "procedural starter-pack art; not final premium art",
+            "vfx_family": candidate.vfx_family,
+            "max_particles": 180,
+            "spawn_rate_per_second": 24,
+            "deterministic_seed": particle_seed,
+        },
         duration_ms=duration_ms,
         assets=[{"asset_id": asset.id, "role": asset.role} for asset in assets],
         layers=[
@@ -404,6 +412,17 @@ def built_runtime_manifest(
     budgets = dict(raw.get("quality_budgets") or {})
     budgets["max_download_bytes"] = max(int(budgets.get("max_download_bytes") or 1), total_bytes)
     raw["quality_budgets"] = budgets
+    particle_systems = list(raw.get("particle_systems") or [])
+    raw["animation_tier"] = "starter"
+    raw["particle_hints"] = {
+        "quality_note": "procedural starter-pack art; not final premium art",
+        "vfx_family": candidate.vfx_family,
+        "asset_mode": "built_assets",
+        "max_particles": sum(int(item.get("max_particles") or 0) for item in particle_systems),
+        "spawn_rate_per_second": sum(
+            int(item.get("spawn_rate_per_second") or 0) for item in particle_systems
+        ),
+    }
     manifest = RuntimeManifest.model_validate(raw).model_dump(mode="json")
     return manifest, list(assets_by_id.values())
 

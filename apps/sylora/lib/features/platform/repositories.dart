@@ -688,6 +688,10 @@ abstract interface class GiftRepository {
   Future<JsonObject> creatorMonetization();
   Future<JsonObject> setCreatorMonetization(bool enabled);
   Future<CursorPage<GiftEventModel>> eventHistory({String? cursor});
+  Future<GiftRankingResponseModel> rankings({
+    String scope = 'global_daily',
+    String? id,
+  });
   Stream<GiftEventModel> events({String? since});
 }
 
@@ -880,6 +884,20 @@ final class DioGiftRepository implements GiftRepository {
     return CursorPage<GiftEventModel>.fromJson(
       requireObject(response.data, 'gift events'),
       GiftEventModel.fromJson,
+    );
+  }
+
+  @override
+  Future<GiftRankingResponseModel> rankings({
+    String scope = 'global_daily',
+    String? id,
+  }) async {
+    final response = await _client.request(
+      'gifts/rankings',
+      queryParameters: <String, dynamic>{'scope': scope, 'id': id},
+    );
+    return GiftRankingResponseModel.fromJson(
+      requireObject(response.data, 'gift rankings'),
     );
   }
 

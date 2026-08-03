@@ -16,6 +16,7 @@ from app.gift_models import (
     GiftAssetPlatform,
     GiftAssetState,
     GiftCategory,
+    GiftCombination,
     GiftDefinition,
     GiftDelivery,
     GiftEvent,
@@ -47,6 +48,7 @@ from app.ledger_service import (
     system_account,
     user_account,
 )
+from app.live_models import LiveSession, LiveSessionState
 from app.models import Role, UserRole
 from app.routers.gifts import websocket_ticket_user
 from app.security import utcnow
@@ -1278,6 +1280,114 @@ async def test_retry_does_not_recharge_refund_is_single_and_records_shortfall(
         assert await account_balance(db, wallet) == 1_000
         assert await account_balance(db, debt) == -210
         assert admin.id != sender.id
+
+
+@pytest.mark.asyncio
+async def test_same_gift_combo_increment_and_rankings(api: APIHarness) -> None:
+    _, admin_tokens = await create_member(
+        api,
+        email="combo-admin@example.com",
+        display_name="Combo Admin",
+        role="admin",
+    )
+    author, _ = await create_member(
+        api, email="combo-author@example.com", display_name="Combo Author"
+    )
+    sender, sender_tokens = await create_member(
+        api, email="combo-sender@example.com", display_name="Combo Sender"
+    )
+    recipient, recipient_tokens = await create_member(
+        api, email="combo-recipient@example.com", display_name="Combo Recipient"
+    )
+    gift_id, _, _ = await create_gift(
+        api,
+        author_id=author.id,
+        slug="same-gift-combo",
+        price_minor=100,
+    )
+    live_session_id = uuid.uuid4()
+    async with api.app.state.session_factory() as db:
+        db.add(CreatorMonetizationSetting(user_id=recipient.id, gifts_enabled=True))
+        db.add(
+            LiveSession(
+                id=live_session_id,
+                owner_user_id=recipient.id,
+                title="Gift rankings live",
+                language="en",
+                state=LiveSessionState.live,
+                ingest_path=f"combo-test/{live_session_id}",
+                ingest_key_hash="e" * 64,
+                ingest_provisioned=True,
+                started_at=utcnow(),
+            )
+        )
+        await db.commit()
+    await issue(
+        api,
+        admin_token=admin_tokens["access_token"],
+        user_id=sender.id,
+        amount_minor=500,
+        key="combo-issuance-0001",
+    )
+
+    for index in range(2):
+        response = await api.client.post(
+            "/v1/gifts/sends",
+            headers={
+                **bearer(sender_tokens["access_token"]),
+                "Idempotency-Key": f"same-gift-combo-{index}",
+            },
+            json={
+                "recipient_user_id": str(recipient.id),
+                "gift_definition_id": str(gift_id),
+            },
+        )
+        assert response.status_code == 201, response.text
+        assert response.json()["status"] == "delivered"
+
+    events = await api.client.get(
+        "/v1/gifts/events?limit=10",
+        headers=bearer(recipient_tokens["access_token"]),
+    )
+    assert events.status_code == 200
+    combo_payloads = [
+        item["payload"]
+        for item in events.json()["items"]
+        if item["event"] == "gift_received" and item["payload"].get("combo_count") == 2
+    ]
+    assert combo_payloads
+    assert combo_payloads[0]["combo_active"] is True
+    assert combo_payloads[0]["combo_multiplier"] == 2
+    assert str(live_session_id) in combo_payloads[0]["live_session_ids"]
+
+    global_rankings = await api.client.get(
+        "/v1/gifts/rankings?scope=global_daily&limit=5",
+        headers=bearer(sender_tokens["access_token"]),
+    )
+    assert global_rankings.status_code == 200, global_rankings.text
+    assert global_rankings.json()["items"][0]["sender_user_id"] == str(sender.id)
+    assert global_rankings.json()["items"][0]["gift_count"] == 2
+    assert global_rankings.json()["items"][0]["total_spent_minor"] == 200
+
+    live_rankings = await api.client.get(
+        "/v1/gifts/rankings",
+        params={"scope": "live_session", "id": str(live_session_id), "limit": 5},
+        headers=bearer(recipient_tokens["access_token"]),
+    )
+    assert live_rankings.status_code == 200, live_rankings.text
+    assert live_rankings.json()["live_session_id"] == str(live_session_id)
+    assert live_rankings.json()["items"][0]["sender_user_id"] == str(sender.id)
+    assert live_rankings.json()["items"][0]["gift_count"] == 2
+
+    async with api.app.state.session_factory() as db:
+        assert (
+            await db.scalar(
+                select(func.count())
+                .select_from(GiftCombination)
+                .where(GiftCombination.combination_key == f"same_gift:{gift_id}")
+            )
+            == 1
+        )
 
 
 @pytest.mark.asyncio
