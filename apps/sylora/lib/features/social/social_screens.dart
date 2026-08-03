@@ -9,6 +9,7 @@ import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../core/realtime.dart';
+import '../../design/sylora.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import '../platform/repositories.dart';
@@ -41,6 +42,47 @@ final publicProfileProvider = FutureProvider.autoDispose
       (ref, handle) =>
           ref.watch(socialRepositoryProvider).publicProfile(handle),
     );
+
+@immutable
+final class FriendsSnapshot {
+  const FriendsSnapshot({
+    required this.friends,
+    required this.requests,
+    required this.suggestions,
+  });
+
+  final List<FriendSummaryModel> friends;
+  final FriendRequestsModel requests;
+  final List<FriendSuggestionModel> suggestions;
+}
+
+final friendsSnapshotProvider = FutureProvider.autoDispose<FriendsSnapshot>((
+  ref,
+) async {
+  final repository = ref.watch(socialRepositoryProvider);
+  final values = await Future.wait<Object>(<Future<Object>>[
+    repository.listFriends(),
+    repository.friendRequests(),
+    repository.suggestions(),
+  ]);
+  return FriendsSnapshot(
+    friends: values[0] as List<FriendSummaryModel>,
+    requests: values[1] as FriendRequestsModel,
+    suggestions: values[2] as List<FriendSuggestionModel>,
+  );
+});
+
+final friendRequestsProvider = FutureProvider.autoDispose<FriendRequestsModel>(
+  (ref) => ref.watch(socialRepositoryProvider).friendRequests(),
+);
+
+void _invalidateFriendSurfaces(WidgetRef ref, [String? handle]) {
+  ref.invalidate(friendsSnapshotProvider);
+  ref.invalidate(friendRequestsProvider);
+  if (handle != null) {
+    ref.invalidate(publicProfileProvider(handle));
+  }
+}
 
 final postProvider = FutureProvider.autoDispose.family<PostModel, String>(
   (ref, id) => ref.watch(socialRepositoryProvider).post(id),
@@ -653,41 +695,951 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
-final class FriendsScreen extends StatelessWidget {
+enum _FriendsTab { friends, requests, suggestions }
+
+final class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
+
+  @override
+  ConsumerState<FriendsScreen> createState() => _FriendsScreenState();
+}
+
+final class _FriendsScreenState extends ConsumerState<FriendsScreen> {
+  _FriendsTab _tab = _FriendsTab.friends;
+  final Set<String> _busy = <String>{};
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return LumenPage(
+    final value = ref.watch(friendsSnapshotProvider);
+    return SyloraModuleScaffold(
       title: l10n.friendsTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          LumenSurface(
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                LumenBadge(label: l10n.friendsRequests),
-                LumenBadge(label: l10n.friendsPendingIncoming),
-                LumenBadge(label: l10n.friendsPendingOutgoing),
-                LumenBadge(label: l10n.friendsSuggestions),
-              ],
-            ),
+      subtitle: 'Real friendships, requests, and people you may know.',
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.feed,
+      actions: <Widget>[
+        IconButton(
+          tooltip: l10n.friendsSearchFriends,
+          onPressed: () => context.goNamed('search'),
+          icon: const Icon(Icons.person_search_rounded),
+        ),
+        IconButton(
+          tooltip: l10n.commonRetry,
+          onPressed: () => unawaited(_refresh()),
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
+      child: LumenAsyncView<FriendsSnapshot>(
+        value: value,
+        onRetry: () => ref.invalidate(friendsSnapshotProvider),
+        data: (snapshot) => RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            primary: false,
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: <Widget>[
+              _FriendsHero(snapshot: snapshot),
+              const SizedBox(height: SyloraTokens.space4),
+              _FriendsSegmentedTabs(
+                selected: _tab,
+                snapshot: snapshot,
+                onSelected: (tab) => setState(() => _tab = tab),
+              ),
+              const SizedBox(height: SyloraTokens.space4),
+              AnimatedSwitcher(
+                duration: SyloraTokens.durMed,
+                switchInCurve: SyloraTokens.curveSoft,
+                switchOutCurve: SyloraTokens.curveSoft,
+                child: _tabBody(snapshot),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          LumenEmptyView(
-            title: l10n.friendsNoFriends,
-            message: l10n.friendsSearchFriends,
-            actionLabel: l10n.friendsSearchFriends,
-            onAction: () => context.goNamed('search'),
-            icon: Icons.group_outlined,
-          ),
-        ],
+        ),
       ),
     );
   }
+
+  Future<void> _refresh() async {
+    _invalidateFriendSurfaces(ref);
+    await ref.refresh(friendsSnapshotProvider.future);
+  }
+
+  Widget _tabBody(FriendsSnapshot snapshot) {
+    final l10n = AppLocalizations.of(context);
+    return switch (_tab) {
+      _FriendsTab.friends => _FriendsList(
+        key: const ValueKey<_FriendsTab>(_FriendsTab.friends),
+        friends: snapshot.friends,
+        busy: _busy,
+        onUnfriend: (friend) => _run(
+          'unfriend:${friend.handle}',
+          () => ref.read(socialRepositoryProvider).unfriend(friend.handle),
+          handle: friend.handle,
+        ),
+      ),
+      _FriendsTab.requests => _RequestsList(
+        key: const ValueKey<_FriendsTab>(_FriendsTab.requests),
+        requests: snapshot.requests,
+        busy: _busy,
+        onAccept: (request) => _run('accept:${request.id}', () async {
+          await ref
+              .read(socialRepositoryProvider)
+              .acceptFriendRequest(request.id);
+        }, handle: request.handle),
+        onReject: (request) => _run(
+          'reject:${request.id}',
+          () => ref
+              .read(socialRepositoryProvider)
+              .rejectFriendRequest(request.id),
+          handle: request.handle,
+        ),
+        onCancel: (request) => _run(
+          'cancel:${request.id}',
+          () => ref
+              .read(socialRepositoryProvider)
+              .cancelFriendRequest(request.id),
+          handle: request.handle,
+        ),
+      ),
+      _FriendsTab.suggestions => _SuggestionsList(
+        key: const ValueKey<_FriendsTab>(_FriendsTab.suggestions),
+        suggestions: snapshot.suggestions,
+        busy: _busy,
+        onAdd: (suggestion) => _run('add:${suggestion.handle}', () async {
+          final status = await ref
+              .read(socialRepositoryProvider)
+              .friend(suggestion.handle);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${l10n.friendsTitle}: $status')),
+            );
+          }
+        }, handle: suggestion.handle),
+      ),
+    };
+  }
+
+  Future<void> _run(
+    String key,
+    Future<void> Function() action, {
+    String? handle,
+  }) async {
+    if (_busy.contains(key)) {
+      return;
+    }
+    setState(() => _busy.add(key));
+    try {
+      await action();
+      _invalidateFriendSurfaces(ref, handle);
+    } on Object catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy.remove(key));
+      }
+    }
+  }
+}
+
+final class _FriendsHero extends StatelessWidget {
+  const _FriendsHero({required this.snapshot});
+
+  final FriendsSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final onlineCount = snapshot.friends
+        .where((friend) => friend.online)
+        .length;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            SyloraTokens.ion.withValues(alpha: 0.18),
+            SyloraTokens.petal.withValues(alpha: 0.12),
+            Colors.white.withValues(alpha: 0.66),
+          ],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(SyloraTokens.space5),
+        child: Wrap(
+          spacing: SyloraTokens.space4,
+          runSpacing: SyloraTokens.space4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          alignment: WrapAlignment.spaceBetween,
+          children: <Widget>[
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    l10n.friendsSearchFriends,
+                    style: SyloraTokens.label(12, color: SyloraTokens.violet),
+                  ),
+                  const SizedBox(height: SyloraTokens.space2),
+                  Text(l10n.friendsTitle, style: SyloraTokens.display(34)),
+                  const SizedBox(height: SyloraTokens.space2),
+                  Text(
+                    '${snapshot.requests.incoming.length} ${l10n.friendsPendingIncoming} · '
+                    '${snapshot.requests.outgoing.length} ${l10n.friendsPendingOutgoing}',
+                    style: SyloraTokens.body(15, weight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            Wrap(
+              spacing: SyloraTokens.space2,
+              runSpacing: SyloraTokens.space2,
+              children: <Widget>[
+                _MetricPill(
+                  label: l10n.friendsTitle,
+                  value: '${snapshot.friends.length}',
+                  icon: Icons.group_rounded,
+                ),
+                _MetricPill(
+                  label: l10n.friendsOnline,
+                  value: '$onlineCount',
+                  icon: Icons.bolt_rounded,
+                ),
+                _MetricPill(
+                  label: l10n.friendsSuggestions,
+                  value: '${snapshot.suggestions.length}',
+                  icon: Icons.auto_awesome_rounded,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _MetricPill extends StatelessWidget {
+  const _MetricPill({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => SyloraGlass(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    radius: SyloraTokens.radiusMd,
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, color: SyloraTokens.violet, size: 18),
+        const SizedBox(width: SyloraTokens.space2),
+        Text(value, style: SyloraTokens.title(18)),
+        const SizedBox(width: SyloraTokens.space1),
+        Text(label, style: SyloraTokens.body(12, color: SyloraTokens.inkMute)),
+      ],
+    ),
+  );
+}
+
+final class _FriendsSegmentedTabs extends StatelessWidget {
+  const _FriendsSegmentedTabs({
+    required this.selected,
+    required this.snapshot,
+    required this.onSelected,
+  });
+
+  final _FriendsTab selected;
+  final FriendsSnapshot snapshot;
+  final ValueChanged<_FriendsTab> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = <_FriendsTab>[
+      _FriendsTab.friends,
+      _FriendsTab.requests,
+      _FriendsTab.suggestions,
+    ];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(5),
+        child: Row(
+          children: <Widget>[
+            for (final tab in tabs)
+              Expanded(
+                child: _SegmentButton(
+                  tab: tab,
+                  selected: selected == tab,
+                  count: _countFor(tab),
+                  onTap: () => onSelected(tab),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _countFor(_FriendsTab tab) => switch (tab) {
+    _FriendsTab.friends => snapshot.friends.length,
+    _FriendsTab.requests =>
+      snapshot.requests.incoming.length + snapshot.requests.outgoing.length,
+    _FriendsTab.suggestions => snapshot.suggestions.length,
+  };
+}
+
+final class _SegmentButton extends StatelessWidget {
+  const _SegmentButton({
+    required this.tab,
+    required this.selected,
+    required this.count,
+    required this.onTap,
+  });
+
+  final _FriendsTab tab;
+  final bool selected;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _tabLabel(context, tab);
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: '$label $count',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: SyloraTokens.durMed,
+          curve: SyloraTokens.curveSoft,
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+            gradient: selected
+                ? const LinearGradient(
+                    colors: <Color>[SyloraTokens.ion, SyloraTokens.petal],
+                  )
+                : null,
+            boxShadow: selected
+                ? SyloraTokens.glow(
+                    SyloraTokens.violet,
+                    blur: 20,
+                    opacity: 0.22,
+                  )
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: SyloraTokens.body(
+                    14,
+                    color: selected ? Colors.white : SyloraTokens.inkSoft,
+                    weight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: SyloraTokens.space2),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: (selected ? Colors.white : SyloraTokens.violet)
+                      .withValues(alpha: selected ? 0.22 : 0.1),
+                  borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  child: Text(
+                    '$count',
+                    style: SyloraTokens.label(
+                      10,
+                      color: selected ? Colors.white : SyloraTokens.violet,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _FriendsList extends StatelessWidget {
+  const _FriendsList({
+    required this.friends,
+    required this.busy,
+    required this.onUnfriend,
+    super.key,
+  });
+
+  final List<FriendSummaryModel> friends;
+  final Set<String> busy;
+  final ValueChanged<FriendSummaryModel> onUnfriend;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (friends.isEmpty) {
+      return _FriendsEmptyState(
+        title: l10n.friendsNoFriends,
+        message: l10n.friendsSearchFriends,
+        actionLabel: l10n.friendsSearchFriends,
+        icon: Icons.group_outlined,
+      );
+    }
+    return Column(
+      key: key,
+      children: <Widget>[
+        for (var i = 0; i < friends.length; i++) ...<Widget>[
+          _StaggeredEntrance(
+            index: i,
+            child: _FriendCard(
+              friend: friends[i],
+              busy: busy.contains('unfriend:${friends[i].handle}'),
+              onUnfriend: () => onUnfriend(friends[i]),
+            ),
+          ),
+          const SizedBox(height: SyloraTokens.space3),
+        ],
+      ],
+    );
+  }
+}
+
+final class _RequestsList extends StatelessWidget {
+  const _RequestsList({
+    required this.requests,
+    required this.busy,
+    required this.onAccept,
+    required this.onReject,
+    required this.onCancel,
+    super.key,
+  });
+
+  final FriendRequestsModel requests;
+  final Set<String> busy;
+  final ValueChanged<FriendRequestSummaryModel> onAccept;
+  final ValueChanged<FriendRequestSummaryModel> onReject;
+  final ValueChanged<FriendRequestSummaryModel> onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final total = requests.incoming.length + requests.outgoing.length;
+    if (total == 0) {
+      return _FriendsEmptyState(
+        title: l10n.friendsRequests,
+        message: l10n.friendsSearchFriends,
+        actionLabel: l10n.friendsSearchFriends,
+        icon: Icons.mark_email_unread_outlined,
+      );
+    }
+    var index = 0;
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        if (requests.incoming.isNotEmpty) ...<Widget>[
+          _SectionTitle(label: l10n.friendsPendingIncoming),
+          const SizedBox(height: SyloraTokens.space2),
+          for (final request in requests.incoming) ...<Widget>[
+            _StaggeredEntrance(
+              index: index++,
+              child: _RequestCard(
+                request: request,
+                incoming: true,
+                acceptBusy: busy.contains('accept:${request.id}'),
+                rejectBusy: busy.contains('reject:${request.id}'),
+                cancelBusy: false,
+                onAccept: () => onAccept(request),
+                onReject: () => onReject(request),
+                onCancel: null,
+              ),
+            ),
+            const SizedBox(height: SyloraTokens.space3),
+          ],
+        ],
+        if (requests.outgoing.isNotEmpty) ...<Widget>[
+          const SizedBox(height: SyloraTokens.space2),
+          _SectionTitle(label: l10n.friendsPendingOutgoing),
+          const SizedBox(height: SyloraTokens.space2),
+          for (final request in requests.outgoing) ...<Widget>[
+            _StaggeredEntrance(
+              index: index++,
+              child: _RequestCard(
+                request: request,
+                incoming: false,
+                acceptBusy: false,
+                rejectBusy: false,
+                cancelBusy: busy.contains('cancel:${request.id}'),
+                onAccept: null,
+                onReject: null,
+                onCancel: () => onCancel(request),
+              ),
+            ),
+            const SizedBox(height: SyloraTokens.space3),
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+final class _SuggestionsList extends StatelessWidget {
+  const _SuggestionsList({
+    required this.suggestions,
+    required this.busy,
+    required this.onAdd,
+    super.key,
+  });
+
+  final List<FriendSuggestionModel> suggestions;
+  final Set<String> busy;
+  final ValueChanged<FriendSuggestionModel> onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (suggestions.isEmpty) {
+      return _FriendsEmptyState(
+        title: l10n.friendsSuggestions,
+        message: l10n.friendsSearchFriends,
+        actionLabel: l10n.friendsSearchFriends,
+        icon: Icons.auto_awesome_outlined,
+      );
+    }
+    return Column(
+      key: key,
+      children: <Widget>[
+        for (var i = 0; i < suggestions.length; i++) ...<Widget>[
+          _StaggeredEntrance(
+            index: i,
+            child: _SuggestionCard(
+              suggestion: suggestions[i],
+              busy: busy.contains('add:${suggestions[i].handle}'),
+              onAdd: () => onAdd(suggestions[i]),
+            ),
+          ),
+          const SizedBox(height: SyloraTokens.space3),
+        ],
+      ],
+    );
+  }
+}
+
+final class _FriendCard extends StatelessWidget {
+  const _FriendCard({
+    required this.friend,
+    required this.busy,
+    required this.onUnfriend,
+  });
+
+  final FriendSummaryModel friend;
+  final bool busy;
+  final VoidCallback onUnfriend;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final lastSeen = friend.lastSeenAt == null
+        ? null
+        : DateFormat.MMMd().add_jm().format(friend.lastSeenAt!.toLocal());
+    return _PersonCard(
+      avatarUrl: friend.avatarUrl,
+      displayName: friend.displayName,
+      handle: friend.handle,
+      online: friend.online,
+      eyebrow: friend.online
+          ? l10n.friendsOnline
+          : lastSeen == null
+          ? l10n.friendsOnly
+          : lastSeen,
+      onTap: () => context.pushNamed(
+        'public-profile',
+        pathParameters: <String, String>{'handle': friend.handle},
+      ),
+      trailing: SyloraButton(
+        label: l10n.friendsUnfriend,
+        icon: Icons.person_remove_outlined,
+        variant: SyloraButtonVariant.secondary,
+        expanded: false,
+        busy: busy,
+        onPressed: onUnfriend,
+      ),
+    );
+  }
+}
+
+final class _RequestCard extends StatelessWidget {
+  const _RequestCard({
+    required this.request,
+    required this.incoming,
+    required this.acceptBusy,
+    required this.rejectBusy,
+    required this.cancelBusy,
+    required this.onAccept,
+    required this.onReject,
+    required this.onCancel,
+  });
+
+  final FriendRequestSummaryModel request;
+  final bool incoming;
+  final bool acceptBusy;
+  final bool rejectBusy;
+  final bool cancelBusy;
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
+  final VoidCallback? onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final requestedAt = DateFormat.MMMd().add_jm().format(
+      request.requestedAt.toLocal(),
+    );
+    return _PersonCard(
+      avatarUrl: request.avatarUrl,
+      displayName: request.displayName,
+      handle: request.handle,
+      online: false,
+      eyebrow: requestedAt,
+      onTap: () => context.pushNamed(
+        'public-profile',
+        pathParameters: <String, String>{'handle': request.handle},
+      ),
+      trailing: incoming
+          ? Wrap(
+              spacing: SyloraTokens.space2,
+              runSpacing: SyloraTokens.space2,
+              children: <Widget>[
+                SyloraButton(
+                  label: l10n.friendsAccept,
+                  icon: Icons.check_rounded,
+                  expanded: false,
+                  busy: acceptBusy,
+                  onPressed: onAccept,
+                ),
+                SyloraButton(
+                  label: l10n.friendsReject,
+                  icon: Icons.close_rounded,
+                  variant: SyloraButtonVariant.ghost,
+                  expanded: false,
+                  busy: rejectBusy,
+                  onPressed: onReject,
+                ),
+              ],
+            )
+          : SyloraButton(
+              label: l10n.commonCancel,
+              icon: Icons.undo_rounded,
+              variant: SyloraButtonVariant.secondary,
+              expanded: false,
+              busy: cancelBusy,
+              onPressed: onCancel,
+            ),
+    );
+  }
+}
+
+final class _SuggestionCard extends StatelessWidget {
+  const _SuggestionCard({
+    required this.suggestion,
+    required this.busy,
+    required this.onAdd,
+  });
+
+  final FriendSuggestionModel suggestion;
+  final bool busy;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return _PersonCard(
+      avatarUrl: suggestion.avatarUrl,
+      displayName: suggestion.displayName,
+      handle: suggestion.handle,
+      online: false,
+      eyebrow: '${suggestion.mutualCount} ${l10n.friendsMutual}',
+      onTap: () => context.pushNamed(
+        'public-profile',
+        pathParameters: <String, String>{'handle': suggestion.handle},
+      ),
+      trailing: SyloraButton(
+        label: l10n.friendsAddFriend,
+        icon: Icons.person_add_alt_1_rounded,
+        expanded: false,
+        busy: busy,
+        onPressed: onAdd,
+      ),
+    );
+  }
+}
+
+final class _PersonCard extends StatelessWidget {
+  const _PersonCard({
+    required this.avatarUrl,
+    required this.displayName,
+    required this.handle,
+    required this.online,
+    required this.eyebrow,
+    required this.trailing,
+    required this.onTap,
+  });
+
+  final String? avatarUrl;
+  final String displayName;
+  final String handle;
+  final bool online;
+  final String eyebrow;
+  final Widget trailing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => SyloraGlass(
+    padding: const EdgeInsets.all(SyloraTokens.space4),
+    radius: SyloraTokens.radiusLg,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 620;
+        final identity = InkWell(
+          borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
+          onTap: onTap,
+          child: Row(
+            children: <Widget>[
+              _PersonAvatar(
+                avatarUrl: avatarUrl,
+                displayName: displayName,
+                online: online,
+              ),
+              const SizedBox(width: SyloraTokens.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      displayName,
+                      style: SyloraTokens.title(18),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '@$handle',
+                      style: SyloraTokens.body(
+                        13,
+                        color: SyloraTokens.inkMute,
+                        weight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: SyloraTokens.space2),
+                    Row(
+                      children: <Widget>[
+                        _PresenceOrb(online: online),
+                        const SizedBox(width: SyloraTokens.space2),
+                        Flexible(
+                          child: Text(
+                            eyebrow,
+                            style: SyloraTokens.label(
+                              10,
+                              color: online
+                                  ? SyloraTokens.aqua
+                                  : SyloraTokens.inkMute,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              identity,
+              const SizedBox(height: SyloraTokens.space3),
+              Align(alignment: Alignment.centerLeft, child: trailing),
+            ],
+          );
+        }
+        return Row(
+          children: <Widget>[
+            Expanded(child: identity),
+            const SizedBox(width: SyloraTokens.space4),
+            trailing,
+          ],
+        );
+      },
+    ),
+  );
+}
+
+final class _PersonAvatar extends StatelessWidget {
+  const _PersonAvatar({
+    required this.avatarUrl,
+    required this.displayName,
+    required this.online,
+  });
+
+  final String? avatarUrl;
+  final String displayName;
+  final bool online;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = displayName.characters.isEmpty
+        ? '?'
+        : displayName.characters.first.toUpperCase();
+    return Stack(
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: online
+                ? SyloraTokens.glow(SyloraTokens.aqua, blur: 28, opacity: 0.28)
+                : SyloraTokens.softElevation,
+          ),
+          child: CircleAvatar(
+            radius: 30,
+            backgroundColor: SyloraTokens.violet.withValues(alpha: 0.16),
+            backgroundImage: avatarUrl == null
+                ? null
+                : NetworkImage(avatarUrl!),
+            child: avatarUrl == null
+                ? Text(initial, style: SyloraTokens.title(20))
+                : null,
+          ),
+        ),
+        Positioned(right: -1, bottom: 1, child: _PresenceOrb(online: online)),
+      ],
+    );
+  }
+}
+
+final class _PresenceOrb extends StatelessWidget {
+  const _PresenceOrb({required this.online});
+
+  final bool online;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: online ? SyloraTokens.aqua : SyloraTokens.mist,
+      border: Border.all(color: Colors.white, width: 2),
+      boxShadow: online
+          ? SyloraTokens.glow(SyloraTokens.aqua, blur: 18, opacity: 0.48)
+          : null,
+    ),
+    child: const SizedBox(width: 14, height: 14),
+  );
+}
+
+final class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(label, style: SyloraTokens.label(12, color: SyloraTokens.violet));
+}
+
+final class _FriendsEmptyState extends StatelessWidget {
+  const _FriendsEmptyState({
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.icon,
+    super.key,
+  });
+
+  final String title;
+  final String message;
+  final String actionLabel;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => SyloraGlass(
+    padding: const EdgeInsets.all(SyloraTokens.space6),
+    radius: SyloraTokens.radiusLg,
+    child: LumenEmptyView(
+      title: title,
+      message: message,
+      actionLabel: actionLabel,
+      onAction: () => context.goNamed('search'),
+      icon: icon,
+    ),
+  );
+}
+
+final class _StaggeredEntrance extends StatelessWidget {
+  const _StaggeredEntrance({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final start = (index * 0.06).clamp(0.0, 0.62);
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 620 + index * 70),
+      curve: Interval(start, 1, curve: SyloraTokens.curveSoft),
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, (1 - value) * 18),
+          child: child,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+String _tabLabel(BuildContext context, _FriendsTab tab) {
+  final l10n = AppLocalizations.of(context);
+  return switch (tab) {
+    _FriendsTab.friends => l10n.friendsTitle,
+    _FriendsTab.requests => l10n.friendsRequests,
+    _FriendsTab.suggestions => l10n.friendsSuggestions,
+  };
 }
 
 final class CommunityScreen extends ConsumerWidget {
@@ -859,19 +1811,9 @@ final class PublicProfileScreen extends ConsumerWidget {
                   ),
                   SizedBox(
                     width: 180,
-                    child: LumenSecondaryButton(
-                      label: 'Friend',
-                      icon: Icons.group_add_outlined,
-                      onPressed: () async {
-                        final status = await ref
-                            .read(socialRepositoryProvider)
-                            .friend(handle);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Friend status: $status')),
-                          );
-                        }
-                      },
+                    child: _ProfileFriendButton(
+                      handle: handle,
+                      profile: profile,
                     ),
                   ),
                   SizedBox(
@@ -931,6 +1873,90 @@ final class PublicProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+final class _ProfileFriendButton extends ConsumerStatefulWidget {
+  const _ProfileFriendButton({required this.handle, required this.profile});
+
+  final String handle;
+  final ProfileModel profile;
+
+  @override
+  ConsumerState<_ProfileFriendButton> createState() =>
+      _ProfileFriendButtonState();
+}
+
+final class _ProfileFriendButtonState
+    extends ConsumerState<_ProfileFriendButton> {
+  String? _localStatus;
+  bool _locallyUnfriended = false;
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final requests = ref.watch(friendRequestsProvider);
+    final outgoingPending = requests.maybeWhen(
+      data: (value) =>
+          value.outgoing.any((request) => request.handle == widget.handle),
+      orElse: () => false,
+    );
+    final accepted =
+        !_locallyUnfriended &&
+        (widget.profile.friendWithViewer || _localStatus == 'friends');
+    final pending =
+        !accepted && (_localStatus == 'requested' || outgoingPending);
+    return SyloraButton(
+      label: accepted
+          ? l10n.friendsUnfriend
+          : pending
+          ? l10n.friendsPendingOutgoing
+          : l10n.friendsAddFriend,
+      icon: accepted
+          ? Icons.group_rounded
+          : pending
+          ? Icons.hourglass_top_rounded
+          : Icons.group_add_outlined,
+      variant: accepted
+          ? SyloraButtonVariant.secondary
+          : SyloraButtonVariant.primary,
+      busy: _busy,
+      onPressed: pending || _busy ? null : () => _toggle(accepted),
+    );
+  }
+
+  Future<void> _toggle(bool accepted) async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _busy = true);
+    try {
+      final repository = ref.read(socialRepositoryProvider);
+      if (accepted) {
+        await repository.unfriend(widget.handle);
+        _localStatus = null;
+        _locallyUnfriended = true;
+      } else {
+        final status = await repository.friend(widget.handle);
+        _localStatus = status;
+        _locallyUnfriended = false;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${l10n.friendsTitle}: $status')),
+          );
+        }
+      }
+      _invalidateFriendSurfaces(ref, widget.handle);
+    } on Object catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
   }
 }
 

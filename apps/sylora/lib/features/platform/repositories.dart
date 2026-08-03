@@ -124,7 +124,15 @@ abstract interface class SocialRepository {
   Future<ProfileModel> publicProfile(String handle);
   Future<String> follow(String handle);
   Future<void> unfollow(String handle);
+  Future<List<FriendSummaryModel>> listFriends();
+  Future<FriendRequestsModel> friendRequests();
+  Future<void> cancelFriendRequest(String id);
+  Future<String> acceptFriendRequest(String id);
+  Future<void> rejectFriendRequest(String id);
   Future<String> friend(String handle);
+  Future<void> unfriend(String handle);
+  Future<List<FriendSuggestionModel>> suggestions();
+  Future<List<FriendSummaryModel>> mutuals(String handle);
   Future<void> block(String handle, bool value);
   Future<void> mute(String handle, bool value);
   Future<SocialSearchBundle> search(String query);
@@ -279,6 +287,48 @@ final class DioSocialRepository implements SocialRepository {
   }
 
   @override
+  Future<List<FriendSummaryModel>> listFriends() async {
+    final response = await _client.request('social/friends');
+    return _array(
+      response.data,
+      'friends',
+    ).map(FriendSummaryModel.fromJson).toList(growable: false);
+  }
+
+  @override
+  Future<FriendRequestsModel> friendRequests() async {
+    final response = await _client.request('social/friend-requests');
+    return FriendRequestsModel.fromJson(
+      requireObject(response.data, 'friend requests'),
+    );
+  }
+
+  @override
+  Future<void> cancelFriendRequest(String id) async {
+    await _client.request(
+      'social/friend-requests/$id/cancel',
+      method: 'DELETE',
+    );
+  }
+
+  @override
+  Future<String> acceptFriendRequest(String id) async {
+    final response = await _client.request(
+      'social/friend-requests/$id/accept',
+      method: 'POST',
+    );
+    return requireString(
+      requireObject(response.data, 'friend relationship'),
+      'status',
+    );
+  }
+
+  @override
+  Future<void> rejectFriendRequest(String id) async {
+    await _client.request('social/friend-requests/$id/reject', method: 'POST');
+  }
+
+  @override
   Future<String> friend(String handle) async {
     final response = await _client.request(
       'social/friends/$handle',
@@ -288,6 +338,29 @@ final class DioSocialRepository implements SocialRepository {
       requireObject(response.data, 'friend relationship'),
       'status',
     );
+  }
+
+  @override
+  Future<void> unfriend(String handle) async {
+    await _client.request('social/friends/$handle', method: 'DELETE');
+  }
+
+  @override
+  Future<List<FriendSuggestionModel>> suggestions() async {
+    final response = await _client.request('social/friends/suggestions');
+    return _array(
+      response.data,
+      'friend suggestions',
+    ).map(FriendSuggestionModel.fromJson).toList(growable: false);
+  }
+
+  @override
+  Future<List<FriendSummaryModel>> mutuals(String handle) async {
+    final response = await _client.request('social/friends/$handle/mutuals');
+    return _array(
+      response.data,
+      'mutual friends',
+    ).map(FriendSummaryModel.fromJson).toList(growable: false);
   }
 
   @override

@@ -513,3 +513,15 @@ DateTime requireDateTime(JsonObject json, String key) {
   }
   return value;
 }
+
+DateTime? optionalDateTime(JsonObject json, String key) {
+  final raw = optionalString(json, key);
+  if (raw == null) {
+    return null;
+  }
+  final value = DateTime.tryParse(raw);
+  if (value == null) {
+    throw FormatException('$key must be an ISO-8601 date-time or null.');
+  }
+  return value;
+}

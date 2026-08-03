@@ -91,6 +91,108 @@ final class ProfileModel {
 }
 
 @immutable
+final class FriendSummaryModel {
+  const FriendSummaryModel({
+    required this.friendshipId,
+    required this.handle,
+    required this.displayName,
+    required this.avatarUrl,
+    required this.online,
+    required this.lastSeenAt,
+  });
+
+  factory FriendSummaryModel.fromJson(JsonObject json) => FriendSummaryModel(
+    friendshipId: requireString(json, 'friendship_id'),
+    handle: requireString(json, 'handle'),
+    displayName: requireString(json, 'display_name'),
+    avatarUrl: optionalString(json, 'avatar_url'),
+    online: requireBool(json, 'online'),
+    lastSeenAt: optionalDateTime(json, 'last_seen_at'),
+  );
+
+  final String friendshipId;
+  final String handle;
+  final String displayName;
+  final String? avatarUrl;
+  final bool online;
+  final DateTime? lastSeenAt;
+}
+
+@immutable
+final class FriendRequestSummaryModel {
+  const FriendRequestSummaryModel({
+    required this.id,
+    required this.handle,
+    required this.displayName,
+    required this.avatarUrl,
+    required this.requestedAt,
+  });
+
+  factory FriendRequestSummaryModel.fromJson(JsonObject json) =>
+      FriendRequestSummaryModel(
+        id: requireString(json, 'id'),
+        handle: requireString(json, 'handle'),
+        displayName: requireString(json, 'display_name'),
+        avatarUrl: optionalString(json, 'avatar_url'),
+        requestedAt: requireDateTime(json, 'requested_at'),
+      );
+
+  final String id;
+  final String handle;
+  final String displayName;
+  final String? avatarUrl;
+  final DateTime requestedAt;
+}
+
+@immutable
+final class FriendRequestsModel {
+  const FriendRequestsModel({required this.incoming, required this.outgoing});
+
+  factory FriendRequestsModel.fromJson(JsonObject json) => FriendRequestsModel(
+    incoming: requireList(json, 'incoming')
+        .map(
+          (value) => FriendRequestSummaryModel.fromJson(
+            requireObject(value, 'incoming friend request'),
+          ),
+        )
+        .toList(growable: false),
+    outgoing: requireList(json, 'outgoing')
+        .map(
+          (value) => FriendRequestSummaryModel.fromJson(
+            requireObject(value, 'outgoing friend request'),
+          ),
+        )
+        .toList(growable: false),
+  );
+
+  final List<FriendRequestSummaryModel> incoming;
+  final List<FriendRequestSummaryModel> outgoing;
+}
+
+@immutable
+final class FriendSuggestionModel {
+  const FriendSuggestionModel({
+    required this.handle,
+    required this.displayName,
+    required this.avatarUrl,
+    required this.mutualCount,
+  });
+
+  factory FriendSuggestionModel.fromJson(JsonObject json) =>
+      FriendSuggestionModel(
+        handle: requireString(json, 'handle'),
+        displayName: requireString(json, 'display_name'),
+        avatarUrl: optionalString(json, 'avatar_url'),
+        mutualCount: requireInt(json, 'mutual_count'),
+      );
+
+  final String handle;
+  final String displayName;
+  final String? avatarUrl;
+  final int mutualCount;
+}
+
+@immutable
 final class AccountSettingsModel {
   const AccountSettingsModel({
     required this.productEmails,
