@@ -1,0 +1,190 @@
+# Parallel / pre-cutover stack for getsylora.com migration.
+# - Separate Compose project name (sylora-restored)
+# - No public :80/:443 (keeps current nginx dashboard live)
+# - API exposed only on loopback :18000 for direct-origin checks
+# - Embedded MinIO so gift/object APIs work without Cloudflare R2 during validation
+# - Single API replica + reduced Redis memory for CX22 (4GB) hosts
+#
+# Usage (on host):
+#   cd /root/Sylora-restored/infrastructure/production
+#   docker compose -p sylora-restored \
+#     -f docker-compose.yml -f docker-compose.parallel.yml \
+#     --env-file .env up -d --build
+
+name: sylora-restored
+
+x-api-env-parallel: &api-env-parallel
+  ENVIRONMENT: "${APP_ENVIRONMENT:-staging}"
+  DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+  REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+  CELERY_BROKER_URL: "redis://:${REDIS_PASSWORD}@redis:6379/1"
+  CELERY_RESULT_BACKEND: "redis://:${REDIS_PASSWORD}@redis:6379/2"
+  WEB_BASE_URL: "https://${DOMAIN}"
+  CORS_ORIGINS: "[\"https://${DOMAIN}\",\"https://www.${DOMAIN}\"]"
+  ALLOWED_HOSTS: "[\"${DOMAIN}\",\"www.${DOMAIN}\",\"127.0.0.1\",\"localhost\"]"
+  JWT_ISSUER: "https://${DOMAIN}"
+  JWT_AUDIENCE: "${JWT_AUDIENCE:-sylora-api}"
+  JWT_SECRET: "${JWT_SECRET}"
+  DATA_ENCRYPTION_KEY: "${DATA_ENCRYPTION_KEY}"
+  IP_HASH_KEY: "${IP_HASH_KEY}"
+  SMTP_HOST: "${SMTP_HOST:-}"
+  SMTP_PORT: "${SMTP_PORT:-587}"
+  SMTP_FROM_EMAIL: "${SMTP_FROM_EMAIL:-}"
+  SMTP_FROM_NAME: "${SMTP_FROM_NAME:-SYLORA}"
+  SMTP_START_TLS: "${SMTP_START_TLS:-true}"
+  SMTP_USE_TLS: "${SMTP_USE_TLS:-false}"
+  SMTP_USERNAME: "${SMTP_USERNAME:-}"
+  SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+  S3_ENDPOINT_URL: "${S3_ENDPOINT_URL:-http://minio:9000}"
+  S3_BUCKET: "${S3_BUCKET:-sylora-app}"
+  S3_REGION: "${S3_REGION:-us-east-1}"
+  S3_ACCESS_KEY_ID: "${S3_ACCESS_KEY_ID}"
+  S3_SECRET_ACCESS_KEY: "${S3_SECRET_ACCESS_KEY}"
+  S3_PRESIGN_SECONDS: "${S3_PRESIGN_SECONDS:-900}"
+  TEST_STAND_MODE: "${TEST_STAND_MODE:-true}"
+  TEST_STAND_AUTO_VERIFY_EMAIL: "${TEST_STAND_AUTO_VERIFY_EMAIL:-true}"
+  TEST_STAND_SANDBOX_WALLET: "${TEST_STAND_SANDBOX_WALLET:-true}"
+  TEST_STAND_SANDBOX_CREDIT_MINOR: "${TEST_STAND_SANDBOX_CREDIT_MINOR:-5000}"
+  TEST_STAND_ENDS_AT: "${TEST_STAND_ENDS_AT:-}"
+  TEST_STAND_BUG_REPORT_URL: "${TEST_STAND_BUG_REPORT_URL:-}"
+  STAND_ARTIFACTS_ROOT: /artifacts/sylora-gift-100-originals
+  BOOTSTRAP_SOFT_PING: "${BOOTSTRAP_SOFT_PING:-false}"
+  OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+  API_WORKERS: "${API_WORKERS:-1}"
+  API_LOG_LEVEL: "${API_LOG_LEVEL:-info}"
+  LOG_FORMAT: json
+
+services:
+  # Keep edge/HA/backup services out of the parallel validation profile set.
+  # Do not start these until cutover (and prefer nginx upstream switch instead).
+  caddy:
+    profiles: ["cutover-edge"]
+
+  api2:
+    profiles: ["ha"]
+
+  backup:
+    profiles: ["backups"]
+
+  api:
+    environment:
+      <<: *api-env-parallel
+    ports:
+      - "127.0.0.1:18000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  migrate:
+    environment:
+      <<: *api-env-parallel
+
+  postgres:
+    command:
+      - postgres
+      - -c
+      - logging_collector=on
+      - -c
+      - log_destination=stderr
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=100
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    command:
+      [
+        "redis-server",
+        "--requirepass",
+        "${REDIS_PASSWORD}",
+        "--appendonly",
+        "yes",
+        "--maxmemory",
+        "${REDIS_MAXMEMORY:-128mb}",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: "${S3_ACCESS_KEY_ID}"
+      MINIO_ROOT_PASSWORD: "${S3_SECRET_ACCESS_KEY}"
+    volumes:
+      - restored-minio-data:/data
+    networks:
+      - data
+      - application
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      S3_ACCESS_KEY_ID: "${S3_ACCESS_KEY_ID}"
+      S3_SECRET_ACCESS_KEY: "${S3_SECRET_ACCESS_KEY}"
+      S3_BUCKET: "${S3_BUCKET:-sylora-app}"
+    entrypoint:
+      - /bin/sh
+      - -lc
+      - |
+        set -euo pipefail
+        mc alias set local http://minio:9000 "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY"
+        mc mb --ignore-existing "local/$$S3_BUCKET"
+        echo "minio bucket ready: $$S3_BUCKET"
+    networks:
+      - data
+
+  # Serve Flutter web dist on loopback for pre-cutover checks (not public).
+  web-preview:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - web-dist:/usr/share/nginx/html:ro
+    ports:
+      - "127.0.0.1:18080:80"
+    depends_on:
+      web:
+        condition: service_completed_successfully
+    networks:
+      - application
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+volumes:
+  restored-minio-data:
