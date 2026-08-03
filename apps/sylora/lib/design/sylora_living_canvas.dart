@@ -50,9 +50,19 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
       if (mounted) setState(() {});
     });
     // Paint a static first frame, then arm motion after layout settles.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // On web (esp. software WebGL) delay longer so Auth/forms mount first.
+    void arm() {
       if (!mounted) return;
       setState(() => _armed = true);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (kIsWeb) {
+        Future<void>.delayed(const Duration(milliseconds: 450), arm);
+      } else {
+        arm();
+      }
     });
   }
 
