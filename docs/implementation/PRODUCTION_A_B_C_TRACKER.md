@@ -12,30 +12,35 @@ Branch: `cursor/sylora-production-platform-fc9f`
 - Light futuristic Lumen DS across product modules
 - Manual audit before claiming launch-ready
 
-## Wave A (Controlled Production) — in progress
+## Wave A (Controlled Production) — largely landed
 
 | Workstream | Status | Notes |
 |---|---|---|
-| Design System shell across Feed/Profile/Settings/AI/More | **Landed** | `SyloraModuleScaffold` + living canvas |
-| i18n architecture (11 locales) + UK/EN seed | **Landed** | ARB + LocaleController; others EN fallback |
+| Design System shell across Feed/Profile/Settings/AI/More | **Landed** | `SyloraModuleScaffold` + living canvas + Aura presence |
+| i18n architecture (11 locales) + UK/EN seed | **Landed** | ARB + LocaleController |
 | Hybrid AI memory (embed + postgres vector store) | **Landed** | Milvus adapter later; fail-closed without provider |
 | Stripe PSP + webhook verify + CI sandbox | **Landed** | Production fail-closed without secrets |
 | Trust & Safety MVP | **Landed** | Reports queue / resolve / escalate / AI moderate |
-| Live OBS-first + MediaMTX WHIP credentials | **Landed** | Creator Studio web WHIP publisher MVP |
+| Live OBS-first + MediaMTX WHIP credentials | **Landed** | Creator Studio web WHIP publisher |
 | Native WebRTC publisher (browser) | **Partial** | WHIP SDP publish on web; mobile native next |
-| Gift READY catalog (20–30) | **Next** | Runtime exists; READY=0 |
-| Push notifications FCM/APNs | **Next** | |
+| Gift READY catalog (20–30) | **Partial** | 10 sandbox/staging READY starter gifts seeded |
+| Push notifications FCM/APNs | **Partial** | FCM HTTP v1 + device register; native token plug-in pending |
 | Security hardening + observability | **Partial** | Headers, request logs, SLO counters/dependency snapshot |
-| Auth/social/messaging polish + manual QA | **Next** | |
+| Auth/social/messaging polish + manual QA | **In progress** | |
 
-## Wave B (Creator Production) — queued
+## Wave B (Creator Production) — in progress
 
-- Creator Studio full: scenes, overlays, mixer, recording
-- AI Host voice + moderation + cohost scheduler full wire
-- Group/guest streams, replay/VOD
-- 30+ READY gifts + rankings/combos polish
-- Complete 11-language copy packs
-- Push + email digests live
+| Workstream | Status | Notes |
+|---|---|---|
+| Creator Studio scenes / overlays / meters / recording | **Partial** | Local + OBS sync; MediaRecorder fallback |
+| AI Host cohost scheduler wire | **Partial** | Per-session DialogueScheduler gating |
+| Aura Presence Fabric | **Partial** | Module presets + reactive emotions |
+| Replay / VOD foundation | **Partial** | LiveReplay + S3 presign fail-closed |
+| European locale packs (pl/de/es/fr) | **Landed** | ja/ko/zh interim EN |
+| 30+ READY gifts + rankings/combos | **Next** | |
+| Group/guest streams | **Next** | |
+| Complete remaining language packs | **Next** | it/pt/ja/ko/zh |
+| Push + email digests live | **Next** | |
 
 ## Wave C (Global Platform) — queued
 
@@ -56,11 +61,14 @@ PAYMENT_SANDBOX_MODE=true   # non-production CI only
 MEDIAMTX_CONTROL_URL=...
 MEDIAMTX_WHIP_BASE_URL=...
 TURN_URLS=["turns:..."]
+PUSH_ENABLED=true
+FCM_PROJECT_ID=...
+FCM_SERVICE_ACCOUNT_JSON=...
+BOOTSTRAP_READY_GIFTS=true
 ```
 
 ## Verification log
 
-- API AI vector tests: passed (agent)
-- API live hub publish-credentials: passed (agent)
-- API payments + trust_safety: passed (agent)
-- Flutter analyze (post-i18n): pending parent merge check
+- API focused suites (vector/payments/trust/live/gifts/push/obs/replay): green in agent runs
+- Flutter analyze: green after i18n + creator studio
+- Full manual product audit: pending deploy
