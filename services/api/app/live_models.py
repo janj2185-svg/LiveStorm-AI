@@ -78,6 +78,24 @@ class LiveSessionState(enum.StrEnum):
     failed = "failed"
 
 
+class LiveGuestInviteStatus(enum.StrEnum):
+    pending = "pending"
+    accepted = "accepted"
+    declined = "declined"
+    revoked = "revoked"
+
+
+class LiveGuestRole(enum.StrEnum):
+    guest = "guest"
+    cohost = "cohost"
+
+
+class LiveGuestMediaStatus(enum.StrEnum):
+    not_requested = "not_requested"
+    awaiting_media_plane = "awaiting_media_plane"
+    ready = "ready"
+
+
 class LiveReplayStatus(enum.StrEnum):
     pending = "pending"
     processing = "processing"
@@ -290,6 +308,44 @@ class LiveSession(Base):
         Enum(LiveAIMode, native_enum=False, length=16), default=LiveAIMode.off
     )
     last_error_code: Mapped[str | None] = mapped_column(String(96))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class LiveGuestInvite(Base):
+    __tablename__ = "live_guest_invites"
+    __table_args__ = (
+        Index("ix_live_guest_invites_session_created", "session_id", "created_at", "id"),
+        Index("ix_live_guest_invites_invitee_status", "invitee_user_id", "status"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("live_sessions.id", ondelete="CASCADE"), index=True
+    )
+    invitee_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[LiveGuestInviteStatus] = mapped_column(
+        Enum(LiveGuestInviteStatus, native_enum=False, length=16),
+        default=LiveGuestInviteStatus.pending,
+        index=True,
+    )
+    role: Mapped[LiveGuestRole] = mapped_column(
+        Enum(LiveGuestRole, native_enum=False, length=16),
+        default=LiveGuestRole.guest,
+        index=True,
+    )
+    media_status: Mapped[LiveGuestMediaStatus] = mapped_column(
+        Enum(LiveGuestMediaStatus, native_enum=False, length=32),
+        default=LiveGuestMediaStatus.not_requested,
+        index=True,
+    )
+    guest_ingest_path: Mapped[str | None] = mapped_column(String(255), index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )

@@ -8,6 +8,7 @@ import 'package:sylora/core/config.dart';
 import 'package:sylora/features/business/business_repository.dart';
 import 'package:sylora/features/learning/learning_repository.dart';
 import 'package:sylora/features/marketplace/marketplace_repository.dart';
+import 'package:sylora/features/platform/repositories.dart';
 
 import 'test_transport.dart';
 
@@ -208,6 +209,47 @@ void main() {
     expect(task.status, 'completed');
   });
 
+  test(
+    'live guest invite routes send username target and parse list',
+    () async {
+      final requests = <RequestOptions>[];
+      final repository = DioLiveRepository(
+        _client((options) {
+          requests.add(options);
+          if (options.uri.path.endsWith('/guests/invite')) {
+            return jsonResponse(_guestInviteJson(status: 'pending'), 201);
+          }
+          return jsonResponse(<Map<String, dynamic>>[
+            _guestInviteJson(status: 'accepted', mediaStatus: 'ready'),
+          ], 200);
+        }),
+        AppConfig(apiBaseUri: Uri.parse('https://api.example.test')),
+        _MemoryTokenStore(),
+      );
+
+      final invited = await repository.inviteGuest(
+        'session-id',
+        invitee: '@guest_handle',
+        role: 'cohost',
+      );
+      final guests = await repository.guests('session-id');
+
+      expect(
+        requests[0].uri.path,
+        '/v1/live/sessions/session-id/guests/invite',
+      );
+      expect(requests[0].method, 'POST');
+      expect(requests[0].data, <String, dynamic>{
+        'invitee_username': 'guest_handle',
+        'role': 'cohost',
+      });
+      expect(invited.status, 'pending');
+      expect(requests[1].uri.path, '/v1/live/sessions/session-id/guests');
+      expect(guests.single.status, 'accepted');
+      expect(guests.single.mediaStatus, 'ready');
+    },
+  );
+
   test('admin and role-specific route guards deny unprivileged users', () {
     expect(canAccessRoleRoute(const <String>['user'], '/admin'), isFalse);
     expect(
@@ -228,6 +270,23 @@ void main() {
     );
   });
 }
+
+Map<String, dynamic> _guestInviteJson({
+  required String status,
+  String mediaStatus = 'not_requested',
+}) => <String, dynamic>{
+  'id': 'invite-id',
+  'session_id': 'session-id',
+  'invitee_user_id': 'guest-user-id',
+  'status': status,
+  'role': 'cohost',
+  'media_status': mediaStatus,
+  'guest_ingest_path': mediaStatus == 'ready'
+      ? 'live/session/guests/invite-id'
+      : null,
+  'created_at': '2026-08-03T19:17:00Z',
+  'updated_at': '2026-08-03T19:17:00Z',
+};
 
 ApiClient _client(TransportHandler handler) {
   final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test/v1/'));

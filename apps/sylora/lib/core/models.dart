@@ -739,3 +739,38 @@ final class LiveSessionModel {
   final List<LiveDestinationModel> destinations;
   final LiveReplayModel? replay;
 }
+
+@immutable
+final class LiveGuestInviteModel {
+  const LiveGuestInviteModel({
+    required this.id,
+    required this.sessionId,
+    required this.inviteeUserId,
+    required this.status,
+    required this.role,
+    required this.mediaStatus,
+    required this.createdAt,
+    this.guestIngestPath,
+  });
+
+  factory LiveGuestInviteModel.fromJson(JsonObject json) =>
+      LiveGuestInviteModel(
+        id: requireString(json, 'id'),
+        sessionId: requireString(json, 'session_id'),
+        inviteeUserId: requireString(json, 'invitee_user_id'),
+        status: requireString(json, 'status'),
+        role: requireString(json, 'role'),
+        mediaStatus: requireString(json, 'media_status'),
+        guestIngestPath: optionalString(json, 'guest_ingest_path'),
+        createdAt: requireDateTime(json, 'created_at'),
+      );
+
+  final String id;
+  final String sessionId;
+  final String inviteeUserId;
+  final String status;
+  final String role;
+  final String mediaStatus;
+  final String? guestIngestPath;
+  final DateTime createdAt;
+}

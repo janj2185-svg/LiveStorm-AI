@@ -52,7 +52,7 @@ from app.live_service import (
     process_webhook_delivery,
     replay_event,
 )
-from app.models import Role, UserRole
+from app.models import Profile, Role, UserRole
 from app.routers.live import live_websocket
 from tests.conftest import APIHarness, bearer, login, register_and_verify
 
@@ -535,6 +535,172 @@ async def test_publish_credentials_shape_when_mediamtx_configured(api_factory: A
         assert payload["sid"] == session_id
         assert payload["path"] == ingest_path
         assert payload["sub"] == str(user_id)
+
+
+@pytest.mark.asyncio
+async def test_live_guest_invite_accept_without_media_plane(api_factory: Any) -> None:
+    async with api_factory() as api:
+        creator_auth, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=creator_auth,
+            json={"title": "Guest foundation"},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+
+        await register_and_verify(
+            api,
+            email="live-guest@example.com",
+            display_name="Live Guest",
+        )
+        guest = await api.user("live-guest@example.com")
+        guest_tokens = await login(api, email="live-guest@example.com")
+        guest_auth = bearer(guest_tokens["access_token"])
+
+        invited = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/invite",
+            headers=creator_auth,
+            json={"invitee_user_id": str(guest.id), "role": "cohost"},
+        )
+        assert invited.status_code == 201, invited.text
+        invite = invited.json()
+        assert invite["status"] == "pending"
+        assert invite["role"] == "cohost"
+        assert invite["media_status"] == "not_requested"
+
+        listing = await api.client.get(
+            f"/v1/live/sessions/{session_id}/guests",
+            headers=creator_auth,
+        )
+        assert listing.status_code == 200, listing.text
+        assert [item["id"] for item in listing.json()] == [invite["id"]]
+
+        accepted = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/{invite['id']}/accept",
+            headers=guest_auth,
+        )
+        assert accepted.status_code == 200, accepted.text
+        accepted_body = accepted.json()
+        assert accepted_body["status"] == "accepted"
+        assert accepted_body["media_status"] == "awaiting_media_plane"
+        assert accepted_body["publish_credentials"] is None
+        assert accepted_body["guest_ingest_path"].endswith(f"/guests/{invite['id']}")
+
+        post_accept_list = await api.client.get(
+            f"/v1/live/sessions/{session_id}/guests",
+            headers=creator_auth,
+        )
+        assert post_accept_list.status_code == 200, post_accept_list.text
+        assert post_accept_list.json()[0]["status"] == "accepted"
+
+
+@pytest.mark.asyncio
+async def test_live_guest_accept_issues_guest_publish_credentials(
+    api_factory: Any,
+) -> None:
+    media = TestAdapter(
+        IntegrationPlatform.rtmp_webrtc,
+        frozenset({LiveCapability.publish, LiveCapability.first_party_ingest}),
+    )
+    async with api_factory(
+        live_adapter_registry=TestRegistry([media]),
+        mediamtx_control_url="http://mediamtx.test:9997",
+        mediamtx_whip_base_url="https://live.test.sylora.local",
+        mediamtx_playback_base_url="https://watch.test.sylora.local",
+    ) as api:
+        creator_auth, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=creator_auth,
+            json={"title": "Guest WHIP media plane"},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+
+        await register_and_verify(
+            api,
+            email="live-whip-guest@example.com",
+            display_name="Live WHIP Guest",
+        )
+        guest = await api.user("live-whip-guest@example.com")
+        async with api.app.state.session_factory() as db:
+            profile = await db.get(Profile, guest.id)
+            assert profile is not None
+            profile.handle = "livewhipguest"
+            await db.commit()
+        guest_tokens = await login(api, email="live-whip-guest@example.com")
+
+        invited = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/invite",
+            headers=creator_auth,
+            json={"invitee_username": "livewhipguest", "role": "guest"},
+        )
+        assert invited.status_code == 201, invited.text
+        invite = invited.json()
+
+        accepted = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/{invite['id']}/accept",
+            headers=bearer(guest_tokens["access_token"]),
+        )
+        assert accepted.status_code == 200, accepted.text
+        body = accepted.json()
+        guest_path = f"{created.json()['ingest_path']}/guests/{invite['id']}"
+        assert body["status"] == "accepted"
+        assert body["media_status"] == "ready"
+        assert body["guest_ingest_path"] == guest_path
+        credentials = body["publish_credentials"]
+        assert credentials["status"] == "available"
+        assert credentials["ingest_path"] == guest_path
+        assert credentials["whip_url"] == f"https://live.test.sylora.local/{guest_path}/whip"
+        assert credentials["playback_url"] == f"https://watch.test.sylora.local/{guest_path}"
+        payload = jwt.decode(
+            credentials["bearer_token"],
+            api.app.state.settings.jwt_secret.get_secret_value(),
+            algorithms=["HS256"],
+            audience=api.app.state.settings.jwt_audience,
+            issuer=api.app.state.settings.jwt_issuer,
+        )
+        assert payload["type"] == "live_guest_whip_publish"
+        assert payload["sid"] == session_id
+        assert payload["path"] == guest_path
+        assert payload["sub"] == str(guest.id)
+
+
+@pytest.mark.asyncio
+async def test_live_guest_invite_decline_flow(api_factory: Any) -> None:
+    async with api_factory() as api:
+        creator_auth, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=creator_auth,
+            json={"title": "Guest decline"},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+
+        await register_and_verify(
+            api,
+            email="live-decline-guest@example.com",
+            display_name="Live Decline Guest",
+        )
+        guest = await api.user("live-decline-guest@example.com")
+        guest_tokens = await login(api, email="live-decline-guest@example.com")
+        invited = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/invite",
+            headers=creator_auth,
+            json={"invitee_user_id": str(guest.id), "role": "guest"},
+        )
+        assert invited.status_code == 201, invited.text
+        invite_id = invited.json()["id"]
+
+        declined = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/{invite_id}/decline",
+            headers=bearer(guest_tokens["access_token"]),
+        )
+        assert declined.status_code == 200, declined.text
+        assert declined.json()["status"] == "declined"
+        assert declined.json()["media_status"] == "not_requested"
 
 
 @pytest.mark.asyncio

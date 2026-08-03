@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.dependencies import (
     AuthContext,
+    current_auth,
     get_session,
     get_settings,
     has_permission,
@@ -65,6 +66,9 @@ from app.live_schemas import (
     LiveActionResponse,
     LiveDestinationCreate,
     LiveDestinationResponse,
+    LiveGuestInviteAcceptResponse,
+    LiveGuestInviteCreate,
+    LiveGuestInviteResponse,
     LiveMediaCapabilityResponse,
     LivePublishCredentialsResponse,
     LiveReplayPlaybackResponse,
@@ -101,6 +105,7 @@ from app.live_schemas import (
 )
 from app.live_service import (
     LiveEventHub,
+    accept_guest_invite,
     accept_webhook,
     add_destination,
     answer_game_question,
@@ -109,12 +114,16 @@ from app.live_service import (
     create_game,
     create_integration_connection,
     create_live_session,
+    decline_guest_invite,
     disconnect_integration,
     end_game,
     end_session,
     execute_live_action,
     generate_live_ai_turn,
+    guest_invite_for_invitee,
     health_connection,
+    invite_guest_to_session,
+    list_guest_invites,
     media_capability_response,
     moderate_live_event,
     oauth_callback_connection,
@@ -148,6 +157,7 @@ ManageAuth = Annotated[AuthContext, Depends(require_permission("live:manage"))]
 IntegrationAuth = Annotated[AuthContext, Depends(require_permission("live:integrations:manage"))]
 ModerateAuth = Annotated[AuthContext, Depends(require_permission("live:moderate"))]
 AdminAuth = Annotated[AuthContext, Depends(require_permission("live:admin"))]
+Authenticated = Annotated[AuthContext, Depends(current_auth)]
 
 
 def registry(request: Request) -> AdapterRegistry:
@@ -703,6 +713,97 @@ async def publish_credentials_endpoint(
     await live_rate_limit(request, auth.user.id)
     record = await owned_live_session(db, session_id, auth.user.id)
     return publish_credentials_response(settings, record)
+
+
+@router.get(
+    "/sessions/{session_id}/guests",
+    response_model=list[LiveGuestInviteResponse],
+)
+async def list_session_guests(
+    session_id: uuid.UUID,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+) -> list[LiveGuestInviteResponse]:
+    record = await owned_live_session(db, session_id, auth.user.id)
+    return [
+        LiveGuestInviteResponse.model_validate(item)
+        for item in await list_guest_invites(db, record)
+    ]
+
+
+@router.post(
+    "/sessions/{session_id}/guests/invite",
+    response_model=LiveGuestInviteResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def invite_session_guest(
+    session_id: uuid.UUID,
+    payload: LiveGuestInviteCreate,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+) -> LiveGuestInviteResponse:
+    await live_rate_limit(request, auth.user.id)
+    record = await owned_live_session(db, session_id, auth.user.id)
+    invite = await invite_guest_to_session(db, record, payload)
+    await publish_latest(request, session_id)
+    return LiveGuestInviteResponse.model_validate(invite)
+
+
+@router.post(
+    "/sessions/{session_id}/guests/{invite_id}/accept",
+    response_model=LiveGuestInviteAcceptResponse,
+)
+async def accept_session_guest(
+    session_id: uuid.UUID,
+    invite_id: uuid.UUID,
+    request: Request,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LiveGuestInviteAcceptResponse:
+    await live_rate_limit(request, auth.user.id)
+    record = await db.get(LiveSession, session_id)
+    if record is None:
+        raise APIError(
+            404,
+            "live_session_not_found",
+            "Live session not found",
+            "The live session does not exist.",
+        )
+    invite = await guest_invite_for_invitee(db, record, invite_id, auth.user.id)
+    invite, credentials = await accept_guest_invite(db, settings, record, invite)
+    await publish_latest(request, session_id)
+    return LiveGuestInviteAcceptResponse(
+        **LiveGuestInviteResponse.model_validate(invite).model_dump(),
+        publish_credentials=credentials,
+    )
+
+
+@router.post(
+    "/sessions/{session_id}/guests/{invite_id}/decline",
+    response_model=LiveGuestInviteResponse,
+)
+async def decline_session_guest(
+    session_id: uuid.UUID,
+    invite_id: uuid.UUID,
+    request: Request,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+) -> LiveGuestInviteResponse:
+    await live_rate_limit(request, auth.user.id)
+    record = await db.get(LiveSession, session_id)
+    if record is None:
+        raise APIError(
+            404,
+            "live_session_not_found",
+            "Live session not found",
+            "The live session does not exist.",
+        )
+    invite = await guest_invite_for_invitee(db, record, invite_id, auth.user.id)
+    invite = await decline_guest_invite(db, record, invite)
+    await publish_latest(request, session_id)
+    return LiveGuestInviteResponse.model_validate(invite)
 
 
 @router.get(

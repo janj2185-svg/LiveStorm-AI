@@ -25,6 +25,9 @@ from app.live_models import (
     LiveAIMode,
     LiveCapability,
     LiveDestinationState,
+    LiveGuestInviteStatus,
+    LiveGuestMediaStatus,
+    LiveGuestRole,
     LiveModerationMode,
     LiveNormalizedEventType,
     LiveReplayStatus,
@@ -63,11 +66,7 @@ def safe_json_object(value: dict[str, Any]) -> dict[str, Any]:
 
 def safe_object_key(value: str) -> str:
     stripped = value.strip()
-    if (
-        not OBJECT_KEY_PATTERN.fullmatch(stripped)
-        or "//" in stripped
-        or "/../" in f"/{stripped}/"
-    ):
+    if not OBJECT_KEY_PATTERN.fullmatch(stripped) or "//" in stripped or "/../" in f"/{stripped}/":
         raise ValueError("object key must be a relative S3 object key")
     return stripped
 
@@ -353,6 +352,40 @@ class LiveSessionCreated(LiveSessionResponse):
     stream_key_once: str
 
 
+class LiveGuestInviteCreate(StrictSchema):
+    invitee_user_id: uuid.UUID | None = None
+    invitee_username: str | None = Field(default=None, min_length=2, max_length=30)
+    role: LiveGuestRole = LiveGuestRole.guest
+
+    @field_validator("invitee_username")
+    @classmethod
+    def valid_username(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        username = value.strip().lstrip("@")
+        if not username or not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]{1,29}", username):
+            raise ValueError("invitee username is invalid")
+        return username
+
+    @model_validator(mode="after")
+    def target_required(self) -> LiveGuestInviteCreate:
+        if self.invitee_user_id is None and self.invitee_username is None:
+            raise ValueError("invitee_user_id or invitee_username is required")
+        return self
+
+
+class LiveGuestInviteResponse(ORMStrictSchema):
+    id: uuid.UUID
+    session_id: uuid.UUID
+    invitee_user_id: uuid.UUID
+    status: LiveGuestInviteStatus
+    role: LiveGuestRole
+    media_status: LiveGuestMediaStatus
+    guest_ingest_path: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
 class StreamKeyRevealResponse(StrictSchema):
     session_id: uuid.UUID
     ingest_path: str
@@ -397,6 +430,10 @@ class LivePublishCredentialsResponse(LiveMediaCapabilityResponse):
     token_expires_at: datetime | None
     token_expires_in_seconds: int
     ice_servers: list[LiveIceServerResponse] = Field(default_factory=list)
+
+
+class LiveGuestInviteAcceptResponse(LiveGuestInviteResponse):
+    publish_credentials: LivePublishCredentialsResponse | None = None
 
 
 class OBSSceneResponse(StrictSchema):

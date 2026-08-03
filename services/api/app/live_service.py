@@ -74,6 +74,9 @@ from app.live_models import (
     LiveGameQuestion,
     LiveGameScore,
     LiveGameSession,
+    LiveGuestInvite,
+    LiveGuestInviteStatus,
+    LiveGuestMediaStatus,
     LiveModerationDecision,
     LiveNormalizedEvent,
     LiveNormalizedEventType,
@@ -106,6 +109,7 @@ from app.live_schemas import (
     GameCreate,
     IntegrationConnectRequest,
     LiveDestinationCreate,
+    LiveGuestInviteCreate,
     LiveIceServerResponse,
     LiveMediaCapabilityResponse,
     LivePublishCredentialsResponse,
@@ -114,6 +118,7 @@ from app.live_schemas import (
     PreflightCheck,
     PreflightResponse,
 )
+from app.models import Profile, User
 from app.security import (
     create_oauth_state,
     decode_oauth_state,
@@ -632,10 +637,22 @@ def media_capability_response(
 
 
 def publish_credentials_response(
-    settings: Settings, live_session: LiveSession
+    settings: Settings,
+    live_session: LiveSession,
+    *,
+    ingest_path: str | None = None,
+    subject_user_id: uuid.UUID | None = None,
+    token_type: str = "live_whip_publish",
 ) -> LivePublishCredentialsResponse:
-    credentials = session_publish_credentials(settings, live_session)
+    credentials = session_publish_credentials(
+        settings,
+        live_session,
+        ingest_path=ingest_path,
+        subject_user_id=subject_user_id,
+        token_type=token_type,
+    )
     capability = credentials.capability
+    effective_ingest_path = ingest_path or live_session.ingest_path
     return LivePublishCredentialsResponse(
         session_id=live_session.id,
         status=capability.status,
@@ -643,7 +660,7 @@ def publish_credentials_response(
         whip_available=capability.whip_available,
         playback_available=capability.playback_available,
         obs_available=capability.obs_available,
-        ingest_path=live_session.ingest_path,
+        ingest_path=effective_ingest_path,
         whip_url=credentials.whip_url,
         playback_url=credentials.playback_url,
         bearer_token=credentials.bearer_token,
@@ -658,6 +675,191 @@ def publish_credentials_response(
             for server in credentials.ice_servers
         ],
     )
+
+
+async def list_guest_invites(db: AsyncSession, live_session: LiveSession) -> list[LiveGuestInvite]:
+    return list(
+        (
+            await db.scalars(
+                select(LiveGuestInvite)
+                .where(LiveGuestInvite.session_id == live_session.id)
+                .order_by(LiveGuestInvite.created_at.desc(), LiveGuestInvite.id.desc())
+            )
+        ).all()
+    )
+
+
+async def _invitee_user_id(db: AsyncSession, payload: LiveGuestInviteCreate) -> uuid.UUID:
+    if payload.invitee_user_id is not None:
+        user = await db.get(User, payload.invitee_user_id)
+        if user is None:
+            raise APIError(
+                404,
+                "live_guest_invitee_not_found",
+                "Live guest not found",
+                "The invited user does not exist.",
+            )
+        return user.id
+    assert payload.invitee_username is not None
+    profile = await db.scalar(
+        select(Profile).where(func.lower(Profile.handle) == payload.invitee_username.lower())
+    )
+    if profile is None:
+        raise APIError(
+            404,
+            "live_guest_invitee_not_found",
+            "Live guest not found",
+            "No user profile matches that username.",
+        )
+    return profile.user_id
+
+
+async def invite_guest_to_session(
+    db: AsyncSession,
+    live_session: LiveSession,
+    payload: LiveGuestInviteCreate,
+) -> LiveGuestInvite:
+    invitee_user_id = await _invitee_user_id(db, payload)
+    if live_session.owner_user_id == invitee_user_id:
+        raise APIError(
+            409,
+            "live_guest_invite_self",
+            "Guest invite not needed",
+            "The session owner already has the host publishing path.",
+        )
+    existing = await db.scalar(
+        select(LiveGuestInvite).where(
+            LiveGuestInvite.session_id == live_session.id,
+            LiveGuestInvite.invitee_user_id == invitee_user_id,
+            LiveGuestInvite.role == payload.role,
+            LiveGuestInvite.status.in_(
+                (LiveGuestInviteStatus.pending, LiveGuestInviteStatus.accepted)
+            ),
+        )
+    )
+    if existing is not None:
+        raise APIError(
+            409,
+            "live_guest_invite_exists",
+            "Live guest invite already exists",
+            "This user already has an active invite for the session and role.",
+        )
+    invite = LiveGuestInvite(
+        session_id=live_session.id,
+        invitee_user_id=invitee_user_id,
+        status=LiveGuestInviteStatus.pending,
+        role=payload.role,
+        media_status=LiveGuestMediaStatus.not_requested,
+    )
+    db.add(invite)
+    await db.flush()
+    _append_live_event(
+        db,
+        live_session,
+        "guest.invited",
+        "guest_invite",
+        invite.id,
+        {"invitee_user_id": str(invitee_user_id), "role": invite.role.value},
+    )
+    await db.commit()
+    await db.refresh(invite)
+    return invite
+
+
+async def guest_invite_for_invitee(
+    db: AsyncSession,
+    live_session: LiveSession,
+    invite_id: uuid.UUID,
+    invitee_user_id: uuid.UUID,
+) -> LiveGuestInvite:
+    invite = await db.scalar(
+        select(LiveGuestInvite).where(
+            LiveGuestInvite.id == invite_id,
+            LiveGuestInvite.session_id == live_session.id,
+            LiveGuestInvite.invitee_user_id == invitee_user_id,
+        )
+    )
+    if invite is None:
+        raise APIError(
+            404,
+            "live_guest_invite_not_found",
+            "Live guest invite not found",
+            "The live guest invite does not exist.",
+        )
+    return invite
+
+
+async def accept_guest_invite(
+    db: AsyncSession,
+    settings: Settings,
+    live_session: LiveSession,
+    invite: LiveGuestInvite,
+) -> tuple[LiveGuestInvite, LivePublishCredentialsResponse | None]:
+    if invite.status != LiveGuestInviteStatus.pending:
+        raise APIError(
+            409,
+            "live_guest_invite_state_conflict",
+            "Live guest invite state conflict",
+            "Only pending live guest invites can be accepted.",
+        )
+    guest_ingest_path = f"{live_session.ingest_path.rstrip('/')}/guests/{invite.id}"
+    credentials = publish_credentials_response(
+        settings,
+        live_session,
+        ingest_path=guest_ingest_path,
+        subject_user_id=invite.invitee_user_id,
+        token_type="live_guest_whip_publish",
+    )
+    invite.status = LiveGuestInviteStatus.accepted
+    invite.guest_ingest_path = guest_ingest_path
+    issued_credentials: LivePublishCredentialsResponse | None = None
+    if credentials.status == "available":
+        invite.media_status = LiveGuestMediaStatus.ready
+        issued_credentials = credentials
+    else:
+        invite.media_status = LiveGuestMediaStatus.awaiting_media_plane
+    _append_live_event(
+        db,
+        live_session,
+        "guest.accepted",
+        "guest_invite",
+        invite.id,
+        {
+            "invitee_user_id": str(invite.invitee_user_id),
+            "role": invite.role.value,
+            "media_status": invite.media_status.value,
+        },
+    )
+    await db.commit()
+    await db.refresh(invite)
+    return invite, issued_credentials
+
+
+async def decline_guest_invite(
+    db: AsyncSession,
+    live_session: LiveSession,
+    invite: LiveGuestInvite,
+) -> LiveGuestInvite:
+    if invite.status != LiveGuestInviteStatus.pending:
+        raise APIError(
+            409,
+            "live_guest_invite_state_conflict",
+            "Live guest invite state conflict",
+            "Only pending live guest invites can be declined.",
+        )
+    invite.status = LiveGuestInviteStatus.declined
+    invite.media_status = LiveGuestMediaStatus.not_requested
+    _append_live_event(
+        db,
+        live_session,
+        "guest.declined",
+        "guest_invite",
+        invite.id,
+        {"invitee_user_id": str(invite.invitee_user_id), "role": invite.role.value},
+    )
+    await db.commit()
+    await db.refresh(invite)
+    return invite
 
 
 def _cohost_system_prompt(content: str, persona: AILivePersona) -> str:

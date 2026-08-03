@@ -1310,6 +1310,17 @@ abstract interface class LiveRepository {
   Future<LiveSessionModel> session(String id);
   Future<JsonObject> mediaCapability(String sessionId);
   Future<JsonObject> publishCredentials(String sessionId);
+  Future<List<LiveGuestInviteModel>> guests(String sessionId);
+  Future<LiveGuestInviteModel> inviteGuest(
+    String sessionId, {
+    required String invitee,
+    required String role,
+  });
+  Future<JsonObject> acceptGuestInvite(String sessionId, String inviteId);
+  Future<LiveGuestInviteModel> declineGuestInvite(
+    String sessionId,
+    String inviteId,
+  );
   Future<JsonObject> replayPlayback(String replayId);
   Future<JsonObject> obsScenes(String sessionId);
   Future<JsonObject> selectObsScene(String sessionId, String sceneName);
@@ -1453,6 +1464,63 @@ final class DioLiveRepository implements LiveRepository {
       method: 'POST',
     );
     return requireObject(response.data, 'live publish credentials');
+  }
+
+  @override
+  Future<List<LiveGuestInviteModel>> guests(String sessionId) async {
+    final response = await _client.request('live/sessions/$sessionId/guests');
+    return _array(
+      response.data,
+      'live guests',
+    ).map(LiveGuestInviteModel.fromJson).toList(growable: false);
+  }
+
+  @override
+  Future<LiveGuestInviteModel> inviteGuest(
+    String sessionId, {
+    required String invitee,
+    required String role,
+  }) async {
+    final target = invitee.trim();
+    final username = target.startsWith('@') ? target.substring(1) : target;
+    final response = await _client.request(
+      'live/sessions/$sessionId/guests/invite',
+      method: 'POST',
+      data: <String, dynamic>{
+        if (_uuidPattern.hasMatch(target)) 'invitee_user_id': target,
+        if (!_uuidPattern.hasMatch(target)) 'invitee_username': username,
+        'role': role,
+      },
+    );
+    return LiveGuestInviteModel.fromJson(
+      requireObject(response.data, 'live guest invite'),
+    );
+  }
+
+  @override
+  Future<JsonObject> acceptGuestInvite(
+    String sessionId,
+    String inviteId,
+  ) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/guests/$inviteId/accept',
+      method: 'POST',
+    );
+    return requireObject(response.data, 'live guest invite acceptance');
+  }
+
+  @override
+  Future<LiveGuestInviteModel> declineGuestInvite(
+    String sessionId,
+    String inviteId,
+  ) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/guests/$inviteId/decline',
+      method: 'POST',
+    );
+    return LiveGuestInviteModel.fromJson(
+      requireObject(response.data, 'live guest invite'),
+    );
   }
 
   @override
@@ -1717,6 +1785,10 @@ final class DioLiveRepository implements LiveRepository {
     }
   }
 }
+
+final RegExp _uuidPattern = RegExp(
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+);
 
 List<JsonObject> _array(Object? value, String context) {
   if (value is! List) {

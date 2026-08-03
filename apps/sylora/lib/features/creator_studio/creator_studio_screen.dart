@@ -31,6 +31,7 @@ final class _CreatorStudioScreenState
   final TextEditingController _lowerThirdText = TextEditingController(
     text: 'Welcome to SYLORA Live',
   );
+  final TextEditingController _guestInviteText = TextEditingController();
   final List<_StudioScene> _scenes = <_StudioScene>[
     const _StudioScene(name: 'Main', localDraft: true),
     const _StudioScene(name: 'Intermission', localDraft: true),
@@ -52,8 +53,12 @@ final class _CreatorStudioScreenState
   bool _browserPublishing = false;
   bool _recording = false;
   bool _recordingBusy = false;
+  bool _guestsBusy = false;
   bool _alertPlaceholderEnabled = true;
   bool _auraDockEnabled = true;
+  String _guestRole = 'guest';
+  String? _guestsStatus;
+  List<LiveGuestInviteModel> _guests = const <LiveGuestInviteModel>[];
 
   @override
   void initState() {
@@ -70,6 +75,7 @@ final class _CreatorStudioScreenState
   @override
   void dispose() {
     _lowerThirdText.dispose();
+    _guestInviteText.dispose();
     _publisher.dispose();
     _aura.dispose();
     super.dispose();
@@ -158,6 +164,8 @@ final class _CreatorStudioScreenState
                     _sessionId = value;
                     _capability = null;
                     _credentials = null;
+                    _guests = const <LiveGuestInviteModel>[];
+                    _guestsStatus = null;
                     _obsScenesAvailable = false;
                     _sceneStatus = null;
                   }),
@@ -311,6 +319,7 @@ final class _CreatorStudioScreenState
       children: <Widget>[
         SizedBox(width: 420, child: _buildScenesSection(session)),
         SizedBox(width: 420, child: _buildOverlaysSection()),
+        SizedBox(width: 420, child: _buildGuestsSection(session)),
         SizedBox(width: 420, child: _buildAudioSection()),
         SizedBox(width: 420, child: _buildRecordingSection(session)),
       ],
@@ -440,6 +449,104 @@ final class _CreatorStudioScreenState
       ),
     );
   }
+
+  Widget _buildGuestsSection(LiveSessionModel? session) {
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Guests',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              LumenBadge(
+                label: '${_guests.length} invited',
+                color: LumenColors.aether,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Invite a guest or cohost by user ID or @username. Accepted guests receive a separate WHIP publishing path when MediaMTX is configured.',
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _guestInviteText,
+            decoration: const InputDecoration(
+              labelText: 'User ID or @username',
+              prefixIcon: Icon(Icons.person_add_alt_1_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: _guestRole,
+            decoration: const InputDecoration(labelText: 'Role'),
+            items: const <DropdownMenuItem<String>>[
+              DropdownMenuItem<String>(value: 'guest', child: Text('Guest')),
+              DropdownMenuItem<String>(value: 'cohost', child: Text('Cohost')),
+            ],
+            onChanged: (value) => setState(() => _guestRole = value ?? 'guest'),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              LumenPrimaryButton(
+                label: 'Invite guest',
+                icon: Icons.person_add_alt_1_rounded,
+                busy: _guestsBusy,
+                onPressed: session == null ? null : () => _inviteGuest(session),
+                disabledReason: 'Select a live session first.',
+              ),
+              LumenSecondaryButton(
+                label: 'Refresh guests',
+                icon: Icons.refresh_rounded,
+                onPressed: session == null
+                    ? null
+                    : () => _refreshGuests(session),
+                disabledReason: 'Select a live session first.',
+              ),
+            ],
+          ),
+          if (_guestsStatus != null) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(_guestsStatus!),
+          ],
+          const SizedBox(height: 12),
+          if (_guests.isEmpty)
+            const Text('No guest invites for this session yet.')
+          else
+            for (final guest in _guests)
+              Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: const Icon(Icons.group_outlined),
+                  title: Text(guest.inviteeUserId),
+                  subtitle: Text(
+                    'Role: ${guest.role} | Media: ${guest.mediaStatus}',
+                  ),
+                  trailing: LumenBadge(
+                    label: guest.status,
+                    color: _guestStatusColor(guest.status),
+                  ),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+
+  Color _guestStatusColor(String status) => switch (status) {
+    'accepted' => LumenColors.aether,
+    'declined' => LumenColors.rose,
+    'revoked' => LumenColors.porcelainMuted,
+    _ => LumenColors.solar,
+  };
 
   Widget _buildAudioSection() {
     return LumenSurface(
@@ -774,6 +881,54 @@ final class _CreatorStudioScreenState
       index += 1;
     }
     return '$name $index';
+  }
+
+  Future<void> _refreshGuests(LiveSessionModel session) async {
+    setState(() => _guestsBusy = true);
+    try {
+      final guests = await ref.read(liveRepositoryProvider).guests(session.id);
+      if (mounted) {
+        setState(() {
+          _guests = guests;
+          _guestsStatus = 'Guest list refreshed.';
+        });
+      }
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _guestsBusy = false);
+      }
+    }
+  }
+
+  Future<void> _inviteGuest(LiveSessionModel session) async {
+    final invitee = _guestInviteText.text.trim();
+    if (invitee.isEmpty) {
+      setState(() => _guestsStatus = 'Enter a user ID or @username to invite.');
+      return;
+    }
+    setState(() => _guestsBusy = true);
+    try {
+      final invited = await ref
+          .read(liveRepositoryProvider)
+          .inviteGuest(session.id, invitee: invitee, role: _guestRole);
+      final guests = await ref.read(liveRepositoryProvider).guests(session.id);
+      if (mounted) {
+        setState(() {
+          _guestInviteText.clear();
+          _guests = guests;
+          _guestsStatus =
+              'Invite sent to ${invited.inviteeUserId} as ${invited.role}.';
+        });
+      }
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _guestsBusy = false);
+      }
+    }
   }
 
   Future<String?> _sceneNameDialog({

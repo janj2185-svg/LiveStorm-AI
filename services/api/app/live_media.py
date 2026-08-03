@@ -90,7 +90,14 @@ def media_capability(settings: Settings, live_session: LiveSession) -> MediaCapa
     )
 
 
-def publish_credentials(settings: Settings, live_session: LiveSession) -> PublishCredentials:
+def publish_credentials(
+    settings: Settings,
+    live_session: LiveSession,
+    *,
+    ingest_path: str | None = None,
+    subject_user_id: uuid.UUID | None = None,
+    token_type: str = "live_whip_publish",
+) -> PublishCredentials:
     """Return MediaMTX WHIP publish credentials, fail-closed when unavailable."""
     capability = media_capability(settings, live_session)
     if capability.status != "available":
@@ -105,11 +112,19 @@ def publish_credentials(settings: Settings, live_session: LiveSession) -> Publis
         )
 
     expires_at = utcnow() + timedelta(seconds=PUBLISH_TOKEN_SECONDS)
+    effective_path = ingest_path or live_session.ingest_path
     return PublishCredentials(
         capability=capability,
-        whip_url=_media_url(settings.mediamtx_whip_base_url, live_session.ingest_path, "whip"),
-        playback_url=_media_url(settings.mediamtx_playback_base_url, live_session.ingest_path),
-        bearer_token=_publish_token(settings, live_session, expires_at),
+        whip_url=_media_url(settings.mediamtx_whip_base_url, effective_path, "whip"),
+        playback_url=_media_url(settings.mediamtx_playback_base_url, effective_path),
+        bearer_token=_publish_token(
+            settings,
+            live_session,
+            expires_at,
+            ingest_path=effective_path,
+            subject_user_id=subject_user_id,
+            token_type=token_type,
+        ),
         token_expires_at=expires_at,
         token_expires_in_seconds=PUBLISH_TOKEN_SECONDS,
         ice_servers=ice_servers(settings),
@@ -139,12 +154,20 @@ def _media_url(base_url: str | None, ingest_path: str, suffix: str | None = None
     return f"{base_url.rstrip('/')}/{path}"
 
 
-def _publish_token(settings: Settings, live_session: LiveSession, expires_at: object) -> str:
+def _publish_token(
+    settings: Settings,
+    live_session: LiveSession,
+    expires_at: object,
+    *,
+    ingest_path: str,
+    subject_user_id: uuid.UUID | None,
+    token_type: str,
+) -> str:
     payload = {
-        "sub": str(live_session.owner_user_id),
+        "sub": str(subject_user_id or live_session.owner_user_id),
         "sid": str(live_session.id),
-        "path": live_session.ingest_path,
-        "type": "live_whip_publish",
+        "path": ingest_path,
+        "type": token_type,
         "jti": str(uuid.uuid4()),
         "iat": utcnow(),
         "nbf": utcnow(),
