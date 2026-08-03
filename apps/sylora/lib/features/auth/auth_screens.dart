@@ -292,7 +292,8 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         ),
       ),
       child: SyloraLivingScaffold(
-        intensity: 0.85,
+        // Keep Auth light on Flutter web / software WebGL — form first, world second.
+        intensity: kIsWeb ? 0.45 : 0.75,
         showOrbits: false,
         child: Center(
           child: SingleChildScrollView(
