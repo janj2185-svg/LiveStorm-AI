@@ -6,6 +6,7 @@ import json
 import uuid
 from collections.abc import AsyncIterator, Mapping, Sequence
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from typing import Any
 
 import jwt
@@ -14,6 +15,12 @@ from fastapi import WebSocketDisconnect
 from sqlalchemy import select
 
 from app.ai_models import AICapability, PromptTemplate, PromptTemplateState
+from app.ai_providers import (
+    ChatProviderRequest,
+    ChatProviderResponse,
+    ProviderRegistry,
+    ProviderUsage,
+)
 from app.gift_models import GiftEvent
 from app.live_adapters import (
     AdapterActionResult,
@@ -42,6 +49,7 @@ from app.live_models import (
     LiveRuleRisk,
     LiveSession,
     LiveSessionState,
+    LiveTurnStatus,
 )
 from app.live_rules import evaluate_condition, validate_condition_dsl
 from app.live_service import (
@@ -186,6 +194,18 @@ class TestRegistry:
 
     def descriptors(self) -> tuple[PlatformDescriptor, ...]:
         return tuple(adapter.descriptor() for adapter in self.adapters.values())
+
+
+class LiveChatProvider:
+    name = "live-chat-test"
+    capabilities = frozenset({AICapability.chat})
+
+    async def chat(self, request: ChatProviderRequest) -> ChatProviderResponse:
+        return ChatProviderResponse(
+            content="Thanks for the question - Aura is on it.",
+            model="test-live-chat",
+            usage=ProviderUsage(prompt_units=5, completion_units=6, cost_micros=1),
+        )
 
 
 class ReplayWebSocket:
@@ -835,6 +855,138 @@ async def test_webhook_signature_dedupe_and_normalized_persistence(
             assert records[0].sequence == 1
             assert records[0].event_type == LiveNormalizedEventType.chat
             assert records[0].text == "Hello live"
+
+
+@pytest.mark.asyncio
+async def test_youtube_chat_webhook_creates_ai_turn_when_configured(api_factory: Any) -> None:
+    media = TestAdapter(
+        IntegrationPlatform.rtmp_webrtc,
+        frozenset(
+            {
+                LiveCapability.publish,
+                LiveCapability.events,
+                LiveCapability.first_party_ingest,
+            }
+        ),
+    )
+    youtube = TestAdapter(
+        IntegrationPlatform.youtube,
+        frozenset(
+            {
+                LiveCapability.chat_read,
+                LiveCapability.chat_send,
+                LiveCapability.events,
+            }
+        ),
+    )
+    deliveries: list[uuid.UUID] = []
+
+    async def capture(delivery_id: uuid.UUID) -> None:
+        deliveries.append(delivery_id)
+
+    async with api_factory(
+        live_adapter_registry=TestRegistry([media, youtube]),
+        live_webhook_dispatcher=capture,
+        ai_provider_registry=ProviderRegistry([LiveChatProvider()]),
+    ) as api:
+        headers, user_id = await creator_headers(api)
+        consent = await api.client.patch(
+            "/v1/ai/settings",
+            headers=headers,
+            json={"consent_granted": True},
+        )
+        assert consent.status_code == 200, consent.text
+        connection = await connect_test_integration(
+            api,
+            headers,
+            platform="youtube",
+            capabilities=["chat_read", "chat_send", "events"],
+        )
+        session = await api.client.post(
+            "/v1/live/sessions",
+            headers=headers,
+            json={
+                "title": "YouTube chat AI",
+                "ai_mode": "autopilot",
+                "destinations": [
+                    {
+                        "connection_id": connection["id"],
+                        "chat_enabled": True,
+                        "events_enabled": True,
+                    }
+                ],
+            },
+        )
+        assert session.status_code == 201, session.text
+        session_id = session.json()["id"]
+        persona = await api.client.post(
+            "/v1/live/personas",
+            headers=headers,
+            json={
+                "name": "Aura",
+                "system_prompt_reference": "live.youtube",
+                "system_prompt_version": 1,
+                "languages": ["en"],
+                "speaking_style": {"min_seconds_between_ai_replies": 0},
+            },
+        )
+        assert persona.status_code == 201, persona.text
+        async with api.app.state.session_factory() as db:
+            db.add(
+                PromptTemplate(
+                    template_key="live.youtube",
+                    version=1,
+                    locale="en",
+                    capability=AICapability.chat,
+                    content="Respond as Aura for connected YouTube/Twitch chat.",
+                    policy_metadata={},
+                    state=PromptTemplateState.published,
+                    created_by_id=user_id,
+                    published_by_id=user_id,
+                )
+            )
+            await db.commit()
+
+        await api.client.post(f"/v1/live/sessions/{session_id}/preflight", headers=headers)
+        started = await api.client.post(f"/v1/live/sessions/{session_id}/start", headers=headers)
+        assert started.status_code == 200, started.text
+        payload = json.dumps({"id": "yt-chat-1", "text": "Can Aura help?"}).encode()
+        signature = hmac.new(b"test-webhook-secret", payload, hashlib.sha256).hexdigest()
+        accepted = await api.client.post(
+            f"/v1/live/webhooks/youtube/{connection['id']}",
+            content=payload,
+            headers={"x-test-signature": signature},
+        )
+        assert accepted.status_code == 202, accepted.text
+        assert len(deliveries) == 1
+        async with api.app.state.session_factory() as db:
+            request = SimpleNamespace(
+                app=SimpleNamespace(
+                    state=SimpleNamespace(
+                        ai_provider_registry=ProviderRegistry([LiveChatProvider()]),
+                        ai_job_dispatcher=lambda _: None,
+                    )
+                )
+            )
+            records = await process_webhook_delivery(
+                db,
+                deliveries[0],
+                request=request,
+                settings=api.app.state.settings,
+            )
+            assert len(records) == 1
+            turn = await db.scalar(select(AILiveTurn).where(AILiveTurn.event_id == records[0].id))
+            assert turn is not None
+            assert turn.status == LiveTurnStatus.succeeded
+            action = await db.scalar(
+                select(LiveAction).where(
+                    LiveAction.event_id == records[0].id,
+                    LiveAction.action_type == LiveActionType.respond_text,
+                )
+            )
+            assert action is not None
+            assert action.requires_approval is False
+            assert action.typed_payload["text"] == "Thanks for the question - Aura is on it."
 
 
 def test_rule_dsl_is_typed_bounded_and_has_no_eval() -> None:

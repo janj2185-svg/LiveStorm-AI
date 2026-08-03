@@ -2562,6 +2562,15 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
               const SizedBox(height: 16),
             ],
             LumenSurface(
+              child: _EntertainmentDestinations(
+                integrations:
+                    integrations.asData?.value ?? const <NamedResource>[],
+                loading: integrations.isLoading,
+                error: integrations.hasError,
+              ),
+            ),
+            const SizedBox(height: 16),
+            LumenSurface(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
@@ -2937,6 +2946,106 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
       }
     }
   }
+}
+
+final class _EntertainmentDestinations extends StatelessWidget {
+  const _EntertainmentDestinations({
+    required this.integrations,
+    required this.loading,
+    required this.error,
+  });
+
+  final List<NamedResource> integrations;
+  final bool loading;
+  final bool error;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      Text(
+        'Entertainment destinations',
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+      const SizedBox(height: 8),
+      Text(
+        loading
+            ? 'Checking connected official integrations...'
+            : error
+            ? 'Integration status could not be loaded; direct MediaMTX ingest remains available.'
+            : 'Official destinations are shown only when real credentials are connected.',
+      ),
+      const SizedBox(height: 12),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: <Widget>[
+          _EntertainmentDestinationChip(
+            label: 'YouTube',
+            available: _integrationAvailable('youtube', integrations),
+          ),
+          _EntertainmentDestinationChip(
+            label: 'Twitch',
+            available: _integrationAvailable('twitch', integrations),
+          ),
+          const _EntertainmentDestinationChip(
+            label: 'TikTok',
+            available: false,
+            blockedReason: 'Requires provider approval',
+          ),
+          const _EntertainmentDestinationChip(
+            label: 'Kick',
+            available: false,
+            blockedReason: 'Requires provider approval',
+          ),
+          const _EntertainmentDestinationChip(
+            label: 'Facebook',
+            available: false,
+            blockedReason: 'Requires provider approval',
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+final class _EntertainmentDestinationChip extends StatelessWidget {
+  const _EntertainmentDestinationChip({
+    required this.label,
+    required this.available,
+    this.blockedReason,
+  });
+
+  final String label;
+  final bool available;
+  final String? blockedReason;
+
+  @override
+  Widget build(BuildContext context) => Chip(
+    avatar: Icon(
+      available ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
+      size: 18,
+    ),
+    label: Text(
+      available
+          ? '$label available'
+          : '$label ${blockedReason ?? 'not connected'}',
+    ),
+  );
+}
+
+bool _integrationAvailable(String platform, List<NamedResource> integrations) {
+  return integrations.any((item) {
+    if (item.label != platform) {
+      return false;
+    }
+    final state = item.status;
+    final credential =
+        item.raw['credential_configured'] == true ||
+        item.raw['refresh_credential_configured'] == true ||
+        item.raw['connection_secret_configured'] == true;
+    return credential && (state == 'connected' || state == 'degraded');
+  });
 }
 
 final class _LiveResourceSection extends StatelessWidget {

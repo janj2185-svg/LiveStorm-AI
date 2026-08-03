@@ -21,7 +21,7 @@ Live stamp: `https://getsylora.com/version.json` → `production-wave-ab` / `aut
 ### Not yet Wave C complete
 - Lip-sync / expressive 3D avatar
 - True multi-host SFU scale / mobile native WebRTC
-- TikTok / Kick / Facebook Live (honestly blocked — never faked)
+- TikTok LIVE remains `BLOCKED_BY_PROVIDER_ACCESS`; TikTok / Kick / Facebook Live stay honestly blocked until real provider approval exists — never faked.
 - Live Stripe + FCM credentials on host
 - AAA gift art (current READY pack is procedural starter)
 - Exhaustive every-button manual matrix across all modules after Auth
@@ -57,7 +57,7 @@ Infra
 | Payment fail-closed without Stripe secrets | Active on host |
 | Push fail-closed without FCM | Active on host |
 | AI tool risk gates + safety reminders | Active |
-| TikTok/Kick/FB never faked | Active |
+| TikTok/Kick/FB never faked | Active — TikTok is `BLOCKED_BY_PROVIDER_ACCESS` until approved provider access exists |
 | Audit on payment webhooks / T&S resolve | Active |
 | Full CSP (Flutter web) | Deferred (documented) |
 | Production ENVIRONMENT label | Host still `staging` — intentional until owner flips |

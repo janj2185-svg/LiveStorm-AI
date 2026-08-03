@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from types import SimpleNamespace
 
 from celery import Celery
 from sqlalchemy import select
@@ -149,7 +150,30 @@ async def _process_live_webhook(delivery_id: uuid.UUID) -> dict[str, str | int]:
     engine = create_engine(settings)
     try:
         async with create_session_factory(engine)() as session:
-            records = await process_webhook_delivery(session, delivery_id)
+            registry = ProviderRegistry()
+            await registry.refresh_from_database(session, settings)
+
+            async def dispatch_ai_job(job_id: uuid.UUID) -> None:
+                await asyncio.to_thread(
+                    celery_app.send_task,
+                    "sylora.ai.process_generation_job",
+                    args=[str(job_id)],
+                )
+
+            request = SimpleNamespace(
+                app=SimpleNamespace(
+                    state=SimpleNamespace(
+                        ai_provider_registry=registry,
+                        ai_job_dispatcher=dispatch_ai_job,
+                    )
+                )
+            )
+            records = await process_webhook_delivery(
+                session,
+                delivery_id,
+                request=request,
+                settings=settings,
+            )
             return {"delivery_id": str(delivery_id), "events": len(records)}
     finally:
         await engine.dispose()

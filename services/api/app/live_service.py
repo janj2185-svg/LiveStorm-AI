@@ -1766,7 +1766,11 @@ def _aware_datetime(value: str) -> datetime:
 
 
 async def process_webhook_delivery(
-    db: AsyncSession, delivery_id: uuid.UUID
+    db: AsyncSession,
+    delivery_id: uuid.UUID,
+    *,
+    request: Request | None = None,
+    settings: Settings | None = None,
 ) -> list[LiveNormalizedEvent]:
     delivery = await db.get(IntegrationWebhookDelivery, delivery_id)
     if delivery is None:
@@ -1788,6 +1792,15 @@ async def process_webhook_delivery(
             )
             records.append(event)
             await evaluate_rules_for_event(db, live_session, event)
+            await maybe_generate_entertainment_chat_turn(
+                db,
+                request,
+                settings,
+                live_session,
+                destination,
+                event,
+                delivery.platform,
+            )
         delivery.processed_at = utcnow()
         delivery.failure_code = None
         await db.commit()
@@ -1799,6 +1812,62 @@ async def process_webhook_delivery(
             delivery.failure_code = "webhook_processing_failed"
             await db.commit()
         raise
+
+
+async def maybe_generate_entertainment_chat_turn(
+    db: AsyncSession,
+    request: Request | None,
+    settings: Settings | None,
+    live_session: LiveSession,
+    destination: LiveDestination,
+    event: LiveNormalizedEvent,
+    platform: IntegrationPlatform,
+) -> AILiveTurn | None:
+    if (
+        request is None
+        or settings is None
+        or platform not in {IntegrationPlatform.youtube, IntegrationPlatform.twitch}
+        or event.event_type != LiveNormalizedEventType.chat
+        or live_session.ai_mode == LiveAIMode.off
+        or not destination.chat_enabled
+    ):
+        return None
+    if live_session.owner_user_id is None:
+        return None
+    existing = await db.scalar(
+        select(AILiveTurn.id).where(
+            AILiveTurn.session_id == live_session.id,
+            AILiveTurn.event_id == event.id,
+        )
+    )
+    if existing is not None:
+        return None
+    persona = await db.scalar(
+        select(AILivePersona)
+        .where(
+            AILivePersona.owner_user_id == live_session.owner_user_id,
+            AILivePersona.active.is_(True),
+            or_(
+                AILivePersona.workspace_id.is_(None),
+                AILivePersona.workspace_id == live_session.workspace_id,
+            ),
+        )
+        .order_by(AILivePersona.created_at.asc(), AILivePersona.id.asc())
+        .limit(1)
+    )
+    if persona is None:
+        return None
+    return await generate_live_ai_turn(
+        db,
+        request,
+        settings,
+        event,
+        persona,
+        live_session,
+        LiveActionType.respond_text,
+        destination_id=destination.id,
+        allow_text_fallback=True,
+    )
 
 
 def event_rule_context(event: LiveNormalizedEvent) -> dict[str, Any]:
