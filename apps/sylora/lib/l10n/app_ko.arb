@@ -1,5 +1,6 @@
 {
   "@@locale": "ko",
+  "@@note": "Interim English fallback locale pack; production Korean translations are pending.",
   "appTitle": "SYLORA",
   "@appTitle": {
     "description": "TODO(ko): English interim fallback. Replace with production Korean copy."

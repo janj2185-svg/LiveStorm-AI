@@ -12,295 +12,296 @@ class AppLocalizationsPl extends AppLocalizations {
   String get appTitle => 'SYLORA';
 
   @override
-  String get appTagline => 'Create. Connect. Go live.';
+  String get appTagline => 'Twórz. Łącz. Nadawaj na żywo.';
 
   @override
   String get appDescription =>
-      'A social platform for community, gifts, AI, and live moments.';
+      'Platforma społecznościowa dla społeczności, prezentów, AI i chwil na żywo.';
 
   @override
-  String get navHome => 'Home';
+  String get navHome => 'Strona główna';
 
   @override
-  String get navFeed => 'Feed';
+  String get navFeed => 'Aktualności';
 
   @override
-  String get navLive => 'Live';
+  String get navLive => 'Na żywo';
 
   @override
   String get navAi => 'AI';
 
   @override
-  String get navGifts => 'Gifts';
+  String get navGifts => 'Prezenty';
 
   @override
-  String get navMessages => 'Messages';
+  String get navMessages => 'Wiadomości';
 
   @override
-  String get navProfile => 'Profile';
+  String get navProfile => 'Profil';
 
   @override
-  String get navSettings => 'Settings';
+  String get navSettings => 'Ustawienia';
 
   @override
-  String get navMore => 'More';
+  String get navMore => 'Więcej';
 
   @override
-  String get navSearch => 'Search';
+  String get navSearch => 'Szukaj';
 
   @override
-  String get navMarket => 'Market';
+  String get navMarket => 'Rynek';
 
   @override
-  String get navCreator => 'Creator';
+  String get navCreator => 'Twórca';
 
   @override
-  String get navWorkspace => 'Workspace';
+  String get navWorkspace => 'Obszar roboczy';
 
   @override
-  String get navAdmin => 'Admin';
+  String get navAdmin => 'Administrator';
 
   @override
-  String get authLogin => 'Log in';
+  String get authLogin => 'Zaloguj się';
 
   @override
-  String get authRegister => 'Register';
+  String get authRegister => 'Zarejestruj się';
 
   @override
-  String get authPassword => 'Password';
+  String get authPassword => 'Hasło';
 
   @override
-  String get authOtp => 'One-time code';
+  String get authOtp => 'Kod jednorazowy';
 
   @override
-  String get authBack => 'Back';
+  String get authBack => 'Wstecz';
 
   @override
-  String get authBackToWorld => 'Back to the world';
+  String get authBackToWorld => 'Wróć do świata';
 
   @override
-  String get authCreateAccount => 'Create account';
+  String get authCreateAccount => 'Utwórz konto';
 
   @override
-  String get authContinue => 'Continue';
+  String get authContinue => 'Kontynuuj';
 
   @override
-  String get authContinueWithPhone => 'Continue with phone';
+  String get authContinueWithPhone => 'Kontynuuj przez telefon';
 
   @override
-  String get authContinueWithEmailOtp => 'Log in with an email code';
+  String get authContinueWithEmailOtp => 'Zaloguj się kodem e-mail';
 
   @override
   String authContinueWithProvider(String provider) {
-    return 'Continue with $provider';
+    return 'Kontynuuj z $provider';
   }
 
   @override
-  String get authSignInToEcosystem => 'Sign in to your AI ecosystem';
+  String get authSignInToEcosystem => 'Zaloguj się do swojego ekosystemu AI';
 
   @override
-  String get authPhone => 'Phone';
+  String get authPhone => 'Telefon';
 
   @override
-  String get authEmail => 'Email';
+  String get authEmail => 'E-mail';
 
   @override
-  String get authEmailAddress => 'Email address';
+  String get authEmailAddress => 'Adres e-mail';
 
   @override
-  String get authPhoneNumber => 'Phone';
+  String get authPhoneNumber => 'Telefon';
 
   @override
-  String get authSmsCode => 'SMS code';
+  String get authSmsCode => 'Kod SMS';
 
   @override
-  String get authEmailCode => 'Email code';
+  String get authEmailCode => 'Kod e-mail';
 
   @override
-  String get authSendCode => 'Send code';
+  String get authSendCode => 'Wyślij kod';
 
   @override
-  String get authResendCode => 'Send code again';
+  String get authResendCode => 'Wyślij kod ponownie';
 
   @override
   String authSendAgainIn(int seconds) {
-    return 'Send again in ${seconds}s';
+    return 'Wyślij ponownie za ${seconds}s';
   }
 
   @override
-  String get authForgotPassword => 'Forgot password?';
+  String get authForgotPassword => 'Nie pamiętasz hasła?';
 
   @override
-  String get authVerifyEmailAgain => 'Verify email or send the message again';
+  String get authVerifyEmailAgain =>
+      'Zweryfikuj e-mail albo wyślij wiadomość ponownie';
 
   @override
-  String get authDisplayName => 'Profile display name';
+  String get authDisplayName => 'Nazwa wyświetlana profilu';
 
   @override
-  String get authPasswordHelper => 'At least 12 characters';
+  String get authPasswordHelper => 'Co najmniej 12 znaków';
 
   @override
-  String get authCodeEmailChip => 'Email code';
+  String get authCodeEmailChip => 'Kod e-mail';
 
   @override
-  String get authPasswordChip => 'Password';
+  String get authPasswordChip => 'Hasło';
 
   @override
   String get authPhoneUnavailable =>
-      'Phone sign-in is temporarily unavailable.';
+      'Logowanie telefonem jest tymczasowo niedostępne.';
 
   @override
-  String get authSmsInstruction => 'We will send a one-time code by SMS.';
+  String get authSmsInstruction => 'Wyślemy jednorazowy kod SMS-em.';
 
   @override
   String get authEmailOtpInstruction =>
-      'We will send a one-time code to your email.';
+      'Wyślemy jednorazowy kod na Twój e-mail.';
 
   @override
-  String get authWelcomeEyebrow => 'Welcome to the ecosystem';
+  String get authWelcomeEyebrow => 'Witamy w ekosystemie';
 
   @override
   String get authWelcomeBody =>
-      'One sign-in for AI, Live, community, and creativity.';
+      'Jedno logowanie do AI, Live, społeczności i kreatywności.';
 
   @override
-  String get authOAuthOpenFailed => 'Could not open the sign-in page.';
+  String get authOAuthOpenFailed => 'Nie można otworzyć strony logowania.';
 
   @override
   String get authOAuthProviderUnavailable =>
-      'This provider is unavailable. Try another sign-in method.';
+      'Ten dostawca jest niedostępny. Spróbuj innej metody logowania.';
 
   @override
   String get authMobileSocialPending =>
-      'Social sign-in in mobile builds will appear after deep-link setup.';
+      'Logowanie społecznościowe w aplikacjach mobilnych pojawi się po konfiguracji deep linków.';
 
   @override
-  String get authReturnToLogin => 'Return to sign-in';
+  String get authReturnToLogin => 'Wróć do logowania';
 
   @override
-  String get authMfaTitle => 'Two-factor authentication';
+  String get authMfaTitle => 'Uwierzytelnianie dwuskładnikowe';
 
   @override
-  String get authMfaPrompt => 'Enter the code from your authenticator app';
+  String get authMfaPrompt => 'Wpisz kod z aplikacji uwierzytelniającej';
 
   @override
-  String get authCode => 'Code';
+  String get authCode => 'Kod';
 
   @override
-  String get authConfirm => 'Confirm';
+  String get authConfirm => 'Potwierdź';
 
   @override
-  String get authEmailVerificationTitle => 'Email verification';
+  String get authEmailVerificationTitle => 'Weryfikacja e-maila';
 
   @override
-  String get authPasswordResetTitle => 'Password reset';
+  String get authPasswordResetTitle => 'Resetowanie hasła';
 
   @override
-  String get authRequestPasswordReset => 'Request password reset';
+  String get authRequestPasswordReset => 'Poproś o reset hasła';
 
   @override
-  String get authRequestVerificationEmail => 'Send verification email';
+  String get authRequestVerificationEmail => 'Wyślij e-mail weryfikacyjny';
 
   @override
-  String get authSendEmail => 'Send email';
+  String get authSendEmail => 'Wyślij e-mail';
 
   @override
-  String get authVerifyWithToken => 'Verify with token';
+  String get authVerifyWithToken => 'Zweryfikuj tokenem';
 
   @override
-  String get authSetNewPassword => 'Set a new password';
+  String get authSetNewPassword => 'Ustaw nowe hasło';
 
   @override
   String get authToken => 'Token';
 
   @override
-  String get authNewPassword => 'New password';
+  String get authNewPassword => 'Nowe hasło';
 
   @override
-  String get authConfirmEmail => 'Confirm email';
+  String get authConfirmEmail => 'Potwierdź e-mail';
 
   @override
-  String get authResetPassword => 'Reset password';
+  String get authResetPassword => 'Zresetuj hasło';
 
   @override
-  String get commonOr => 'or';
+  String get commonOr => 'lub';
 
   @override
-  String get commonSave => 'Save';
+  String get commonSave => 'Zapisz';
 
   @override
-  String get commonCancel => 'Cancel';
+  String get commonCancel => 'Anuluj';
 
   @override
-  String get commonRetry => 'Retry';
+  String get commonRetry => 'Ponów';
 
   @override
-  String get commonLoading => 'Loading';
+  String get commonLoading => 'Ładowanie';
 
   @override
-  String get commonError => 'Error';
+  String get commonError => 'Błąd';
 
   @override
   String get commonOffline => 'Offline';
 
   @override
-  String get commonTryAgain => 'Try again';
+  String get commonTryAgain => 'Spróbuj ponownie';
 
   @override
-  String get commonSomethingWentWrong => 'Something went wrong';
+  String get commonSomethingWentWrong => 'Coś poszło nie tak';
 
   @override
-  String get auraCompanionLabel => 'Aura · AI companion';
+  String get auraCompanionLabel => 'Aura · towarzysz AI';
 
   @override
-  String get auraGreeting => 'Aura is ready to help.';
+  String get auraGreeting => 'Aura jest gotowa pomóc.';
 
   @override
-  String get auraListening => 'Aura is listening.';
+  String get auraListening => 'Aura słucha.';
 
   @override
-  String get auraThinking => 'Aura is thinking.';
+  String get auraThinking => 'Aura myśli.';
 
   @override
-  String get settingsLanguage => 'Language';
+  String get settingsLanguage => 'Język';
 
   @override
   String get settingsLanguageDescription =>
-      'Choose the app language used on this device.';
+      'Wybierz język aplikacji używany na tym urządzeniu.';
 
   @override
-  String get settingsDisplayAccessibility => 'Display & accessibility';
+  String get settingsDisplayAccessibility => 'Wygląd i dostępność';
 
   @override
-  String get settingsLanguageEnglish => 'English';
+  String get settingsLanguageEnglish => 'Angielski';
 
   @override
-  String get settingsLanguageUkrainian => 'Ukrainian';
+  String get settingsLanguageUkrainian => 'Ukraiński';
 
   @override
-  String get settingsLanguagePolish => 'Polish';
+  String get settingsLanguagePolish => 'Polski';
 
   @override
-  String get settingsLanguageGerman => 'German';
+  String get settingsLanguageGerman => 'Niemiecki';
 
   @override
-  String get settingsLanguageSpanish => 'Spanish';
+  String get settingsLanguageSpanish => 'Hiszpański';
 
   @override
-  String get settingsLanguageFrench => 'French';
+  String get settingsLanguageFrench => 'Francuski';
 
   @override
-  String get settingsLanguageItalian => 'Italian';
+  String get settingsLanguageItalian => 'Włoski';
 
   @override
-  String get settingsLanguagePortuguese => 'Portuguese';
+  String get settingsLanguagePortuguese => 'Portugalski';
 
   @override
-  String get settingsLanguageJapanese => 'Japanese';
+  String get settingsLanguageJapanese => 'Japoński';
 
   @override
-  String get settingsLanguageKorean => 'Korean';
+  String get settingsLanguageKorean => 'Koreański';
 
   @override
-  String get settingsLanguageChinese => 'Chinese';
+  String get settingsLanguageChinese => 'Chiński';
 }
