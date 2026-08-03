@@ -19,6 +19,21 @@ class OAuthProviderSettings(BaseModel):
     scopes: str = "openid email profile"
 
 
+# Providers without a public OIDC discovery document use builtin:* URLs resolved
+# by the OAuth router. Google/Apple use their standard discovery endpoints.
+OAUTH_DEFAULT_DISCOVERY: dict[str, str] = {
+    "google": "https://accounts.google.com/.well-known/openid-configuration",
+    "apple": "https://appleid.apple.com/.well-known/openid-configuration",
+    "github": "builtin:github",
+}
+
+OAUTH_DEFAULT_SCOPES: dict[str, str] = {
+    "google": "openid email profile",
+    "apple": "openid email name",
+    "github": "read:user user:email",
+}
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -241,34 +256,60 @@ class Settings(BaseSettings):
         return self.celery_result_backend or self.redis_url
 
     def oauth_provider(self, name: str) -> OAuthProviderSettings | None:
-        safe_name = name.upper().replace("-", "_")
+        provider = name.lower().strip()
+        safe_name = provider.upper().replace("-", "_")
         if not safe_name.replace("_", "").isalnum():
             return None
         prefix = f"OAUTH_{safe_name}_"
         dotenv_path = find_dotenv(usecwd=True)
         file_values = dotenv_values(dotenv_path) if dotenv_path else {}
 
-        def configured_value(suffix: str) -> str | None:
-            value = os.getenv(prefix + suffix)
-            if value is None:
-                value = file_values.get(prefix + suffix)
-            return str(value) if value else None
+        def first_configured(*keys: str) -> str | None:
+            for key in keys:
+                value = os.getenv(key)
+                if value is None:
+                    value = file_values.get(key)
+                if value is not None and str(value).strip():
+                    return str(value).strip()
+            return None
 
-        values = {
-            "client_id": configured_value("CLIENT_ID"),
-            "client_secret": configured_value("CLIENT_SECRET"),
-            "discovery_url": configured_value("DISCOVERY_URL"),
-            "redirect_uri": configured_value("REDIRECT_URI"),
-        }
-        if not all(values.values()):
+        def configured_value(suffix: str) -> str | None:
+            return first_configured(prefix + suffix)
+
+        # Canonical OAUTH_{PROVIDER}_* plus common deployment aliases.
+        client_id = first_configured(
+            prefix + "CLIENT_ID",
+            f"{safe_name}_CLIENT_ID",
+            f"AUTH_{safe_name}_ID",
+            f"AUTH_{safe_name}_CLIENT_ID",
+        )
+        client_secret = first_configured(
+            prefix + "CLIENT_SECRET",
+            f"{safe_name}_CLIENT_SECRET",
+            f"AUTH_{safe_name}_SECRET",
+            f"AUTH_{safe_name}_CLIENT_SECRET",
+        )
+        discovery_url = configured_value("DISCOVERY_URL") or OAUTH_DEFAULT_DISCOVERY.get(
+            provider
+        )
+        redirect_uri = configured_value("REDIRECT_URI") or (
+            f"{self.web_base_url.rstrip('/')}/v1/auth/oauth/{provider}/callback"
+        )
+        scopes = (
+            configured_value("SCOPES")
+            or OAUTH_DEFAULT_SCOPES.get(provider)
+            or "openid email profile"
+        )
+
+        if not client_id or not client_secret or not discovery_url or not redirect_uri:
             return None
         return OAuthProviderSettings(
-            name=name.lower(),
-            client_id=str(values["client_id"]),
-            client_secret=SecretStr(str(values["client_secret"])),
-            discovery_url=str(values["discovery_url"]),
-            redirect_uri=str(values["redirect_uri"]),
-            scopes=configured_value("SCOPES") or "openid email profile",
+            name=provider,
+            client_id=client_id,
+            client_secret=SecretStr(client_secret),
+            discovery_url=discovery_url,
+            redirect_uri=redirect_uri,
+            scopes=scopes,
         )
 
 

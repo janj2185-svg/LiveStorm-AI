@@ -105,6 +105,58 @@ async def test_unconfigured_oauth_provider_returns_capability_error(api) -> None
     assert response.json()["code"] == "oauth_provider_unavailable"
 
 
+def test_oauth_provider_accepts_aliases_and_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AUTH_GITHUB_ID", "github-client")
+    monkeypatch.setenv("AUTH_GITHUB_SECRET", "github-secret")
+    monkeypatch.delenv("OAUTH_GITHUB_CLIENT_ID", raising=False)
+    monkeypatch.delenv("OAUTH_GITHUB_CLIENT_SECRET", raising=False)
+    monkeypatch.delenv("OAUTH_GITHUB_DISCOVERY_URL", raising=False)
+    monkeypatch.delenv("OAUTH_GITHUB_REDIRECT_URI", raising=False)
+
+    settings = Settings(
+        _env_file=None,
+        environment="test",
+        database_url="sqlite+aiosqlite:///oauth-alias.db",
+        redis_url="memory://",
+        jwt_secret="unit-test-jwt-key-with-more-than-thirty-two-characters",
+        data_encryption_key="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        web_base_url="https://getsylora.com",
+    )
+    github = settings.oauth_provider("github")
+    assert github is not None
+    assert github.client_id == "github-client"
+    assert github.client_secret.get_secret_value() == "github-secret"
+    assert github.discovery_url == "builtin:github"
+    assert github.redirect_uri == "https://getsylora.com/v1/auth/oauth/github/callback"
+    assert "user:email" in github.scopes
+
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret")
+    google = settings.oauth_provider("google")
+    assert google is not None
+    assert google.discovery_url.endswith("/.well-known/openid-configuration")
+    assert google.redirect_uri.endswith("/v1/auth/oauth/google/callback")
+
+    assert settings.oauth_provider("apple") is None
+
+
+async def test_github_oauth_start_redirects_with_builtin_discovery(
+    api_factory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AUTH_GITHUB_ID", "github-client")
+    monkeypatch.setenv("AUTH_GITHUB_SECRET", "github-secret")
+    async with api_factory() as harness:
+        response = await harness.client.get(
+            "/v1/auth/oauth/github/start", follow_redirects=False
+        )
+        assert response.status_code == 307
+        location = response.headers["location"]
+        assert location.startswith("https://github.com/login/oauth/authorize?")
+        assert "client_id=github-client" in location
+        assert "code_challenge=" in location
+        assert "redirect_uri=" in location
+
+
 def test_production_configuration_rejects_missing_capabilities() -> None:
     with pytest.raises(ValidationError):
         Settings(

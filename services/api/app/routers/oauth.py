@@ -40,6 +40,18 @@ from app.security import (
 router = APIRouter(prefix="/auth/oauth", tags=["OAuth"])
 STATE_COOKIE = "sylora_oauth_state"
 
+# GitHub's login OAuth Apps are not OIDC discovery publishers. Resolve a stable
+# metadata document locally so /start can redirect without inventing a fake host.
+BUILTIN_OAUTH_DISCOVERY: dict[str, dict[str, Any]] = {
+    "github": {
+        "issuer": "https://github.com",
+        "authorization_endpoint": "https://github.com/login/oauth/authorize",
+        "token_endpoint": "https://github.com/login/oauth/access_token",
+        "userinfo_endpoint": "https://api.github.com/user",
+        "token_endpoint_auth_methods_supported": ["client_secret_post"],
+    }
+}
+
 
 def provider_or_error(settings: Settings, provider: str) -> OAuthProviderSettings:
     configuration = settings.oauth_provider(provider)
@@ -54,9 +66,23 @@ def provider_or_error(settings: Settings, provider: str) -> OAuthProviderSetting
 
 
 async def fetch_json(url: str, *, headers: dict[str, str] | None = None) -> dict[str, Any]:
+    if url.startswith("builtin:"):
+        key = url.removeprefix("builtin:").strip().lower()
+        data = BUILTIN_OAUTH_DISCOVERY.get(key)
+        if data is None:
+            raise APIError(
+                503,
+                "oauth_provider_unavailable",
+                "OAuth provider unavailable",
+                "The OAuth provider metadata is incomplete.",
+            )
+        return dict(data)
     try:
+        request_headers = {"Accept": "application/json", "User-Agent": "sylora-api"}
+        if headers:
+            request_headers.update(headers)
         async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
-            response = await client.get(url, headers=headers)
+            response = await client.get(url, headers=request_headers)
             response.raise_for_status()
             data = response.json()
     except (httpx.HTTPError, ValueError) as exc:
@@ -74,6 +100,82 @@ async def fetch_json(url: str, *, headers: dict[str, str] | None = None) -> dict
             "The OAuth provider returned an invalid response.",
         )
     return data
+
+
+async def fetch_json_list(
+    url: str, *, headers: dict[str, str] | None = None
+) -> list[dict[str, Any]]:
+    try:
+        request_headers = {"Accept": "application/json", "User-Agent": "sylora-api"}
+        if headers:
+            request_headers.update(headers)
+        async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
+            response = await client.get(url, headers=request_headers)
+            response.raise_for_status()
+            data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise APIError(
+            401,
+            "oauth_identity_invalid",
+            "OAuth identity invalid",
+            "The provider did not supply a verifiable identity.",
+        ) from exc
+    if not isinstance(data, list):
+        raise APIError(
+            401,
+            "oauth_identity_invalid",
+            "OAuth identity invalid",
+            "The provider did not supply a verifiable identity.",
+        )
+    return [item for item in data if isinstance(item, dict)]
+
+
+async def enrich_github_claims(
+    claims: dict[str, Any], access_token: str
+) -> dict[str, Any]:
+    """Normalize GitHub /user (+ /user/emails) into OIDC-like claims."""
+    enriched = dict(claims)
+    subject = enriched.get("sub")
+    if not isinstance(subject, str) or not subject:
+        github_id = enriched.get("id")
+        if github_id is None:
+            raise APIError(
+                401,
+                "oauth_identity_invalid",
+                "OAuth identity invalid",
+                "The provider did not supply a verifiable identity.",
+            )
+        enriched["sub"] = str(github_id)
+
+    emails = await fetch_json_list(
+        "https://api.github.com/user/emails",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    selected: dict[str, Any] | None = None
+    for item in emails:
+        if item.get("primary") is True and item.get("verified") is True:
+            selected = item
+            break
+    if selected is None:
+        for item in emails:
+            if item.get("verified") is True:
+                selected = item
+                break
+    email = selected.get("email") if selected else enriched.get("email")
+    if not isinstance(email, str) or not email.strip():
+        raise APIError(
+            403,
+            "oauth_email_unverified",
+            "Verified provider email required",
+            "The OAuth provider did not return a verified email address.",
+        )
+    enriched["email"] = email.strip()
+    enriched["email_verified"] = True
+    if not enriched.get("name"):
+        login = enriched.get("login")
+        if isinstance(login, str) and login.strip():
+            enriched["name"] = login.strip()
+    return enriched
 
 
 @router.get("/{provider}/start")
@@ -265,7 +367,13 @@ async def validated_claims(
             "OAuth identity invalid",
             "The provider did not supply a verifiable identity.",
         )
-    return await fetch_json(userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
+    claims = await fetch_json(
+        userinfo_endpoint,
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if configuration.name == "github":
+        return await enrich_github_claims(claims, access_token)
+    return claims
 
 
 @router.get("/{provider}/callback")
