@@ -4,7 +4,18 @@ import 'sylora_aura.dart';
 import 'sylora_components.dart';
 import 'sylora_tokens.dart';
 
-enum SyloraAuraContextPreset { feed, live, ai, gifts, creatorStudio, settings }
+enum SyloraAuraContextPreset {
+  feed,
+  live,
+  ai,
+  gifts,
+  creatorStudio,
+  marketplace,
+  business,
+  learning,
+  creator,
+  settings,
+}
 
 @immutable
 final class SyloraAuraPresetState {
@@ -35,6 +46,22 @@ final Map<SyloraAuraContextPreset, SyloraAuraPresetState> _presetStates =
       SyloraAuraContextPreset.creatorStudio: const SyloraAuraPresetState(
         emotion: AuraEmotion.greeting,
         tip: 'Aura is checking your creator setup.',
+      ),
+      SyloraAuraContextPreset.marketplace: const SyloraAuraPresetState(
+        emotion: AuraEmotion.amused,
+        tip: 'Aura is tracking catalog signals.',
+      ),
+      SyloraAuraContextPreset.business: const SyloraAuraPresetState(
+        emotion: AuraEmotion.focused,
+        tip: 'Aura is keeping workspace context ready.',
+      ),
+      SyloraAuraContextPreset.learning: const SyloraAuraPresetState(
+        emotion: AuraEmotion.listening,
+        tip: 'Aura is following your learning path.',
+      ),
+      SyloraAuraContextPreset.creator: const SyloraAuraPresetState(
+        emotion: AuraEmotion.greeting,
+        tip: 'Aura is watching your creator flow.',
       ),
       SyloraAuraContextPreset.settings: const SyloraAuraPresetState(
         emotion: AuraEmotion.focused,

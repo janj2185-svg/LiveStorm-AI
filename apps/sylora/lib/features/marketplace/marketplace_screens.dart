@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
+import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import 'marketplace_repository.dart';
 
@@ -56,6 +57,8 @@ final class MarketplaceScreen extends ConsumerWidget {
       title: 'Marketplace',
       subtitle:
           'The persisted catalog, cart, orders, entitlements, and seller APIs.',
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.marketplace,
       actions: <Widget>[
         if (seller)
           IconButton(
@@ -742,9 +745,12 @@ final class _MarketplaceProductScreenState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Product')),
-    body:
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Product',
+    subtitle: 'Catalog detail, cart entry, and verified reviews.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.marketplace,
+    child:
         FutureBuilder<
           (CatalogProduct, CursorPage<ProductReview>, MarketplaceOrder?)
         >(
@@ -763,8 +769,8 @@ final class _MarketplaceProductScreenState
             final purchasedLine = purchasedOrder?.lines
                 .where((line) => line.productId == product.id)
                 .firstOrNull;
-            return ListView(
-              padding: const EdgeInsets.all(20),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 LumenSurface(
                   child: Column(
@@ -930,9 +936,12 @@ final class MarketplaceOrderScreen extends ConsumerWidget {
   final String orderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-    appBar: AppBar(title: const Text('Order detail')),
-    body: FutureBuilder<MarketplaceOrder>(
+  Widget build(BuildContext context, WidgetRef ref) => LumenPage(
+    title: 'Order detail',
+    subtitle: 'Marketplace settlement and line item record.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.marketplace,
+    child: FutureBuilder<MarketplaceOrder>(
       future: ref.read(marketplaceRepositoryProvider).order(orderId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -948,8 +957,8 @@ final class MarketplaceOrderScreen extends ConsumerWidget {
           return const Center(child: CircularProgressIndicator());
         }
         final order = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(
@@ -1047,9 +1056,12 @@ final class _MarketplaceSellerScreenState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Seller workspace')),
-    body:
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Seller workspace',
+    subtitle: 'Store setup, seller products, sales, and service bookings.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.marketplace,
+    child:
         FutureBuilder<
           (
             SellerStore?,
@@ -1067,14 +1079,12 @@ final class _MarketplaceSellerScreenState
             }
             final (store, products, sales) = snapshot.data!;
             if (store == null) {
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: _StoreOnboarding(onCreated: _refresh),
-              );
+              return _StoreOnboarding(onCreated: _refresh);
             }
             return DefaultTabController(
               length: 3,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   const TabBar(
                     tabs: <Tab>[
@@ -1083,7 +1093,9 @@ final class _MarketplaceSellerScreenState
                       Tab(text: 'Bookings'),
                     ],
                   ),
-                  Expanded(
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    height: 720,
                     child: TabBarView(
                       children: <Widget>[
                         _SellerProducts(
@@ -1645,9 +1657,12 @@ final class _MarketplaceBookingScreenState
       .booking(widget.bookingId);
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Service booking')),
-    body: FutureBuilder<ServiceBooking>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Service booking',
+    subtitle: 'Booking status, scheduling, and seller-buyer messaging.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.marketplace,
+    child: FutureBuilder<ServiceBooking>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -1657,8 +1672,8 @@ final class _MarketplaceBookingScreenState
           return const Center(child: CircularProgressIndicator());
         }
         final booking = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(

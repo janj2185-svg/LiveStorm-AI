@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
+import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import 'business_repository.dart';
 
@@ -21,6 +22,8 @@ final class BusinessScreen extends ConsumerWidget {
     title: 'Workspaces',
     subtitle:
         'Select a tenant before opening CRM, operations, documents, or finance.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.business,
     actions: <Widget>[
       IconButton(
         tooltip: 'Create workspace',
@@ -138,9 +141,12 @@ final class _BusinessWorkspaceScreenState
       .switchWorkspace(widget.workspaceId);
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Workspace')),
-    body: FutureBuilder<WorkspaceContext>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Workspace',
+    subtitle: 'Tenant overview, permissions, and operational areas.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.business,
+    child: FutureBuilder<WorkspaceContext>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -165,8 +171,8 @@ final class _BusinessWorkspaceScreenState
           ('documents', 'Documents', Icons.folder_outlined),
           ('finance', 'Finance', Icons.account_balance_outlined),
         ];
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(
@@ -340,9 +346,12 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(_areaTitle(widget.area))),
-    body: FutureBuilder<_BusinessAreaData>(
+  Widget build(BuildContext context) => LumenPage(
+    title: _areaTitle(widget.area),
+    subtitle: 'Persisted workspace records and actions for this area.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.business,
+    child: FutureBuilder<_BusinessAreaData>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -352,8 +361,8 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         final data = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             for (final section in data.sections.entries) ...<Widget>[
               _BusinessSection(
@@ -1114,9 +1123,12 @@ final class _BusinessDocumentScreenState
       .document(widget.workspaceId, widget.documentId);
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Business document')),
-    body: FutureBuilder<JsonObject>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Business document',
+    subtitle: 'Document versions, upload capability, and approvals.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.business,
+    child: FutureBuilder<JsonObject>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -1134,8 +1146,8 @@ final class _BusinessDocumentScreenState
                   .map((value) => requireObject(value, 'document approval'))
                   .toList(growable: false)
             : const <JsonObject>[];
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(

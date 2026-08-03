@@ -7,6 +7,7 @@ import '../../core/api.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
+import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import 'creator_repository.dart';
 
@@ -70,6 +71,8 @@ final class CreatorScreen extends ConsumerWidget {
       title: 'Creator',
       subtitle:
           'Publishing, audience, subscriptions, and commerce from the creator APIs.',
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.creator,
       child: LumenAsyncView<_CreatorSnapshot>(
         value: value,
         onRetry: () => ref.invalidate(_creatorProvider),
@@ -873,13 +876,16 @@ final class _CreatorContentScreenState
   @override
   Widget build(BuildContext context) {
     final value = ref.watch(_contentDetailProvider(widget.contentId));
-    return Scaffold(
-      appBar: AppBar(title: const Text('Creator content')),
-      body: LumenAsyncView<ContentDetail>(
+    return LumenPage(
+      title: 'Creator content',
+      subtitle: 'Content versions, publishing lifecycle, assets, and access.',
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.creator,
+      child: LumenAsyncView<ContentDetail>(
         value: value,
         onRetry: _refresh,
-        data: (detail) => ListView(
-          padding: const EdgeInsets.all(20),
+        data: (detail) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(

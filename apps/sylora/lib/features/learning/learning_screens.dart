@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
+import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import 'learning_repository.dart';
 
@@ -38,6 +39,8 @@ final class LearningScreen extends ConsumerWidget {
     title: 'Learning',
     subtitle:
         'Published courses, real enrollment progress, quizzes, and certificates.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.learning,
     child: LumenAsyncView<_LearningSnapshot>(
       value: ref.watch(_learningProvider),
       onRetry: () => ref.invalidate(_learningProvider),
@@ -335,9 +338,12 @@ final class _LearningCourseScreenState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Course')),
-    body: FutureBuilder<(Course, Curriculum)>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Course',
+    subtitle: 'Course detail, curriculum, and enrollment entry point.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.learning,
+    child: FutureBuilder<(Course, Curriculum)>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -350,8 +356,8 @@ final class _LearningCourseScreenState
           return const Center(child: CircularProgressIndicator());
         }
         final (course, curriculum) = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(
@@ -499,9 +505,12 @@ final class _LearningEnrollmentScreenState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Enrollment')),
-    body: FutureBuilder<(Course, Curriculum, CursorPage<LessonProgress>)>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Enrollment',
+    subtitle: 'Lesson progress, quizzes, and certificate issuance.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.learning,
+    child: FutureBuilder<(Course, Curriculum, CursorPage<LessonProgress>)>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -511,8 +520,8 @@ final class _LearningEnrollmentScreenState
           return const Center(child: CircularProgressIndicator());
         }
         final (course, curriculum, progress) = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text(
               course.title,
@@ -732,9 +741,12 @@ final class _LearningLessonScreenState
   String? _message;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Lesson')),
-    body: FutureBuilder<Lesson>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Lesson',
+    subtitle: 'Lesson content, heartbeat tracking, and completion controls.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.learning,
+    child: FutureBuilder<Lesson>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -751,8 +763,8 @@ final class _LearningLessonScreenState
           return const Center(child: CircularProgressIndicator());
         }
         final lesson = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(
@@ -876,9 +888,12 @@ final class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
   String? _message;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Quiz')),
-    body: FutureBuilder<PublicQuiz>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Quiz',
+    subtitle: 'Attempt lifecycle, answers, and scoring.',
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.learning,
+    child: FutureBuilder<PublicQuiz>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -895,8 +910,8 @@ final class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         final quiz = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text(quiz.title, style: Theme.of(context).textTheme.headlineLarge),
             Text('Attempt limit: ${quiz.attemptLimit}'),

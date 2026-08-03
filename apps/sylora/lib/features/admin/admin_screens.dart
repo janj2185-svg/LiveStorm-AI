@@ -327,9 +327,10 @@ final class _AdminUserScreenState extends ConsumerState<AdminUserScreen> {
   String? _message;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Admin user detail')),
-    body: FutureBuilder<JsonObject>(
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Admin user detail',
+    subtitle: 'Account state, roles, sessions, and administration actions.',
+    child: FutureBuilder<JsonObject>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -343,8 +344,8 @@ final class _AdminUserScreenState extends ConsumerState<AdminUserScreen> {
         final sessions = requireList(json, 'sessions');
         final memberships = requireList(json, 'workspace_memberships');
         final actions = requireList(json, 'administration_actions');
-        return ListView(
-          padding: const EdgeInsets.all(20),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             LumenSurface(
               child: Column(
