@@ -17,7 +17,12 @@ async def test_health_metrics_problem_details_and_security_headers(api) -> None:
     ready = await api.client.get("/health/ready")
     assert live.json() == {"status": "live"}
     assert ready.json() == {"status": "ready"}
+    assert ready.headers["x-content-type-options"] == "nosniff"
     assert ready.headers["x-frame-options"] == "DENY"
+    assert ready.headers["referrer-policy"] == "no-referrer"
+    assert ready.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+    assert "content-security-policy" not in ready.headers
+    assert "strict-transport-security" not in ready.headers
 
     invalid = await api.client.post("/v1/auth/login", json={"email": "bad"})
     assert invalid.status_code == 422
@@ -30,6 +35,33 @@ async def test_health_metrics_problem_details_and_security_headers(api) -> None:
     assert "sylora_http_requests_total" in metrics.text
     assert 'route="/health/live"' in metrics.text
     assert "sylora_http_request_duration_seconds" in metrics.text
+
+
+async def test_slo_snapshot_increments_http_counter_and_reports_dependencies(api) -> None:
+    baseline = await api.client.get("/v1/diagnostics/slo")
+    assert baseline.status_code == 200, baseline.text
+    assert baseline.headers["x-frame-options"] == "DENY"
+    baseline_body = baseline.json()
+    baseline_requests = baseline_body["counters"]["http_requests"]
+
+    health = await api.client.get("/health/live")
+    assert health.status_code == 200
+
+    updated = await api.client.get("/v1/diagnostics/slo")
+    assert updated.status_code == 200, updated.text
+    body = updated.json()
+    assert body["counters"]["http_requests"] >= baseline_requests + 2
+    assert set(body["counters"]) == {
+        "http_requests",
+        "ai_chat_turns",
+        "gift_sends",
+        "live_sessions_started",
+        "push_skipped",
+    }
+    assert body["uptime_seconds"] >= 0
+    assert body["dependencies"]["db"]["ok"] is True
+    assert body["dependencies"]["redis"]["ok"] is True
+    assert set(body["dependencies"]) == {"db", "redis", "s3", "payments", "push", "ai_vector"}
 
 
 async def test_body_size_limit_is_enforced(api_factory) -> None:

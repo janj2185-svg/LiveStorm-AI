@@ -75,6 +75,7 @@ from app.audit import add_audit_event
 from app.config import Settings
 from app.dependencies import AuthContext, current_auth, get_session, get_settings
 from app.errors import APIError
+from app.observability import increment_counter
 from app.rate_limit import rate_limit
 from app.schemas import MessageResponse
 from app.security import utcnow
@@ -393,6 +394,7 @@ async def send_message(
         conversation_id=conversation_id,
         payload=payload,
     )
+    increment_counter("ai_chat_turns")
     await _publish_committed_event(
         request,
         db,
@@ -423,6 +425,7 @@ async def stream_message(
         payload=payload,
         stream=True,
     )
+    increment_counter("ai_chat_turns")
     await _publish_committed_event(
         request,
         db,

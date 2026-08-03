@@ -90,6 +90,7 @@ from app.gift_service import (
     published_version,
     record_affinity,
 )
+from app.observability import increment_counter
 from app.push_service import PushMessage, dispatch_push_best_effort
 from app.rate_limit import rate_limit
 from app.routers.messaging import websocket_user
@@ -561,6 +562,7 @@ async def send_gift_endpoint(
         if created:
             await db.commit()
             await db.refresh(gift_send)
+            increment_counter("gift_sends")
             await publish_gift_events(request, settings, events)
             await dispatch_push_best_effort(
                 db,

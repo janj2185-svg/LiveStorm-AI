@@ -275,7 +275,8 @@ def create_app(
             expose_headers=["X-Request-ID"],
             max_age=600,
         )
-    app.add_middleware(SecurityHeadersMiddleware)
+    if resolved_settings.security_headers_enabled:
+        app.add_middleware(SecurityHeadersMiddleware, settings=resolved_settings)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(BodySizeLimitMiddleware, max_bytes=resolved_settings.max_body_bytes)
 

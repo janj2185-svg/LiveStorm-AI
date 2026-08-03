@@ -1,73 +1,57 @@
 from __future__ import annotations
 
 import json
-import logging
-import re
 import time
 import uuid
 from collections.abc import Awaitable, Callable
 
 from fastapi import Request, Response
-from prometheus_client import Counter, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-logger = logging.getLogger("sylora.requests")
-
-REQUESTS = Counter(
-    "sylora_http_requests_total",
-    "HTTP requests",
-    ("method", "route", "status"),
+from app.config import Settings
+from app.observability import (
+    apply_security_headers,
+    log_request_completed,
+    record_http_request,
+    request_id_from_headers,
+    route_for_request,
 )
-LATENCY = Histogram(
-    "sylora_http_request_duration_seconds",
-    "HTTP request latency",
-    ("method", "route"),
-)
-REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        supplied = request.headers.get("x-request-id", "")
-        request_id = supplied if REQUEST_ID_PATTERN.fullmatch(supplied) else str(uuid.uuid4())
+        request_id = request_id_from_headers(request.headers)
         request.state.request_id = request_id
         started = time.perf_counter()
         response = await call_next(request)
         elapsed = time.perf_counter() - started
-        route_obj = request.scope.get("route")
-        route = getattr(route_obj, "path", request.url.path)
-        REQUESTS.labels(request.method, route, str(response.status_code)).inc()
-        LATENCY.labels(request.method, route).observe(elapsed)
+        route = route_for_request(request)
+        record_http_request(request.method, route, response.status_code, elapsed)
         response.headers["X-Request-ID"] = request_id
-        logger.info(
-            "request_completed",
-            extra={
-                "request_id": request_id,
-                "method": request.method,
-                "path": request.url.path,
-                "status": response.status_code,
-                "duration_ms": round(elapsed * 1000, 2),
-            },
+        log_request_completed(
+            request_id=request_id,
+            method=request.method,
+            path=request.url.path,
+            route=route,
+            status=response.status_code,
+            duration_ms=elapsed * 1000,
         )
         return response
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app: ASGIApp, settings: Settings) -> None:
+        super().__init__(app)
+        self.settings = settings
+
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         response = await call_next(request)
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
-        response.headers["Cache-Control"] = "no-store"
-        if request.url.scheme == "https":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        apply_security_headers(response, request, self.settings)
         return response
 
 
@@ -142,7 +126,6 @@ class BodySizeLimitMiddleware:
                     (b"x-frame-options", b"DENY"),
                     (b"referrer-policy", b"no-referrer"),
                     (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
-                    (b"content-security-policy", b"default-src 'none'; frame-ancestors 'none'"),
                     (b"cache-control", b"no-store"),
                 ],
             }

@@ -602,6 +602,7 @@ async def payment_webhook(
         event_type=verified.event_type,
     )
     db.add(event)
+    operation: PaymentOperation | None = None
     if verified.operation_id is not None and verified.operation_status is not None:
         operation = await db.scalar(
             select(PaymentOperation)
@@ -662,5 +663,20 @@ async def payment_webhook(
             operation_status=verified.operation_status,
         )
     event.processed_at = utcnow()
+    add_audit_event(
+        db,
+        request,
+        request.app.state.settings,
+        "payments.webhook_processed",
+        target_user_id=operation.actor_user_id if operation is not None else None,
+        metadata={
+            "provider": provider_name,
+            "provider_event_id": verified.event_id,
+            "event_type": verified.event_type,
+            "operation_id": verified.operation_id,
+            "operation_status": verified.operation_status,
+            "payment_operation_id": str(operation.id) if operation is not None else None,
+        },
+    )
     await db.commit()
     return {"status": "processed"}

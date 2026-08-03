@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_system_audit_event
 from app.config import Settings
+from app.observability import increment_counter
 from app.push_models import DevicePushToken
 
 logger = logging.getLogger("sylora.push")
@@ -230,7 +231,10 @@ async def dispatch_push_best_effort(
     metadata: Mapping[str, Any] | None = None,
 ) -> PushDispatchSummary | None:
     try:
-        return await dispatcher.dispatch(db, user_ids=user_ids, message=message)
+        summary = await dispatcher.dispatch(db, user_ids=user_ids, message=message)
+        if summary.skipped:
+            increment_counter("push_skipped", summary.skipped)
+        return summary
     except Exception as exc:  # noqa: BLE001 - notifications must not break primary flow
         logger.exception("push_dispatch_failed", extra={"action": action, "error": str(exc)})
         add_system_audit_event(

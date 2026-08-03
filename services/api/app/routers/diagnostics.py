@@ -16,6 +16,7 @@ from sqlalchemy import text
 
 from app.config import Settings
 from app.errors import APIError
+from app.observability import slo_snapshot
 
 router = APIRouter(tags=["Diagnostics"])
 
@@ -46,7 +47,10 @@ def _provider_flags(settings: Settings) -> tuple[list[str], list[str]]:
     def flag(name: str, present: bool) -> None:
         (configured if present else missing).append(name)
 
-    flag("object_storage_s3", bool(settings.s3_endpoint_url and settings.s3_bucket and settings.s3_access_key_id))
+    flag(
+        "object_storage_s3",
+        bool(settings.s3_endpoint_url and settings.s3_bucket and settings.s3_access_key_id),
+    )
     flag("payment_provider", False)  # always unconfigured unless injected
     flag("openai_api_key", bool(os.environ.get("OPENAI_API_KEY")))
     flag("youtube_oauth", bool(settings.youtube_client_id and settings.youtube_client_secret))
@@ -56,6 +60,11 @@ def _provider_flags(settings: Settings) -> tuple[list[str], list[str]]:
     flag("smtp", bool(settings.smtp_host))
     flag("service_health_hmac", bool(settings.service_health_hmac_secret))
     return configured, missing
+
+
+@router.get("/diagnostics/slo")
+async def diagnostics_slo(request: Request) -> dict[str, Any]:
+    return await slo_snapshot(request)
 
 
 @router.get("/diagnostics")
@@ -116,7 +125,12 @@ async def diagnostics(request: Request) -> dict[str, Any]:
         missing.append("payment_provider")
 
     # Gift library honesty snapshot — prefer official SYLORA 100 catalog / STAND_ARTIFACTS_ROOT.
-    gift_summary: dict[str, Any] = {"ready": 0, "assets_built_not_ready": 0, "spec_only": 0, "total": 0}
+    gift_summary: dict[str, Any] = {
+        "ready": 0,
+        "assets_built_not_ready": 0,
+        "spec_only": 0,
+        "total": 0,
+    }
     stand_root = os.environ.get("STAND_ARTIFACTS_ROOT")
     catalog_candidates = [
         Path(stand_root) / "catalog.json" if stand_root else None,
@@ -248,9 +262,15 @@ async def diagnostics(request: Request) -> dict[str, Any]:
         "failed_background_jobs": [],
         "notes": [
             "Secrets are never returned by this endpoint.",
-            "Unconfigured providers must fail closed with Provider not configured — never fake success.",
+            (
+                "Unconfigured providers must fail closed with Provider not configured "
+                "— never fake success."
+            ),
             "READY gift count is honest; do not claim 100 READY unless catalog says so.",
-            "Phase 1 product loops: login → handle → wallet → feed → DM. Phase 2+ needs owner confirm.",
+            (
+                "Phase 1 product loops: login → handle → wallet → feed → DM. "
+                "Phase 2+ needs owner confirm."
+            ),
             "Use GET /v1/public/stand-status for the public READY/PARTIAL/BLOCKED matrix.",
         ],
     }

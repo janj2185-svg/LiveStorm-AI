@@ -120,6 +120,7 @@ from app.live_service import (
     start_game,
     start_session,
 )
+from app.observability import increment_counter
 from app.push_service import PushMessage, dispatch_push_best_effort
 from app.rate_limit import rate_limit
 from app.routers.messaging import websocket_user
@@ -648,6 +649,8 @@ async def start_session_endpoint(
     await live_rate_limit(request, auth.user.id)
     record = await owned_live_session(db, session_id, auth.user.id)
     record = await start_session(db, registry(request), settings, record)
+    if record.state == LiveSessionState.live:
+        increment_counter("live_sessions_started")
     await publish_latest(request, session_id)
     if record.owner_user_id is not None:
         await dispatch_push_best_effort(

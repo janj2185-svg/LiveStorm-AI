@@ -25,7 +25,7 @@ Branch: `cursor/sylora-production-platform-fc9f`
 | Native WebRTC publisher (browser) | **Partial** | WHIP SDP publish on web; mobile native next |
 | Gift READY catalog (20–30) | **Next** | Runtime exists; READY=0 |
 | Push notifications FCM/APNs | **Next** | |
-| Security hardening + observability | **Next** | |
+| Security hardening + observability | **Partial** | Headers, request logs, SLO counters/dependency snapshot |
 | Auth/social/messaging polish + manual QA | **Next** | |
 
 ## Wave B (Creator Production) — queued
