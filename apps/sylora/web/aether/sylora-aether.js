@@ -1,19 +1,13 @@
 /**
- * SYLORA Aether — GPU particle world for the public entry.
- * Instant canvas paint; Flutter boots only on demand.
+ * SYLORA Aether — living GPU entry.
+ * Readable HUD, form↔scatter logo cycle, mobile-tuned.
  */
 (function () {
   'use strict';
 
   const NODES = [
-    'AI',
-    'Live',
-    'Community',
-    'Business',
-    'Education',
-    'Marketplace',
-    'Gifts',
-    'Creator Tools',
+    'AI', 'Live', 'Community', 'Business',
+    'Education', 'Marketplace', 'Gifts', 'Creator Tools',
   ];
 
   const PETAL_COLORS = [
@@ -27,9 +21,11 @@
   const state = {
     running: false,
     reduced: false,
+    mobile: false,
     stage: 0,
+    formAmount: 0,
     t0: 0,
-    pointer: { x: 0, y: 0, active: false },
+    pointer: { x: 0, y: 0, tx: 0, ty: 0, active: 0 },
     width: 1,
     height: 1,
     dpr: 1,
@@ -37,17 +33,18 @@
     program: null,
     buffers: null,
     count: 0,
-    targets: null,
+    particles: null,
     raf: 0,
     flutterPromise: null,
     hotNode: -1,
+    fpsGate: 0,
+    skipOdd: false,
+    listenersBound: false,
   };
 
   function prefersAetherRoute() {
     const hash = (location.hash || '').replace(/^#/, '');
-    if (!hash || hash === '/' || hash === '/welcome') return true;
-    if (hash.startsWith('/welcome')) return true;
-    return false;
+    return !hash || hash === '/' || hash === '/welcome' || hash.startsWith('/welcome');
   }
 
   function qs(sel, root) {
@@ -57,79 +54,112 @@
   function buildLogoTargets(count) {
     const targets = new Float32Array(count * 2);
     const colors = new Float32Array(count * 3);
+    const depths = new Float32Array(count);
     const petals = 5;
     for (let i = 0; i < count; i += 1) {
       const petal = i % petals;
       const angle = (petal / petals) * Math.PI * 2 - Math.PI / 2;
       const u = Math.random();
       const v = Math.random();
-      // Ellipse petal in local space, then rotate + offset from center.
-      const lx = (u - 0.5) * 0.42;
-      const ly = (v * v) * 0.72 - 0.08;
+      const lx = (u - 0.5) * 0.4;
+      const ly = (v * v) * 0.7 - 0.06;
       const ca = Math.cos(angle);
       const sa = Math.sin(angle);
-      const x = lx * ca - ly * sa;
-      const y = lx * sa + ly * ca;
-      // Slight denser core.
-      const core = Math.random() < 0.12;
-      targets[i * 2] = core ? (Math.random() - 0.5) * 0.12 : x * 0.95;
-      targets[i * 2 + 1] = core ? (Math.random() - 0.5) * 0.12 : y * 0.95;
+      const core = Math.random() < 0.1;
+      // Logo sits upper-mid so copy plate below stays clear.
+      const x = core ? (Math.random() - 0.5) * 0.1 : (lx * ca - ly * sa) * 0.92;
+      const y = core ? (Math.random() - 0.5) * 0.1 + 0.18 : (lx * sa + ly * ca) * 0.92 + 0.18;
+      targets[i * 2] = x;
+      targets[i * 2 + 1] = y;
       const c = PETAL_COLORS[petal];
-      const jitter = 0.85 + Math.random() * 0.2;
+      const jitter = 0.86 + Math.random() * 0.18;
       colors[i * 3] = c[0] * jitter;
       colors[i * 3 + 1] = c[1] * jitter;
       colors[i * 3 + 2] = c[2] * jitter;
+      depths[i] = Math.random(); // 0 far → 1 near
     }
-    return { targets, colors };
+    return { targets, colors, depths };
   }
 
   function createParticles(count) {
     const positions = new Float32Array(count * 2);
     const velocities = new Float32Array(count * 2);
     const seeds = new Float32Array(count);
-    const { targets, colors } = buildLogoTargets(count);
+    const { targets, colors, depths } = buildLogoTargets(count);
     for (let i = 0; i < count; i += 1) {
       const a = Math.random() * Math.PI * 2;
-      const r = 0.55 + Math.random() * 1.4;
+      const r = 0.9 + Math.random() * 1.8;
       positions[i * 2] = Math.cos(a) * r;
-      positions[i * 2 + 1] = Math.sin(a) * r;
-      velocities[i * 2] = (Math.random() - 0.5) * 0.25;
-      velocities[i * 2 + 1] = (Math.random() - 0.5) * 0.25;
+      positions[i * 2 + 1] = Math.sin(a) * r * 0.85;
+      velocities[i * 2] = (Math.random() - 0.5) * 0.2;
+      velocities[i * 2 + 1] = (Math.random() - 0.5) * 0.2;
       seeds[i] = Math.random() * 1000;
     }
-    return { positions, velocities, seeds, targets, colors };
+    return { positions, velocities, seeds, targets, colors, depths };
+  }
+
+  /** Smooth cycle: scatter → form → hold → scatter … */
+  function formCycle(t) {
+    const period = 11;
+    const x = t % period;
+    if (x < 3.2) {
+      const u = x / 3.2;
+      return u * u * (3 - 2 * u);
+    }
+    if (x < 6.2) return 1;
+    if (x < 9.0) {
+      const u = (x - 6.2) / 2.8;
+      return 1 - u * u * (3 - 2 * u);
+    }
+    return 0;
   }
 
   const VERT = `
     attribute vec2 a_pos;
     attribute vec3 a_color;
     attribute float a_seed;
+    attribute float a_depth;
     uniform float u_time;
-    uniform float u_stage;
+    uniform float u_form;
     uniform vec2 u_pointer;
     uniform float u_pointerActive;
     uniform vec2 u_res;
     varying vec3 v_color;
     varying float v_alpha;
     void main() {
-      float breathe = 0.012 * sin(u_time * 1.3 + a_seed);
       vec2 p = a_pos;
-      // Soft light-wave field.
-      p.y += 0.018 * sin(p.x * 6.0 + u_time * 1.4);
-      p.x += 0.012 * cos(p.y * 5.0 - u_time * 1.1);
-      if (u_pointerActive > 0.5) {
+      float wave = 0.02 * sin(p.x * 5.5 + u_time * 1.15) * (0.35 + a_depth);
+      p.y += wave;
+      p.x += 0.014 * cos(p.y * 4.2 - u_time * 0.9) * (0.4 + a_depth);
+
+      // Soft parallax toward pointer — living field.
+      if (u_pointerActive > 0.05) {
         vec2 d = p - u_pointer;
-        float dist = length(d) + 0.0001;
-        p += normalize(d) * (0.035 / dist) * smoothstep(0.55, 0.0, dist);
+        float dist = length(d) + 0.001;
+        float fall = smoothstep(0.85, 0.0, dist);
+        p += normalize(d) * (0.045 * u_pointerActive * fall) * mix(0.45, 1.2, a_depth);
+        // Subtle attract into logo region when forming.
+        p -= d * (0.012 * u_form * u_pointerActive * fall);
       }
-      float size = mix(1.6, 2.8, clamp(u_stage, 0.0, 1.0));
-      size *= (0.85 + 0.25 * sin(u_time * 2.0 + a_seed));
-      // Aspect-correct
-      vec2 ndc = vec2(p.x * (u_res.y / u_res.x), p.y);
-      gl_Position = vec4(ndc * 1.15, 0.0, 1.0);
-      gl_PointSize = size * (1.0 + breathe * 8.0) * (u_res.y / 900.0);
+
+      float size = mix(1.35, 2.6, a_depth);
+      size *= mix(0.85, 1.25, u_form);
+      size *= (0.88 + 0.2 * sin(u_time * 1.8 + a_seed));
+
+      // Keep lower HUD readable: fade & shrink particles in copy zone.
+      float hud = smoothstep(-0.05, -0.55, p.y);
+      size *= mix(1.0, 0.45, hud);
+      float alpha = mix(0.22, 0.9, a_depth) * mix(0.55, 1.0, u_form);
+      alpha *= mix(1.0, 0.12, hud);
+
+      float aspect = u_res.y / max(u_res.x, 1.0);
+      // Depth scale — near particles larger / slightly offset.
+      float zoom = mix(0.92, 1.18, a_depth);
+      vec2 ndc = vec2(p.x * aspect, p.y) * zoom;
+      gl_Position = vec4(ndc, 0.0, 1.0);
+      gl_PointSize = max(1.0, size * (u_res.y / 980.0));
       v_color = a_color;
-      v_alpha = mix(0.35, 0.95, clamp(u_stage, 0.0, 1.0));
+      v_alpha = alpha;
     }
   `;
 
@@ -141,7 +171,7 @@
       vec2 uv = gl_PointCoord * 2.0 - 1.0;
       float d = dot(uv, uv);
       if (d > 1.0) discard;
-      float glow = exp(-d * 2.8);
+      float glow = exp(-d * 3.1);
       gl_FragColor = vec4(v_color, glow * v_alpha);
     }
   `;
@@ -163,7 +193,7 @@
       depth: false,
       stencil: false,
       premultipliedAlpha: true,
-      powerPreference: 'high-performance',
+      powerPreference: state.mobile ? 'low-power' : 'high-performance',
     });
     if (!gl) return null;
     const prog = gl.createProgram();
@@ -181,32 +211,24 @@
   }
 
   function upload(gl, prog, particles) {
-    const posBuf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, particles.positions, gl.DYNAMIC_DRAW);
-    const aPos = gl.getAttribLocation(prog, 'a_pos');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-    const colBuf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, particles.colors, gl.STATIC_DRAW);
-    const aColor = gl.getAttribLocation(prog, 'a_color');
-    gl.enableVertexAttribArray(aColor);
-    gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 0, 0);
-
-    const seedBuf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, seedBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, particles.seeds, gl.STATIC_DRAW);
-    const aSeed = gl.getAttribLocation(prog, 'a_seed');
-    gl.enableVertexAttribArray(aSeed);
-    gl.vertexAttribPointer(aSeed, 1, gl.FLOAT, false, 0, 0);
-
+    const bind = (data, locName, size, dynamic) => {
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, data, dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, locName);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+      return buf;
+    };
+    const posBuf = bind(particles.positions, 'a_pos', 2, true);
+    bind(particles.colors, 'a_color', 3, false);
+    bind(particles.seeds, 'a_seed', 1, false);
+    bind(particles.depths, 'a_depth', 1, false);
     return {
       posBuf,
       uniforms: {
         time: gl.getUniformLocation(prog, 'u_time'),
-        stage: gl.getUniformLocation(prog, 'u_stage'),
+        form: gl.getUniformLocation(prog, 'u_form'),
         pointer: gl.getUniformLocation(prog, 'u_pointer'),
         pointerActive: gl.getUniformLocation(prog, 'u_pointerActive'),
         res: gl.getUniformLocation(prog, 'u_res'),
@@ -215,7 +237,8 @@
   }
 
   function resize(canvas) {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const maxDpr = state.mobile ? 1.35 : 1.75;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     const w = Math.max(1, Math.floor(canvas.clientWidth * dpr));
     const h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
     if (canvas.width !== w || canvas.height !== h) {
@@ -229,45 +252,51 @@
   }
 
   function stepParticles(particles, dt, t) {
-    const { positions, velocities, targets } = particles;
+    const { positions, velocities, targets, seeds } = particles;
     const count = state.count;
-    // Formation stage eases toward logo; later adds orbital drift.
-    const form = Math.min(1, Math.max(0, (t - 0.4) / 2.8));
-    const ease = form * form * (3 - 2 * form);
-    state.stage = ease;
+    const form = formCycle(t);
+    state.formAmount = form;
+    state.stage = form;
+
+    // Smooth pointer.
+    state.pointer.x += (state.pointer.tx - state.pointer.x) * Math.min(1, dt * 10);
+    state.pointer.y += (state.pointer.ty - state.pointer.y) * Math.min(1, dt * 10);
+    state.pointer.active *= 0.92;
+
     const px = state.pointer.x;
     const py = state.pointer.y;
     const pActive = state.pointer.active;
 
     for (let i = 0; i < count; i += 1) {
       const ix = i * 2;
-      const tx = targets[ix];
-      const ty = targets[ix + 1];
-      // Noise field before formation.
-      const n = particles.seeds[i];
-      const wanderX = Math.cos(t * 0.7 + n) * 0.35;
-      const wanderY = Math.sin(t * 0.55 + n * 1.3) * 0.28;
-      const goalX = tx * ease + wanderX * (1 - ease);
-      const goalY = ty * ease + wanderY * (1 - ease);
-      let ax = (goalX - positions[ix]) * (0.9 + ease * 1.8);
-      let ay = (goalY - positions[ix + 1]) * (0.9 + ease * 1.8);
-      if (pActive) {
+      const n = seeds[i];
+      const wanderX = Math.cos(t * 0.55 + n) * (0.55 + (1 - form) * 0.55);
+      const wanderY = Math.sin(t * 0.42 + n * 1.3) * (0.42 + (1 - form) * 0.5);
+      const tx = targets[ix] * form + wanderX * (1 - form) * 0.85;
+      const ty = targets[ix + 1] * form + wanderY * (1 - form) * 0.85;
+
+      let ax = (tx - positions[ix]) * (0.75 + form * 2.1);
+      let ay = (ty - positions[ix + 1]) * (0.75 + form * 2.1);
+
+      if (pActive > 0.04) {
         const dx = positions[ix] - px;
         const dy = positions[ix + 1] - py;
-        const dist2 = dx * dx + dy * dy + 0.0002;
-        const force = 0.08 / dist2;
+        const dist2 = dx * dx + dy * dy + 0.00025;
+        const force = (0.055 * pActive) / dist2;
         ax += dx * force;
         ay += dy * force;
       }
-      // Late-stage constellation orbit for a subset.
-      if (ease > 0.85 && i % 11 === 0) {
-        const ang = t * 0.35 + n;
-        const radius = 0.55 + (i % 7) * 0.05;
-        ax += (Math.cos(ang) * radius - positions[ix]) * 0.15;
-        ay += (Math.sin(ang) * radius * 0.62 - positions[ix + 1]) * 0.15;
+
+      // Vast orbital drift when scattered — scale of a universe.
+      if (form < 0.35 && i % 9 === 0) {
+        const ang = t * 0.22 + n;
+        const radius = 0.85 + (i % 5) * 0.08;
+        ax += (Math.cos(ang) * radius - positions[ix]) * 0.08;
+        ay += (Math.sin(ang) * radius * 0.7 - positions[ix + 1]) * 0.08;
       }
-      velocities[ix] = (velocities[ix] + ax * dt) * 0.86;
-      velocities[ix + 1] = (velocities[ix + 1] + ay * dt) * 0.86;
+
+      velocities[ix] = (velocities[ix] + ax * dt) * 0.84;
+      velocities[ix + 1] = (velocities[ix + 1] + ay * dt) * 0.84;
       positions[ix] += velocities[ix] * dt;
       positions[ix + 1] += velocities[ix + 1] * dt;
     }
@@ -276,29 +305,40 @@
   function frame(now) {
     if (!state.running) return;
     const t = (now - state.t0) / 1000;
-    const dt = Math.min(0.033, state._last ? (now - state._last) / 1000 : 0.016);
+    const rawDt = state._last ? (now - state._last) / 1000 : 0.016;
+    const dt = Math.min(0.033, rawDt);
     state._last = now;
-    const { gl, program, buffers, particles } = state;
-    if (!state.reduced) {
+
+    // Adaptive quality: if frame is heavy, alternate physics updates on mobile.
+    if (rawDt > 0.028) state.fpsGate = Math.min(8, state.fpsGate + 1);
+    else state.fpsGate = Math.max(0, state.fpsGate - 1);
+    const skipPhysics = state.mobile && state.fpsGate > 3 && (state.skipOdd = !state.skipOdd);
+
+    const { gl, buffers, particles } = state;
+    if (!state.reduced && !skipPhysics) {
       stepParticles(particles, dt, t);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffers.posBuf);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, particles.positions);
+    } else if (state.reduced) {
+      state.formAmount = 1;
+      state.stage = 1;
     }
+
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform1f(buffers.uniforms.time, t);
-    gl.uniform1f(buffers.uniforms.stage, state.stage);
+    gl.uniform1f(buffers.uniforms.form, state.formAmount);
     gl.uniform2f(buffers.uniforms.pointer, state.pointer.x, state.pointer.y);
-    gl.uniform1f(buffers.uniforms.pointerActive, state.pointer.active ? 1 : 0);
+    gl.uniform1f(buffers.uniforms.pointerActive, state.pointer.active);
     gl.uniform2f(buffers.uniforms.res, state.width, state.height);
     gl.drawArrays(gl.POINTS, 0, state.count);
 
-    if (state.stage > 0.72 && !state._hudReady) {
+    if (!state._hudReady && (state.formAmount > 0.55 || t > 2.2 || state.reduced)) {
       state._hudReady = true;
       qs('#sylora-aether')?.classList.add('aether-stage-ready');
     }
-    // Hot node pulse
-    if (NODES.length) {
-      const idx = Math.floor((t * 0.45) % NODES.length);
+
+    if (NODES.length && t > 1) {
+      const idx = Math.floor((t * 0.4) % NODES.length);
       if (idx !== state.hotNode) {
         state.hotNode = idx;
         document.querySelectorAll('.aether-node').forEach((el, i) => {
@@ -311,29 +351,31 @@
 
   function pointerFromEvent(e, canvas) {
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
-    const ny = -(((clientY - rect.top) / rect.height) * 2 - 1);
-    // Match vertex aspect mapping roughly.
-    state.pointer.x = nx * (rect.width / Math.max(rect.height, 1));
-    state.pointer.y = ny;
-    state.pointer.active = true;
+    const src = e.touches ? e.touches[0] : e;
+    if (!src) return;
+    const nx = ((src.clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = -(((src.clientY - rect.top) / rect.height) * 2 - 1);
+    state.pointer.tx = nx * (rect.width / Math.max(rect.height, 1));
+    state.pointer.ty = ny;
+    state.pointer.active = 1;
   }
 
   function loadFlutter() {
     if (state.flutterPromise) return state.flutterPromise;
     state.flutterPromise = new Promise((resolve, reject) => {
-      if (window._flutter?.loader) {
-        window._flutter.loader.load()
-          .then(resolve)
-          .catch(reject);
-        return;
-      }
+      const bootLoader = () => {
+        if (window._flutter?.loader) {
+          window._flutter.loader.load().then(resolve).catch(reject);
+          return true;
+        }
+        return false;
+      };
+      if (bootLoader()) return;
       const existing = document.querySelector('script[data-sylora-flutter]');
       if (existing) {
         existing.addEventListener('load', () => {
-          window._flutter.loader.load().then(resolve).catch(reject);
+          const wait = () => { if (!bootLoader()) setTimeout(wait, 30); };
+          wait();
         });
         return;
       }
@@ -342,14 +384,8 @@
       s.async = true;
       s.dataset.syloraFlutter = '1';
       s.onload = () => {
-        const boot = () => {
-          if (window._flutter?.loader) {
-            window._flutter.loader.load().then(resolve).catch(reject);
-          } else {
-            setTimeout(boot, 30);
-          }
-        };
-        boot();
+        const wait = () => { if (!bootLoader()) setTimeout(wait, 30); };
+        wait();
       };
       s.onerror = reject;
       document.body.appendChild(s);
@@ -358,25 +394,21 @@
   }
 
   function prefetchFlutterIdle() {
-    const ric = window.requestIdleCallback || ((cb) => setTimeout(cb, 1200));
-    ric(() => {
-      loadFlutter().catch(() => {});
-    }, { timeout: 2500 });
+    const ric = window.requestIdleCallback || ((cb) => setTimeout(cb, 1800));
+    ric(() => { loadFlutter().catch(() => {}); }, { timeout: 4000 });
   }
 
   async function enterApp(create) {
+    const buttons = document.querySelectorAll('[data-aether-enter], [data-aether-signin], [data-aether-signin-secondary]');
+    buttons.forEach((b) => { b.disabled = true; });
     const primary = qs('[data-aether-enter]');
-    const secondary = qs('[data-aether-signin]');
-    [primary, secondary].forEach((b) => b && (b.disabled = true));
-    if (primary) primary.textContent = 'Opening…';
+    if (primary) primary.querySelector('span').textContent = 'Opening…';
     try {
       await loadFlutter();
       document.body.classList.remove('sylora-aether-active');
       document.body.classList.add('sylora-app-ready');
       hide();
-      const path = create ? '/auth?create=1' : '/auth';
-      location.hash = `#${path}`;
-      // Give GoRouter a moment if already running.
+      location.hash = create ? '#/auth?create=1' : '#/auth';
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     } catch (err) {
       console.error(err);
@@ -385,27 +417,55 @@
     }
   }
 
+  function observeUniverse(root) {
+    const plate = qs('[data-aether-universe]', root);
+    if (!plate || !('IntersectionObserver' in window)) {
+      plate?.classList.add('is-in');
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          en.target.classList.add('is-in');
+          io.disconnect();
+        }
+      });
+    }, { threshold: 0.28 });
+    io.observe(plate);
+  }
+
   function mountHud(root) {
     root.innerHTML = `
       <canvas id="aether-canvas" aria-hidden="true"></canvas>
-      <div class="aether-vignette"></div>
-      <div class="aether-hud">
-        <div class="aether-top">
-          <div class="aether-mark"><span class="aether-mark-petal" aria-hidden="true"></span>SYLORA</div>
-          <button type="button" class="aether-pill" data-aether-signin>Sign in</button>
-        </div>
-        <div class="aether-center">
-          <p class="aether-kicker">Create · Connect · Elevate</p>
-          <h1 class="aether-brand">SYLORA</h1>
-          <p class="aether-line">A living digital ecosystem — AI, live presence, community, and creation in one continuum.</p>
-          <div class="aether-cta-row">
-            <button type="button" class="aether-cta" data-aether-enter>Enter SYLORA</button>
-            <button type="button" class="aether-cta ghost" data-aether-signin-secondary>Sign in</button>
+      <div class="aether-depth" aria-hidden="true"></div>
+      <div class="aether-waves" aria-hidden="true"></div>
+      <div class="aether-vignette" aria-hidden="true"></div>
+      <div class="aether-scroll" data-aether-scroll>
+        <div class="aether-hud">
+          <div class="aether-top">
+            <div class="aether-mark"><span class="aether-mark-petal" aria-hidden="true"></span>SYLORA</div>
+            <button type="button" class="aether-pill" data-aether-signin>Sign in</button>
           </div>
-        </div>
-        <div class="aether-bottom">
-          <p class="aether-orbit-caption">Ecosystem constellation</p>
-          <div class="aether-nodes" data-aether-nodes></div>
+          <section class="aether-hero">
+            <div class="aether-copy">
+              <p class="aether-kicker">Create · Connect · Elevate</p>
+              <h1 class="aether-brand">SYLORA</h1>
+              <p class="aether-line">Step into a living digital universe — vast, continuous, and built for what comes next.</p>
+              <div class="aether-cta-row">
+                <button type="button" class="aether-cta" data-aether-enter><span>Enter SYLORA</span></button>
+                <button type="button" class="aether-cta ghost" data-aether-signin-secondary><span>Sign in</span></button>
+              </div>
+              <p class="aether-hint"><span>↓</span> discover the universe</p>
+            </div>
+          </section>
+          <section class="aether-universe" aria-label="Ecosystem">
+            <div class="aether-universe-plate" data-aether-universe>
+              <h2>One continuum. Infinite rooms.</h2>
+              <p>AI, live presence, community, business, learning, marketplace, gifts, and creator tools — orbiting as one world, not a pile of apps.</p>
+              <p class="aether-orbit-caption">Ecosystem constellation</p>
+              <div class="aether-nodes" data-aether-nodes></div>
+            </div>
+          </section>
         </div>
       </div>
     `;
@@ -419,6 +479,44 @@
     qs('[data-aether-enter]', root).addEventListener('click', () => enterApp(true));
     qs('[data-aether-signin]', root).addEventListener('click', () => enterApp(false));
     qs('[data-aether-signin-secondary]', root).addEventListener('click', () => enterApp(false));
+    observeUniverse(root);
+  }
+
+  function bindPointer(canvas, scrollEl) {
+    if (state.listenersBound) return;
+    state.listenersBound = true;
+    const onMove = (e) => pointerFromEvent(e, canvas);
+    const onEnd = () => { state.pointer.active *= 0.3; };
+    // Track over whole surface so HUD still ripples the field.
+    const surface = scrollEl || canvas;
+    surface.addEventListener('pointermove', onMove, { passive: true });
+    surface.addEventListener('pointerdown', onMove, { passive: true });
+    surface.addEventListener('pointerup', onEnd, { passive: true });
+    surface.addEventListener('pointerleave', onEnd, { passive: true });
+    surface.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('resize', () => resize(canvas), { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        cancelAnimationFrame(state.raf);
+        state.running = false;
+      } else if (document.body.classList.contains('sylora-aether-active')) {
+        state.running = true;
+        state._last = 0;
+        state.raf = requestAnimationFrame(frame);
+      }
+    });
+  }
+
+  function particleBudget() {
+    state.mobile = window.matchMedia('(max-width: 820px)').matches
+      || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || '');
+    const cores = navigator.hardwareConcurrency || 4;
+    const saveData = !!(navigator.connection && navigator.connection.saveData);
+    const slowNet = !!(navigator.connection && /2g|3g|slow-2g/i.test(navigator.connection.effectiveType || ''));
+    if (state.reduced) return 700;
+    if (saveData || slowNet) return state.mobile ? 1100 : 2200;
+    if (state.mobile) return Math.min(2400, 1400 + cores * 180);
+    return Math.min(7000, 3800 + cores * 350);
   }
 
   function show() {
@@ -434,17 +532,17 @@
     }
     root.style.display = 'block';
     document.body.classList.add('sylora-aether-active');
+
     const canvas = qs('#aether-canvas', root);
-    const mobile = window.matchMedia('(max-width: 820px)').matches;
-    const cores = navigator.hardwareConcurrency || 4;
-    const count = state.reduced ? 900 : mobile ? Math.min(4500, 2200 + cores * 300) : Math.min(12000, 6000 + cores * 600);
-    state.count = count;
+    const scrollEl = qs('[data-aether-scroll]', root);
     state.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    state.particles = createParticles(count);
+    state.count = particleBudget();
+    state.particles = createParticles(state.count);
     state._hudReady = false;
     root.classList.remove('aether-stage-ready');
     if (state.reduced) {
       root.classList.add('aether-stage-ready');
+      state.formAmount = 1;
       state.stage = 1;
     }
 
@@ -462,25 +560,7 @@
     state.running = true;
     cancelAnimationFrame(state.raf);
     state.raf = requestAnimationFrame(frame);
-
-    const onMove = (e) => pointerFromEvent(e, canvas);
-    const onEnd = () => { state.pointer.active = false; };
-    canvas.addEventListener('pointermove', onMove, { passive: true });
-    canvas.addEventListener('pointerdown', onMove, { passive: true });
-    canvas.addEventListener('pointerup', onEnd, { passive: true });
-    canvas.addEventListener('pointerleave', onEnd, { passive: true });
-    canvas.addEventListener('touchmove', onMove, { passive: true });
-    window.addEventListener('resize', () => resize(canvas), { passive: true });
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        cancelAnimationFrame(state.raf);
-        state.running = false;
-      } else if (document.body.classList.contains('sylora-aether-active')) {
-        state.running = true;
-        state.t0 = performance.now() - state.stage * 3000;
-        state.raf = requestAnimationFrame(frame);
-      }
-    });
+    bindPointer(canvas, scrollEl);
     prefetchFlutterIdle();
   }
 
@@ -488,14 +568,11 @@
     state.running = false;
     cancelAnimationFrame(state.raf);
     const root = qs('#sylora-aether');
-    if (root) {
-      root.style.display = 'none';
-    }
+    if (root) root.style.display = 'none';
     document.body.classList.remove('sylora-aether-active');
   }
 
   function boot() {
-    // Ensure stylesheet
     if (!document.querySelector('link[data-sylora-aether-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -503,9 +580,8 @@
       link.dataset.syloraAetherCss = '1';
       document.head.appendChild(link);
     }
-    if (prefersAetherRoute()) {
-      show();
-    } else {
+    if (prefersAetherRoute()) show();
+    else {
       document.body.classList.add('sylora-app-ready');
       loadFlutter().catch((e) => console.error(e));
     }
@@ -523,9 +599,7 @@
   window.SyloraAether = {
     show,
     hide,
-    enter: function (create) {
-      return enterApp(!!create);
-    },
+    enter(create) { return enterApp(!!create); },
     prefersAetherRoute,
     loadFlutter,
   };
