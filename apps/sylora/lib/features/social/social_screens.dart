@@ -763,7 +763,7 @@ final class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
   Future<void> _refresh() async {
     _invalidateFriendSurfaces(ref);
-    await ref.refresh(friendsSnapshotProvider.future);
+    await ref.read(friendsSnapshotProvider.future);
   }
 
   Widget _tabBody(FriendsSnapshot snapshot) {
@@ -1280,9 +1280,7 @@ final class _FriendCard extends StatelessWidget {
       online: friend.online,
       eyebrow: friend.online
           ? l10n.friendsOnline
-          : lastSeen == null
-          ? l10n.friendsOnly
-          : lastSeen,
+          : lastSeen ?? l10n.friendsOnly,
       onTap: () => context.pushNamed(
         'public-profile',
         pathParameters: <String, String>{'handle': friend.handle},
@@ -1586,7 +1584,6 @@ final class _FriendsEmptyState extends StatelessWidget {
     required this.message,
     required this.actionLabel,
     required this.icon,
-    super.key,
   });
 
   final String title;
