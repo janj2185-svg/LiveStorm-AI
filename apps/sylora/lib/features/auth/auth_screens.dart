@@ -292,6 +292,8 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         ),
       ),
       child: SyloraLivingScaffold(
+        intensity: 0.85,
+        showOrbits: false,
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -27,15 +28,31 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   Duration _elapsed = Duration.zero;
+  Duration _lastPaint = Duration.zero;
   Offset? _pointer;
   bool _reduced = false;
+  bool _armed = false;
+
+  // CanvasKit + full-rate CustomPaint can hang the first Auth frame on web.
+  static final Duration _minFrame = Duration(
+    milliseconds: kIsWeb ? 33 : 16,
+  );
 
   @override
   void initState() {
     super.initState();
     _ticker = createTicker((d) {
+      if (d - _lastPaint < _minFrame) {
+        return;
+      }
+      _lastPaint = d;
       _elapsed = d;
       if (mounted) setState(() {});
+    });
+    // Paint a static first frame, then arm motion after layout settles.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _armed = true);
     });
   }
 
@@ -48,10 +65,12 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
   @override
   Widget build(BuildContext context) {
     _reduced = refReducedMotion(context);
-    if (_reduced && _ticker.isActive) {
+    final shouldRun = _armed && !_reduced;
+    if (!shouldRun && _ticker.isActive) {
       _ticker.stop();
       _elapsed = Duration.zero;
-    } else if (!_reduced && !_ticker.isActive) {
+      _lastPaint = Duration.zero;
+    } else if (shouldRun && !_ticker.isActive) {
       _ticker.start();
     }
     final t = _elapsed.inMilliseconds / 1000;
@@ -66,15 +85,18 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
           const DecoratedBox(
             decoration: BoxDecoration(gradient: SyloraTokens.heroGradient),
           ),
-          CustomPaint(
-            painter: _LivingPainter(
-              t: t,
-              pointer: _pointer,
-              reduced: _reduced,
-              intensity: widget.intensity,
-              showOrbits: widget.showOrbits,
+          RepaintBoundary(
+            child: CustomPaint(
+              painter: _LivingPainter(
+                t: t,
+                pointer: _pointer,
+                reduced: _reduced || !_armed,
+                intensity: widget.intensity,
+                showOrbits: widget.showOrbits && !kIsWeb,
+                webLite: kIsWeb,
+              ),
+              size: Size.infinite,
             ),
-            size: Size.infinite,
           ),
           widget.child,
         ],
@@ -105,6 +127,7 @@ final class _LivingPainter extends CustomPainter {
     required this.reduced,
     required this.intensity,
     required this.showOrbits,
+    required this.webLite,
   });
 
   final double t;
@@ -112,6 +135,7 @@ final class _LivingPainter extends CustomPainter {
   final bool reduced;
   final double intensity;
   final bool showOrbits;
+  final bool webLite;
 
   static const _palette = <Color>[
     SyloraTokens.ion,
@@ -158,10 +182,12 @@ final class _LivingPainter extends CustomPainter {
 
     // Light waves
     if (!reduced) {
-      for (var i = 0; i < 3; i++) {
+      final waves = webLite ? 2 : 3;
+      for (var i = 0; i < waves; i++) {
         final y = size.height * (0.28 + i * 0.18) + math.sin(t * 0.5 + i) * 12;
         final path = Path()..moveTo(0, y);
-        for (var x = 0.0; x <= size.width; x += 16) {
+        final step = webLite ? 28.0 : 16.0;
+        for (var x = 0.0; x <= size.width; x += step) {
           path.lineTo(
             x,
             y + math.sin(x * 0.012 + t * (0.7 + i * 0.12) + i) * (8 + i * 3),
@@ -189,7 +215,11 @@ final class _LivingPainter extends CustomPainter {
     }
 
     // Particles
-    final count = reduced ? 28 : (size.shortestSide < 420 ? 54 : 90);
+    final count = reduced
+        ? (webLite ? 16 : 28)
+        : (webLite
+              ? (size.shortestSide < 420 ? 28 : 40)
+              : (size.shortestSide < 420 ? 54 : 90));
     final rnd = math.Random(7);
     for (var i = 0; i < count; i++) {
       final seed = rnd.nextDouble() * math.pi * 2;
@@ -227,7 +257,13 @@ final class _LivingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _LivingPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _LivingPainter oldDelegate) =>
+      oldDelegate.t != t ||
+      oldDelegate.pointer != pointer ||
+      oldDelegate.reduced != reduced ||
+      oldDelegate.intensity != intensity ||
+      oldDelegate.showOrbits != showOrbits ||
+      oldDelegate.webLite != webLite;
 }
 
 /// Convenience scaffold with living world + optional safe area.

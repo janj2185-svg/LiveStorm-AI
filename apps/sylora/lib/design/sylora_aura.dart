@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -38,18 +39,32 @@ final class _SyloraAuraState extends State<SyloraAura>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   Duration _elapsed = Duration.zero;
+  Duration _lastPaint = Duration.zero;
   double _lid = 0;
   double _blinkAt = 0.9;
   double _yaw = 0;
   double _pitch = 0;
 
+  static final Duration _minFrame = Duration(
+    milliseconds: kIsWeb ? 40 : 16,
+  );
+
   @override
   void initState() {
     super.initState();
     _ticker = createTicker((d) {
+      if (d - _lastPaint < _minFrame) {
+        return;
+      }
+      _lastPaint = d;
       _elapsed = d;
       if (mounted) setState(() {});
-    })..start();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_ticker.isActive) {
+        _ticker.start();
+      }
+    });
   }
 
   @override
