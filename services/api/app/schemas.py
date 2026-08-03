@@ -17,6 +17,8 @@ class MessageResponse(BaseModel):
 class AuthMethodsResponse(BaseModel):
     phone: bool
     email: bool
+    email_password: bool = True
+    email_otp: bool = False
     tiktok: bool
     facebook: bool
     google: bool
@@ -31,6 +33,22 @@ class PhoneVerifyRequest(BaseModel):
     phone: str = Field(min_length=8, max_length=32)
     code: str = Field(min_length=4, max_length=12)
     device_label: str = Field(default="Phone", min_length=1, max_length=100)
+
+
+class PhonePasswordResetConsumeRequest(BaseModel):
+    phone: str = Field(min_length=8, max_length=32)
+    code: str = Field(min_length=4, max_length=12)
+    new_password: str = Field(min_length=12, max_length=1024)
+
+
+class PhoneLinkVerifyRequest(BaseModel):
+    phone: str = Field(min_length=8, max_length=32)
+    code: str = Field(min_length=4, max_length=12)
+
+
+class EmailLinkVerifyRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    code: str = Field(min_length=4, max_length=12)
 
 
 class EmailOtpStartRequest(BaseModel):

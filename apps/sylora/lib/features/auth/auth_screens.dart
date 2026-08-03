@@ -12,38 +12,85 @@ import 'auth.dart';
 
 enum _AuthPane { chooser, phone, email }
 
-final class WelcomeScreen extends StatelessWidget {
+enum _EmailMode { otp, password, register }
+
+final class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+final class _WelcomeScreenState extends State<WelcomeScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _motion;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _motion = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _fade = CurvedAnimation(parent: _motion, curve: Curves.easeOutCubic);
+    _slide = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _motion, curve: Curves.easeOutCubic));
+    unawaited(_motion.forward());
+  }
+
+  @override
+  void dispose() {
+    _motion.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              children: <Widget>[
-                const SyloraLogo(size: 92),
-                const SizedBox(height: 28),
-                Text(
-                  'Яскравіше місце, щоб творити разом.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Спільнота, розмови, подарунки, AI та ефір — у вашому акаунті SYLORA.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 32),
-                LumenPrimaryButton(
-                  label: 'Продовжити',
-                  onPressed: () => context.goNamed('auth'),
-                ),
-              ],
+    body: _AuthAtmosphere(
+      child: SafeArea(
+        child: FadeTransition(
+          opacity: _fade,
+          child: SlideTransition(
+            position: _slide,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const Spacer(flex: 2),
+                  const SyloraLogo(size: 88),
+                  const SizedBox(height: 28),
+                  Text(
+                    'SYLORA',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Твори. Спілкуйся. Ефір.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Соціальна платформа для спільноти, подарунків і живого ефіру.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: LumenColors.porcelainMuted,
+                    ),
+                  ),
+                  const Spacer(flex: 3),
+                  LumenPrimaryButton(
+                    label: 'Продовжити',
+                    onPressed: () => context.goNamed('auth'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -66,26 +113,33 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   final _signInKey = GlobalKey<FormState>();
   final _registerKey = GlobalKey<FormState>();
   final _phoneKey = GlobalKey<FormState>();
+  final _emailOtpKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _displayName = TextEditingController();
   final _phone = TextEditingController();
   final _otp = TextEditingController();
-  late final TabController _tabs;
+  late final AnimationController _paneMotion;
   _AuthPane _pane = _AuthPane.chooser;
+  _EmailMode _emailMode = _EmailMode.otp;
   AuthMethods? _methods;
   String? _methodsError;
   bool _phoneCodeSent = false;
+  bool _emailCodeSent = false;
   bool _loadingMethods = true;
+  int _resendSeconds = 0;
+  Timer? _resendTimer;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(
-      length: 2,
+    _paneMotion = AnimationController(
       vsync: this,
-      initialIndex: widget.initialCreateAccount ? 1 : 0,
-    );
+      duration: const Duration(milliseconds: 420),
+    )..value = 1;
+    if (widget.initialCreateAccount) {
+      _emailMode = _EmailMode.register;
+    }
     unawaited(_loadMethods());
   }
 
@@ -99,6 +153,11 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         _methods = methods;
         _loadingMethods = false;
         _methodsError = null;
+        if (!methods.emailOtp && methods.emailPassword) {
+          _emailMode = widget.initialCreateAccount
+              ? _EmailMode.register
+              : _EmailMode.password;
+        }
       });
     } on Object catch (error) {
       if (!mounted) {
@@ -107,22 +166,60 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       setState(() {
         _loadingMethods = false;
         _methodsError = messageFor(error);
-        // Safe defaults: email password always available; social/phone off.
         _methods = const AuthMethods(
           phone: false,
           email: true,
+          emailPassword: true,
+          emailOtp: false,
           tiktok: false,
           facebook: false,
           google: false,
           apple: false,
         );
+        _emailMode = _EmailMode.password;
       });
     }
   }
 
+  void _startResendCountdown(int seconds) {
+    _resendTimer?.cancel();
+    setState(() => _resendSeconds = seconds);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_resendSeconds <= 1) {
+        timer.cancel();
+        setState(() => _resendSeconds = 0);
+        return;
+      }
+      setState(() => _resendSeconds -= 1);
+    });
+  }
+
+  Future<void> _switchPane(_AuthPane pane) async {
+    await _paneMotion.reverse();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _pane = pane;
+      if (pane == _AuthPane.chooser) {
+        _phoneCodeSent = false;
+        _emailCodeSent = false;
+        _otp.clear();
+        _resendTimer?.cancel();
+        _resendSeconds = 0;
+      }
+    });
+    await _paneMotion.forward();
+  }
+
   @override
   void dispose() {
-    _tabs.dispose();
+    _resendTimer?.cancel();
+    _paneMotion.dispose();
     _email.dispose();
     _password.dispose();
     _displayName.dispose();
@@ -135,54 +232,63 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: LumenSurface(
-                padding: const EdgeInsets.all(28),
+      body: _AuthAtmosphere(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: SyloraLogo(size: 54),
-                    ),
+                    const SyloraLogo(size: 56),
                     const SizedBox(height: 18),
                     Text(
-                      'Вхід до SYLORA',
-                      style: Theme.of(context).textTheme.headlineLarge,
+                      'SYLORA',
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
-                      'Соціальна платформа для спільноти. Оберіть зручний спосіб входу.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      _pane == _AuthPane.chooser
+                          ? 'Увійдіть, щоб продовжити'
+                          : _pane == _AuthPane.phone
+                          ? 'Вхід за номером телефону'
+                          : 'Вхід з електронною поштою',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: LumenColors.porcelainMuted,
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 22),
                     if (_loadingMethods)
                       const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
+                        padding: EdgeInsets.symmetric(vertical: 36),
                         child: Center(child: CircularProgressIndicator()),
                       )
-                    else ...<Widget>[
-                      if (_pane != _AuthPane.chooser)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: () => setState(() {
-                              _pane = _AuthPane.chooser;
-                              _phoneCodeSent = false;
-                            }),
-                            icon: const Icon(Icons.arrow_back_rounded),
-                            label: const Text('Назад'),
-                          ),
+                    else
+                      FadeTransition(
+                        opacity: _paneMotion,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            if (_pane != _AuthPane.chooser)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: () => _switchPane(_AuthPane.chooser),
+                                  icon: const Icon(Icons.arrow_back_rounded),
+                                  label: const Text('Назад'),
+                                ),
+                              ),
+                            if (_pane == _AuthPane.chooser) _chooser(auth),
+                            if (_pane == _AuthPane.phone) _phonePane(auth),
+                            if (_pane == _AuthPane.email) _emailPane(auth),
+                          ],
                         ),
-                      if (_pane == _AuthPane.chooser) _chooser(auth),
-                      if (_pane == _AuthPane.phone) _phonePane(auth),
-                      if (_pane == _AuthPane.email) _emailPane(auth),
-                    ],
+                      ),
                     if (_methodsError != null) ...<Widget>[
                       const SizedBox(height: 12),
                       _MessageBanner(message: _methodsError!, error: true),
@@ -207,11 +313,12 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
 
   Widget _chooser(AuthState auth) {
     final methods = _methods!;
+    // Product order: Google → Apple → Facebook → TikTok. Never GitHub.
     final social = <(String, String, IconData)>[
-      if (methods.tiktok) ('tiktok', 'TikTok', Icons.music_note_rounded),
-      if (methods.facebook) ('facebook', 'Facebook', Icons.facebook_rounded),
       if (methods.google) ('google', 'Google', Icons.g_mobiledata_rounded),
       if (methods.apple) ('apple', 'Apple', Icons.apple_rounded),
+      if (methods.facebook) ('facebook', 'Facebook', Icons.facebook_rounded),
+      if (methods.tiktok) ('tiktok', 'TikTok', Icons.music_note_rounded),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -221,7 +328,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           icon: Icons.sms_outlined,
           busy: auth.busy,
           onPressed: methods.phone
-              ? () => setState(() => _pane = _AuthPane.phone)
+              ? () => _switchPane(_AuthPane.phone)
               : null,
           disabledReason: methods.phone
               ? null
@@ -232,29 +339,25 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           label: 'Продовжити з електронною поштою',
           icon: Icons.mail_outline_rounded,
           onPressed: methods.email
-              ? () => setState(() => _pane = _AuthPane.email)
+              ? () => _switchPane(_AuthPane.email)
               : null,
           disabledReason: methods.email
               ? null
               : 'Вхід за електронною поштою недоступний.',
         ),
         if (social.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 24),
-          const _DividerLabel(label: 'або продовжити через'),
+          const SizedBox(height: 28),
+          const _DividerLabel(label: 'або'),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: <Widget>[
-              for (final entry in social)
-                _oauthButton(entry.$1, entry.$2, entry.$3),
-            ],
-          ),
+          for (final entry in social) ...<Widget>[
+            _oauthButton(entry.$1, entry.$2, entry.$3),
+            const SizedBox(height: 10),
+          ],
         ],
         if (!kIsWeb) ...<Widget>[
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
-            'Соціальний вхід у цій збірці вимкнено, доки не налаштовано deep-link.',
+            'Соціальний вхід у мобільній збірці з’явиться після налаштування deep-link.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -267,11 +370,6 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Text(
-          'Номер телефону',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 8),
         Text(
           'Ми надішлемо одноразовий код у SMS.',
           style: Theme.of(context).textTheme.bodyMedium,
@@ -298,39 +396,138 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
               labelText: 'Код з SMS',
               prefixIcon: Icon(Icons.pin_outlined),
             ),
-            validator: (value) =>
-                (value == null || value.trim().length < 4)
+            validator: (value) => (value == null || value.trim().length < 4)
                 ? 'Введіть код із SMS.'
                 : null,
           ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: auth.busy || _resendSeconds > 0
+                  ? null
+                  : () => _startPhone(auth),
+              child: Text(
+                _resendSeconds > 0
+                    ? 'Надіслати знову через $_resendSeconds с'
+                    : 'Надіслати код знову',
+              ),
+            ),
+          ),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         LumenPrimaryButton(
           label: _phoneCodeSent ? 'Увійти' : 'Надіслати код',
           busy: auth.busy,
-          onPressed: () => _phoneCodeSent ? _verifyPhone(auth) : _startPhone(auth),
+          onPressed: () =>
+              _phoneCodeSent ? _verifyPhone(auth) : _startPhone(auth),
         ),
       ],
     ),
   );
 
-  Widget _emailPane(AuthState auth) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: <Widget>[
-      TabBar(
-        controller: _tabs,
-        tabs: const <Tab>[
-          Tab(text: 'Увійти'),
-          Tab(text: 'Створити акаунт'),
+  Widget _emailPane(AuthState auth) {
+    final methods = _methods!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (methods.emailOtp || methods.emailPassword)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              if (methods.emailOtp)
+                ChoiceChip(
+                  label: const Text('Код на пошту'),
+                  selected: _emailMode == _EmailMode.otp,
+                  onSelected: (_) => setState(() {
+                    _emailMode = _EmailMode.otp;
+                    _emailCodeSent = false;
+                    _otp.clear();
+                  }),
+                ),
+              if (methods.emailPassword)
+                ChoiceChip(
+                  label: const Text('Пароль'),
+                  selected: _emailMode == _EmailMode.password,
+                  onSelected: (_) =>
+                      setState(() => _emailMode = _EmailMode.password),
+                ),
+              if (methods.emailPassword)
+                ChoiceChip(
+                  label: const Text('Створити акаунт'),
+                  selected: _emailMode == _EmailMode.register,
+                  onSelected: (_) =>
+                      setState(() => _emailMode = _EmailMode.register),
+                ),
+            ],
+          ),
+        const SizedBox(height: 18),
+        if (_emailMode == _EmailMode.otp) _emailOtpForm(auth),
+        if (_emailMode == _EmailMode.password) _signInForm(auth),
+        if (_emailMode == _EmailMode.register) _registerForm(auth),
+      ],
+    );
+  }
+
+  Widget _emailOtpForm(AuthState auth) => Form(
+    key: _emailOtpKey,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          'Ми надішлемо одноразовий код на електронну пошту.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _email,
+          keyboardType: TextInputType.emailAddress,
+          autofillHints: const <String>[AutofillHints.email],
+          decoration: const InputDecoration(
+            labelText: 'Електронна пошта',
+            prefixIcon: Icon(Icons.mail_outline_rounded),
+          ),
+          validator: validateEmail,
+        ),
+        if (_emailCodeSent) ...<Widget>[
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: _otp,
+            keyboardType: TextInputType.number,
+            autofillHints: const <String>[AutofillHints.oneTimeCode],
+            decoration: const InputDecoration(
+              labelText: 'Код з листа',
+              prefixIcon: Icon(Icons.pin_outlined),
+            ),
+            validator: (value) => (value == null || value.trim().length < 4)
+                ? 'Введіть код із листа.'
+                : null,
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: auth.busy || _resendSeconds > 0
+                  ? null
+                  : () => _startEmailOtp(auth),
+              child: Text(
+                _resendSeconds > 0
+                    ? 'Надіслати знову через $_resendSeconds с'
+                    : 'Надіслати код знову',
+              ),
+            ),
+          ),
         ],
-      ),
-      const SizedBox(height: 20),
-      AnimatedBuilder(
-        animation: _tabs,
-        builder: (context, child) =>
-            _tabs.index == 0 ? _signInForm(auth) : _registerForm(auth),
-      ),
-    ],
+        const SizedBox(height: 16),
+        LumenPrimaryButton(
+          label: _emailCodeSent ? 'Увійти' : 'Надіслати код',
+          busy: auth.busy,
+          onPressed: () =>
+              _emailCodeSent ? _verifyEmailOtp(auth) : _startEmailOtp(auth),
+        ),
+      ],
+    ),
   );
 
   Widget _signInForm(AuthState auth) => Form(
@@ -469,6 +666,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         .startPhoneOtp(_phone.text.trim());
     if (ok && mounted) {
       setState(() => _phoneCodeSent = true);
+      _startResendCountdown(60);
     }
   }
 
@@ -481,42 +679,67 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         .verifyPhoneOtp(phone: _phone.text.trim(), code: _otp.text.trim());
   }
 
+  Future<void> _startEmailOtp(AuthState auth) async {
+    if (auth.busy || !_emailOtpKey.currentState!.validate()) {
+      return;
+    }
+    final ok = await ref
+        .read(authControllerProvider.notifier)
+        .startEmailOtp(_email.text.trim());
+    if (ok && mounted) {
+      setState(() => _emailCodeSent = true);
+      _startResendCountdown(60);
+    }
+  }
+
+  Future<void> _verifyEmailOtp(AuthState auth) async {
+    if (auth.busy || !_emailOtpKey.currentState!.validate()) {
+      return;
+    }
+    await ref
+        .read(authControllerProvider.notifier)
+        .verifyEmailOtp(email: _email.text.trim(), code: _otp.text.trim());
+  }
+
   Widget _oauthButton(String provider, String label, IconData icon) {
     final reason =
         'Соціальний вхід у цій збірці потребує налаштованого deep-link.';
-    return LumenSecondaryButton(
-      label: label,
-      icon: icon,
-      onPressed: kIsWeb
-          ? () async {
-              final config = ref.read(appConfigProvider);
-              final uri = config.endpoint('auth/oauth/$provider/start');
-              try {
-                final launched = await launchUrl(
-                  uri,
-                  webOnlyWindowName: '_self',
-                );
-                if (!launched && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Не вдалося відкрити сторінку входу.'),
-                    ),
+    return SizedBox(
+      width: double.infinity,
+      child: LumenSecondaryButton(
+        label: 'Продовжити з $label',
+        icon: icon,
+        onPressed: kIsWeb
+            ? () async {
+                final config = ref.read(appConfigProvider);
+                final uri = config.endpoint('auth/oauth/$provider/start');
+                try {
+                  final launched = await launchUrl(
+                    uri,
+                    webOnlyWindowName: '_self',
                   );
-                }
-              } on Object {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Провайдер недоступний. Спробуйте інший спосіб входу.',
+                  if (!launched && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Не вдалося відкрити сторінку входу.'),
                       ),
-                    ),
-                  );
+                    );
+                  }
+                } on Object {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Провайдер недоступний. Спробуйте інший спосіб входу.',
+                        ),
+                      ),
+                    );
+                  }
                 }
               }
-            }
-          : null,
-      disabledReason: kIsWeb ? null : reason,
+            : null,
+        disabledReason: kIsWeb ? null : reason,
+      ),
     );
   }
 }
@@ -553,22 +776,24 @@ final class _OAuthCompleteScreenState extends ConsumerState<OAuthCompleteScreen>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: _error == null
-            ? const CircularProgressIndicator()
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  _MessageBanner(message: _error!, error: true),
-                  const SizedBox(height: 16),
-                  LumenPrimaryButton(
-                    label: 'Повернутися до входу',
-                    onPressed: () => context.goNamed('auth'),
-                  ),
-                ],
-              ),
+    body: _AuthAtmosphere(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: _error == null
+              ? const CircularProgressIndicator()
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    _MessageBanner(message: _error!, error: true),
+                    const SizedBox(height: 16),
+                    LumenPrimaryButton(
+                      label: 'Повернутися до входу',
+                      onPressed: () => context.goNamed('auth'),
+                    ),
+                  ],
+                ),
+        ),
       ),
     ),
   );
@@ -670,11 +895,23 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
   bool _busy = false;
   String? _message;
   bool _error = false;
+  bool _autoTried = false;
 
   @override
   void initState() {
     super.initState();
     _token = TextEditingController(text: widget.initialToken);
+    if ((widget.initialToken?.length ?? 0) >= 32) {
+      unawaited(_autoConsume());
+    }
+  }
+
+  Future<void> _autoConsume() async {
+    if (_autoTried || widget.mode != AuthUtilityMode.emailVerification) {
+      return;
+    }
+    _autoTried = true;
+    await _consume();
   }
 
   @override
@@ -690,9 +927,7 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(
-        _verification ? 'Підтвердження пошти' : 'Скидання пароля',
-      ),
+      title: Text(_verification ? 'Підтвердження пошти' : 'Скидання пароля'),
     ),
     body: Center(
       child: SingleChildScrollView(
@@ -847,6 +1082,70 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
         setState(() => _busy = false);
       }
     }
+  }
+}
+
+final class _AuthAtmosphere extends StatelessWidget {
+  const _AuthAtmosphere({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: dark
+              ? const <Color>[
+                  Color(0xFF10141A),
+                  Color(0xFF16323A),
+                  Color(0xFF171A20),
+                ]
+              : const <Color>[
+                  Color(0xFFF4FBFB),
+                  Color(0xFFE7F4F1),
+                  Color(0xFFF7F5EF),
+                ],
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          Positioned(
+            top: -80,
+            right: -40,
+            child: IgnorePointer(
+              child: Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LumenColors.aetherBright.withValues(alpha: 0.16),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -60,
+            left: -30,
+            child: IgnorePointer(
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LumenColors.verdigris.withValues(alpha: 0.12),
+                ),
+              ),
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
   }
 }
 

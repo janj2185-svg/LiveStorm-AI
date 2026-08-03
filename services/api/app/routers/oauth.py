@@ -5,7 +5,9 @@ import hashlib
 import secrets
 from typing import Any
 import httpx
-from fastapi import APIRouter, Depends, Query, Request
+import json
+
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from joserfc import jwt as jose_jwt
 from joserfc.errors import JoseError
@@ -19,13 +21,15 @@ from app.auth_service import issue_token_pair
 from app.config import DEVELOPMENT_ONLY_OAUTH_PROVIDERS, OAuthProviderSettings, Settings
 from app.dependencies import get_session, get_settings
 from app.errors import APIError
+from app.identity_linking import (
+    activate_verified_user,
+    assert_account_sign_in_allowed,
+    create_consumer_user,
+    find_linkable_user_by_email,
+)
 from app.models import (
-    AccountSettings,
     OAuthIdentity,
-    Profile,
-    Role,
     User,
-    UserRole,
     UserStatus,
 )
 from app.oauth_providers import (
@@ -415,49 +419,32 @@ async def resolve_oauth_user(
     )
     user = await db.get(User, identity.user_id) if identity else None
     if user is not None:
+        if email:
+            await activate_verified_user(user, email=email)
         return user, identity
 
-    # Only auto-link by email when the provider asserted a verified email.
+    # Auto-link by verified provider email. Prefer verified locals; otherwise
+    # claim an unverified local email account (provider already verified it).
     if email is not None:
-        user = await db.scalar(select(User).where(User.email == email))
-        if user is not None and user.status in {UserStatus.suspended, UserStatus.deleted}:
-            raise APIError(
-                403,
-                "account_unavailable",
-                "Account unavailable",
-                "This account cannot sign in with OAuth.",
-            )
-        if user is not None and user.email_verified_at is None:
-            # Do not merge into an unverified local email account.
-            user = None
+        user = await find_linkable_user_by_email(db, email)
+        if user is None:
+            existing = await db.scalar(select(User).where(User.email == email))
+            if existing is not None:
+                assert_account_sign_in_allowed(existing)
+                user = existing
 
     if user is None:
         display_name = str(
             claims.get("name") or (email.split("@", 1)[0] if email else configuration.name)
         )[:100]
-        user = User(
+        user = await create_consumer_user(
+            db,
             email=email,
-            password_hash=None,
-            status=UserStatus.active,
-            email_verified_at=utcnow() if email else None,
+            display_name=display_name,
+            email_verified=bool(email),
         )
-        user.profile = Profile(display_name=display_name, locale="uk")
-        user.settings = AccountSettings()
-        db.add(user)
-        await db.flush()
-        default_role = await db.scalar(select(Role).where(Role.name == "user"))
-        if default_role is None:
-            raise APIError(
-                503,
-                "service_not_ready",
-                "Service not ready",
-                "Identity roles have not been initialized.",
-            )
-        db.add(UserRole(user_id=user.id, role_id=default_role.id))
-    elif user.status == UserStatus.pending:
-        user.status = UserStatus.active
-        if email and user.email_verified_at is None:
-            user.email_verified_at = utcnow()
+    else:
+        await activate_verified_user(user, email=email)
 
     identity = OAuthIdentity(
         user_id=user.id,
@@ -469,15 +456,54 @@ async def resolve_oauth_user(
     return user, identity
 
 
-@router.get("/{provider}/callback")
-async def oauth_callback(
+def _merge_apple_user_form(claims: dict[str, Any], user_json: str | None) -> dict[str, Any]:
+    if not user_json:
+        return claims
+    try:
+        payload = json.loads(user_json)
+    except (TypeError, ValueError):
+        return claims
+    if not isinstance(payload, dict):
+        return claims
+    name = payload.get("name")
+    if isinstance(name, dict):
+        parts = [str(name.get("firstName") or "").strip(), str(name.get("lastName") or "").strip()]
+        display = " ".join(part for part in parts if part)
+        if display and not claims.get("name"):
+            claims["name"] = display
+    email = payload.get("email")
+    if isinstance(email, str) and email.strip() and not claims.get("email"):
+        claims["email"] = email.strip()
+        # Apple only posts email on first authorization; treat as verified when present.
+        claims.setdefault("email_verified", True)
+    return claims
+
+
+async def _oauth_callback_impl(
     provider: str,
     request: Request,
-    state: str = Query(min_length=32, max_length=256),
-    code: str = Query(min_length=1, max_length=4096),
-    db: AsyncSession = Depends(get_session),
-    settings: Settings = Depends(get_settings),
-) -> JSONResponse:
+    *,
+    state: str,
+    code: str,
+    apple_user_json: str | None,
+    db: AsyncSession,
+    settings: Settings,
+) -> JSONResponse | RedirectResponse:
+    if not state or len(state) < 32 or len(state) > 256:
+        raise APIError(
+            400,
+            "invalid_oauth_state",
+            "Invalid OAuth state",
+            "The OAuth authorization request is invalid or expired.",
+        )
+    if not code or len(code) > 4096:
+        raise APIError(
+            400,
+            "oauth_exchange_failed",
+            "OAuth authorization failed",
+            "The provider authorization code is missing or invalid.",
+        )
+
     configuration = provider_or_error(settings, provider)
     cookie_value = request.cookies.get(STATE_COOKIE)
     if not cookie_value:
@@ -503,6 +529,8 @@ async def oauth_callback(
     claims = await validated_claims(
         configuration, discovery, token_payload, str(state_data["nonce"])
     )
+    if configuration.name == "apple":
+        claims = _merge_apple_user_form(claims, apple_user_json)
     user, identity = await resolve_oauth_user(db, configuration, claims)
     if user.status != UserStatus.active:
         raise APIError(
@@ -561,6 +589,43 @@ async def oauth_callback(
         samesite="lax",
     )
     return response
+
+
+@router.get("/{provider}/callback", response_model=None)
+async def oauth_callback_get(
+    provider: str,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> JSONResponse | RedirectResponse:
+    return await _oauth_callback_impl(
+        provider,
+        request,
+        state=str(request.query_params.get("state") or ""),
+        code=str(request.query_params.get("code") or ""),
+        apple_user_json=None,
+        db=db,
+        settings=settings,
+    )
+
+
+@router.post("/{provider}/callback", response_model=None)
+async def oauth_callback_post(
+    provider: str,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> JSONResponse | RedirectResponse:
+    form = await request.form()
+    return await _oauth_callback_impl(
+        provider,
+        request,
+        state=str(form.get("state") or ""),
+        code=str(form.get("code") or ""),
+        apple_user_json=str(form.get("user")) if form.get("user") is not None else None,
+        db=db,
+        settings=settings,
+    )
 
 
 @router.get("/session-complete", response_model=None)

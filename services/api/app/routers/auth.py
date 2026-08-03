@@ -8,8 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_audit_event
 from app.auth_otp import (
+    consume_phone_password_reset,
+    link_email_start,
+    link_email_verify,
+    link_phone_start,
+    link_phone_verify,
     start_email_otp,
     start_phone_otp,
+    start_phone_password_reset,
     verify_email_otp,
     verify_phone_otp,
 )
@@ -34,6 +40,7 @@ from app.models import AccessSession
 from app.rate_limit import auth_rate_limit
 from app.schemas import (
     AuthMethodsResponse,
+    EmailLinkVerifyRequest,
     EmailOtpStartRequest,
     EmailOtpVerifyRequest,
     EmailRequest,
@@ -43,6 +50,8 @@ from app.schemas import (
     MFAVerifyRequest,
     OtpStartResponse,
     PasswordResetConsumeRequest,
+    PhoneLinkVerifyRequest,
+    PhonePasswordResetConsumeRequest,
     PhoneStartRequest,
     PhoneVerifyRequest,
     RefreshRequest,
@@ -145,6 +154,133 @@ async def email_otp_verify(
         payload.email,
         payload.code,
         payload.device_label,
+    )
+
+
+@router.post(
+    "/password-reset/phone/start",
+    response_model=OtpStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def phone_password_reset_start(
+    payload: PhoneStartRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OtpStartResponse:
+    result = await start_phone_password_reset(
+        db, request, settings, build_sms_provider(settings), payload.phone
+    )
+    return OtpStartResponse(**result)
+
+
+@router.post(
+    "/password-reset/phone/consume",
+    response_model=MessageResponse,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def phone_password_reset_consume(
+    payload: PhonePasswordResetConsumeRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> MessageResponse:
+    await consume_phone_password_reset(
+        db,
+        request,
+        settings,
+        payload.phone,
+        payload.code,
+        payload.new_password,
+    )
+    return MessageResponse(status="password_reset")
+
+
+@router.post(
+    "/phone/link/start",
+    response_model=OtpStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def phone_link_start(
+    payload: PhoneStartRequest,
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OtpStartResponse:
+    result = await link_phone_start(
+        db,
+        request,
+        settings,
+        build_sms_provider(settings),
+        auth.user,
+        payload.phone,
+    )
+    return OtpStartResponse(**result)
+
+
+@router.post("/phone/link/verify", response_model=UserResponse)
+async def phone_link_verify(
+    payload: PhoneLinkVerifyRequest,
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> UserResponse:
+    user = await link_phone_verify(
+        db, request, settings, auth.user, payload.phone, payload.code
+    )
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        phone_e164=user.phone_e164,
+        phone_verified_at=user.phone_verified_at,
+        status=user.status,
+        email_verified_at=user.email_verified_at,
+        created_at=user.created_at,
+        roles=sorted(role.name for role in user.roles),
+    )
+
+
+@router.post(
+    "/email/link/start",
+    response_model=OtpStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def email_link_start(
+    payload: EmailRequest,
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OtpStartResponse:
+    result = await link_email_start(db, request, settings, auth.user, payload.email)
+    return OtpStartResponse(**result)
+
+
+@router.post("/email/link/verify", response_model=UserResponse)
+async def email_link_verify(
+    payload: EmailLinkVerifyRequest,
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> UserResponse:
+    user = await link_email_verify(
+        db, request, settings, auth.user, payload.email, payload.code
+    )
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        phone_e164=user.phone_e164,
+        phone_verified_at=user.phone_verified_at,
+        status=user.status,
+        email_verified_at=user.email_verified_at,
+        created_at=user.created_at,
+        roles=sorted(role.name for role in user.roles),
     )
 
 

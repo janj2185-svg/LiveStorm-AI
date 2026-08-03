@@ -54,6 +54,9 @@ def authorize_query(
     }
     if configuration.name not in {"tiktok", "facebook"}:
         params["nonce"] = nonce
+    if configuration.name == "apple":
+        # Apple returns the authorization code via form_post for web clients.
+        params["response_mode"] = "form_post"
     if configuration.name == "facebook":
         # Facebook uses comma-separated scopes in config; leave as-is.
         pass

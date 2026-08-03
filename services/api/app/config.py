@@ -327,6 +327,14 @@ class Settings(BaseSettings):
         )
         if not client_id or not client_secret or not discovery_url or not redirect_uri:
             return None
+        if self._is_placeholder_oauth_value(client_id) or self._is_placeholder_oauth_value(
+            client_secret
+        ):
+            return None
+        if self.environment in {"production", "staging"} and not redirect_uri.startswith(
+            "https://"
+        ):
+            return None
         return OAuthProviderSettings(
             name=provider,
             client_id=client_id,
@@ -336,12 +344,32 @@ class Settings(BaseSettings):
             scopes=scopes,
         )
 
+    @staticmethod
+    def _is_placeholder_oauth_value(value: str) -> bool:
+        lowered = value.strip().lower()
+        markers = (
+            "changeme",
+            "change_me",
+            "change-me",
+            "your_",
+            "todo",
+            "placeholder",
+            "example",
+            "xxxx",
+            "replace_me",
+            "replace-me",
+        )
+        return any(marker in lowered for marker in markers)
+
     def auth_methods(self) -> dict[str, bool]:
         from app.sms import sms_configured
 
+        email_otp = self.smtp_configured or self.test_stand_auto_verify_email
         return {
             "phone": sms_configured(self),
             "email": True,
+            "email_password": True,
+            "email_otp": email_otp,
             "tiktok": self.oauth_provider("tiktok") is not None,
             "facebook": self.oauth_provider("facebook") is not None,
             "google": self.oauth_provider("google") is not None,

@@ -12,23 +12,34 @@ final class AuthMethods {
   const AuthMethods({
     required this.phone,
     required this.email,
+    this.emailPassword = true,
+    this.emailOtp = false,
     required this.tiktok,
     required this.facebook,
     required this.google,
     required this.apple,
   });
 
-  factory AuthMethods.fromJson(JsonObject json) => AuthMethods(
-    phone: requireBool(json, 'phone'),
-    email: requireBool(json, 'email'),
-    tiktok: requireBool(json, 'tiktok'),
-    facebook: requireBool(json, 'facebook'),
-    google: requireBool(json, 'google'),
-    apple: requireBool(json, 'apple'),
-  );
+  factory AuthMethods.fromJson(JsonObject json) {
+    final email = requireBool(json, 'email');
+    return AuthMethods(
+      phone: requireBool(json, 'phone'),
+      email: email,
+      emailPassword: json['email_password'] is bool
+          ? json['email_password'] as bool
+          : true,
+      emailOtp: json['email_otp'] is bool ? json['email_otp'] as bool : email,
+      tiktok: requireBool(json, 'tiktok'),
+      facebook: requireBool(json, 'facebook'),
+      google: requireBool(json, 'google'),
+      apple: requireBool(json, 'apple'),
+    );
+  }
 
   final bool phone;
   final bool email;
+  final bool emailPassword;
+  final bool emailOtp;
   final bool tiktok;
   final bool facebook;
   final bool google;
@@ -542,6 +553,38 @@ final class AuthController extends StateNotifier<AuthState> {
     try {
       final user = await _repository.verifyPhoneOtp(
         phone: phone,
+        code: code,
+        deviceLabel: 'SYLORA client',
+      );
+      state = AuthState(status: AuthStatus.authenticated, user: user);
+    } on Object catch (error) {
+      state = AuthState.unauthenticated(error: messageFor(error));
+    }
+  }
+
+  Future<bool> startEmailOtp(String email) async {
+    state = state.copyWith(busy: true, clearMessages: true);
+    try {
+      await _repository.startEmailOtp(email.trim());
+      state = state.copyWith(
+        busy: false,
+        notice: 'Якщо адреса коректна, код надіслано на пошту.',
+      );
+      return true;
+    } on Object catch (error) {
+      state = AuthState.unauthenticated(error: messageFor(error));
+      return false;
+    }
+  }
+
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String code,
+  }) async {
+    state = state.copyWith(busy: true, clearMessages: true);
+    try {
+      final user = await _repository.verifyEmailOtp(
+        email: email.trim(),
         code: code,
         deviceLabel: 'SYLORA client',
       );

@@ -512,6 +512,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final public = <String>{
         '/welcome',
         '/auth',
+        '/auth/oauth/complete',
         '/verify-email',
         '/reset-password',
       }.contains(location);

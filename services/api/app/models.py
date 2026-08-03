@@ -257,17 +257,29 @@ class AuthOtpChannel(enum.StrEnum):
     email = "email"
 
 
+class AuthOtpPurpose(enum.StrEnum):
+    login = "login"
+    password_reset = "password_reset"
+    link = "link"
+
+
 class AuthOtpChallenge(Base):
     """Hashed one-time codes for phone/email passwordless sign-in."""
 
     __tablename__ = "auth_otp_challenges"
     __table_args__ = (
         Index("ix_auth_otp_destination_channel", "destination", "channel"),
+        Index("ix_auth_otp_destination_channel_purpose", "destination", "channel", "purpose"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     channel: Mapped[AuthOtpChannel] = mapped_column(
         Enum(AuthOtpChannel, native_enum=False, length=16), index=True
+    )
+    purpose: Mapped[AuthOtpPurpose] = mapped_column(
+        Enum(AuthOtpPurpose, native_enum=False, length=32),
+        default=AuthOtpPurpose.login,
+        index=True,
     )
     destination: Mapped[str] = mapped_column(String(320), index=True)
     code_hash: Mapped[str] = mapped_column(String(64))
