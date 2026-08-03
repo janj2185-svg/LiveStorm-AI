@@ -292,9 +292,11 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         ),
       ),
       child: SyloraLivingScaffold(
-        // Keep Auth light on Flutter web / software WebGL — form first, world second.
-        intensity: kIsWeb ? 0.45 : 0.75,
+        // Web cold-start: static atmosphere only. Animated world can arm later
+        // on native where CanvasKit/WebGL is not the bottleneck.
+        intensity: kIsWeb ? 0.35 : 0.75,
         showOrbits: false,
+        animate: !kIsWeb,
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -329,9 +331,11 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         SyloraAura(
-          size: compact ? 96 : 150,
+          size: compact ? 88 : 132,
           emotion: AuraEmotion.greeting,
           label: l10n.auraCompanionLabel,
+          // Static Aura on web so Auth form wins the first frame.
+          animate: !kIsWeb,
         ),
         SizedBox(height: compact ? 10 : 18),
         Text(
@@ -1293,7 +1297,13 @@ final class _AuthAtmosphere extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => SyloraLivingCanvas(child: child);
+  Widget build(BuildContext context) => SyloraLivingCanvas(
+        // Avoid CustomPaint particle loops on web auth utilities.
+        animate: !kIsWeb,
+        intensity: kIsWeb ? 0.35 : 0.85,
+        showOrbits: false,
+        child: child,
+      );
 }
 
 final class _AuthPillButton extends StatelessWidget {

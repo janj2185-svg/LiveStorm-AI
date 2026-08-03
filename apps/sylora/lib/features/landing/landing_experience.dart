@@ -44,9 +44,18 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
   @override
   void initState() {
     super.initState();
-    final mobile = !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.iOS ||
-            defaultTargetPlatform == TargetPlatform.android);
+    // On web the HTML aether shell owns Welcome visuals. Keep Flutter idle
+    // so background preload does not compete with the landing canvas.
+    if (kIsWeb) {
+      _field = AetherField(count: 0);
+      _ticker = createTicker((_) {})..stop();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) aether_bridge.revealAetherShell();
+      });
+      return;
+    }
+    final mobile = defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android;
     _field = AetherField(count: mobile ? 900 : 1600);
     _ticker = createTicker((d) {
       final dt = ((_elapsed == Duration.zero ? d : d - _elapsed).inMicroseconds) /
@@ -69,16 +78,13 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
       if (!mounted) return;
       setState(() => _hot = (_hot + 1) % _ecosystem.length);
     });
-    if (kIsWeb) {
-      aether_bridge.revealAetherShell();
-    }
   }
 
   @override
   void dispose() {
     _ticker.dispose();
     _hotTimer?.cancel();
-    if (kIsWeb) aether_bridge.hideAetherShell();
+    // Do not hide the HTML shell here — enterApp/auth owns the handoff.
     super.dispose();
   }
 
@@ -95,6 +101,10 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      // Transparent placeholder under the HTML aether overlay.
+      return const ColoredBox(color: SyloraTokens.canvas);
+    }
     final t = _elapsed.inMilliseconds / 1000;
     _reducedMotion =
         ref.watch(visualSettingsProvider.select((value) => value.reducedMotion));

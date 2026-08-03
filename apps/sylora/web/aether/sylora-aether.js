@@ -26,6 +26,7 @@
     count: 0,
     raf: 0,
     flutterPromise: null,
+    preloadScheduled: false,
     hotNode: -1,
     listenersBound: false,
     emotion: 'greeting',
@@ -394,8 +395,38 @@
     state.raf = requestAnimationFrame(frame);
   }
 
+  function armFlutterFrameListener() {
+    if (window._syloraFlutterFrameListener) return;
+    window._syloraFlutterFrameListener = true;
+    window.addEventListener('flutter-first-frame', () => {
+      window._syloraFlutterFrame = true;
+    }, { once: true });
+  }
+
+  function waitForFlutterFirstFrame(timeoutMs) {
+    armFlutterFrameListener();
+    if (window._syloraFlutterFrame || window._syloraFlutterRunning) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        resolve();
+      };
+      const onFrame = () => {
+        window._syloraFlutterFrame = true;
+        finish();
+      };
+      window.addEventListener('flutter-first-frame', onFrame, { once: true });
+      setTimeout(finish, timeoutMs);
+    });
+  }
+
   function loadFlutter() {
     if (state.flutterPromise) return state.flutterPromise;
+    if (window._syloraFlutterRunning) return Promise.resolve();
     state.flutterPromise = new Promise((resolve, reject) => {
       if (window._flutter && window._flutter.loader) {
         resolve();
@@ -405,36 +436,77 @@
       script.src = 'flutter_bootstrap.js';
       script.async = true;
       script.onload = () => resolve();
-      script.onerror = reject;
+      script.onerror = () => reject(new Error('flutter_bootstrap failed'));
       document.body.appendChild(script);
     }).then(async () => {
+      if (window._syloraFlutterRunning) return;
       if (window._flutter && window._flutter.loader) {
         await window._flutter.loader.load({
           config: { canvasKitBaseUrl: 'canvaskit/' },
           onEntrypointLoaded: async (engineInitializer) => {
-            const appRunner = await engineInitializer.initializeEngine();
+            if (window._syloraFlutterRunning) return;
+            const appRunner = await engineInitializer.initializeEngine({
+              // Prefer path that matches current hash so Auth boots first.
+              assetBase: undefined,
+            });
             await appRunner.runApp();
+            window._syloraFlutterRunning = true;
           },
         });
       }
+    }).catch((err) => {
+      state.flutterPromise = null;
+      throw err;
     });
     return state.flutterPromise;
   }
 
-  function enterApp(create) {
+  function scheduleFlutterPreload() {
+    if (state.preloadScheduled || state.flutterPromise || window._syloraFlutterRunning) {
+      return;
+    }
+    state.preloadScheduled = true;
+    const start = () => {
+      // Warm CanvasKit under the HTML shell so "Почати" is near-instant.
+      loadFlutter().catch(() => {
+        state.preloadScheduled = false;
+      });
+    };
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(start, { timeout: 1800 });
+    } else {
+      setTimeout(start, 900);
+    }
+  }
+
+  async function enterApp(create) {
     const buttons = document.querySelectorAll('[data-aether-enter], [data-aether-signin]');
     buttons.forEach((b) => { b.disabled = true; });
     const label = qs('[data-aether-enter] span');
+    const previousLabel = label ? label.textContent : '';
     if (label) label.textContent = 'Завантаження…';
-    setEmotion('speaking', 2000);
-    loadFlutter().finally(() => {
-      document.body.classList.remove('sylora-aether-active');
-      const root = qs('#sylora-aether');
-      if (root) root.style.display = 'none';
-      state.running = false;
-      cancelAnimationFrame(state.raf);
-      location.hash = create ? '#/auth?create=1' : '#/auth';
-    });
+    setEmotion('speaking', 2400);
+
+    // Route BEFORE Flutter paints so the first frame is Auth, not Welcome.
+    const target = create ? '#/auth?create=1' : '#/auth';
+    if (location.hash !== target) {
+      location.hash = target;
+    }
+
+    try {
+      const already = !!(window._syloraFlutterRunning || state.flutterPromise);
+      await loadFlutter();
+      await waitForFlutterFirstFrame(already ? 1200 : 5000);
+      // Let GoRouter paint Auth under the shell before removing HTML overlay.
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise((r) => setTimeout(r, already ? 80 : 160));
+      hide();
+    } catch (err) {
+      console.error('SYLORA enter failed', err);
+      if (label) label.textContent = previousLabel || 'Почати';
+      buttons.forEach((b) => { b.disabled = false; });
+      setEmotion('idle', 0);
+    }
   }
 
   function observeSpace(root) {
@@ -561,6 +633,7 @@
     state.blinkAt = performance.now() + 900;
     requestAnimationFrame(() => root.classList.add('aether-revealed'));
     state.raf = requestAnimationFrame(frame);
+    scheduleFlutterPreload();
   }
 
   function hide() {
@@ -589,6 +662,7 @@
   };
 
   ensureCss();
+  armFlutterFrameListener();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       if (prefersAetherRoute()) show();

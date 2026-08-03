@@ -14,11 +14,15 @@ final class SyloraLivingCanvas extends StatefulWidget {
     super.key,
     this.intensity = 1,
     this.showOrbits = true,
+    /// When false, paint a static gradient world (no ticker / particles).
+    /// Use for Auth cold-start on Flutter web.
+    this.animate = true,
   });
 
   final Widget child;
   final double intensity;
   final bool showOrbits;
+  final bool animate;
 
   @override
   State<SyloraLivingCanvas> createState() => _SyloraLivingCanvasState();
@@ -52,14 +56,18 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
     // Paint a static first frame, then arm motion after layout settles.
     // On web (esp. software WebGL) delay longer so Auth/forms mount first.
     void arm() {
-      if (!mounted) return;
+      if (!mounted || !widget.animate) return;
       setState(() => _armed = true);
+    }
+
+    if (!widget.animate) {
+      return;
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (kIsWeb) {
-        Future<void>.delayed(const Duration(milliseconds: 450), arm);
+        Future<void>.delayed(const Duration(milliseconds: 900), arm);
       } else {
         arm();
       }
@@ -74,8 +82,8 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
 
   @override
   Widget build(BuildContext context) {
-    _reduced = refReducedMotion(context);
-    final shouldRun = _armed && !_reduced;
+    _reduced = refReducedMotion(context) || !widget.animate;
+    final shouldRun = widget.animate && _armed && !_reduced;
     if (!shouldRun && _ticker.isActive) {
       _ticker.stop();
       _elapsed = Duration.zero;
@@ -84,17 +92,13 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
       _ticker.start();
     }
     final t = _elapsed.inMilliseconds / 1000;
-    return Listener(
-      onPointerHover: (e) => setState(() => _pointer = e.localPosition),
-      onPointerMove: (e) => setState(() => _pointer = e.localPosition),
-      onPointerUp: (_) => setState(() => _pointer = null),
-      onPointerCancel: (_) => setState(() => _pointer = null),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(gradient: SyloraTokens.heroGradient),
-          ),
+    final stack = Stack(
+      fit: StackFit.expand,
+      children: [
+        const DecoratedBox(
+          decoration: BoxDecoration(gradient: SyloraTokens.heroGradient),
+        ),
+        if (widget.animate)
           RepaintBoundary(
             child: CustomPaint(
               painter: _LivingPainter(
@@ -107,10 +111,37 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
               ),
               size: Size.infinite,
             ),
+          )
+        else
+          // Cheap static luminous blobs — no CustomPaint particle loop.
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.0, -0.2),
+                  radius: 1.15,
+                  colors: <Color>[
+                    Color(0x66FFFFFF),
+                    Color(0x33E8F0FF),
+                    Color(0x00F3F7FF),
+                  ],
+                  stops: <double>[0.15, 0.55, 1],
+                ),
+              ),
+            ),
           ),
-          widget.child,
-        ],
-      ),
+        widget.child,
+      ],
+    );
+    if (!widget.animate) {
+      return stack;
+    }
+    return Listener(
+      onPointerHover: (e) => setState(() => _pointer = e.localPosition),
+      onPointerMove: (e) => setState(() => _pointer = e.localPosition),
+      onPointerUp: (_) => setState(() => _pointer = null),
+      onPointerCancel: (_) => setState(() => _pointer = null),
+      child: stack,
     );
   }
 
@@ -283,12 +314,14 @@ final class SyloraLivingScaffold extends StatelessWidget {
     this.safe = true,
     this.intensity = 1,
     this.showOrbits = true,
+    this.animate = true,
   });
 
   final Widget child;
   final bool safe;
   final double intensity;
   final bool showOrbits;
+  final bool animate;
 
   @override
   Widget build(BuildContext context) {
@@ -298,6 +331,7 @@ final class SyloraLivingScaffold extends StatelessWidget {
       body: SyloraLivingCanvas(
         intensity: intensity,
         showOrbits: showOrbits,
+        animate: animate,
         child: body,
       ),
     );

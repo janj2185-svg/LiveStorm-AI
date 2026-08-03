@@ -24,12 +24,14 @@ final class SyloraAura extends StatefulWidget {
     this.emotion = AuraEmotion.idle,
     this.label = 'Aura',
     this.showLabel = true,
+    this.animate = true,
   });
 
   final double size;
   final AuraEmotion emotion;
   final String label;
   final bool showLabel;
+  final bool animate;
 
   @override
   State<SyloraAura> createState() => _SyloraAuraState();
@@ -60,6 +62,9 @@ final class _SyloraAuraState extends State<SyloraAura>
       _elapsed = d;
       if (mounted) setState(() {});
     });
+    if (!widget.animate) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_ticker.isActive) {
         _ticker.start();
@@ -75,16 +80,18 @@ final class _SyloraAuraState extends State<SyloraAura>
 
   @override
   Widget build(BuildContext context) {
-    final t = _elapsed.inMilliseconds / 1000;
-    if (t > _blinkAt) {
-      _lid = 1;
-      _blinkAt = t + 2.2 + (t % 1.7);
+    final t = widget.animate ? _elapsed.inMilliseconds / 1000 : 0.0;
+    if (widget.animate) {
+      if (t > _blinkAt) {
+        _lid = 1;
+        _blinkAt = t + 2.2 + (t % 1.7);
+      }
+      _lid *= 0.78;
+      final targetYaw = math.sin(t * 0.7) * 4;
+      final targetPitch = math.cos(t * 0.9) * 2;
+      _yaw += (targetYaw - _yaw) * 0.06;
+      _pitch += (targetPitch - _pitch) * 0.06;
     }
-    _lid *= 0.78;
-    final targetYaw = math.sin(t * 0.7) * 4;
-    final targetPitch = math.cos(t * 0.9) * 2;
-    _yaw += (targetYaw - _yaw) * 0.06;
-    _pitch += (targetPitch - _pitch) * 0.06;
 
     return SizedBox(
       width: widget.size,
@@ -107,6 +114,8 @@ final class _SyloraAuraState extends State<SyloraAura>
             Text(
               widget.label,
               style: SyloraTokens.label(9, color: SyloraTokens.inkMute),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
         ],
       ),

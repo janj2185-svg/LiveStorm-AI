@@ -157,13 +157,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         name: 'auth',
-        pageBuilder: (context, state) => _page(
-          state,
-          AuthScreen(
-            initialCreateAccount: state.uri.queryParameters['create'] == '1',
-          ),
-          reducedMotion,
-        ),
+        pageBuilder: (context, state) {
+          // Auth must paint immediately after "Почати" — skip world transition.
+          return NoTransitionPage<void>(
+            key: state.pageKey,
+            child: AuthScreen(
+              initialCreateAccount:
+                  state.uri.queryParameters['create'] == '1',
+            ),
+          );
+        },
       ),
       GoRoute(
         path: '/auth/oauth/complete',
