@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, Request, status
-from sqlalchemy import and_, delete, exists, func, or_, select, update
+from sqlalchemy import and_, case, delete, exists, func, literal, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_audit_event
@@ -18,7 +18,7 @@ from app.dependencies import (
     require_permission,
 )
 from app.errors import APIError
-from app.models import AccountSettings, Profile, User, UserStatus
+from app.models import AccessSession, AccountSettings, Profile, User, UserStatus
 from app.rate_limit import rate_limit
 from app.schemas import MessageResponse
 from app.security import utcnow
@@ -62,6 +62,10 @@ from app.social_schemas import (
     CommunityPatch,
     CommunityResponse,
     CommunitySearchResponse,
+    FriendRequestSummaryResponse,
+    FriendRequestsResponse,
+    FriendSummaryResponse,
+    FriendSuggestionResponse,
     MembershipResponse,
     MembershipRolePatch,
     ModerationDecisionRequest,
@@ -427,6 +431,359 @@ async def cancel_follow_request(
     request_record.responded_at = utcnow()
     await db.commit()
     return MessageResponse(status="cancelled")
+
+
+def aware_datetime(value: datetime) -> datetime:
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value
+
+
+def friendship_other_id(viewer_id: uuid.UUID) -> object:
+    return case(
+        (Friendship.user_low_id == viewer_id, Friendship.user_high_id),
+        else_=Friendship.user_low_id,
+    )
+
+
+async def accepted_friendship_map(
+    db: AsyncSession, user_id: uuid.UUID
+) -> dict[uuid.UUID, uuid.UUID]:
+    other_id = friendship_other_id(user_id).label("friend_id")
+    rows = (
+        await db.execute(
+            select(Friendship.id.label("friendship_id"), other_id)
+            .select_from(Friendship)
+            .where(
+                Friendship.status == RelationStatus.accepted,
+                or_(
+                    Friendship.user_low_id == user_id,
+                    Friendship.user_high_id == user_id,
+                ),
+            )
+        )
+    ).all()
+    return {row.friend_id: row.friendship_id for row in rows}
+
+
+async def last_seen_by_user(
+    db: AsyncSession, user_ids: set[uuid.UUID]
+) -> dict[uuid.UUID, datetime]:
+    if not user_ids:
+        return {}
+    rows = (
+        await db.execute(
+            select(AccessSession.user_id, AccessSession.last_used_at, AccessSession.created_at)
+            .where(
+                AccessSession.user_id.in_(user_ids),
+                AccessSession.revoked_at.is_(None),
+            )
+            .order_by(AccessSession.created_at.desc())
+        )
+    ).all()
+    last_seen: dict[uuid.UUID, datetime] = {}
+    for user_id, last_used_at, created_at in rows:
+        seen_at = last_used_at or created_at
+        if seen_at is None:
+            continue
+        aware_seen = aware_datetime(seen_at)
+        if user_id not in last_seen or aware_seen > last_seen[user_id]:
+            last_seen[user_id] = aware_seen
+    return last_seen
+
+
+def friend_summary(
+    *,
+    friendship_id: uuid.UUID,
+    handle: str,
+    display_name: str,
+    avatar_url: str | None,
+    last_seen_at: datetime | None,
+) -> FriendSummaryResponse:
+    online_cutoff = utcnow() - timedelta(minutes=5)
+    return FriendSummaryResponse(
+        friendship_id=friendship_id,
+        handle=handle,
+        display_name=display_name,
+        avatar_url=avatar_url,
+        online=last_seen_at is not None and last_seen_at >= online_cutoff,
+        last_seen_at=last_seen_at,
+    )
+
+
+async def friend_request_rows(
+    db: AsyncSession, user_id: uuid.UUID, *, incoming: bool
+) -> list[FriendRequestSummaryResponse]:
+    other_id = friendship_other_id(user_id)
+    requested_by_filter = (
+        Friendship.requested_by_id != user_id if incoming else Friendship.requested_by_id == user_id
+    )
+    rows = (
+        await db.execute(
+            select(
+                Friendship.id.label("request_id"),
+                Friendship.created_at.label("requested_at"),
+                Profile.handle,
+                Profile.display_name,
+                Profile.avatar_url,
+            )
+            .select_from(Friendship)
+            .join(Profile, Profile.user_id == other_id)
+            .where(
+                Friendship.status == RelationStatus.pending,
+                requested_by_filter,
+                or_(
+                    Friendship.user_low_id == user_id,
+                    Friendship.user_high_id == user_id,
+                ),
+                Profile.handle.is_not(None),
+                not_blocked_condition(user_id, Profile.user_id),
+            )
+            .order_by(Friendship.created_at.desc(), Friendship.id.desc())
+        )
+    ).all()
+    return [
+        FriendRequestSummaryResponse(
+            id=row.request_id,
+            handle=row.handle,
+            display_name=row.display_name,
+            avatar_url=row.avatar_url,
+            requested_at=row.requested_at,
+        )
+        for row in rows
+        if row.handle is not None
+    ]
+
+
+@router.get("/friends", response_model=list[FriendSummaryResponse])
+async def list_friends(
+    limit: int = Query(default=100, ge=1, le=500),
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> list[FriendSummaryResponse]:
+    await require_handle(db, auth.user.id)
+    other_id = friendship_other_id(auth.user.id)
+    rows = (
+        await db.execute(
+            select(
+                Friendship.id.label("friendship_id"),
+                Profile.user_id,
+                Profile.handle,
+                Profile.display_name,
+                Profile.avatar_url,
+            )
+            .select_from(Friendship)
+            .join(Profile, Profile.user_id == other_id)
+            .where(
+                Friendship.status == RelationStatus.accepted,
+                or_(
+                    Friendship.user_low_id == auth.user.id,
+                    Friendship.user_high_id == auth.user.id,
+                ),
+                Profile.handle.is_not(None),
+                not_blocked_condition(auth.user.id, Profile.user_id),
+            )
+            .order_by(Profile.display_name.asc(), Profile.handle.asc())
+            .limit(limit)
+        )
+    ).all()
+    last_seen = await last_seen_by_user(db, {row.user_id for row in rows})
+    return [
+        friend_summary(
+            friendship_id=row.friendship_id,
+            handle=row.handle,
+            display_name=row.display_name,
+            avatar_url=row.avatar_url,
+            last_seen_at=last_seen.get(row.user_id),
+        )
+        for row in rows
+        if row.handle is not None
+    ]
+
+
+@router.get("/friend-requests", response_model=FriendRequestsResponse)
+async def list_friend_requests(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> FriendRequestsResponse:
+    await require_handle(db, auth.user.id)
+    return FriendRequestsResponse(
+        incoming=await friend_request_rows(db, auth.user.id, incoming=True),
+        outgoing=await friend_request_rows(db, auth.user.id, incoming=False),
+    )
+
+
+@router.delete("/friend-requests/{friendship_id}/cancel", response_model=MessageResponse)
+async def cancel_friendship_request(
+    friendship_id: uuid.UUID,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> MessageResponse:
+    friendship = await db.scalar(
+        select(Friendship).where(
+            Friendship.id == friendship_id,
+            Friendship.status == RelationStatus.pending,
+            Friendship.requested_by_id == auth.user.id,
+            or_(
+                Friendship.user_low_id == auth.user.id,
+                Friendship.user_high_id == auth.user.id,
+            ),
+        )
+    )
+    if friendship is None:
+        raise APIError(
+            404,
+            "friend_request_not_found",
+            "Friend request not found",
+            "The pending outgoing friend request does not exist.",
+        )
+    friendship.status = RelationStatus.cancelled
+    friendship.responded_at = utcnow()
+    await db.commit()
+    return MessageResponse(status="cancelled")
+
+
+@router.get("/friends/suggestions", response_model=list[FriendSuggestionResponse])
+async def list_friend_suggestions(
+    limit: int = Query(default=20, ge=1, le=20),
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> list[FriendSuggestionResponse]:
+    await require_handle(db, auth.user.id)
+    current_friend_ids = set((await accepted_friendship_map(db, auth.user.id)).keys())
+    current_followed_ids = set(
+        (
+            await db.scalars(select(Follow.followed_id).where(Follow.follower_id == auth.user.id))
+        ).all()
+    )
+    friend_overlap = (
+        select(func.count())
+        .select_from(Friendship)
+        .where(
+            Friendship.status == RelationStatus.accepted,
+            or_(
+                and_(
+                    Friendship.user_low_id == Profile.user_id,
+                    Friendship.user_high_id.in_(current_friend_ids),
+                ),
+                and_(
+                    Friendship.user_high_id == Profile.user_id,
+                    Friendship.user_low_id.in_(current_friend_ids),
+                ),
+            ),
+        )
+        .correlate(Profile)
+        .scalar_subquery()
+        if current_friend_ids
+        else literal(0)
+    )
+    follow_overlap = (
+        select(func.count())
+        .select_from(Follow)
+        .where(
+            Follow.follower_id == Profile.user_id,
+            Follow.followed_id.in_(current_followed_ids),
+        )
+        .correlate(Profile)
+        .scalar_subquery()
+        if current_followed_ids
+        else literal(0)
+    )
+    mutual_count = (friend_overlap + follow_overlap).label("mutual_count")
+    connected_or_pending = exists(
+        select(Friendship.id).where(
+            Friendship.status.in_([RelationStatus.accepted, RelationStatus.pending]),
+            or_(
+                and_(
+                    Friendship.user_low_id == auth.user.id,
+                    Friendship.user_high_id == Profile.user_id,
+                ),
+                and_(
+                    Friendship.user_high_id == auth.user.id,
+                    Friendship.user_low_id == Profile.user_id,
+                ),
+            ),
+        )
+    )
+    visible_candidate = or_(
+        AccountSettings.profile_visibility == "public",
+        exists(
+            select(Follow.id).where(
+                Follow.follower_id == auth.user.id,
+                Follow.followed_id == Profile.user_id,
+            )
+        ),
+    )
+    rows = (
+        await db.execute(
+            select(Profile.handle, Profile.display_name, Profile.avatar_url, mutual_count)
+            .join(AccountSettings, AccountSettings.user_id == Profile.user_id)
+            .where(
+                Profile.user_id != auth.user.id,
+                Profile.handle.is_not(None),
+                visible_candidate,
+                not_blocked_condition(auth.user.id, Profile.user_id),
+                ~connected_or_pending,
+            )
+            .order_by(mutual_count.desc(), Profile.display_name.asc(), Profile.handle.asc())
+            .limit(limit)
+        )
+    ).all()
+    return [
+        FriendSuggestionResponse(
+            handle=row.handle,
+            display_name=row.display_name,
+            avatar_url=row.avatar_url,
+            mutual_count=int(row.mutual_count or 0),
+        )
+        for row in rows
+        if row.handle is not None
+    ]
+
+
+@router.get("/friends/{handle}/mutuals", response_model=list[FriendSummaryResponse])
+async def list_mutual_friends(
+    handle: str,
+    limit: int = Query(default=20, ge=1, le=100),
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> list[FriendSummaryResponse]:
+    await require_handle(db, auth.user.id)
+    target = await profile_for_handle(db, handle)
+    if not await can_view_profile(db, auth.user.id, target.user_id):
+        raise APIError(
+            404,
+            "profile_not_found",
+            "Profile not found",
+            "The requested profile does not exist.",
+        )
+    current_friendships = await accepted_friendship_map(db, auth.user.id)
+    target_friendships = await accepted_friendship_map(db, target.user_id)
+    mutual_ids = set(current_friendships) & set(target_friendships)
+    if not mutual_ids:
+        return []
+    rows = (
+        await db.execute(
+            select(Profile.user_id, Profile.handle, Profile.display_name, Profile.avatar_url)
+            .where(
+                Profile.user_id.in_(mutual_ids),
+                Profile.handle.is_not(None),
+                not_blocked_condition(auth.user.id, Profile.user_id),
+            )
+            .order_by(Profile.display_name.asc(), Profile.handle.asc())
+            .limit(limit)
+        )
+    ).all()
+    last_seen = await last_seen_by_user(db, {row.user_id for row in rows})
+    return [
+        friend_summary(
+            friendship_id=current_friendships[row.user_id],
+            handle=row.handle,
+            display_name=row.display_name,
+            avatar_url=row.avatar_url,
+            last_seen_at=last_seen.get(row.user_id),
+        )
+        for row in rows
+        if row.handle is not None
+    ]
 
 
 @router.post("/friends/{handle}", response_model=RelationResponse)

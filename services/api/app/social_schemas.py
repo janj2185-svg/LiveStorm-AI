@@ -129,6 +129,35 @@ class RelationResponse(StrictSchema):
     target_handle: str
 
 
+class FriendSummaryResponse(StrictSchema):
+    friendship_id: uuid.UUID
+    handle: str
+    display_name: str
+    avatar_url: str | None
+    online: bool = False
+    last_seen_at: datetime | None = None
+
+
+class FriendRequestSummaryResponse(StrictSchema):
+    id: uuid.UUID
+    handle: str
+    display_name: str
+    avatar_url: str | None
+    requested_at: datetime
+
+
+class FriendRequestsResponse(StrictSchema):
+    incoming: list[FriendRequestSummaryResponse]
+    outgoing: list[FriendRequestSummaryResponse]
+
+
+class FriendSuggestionResponse(StrictSchema):
+    handle: str
+    display_name: str
+    avatar_url: str | None
+    mutual_count: int
+
+
 class CommunityCreate(StrictSchema):
     slug: str = Field(min_length=3, max_length=64)
     name: str = Field(min_length=1, max_length=100)

@@ -53,6 +53,22 @@ async def social_user(
     return tokens, headers
 
 
+async def make_friends(
+    api,
+    requester_headers: dict[str, str],
+    accepter_headers: dict[str, str],
+    handle: str,
+) -> str:
+    requested = await api.client.post(f"/v1/social/friends/{handle}", headers=requester_headers)
+    assert requested.status_code == 200, requested.text
+    accepted = await api.client.post(
+        f"/v1/social/friend-requests/{requested.json()['id']}/accept",
+        headers=accepter_headers,
+    )
+    assert accepted.status_code == 200, accepted.text
+    return requested.json()["id"]
+
+
 async def test_handle_validation_reserved_and_uniqueness(api) -> None:
     await register_and_verify(api)
     tokens = await login(api)
@@ -172,6 +188,109 @@ async def test_private_follow_friendship_canonical_and_block_cleanup(api) -> Non
             select(SecurityAuditEvent).where(SecurityAuditEvent.action == "social.user_blocked")
         )
         assert audit is not None
+
+
+async def test_friend_reads_requests_cancel_suggestions_and_mutuals(api) -> None:
+    _, alice_headers = await social_user(
+        api,
+        email="friend.alice@example.com",
+        password="CorrectHorse!2026",
+        display_name="Alice",
+        handle="friend.alice",
+    )
+    _, bob_headers = await social_user(
+        api,
+        email="friend.bob@example.com",
+        password="CorrectHorse!2026",
+        display_name="Bob",
+        handle="friend.bob",
+    )
+    _, carol_headers = await social_user(
+        api,
+        email="friend.carol@example.com",
+        password="CorrectHorse!2026",
+        display_name="Carol",
+        handle="friend.carol",
+    )
+    _, dave_headers = await social_user(
+        api,
+        email="friend.dave@example.com",
+        password="CorrectHorse!2026",
+        display_name="Dave",
+        handle="friend.dave",
+    )
+    _, erin_headers = await social_user(
+        api,
+        email="friend.erin@example.com",
+        password="CorrectHorse!2026",
+        display_name="Erin",
+        handle="friend.erin",
+    )
+    _, faye_headers = await social_user(
+        api,
+        email="friend.faye@example.com",
+        password="CorrectHorse!2026",
+        display_name="Faye",
+        handle="friend.faye",
+    )
+    _, blocked_headers = await social_user(
+        api,
+        email="friend.blocked@example.com",
+        password="CorrectHorse!2026",
+        display_name="Blocked",
+        handle="friend.blocked",
+    )
+
+    await make_friends(api, alice_headers, bob_headers, "friend.bob")
+    await make_friends(api, alice_headers, carol_headers, "friend.carol")
+    await make_friends(api, bob_headers, carol_headers, "friend.carol")
+    await make_friends(api, bob_headers, faye_headers, "friend.faye")
+    await make_friends(api, bob_headers, blocked_headers, "friend.blocked")
+
+    incoming = await api.client.post("/v1/social/friends/friend.alice", headers=dave_headers)
+    assert incoming.status_code == 200, incoming.text
+    outgoing = await api.client.post("/v1/social/friends/friend.erin", headers=alice_headers)
+    assert outgoing.status_code == 200, outgoing.text
+    assert erin_headers["Authorization"]
+
+    blocked = await api.client.post("/v1/social/blocks/friend.blocked", headers=alice_headers)
+    assert blocked.status_code == 200, blocked.text
+
+    friends = await api.client.get("/v1/social/friends", headers=alice_headers)
+    assert friends.status_code == 200, friends.text
+    friends_by_handle = {item["handle"]: item for item in friends.json()}
+    assert set(friends_by_handle) == {"friend.bob", "friend.carol"}
+    assert friends_by_handle["friend.bob"]["friendship_id"]
+    assert isinstance(friends_by_handle["friend.bob"]["online"], bool)
+    assert "last_seen_at" in friends_by_handle["friend.bob"]
+
+    requests = await api.client.get("/v1/social/friend-requests", headers=alice_headers)
+    assert requests.status_code == 200, requests.text
+    assert [item["handle"] for item in requests.json()["incoming"]] == ["friend.dave"]
+    assert [item["handle"] for item in requests.json()["outgoing"]] == ["friend.erin"]
+
+    cancelled = await api.client.delete(
+        f"/v1/social/friend-requests/{outgoing.json()['id']}/cancel",
+        headers=alice_headers,
+    )
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    after_cancel = await api.client.get("/v1/social/friend-requests", headers=alice_headers)
+    assert after_cancel.status_code == 200
+    assert after_cancel.json()["outgoing"] == []
+
+    suggestions = await api.client.get("/v1/social/friends/suggestions", headers=alice_headers)
+    assert suggestions.status_code == 200, suggestions.text
+    suggestions_by_handle = {item["handle"]: item for item in suggestions.json()}
+    assert suggestions_by_handle["friend.faye"]["mutual_count"] >= 1
+    assert "friend.bob" not in suggestions_by_handle
+    assert "friend.carol" not in suggestions_by_handle
+    assert "friend.blocked" not in suggestions_by_handle
+
+    mutuals = await api.client.get("/v1/social/friends/friend.bob/mutuals", headers=alice_headers)
+    assert mutuals.status_code == 200, mutuals.text
+    assert [item["handle"] for item in mutuals.json()] == ["friend.carol"]
+    assert mutuals.json()[0]["friendship_id"] == friends_by_handle["friend.carol"]["friendship_id"]
 
 
 async def test_community_private_join_roles_and_last_owner(api) -> None:
