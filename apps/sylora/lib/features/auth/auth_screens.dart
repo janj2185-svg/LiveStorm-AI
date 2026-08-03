@@ -123,11 +123,20 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   late final AnimationController _paneMotion;
   _AuthPane _pane = _AuthPane.chooser;
   _EmailMode _emailMode = _EmailMode.otp;
-  AuthMethods? _methods;
+  // Optimistic defaults so the form is usable while /auth/methods loads.
+  AuthMethods _methods = const AuthMethods(
+    phone: false,
+    email: true,
+    emailPassword: true,
+    emailOtp: true,
+    tiktok: false,
+    facebook: false,
+    google: false,
+    apple: false,
+  );
   String? _methodsError;
   bool _phoneCodeSent = false;
   bool _emailCodeSent = false;
-  bool _loadingMethods = true;
   int _resendSeconds = 0;
   Timer? _resendTimer;
 
@@ -140,6 +149,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     )..value = 1;
     if (widget.initialCreateAccount) {
       _emailMode = _EmailMode.register;
+      _pane = _AuthPane.email;
     }
     unawaited(_loadMethods());
   }
@@ -152,7 +162,6 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       }
       setState(() {
         _methods = methods;
-        _loadingMethods = false;
         _methodsError = null;
         if (!methods.emailOtp && methods.emailPassword) {
           _emailMode = widget.initialCreateAccount
@@ -165,7 +174,6 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         return;
       }
       setState(() {
-        _loadingMethods = false;
         _methodsError = messageFor(error);
         _methods = const AuthMethods(
           phone: false,
@@ -177,7 +185,9 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           google: false,
           apple: false,
         );
-        _emailMode = _EmailMode.password;
+        if (!widget.initialCreateAccount) {
+          _emailMode = _EmailMode.password;
+        }
       });
     }
   }
@@ -292,45 +302,35 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
                       style: LandingTokens.body(16),
                     ),
                     const SizedBox(height: 28),
-                    if (_loadingMethods)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 36),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: LandingTokens.ion,
-                          ),
-                        ),
-                      )
-                    else
-                      FadeTransition(
-                        opacity: _paneMotion,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton(
-                                onPressed: _pane == _AuthPane.chooser
-                                    ? () => context.goNamed('welcome')
-                                    : () => _switchPane(_AuthPane.chooser),
-                                child: Text(
-                                  _pane == _AuthPane.chooser
-                                      ? '← Назад до світу'
-                                      : '← Назад',
-                                  style: LandingTokens.body(
-                                    14,
-                                    color: LandingTokens.ink.withValues(alpha: 0.55),
-                                  ),
+                    FadeTransition(
+                      opacity: _paneMotion,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: _pane == _AuthPane.chooser
+                                  ? () => context.goNamed('welcome')
+                                  : () => _switchPane(_AuthPane.chooser),
+                              child: Text(
+                                _pane == _AuthPane.chooser
+                                    ? '← Назад до світу'
+                                    : '← Назад',
+                                style: LandingTokens.body(
+                                  14,
+                                  color: LandingTokens.ink.withValues(alpha: 0.55),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            if (_pane == _AuthPane.chooser) _chooser(auth),
-                            if (_pane == _AuthPane.phone) _phonePane(auth),
-                            if (_pane == _AuthPane.email) _emailPane(auth),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (_pane == _AuthPane.chooser) _chooser(auth),
+                          if (_pane == _AuthPane.phone) _phonePane(auth),
+                          if (_pane == _AuthPane.email) _emailPane(auth),
+                        ],
                       ),
+                    ),
                     if (_methodsError != null) ...<Widget>[
                       const SizedBox(height: 12),
                       _MessageBanner(message: _methodsError!, error: true),
@@ -355,7 +355,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   }
 
   Widget _chooser(AuthState auth) {
-    final methods = _methods!;
+    final methods = _methods;
     // Product order: Google → Apple → Facebook → TikTok. Never GitHub.
     final social = <(String, String, IconData)>[
       if (methods.google) ('google', 'Google', Icons.g_mobiledata_rounded),
@@ -367,9 +367,32 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         _AuthPillButton(
-          label: 'Продовжити з телефоном',
+          label: 'Увійти',
           busy: auth.busy,
           filled: true,
+          onPressed: methods.email
+              ? () {
+                  setState(() => _emailMode = _EmailMode.password);
+                  unawaited(_switchPane(_AuthPane.email));
+                }
+              : null,
+        ),
+        const SizedBox(height: 12),
+        _AuthPillButton(
+          label: 'Створити акаунт',
+          filled: false,
+          onPressed: methods.email
+              ? () {
+                  setState(() => _emailMode = _EmailMode.register);
+                  unawaited(_switchPane(_AuthPane.email));
+                }
+              : null,
+        ),
+        const SizedBox(height: 18),
+        _AuthPillButton(
+          label: 'Продовжити з телефоном',
+          busy: auth.busy,
+          filled: false,
           onPressed: methods.phone ? () => _switchPane(_AuthPane.phone) : null,
         ),
         if (!methods.phone) ...<Widget>[
@@ -382,9 +405,14 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         ],
         const SizedBox(height: 12),
         _AuthPillButton(
-          label: 'Продовжити з поштою',
+          label: 'Увійти кодом на пошту',
           filled: false,
-          onPressed: methods.email ? () => _switchPane(_AuthPane.email) : null,
+          onPressed: methods.email && methods.emailOtp
+              ? () {
+                  setState(() => _emailMode = _EmailMode.otp);
+                  unawaited(_switchPane(_AuthPane.email));
+                }
+              : null,
         ),
         if (social.isNotEmpty) ...<Widget>[
           const SizedBox(height: 28),
@@ -469,7 +497,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   );
 
   Widget _emailPane(AuthState auth) {
-    final methods = _methods!;
+    final methods = _methods;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -694,25 +722,28 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     if (auth.busy || !_registerKey.currentState!.validate()) {
       return;
     }
-    await ref
+    final result = await ref
         .read(authControllerProvider.notifier)
         .register(
           email: _email.text,
           password: _password.text,
           displayName: _displayName.text,
         );
+    if (result != null && mounted) {
+      setState(() => _emailMode = _EmailMode.password);
+    }
   }
 
   Future<void> _startPhone(AuthState auth) async {
     if (auth.busy || !_phoneKey.currentState!.validate()) {
       return;
     }
-    final ok = await ref
+    final result = await ref
         .read(authControllerProvider.notifier)
         .startPhoneOtp(_phone.text.trim());
-    if (ok && mounted) {
+    if (result != null && mounted) {
       setState(() => _phoneCodeSent = true);
-      _startResendCountdown(60);
+      _startResendCountdown(result.resendAfter);
     }
   }
 
@@ -729,12 +760,17 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     if (auth.busy || !_emailOtpKey.currentState!.validate()) {
       return;
     }
-    final ok = await ref
+    final result = await ref
         .read(authControllerProvider.notifier)
         .startEmailOtp(_email.text.trim());
-    if (ok && mounted) {
-      setState(() => _emailCodeSent = true);
-      _startResendCountdown(60);
+    if (result != null && mounted) {
+      setState(() {
+        _emailCodeSent = true;
+        if (result.debugCode != null && _otp.text.trim().isEmpty) {
+          _otp.text = result.debugCode!;
+        }
+      });
+      _startResendCountdown(result.resendAfter);
     }
   }
 
@@ -1095,10 +1131,16 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
     }
     await _run(() async {
       final repository = ref.read(authRepositoryProvider);
-      if (_verification) {
-        await repository.requestEmailVerification(_email.text.trim());
-      } else {
-        await repository.requestPasswordReset(_email.text.trim());
+      final hint = _verification
+          ? await repository.requestEmailVerification(_email.text.trim())
+          : await repository.requestPasswordReset(_email.text.trim());
+      if (hint.debugToken != null && mounted) {
+        _token.text = hint.debugToken!;
+      }
+      if (hint.debugToken != null) {
+        return _verification
+            ? 'Тестовий стенд: токен підтвердження підставлено нижче.'
+            : 'Тестовий стенд: токен скидання підставлено нижче. Вкажіть новий пароль і підтвердіть.';
       }
       return 'Якщо акаунт підходить, ми надіслали лист.';
     });

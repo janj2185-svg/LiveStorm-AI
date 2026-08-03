@@ -451,8 +451,17 @@ async def reset_request(
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> MessageResponse:
-    await request_password_reset(db, request, payload.email, settings)
-    return MessageResponse(status="accepted")
+    debug_token = await request_password_reset(db, request, payload.email, settings)
+    debug_link = None
+    if debug_token:
+        debug_link = (
+            f"{settings.web_base_url.rstrip('/')}/reset-password?token={debug_token}"
+        )
+    return MessageResponse(
+        status="accepted",
+        debug_token=debug_token,
+        debug_link=debug_link,
+    )
 
 
 @router.post(

@@ -108,8 +108,18 @@ bool canAccessRoleRoute(Iterable<String> roles, String path) {
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authControllerProvider);
-  final roles = auth.user?.roles ?? const <String>[];
+  // Rebuild only when auth gate / role shell must change — not on busy/notice/error,
+  // otherwise AuthScreen remounts and OTP/register panes snap back to the chooser.
+  final authView = ref.watch(
+    authControllerProvider.select(
+      (state) => (
+        status: state.status,
+        userId: state.user?.id,
+        roles: state.user?.roles ?? const <String>[],
+      ),
+    ),
+  );
+  final roles = authView.roles;
   final destinations = shellDestinationsForRoles(roles);
   final reducedMotion = ref.watch(
     visualSettingsProvider.select((value) => value.reducedMotion),
@@ -522,7 +532,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/verify-email',
         '/reset-password',
       }.contains(location);
-      return switch (auth.status) {
+      return switch (authView.status) {
         AuthStatus.checking => location == '/splash' ? null : '/splash',
         AuthStatus.mfaRequired => location == '/mfa' ? null : '/mfa',
         AuthStatus.unauthenticated => public ? null : '/welcome',

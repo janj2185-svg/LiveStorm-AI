@@ -477,12 +477,14 @@ async def rotate_refresh_token(
 
 async def request_password_reset(
     db: AsyncSession, request: Request, email_value: str, settings: Settings
-) -> None:
+) -> str | None:
+    """Request a password reset. Returns a debug token on SMTP-less test stands."""
     require_email_capability(settings)
     try:
         email = normalize_email(email_value)
     except APIError:
         email = ""
+    debug_token: str | None = None
     user = await db.scalar(select(User).where(User.email == email))
     if user is not None and user.status == UserStatus.active and user.password_hash:
         now = utcnow()
@@ -511,7 +513,10 @@ async def request_password_reset(
             actor_user_id=user.id,
             target_user_id=user.id,
         )
+        if settings.is_public_test_stand and not settings.smtp_configured:
+            debug_token = raw_token
     await db.commit()
+    return debug_token
 
 
 async def consume_password_reset(

@@ -164,7 +164,7 @@ async def start_email_otp(
     email_value: str,
     *,
     purpose: AuthOtpPurpose = AuthOtpPurpose.login,
-) -> dict[str, int | str]:
+) -> dict[str, int | str | None]:
     require_email_capability(settings)
     email = normalize_email(email_value)
     existing = await _latest_open_challenge(
@@ -211,11 +211,15 @@ async def start_email_otp(
         metadata={"email_domain": email.split("@", 1)[-1], "purpose": purpose.value},
     )
     await db.commit()
-    return {
+    payload: dict[str, int | str | None] = {
         "status": "code_sent",
         "expires_in": settings.auth_otp_minutes * 60,
         "resend_after": settings.auth_otp_resend_seconds,
     }
+    if settings.is_public_test_stand and not settings.smtp_configured:
+        # Stand has no SMTP — surface the code so testers can complete the flow.
+        payload["debug_code"] = code
+    return payload
 
 
 async def _verify_challenge(

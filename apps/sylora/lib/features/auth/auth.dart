@@ -60,6 +60,55 @@ final class LoginResult {
 }
 
 @immutable
+final class OtpStartResult {
+  const OtpStartResult({this.debugCode, this.resendAfter = 60});
+
+  factory OtpStartResult.fromJson(JsonObject json) => OtpStartResult(
+    debugCode: json['debug_code'] is String
+        ? json['debug_code'] as String
+        : null,
+    resendAfter: json['resend_after'] is num
+        ? (json['resend_after'] as num).toInt()
+        : 60,
+  );
+
+  final String? debugCode;
+  final int resendAfter;
+}
+
+@immutable
+final class RegisterResult {
+  const RegisterResult({required this.status});
+
+  factory RegisterResult.fromJson(JsonObject json) => RegisterResult(
+    status: json['status'] is String
+        ? json['status'] as String
+        : 'verification_queued',
+  );
+
+  final String status;
+
+  bool get verified => status == 'registered_verified';
+}
+
+@immutable
+final class DeliveryHint {
+  const DeliveryHint({this.debugToken, this.debugLink});
+
+  factory DeliveryHint.fromJson(JsonObject json) => DeliveryHint(
+    debugToken: json['debug_token'] is String
+        ? json['debug_token'] as String
+        : null,
+    debugLink: json['debug_link'] is String
+        ? json['debug_link'] as String
+        : null,
+  );
+
+  final String? debugToken;
+  final String? debugLink;
+}
+
+@immutable
 final class SessionModel {
   const SessionModel({
     required this.id,
@@ -94,28 +143,28 @@ abstract interface class AuthRepository {
     required String code,
     required String deviceLabel,
   });
-  Future<void> register({
+  Future<RegisterResult> register({
     required String email,
     required String password,
     required String displayName,
     required String deviceLabel,
   });
-  Future<void> startPhoneOtp(String phone);
+  Future<OtpStartResult> startPhoneOtp(String phone);
   Future<UserAccount> verifyPhoneOtp({
     required String phone,
     required String code,
     required String deviceLabel,
   });
-  Future<void> startEmailOtp(String email);
+  Future<OtpStartResult> startEmailOtp(String email);
   Future<UserAccount> verifyEmailOtp({
     required String email,
     required String code,
     required String deviceLabel,
   });
   Future<UserAccount> completeOAuthSession();
-  Future<void> requestEmailVerification(String email);
+  Future<DeliveryHint> requestEmailVerification(String email);
   Future<void> consumeEmailVerification(String token);
-  Future<void> requestPasswordReset(String email);
+  Future<DeliveryHint> requestPasswordReset(String email);
   Future<void> consumePasswordReset(String token, String password);
   Future<void> logout();
   Future<void> logoutAll();
@@ -161,9 +210,10 @@ final class DioAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> startPhoneOtp(String phone) => _publicPost(
+  Future<OtpStartResult> startPhoneOtp(String phone) => _publicPostResult(
     'auth/phone/start',
     <String, dynamic>{'phone': phone},
+    OtpStartResult.fromJson,
   );
 
   @override
@@ -187,9 +237,10 @@ final class DioAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> startEmailOtp(String email) => _publicPost(
+  Future<OtpStartResult> startEmailOtp(String email) => _publicPostResult(
     'auth/email/otp/start',
     <String, dynamic>{'email': email},
+    OtpStartResult.fromJson,
   );
 
   @override
@@ -273,13 +324,13 @@ final class DioAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> register({
+  Future<RegisterResult> register({
     required String email,
     required String password,
     required String displayName,
     required String deviceLabel,
   }) async {
-    await client.request(
+    final response = await client.request(
       'auth/register',
       method: 'POST',
       authentication: false,
@@ -291,13 +342,19 @@ final class DioAuthRepository implements AuthRepository {
         'device_label': deviceLabel,
       },
     );
+    final json = response.data is Map
+        ? Map<String, dynamic>.from(response.data as Map)
+        : <String, dynamic>{};
+    return RegisterResult.fromJson(json);
   }
 
   @override
-  Future<void> requestEmailVerification(String email) => _publicPost(
-    'auth/email-verification/request',
-    <String, dynamic>{'email': email},
-  );
+  Future<DeliveryHint> requestEmailVerification(String email) =>
+      _publicPostResult(
+        'auth/email-verification/request',
+        <String, dynamic>{'email': email},
+        DeliveryHint.fromJson,
+      );
 
   @override
   Future<void> consumeEmailVerification(String token) => _publicPost(
@@ -306,9 +363,10 @@ final class DioAuthRepository implements AuthRepository {
   );
 
   @override
-  Future<void> requestPasswordReset(String email) => _publicPost(
+  Future<DeliveryHint> requestPasswordReset(String email) => _publicPostResult(
     'auth/password-reset/request',
     <String, dynamic>{'email': email},
+    DeliveryHint.fromJson,
   );
 
   @override
@@ -326,6 +384,24 @@ final class DioAuthRepository implements AuthRepository {
       authentication: false,
       refreshOnUnauthorized: false,
     );
+  }
+
+  Future<T> _publicPostResult<T>(
+    String path,
+    JsonObject data,
+    T Function(JsonObject json) parse,
+  ) async {
+    final response = await client.request(
+      path,
+      method: 'POST',
+      data: data,
+      authentication: false,
+      refreshOnUnauthorized: false,
+    );
+    final json = response.data is Map
+        ? Map<String, dynamic>.from(response.data as Map)
+        : <String, dynamic>{};
+    return parse(json);
   }
 
   @override
@@ -509,39 +585,46 @@ final class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register({
+  Future<RegisterResult?> register({
     required String email,
     required String password,
     required String displayName,
   }) async {
     state = const AuthState.unauthenticated(busy: true);
     try {
-      await _repository.register(
+      final result = await _repository.register(
         email: email.trim(),
         password: password,
         displayName: displayName.trim(),
         deviceLabel: 'SYLORA client',
       );
-      state = const AuthState.unauthenticated(
-        notice: 'Перевірте пошту, щоб підтвердити акаунт.',
+      state = AuthState.unauthenticated(
+        notice: result.verified
+            ? 'Акаунт створено. Увійдіть з вашим паролем.'
+            : 'Перевірте пошту, щоб підтвердити акаунт.',
       );
+      return result;
     } on Object catch (error) {
       state = AuthState.unauthenticated(error: messageFor(error));
+      return null;
     }
   }
 
-  Future<bool> startPhoneOtp(String phone) async {
+  Future<OtpStartResult?> startPhoneOtp(String phone) async {
     state = state.copyWith(busy: true, clearMessages: true);
     try {
-      await _repository.startPhoneOtp(phone);
+      final result = await _repository.startPhoneOtp(phone);
+      final codeHint = result.debugCode == null
+          ? ''
+          : ' Код для тесту: ${result.debugCode}.';
       state = state.copyWith(
         busy: false,
-        notice: 'Якщо номер коректний, код надіслано в SMS.',
+        notice: 'Якщо номер коректний, код надіслано в SMS.$codeHint',
       );
-      return true;
+      return result;
     } on Object catch (error) {
       state = AuthState.unauthenticated(error: messageFor(error));
-      return false;
+      return null;
     }
   }
 
@@ -562,18 +645,21 @@ final class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> startEmailOtp(String email) async {
+  Future<OtpStartResult?> startEmailOtp(String email) async {
     state = state.copyWith(busy: true, clearMessages: true);
     try {
-      await _repository.startEmailOtp(email.trim());
+      final result = await _repository.startEmailOtp(email.trim());
+      final codeHint = result.debugCode == null
+          ? ''
+          : ' Код для тесту: ${result.debugCode}.';
       state = state.copyWith(
         busy: false,
-        notice: 'Якщо адреса коректна, код надіслано на пошту.',
+        notice: 'Якщо адреса коректна, код надіслано на пошту.$codeHint',
       );
-      return true;
+      return result;
     } on Object catch (error) {
       state = AuthState.unauthenticated(error: messageFor(error));
-      return false;
+      return null;
     }
   }
 

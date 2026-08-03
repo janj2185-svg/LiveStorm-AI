@@ -12,6 +12,9 @@ from app.social_schemas import validate_handle
 
 class MessageResponse(BaseModel):
     status: str
+    # Present only on public test stands without SMTP so flows remain usable.
+    debug_token: str | None = None
+    debug_link: str | None = None
 
 
 class AuthMethodsResponse(BaseModel):
@@ -65,6 +68,8 @@ class OtpStartResponse(BaseModel):
     status: str
     expires_in: int
     resend_after: int
+    # Present only on public test stands without SMTP so OTP remains usable.
+    debug_code: str | None = None
 
 
 class RegisterRequest(BaseModel):

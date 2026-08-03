@@ -105,6 +105,74 @@ async def test_stand_auto_verify_register_and_login(api_factory: Any) -> None:
 
 
 @pytest.mark.asyncio
+async def test_stand_email_otp_and_password_reset_expose_debug_delivery(
+    api_factory: Any,
+) -> None:
+    async with api_factory(
+        smtp_host=None,
+        smtp_from_email=None,
+        test_stand_mode=True,
+        test_stand_auto_verify_email=True,
+        test_stand_sandbox_wallet=True,
+    ) as api:
+        email = "stand.otp@example.com"
+        password = "CorrectHorse!2026"
+        reg = await api.client.post(
+            "/v1/auth/register",
+            json={
+                "email": email,
+                "password": password,
+                "display_name": "OTP User",
+            },
+        )
+        assert reg.status_code == 202, reg.text
+
+        otp = await api.client.post(
+            "/v1/auth/email/otp/start",
+            json={"email": email},
+        )
+        assert otp.status_code == 202, otp.text
+        otp_body = otp.json()
+        assert otp_body["status"] == "code_sent"
+        assert otp_body.get("debug_code")
+        verify = await api.client.post(
+            "/v1/auth/email/otp/verify",
+            json={
+                "email": email,
+                "code": otp_body["debug_code"],
+                "device_label": "stand",
+            },
+        )
+        assert verify.status_code == 200, verify.text
+
+        reset = await api.client.post(
+            "/v1/auth/password-reset/request",
+            json={"email": email},
+        )
+        assert reset.status_code == 202, reset.text
+        reset_body = reset.json()
+        assert reset_body.get("debug_token")
+        assert reset_body.get("debug_link")
+        consume = await api.client.post(
+            "/v1/auth/password-reset/consume",
+            json={
+                "token": reset_body["debug_token"],
+                "new_password": "CorrectHorse!2027",
+            },
+        )
+        assert consume.status_code == 200, consume.text
+        login = await api.client.post(
+            "/v1/auth/login",
+            json={
+                "email": email,
+                "password": "CorrectHorse!2027",
+                "device_label": "stand",
+            },
+        )
+        assert login.status_code == 200, login.text
+
+
+@pytest.mark.asyncio
 async def test_stand_closed_after_ends_at(api_factory: Any) -> None:
     async with api_factory(
         smtp_host=None,

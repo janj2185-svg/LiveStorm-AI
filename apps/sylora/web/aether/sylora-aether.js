@@ -1,5 +1,5 @@
 /**
- * SYLORA Aether v3 — open digital universe (not a SaaS landing).
+ * SYLORA Aether v4 — AI ecosystem entry with clear product identity.
  */
 (function () {
   'use strict';
@@ -516,21 +516,23 @@
       <div class="aether-scroll" data-aether-scroll>
         <div class="aether-hud">
           <div class="aether-top">
-            <button type="button" class="aether-link" data-aether-signin>Sign in</button>
+            <button type="button" class="aether-link" data-aether-signin>Увійти</button>
           </div>
           <section class="aether-hero">
+            <p class="aether-kicker">AI-екосистема</p>
             <h1 class="aether-brand">SYLORA</h1>
-            <p class="aether-line">Enter the universe.</p>
+            <p class="aether-line">Жива цифрова платформа: штучний інтелект, live, спільнота, бізнес і творчість в одному просторі.</p>
             <div class="aether-cta-wrap">
               <button type="button" class="aether-portal" data-aether-enter>
-                <span>Enter</span>
+                <span>Почати</span>
                 <i class="aether-portal-beam" aria-hidden="true"></i>
               </button>
+              <button type="button" class="aether-secondary" data-aether-create>Створити акаунт</button>
             </div>
-            <p class="aether-hint"><i>↓</i> deeper</p>
+            <p class="aether-hint"><i>↓</i> можливості екосистеми</p>
           </section>
-          <section class="aether-space" data-aether-space aria-label="Universe">
-            <h2 class="aether-space-title">A continuum, not a product suite.</h2>
+          <section class="aether-space" data-aether-space aria-label="Ecosystem">
+            <h2 class="aether-space-title">Не окремі продукти — єдина AI-екосистема.</h2>
             <div class="aether-constellation" data-aether-nodes></div>
           </section>
         </div>
@@ -544,6 +546,7 @@
       nodes.appendChild(el);
     });
     qs('[data-aether-enter]', root).addEventListener('click', () => enterApp(true));
+    qs('[data-aether-create]', root).addEventListener('click', () => enterApp(true));
     qs('[data-aether-signin]', root).addEventListener('click', () => enterApp(false));
     observeSpace(root);
   }

@@ -100,8 +100,14 @@ async def public_stand_status(request: Request) -> dict[str, Any]:
         ),
         "login_logout": _feature("READY", "JWT access + rotating refresh sessions"),
         "password_reset": _feature(
-            "READY" if settings.smtp_configured else "PARTIAL",
-            "SMTP password reset" if settings.smtp_configured else "requires SMTP (not auto-verify)",
+            "READY"
+            if settings.smtp_configured
+            or (settings.is_public_test_stand and settings.test_stand_auto_verify_email)
+            else "PARTIAL",
+            "SMTP password reset"
+            if settings.smtp_configured
+            else "test-stand debug_token in API response (SMTP unset)",
+            mode="smtp" if settings.smtp_configured else "debug_token",
         ),
         "profile": _feature("READY", "GET/PATCH /v1/users/me + public profiles"),
         "feed": _feature("READY", "social posts feed"),

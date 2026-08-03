@@ -86,7 +86,8 @@ final class _FakeAuthRepository implements AuthRepository {
   }) async => user;
 
   @override
-  Future<void> startPhoneOtp(String phone) async {}
+  Future<OtpStartResult> startPhoneOtp(String phone) async =>
+      const OtpStartResult();
 
   @override
   Future<UserAccount> verifyPhoneOtp({
@@ -96,7 +97,8 @@ final class _FakeAuthRepository implements AuthRepository {
   }) async => user;
 
   @override
-  Future<void> startEmailOtp(String email) async {}
+  Future<OtpStartResult> startEmailOtp(String email) async =>
+      const OtpStartResult();
 
   @override
   Future<UserAccount> verifyEmailOtp({
@@ -127,18 +129,20 @@ final class _FakeAuthRepository implements AuthRepository {
   Future<void> logoutAll() async {}
 
   @override
-  Future<void> register({
+  Future<RegisterResult> register({
     required String email,
     required String password,
     required String displayName,
     required String deviceLabel,
-  }) async {}
+  }) async => const RegisterResult(status: 'registered_verified');
 
   @override
-  Future<void> requestEmailVerification(String email) async {}
+  Future<DeliveryHint> requestEmailVerification(String email) async =>
+      const DeliveryHint();
 
   @override
-  Future<void> requestPasswordReset(String email) async {}
+  Future<DeliveryHint> requestPasswordReset(String email) async =>
+      const DeliveryHint();
 
   @override
   Future<void> revokeSession(String id) async {}

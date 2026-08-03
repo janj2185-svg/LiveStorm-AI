@@ -171,23 +171,24 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                           TextButton(
                             onPressed: () => _goAuth(create: false),
                             child: Text(
-                              'SIGN IN',
+                              'Увійти',
                               style: LandingTokens.body(
-                                11,
+                                12,
                                 color: LandingTokens.mist,
                                 weight: FontWeight.w600,
-                              ).copyWith(letterSpacing: 2),
+                              ).copyWith(letterSpacing: 1.2),
                             ),
                           ),
                         ],
                       ),
                       const Spacer(),
                       Text(
-                        'CREATE · CONNECT · ELEVATE',
+                        'AI-ЕКОСИСТЕМА',
                         style: LandingTokens.body(
                           11,
-                          color: LandingTokens.mist,
-                        ).copyWith(letterSpacing: 4),
+                          color: LandingTokens.ion,
+                          weight: FontWeight.w600,
+                        ).copyWith(letterSpacing: 3),
                       ),
                       const SizedBox(height: 14),
                       ShaderMask(
@@ -204,15 +205,15 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                         child: Text(
                           'SYLORA',
                           style: LandingTokens.display(
-                            MediaQuery.sizeOf(context).width < 420 ? 54 : 72,
-                          ).copyWith(letterSpacing: 10, color: Colors.white),
+                            MediaQuery.sizeOf(context).width < 420 ? 52 : 68,
+                          ).copyWith(letterSpacing: 6, color: Colors.white),
                         ),
                       ),
                       const SizedBox(height: 14),
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
+                        constraints: const BoxConstraints(maxWidth: 440),
                         child: Text(
-                          'A living digital ecosystem — AI, live presence, community, and creation in one continuum.',
+                          'Жива цифрова платформа: штучний інтелект, live, спільнота, бізнес і творчість в одному просторі.',
                           textAlign: TextAlign.center,
                           style: LandingTokens.body(15),
                         ),
@@ -224,12 +225,17 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                         alignment: WrapAlignment.center,
                         children: [
                           _AetherButton(
-                            label: 'ENTER SYLORA',
+                            label: 'Почати',
                             filled: true,
                             onPressed: () => _goAuth(create: true),
                           ),
                           _AetherButton(
-                            label: 'SIGN IN',
+                            label: 'Створити акаунт',
+                            filled: false,
+                            onPressed: () => _goAuth(create: true),
+                          ),
+                          _AetherButton(
+                            label: 'Увійти',
                             filled: false,
                             onPressed: () => _goAuth(create: false),
                           ),
@@ -237,7 +243,7 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                       ),
                       const Spacer(),
                       Text(
-                        'ECOSYSTEM CONSTELLATION',
+                        'МОЖЛИВОСТІ ЕКОСИСТЕМИ',
                         style: LandingTokens.body(
                           10,
                           color: LandingTokens.mist.withValues(alpha: 0.55),
