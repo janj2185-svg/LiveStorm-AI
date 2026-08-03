@@ -297,4 +297,285 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsLanguageChinese => '중국어';
+
+  @override
+  String get navFriends => '친구';
+
+  @override
+  String get feedTitle => '피드';
+
+  @override
+  String get feedSubtitle => 'SYLORA 소셜 API의 최신 게시물입니다.';
+
+  @override
+  String get feedEmpty => '피드가 조용합니다';
+
+  @override
+  String get feedEmptyMessage =>
+      '게시된 글이 반환되지 않았습니다. 글을 올리거나 사람들을 팔로우해 피드를 만들어 보세요.';
+
+  @override
+  String get feedCreatePost => '게시물 작성';
+
+  @override
+  String get feedLoadMore => '게시물 더 불러오기';
+
+  @override
+  String get feedLoadingPosts => '게시물 로딩 중…';
+
+  @override
+  String get feedLoadingMoreReason => '다음 피드 페이지를 불러오는 중입니다.';
+
+  @override
+  String get feedRecommended => '추천';
+
+  @override
+  String get feedRecommendationsUnavailable => '추천을 사용할 수 없음';
+
+  @override
+  String get feedRecommendationsEmpty => 'API에 아직 추천 항목이 없습니다.';
+
+  @override
+  String get feedPostBodyLabel => '일반 텍스트 게시물';
+
+  @override
+  String get feedPublishNow => '지금 게시';
+
+  @override
+  String get feedSaveDraft => '초안으로 저장';
+
+  @override
+  String get feedPublish => '게시';
+
+  @override
+  String get friendsTitle => '친구';
+
+  @override
+  String get friendsRequests => '요청';
+
+  @override
+  String get friendsSuggestions => '추천 친구';
+
+  @override
+  String get friendsAccept => '수락';
+
+  @override
+  String get friendsReject => '거절';
+
+  @override
+  String get friendsUnfriend => '친구 삭제';
+
+  @override
+  String get friendsAddFriend => '친구 추가';
+
+  @override
+  String get friendsOnly => '친구만';
+
+  @override
+  String get friendsOnline => '온라인';
+
+  @override
+  String get friendsMutual => '함께 아는 친구';
+
+  @override
+  String get friendsSearchFriends => '친구 검색';
+
+  @override
+  String get friendsNoFriends => '아직 친구가 없습니다';
+
+  @override
+  String get friendsPendingIncoming => '받은 요청';
+
+  @override
+  String get friendsPendingOutgoing => '보낸 요청';
+
+  @override
+  String get messagesTitle => '메시지';
+
+  @override
+  String get messagesEmpty => '대화가 없습니다';
+
+  @override
+  String get messagesEmptyMessage => '대화 기록이 반환되지 않았습니다. 공개 핸들로 대화를 시작하세요.';
+
+  @override
+  String get messagesTypeMessage => '메시지';
+
+  @override
+  String get messagesSend => '메시지 보내기';
+
+  @override
+  String get messagesNewConversation => '새 대화';
+
+  @override
+  String get messagesRecipientHandle => '받는 사람 핸들';
+
+  @override
+  String get messagesStart => '시작';
+
+  @override
+  String get messagesConversationTitle => '대화';
+
+  @override
+  String get messagesAcceptRequest => '메시지 요청 수락';
+
+  @override
+  String get messagesDeclineRequest => '메시지 요청 거절';
+
+  @override
+  String get moreTitle => '더보기';
+
+  @override
+  String get moreSubtitle => '간편 내비게이션에 담기 어려운 계정 도구와 역할별 워크스페이스입니다.';
+
+  @override
+  String get moreOpenModule => '모듈 열기';
+
+  @override
+  String get moreLearning => '학습';
+
+  @override
+  String get moreWallet => '지갑';
+
+  @override
+  String get moreGifts => '선물';
+
+  @override
+  String get moreAi => 'AI';
+
+  @override
+  String get moreLive => '라이브';
+
+  @override
+  String get moreCreatorStudio => '크리에이터 스튜디오';
+
+  @override
+  String get moreCreator => '크리에이터';
+
+  @override
+  String get moreWorkspace => '워크스페이스';
+
+  @override
+  String get moreAdmin => '관리';
+
+  @override
+  String get moreSettings => '설정';
+
+  @override
+  String get settingsProfile => '프로필';
+
+  @override
+  String get settingsEditProfile => '프로필 편집';
+
+  @override
+  String get settingsNoPublicHandle => '공개 핸들이 없습니다';
+
+  @override
+  String get settingsAccountPrivacy => '계정 공개 범위 및 이메일';
+
+  @override
+  String get settingsProductEmails => '제품 이메일';
+
+  @override
+  String get settingsMarketingEmails => '마케팅 이메일';
+
+  @override
+  String get settingsSecurityEmails => '보안 이메일';
+
+  @override
+  String get settingsSecurityEmailDescription =>
+      '백엔드가 보안상 중요한 알림을 강제로 보낼 수 있습니다.';
+
+  @override
+  String get settingsProfileVisibility => '프로필 공개 범위';
+
+  @override
+  String get settingsProfilePublic => '공개';
+
+  @override
+  String get settingsProfilePrivate => '비공개';
+
+  @override
+  String get settingsSecurity => '보안';
+
+  @override
+  String get settingsSessions => '세션';
+
+  @override
+  String get settingsSignOut => '로그아웃';
+
+  @override
+  String get settingsTheme => '테마';
+
+  @override
+  String get settingsThemeLight => '라이트';
+
+  @override
+  String get settingsThemeDark => '다크';
+
+  @override
+  String get settingsThemeSystem => '시스템';
+
+  @override
+  String get settingsNotifications => '알림';
+
+  @override
+  String get settingsEnableNotifications => '알림 켜기';
+
+  @override
+  String get settingsNotificationsDescription =>
+      '네이티브 푸시 토큰 연결은 이 설정을 사용할 수 있습니다.';
+
+  @override
+  String get settingsHighContrast => '고대비';
+
+  @override
+  String get settingsReducedMotion => '움직임 줄이기';
+
+  @override
+  String settingsTextScale(String scale) {
+    return '텍스트 배율: $scale×';
+  }
+
+  @override
+  String get settingsAuthenticatorApp => '인증 앱';
+
+  @override
+  String get liveShortLabel => '라이브';
+
+  @override
+  String get aiShortLabel => 'AI';
+
+  @override
+  String get giftsShortLabel => '선물';
+
+  @override
+  String get walletShortLabel => '지갑';
+
+  @override
+  String get conferencesTitle => '컨퍼런스';
+
+  @override
+  String get conferencesStart => '컨퍼런스 시작';
+
+  @override
+  String get conferencesJoin => '컨퍼런스 참가';
+
+  @override
+  String get conferencesLeave => '컨퍼런스 나가기';
+
+  @override
+  String get conferencesInvite => '초대';
+
+  @override
+  String get conferencesAuraAssist => 'Aura 지원';
+
+  @override
+  String get commonPremiumEmpty => '아직 프리미엄 항목이 없습니다';
+
+  @override
+  String get commonPremiumError => '프리미엄 콘텐츠를 불러올 수 없습니다.';
+
+  @override
+  String get commonPremiumRetry => '프리미엄 다시 시도';
 }

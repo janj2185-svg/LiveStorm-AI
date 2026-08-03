@@ -90,6 +90,11 @@ final class SettingsScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
+                      Text(
+                        l10n.settingsProfile,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 12),
                       Row(
                         children: <Widget>[
                           CircleAvatar(
@@ -119,14 +124,14 @@ final class SettingsScreen extends ConsumerWidget {
                                 ),
                                 Text(
                                   snapshot.profile.handle == null
-                                      ? 'No public handle'
+                                      ? l10n.settingsNoPublicHandle
                                       : '@${snapshot.profile.handle}',
                                 ),
                               ],
                             ),
                           ),
                           SyloraButton(
-                            label: 'Edit profile',
+                            label: l10n.settingsEditProfile,
                             variant: SyloraButtonVariant.secondary,
                             expanded: false,
                             onPressed: () =>
@@ -143,13 +148,13 @@ final class SettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Account privacy & email',
+                        l10n.settingsAccountPrivacy,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 8),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Product emails'),
+                        title: Text(l10n.settingsProductEmails),
                         value: snapshot.settings.productEmails,
                         onChanged: (value) => _updateAccount(
                           ref,
@@ -158,7 +163,7 @@ final class SettingsScreen extends ConsumerWidget {
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Marketing emails'),
+                        title: Text(l10n.settingsMarketingEmails),
                         value: snapshot.settings.marketingEmails,
                         onChanged: (value) => _updateAccount(
                           ref,
@@ -167,10 +172,8 @@ final class SettingsScreen extends ConsumerWidget {
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Security emails'),
-                        subtitle: const Text(
-                          'The backend may enforce security-critical notices.',
-                        ),
+                        title: Text(l10n.settingsSecurityEmails),
+                        subtitle: Text(l10n.settingsSecurityEmailDescription),
                         value: snapshot.settings.securityEmails,
                         onChanged: (value) => _updateAccount(
                           ref,
@@ -179,27 +182,25 @@ final class SettingsScreen extends ConsumerWidget {
                       ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Enable notifications'),
-                        subtitle: const Text(
-                          'Native push token wiring can plug into this preference.',
-                        ),
+                        title: Text(l10n.settingsNotifications),
+                        subtitle: Text(l10n.settingsNotificationsDescription),
                         value: notificationsEnabled,
                         onChanged: (value) =>
                             unawaited(_setNotifications(context, ref, value)),
                       ),
                       DropdownButtonFormField<String>(
                         initialValue: snapshot.settings.profileVisibility,
-                        decoration: const InputDecoration(
-                          labelText: 'Profile visibility',
+                        decoration: InputDecoration(
+                          labelText: l10n.settingsProfileVisibility,
                         ),
-                        items: const <DropdownMenuItem<String>>[
+                        items: <DropdownMenuItem<String>>[
                           DropdownMenuItem(
                             value: 'public',
-                            child: Text('Public'),
+                            child: Text(l10n.settingsProfilePublic),
                           ),
                           DropdownMenuItem(
                             value: 'private',
-                            child: Text('Private'),
+                            child: Text(l10n.settingsProfilePrivate),
                           ),
                         ],
                         onChanged: (value) {
@@ -250,19 +251,19 @@ final class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<LumenThemeMode>(
                   initialValue: visual.themeMode,
-                  decoration: const InputDecoration(labelText: 'Theme'),
-                  items: const <DropdownMenuItem<LumenThemeMode>>[
+                  decoration: InputDecoration(labelText: l10n.settingsTheme),
+                  items: <DropdownMenuItem<LumenThemeMode>>[
                     DropdownMenuItem(
                       value: LumenThemeMode.light,
-                      child: Text('Light'),
+                      child: Text(l10n.settingsThemeLight),
                     ),
                     DropdownMenuItem(
                       value: LumenThemeMode.dark,
-                      child: Text('Dark'),
+                      child: Text(l10n.settingsThemeDark),
                     ),
                     DropdownMenuItem(
                       value: LumenThemeMode.system,
-                      child: Text('System'),
+                      child: Text(l10n.settingsThemeSystem),
                     ),
                   ],
                   onChanged: (value) {
@@ -275,7 +276,7 @@ final class SettingsScreen extends ConsumerWidget {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('High contrast'),
+                  title: Text(l10n.settingsHighContrast),
                   value: visual.highContrast,
                   onChanged: (value) => ref
                       .read(visualSettingsProvider.notifier)
@@ -283,13 +284,15 @@ final class SettingsScreen extends ConsumerWidget {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Reduced motion'),
+                  title: Text(l10n.settingsReducedMotion),
                   value: visual.reducedMotion,
                   onChanged: (value) => ref
                       .read(visualSettingsProvider.notifier)
                       .update(visual.copyWith(reducedMotion: value)),
                 ),
-                Text('Text scale: ${visual.textScale.toStringAsFixed(1)}×'),
+                Text(
+                  l10n.settingsTextScale(visual.textScale.toStringAsFixed(1)),
+                ),
                 Slider(
                   value: visual.textScale,
                   min: 0.8,
@@ -309,18 +312,18 @@ final class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 Text(
-                  'Security',
+                  l10n.settingsSecurity,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 12),
                 LumenSecondaryButton(
-                  label: 'Sessions',
+                  label: l10n.settingsSessions,
                   icon: Icons.devices_outlined,
                   onPressed: () => context.pushNamed('sessions'),
                 ),
                 const SizedBox(height: 8),
                 LumenSecondaryButton(
-                  label: 'Authenticator app',
+                  label: l10n.settingsAuthenticatorApp,
                   icon: Icons.security_outlined,
                   onPressed: () => context.pushNamed('totp'),
                 ),
@@ -329,7 +332,7 @@ final class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           LumenPrimaryButton(
-            label: 'Sign out',
+            label: l10n.settingsSignOut,
             icon: Icons.logout_rounded,
             onPressed: () => ref.read(authControllerProvider.notifier).logout(),
           ),

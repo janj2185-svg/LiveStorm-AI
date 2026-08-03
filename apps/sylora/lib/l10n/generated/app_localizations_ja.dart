@@ -298,4 +298,285 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsLanguageChinese => '中国語';
+
+  @override
+  String get navFriends => '友達';
+
+  @override
+  String get feedTitle => 'フィード';
+
+  @override
+  String get feedSubtitle => 'SYLORAソーシャルAPIからの最新投稿。';
+
+  @override
+  String get feedEmpty => 'フィードは静かです';
+
+  @override
+  String get feedEmptyMessage =>
+      '公開済みの投稿は返されませんでした。投稿するか、ユーザーをフォローしてフィードを整えましょう。';
+
+  @override
+  String get feedCreatePost => '投稿を作成';
+
+  @override
+  String get feedLoadMore => 'さらに投稿を読み込む';
+
+  @override
+  String get feedLoadingPosts => '投稿を読み込み中…';
+
+  @override
+  String get feedLoadingMoreReason => '次のフィードページを読み込んでいます。';
+
+  @override
+  String get feedRecommended => 'おすすめ';
+
+  @override
+  String get feedRecommendationsUnavailable => 'おすすめを利用できません';
+
+  @override
+  String get feedRecommendationsEmpty => 'APIにはまだおすすめがありません。';
+
+  @override
+  String get feedPostBodyLabel => 'プレーンテキスト投稿';
+
+  @override
+  String get feedPublishNow => '今すぐ公開';
+
+  @override
+  String get feedSaveDraft => '下書きとして保存';
+
+  @override
+  String get feedPublish => '公開';
+
+  @override
+  String get friendsTitle => '友達';
+
+  @override
+  String get friendsRequests => 'リクエスト';
+
+  @override
+  String get friendsSuggestions => '候補';
+
+  @override
+  String get friendsAccept => '承認';
+
+  @override
+  String get friendsReject => '拒否';
+
+  @override
+  String get friendsUnfriend => '友達から削除';
+
+  @override
+  String get friendsAddFriend => '友達を追加';
+
+  @override
+  String get friendsOnly => '友達のみ';
+
+  @override
+  String get friendsOnline => 'オンライン';
+
+  @override
+  String get friendsMutual => '共通の友達';
+
+  @override
+  String get friendsSearchFriends => '友達を検索';
+
+  @override
+  String get friendsNoFriends => 'まだ友達はいません';
+
+  @override
+  String get friendsPendingIncoming => '届いたリクエスト';
+
+  @override
+  String get friendsPendingOutgoing => '送信済みリクエスト';
+
+  @override
+  String get messagesTitle => 'メッセージ';
+
+  @override
+  String get messagesEmpty => '会話はありません';
+
+  @override
+  String get messagesEmptyMessage => '会話履歴は返されませんでした。公開ハンドルを使って会話を始めましょう。';
+
+  @override
+  String get messagesTypeMessage => 'メッセージ';
+
+  @override
+  String get messagesSend => 'メッセージを送信';
+
+  @override
+  String get messagesNewConversation => '新しい会話';
+
+  @override
+  String get messagesRecipientHandle => '受信者のハンドル';
+
+  @override
+  String get messagesStart => '開始';
+
+  @override
+  String get messagesConversationTitle => '会話';
+
+  @override
+  String get messagesAcceptRequest => 'メッセージリクエストを承認';
+
+  @override
+  String get messagesDeclineRequest => 'メッセージリクエストを拒否';
+
+  @override
+  String get moreTitle => 'その他';
+
+  @override
+  String get moreSubtitle => 'コンパクトなナビゲーションに収まらないアカウントツールとロール別ワークスペース。';
+
+  @override
+  String get moreOpenModule => 'モジュールを開く';
+
+  @override
+  String get moreLearning => 'ラーニング';
+
+  @override
+  String get moreWallet => 'ウォレット';
+
+  @override
+  String get moreGifts => 'ギフト';
+
+  @override
+  String get moreAi => 'AI';
+
+  @override
+  String get moreLive => 'ライブ';
+
+  @override
+  String get moreCreatorStudio => 'クリエイタースタジオ';
+
+  @override
+  String get moreCreator => 'クリエイター';
+
+  @override
+  String get moreWorkspace => 'ワークスペース';
+
+  @override
+  String get moreAdmin => '管理';
+
+  @override
+  String get moreSettings => '設定';
+
+  @override
+  String get settingsProfile => 'プロフィール';
+
+  @override
+  String get settingsEditProfile => 'プロフィールを編集';
+
+  @override
+  String get settingsNoPublicHandle => '公開ハンドルなし';
+
+  @override
+  String get settingsAccountPrivacy => 'アカウントのプライバシーとメール';
+
+  @override
+  String get settingsProductEmails => 'プロダクトメール';
+
+  @override
+  String get settingsMarketingEmails => 'マーケティングメール';
+
+  @override
+  String get settingsSecurityEmails => 'セキュリティメール';
+
+  @override
+  String get settingsSecurityEmailDescription =>
+      'バックエンドがセキュリティ上重要なお知らせを強制する場合があります。';
+
+  @override
+  String get settingsProfileVisibility => 'プロフィールの公開範囲';
+
+  @override
+  String get settingsProfilePublic => '公開';
+
+  @override
+  String get settingsProfilePrivate => '非公開';
+
+  @override
+  String get settingsSecurity => 'セキュリティ';
+
+  @override
+  String get settingsSessions => 'セッション';
+
+  @override
+  String get settingsSignOut => 'サインアウト';
+
+  @override
+  String get settingsTheme => 'テーマ';
+
+  @override
+  String get settingsThemeLight => 'ライト';
+
+  @override
+  String get settingsThemeDark => 'ダーク';
+
+  @override
+  String get settingsThemeSystem => 'システム';
+
+  @override
+  String get settingsNotifications => '通知';
+
+  @override
+  String get settingsEnableNotifications => '通知を有効にする';
+
+  @override
+  String get settingsNotificationsDescription =>
+      'ネイティブのプッシュトークン連携はこの設定を使用できます。';
+
+  @override
+  String get settingsHighContrast => '高コントラスト';
+
+  @override
+  String get settingsReducedMotion => '動きを減らす';
+
+  @override
+  String settingsTextScale(String scale) {
+    return 'テキスト倍率: $scale×';
+  }
+
+  @override
+  String get settingsAuthenticatorApp => '認証アプリ';
+
+  @override
+  String get liveShortLabel => 'ライブ';
+
+  @override
+  String get aiShortLabel => 'AI';
+
+  @override
+  String get giftsShortLabel => 'ギフト';
+
+  @override
+  String get walletShortLabel => 'ウォレット';
+
+  @override
+  String get conferencesTitle => 'カンファレンス';
+
+  @override
+  String get conferencesStart => 'カンファレンスを開始';
+
+  @override
+  String get conferencesJoin => 'カンファレンスに参加';
+
+  @override
+  String get conferencesLeave => 'カンファレンスを退出';
+
+  @override
+  String get conferencesInvite => '招待';
+
+  @override
+  String get conferencesAuraAssist => 'Auraアシスト';
+
+  @override
+  String get commonPremiumEmpty => 'プレミアム項目はまだありません';
+
+  @override
+  String get commonPremiumError => 'プレミアムコンテンツを読み込めませんでした。';
+
+  @override
+  String get commonPremiumRetry => 'プレミアムを再試行';
 }

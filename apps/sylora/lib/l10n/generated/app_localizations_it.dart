@@ -305,4 +305,288 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsLanguageChinese => 'Cinese';
+
+  @override
+  String get navFriends => 'Amici';
+
+  @override
+  String get feedTitle => 'Feed';
+
+  @override
+  String get feedSubtitle => 'Post attuali dall’API social di SYLORA.';
+
+  @override
+  String get feedEmpty => 'Il tuo feed è silenzioso';
+
+  @override
+  String get feedEmptyMessage =>
+      'Non sono stati restituiti post pubblicati. Pubblica un post o segui persone per modellare il tuo feed.';
+
+  @override
+  String get feedCreatePost => 'Crea un post';
+
+  @override
+  String get feedLoadMore => 'Carica altri post';
+
+  @override
+  String get feedLoadingPosts => 'Caricamento post…';
+
+  @override
+  String get feedLoadingMoreReason =>
+      'La pagina successiva del feed è in caricamento.';
+
+  @override
+  String get feedRecommended => 'Consigliati';
+
+  @override
+  String get feedRecommendationsUnavailable => 'Consigli non disponibili';
+
+  @override
+  String get feedRecommendationsEmpty => 'L’API non ha ancora consigli.';
+
+  @override
+  String get feedPostBodyLabel => 'Post in testo semplice';
+
+  @override
+  String get feedPublishNow => 'Pubblica ora';
+
+  @override
+  String get feedSaveDraft => 'Salva come bozza';
+
+  @override
+  String get feedPublish => 'Pubblica';
+
+  @override
+  String get friendsTitle => 'Amici';
+
+  @override
+  String get friendsRequests => 'Richieste';
+
+  @override
+  String get friendsSuggestions => 'Suggerimenti';
+
+  @override
+  String get friendsAccept => 'Accetta';
+
+  @override
+  String get friendsReject => 'Rifiuta';
+
+  @override
+  String get friendsUnfriend => 'Rimuovi dagli amici';
+
+  @override
+  String get friendsAddFriend => 'Aggiungi amico';
+
+  @override
+  String get friendsOnly => 'Solo amici';
+
+  @override
+  String get friendsOnline => 'Online';
+
+  @override
+  String get friendsMutual => 'Amici in comune';
+
+  @override
+  String get friendsSearchFriends => 'Cerca amici';
+
+  @override
+  String get friendsNoFriends => 'Ancora nessun amico';
+
+  @override
+  String get friendsPendingIncoming => 'Richieste in arrivo';
+
+  @override
+  String get friendsPendingOutgoing => 'Richieste inviate';
+
+  @override
+  String get messagesTitle => 'Messaggi';
+
+  @override
+  String get messagesEmpty => 'Nessuna conversazione';
+
+  @override
+  String get messagesEmptyMessage =>
+      'Non è stata restituita alcuna cronologia conversazioni. Avviane una con un handle pubblico.';
+
+  @override
+  String get messagesTypeMessage => 'Messaggio';
+
+  @override
+  String get messagesSend => 'Invia messaggio';
+
+  @override
+  String get messagesNewConversation => 'Nuova conversazione';
+
+  @override
+  String get messagesRecipientHandle => 'Handle del destinatario';
+
+  @override
+  String get messagesStart => 'Avvia';
+
+  @override
+  String get messagesConversationTitle => 'Conversazione';
+
+  @override
+  String get messagesAcceptRequest => 'Accetta richiesta di messaggio';
+
+  @override
+  String get messagesDeclineRequest => 'Rifiuta richiesta di messaggio';
+
+  @override
+  String get moreTitle => 'Altro';
+
+  @override
+  String get moreSubtitle =>
+      'Strumenti account e aree di lavoro basate sui ruoli che non rientrano nella navigazione compatta.';
+
+  @override
+  String get moreOpenModule => 'Apri modulo';
+
+  @override
+  String get moreLearning => 'Apprendimento';
+
+  @override
+  String get moreWallet => 'Portafoglio';
+
+  @override
+  String get moreGifts => 'Regali';
+
+  @override
+  String get moreAi => 'AI';
+
+  @override
+  String get moreLive => 'Live';
+
+  @override
+  String get moreCreatorStudio => 'Creator Studio';
+
+  @override
+  String get moreCreator => 'Creator';
+
+  @override
+  String get moreWorkspace => 'Area di lavoro';
+
+  @override
+  String get moreAdmin => 'Amministrazione';
+
+  @override
+  String get moreSettings => 'Impostazioni';
+
+  @override
+  String get settingsProfile => 'Profilo';
+
+  @override
+  String get settingsEditProfile => 'Modifica profilo';
+
+  @override
+  String get settingsNoPublicHandle => 'Nessun handle pubblico';
+
+  @override
+  String get settingsAccountPrivacy => 'Privacy account ed email';
+
+  @override
+  String get settingsProductEmails => 'Email di prodotto';
+
+  @override
+  String get settingsMarketingEmails => 'Email di marketing';
+
+  @override
+  String get settingsSecurityEmails => 'Email di sicurezza';
+
+  @override
+  String get settingsSecurityEmailDescription =>
+      'Il backend può imporre avvisi critici per la sicurezza.';
+
+  @override
+  String get settingsProfileVisibility => 'Visibilità profilo';
+
+  @override
+  String get settingsProfilePublic => 'Pubblico';
+
+  @override
+  String get settingsProfilePrivate => 'Privato';
+
+  @override
+  String get settingsSecurity => 'Sicurezza';
+
+  @override
+  String get settingsSessions => 'Sessioni';
+
+  @override
+  String get settingsSignOut => 'Esci';
+
+  @override
+  String get settingsTheme => 'Tema';
+
+  @override
+  String get settingsThemeLight => 'Chiaro';
+
+  @override
+  String get settingsThemeDark => 'Scuro';
+
+  @override
+  String get settingsThemeSystem => 'Sistema';
+
+  @override
+  String get settingsNotifications => 'Notifiche';
+
+  @override
+  String get settingsEnableNotifications => 'Attiva notifiche';
+
+  @override
+  String get settingsNotificationsDescription =>
+      'Il collegamento del token push nativo può usare questa preferenza.';
+
+  @override
+  String get settingsHighContrast => 'Contrasto elevato';
+
+  @override
+  String get settingsReducedMotion => 'Movimento ridotto';
+
+  @override
+  String settingsTextScale(String scale) {
+    return 'Scala testo: $scale×';
+  }
+
+  @override
+  String get settingsAuthenticatorApp => 'App di autenticazione';
+
+  @override
+  String get liveShortLabel => 'Live';
+
+  @override
+  String get aiShortLabel => 'AI';
+
+  @override
+  String get giftsShortLabel => 'Regali';
+
+  @override
+  String get walletShortLabel => 'Portafoglio';
+
+  @override
+  String get conferencesTitle => 'Conferenze';
+
+  @override
+  String get conferencesStart => 'Avvia conferenza';
+
+  @override
+  String get conferencesJoin => 'Partecipa alla conferenza';
+
+  @override
+  String get conferencesLeave => 'Lascia conferenza';
+
+  @override
+  String get conferencesInvite => 'Invita';
+
+  @override
+  String get conferencesAuraAssist => 'Assistenza Aura';
+
+  @override
+  String get commonPremiumEmpty => 'Ancora nessun elemento premium';
+
+  @override
+  String get commonPremiumError => 'Impossibile caricare i contenuti premium.';
+
+  @override
+  String get commonPremiumRetry => 'Riprova premium';
 }

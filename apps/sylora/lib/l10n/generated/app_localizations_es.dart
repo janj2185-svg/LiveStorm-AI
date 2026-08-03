@@ -309,4 +309,289 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsLanguageChinese => 'Chino';
+
+  @override
+  String get navFriends => 'Amigos';
+
+  @override
+  String get feedTitle => 'Feed';
+
+  @override
+  String get feedSubtitle =>
+      'Publicaciones actuales de la API social de SYLORA.';
+
+  @override
+  String get feedEmpty => 'Tu feed está silencioso';
+
+  @override
+  String get feedEmptyMessage =>
+      'No se devolvieron publicaciones publicadas. Publica algo o sigue a personas para dar forma a tu feed.';
+
+  @override
+  String get feedCreatePost => 'Crear publicación';
+
+  @override
+  String get feedLoadMore => 'Cargar más publicaciones';
+
+  @override
+  String get feedLoadingPosts => 'Cargando publicaciones…';
+
+  @override
+  String get feedLoadingMoreReason =>
+      'Se está cargando la siguiente página del feed.';
+
+  @override
+  String get feedRecommended => 'Recomendado';
+
+  @override
+  String get feedRecommendationsUnavailable => 'Recomendaciones no disponibles';
+
+  @override
+  String get feedRecommendationsEmpty => 'La API aún no tiene recomendaciones.';
+
+  @override
+  String get feedPostBodyLabel => 'Publicación de texto sin formato';
+
+  @override
+  String get feedPublishNow => 'Publicar ahora';
+
+  @override
+  String get feedSaveDraft => 'Guardar como borrador';
+
+  @override
+  String get feedPublish => 'Publicar';
+
+  @override
+  String get friendsTitle => 'Amigos';
+
+  @override
+  String get friendsRequests => 'Solicitudes';
+
+  @override
+  String get friendsSuggestions => 'Sugerencias';
+
+  @override
+  String get friendsAccept => 'Aceptar';
+
+  @override
+  String get friendsReject => 'Rechazar';
+
+  @override
+  String get friendsUnfriend => 'Eliminar amigo';
+
+  @override
+  String get friendsAddFriend => 'Añadir amigo';
+
+  @override
+  String get friendsOnly => 'Solo amigos';
+
+  @override
+  String get friendsOnline => 'En línea';
+
+  @override
+  String get friendsMutual => 'Amigos en común';
+
+  @override
+  String get friendsSearchFriends => 'Buscar amigos';
+
+  @override
+  String get friendsNoFriends => 'Aún no tienes amigos';
+
+  @override
+  String get friendsPendingIncoming => 'Solicitudes entrantes';
+
+  @override
+  String get friendsPendingOutgoing => 'Solicitudes salientes';
+
+  @override
+  String get messagesTitle => 'Mensajes';
+
+  @override
+  String get messagesEmpty => 'No hay conversaciones';
+
+  @override
+  String get messagesEmptyMessage =>
+      'No se devolvió historial de conversaciones. Inicia una con un identificador público.';
+
+  @override
+  String get messagesTypeMessage => 'Mensaje';
+
+  @override
+  String get messagesSend => 'Enviar mensaje';
+
+  @override
+  String get messagesNewConversation => 'Nueva conversación';
+
+  @override
+  String get messagesRecipientHandle => 'Identificador del destinatario';
+
+  @override
+  String get messagesStart => 'Iniciar';
+
+  @override
+  String get messagesConversationTitle => 'Conversación';
+
+  @override
+  String get messagesAcceptRequest => 'Aceptar solicitud de mensaje';
+
+  @override
+  String get messagesDeclineRequest => 'Rechazar solicitud de mensaje';
+
+  @override
+  String get moreTitle => 'Más';
+
+  @override
+  String get moreSubtitle =>
+      'Herramientas de cuenta y espacios de trabajo según el rol que no caben en la navegación compacta.';
+
+  @override
+  String get moreOpenModule => 'Abrir módulo';
+
+  @override
+  String get moreLearning => 'Aprendizaje';
+
+  @override
+  String get moreWallet => 'Cartera';
+
+  @override
+  String get moreGifts => 'Regalos';
+
+  @override
+  String get moreAi => 'IA';
+
+  @override
+  String get moreLive => 'En directo';
+
+  @override
+  String get moreCreatorStudio => 'Estudio de creador';
+
+  @override
+  String get moreCreator => 'Creador';
+
+  @override
+  String get moreWorkspace => 'Espacio de trabajo';
+
+  @override
+  String get moreAdmin => 'Administración';
+
+  @override
+  String get moreSettings => 'Configuración';
+
+  @override
+  String get settingsProfile => 'Perfil';
+
+  @override
+  String get settingsEditProfile => 'Editar perfil';
+
+  @override
+  String get settingsNoPublicHandle => 'Sin identificador público';
+
+  @override
+  String get settingsAccountPrivacy => 'Privacidad de la cuenta y correo';
+
+  @override
+  String get settingsProductEmails => 'Correos de producto';
+
+  @override
+  String get settingsMarketingEmails => 'Correos de marketing';
+
+  @override
+  String get settingsSecurityEmails => 'Correos de seguridad';
+
+  @override
+  String get settingsSecurityEmailDescription =>
+      'El backend puede exigir avisos críticos de seguridad.';
+
+  @override
+  String get settingsProfileVisibility => 'Visibilidad del perfil';
+
+  @override
+  String get settingsProfilePublic => 'Público';
+
+  @override
+  String get settingsProfilePrivate => 'Privado';
+
+  @override
+  String get settingsSecurity => 'Seguridad';
+
+  @override
+  String get settingsSessions => 'Sesiones';
+
+  @override
+  String get settingsSignOut => 'Cerrar sesión';
+
+  @override
+  String get settingsTheme => 'Tema';
+
+  @override
+  String get settingsThemeLight => 'Claro';
+
+  @override
+  String get settingsThemeDark => 'Oscuro';
+
+  @override
+  String get settingsThemeSystem => 'Sistema';
+
+  @override
+  String get settingsNotifications => 'Notificaciones';
+
+  @override
+  String get settingsEnableNotifications => 'Activar notificaciones';
+
+  @override
+  String get settingsNotificationsDescription =>
+      'La conexión del token push nativo puede usar esta preferencia.';
+
+  @override
+  String get settingsHighContrast => 'Alto contraste';
+
+  @override
+  String get settingsReducedMotion => 'Movimiento reducido';
+
+  @override
+  String settingsTextScale(String scale) {
+    return 'Escala del texto: $scale×';
+  }
+
+  @override
+  String get settingsAuthenticatorApp => 'Aplicación de autenticación';
+
+  @override
+  String get liveShortLabel => 'Live';
+
+  @override
+  String get aiShortLabel => 'IA';
+
+  @override
+  String get giftsShortLabel => 'Regalos';
+
+  @override
+  String get walletShortLabel => 'Cartera';
+
+  @override
+  String get conferencesTitle => 'Conferencias';
+
+  @override
+  String get conferencesStart => 'Iniciar conferencia';
+
+  @override
+  String get conferencesJoin => 'Unirse a conferencia';
+
+  @override
+  String get conferencesLeave => 'Salir de la conferencia';
+
+  @override
+  String get conferencesInvite => 'Invitar';
+
+  @override
+  String get conferencesAuraAssist => 'Asistencia de Aura';
+
+  @override
+  String get commonPremiumEmpty => 'Aún no hay elementos premium';
+
+  @override
+  String get commonPremiumError => 'No se pudo cargar el contenido premium.';
+
+  @override
+  String get commonPremiumRetry => 'Reintentar premium';
 }

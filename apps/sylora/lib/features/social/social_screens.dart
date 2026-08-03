@@ -9,6 +9,7 @@ import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../core/realtime.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import '../platform/repositories.dart';
 
@@ -86,10 +87,11 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final feed = ref.watch(feedProvider);
     return LumenPage(
-      title: 'Home',
-      subtitle: 'Current posts from the SYLORA social API.',
+      title: l10n.feedTitle,
+      subtitle: l10n.feedSubtitle,
       actions: <Widget>[
         IconButton(
           tooltip: 'Notifications',
@@ -97,7 +99,7 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           icon: const Icon(Icons.notifications_outlined),
         ),
         IconButton(
-          tooltip: 'Write a post',
+          tooltip: l10n.feedCreatePost,
           onPressed: () => _showComposer(context, ref),
           icon: const Icon(Icons.edit_outlined),
         ),
@@ -113,10 +115,9 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           final posts = <PostModel>[...page.items, ..._additionalPosts];
           if (posts.isEmpty) {
             return LumenEmptyView(
-              title: 'Your feed is quiet',
-              message:
-                  'No published posts were returned. Publish a post or follow people to shape your feed.',
-              actionLabel: 'Write a post',
+              title: l10n.feedEmpty,
+              message: l10n.feedEmptyMessage,
+              actionLabel: l10n.feedCreatePost,
               onAction: () => _showComposer(context, ref),
               icon: Icons.auto_awesome_outlined,
             );
@@ -129,11 +130,13 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
               ],
               if (_nextCursor != null)
                 LumenSecondaryButton(
-                  label: _loadingMore ? 'Loading posts…' : 'Load more posts',
+                  label: _loadingMore
+                      ? l10n.feedLoadingPosts
+                      : l10n.feedLoadMore,
                   icon: Icons.expand_more_rounded,
                   onPressed: _loadingMore ? null : _loadMore,
                   disabledReason: _loadingMore
-                      ? 'The next feed page is loading.'
+                      ? l10n.feedLoadingMoreReason
                       : null,
                 ),
             ],
@@ -165,13 +168,14 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Future<void> _showComposer(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final body = TextEditingController();
     var publish = true;
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Create a post'),
+          title: Text(l10n.feedCreatePost),
           content: SizedBox(
             width: 520,
             child: Column(
@@ -183,15 +187,17 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
                   minLines: 4,
                   maxLines: 10,
                   maxLength: 20000,
-                  decoration: const InputDecoration(
-                    labelText: 'Plain-text post',
+                  decoration: InputDecoration(
+                    labelText: l10n.feedPostBodyLabel,
                     alignLabelWithHint: true,
                   ),
                 ),
                 SwitchListTile(
                   value: publish,
                   onChanged: (value) => setState(() => publish = value),
-                  title: Text(publish ? 'Publish now' : 'Save as draft'),
+                  title: Text(
+                    publish ? l10n.feedPublishNow : l10n.feedSaveDraft,
+                  ),
                 ),
               ],
             ),
@@ -199,7 +205,7 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () async {
@@ -221,7 +227,7 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
                   }
                 }
               },
-              child: Text(publish ? 'Publish' : 'Save draft'),
+              child: Text(publish ? l10n.feedPublish : l10n.feedSaveDraft),
             ),
           ],
         ),
@@ -245,6 +251,7 @@ final class RecommendationsPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(recommendationsProvider);
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -254,21 +261,24 @@ final class RecommendationsPanel extends ConsumerWidget {
           error: (error, stackTrace) => Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const Text('Recommendations unavailable'),
+              Text(l10n.feedRecommendationsUnavailable),
               TextButton(
                 onPressed: () => ref.invalidate(recommendationsProvider),
-                child: const Text('Retry'),
+                child: Text(l10n.commonRetry),
               ),
             ],
           ),
           data: (posts) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('For you', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                l10n.feedRecommended,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 16),
               if (posts.isEmpty)
                 Text(
-                  'The API has no recommendations yet.',
+                  l10n.feedRecommendationsEmpty,
                   style: Theme.of(context).textTheme.bodySmall,
                 )
               else
@@ -643,6 +653,43 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
+final class FriendsScreen extends StatelessWidget {
+  const FriendsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return LumenPage(
+      title: l10n.friendsTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          LumenSurface(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                LumenBadge(label: l10n.friendsRequests),
+                LumenBadge(label: l10n.friendsPendingIncoming),
+                LumenBadge(label: l10n.friendsPendingOutgoing),
+                LumenBadge(label: l10n.friendsSuggestions),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          LumenEmptyView(
+            title: l10n.friendsNoFriends,
+            message: l10n.friendsSearchFriends,
+            actionLabel: l10n.friendsSearchFriends,
+            onAction: () => context.goNamed('search'),
+            icon: Icons.group_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 final class CommunityScreen extends ConsumerWidget {
   const CommunityScreen({required this.slug, super.key});
 
@@ -953,12 +1000,13 @@ final class ConversationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(conversationsProvider);
     return LumenPage(
-      title: 'Messages',
+      title: l10n.messagesTitle,
       actions: <Widget>[
         IconButton(
-          tooltip: 'New conversation',
+          tooltip: l10n.messagesNewConversation,
           onPressed: () => _createConversation(context, ref),
           icon: const Icon(Icons.add_comment_outlined),
         ),
@@ -968,10 +1016,9 @@ final class ConversationsScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(conversationsProvider),
         data: (items) => items.isEmpty
             ? LumenEmptyView(
-                title: 'No conversations',
-                message:
-                    'No conversation history was returned. Start one with a public handle.',
-                actionLabel: 'New conversation',
+                title: l10n.messagesEmpty,
+                message: l10n.messagesEmptyMessage,
+                actionLabel: l10n.messagesNewConversation,
                 onAction: () => _createConversation(context, ref),
                 icon: Icons.forum_outlined,
               )
@@ -984,7 +1031,8 @@ final class ConversationsScreen extends ConsumerWidget {
                           child: Icon(Icons.person_outline),
                         ),
                         title: Text(
-                          'Conversation ${conversation.id.substring(0, 8)}',
+                          '${l10n.messagesConversationTitle} '
+                          '${conversation.id.substring(0, 8)}',
                         ),
                         subtitle: Text(conversation.state),
                         trailing: conversation.state == 'request'
@@ -992,7 +1040,7 @@ final class ConversationsScreen extends ConsumerWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: <Widget>[
                                   IconButton(
-                                    tooltip: 'Decline message request',
+                                    tooltip: l10n.messagesDeclineRequest,
                                     onPressed: () async {
                                       await ref
                                           .read(messagingRepositoryProvider)
@@ -1002,7 +1050,7 @@ final class ConversationsScreen extends ConsumerWidget {
                                     icon: const Icon(Icons.close_rounded),
                                   ),
                                   IconButton.filledTonal(
-                                    tooltip: 'Accept message request',
+                                    tooltip: l10n.messagesAcceptRequest,
                                     onPressed: () async {
                                       await ref
                                           .read(messagingRepositoryProvider)
@@ -1029,20 +1077,21 @@ final class ConversationsScreen extends ConsumerWidget {
   }
 
   Future<void> _createConversation(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final handle = TextEditingController();
     final result = await showDialog<ConversationModel>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('New conversation'),
+        title: Text(l10n.messagesNewConversation),
         content: TextField(
           controller: handle,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Recipient handle'),
+          decoration: InputDecoration(labelText: l10n.messagesRecipientHandle),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -1065,7 +1114,7 @@ final class ConversationsScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('Start'),
+            child: Text(l10n.messagesStart),
           ),
         ],
       ),
@@ -1119,9 +1168,10 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(messageHistoryProvider(widget.conversationId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Conversation')),
+      appBar: AppBar(title: Text(l10n.messagesConversationTitle)),
       body: Column(
         children: <Widget>[
           if (!realtimeSupported)
@@ -1154,10 +1204,9 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 }
                 return page.items.isEmpty
                     ? LumenEmptyView(
-                        title: 'No messages yet',
-                        message:
-                            'The API returned an empty history. Send the first message.',
-                        actionLabel: 'Focus message field',
+                        title: l10n.messagesEmpty,
+                        message: l10n.messagesEmptyMessage,
+                        actionLabel: l10n.messagesTypeMessage,
                         onAction: _messageFocus.requestFocus,
                         icon: Icons.mark_chat_unread_outlined,
                       )
@@ -1194,12 +1243,14 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                       focusNode: _messageFocus,
                       minLines: 1,
                       maxLines: 5,
-                      decoration: const InputDecoration(labelText: 'Message'),
+                      decoration: InputDecoration(
+                        labelText: l10n.messagesTypeMessage,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    tooltip: 'Send message',
+                    tooltip: l10n.messagesSend,
                     onPressed: () async {
                       final text = _message.text.trim();
                       if (text.isEmpty) {

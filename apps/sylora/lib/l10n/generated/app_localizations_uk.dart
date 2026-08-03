@@ -303,4 +303,288 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsLanguageChinese => 'Китайська';
+
+  @override
+  String get navFriends => 'Друзі';
+
+  @override
+  String get feedTitle => 'Стрічка';
+
+  @override
+  String get feedSubtitle => 'Актуальні дописи із соціального API SYLORA.';
+
+  @override
+  String get feedEmpty => 'У вашій стрічці тихо';
+
+  @override
+  String get feedEmptyMessage =>
+      'Опублікованих дописів не повернено. Опублікуйте допис або підпишіться на людей, щоб налаштувати стрічку.';
+
+  @override
+  String get feedCreatePost => 'Створити допис';
+
+  @override
+  String get feedLoadMore => 'Завантажити ще дописи';
+
+  @override
+  String get feedLoadingPosts => 'Завантаження дописів…';
+
+  @override
+  String get feedLoadingMoreReason =>
+      'Завантажується наступна сторінка стрічки.';
+
+  @override
+  String get feedRecommended => 'Рекомендоване';
+
+  @override
+  String get feedRecommendationsUnavailable => 'Рекомендації недоступні';
+
+  @override
+  String get feedRecommendationsEmpty => 'API ще не має рекомендацій.';
+
+  @override
+  String get feedPostBodyLabel => 'Текстовий допис';
+
+  @override
+  String get feedPublishNow => 'Опублікувати зараз';
+
+  @override
+  String get feedSaveDraft => 'Зберегти як чернетку';
+
+  @override
+  String get feedPublish => 'Опублікувати';
+
+  @override
+  String get friendsTitle => 'Друзі';
+
+  @override
+  String get friendsRequests => 'Запити';
+
+  @override
+  String get friendsSuggestions => 'Пропозиції';
+
+  @override
+  String get friendsAccept => 'Прийняти';
+
+  @override
+  String get friendsReject => 'Відхилити';
+
+  @override
+  String get friendsUnfriend => 'Видалити з друзів';
+
+  @override
+  String get friendsAddFriend => 'Додати друга';
+
+  @override
+  String get friendsOnly => 'Лише друзі';
+
+  @override
+  String get friendsOnline => 'Онлайн';
+
+  @override
+  String get friendsMutual => 'Спільні друзі';
+
+  @override
+  String get friendsSearchFriends => 'Шукати друзів';
+
+  @override
+  String get friendsNoFriends => 'Друзів ще немає';
+
+  @override
+  String get friendsPendingIncoming => 'Вхідні запити';
+
+  @override
+  String get friendsPendingOutgoing => 'Вихідні запити';
+
+  @override
+  String get messagesTitle => 'Повідомлення';
+
+  @override
+  String get messagesEmpty => 'Немає розмов';
+
+  @override
+  String get messagesEmptyMessage =>
+      'Історію розмов не повернено. Почніть розмову з публічним нікнеймом.';
+
+  @override
+  String get messagesTypeMessage => 'Повідомлення';
+
+  @override
+  String get messagesSend => 'Надіслати повідомлення';
+
+  @override
+  String get messagesNewConversation => 'Нова розмова';
+
+  @override
+  String get messagesRecipientHandle => 'Нікнейм одержувача';
+
+  @override
+  String get messagesStart => 'Почати';
+
+  @override
+  String get messagesConversationTitle => 'Розмова';
+
+  @override
+  String get messagesAcceptRequest => 'Прийняти запит на повідомлення';
+
+  @override
+  String get messagesDeclineRequest => 'Відхилити запит на повідомлення';
+
+  @override
+  String get moreTitle => 'Більше';
+
+  @override
+  String get moreSubtitle =>
+      'Інструменти акаунта й робочі простори за ролями, які не вміщаються в компактну навігацію.';
+
+  @override
+  String get moreOpenModule => 'Відкрити модуль';
+
+  @override
+  String get moreLearning => 'Навчання';
+
+  @override
+  String get moreWallet => 'Гаманець';
+
+  @override
+  String get moreGifts => 'Подарунки';
+
+  @override
+  String get moreAi => 'AI';
+
+  @override
+  String get moreLive => 'Ефір';
+
+  @override
+  String get moreCreatorStudio => 'Студія автора';
+
+  @override
+  String get moreCreator => 'Автор';
+
+  @override
+  String get moreWorkspace => 'Робочий простір';
+
+  @override
+  String get moreAdmin => 'Адміністрування';
+
+  @override
+  String get moreSettings => 'Налаштування';
+
+  @override
+  String get settingsProfile => 'Профіль';
+
+  @override
+  String get settingsEditProfile => 'Редагувати профіль';
+
+  @override
+  String get settingsNoPublicHandle => 'Немає публічного нікнейма';
+
+  @override
+  String get settingsAccountPrivacy => 'Приватність акаунта й пошта';
+
+  @override
+  String get settingsProductEmails => 'Продуктові листи';
+
+  @override
+  String get settingsMarketingEmails => 'Маркетингові листи';
+
+  @override
+  String get settingsSecurityEmails => 'Листи безпеки';
+
+  @override
+  String get settingsSecurityEmailDescription =>
+      'Бекенд може примусово надсилати критичні сповіщення безпеки.';
+
+  @override
+  String get settingsProfileVisibility => 'Видимість профілю';
+
+  @override
+  String get settingsProfilePublic => 'Публічний';
+
+  @override
+  String get settingsProfilePrivate => 'Приватний';
+
+  @override
+  String get settingsSecurity => 'Безпека';
+
+  @override
+  String get settingsSessions => 'Сесії';
+
+  @override
+  String get settingsSignOut => 'Вийти';
+
+  @override
+  String get settingsTheme => 'Тема';
+
+  @override
+  String get settingsThemeLight => 'Світла';
+
+  @override
+  String get settingsThemeDark => 'Темна';
+
+  @override
+  String get settingsThemeSystem => 'Системна';
+
+  @override
+  String get settingsNotifications => 'Сповіщення';
+
+  @override
+  String get settingsEnableNotifications => 'Увімкнути сповіщення';
+
+  @override
+  String get settingsNotificationsDescription =>
+      'Підключення нативного push-токена може використовувати це налаштування.';
+
+  @override
+  String get settingsHighContrast => 'Висока контрастність';
+
+  @override
+  String get settingsReducedMotion => 'Зменшений рух';
+
+  @override
+  String settingsTextScale(String scale) {
+    return 'Масштаб тексту: $scale×';
+  }
+
+  @override
+  String get settingsAuthenticatorApp => 'Застосунок-автентифікатор';
+
+  @override
+  String get liveShortLabel => 'Ефір';
+
+  @override
+  String get aiShortLabel => 'AI';
+
+  @override
+  String get giftsShortLabel => 'Подарунки';
+
+  @override
+  String get walletShortLabel => 'Гаманець';
+
+  @override
+  String get conferencesTitle => 'Конференції';
+
+  @override
+  String get conferencesStart => 'Почати конференцію';
+
+  @override
+  String get conferencesJoin => 'Приєднатися до конференції';
+
+  @override
+  String get conferencesLeave => 'Залишити конференцію';
+
+  @override
+  String get conferencesInvite => 'Запросити';
+
+  @override
+  String get conferencesAuraAssist => 'Допомога Aura';
+
+  @override
+  String get commonPremiumEmpty => 'Преміум-елементів ще немає';
+
+  @override
+  String get commonPremiumError => 'Не вдалося завантажити преміум-контент.';
+
+  @override
+  String get commonPremiumRetry => 'Повторити преміум';
 }

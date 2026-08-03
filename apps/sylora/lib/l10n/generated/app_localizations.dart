@@ -685,6 +685,558 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chinese'**
   String get settingsLanguageChinese;
+
+  /// No description provided for @navFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get navFriends;
+
+  /// No description provided for @feedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get feedTitle;
+
+  /// No description provided for @feedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current posts from the SYLORA social API.'**
+  String get feedSubtitle;
+
+  /// No description provided for @feedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your feed is quiet'**
+  String get feedEmpty;
+
+  /// No description provided for @feedEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No published posts were returned. Publish a post or follow people to shape your feed.'**
+  String get feedEmptyMessage;
+
+  /// No description provided for @feedCreatePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a post'**
+  String get feedCreatePost;
+
+  /// No description provided for @feedLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more posts'**
+  String get feedLoadMore;
+
+  /// No description provided for @feedLoadingPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading posts…'**
+  String get feedLoadingPosts;
+
+  /// No description provided for @feedLoadingMoreReason.
+  ///
+  /// In en, this message translates to:
+  /// **'The next feed page is loading.'**
+  String get feedLoadingMoreReason;
+
+  /// No description provided for @feedRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get feedRecommended;
+
+  /// No description provided for @feedRecommendationsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendations unavailable'**
+  String get feedRecommendationsUnavailable;
+
+  /// No description provided for @feedRecommendationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The API has no recommendations yet.'**
+  String get feedRecommendationsEmpty;
+
+  /// No description provided for @feedPostBodyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain-text post'**
+  String get feedPostBodyLabel;
+
+  /// No description provided for @feedPublishNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish now'**
+  String get feedPublishNow;
+
+  /// No description provided for @feedSaveDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as draft'**
+  String get feedSaveDraft;
+
+  /// No description provided for @feedPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get feedPublish;
+
+  /// No description provided for @friendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friendsTitle;
+
+  /// No description provided for @friendsRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get friendsRequests;
+
+  /// No description provided for @friendsSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get friendsSuggestions;
+
+  /// No description provided for @friendsAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get friendsAccept;
+
+  /// No description provided for @friendsReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get friendsReject;
+
+  /// No description provided for @friendsUnfriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfriend'**
+  String get friendsUnfriend;
+
+  /// No description provided for @friendsAddFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get friendsAddFriend;
+
+  /// No description provided for @friendsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends only'**
+  String get friendsOnly;
+
+  /// No description provided for @friendsOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get friendsOnline;
+
+  /// No description provided for @friendsMutual.
+  ///
+  /// In en, this message translates to:
+  /// **'Mutual friends'**
+  String get friendsMutual;
+
+  /// No description provided for @friendsSearchFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Search friends'**
+  String get friendsSearchFriends;
+
+  /// No description provided for @friendsNoFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet'**
+  String get friendsNoFriends;
+
+  /// No description provided for @friendsPendingIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming requests'**
+  String get friendsPendingIncoming;
+
+  /// No description provided for @friendsPendingOutgoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing requests'**
+  String get friendsPendingOutgoing;
+
+  /// No description provided for @messagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messagesTitle;
+
+  /// No description provided for @messagesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations'**
+  String get messagesEmpty;
+
+  /// No description provided for @messagesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversation history was returned. Start one with a public handle.'**
+  String get messagesEmptyMessage;
+
+  /// No description provided for @messagesTypeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get messagesTypeMessage;
+
+  /// No description provided for @messagesSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get messagesSend;
+
+  /// No description provided for @messagesNewConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get messagesNewConversation;
+
+  /// No description provided for @messagesRecipientHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient handle'**
+  String get messagesRecipientHandle;
+
+  /// No description provided for @messagesStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get messagesStart;
+
+  /// No description provided for @messagesConversationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation'**
+  String get messagesConversationTitle;
+
+  /// No description provided for @messagesAcceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept message request'**
+  String get messagesAcceptRequest;
+
+  /// No description provided for @messagesDeclineRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline message request'**
+  String get messagesDeclineRequest;
+
+  /// No description provided for @moreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get moreTitle;
+
+  /// No description provided for @moreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account tools and role-aware workspaces that do not fit compact navigation.'**
+  String get moreSubtitle;
+
+  /// No description provided for @moreOpenModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Open module'**
+  String get moreOpenModule;
+
+  /// No description provided for @moreLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning'**
+  String get moreLearning;
+
+  /// No description provided for @moreWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get moreWallet;
+
+  /// No description provided for @moreGifts.
+  ///
+  /// In en, this message translates to:
+  /// **'Gifts'**
+  String get moreGifts;
+
+  /// No description provided for @moreAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get moreAi;
+
+  /// No description provided for @moreLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get moreLive;
+
+  /// No description provided for @moreCreatorStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator Studio'**
+  String get moreCreatorStudio;
+
+  /// No description provided for @moreCreator.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator'**
+  String get moreCreator;
+
+  /// No description provided for @moreWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get moreWorkspace;
+
+  /// No description provided for @moreAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Administration'**
+  String get moreAdmin;
+
+  /// No description provided for @moreSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get moreSettings;
+
+  /// No description provided for @settingsProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get settingsProfile;
+
+  /// No description provided for @settingsEditProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get settingsEditProfile;
+
+  /// No description provided for @settingsNoPublicHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'No public handle'**
+  String get settingsNoPublicHandle;
+
+  /// No description provided for @settingsAccountPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Account privacy & email'**
+  String get settingsAccountPrivacy;
+
+  /// No description provided for @settingsProductEmails.
+  ///
+  /// In en, this message translates to:
+  /// **'Product emails'**
+  String get settingsProductEmails;
+
+  /// No description provided for @settingsMarketingEmails.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing emails'**
+  String get settingsMarketingEmails;
+
+  /// No description provided for @settingsSecurityEmails.
+  ///
+  /// In en, this message translates to:
+  /// **'Security emails'**
+  String get settingsSecurityEmails;
+
+  /// No description provided for @settingsSecurityEmailDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The backend may enforce security-critical notices.'**
+  String get settingsSecurityEmailDescription;
+
+  /// No description provided for @settingsProfileVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile visibility'**
+  String get settingsProfileVisibility;
+
+  /// No description provided for @settingsProfilePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get settingsProfilePublic;
+
+  /// No description provided for @settingsProfilePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get settingsProfilePrivate;
+
+  /// No description provided for @settingsSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get settingsSecurity;
+
+  /// No description provided for @settingsSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get settingsSessions;
+
+  /// No description provided for @settingsSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get settingsSignOut;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsEnableNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications'**
+  String get settingsEnableNotifications;
+
+  /// No description provided for @settingsNotificationsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Native push token wiring can plug into this preference.'**
+  String get settingsNotificationsDescription;
+
+  /// No description provided for @settingsHighContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get settingsHighContrast;
+
+  /// No description provided for @settingsReducedMotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduced motion'**
+  String get settingsReducedMotion;
+
+  /// No description provided for @settingsTextScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Text scale: {scale}×'**
+  String settingsTextScale(String scale);
+
+  /// No description provided for @settingsAuthenticatorApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator app'**
+  String get settingsAuthenticatorApp;
+
+  /// No description provided for @liveShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get liveShortLabel;
+
+  /// No description provided for @aiShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get aiShortLabel;
+
+  /// No description provided for @giftsShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gifts'**
+  String get giftsShortLabel;
+
+  /// No description provided for @walletShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get walletShortLabel;
+
+  /// No description provided for @conferencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conferences'**
+  String get conferencesTitle;
+
+  /// No description provided for @conferencesStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start conference'**
+  String get conferencesStart;
+
+  /// No description provided for @conferencesJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join conference'**
+  String get conferencesJoin;
+
+  /// No description provided for @conferencesLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave conference'**
+  String get conferencesLeave;
+
+  /// No description provided for @conferencesInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get conferencesInvite;
+
+  /// No description provided for @conferencesAuraAssist.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura assist'**
+  String get conferencesAuraAssist;
+
+  /// No description provided for @commonPremiumEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No premium items yet'**
+  String get commonPremiumEmpty;
+
+  /// No description provided for @commonPremiumError.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium content could not be loaded.'**
+  String get commonPremiumError;
+
+  /// No description provided for @commonPremiumRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry premium'**
+  String get commonPremiumRetry;
 }
 
 class _AppLocalizationsDelegate

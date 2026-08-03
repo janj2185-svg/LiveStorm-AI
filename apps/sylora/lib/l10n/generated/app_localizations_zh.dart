@@ -296,4 +296,282 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsLanguageChinese => '中文';
+
+  @override
+  String get navFriends => '好友';
+
+  @override
+  String get feedTitle => '动态';
+
+  @override
+  String get feedSubtitle => '来自 SYLORA 社交 API 的最新帖子。';
+
+  @override
+  String get feedEmpty => '你的动态很安静';
+
+  @override
+  String get feedEmptyMessage => '没有返回已发布的帖子。发布帖子或关注他人来塑造你的动态。';
+
+  @override
+  String get feedCreatePost => '创建帖子';
+
+  @override
+  String get feedLoadMore => '加载更多帖子';
+
+  @override
+  String get feedLoadingPosts => '正在加载帖子…';
+
+  @override
+  String get feedLoadingMoreReason => '正在加载下一页动态。';
+
+  @override
+  String get feedRecommended => '推荐';
+
+  @override
+  String get feedRecommendationsUnavailable => '推荐不可用';
+
+  @override
+  String get feedRecommendationsEmpty => 'API 暂时没有推荐内容。';
+
+  @override
+  String get feedPostBodyLabel => '纯文本帖子';
+
+  @override
+  String get feedPublishNow => '立即发布';
+
+  @override
+  String get feedSaveDraft => '保存为草稿';
+
+  @override
+  String get feedPublish => '发布';
+
+  @override
+  String get friendsTitle => '好友';
+
+  @override
+  String get friendsRequests => '请求';
+
+  @override
+  String get friendsSuggestions => '建议';
+
+  @override
+  String get friendsAccept => '接受';
+
+  @override
+  String get friendsReject => '拒绝';
+
+  @override
+  String get friendsUnfriend => '删除好友';
+
+  @override
+  String get friendsAddFriend => '添加好友';
+
+  @override
+  String get friendsOnly => '仅好友';
+
+  @override
+  String get friendsOnline => '在线';
+
+  @override
+  String get friendsMutual => '共同好友';
+
+  @override
+  String get friendsSearchFriends => '搜索好友';
+
+  @override
+  String get friendsNoFriends => '还没有好友';
+
+  @override
+  String get friendsPendingIncoming => '收到的请求';
+
+  @override
+  String get friendsPendingOutgoing => '发出的请求';
+
+  @override
+  String get messagesTitle => '消息';
+
+  @override
+  String get messagesEmpty => '没有会话';
+
+  @override
+  String get messagesEmptyMessage => '没有返回会话历史。使用公开用户名开始一个会话。';
+
+  @override
+  String get messagesTypeMessage => '消息';
+
+  @override
+  String get messagesSend => '发送消息';
+
+  @override
+  String get messagesNewConversation => '新会话';
+
+  @override
+  String get messagesRecipientHandle => '收件人用户名';
+
+  @override
+  String get messagesStart => '开始';
+
+  @override
+  String get messagesConversationTitle => '会话';
+
+  @override
+  String get messagesAcceptRequest => '接受消息请求';
+
+  @override
+  String get messagesDeclineRequest => '拒绝消息请求';
+
+  @override
+  String get moreTitle => '更多';
+
+  @override
+  String get moreSubtitle => '无法放入紧凑导航中的账户工具和按角色显示的工作区。';
+
+  @override
+  String get moreOpenModule => '打开模块';
+
+  @override
+  String get moreLearning => '学习';
+
+  @override
+  String get moreWallet => '钱包';
+
+  @override
+  String get moreGifts => '礼物';
+
+  @override
+  String get moreAi => 'AI';
+
+  @override
+  String get moreLive => '直播';
+
+  @override
+  String get moreCreatorStudio => '创作者工作室';
+
+  @override
+  String get moreCreator => '创作者';
+
+  @override
+  String get moreWorkspace => '工作区';
+
+  @override
+  String get moreAdmin => '管理';
+
+  @override
+  String get moreSettings => '设置';
+
+  @override
+  String get settingsProfile => '个人资料';
+
+  @override
+  String get settingsEditProfile => '编辑个人资料';
+
+  @override
+  String get settingsNoPublicHandle => '没有公开用户名';
+
+  @override
+  String get settingsAccountPrivacy => '账户隐私与邮箱';
+
+  @override
+  String get settingsProductEmails => '产品邮件';
+
+  @override
+  String get settingsMarketingEmails => '营销邮件';
+
+  @override
+  String get settingsSecurityEmails => '安全邮件';
+
+  @override
+  String get settingsSecurityEmailDescription => '后端可能会强制发送重要安全通知。';
+
+  @override
+  String get settingsProfileVisibility => '个人资料可见性';
+
+  @override
+  String get settingsProfilePublic => '公开';
+
+  @override
+  String get settingsProfilePrivate => '私密';
+
+  @override
+  String get settingsSecurity => '安全';
+
+  @override
+  String get settingsSessions => '会话';
+
+  @override
+  String get settingsSignOut => '退出登录';
+
+  @override
+  String get settingsTheme => '主题';
+
+  @override
+  String get settingsThemeLight => '浅色';
+
+  @override
+  String get settingsThemeDark => '深色';
+
+  @override
+  String get settingsThemeSystem => '跟随系统';
+
+  @override
+  String get settingsNotifications => '通知';
+
+  @override
+  String get settingsEnableNotifications => '启用通知';
+
+  @override
+  String get settingsNotificationsDescription => '原生推送令牌接入可以使用此偏好设置。';
+
+  @override
+  String get settingsHighContrast => '高对比度';
+
+  @override
+  String get settingsReducedMotion => '减少动态效果';
+
+  @override
+  String settingsTextScale(String scale) {
+    return '文字缩放：$scale×';
+  }
+
+  @override
+  String get settingsAuthenticatorApp => '身份验证器应用';
+
+  @override
+  String get liveShortLabel => '直播';
+
+  @override
+  String get aiShortLabel => 'AI';
+
+  @override
+  String get giftsShortLabel => '礼物';
+
+  @override
+  String get walletShortLabel => '钱包';
+
+  @override
+  String get conferencesTitle => '会议';
+
+  @override
+  String get conferencesStart => '开始会议';
+
+  @override
+  String get conferencesJoin => '加入会议';
+
+  @override
+  String get conferencesLeave => '离开会议';
+
+  @override
+  String get conferencesInvite => '邀请';
+
+  @override
+  String get conferencesAuraAssist => 'Aura 协助';
+
+  @override
+  String get commonPremiumEmpty => '还没有高级项目';
+
+  @override
+  String get commonPremiumError => '无法加载高级内容。';
+
+  @override
+  String get commonPremiumRetry => '重试高级内容';
 }

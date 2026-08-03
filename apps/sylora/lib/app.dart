@@ -33,6 +33,12 @@ const _searchDestination = ShellDestination(
   selectedIcon: Icons.search_rounded,
   path: '/search',
 );
+const _friendsDestination = ShellDestination(
+  label: 'Friends',
+  icon: Icons.group_outlined,
+  selectedIcon: Icons.group_rounded,
+  path: '/friends',
+);
 const _messagesDestination = ShellDestination(
   label: 'Messages',
   icon: Icons.chat_bubble_outline_rounded,
@@ -73,6 +79,7 @@ const _moreDestination = ShellDestination(
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
   _searchDestination,
+  _friendsDestination,
   _messagesDestination,
   _marketplaceDestination,
   _moreDestination,
@@ -83,6 +90,7 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   return <ShellDestination>[
     _homeDestination,
     _searchDestination,
+    _friendsDestination,
     _messagesDestination,
     _marketplaceDestination,
     if (roleSet.contains('creator') || roleSet.contains('admin'))
@@ -232,6 +240,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'search',
             pageBuilder: (context, state) =>
                 _page(state, const SearchScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/friends',
+            name: 'friends',
+            pageBuilder: (context, state) =>
+                _page(state, const FriendsScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/messages',
@@ -609,6 +623,7 @@ String _localizedDestinationLabel(AppLocalizations l10n, String path) =>
     switch (path) {
       '/home' => l10n.navHome,
       '/search' => l10n.navSearch,
+      '/friends' => l10n.navFriends,
       '/messages' => l10n.navMessages,
       '/marketplace' => l10n.navMarket,
       '/creator' => l10n.navCreator,
