@@ -6,6 +6,7 @@ import 'sylora_tokens.dart';
 
 enum SyloraAuraContextPreset {
   feed,
+  friends,
   live,
   ai,
   gifts,
@@ -15,6 +16,7 @@ enum SyloraAuraContextPreset {
   learning,
   creator,
   settings,
+  conferences,
 }
 
 @immutable
@@ -30,6 +32,14 @@ final Map<SyloraAuraContextPreset, SyloraAuraPresetState> _presetStates =
       SyloraAuraContextPreset.feed: const SyloraAuraPresetState(
         emotion: AuraEmotion.greeting,
         tip: 'Aura is watching the community pulse.',
+      ),
+      SyloraAuraContextPreset.friends: const SyloraAuraPresetState(
+        emotion: AuraEmotion.amused,
+        tip: 'Aura is helping you find meaningful connections.',
+      ),
+      SyloraAuraContextPreset.conferences: const SyloraAuraPresetState(
+        emotion: AuraEmotion.listening,
+        tip: 'Aura is ready to assist your meeting.',
       ),
       SyloraAuraContextPreset.live: const SyloraAuraPresetState(
         emotion: AuraEmotion.focused,

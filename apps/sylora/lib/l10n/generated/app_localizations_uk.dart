@@ -311,7 +311,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get feedTitle => 'Стрічка';
 
   @override
-  String get feedSubtitle => 'Актуальні дописи із соціального API SYLORA.';
+  String get feedSubtitle =>
+      'Живий пульс SYLORA — пости, друзі й творчість в одному потоці.';
 
   @override
   String get feedEmpty => 'У вашій стрічці тихо';
@@ -587,4 +588,17 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get commonPremiumRetry => 'Повторити преміум';
+
+  @override
+  String get homeHeroEyebrow => 'ТВІЙ ЖИВИЙ AI-СВІТ';
+
+  @override
+  String get homeHeroBody =>
+      'Твори, спілкуйся й розвивайся в одному світловому просторі — AI, Live, друзі та творчість разом.';
+
+  @override
+  String get homeModulesLabel => 'ПОРТАЛИ ЕКОСИСТЕМИ';
+
+  @override
+  String get homeComposeHint => 'Поділись сигналом із всесвітом…';
 }

@@ -701,7 +701,7 @@ abstract class AppLocalizations {
   /// No description provided for @feedSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Current posts from the SYLORA social API.'**
+  /// **'The living pulse of SYLORA — posts, friends and creation in one flow.'**
   String get feedSubtitle;
 
   /// No description provided for @feedEmpty.
@@ -1237,6 +1237,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry premium'**
   String get commonPremiumRetry;
+
+  /// Home hero: homeHeroEyebrow
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR LIVING AI WORLD'**
+  String get homeHeroEyebrow;
+
+  /// Home hero: homeHeroBody
+  ///
+  /// In en, this message translates to:
+  /// **'Create, connect and grow inside one luminous network — AI, Live, friends and creation together.'**
+  String get homeHeroBody;
+
+  /// Home hero: homeModulesLabel
+  ///
+  /// In en, this message translates to:
+  /// **'ECOSYSTEM PORTALS'**
+  String get homeModulesLabel;
+
+  /// Home hero: homeComposeHint
+  ///
+  /// In en, this message translates to:
+  /// **'Share a signal with the universe…'**
+  String get homeComposeHint;
 }
 
 class _AppLocalizationsDelegate

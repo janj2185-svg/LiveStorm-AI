@@ -100,7 +100,7 @@
   "settingsLanguageChinese": "中文",
   "navFriends": "好友",
   "feedTitle": "动态",
-  "feedSubtitle": "来自 SYLORA 社交 API 的最新帖子。",
+  "feedSubtitle": "SYLORA 的鲜活脉搏 — 动态、好友与创作同流。",
   "feedEmpty": "你的动态很安静",
   "feedEmptyMessage": "没有返回已发布的帖子。发布帖子或关注他人来塑造你的动态。",
   "feedCreatePost": "创建帖子",
@@ -189,5 +189,21 @@
   "conferencesAuraAssist": "Aura 协助",
   "commonPremiumEmpty": "还没有高级项目",
   "commonPremiumError": "无法加载高级内容。",
-  "commonPremiumRetry": "重试高级内容"
+  "commonPremiumRetry": "重试高级内容",
+  "homeHeroEyebrow": "你的鲜活 AI 世界",
+  "@homeHeroEyebrow": {
+    "description": "Home hero: homeHeroEyebrow"
+  },
+  "homeHeroBody": "在同一个光感网络中创造、连接与成长。",
+  "@homeHeroBody": {
+    "description": "Home hero: homeHeroBody"
+  },
+  "homeModulesLabel": "生态入口",
+  "@homeModulesLabel": {
+    "description": "Home hero: homeModulesLabel"
+  },
+  "homeComposeHint": "向宇宙发出一个信号…",
+  "@homeComposeHint": {
+    "description": "Home hero: homeComposeHint"
+  }
 }

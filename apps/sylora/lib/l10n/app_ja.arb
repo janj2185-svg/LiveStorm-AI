@@ -100,7 +100,7 @@
   "settingsLanguageChinese": "中国語",
   "navFriends": "友達",
   "feedTitle": "フィード",
-  "feedSubtitle": "SYLORAソーシャルAPIからの最新投稿。",
+  "feedSubtitle": "SYLORAの生きた鼓動 — 投稿、友だち、創造がひとつに。",
   "feedEmpty": "フィードは静かです",
   "feedEmptyMessage": "公開済みの投稿は返されませんでした。投稿するか、ユーザーをフォローしてフィードを整えましょう。",
   "feedCreatePost": "投稿を作成",
@@ -189,5 +189,21 @@
   "conferencesAuraAssist": "Auraアシスト",
   "commonPremiumEmpty": "プレミアム項目はまだありません",
   "commonPremiumError": "プレミアムコンテンツを読み込めませんでした。",
-  "commonPremiumRetry": "プレミアムを再試行"
+  "commonPremiumRetry": "プレミアムを再試行",
+  "homeHeroEyebrow": "あなたの生きたAIワールド",
+  "@homeHeroEyebrow": {
+    "description": "Home hero: homeHeroEyebrow"
+  },
+  "homeHeroBody": "ひとつの光のネットワークで創り、つながり、成長しましょう。",
+  "@homeHeroBody": {
+    "description": "Home hero: homeHeroBody"
+  },
+  "homeModulesLabel": "エコシステムのポータル",
+  "@homeModulesLabel": {
+    "description": "Home hero: homeModulesLabel"
+  },
+  "homeComposeHint": "宇宙にシグナルを届けましょう…",
+  "@homeComposeHint": {
+    "description": "Home hero: homeComposeHint"
+  }
 }

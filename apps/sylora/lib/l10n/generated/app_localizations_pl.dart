@@ -312,7 +312,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get feedTitle => 'Aktualności';
 
   @override
-  String get feedSubtitle => 'Bieżące posty z API społecznościowego SYLORA.';
+  String get feedSubtitle =>
+      'Żywy puls SYLORA — posty, przyjaciele i twórczość w jednym przepływie.';
 
   @override
   String get feedEmpty => 'W Twoim feedzie jest cicho';
@@ -587,4 +588,17 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get commonPremiumRetry => 'Ponów premium';
+
+  @override
+  String get homeHeroEyebrow => 'TWÓJ ŻYWY ŚWIAT AI';
+
+  @override
+  String get homeHeroBody =>
+      'Twórz, łącz się i rozwijaj w jednej świetlistej sieci — AI, Live, przyjaciele i twórczość razem.';
+
+  @override
+  String get homeModulesLabel => 'PORTALE EKOSYSTEMU';
+
+  @override
+  String get homeComposeHint => 'Podziel się sygnałem z wszechświatem…';
 }

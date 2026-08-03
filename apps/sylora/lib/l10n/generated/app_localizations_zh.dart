@@ -304,7 +304,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get feedTitle => '动态';
 
   @override
-  String get feedSubtitle => '来自 SYLORA 社交 API 的最新帖子。';
+  String get feedSubtitle => 'SYLORA 的鲜活脉搏 — 动态、好友与创作同流。';
 
   @override
   String get feedEmpty => '你的动态很安静';
@@ -574,4 +574,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commonPremiumRetry => '重试高级内容';
+
+  @override
+  String get homeHeroEyebrow => '你的鲜活 AI 世界';
+
+  @override
+  String get homeHeroBody => '在同一个光感网络中创造、连接与成长。';
+
+  @override
+  String get homeModulesLabel => '生态入口';
+
+  @override
+  String get homeComposeHint => '向宇宙发出一个信号…';
 }

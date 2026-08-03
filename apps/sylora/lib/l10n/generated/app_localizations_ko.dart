@@ -305,7 +305,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get feedTitle => '피드';
 
   @override
-  String get feedSubtitle => 'SYLORA 소셜 API의 최신 게시물입니다.';
+  String get feedSubtitle => 'SYLORA의 살아있는 맥박 — 게시물, 친구, 창작이 하나로.';
 
   @override
   String get feedEmpty => '피드가 조용합니다';
@@ -578,4 +578,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get commonPremiumRetry => '프리미엄 다시 시도';
+
+  @override
+  String get homeHeroEyebrow => '살아 있는 AI 월드';
+
+  @override
+  String get homeHeroBody => '하나의 빛나는 네트워크에서 만들고, 연결하고, 성장하세요.';
+
+  @override
+  String get homeModulesLabel => '생태계 포털';
+
+  @override
+  String get homeComposeHint => '우주에 신호를 보내세요…';
 }

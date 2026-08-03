@@ -118,7 +118,7 @@
   "settingsLanguageChinese": "Китайська",
   "navFriends": "Друзі",
   "feedTitle": "Стрічка",
-  "feedSubtitle": "Актуальні дописи із соціального API SYLORA.",
+  "feedSubtitle": "Живий пульс SYLORA — пости, друзі й творчість в одному потоці.",
   "feedEmpty": "У вашій стрічці тихо",
   "feedEmptyMessage": "Опублікованих дописів не повернено. Опублікуйте допис або підпишіться на людей, щоб налаштувати стрічку.",
   "feedCreatePost": "Створити допис",
@@ -207,5 +207,21 @@
   "conferencesAuraAssist": "Допомога Aura",
   "commonPremiumEmpty": "Преміум-елементів ще немає",
   "commonPremiumError": "Не вдалося завантажити преміум-контент.",
-  "commonPremiumRetry": "Повторити преміум"
+  "commonPremiumRetry": "Повторити преміум",
+  "homeHeroEyebrow": "ТВІЙ ЖИВИЙ AI-СВІТ",
+  "@homeHeroEyebrow": {
+    "description": "Home hero: homeHeroEyebrow"
+  },
+  "homeHeroBody": "Твори, спілкуйся й розвивайся в одному світловому просторі — AI, Live, друзі та творчість разом.",
+  "@homeHeroBody": {
+    "description": "Home hero: homeHeroBody"
+  },
+  "homeModulesLabel": "ПОРТАЛИ ЕКОСИСТЕМИ",
+  "@homeModulesLabel": {
+    "description": "Home hero: homeModulesLabel"
+  },
+  "homeComposeHint": "Поділись сигналом із всесвітом…",
+  "@homeComposeHint": {
+    "description": "Home hero: homeComposeHint"
+  }
 }

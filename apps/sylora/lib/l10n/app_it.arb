@@ -100,7 +100,7 @@
   "settingsLanguageChinese": "Cinese",
   "navFriends": "Amici",
   "feedTitle": "Feed",
-  "feedSubtitle": "Post attuali dall’API social di SYLORA.",
+  "feedSubtitle": "Il polso vivo di SYLORA — post, amici e creazione.",
   "feedEmpty": "Il tuo feed è silenzioso",
   "feedEmptyMessage": "Non sono stati restituiti post pubblicati. Pubblica un post o segui persone per modellare il tuo feed.",
   "feedCreatePost": "Crea un post",
@@ -189,5 +189,21 @@
   "conferencesAuraAssist": "Assistenza Aura",
   "commonPremiumEmpty": "Ancora nessun elemento premium",
   "commonPremiumError": "Impossibile caricare i contenuti premium.",
-  "commonPremiumRetry": "Riprova premium"
+  "commonPremiumRetry": "Riprova premium",
+  "homeHeroEyebrow": "IL TUO MONDO IA VIVO",
+  "@homeHeroEyebrow": {
+    "description": "Home hero: homeHeroEyebrow"
+  },
+  "homeHeroBody": "Crea, connettiti e cresci in una rete luminosa — IA, Live, amici e creazione.",
+  "@homeHeroBody": {
+    "description": "Home hero: homeHeroBody"
+  },
+  "homeModulesLabel": "PORTALI DELL'ECOSISTEMA",
+  "@homeModulesLabel": {
+    "description": "Home hero: homeModulesLabel"
+  },
+  "homeComposeHint": "Condividi un segnale con l'universo…",
+  "@homeComposeHint": {
+    "description": "Home hero: homeComposeHint"
+  }
 }

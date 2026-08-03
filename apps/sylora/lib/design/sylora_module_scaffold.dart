@@ -28,6 +28,7 @@ final class SyloraModuleScaffold extends StatelessWidget {
     this.railPadding = const EdgeInsets.all(SyloraTokens.space5),
     this.intensity = 0.78,
     this.showOrbits = true,
+    this.header,
   });
 
   final String title;
@@ -45,6 +46,8 @@ final class SyloraModuleScaffold extends StatelessWidget {
   final EdgeInsetsGeometry railPadding;
   final double intensity;
   final bool showOrbits;
+  /// Optional hero block rendered above the glass content rail.
+  final Widget? header;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +86,10 @@ final class SyloraModuleScaffold extends StatelessWidget {
                                     actions: actions,
                                     compact: compact,
                                   ),
+                                  if (header != null) ...<Widget>[
+                                    const SizedBox(height: SyloraTokens.space4),
+                                    header!,
+                                  ],
                                   const SizedBox(height: SyloraTokens.space4),
                                   SyloraGlass(
                                     padding: railPadding,
@@ -240,15 +247,21 @@ final class _SyloraModuleEntrance extends StatelessWidget {
     }
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
-      duration: SyloraTokens.durMed,
+      duration: SyloraTokens.durSlow,
       curve: SyloraTokens.curveSnap,
-      builder: (context, value, child) => Opacity(
-        opacity: value,
-        child: Transform.translate(
-          offset: Offset(0, (1 - value) * 14),
-          child: child,
-        ),
-      ),
+      builder: (context, value, child) {
+        final curved = Curves.easeOutCubic.transform(value);
+        return Opacity(
+          opacity: curved,
+          child: Transform.translate(
+            offset: Offset(0, (1 - curved) * 22),
+            child: Transform.scale(
+              scale: 0.985 + (0.015 * curved),
+              child: child,
+            ),
+          ),
+        );
+      },
       child: child,
     );
   }

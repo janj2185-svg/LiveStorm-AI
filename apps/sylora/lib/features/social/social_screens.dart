@@ -126,19 +126,41 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
   String? _nextCursor;
   bool _paginationInitialized = false;
   bool _loadingMore = false;
+  late final SyloraAuraPresenceController _aura =
+      SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.feed);
+
+  @override
+  void dispose() {
+    _aura.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final feed = ref.watch(feedProvider);
+    final wide = MediaQuery.sizeOf(context).width >= 1100;
     return LumenPage(
-      title: l10n.feedTitle,
+      title: 'SYLORA',
       subtitle: l10n.feedSubtitle,
+      intensity: 1,
+      showOrbits: !wide,
+      showAuraPresence: true,
+      auraPresenceController: _aura,
+      auraPresencePreset: SyloraAuraContextPreset.feed,
+      showAuraDock: wide,
+      auraEmotion: AuraEmotion.greeting,
+      maxContentWidth: 1080,
       actions: <Widget>[
         IconButton(
-          tooltip: 'Notifications',
+          tooltip: l10n.settingsNotifications,
           onPressed: () => context.pushNamed('notifications'),
           icon: const Icon(Icons.notifications_outlined),
+        ),
+        IconButton(
+          tooltip: l10n.navFriends,
+          onPressed: () => context.goNamed('friends'),
+          icon: const Icon(Icons.group_outlined),
         ),
         IconButton(
           tooltip: l10n.feedCreatePost,
@@ -146,6 +168,9 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           icon: const Icon(Icons.edit_outlined),
         ),
       ],
+      header: _HomeUniverseHero(
+        onCompose: () => _showComposer(context, ref),
+      ),
       child: LumenAsyncView<CursorPage<PostModel>>(
         value: feed,
         onRetry: () => ref.invalidate(feedProvider),
@@ -166,9 +191,12 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           }
           return Column(
             children: <Widget>[
-              for (final post in posts) ...<Widget>[
-                PostCard(post: post),
-                const SizedBox(height: 16),
+              for (var i = 0; i < posts.length; i++) ...<Widget>[
+                _StaggeredReveal(
+                  index: i,
+                  child: PostCard(post: posts[i]),
+                ),
+                const SizedBox(height: 18),
               ],
               if (_nextCursor != null)
                 LumenSecondaryButton(
@@ -346,20 +374,275 @@ final class RecommendationsPanel extends ConsumerWidget {
   }
 }
 
+final class _HomeUniverseHero extends StatelessWidget {
+  const _HomeUniverseHero({required this.onCompose});
+
+  final VoidCallback onCompose;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final compact = MediaQuery.sizeOf(context).width < 720;
+    final portals = <(String, String, IconData)>[
+      (l10n.navAi, 'ai', Icons.auto_awesome_rounded),
+      (l10n.navLive, 'live', Icons.podcasts_rounded),
+      (l10n.navFriends, 'friends', Icons.group_rounded),
+      (l10n.navMessages, 'messages', Icons.forum_rounded),
+      (l10n.navGifts, 'gifts', Icons.card_giftcard_rounded),
+      (l10n.moreLearning, 'learning', Icons.school_rounded),
+      (l10n.navMarket, 'marketplace', Icons.storefront_rounded),
+      (l10n.navCreator, 'creator', Icons.videocam_rounded),
+    ];
+
+    return SyloraGlass(
+      radius: SyloraTokens.radiusXl,
+      padding: EdgeInsets.fromLTRB(
+        compact ? 18 : 28,
+        compact ? 22 : 30,
+        compact ? 18 : 28,
+        compact ? 20 : 26,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text(
+            l10n.homeHeroEyebrow,
+            style: SyloraTokens.label(11, color: SyloraTokens.ion),
+          ),
+          const SizedBox(height: 10),
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: <Color>[SyloraTokens.night, SyloraTokens.ion],
+            ).createShader(bounds),
+            child: Text(
+              'SYLORA',
+              style: SyloraTokens.display(
+                compact ? 42 : 56,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.homeHeroBody,
+            style: SyloraTokens.body(
+              compact ? 14.5 : 16.5,
+              color: SyloraTokens.inkSoft,
+              weight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 22),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+              onTap: onCompose,
+              child: Ink(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+                  gradient: const LinearGradient(
+                    colors: <Color>[SyloraTokens.ion, SyloraTokens.petal],
+                  ),
+                  boxShadow: SyloraTokens.glow(
+                    SyloraTokens.violet,
+                    blur: 26,
+                    opacity: 0.28,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.homeComposeHint,
+                          style: SyloraTokens.body(
+                            15,
+                            color: Colors.white,
+                            weight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        l10n.feedCreatePost,
+                        style: SyloraTokens.body(
+                          13.5,
+                          color: Colors.white,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 22),
+          Text(
+            l10n.homeModulesLabel,
+            style: SyloraTokens.label(11, color: SyloraTokens.ion),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              for (final portal in portals)
+                _HomePortalChip(
+                  label: portal.$1,
+                  icon: portal.$3,
+                  onTap: () => context.goNamed(portal.$2),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _HomePortalChip extends StatefulWidget {
+  const _HomePortalChip({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  State<_HomePortalChip> createState() => _HomePortalChipState();
+}
+
+final class _HomePortalChipState extends State<_HomePortalChip> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedContainer(
+        duration: SyloraTokens.durFast,
+        curve: SyloraTokens.curveSoft,
+        transform: Matrix4.translationValues(0, _hover ? -2 : 0, 0),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+            onTap: widget.onTap,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: _hover ? 0.92 : 0.72),
+                borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+                border: Border.all(
+                  color: _hover
+                      ? SyloraTokens.ion.withValues(alpha: 0.45)
+                      : Colors.white.withValues(alpha: 0.8),
+                ),
+                boxShadow: _hover
+                    ? SyloraTokens.glow(SyloraTokens.ion, blur: 18, opacity: 0.2)
+                    : null,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(widget.icon, size: 16, color: SyloraTokens.violet),
+                    const SizedBox(width: 8),
+                    Text(
+                      widget.label,
+                      style: SyloraTokens.body(
+                        13,
+                        color: SyloraTokens.ink,
+                        weight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _StaggeredReveal extends StatelessWidget {
+  const _StaggeredReveal({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
+    final delayMs = (index.clamp(0, 8) * 55);
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 520 + delayMs),
+      curve: SyloraTokens.curveSnap,
+      builder: (context, value, child) {
+        final t = Curves.easeOutCubic.transform(value);
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * 18),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
 final class PostCard extends ConsumerWidget {
   const PostCard({required this.post, super.key});
 
   final PostModel post;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => LumenSurface(
+  Widget build(BuildContext context, WidgetRef ref) => SyloraCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Row(
           children: <Widget>[
-            CircleAvatar(
-              child: Text(post.authorHandle.characters.first.toUpperCase()),
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: <Color>[SyloraTokens.ion, SyloraTokens.violet],
+                ),
+                boxShadow: SyloraTokens.glow(
+                  SyloraTokens.violet,
+                  blur: 14,
+                  opacity: 0.22,
+                ),
+              ),
+              child: Text(
+                post.authorHandle.characters.first.toUpperCase(),
+                style: SyloraTokens.body(
+                  16,
+                  color: Colors.white,
+                  weight: FontWeight.w600,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -373,13 +656,13 @@ final class PostCard extends ConsumerWidget {
                   children: <Widget>[
                     Text(
                       '@${post.authorHandle}',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: SyloraTokens.title(17),
                     ),
                     Text(
                       DateFormat.yMMMd().add_jm().format(
                         post.createdAt.toLocal(),
                       ),
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: SyloraTokens.body(12.5, color: SyloraTokens.inkMute),
                     ),
                   ],
                 ),
@@ -389,7 +672,7 @@ final class PostCard extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
-        Text(post.body, style: Theme.of(context).textTheme.bodyLarge),
+        Text(post.body, style: SyloraTokens.body(16, color: SyloraTokens.ink)),
         const SizedBox(height: 12),
         Wrap(
           spacing: 4,

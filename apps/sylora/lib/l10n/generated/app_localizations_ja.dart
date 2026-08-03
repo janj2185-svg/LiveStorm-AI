@@ -306,7 +306,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get feedTitle => 'フィード';
 
   @override
-  String get feedSubtitle => 'SYLORAソーシャルAPIからの最新投稿。';
+  String get feedSubtitle => 'SYLORAの生きた鼓動 — 投稿、友だち、創造がひとつに。';
 
   @override
   String get feedEmpty => 'フィードは静かです';
@@ -579,4 +579,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get commonPremiumRetry => 'プレミアムを再試行';
+
+  @override
+  String get homeHeroEyebrow => 'あなたの生きたAIワールド';
+
+  @override
+  String get homeHeroBody => 'ひとつの光のネットワークで創り、つながり、成長しましょう。';
+
+  @override
+  String get homeModulesLabel => 'エコシステムのポータル';
+
+  @override
+  String get homeComposeHint => '宇宙にシグナルを届けましょう…';
 }

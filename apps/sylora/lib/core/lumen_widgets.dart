@@ -370,6 +370,10 @@ final class LumenPage extends StatelessWidget {
     this.showAuraPresence = false,
     this.auraPresenceController,
     this.auraPresencePreset = SyloraAuraContextPreset.ai,
+    this.intensity = 0.78,
+    this.showOrbits = true,
+    this.header,
+    this.maxContentWidth = 980,
   });
 
   final String title;
@@ -382,6 +386,10 @@ final class LumenPage extends StatelessWidget {
   final bool showAuraPresence;
   final SyloraAuraPresenceController? auraPresenceController;
   final SyloraAuraContextPreset auraPresencePreset;
+  final double intensity;
+  final bool showOrbits;
+  final Widget? header;
+  final double maxContentWidth;
 
   @override
   Widget build(BuildContext context) => SyloraModuleScaffold(
@@ -394,6 +402,10 @@ final class LumenPage extends StatelessWidget {
     showAuraPresence: showAuraPresence,
     auraPresenceController: auraPresenceController,
     auraPresencePreset: auraPresencePreset,
+    intensity: intensity,
+    showOrbits: showOrbits,
+    header: header,
+    maxContentWidth: maxContentWidth,
     child: child,
   );
 }
