@@ -97,6 +97,11 @@ services:
         condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
+    # Stay on the live nginx edge network after cutover (upstream by container name).
+    networks:
+      - application
+      - data
+      - edge-proxy
     deploy:
       resources:
         limits:
@@ -220,10 +225,16 @@ services:
         condition: service_completed_successfully
     networks:
       - application
+      - edge-proxy
     deploy:
       resources:
         limits:
           memory: 64M
+
+networks:
+  edge-proxy:
+    external: true
+    name: sylora_default
 
 volumes:
   restored-minio-data:
