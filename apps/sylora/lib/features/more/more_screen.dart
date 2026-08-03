@@ -13,6 +13,7 @@ enum MoreEntryKind {
   gifts,
   ai,
   live,
+  conferences,
   creatorStudio,
   creator,
   workspace,
@@ -60,6 +61,11 @@ const _entries = <MoreEntry>[
     kind: MoreEntryKind.live,
     routeName: 'live',
     icon: Icons.sensors_outlined,
+  ),
+  MoreEntry(
+    kind: MoreEntryKind.conferences,
+    routeName: 'conferences',
+    icon: Icons.video_call_outlined,
   ),
   MoreEntry(
     kind: MoreEntryKind.creatorStudio,
@@ -157,6 +163,7 @@ String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
   MoreEntryKind.gifts => l10n.giftsShortLabel,
   MoreEntryKind.ai => l10n.aiShortLabel,
   MoreEntryKind.live => l10n.liveShortLabel,
+  MoreEntryKind.conferences => 'Conferences',
   MoreEntryKind.creatorStudio => l10n.moreCreatorStudio,
   MoreEntryKind.creator => l10n.moreCreator,
   MoreEntryKind.workspace => l10n.moreWorkspace,

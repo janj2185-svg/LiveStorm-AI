@@ -10,6 +10,7 @@ import 'features/admin/admin_screens.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
+import 'features/conferences/conference_screens.dart';
 import 'features/creator/creator_screens.dart';
 import 'features/creator_studio/creator_studio_screen.dart';
 import 'features/landing/landing_experience.dart';
@@ -320,6 +321,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 _page(state, const LiveScreen(), reducedMotion),
           ),
           GoRoute(
+            path: '/conferences',
+            name: 'conferences',
+            pageBuilder: (context, state) =>
+                _page(state, const ConferencesScreen(), reducedMotion),
+          ),
+          GoRoute(
             path: '/settings',
             name: 'settings',
             pageBuilder: (context, state) =>
@@ -411,6 +418,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _page(
           state,
           LiveSessionScreen(sessionId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/conferences/:id',
+        name: 'conference-room',
+        pageBuilder: (context, state) => _page(
+          state,
+          ConferenceRoomScreen(conferenceId: state.pathParameters['id']!),
           reducedMotion,
         ),
       ),

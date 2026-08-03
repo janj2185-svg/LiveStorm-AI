@@ -58,6 +58,7 @@ from app.routers import (
     auth,
     business,
     business_operations,
+    conferences,
     creator_platform,
     diagnostics,
     gift_authoring,
@@ -215,6 +216,10 @@ def create_app(
                 "description": "Official live integrations and durable control plane",
             },
             {
+                "name": "Video Conferences",
+                "description": "Business and education video conference rooms",
+            },
+            {
                 "name": "Creator platform",
                 "description": "Creator channels, subscriptions, content, and analytics",
             },
@@ -298,6 +303,7 @@ def create_app(
     app.include_router(live.router, prefix=resolved_settings.api_prefix)
     app.include_router(live.admin_router, prefix=resolved_settings.api_prefix)
     app.include_router(live.websocket_router, prefix=resolved_settings.api_prefix)
+    app.include_router(conferences.router, prefix=resolved_settings.api_prefix)
     app.include_router(gift_authoring.router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.admin_router, prefix=resolved_settings.api_prefix)
