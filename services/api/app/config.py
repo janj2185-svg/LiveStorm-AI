@@ -19,24 +19,28 @@ class OAuthProviderSettings(BaseModel):
     scopes: str = "openid email profile"
 
 
-# Consumer-facing providers. GitHub remains backend-capable but is never exposed
-# via GET /v1/auth/methods for the public Flutter UI.
+# Consumer-facing OAuth providers for the public product / Flutter UI.
+# GitHub is intentionally excluded from production authentication.
 PUBLIC_OAUTH_PROVIDERS = ("tiktok", "facebook", "google", "apple")
+
+# GitHub OAuth may be used only in local development/test tooling.
+DEVELOPMENT_ONLY_OAUTH_PROVIDERS = frozenset({"github"})
 
 OAUTH_DEFAULT_DISCOVERY: dict[str, str] = {
     "google": "https://accounts.google.com/.well-known/openid-configuration",
     "apple": "https://appleid.apple.com/.well-known/openid-configuration",
-    "github": "builtin:github",
     "tiktok": "builtin:tiktok",
     "facebook": "builtin:facebook",
+    # Development/test only — never enabled for staging/production product auth.
+    "github": "builtin:github",
 }
 
 OAUTH_DEFAULT_SCOPES: dict[str, str] = {
     "google": "openid email profile",
     "apple": "openid email name",
-    "github": "read:user user:email",
     "tiktok": "user.info.basic",
     "facebook": "email,public_profile",
+    "github": "read:user user:email",
 }
 
 
@@ -275,6 +279,12 @@ class Settings(BaseSettings):
         provider = name.lower().strip()
         safe_name = provider.upper().replace("-", "_")
         if not safe_name.replace("_", "").isalnum():
+            return None
+        # GitHub is not a consumer sign-in option outside local development/test.
+        if provider in DEVELOPMENT_ONLY_OAUTH_PROVIDERS and self.environment not in {
+            "development",
+            "test",
+        }:
             return None
         prefix = f"OAUTH_{safe_name}_"
         dotenv_path = find_dotenv(usecwd=True)

@@ -105,21 +105,26 @@ unavailable, startup fails.
 `/health/live` reports process liveness, `/health/ready` checks both
 dependencies, and `/metrics` exposes Prometheus request counts and latency.
 
-OAuth providers are configured by name:
+Consumer OAuth providers for the public product are TikTok, Facebook, Google,
+and Apple (plus phone/email OTP elsewhere). GitHub is **not** a product
+sign-in option and is ignored outside local `development`/`test`.
 
 ```dotenv
 OAUTH_GOOGLE_CLIENT_ID=...
 OAUTH_GOOGLE_CLIENT_SECRET=...
-OAUTH_GOOGLE_DISCOVERY_URL=https://accounts.google.com/.well-known/openid-configuration
-OAUTH_GOOGLE_REDIRECT_URI=https://api.sylora.example/v1/auth/oauth/google/callback
-OAUTH_GOOGLE_SCOPES=openid email profile
+OAUTH_APPLE_CLIENT_ID=...
+OAUTH_APPLE_CLIENT_SECRET=...
+OAUTH_FACEBOOK_CLIENT_ID=...
+OAUTH_FACEBOOK_CLIENT_SECRET=...
+OAUTH_TIKTOK_CLIENT_ID=...
+OAUTH_TIKTOK_CLIENT_SECRET=...
 ```
 
-The provider must expose valid OIDC discovery metadata. The callback validates
-state, PKCE, nonce, signature, issuer, audience, expiry, subject, and verified
-email before linking or creating an identity. An unconfigured provider returns
-an explicit `oauth_provider_unavailable` response; it never reports simulated
-success.
+OIDC providers use discovery metadata where available; TikTok/Facebook use
+builtin authorization metadata. The callback validates state, PKCE, and
+provider identity before linking or creating an account. Unverified emails are
+never used alone to merge accounts. An unconfigured provider returns
+`oauth_provider_unavailable`; it never reports simulated success.
 
 ## Wallet, ledger, and payments
 

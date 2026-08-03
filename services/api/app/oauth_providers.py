@@ -8,13 +8,6 @@ from urllib.parse import urlencode
 from app.config import OAuthProviderSettings
 
 BUILTIN_OAUTH_DISCOVERY: dict[str, dict[str, Any]] = {
-    "github": {
-        "issuer": "https://github.com",
-        "authorization_endpoint": "https://github.com/login/oauth/authorize",
-        "token_endpoint": "https://github.com/login/oauth/access_token",
-        "userinfo_endpoint": "https://api.github.com/user",
-        "token_endpoint_auth_methods_supported": ["client_secret_post"],
-    },
     "tiktok": {
         "issuer": "https://www.tiktok.com",
         "authorization_endpoint": "https://www.tiktok.com/v2/auth/authorize/",
@@ -30,10 +23,15 @@ BUILTIN_OAUTH_DISCOVERY: dict[str, dict[str, Any]] = {
         "userinfo_endpoint": "https://graph.facebook.com/me",
         "token_endpoint_auth_methods_supported": ["client_secret_post"],
     },
+    # Local development/test tooling only. Never used for production product auth.
+    "github": {
+        "issuer": "https://github.com",
+        "authorization_endpoint": "https://github.com/login/oauth/authorize",
+        "token_endpoint": "https://github.com/login/oauth/access_token",
+        "userinfo_endpoint": "https://api.github.com/user",
+        "token_endpoint_auth_methods_supported": ["client_secret_post"],
+    },
 }
-
-# GitHub stays in the backend for development tooling only.
-DEVELOPMENT_ONLY_OAUTH_PROVIDERS = frozenset({"github"})
 
 
 def authorize_query(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import SecretStr
 
 from app.config import Settings
 from app.phone import normalize_phone_e164
@@ -12,12 +13,13 @@ def test_normalize_phone_e164_ukraine() -> None:
     assert normalize_phone_e164("0501112233", default_region="UA") == "+380501112233"
 
 
-def test_auth_methods_hide_unconfigured_and_github(
+def test_auth_methods_exclude_github_and_unconfigured_providers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("OAUTH_GOOGLE_CLIENT_ID", raising=False)
     monkeypatch.delenv("OAUTH_GOOGLE_CLIENT_SECRET", raising=False)
     monkeypatch.delenv("OAUTH_TIKTOK_CLIENT_ID", raising=False)
+    monkeypatch.delenv("OAUTH_GITHUB_CLIENT_ID", raising=False)
     monkeypatch.delenv("SMS_PROVIDER", raising=False)
     settings = Settings(
         _env_file=None,
@@ -36,6 +38,40 @@ def test_auth_methods_hide_unconfigured_and_github(
     assert methods["google"] is False
     assert methods["apple"] is False
     assert "github" not in methods
+
+
+def test_github_oauth_ignored_in_production_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("OAUTH_GITHUB_CLIENT_ID", "dev-only-client")
+    monkeypatch.setenv("OAUTH_GITHUB_CLIENT_SECRET", "dev-only-secret")
+    production = Settings(
+        _env_file=None,
+        environment="production",
+        database_url="postgresql+asyncpg://sylora:x@127.0.0.1:5432/sylora",
+        redis_url="redis://127.0.0.1:6379/0",
+        jwt_secret="unit-test-jwt-key-with-more-than-thirty-two-characters",
+        data_encryption_key="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        web_base_url="https://getsylora.com",
+        cors_origins=["https://getsylora.com"],
+        allowed_hosts=["getsylora.com"],
+        jwt_issuer="https://getsylora.com",
+        ip_hash_key=SecretStr("unit-test-ip-hash-key-with-enough-entropy"),
+        smtp_host="smtp.example.com",
+        smtp_from_email="noreply@example.com",
+    )
+    assert production.oauth_provider("github") is None
+
+    development = Settings(
+        _env_file=None,
+        environment="development",
+        database_url="postgresql+asyncpg://sylora:x@127.0.0.1:5432/sylora",
+        redis_url="redis://127.0.0.1:6379/0",
+        jwt_secret="unit-test-jwt-key-with-more-than-thirty-two-characters",
+        data_encryption_key="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        web_base_url="http://localhost:5173",
+    )
+    assert development.oauth_provider("github") is not None
 
 
 async def test_auth_methods_endpoint(api) -> None:

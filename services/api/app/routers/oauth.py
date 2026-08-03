@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_audit_event
 from app.auth_service import issue_token_pair
-from app.config import OAuthProviderSettings, Settings
+from app.config import DEVELOPMENT_ONLY_OAUTH_PROVIDERS, OAuthProviderSettings, Settings
 from app.dependencies import get_session, get_settings
 from app.errors import APIError
 from app.models import (
@@ -30,7 +30,6 @@ from app.models import (
 )
 from app.oauth_providers import (
     BUILTIN_OAUTH_DISCOVERY,
-    DEVELOPMENT_ONLY_OAUTH_PROVIDERS,
     authorize_query,
     token_form,
 )
@@ -47,16 +46,14 @@ STATE_COOKIE = "sylora_oauth_state"
 
 def provider_or_error(settings: Settings, provider: str) -> OAuthProviderSettings:
     name = provider.lower().strip()
-    if name in DEVELOPMENT_ONLY_OAUTH_PROVIDERS and settings.environment not in {
-        "development",
-        "test",
-    }:
-        raise APIError(
-            503,
-            "oauth_provider_unavailable",
-            "OAuth provider unavailable",
-            "This OAuth provider is not available for consumer sign-in.",
-        )
+    if name in DEVELOPMENT_ONLY_OAUTH_PROVIDERS:
+        if settings.environment not in {"development", "test"}:
+            raise APIError(
+                503,
+                "oauth_provider_unavailable",
+                "OAuth provider unavailable",
+                "GitHub sign-in is not part of the SYLORA consumer product.",
+            )
     configuration = settings.oauth_provider(name)
     if configuration is None:
         raise APIError(
