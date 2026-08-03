@@ -232,7 +232,39 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
-    return Scaffold(
+    return Theme(
+      data: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: const ColorScheme.dark(
+          primary: LandingTokens.ion,
+          secondary: LandingTokens.petal,
+          surface: LandingTokens.voidMid,
+        ),
+        scaffoldBackgroundColor: LandingTokens.voidDeep,
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: LandingTokens.glass,
+          labelStyle: LandingTokens.body(13),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: LandingTokens.glassStroke),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: LandingTokens.glassStroke),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: LandingTokens.ion),
+          ),
+        ),
+        dividerColor: LandingTokens.glassStroke,
+        textTheme: TextTheme(
+          labelMedium: LandingTokens.body(12),
+          bodyMedium: LandingTokens.body(14),
+        ),
+      ),
+      child: Scaffold(
       backgroundColor: LandingTokens.canvas,
       body: _AuthAtmosphere(
         child: SafeArea(
@@ -263,7 +295,11 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
                     if (_loadingMethods)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 36),
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: LandingTokens.ion,
+                          ),
+                        ),
                       )
                     else
                       FadeTransition(
@@ -313,6 +349,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1131,7 +1168,7 @@ final class _AuthAtmosphere extends StatelessWidget {
                 height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: LandingTokens.amberLight.withValues(alpha: 0.28),
+                  color: LandingTokens.violet.withValues(alpha: 0.28),
                 ),
               ),
             ),
@@ -1145,7 +1182,7 @@ final class _AuthAtmosphere extends StatelessWidget {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: LandingTokens.roseGold.withValues(alpha: 0.18),
+                  color: LandingTokens.ion.withValues(alpha: 0.14),
                 ),
               ),
             ),
@@ -1180,24 +1217,27 @@ final class _AuthPillButton extends StatelessWidget {
         child: FilledButton(
           onPressed: enabled ? onPressed : null,
           style: FilledButton.styleFrom(
-            backgroundColor: LandingTokens.ink,
-            foregroundColor: LandingTokens.pearl,
-            disabledBackgroundColor: LandingTokens.ink.withValues(alpha: 0.25),
+            backgroundColor: LandingTokens.ion,
+            foregroundColor: LandingTokens.voidDeep,
+            disabledBackgroundColor: LandingTokens.ion.withValues(alpha: 0.25),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),
             ),
             textStyle: LandingTokens.body(
               15,
-              weight: FontWeight.w600,
-              color: LandingTokens.pearl,
+              weight: FontWeight.w700,
+              color: LandingTokens.voidDeep,
             ),
           ),
           child: busy
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: LandingTokens.voidDeep,
+                  ),
                 )
               : Text(label),
         ),
@@ -1210,7 +1250,7 @@ final class _AuthPillButton extends StatelessWidget {
         onPressed: enabled ? onPressed : null,
         style: OutlinedButton.styleFrom(
           foregroundColor: LandingTokens.ink,
-          side: BorderSide(color: LandingTokens.ink.withValues(alpha: 0.18)),
+          side: BorderSide(color: LandingTokens.ink.withValues(alpha: 0.28)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(999),
           ),

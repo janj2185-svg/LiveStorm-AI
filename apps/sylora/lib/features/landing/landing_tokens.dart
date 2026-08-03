@@ -1,40 +1,51 @@
 import 'package:flutter/material.dart';
 
-/// Warm premium palette for the immersive world entry — not product chrome.
+/// SYLORA Aether — proprietary dark ion palette (not generic neon SaaS).
 abstract final class LandingTokens {
-  static const canvas = Color(0xFFFAF7F2);
-  static const mist = Color(0xFFF3EDE4);
-  static const pearl = Color(0xFFFFFCF8);
-  static const champagne = Color(0xFFE9DCC8);
-  static const amberLight = Color(0xFFF0D7A8);
-  static const roseGold = Color(0xFFD4A894);
-  static const softClay = Color(0xFFC9B8A6);
-  static const ink = Color(0xFF2C2621);
-  static const inkSoft = Color(0xFF5C534B);
-  static const glassFill = Color(0xCCFFFEFB);
-  static const glassStroke = Color(0x66FFFFFF);
+  static const voidDeep = Color(0xFF010008);
+  static const voidMid = Color(0xFF04020E);
+  static const ion = Color(0xFF3CEFFF);
+  static const petal = Color(0xFFFF4FD8);
+  static const violet = Color(0xFF8B5CFF);
+  static const ember = Color(0xFFFFB06B);
+  static const mist = Color(0xFFD7C6FF);
+  static const ink = Color(0xFFF4F0FF);
+  static const inkDim = Color(0x9EF4F0FF);
+  static const glass = Color(0x6B120A28);
+  static const glassStroke = Color(0x24FFFFFF);
+
+  /// Backward-compatible aliases used by auth screens.
+  static const canvas = voidDeep;
+  static const mistBg = Color(0xFF0B0618);
+  static const pearl = Color(0xFF161028);
+  static const champagne = violet;
+  static const amberLight = ember;
+  static const roseGold = petal;
+  static const softClay = mist;
+  static const inkSoft = inkDim;
+  static const glassFill = glass;
 
   static const heroGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
     colors: <Color>[
-      Color(0xFFFFFCF8),
-      Color(0xFFF7F0E6),
-      Color(0xFFEFE4D4),
+      Color(0xFF12082A),
+      voidMid,
+      voidDeep,
     ],
   );
 
-  static TextStyle display(double size, {Color color = ink, double height = 1.15}) =>
+  static TextStyle display(double size, {Color color = ink, double height = 1.05}) =>
       TextStyle(
-        fontFamily: 'Instrument Serif',
+        fontFamily: 'Instrument Sans',
         fontSize: size,
         height: height,
-        fontWeight: FontWeight.w400,
-        letterSpacing: -0.02 * size,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.14 * size * 0.08,
         color: color,
       );
 
-  static TextStyle body(double size, {Color color = inkSoft, FontWeight weight = FontWeight.w400}) =>
+  static TextStyle body(double size, {Color color = inkDim, FontWeight weight = FontWeight.w400}) =>
       TextStyle(
         fontFamily: 'Instrument Sans',
         fontSize: size,
