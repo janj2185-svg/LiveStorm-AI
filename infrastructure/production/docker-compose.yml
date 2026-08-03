@@ -110,7 +110,7 @@ services:
     working_dir: /build
     restart: "no"
     volumes:
-      - ../../../apps/sylora:/build:ro
+      - ../../apps/sylora:/build:ro
       - web-dist:/out
     environment:
       SYLORA_API_BASE_URL: "https://${DOMAIN}"
@@ -131,7 +131,7 @@ services:
 
   api-image:
     build:
-      context: ../../../services/api
+      context: ../../services/api
       dockerfile: ../../infrastructure/docker/api.Dockerfile
     image: sylora-api:${IMAGE_TAG:-production}
     entrypoint: ["true"]
@@ -146,7 +146,7 @@ services:
     environment:
       <<: *api-env
     volumes:
-      - ../../../services/api:/src:ro
+      - ../../services/api:/src:ro
     working_dir: /src
     command: ["alembic", "upgrade", "head"]
     depends_on:
@@ -161,14 +161,14 @@ services:
   api:
     image: sylora-api:${IMAGE_TAG:-production}
     build:
-      context: ../../../services/api
+      context: ../../services/api
       dockerfile: ../../infrastructure/docker/api.Dockerfile
     restart: unless-stopped
     env_file: [.env]
     environment:
       <<: *api-env
     volumes:
-      - ../../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
+      - ../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -200,7 +200,7 @@ services:
     environment:
       <<: *api-env
     volumes:
-      - ../../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
+      - ../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -305,8 +305,8 @@ services:
       BACKUP_CRON: "${BACKUP_CRON:-0 */6 * * *}"
     volumes:
       - ./scripts/backup-loop.sh:/usr/local/bin/backup-loop.sh:ro
-      - ../../../infrastructure/scripts/backup-postgres.sh:/usr/local/bin/backup-postgres.sh:ro
-      - ../../../infrastructure/scripts/restore-postgres.sh:/usr/local/bin/restore-postgres.sh:ro
+      - ../../infrastructure/scripts/backup-postgres.sh:/usr/local/bin/backup-postgres.sh:ro
+      - ../../infrastructure/scripts/restore-postgres.sh:/usr/local/bin/restore-postgres.sh:ro
       - postgres-backup-tmp:/backups
     depends_on:
       postgres:

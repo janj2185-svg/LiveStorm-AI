@@ -40,7 +40,7 @@ services:
     working_dir: /build
     restart: "no"
     volumes:
-      - ../../../apps/sylora:/build
+      - ../../apps/sylora:/build
       - web-dist:/out
     environment:
       SYLORA_API_BASE_URL: "https://${STAND_DOMAIN}"
@@ -76,7 +76,7 @@ services:
       TEST_STAND_AUTO_VERIFY_EMAIL: "${TEST_STAND_AUTO_VERIFY_EMAIL:-true}"
       TEST_STAND_SANDBOX_WALLET: "${TEST_STAND_SANDBOX_WALLET:-true}"
     volumes:
-      - ../../../services/api:/src:ro
+      - ../../services/api:/src:ro
     working_dir: /src
     command: ["alembic", "upgrade", "head"]
     depends_on:
@@ -90,7 +90,7 @@ services:
   # Ensure the API image exists before migrate/api start (build-only service).
   api-image:
     build:
-      context: ../../../services/api
+      context: ../../services/api
       dockerfile: ../../infrastructure/docker/api.Dockerfile
     image: sylora-api:public-stand
     entrypoint: ["true"]
@@ -100,7 +100,7 @@ services:
 
   api:
     build:
-      context: ../../../services/api
+      context: ../../services/api
       dockerfile: ../../infrastructure/docker/api.Dockerfile
     image: sylora-api:public-stand
     restart: unless-stopped
@@ -126,7 +126,7 @@ services:
       STAND_ARTIFACTS_ROOT: /artifacts/sylora-gift-100-originals
       LOG_FORMAT: json
     volumes:
-      - ../../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
+      - ../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
     depends_on:
       postgres:
         condition: service_healthy
