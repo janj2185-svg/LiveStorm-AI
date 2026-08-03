@@ -57,6 +57,11 @@ from app.ai_providers import (
     ProviderUnavailableError,
     TranslationProviderResponse,
 )
+from app.ai_safety import (
+    assess_user_message,
+    enforce_tool_execution_policy,
+    inject_domain_disclaimers,
+)
 from app.ai_schemas import (
     AICitationResponse,
     AIEventResponse,
@@ -691,6 +696,7 @@ async def _execute_proposal_in_transaction(
 ) -> tuple[AIToolExecution, dict[str, Any]]:
     if proposal.user_id is None:
         raise APIError(409, "ai_tool_revoked", "AI tool revoked", "The proposal owner was removed.")
+    enforce_tool_execution_policy(proposal.risk, approval_kind=approval_kind)
     started = utcnow()
     proposal.state = AIToolState.executing
     output = await _execute_tool_effect(
@@ -775,12 +781,20 @@ async def send_chat_message(
             )
 
     history = await _chat_history(db, conversation.id)
+    safety = assess_user_message(payload.content)
     prompt_template = await _latest_prompt(db, conversation.locale, AICapability.chat)
     system_content = (
         prompt_template.content if prompt_template is not None else AURA_SYSTEM_PROMPT
     )
-    history.insert(0, {"role": "system", "content": system_content})
-    history.append({"role": "user", "content": payload.content})
+    safety_messages = [
+        {"role": "system", "content": reminder} for reminder in safety.system_reminders
+    ]
+    history = [
+        {"role": "system", "content": system_content},
+        *safety_messages,
+        *history,
+        {"role": "user", "content": payload.content},
+    ]
     sources = await resolve_grounding_context(
         db,
         user_id,
@@ -831,6 +845,13 @@ async def send_chat_message(
             raise ValueError
         if stream and deltas and "".join(deltas) != content:
             raise ProviderResponseError("provider_inconsistent_chat_stream")
+        guarded_content = inject_domain_disclaimers(content, safety)
+        if len(guarded_content) > 64_000:
+            raise ValueError
+        if guarded_content != content:
+            content = guarded_content
+            if deltas:
+                deltas = [content]
         validated_proposals = await _validate_provider_proposals(db, response.tool_proposals)
         resolved_citations = _validate_citations(response.citations, sources)
     except (ValueError, ProviderResponseError) as exc:
@@ -862,6 +883,19 @@ async def send_chat_message(
     )
     db.add(user_message)
     await db.flush()
+    if safety.flagged:
+        db.add(
+            AIEvent(
+                user_id=user_id,
+                event_type="message.safety_flagged",
+                aggregate_type="message",
+                aggregate_id=user_message.id,
+                event_payload={
+                    "flags": list(safety.flags),
+                    "topics": list(safety.topics),
+                },
+            )
+        )
     assistant_message = AIMessage(
         conversation_id=conversation.id,
         role=AIMessageRole.assistant,
