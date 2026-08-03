@@ -91,7 +91,8 @@ abstract final class SyloraTokens {
 
   static TextStyle display(double size, {Color color = ink, double height = 1.02}) =>
       TextStyle(
-        fontFamily: 'Syne',
+        // Bundled in pubspec — do not reference web-only families like Syne.
+        fontFamily: 'Instrument Sans',
         fontSize: size,
         height: height,
         fontWeight: FontWeight.w800,
@@ -100,7 +101,7 @@ abstract final class SyloraTokens {
       );
 
   static TextStyle title(double size, {Color color = ink}) => TextStyle(
-    fontFamily: 'Syne',
+    fontFamily: 'Instrument Sans',
     fontSize: size,
     height: 1.2,
     fontWeight: FontWeight.w700,
