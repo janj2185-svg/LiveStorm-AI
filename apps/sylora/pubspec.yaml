@@ -63,6 +63,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  shaders:
+    - shaders/universe_atmosphere.frag
+
   fonts:
     - family: Instrument Serif
       fonts:

@@ -5,9 +5,7 @@ import 'package:sylora/core/lumen_theme.dart';
 import 'package:sylora/features/landing/landing_experience.dart';
 
 void main() {
-  testWidgets('landing hero shows brand story without auth controls', (
-    tester,
-  ) async {
+  testWidgets('universe entry has no auth chrome on first frame', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
@@ -17,13 +15,13 @@ void main() {
       ),
     );
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('SYLORA'), findsWidgets);
-    expect(find.textContaining('Майбутнє починається'), findsOneWidget);
-    expect(find.text('Почати'), findsOneWidget);
-    expect(find.text('Увійти'), findsNothing);
+    expect(find.text('Увійти у світ'), findsOneWidget);
     expect(find.text('Створити акаунт'), findsNothing);
-    expect(find.textContaining('Google'), findsNothing);
+    expect(find.text('Google'), findsNothing);
     expect(find.textContaining('пароль'), findsNothing);
+    expect(find.textContaining('feature'), findsNothing);
   });
 }
