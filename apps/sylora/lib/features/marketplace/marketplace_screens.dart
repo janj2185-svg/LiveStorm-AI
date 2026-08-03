@@ -57,6 +57,7 @@ final class MarketplaceScreen extends ConsumerWidget {
       title: 'Marketplace',
       subtitle:
           'The persisted catalog, cart, orders, entitlements, and seller APIs.',
+      intensity: 0.9,
       showAuraPresence: true,
       auraPresencePreset: SyloraAuraContextPreset.marketplace,
       actions: <Widget>[
@@ -67,6 +68,29 @@ final class MarketplaceScreen extends ConsumerWidget {
             icon: const Icon(Icons.storefront_outlined),
           ),
       ],
+      header: SyloraUniverseHero(
+        eyebrow: 'COMMERCE',
+        title: 'Marketplace',
+        body:
+            'Catalog, cart, orders and creator commerce — glass surfaces with living motion.',
+        trailing: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            if (seller)
+              SyloraPortalChip(
+                label: 'Seller',
+                icon: Icons.storefront_rounded,
+                onTap: () => context.pushNamed('marketplace-seller'),
+              ),
+            SyloraPortalChip(
+              label: 'Gifts',
+              icon: Icons.card_giftcard_rounded,
+              onTap: () => context.goNamed('gifts'),
+            ),
+          ],
+        ),
+      ),
       child: LumenAsyncView<_MarketplaceSnapshot>(
         value: value,
         onRetry: () => ref.invalidate(_marketplaceProvider),

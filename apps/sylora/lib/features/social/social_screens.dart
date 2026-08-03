@@ -851,125 +851,246 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => LumenPage(
-    title: 'Search',
-    subtitle: 'Search current users, posts, and communities.',
-    child: Column(
-      children: <Widget>[
-        SearchBar(
-          controller: _query,
-          focusNode: _searchFocus,
-          hintText: 'Search SYLORA',
-          leading: const Icon(Icons.search_rounded),
-          trailing: <Widget>[
-            IconButton(
-              tooltip: 'Search',
-              onPressed: _search,
-              icon: const Icon(Icons.arrow_forward_rounded),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return LumenPage(
+      title: l10n.searchTitle,
+      subtitle: l10n.searchSubtitle,
+      intensity: 0.94,
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.feed,
+      header: SyloraUniverseHero(
+        eyebrow: l10n.searchHeroEyebrow,
+        title: l10n.searchTitle,
+        body: l10n.searchSubtitle,
+        trailing: SyloraGlass(
+          radius: SyloraTokens.radiusPill,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            children: <Widget>[
+              const SizedBox(width: 8),
+              Icon(Icons.travel_explore_rounded, color: SyloraTokens.violet),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _query,
+                  focusNode: _searchFocus,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _search(),
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHint,
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  style: SyloraTokens.body(15, color: SyloraTokens.ink, weight: FontWeight.w500),
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.searchTitle,
+                onPressed: _search,
+                icon: const Icon(Icons.arrow_forward_rounded),
+              ),
+            ],
+          ),
+        ),
+        footer: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            SyloraPortalChip(
+              label: l10n.searchPeople,
+              icon: Icons.person_search_rounded,
+              onTap: _searchFocus.requestFocus,
+            ),
+            SyloraPortalChip(
+              label: l10n.searchPosts,
+              icon: Icons.article_outlined,
+              onTap: _searchFocus.requestFocus,
+            ),
+            SyloraPortalChip(
+              label: l10n.searchCommunities,
+              icon: Icons.groups_2_outlined,
+              onTap: _searchFocus.requestFocus,
             ),
           ],
-          onSubmitted: (_) => _search(),
         ),
-        const SizedBox(height: 20),
-        if (_results == null)
-          LumenEmptyView(
-            title: 'Find your people',
-            message:
-                'Enter at least two characters to query the live SYLORA index.',
-            actionLabel: 'Focus search',
-            onAction: _searchFocus.requestFocus,
-            icon: Icons.travel_explore_rounded,
-          )
-        else
-          FutureBuilder<SocialSearchBundle>(
-            future: _results,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const Padding(
-                  padding: EdgeInsets.all(40),
-                  child: CircularProgressIndicator(),
-                );
-              }
-              if (snapshot.hasError) {
-                return LumenErrorView(error: snapshot.error!, onRetry: _search);
-              }
-              final data = snapshot.requireData;
-              if (data.users.isEmpty &&
-                  data.posts.isEmpty &&
-                  data.communities.isEmpty) {
-                return LumenEmptyView(
-                  title: 'No results',
-                  message:
-                      'The API returned no users, posts, or communities for this query.',
-                  actionLabel: 'Edit search',
-                  onAction: _searchFocus.requestFocus,
-                  icon: Icons.search_off_rounded,
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  if (data.users.isNotEmpty) ...<Widget>[
-                    Text(
-                      'People',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    for (final user in data.users)
-                      ListTile(
-                        title: Text(user.displayName),
-                        subtitle: Text('@${user.handle}'),
-                        onTap: () => context.pushNamed(
-                          'public-profile',
-                          pathParameters: <String, String>{
-                            'handle': user.handle!,
-                          },
-                        ),
+      ),
+      child: _results == null
+          ? LumenEmptyView(
+              title: l10n.searchFindPeople,
+              message: l10n.searchFindPeopleMessage,
+              actionLabel: l10n.searchFocus,
+              onAction: _searchFocus.requestFocus,
+              icon: Icons.travel_explore_rounded,
+            )
+          : FutureBuilder<SocialSearchBundle>(
+              future: _results,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return LumenErrorView(
+                    error: snapshot.error!,
+                    onRetry: _search,
+                  );
+                }
+                final data = snapshot.requireData;
+                if (data.users.isEmpty &&
+                    data.posts.isEmpty &&
+                    data.communities.isEmpty) {
+                  return LumenEmptyView(
+                    title: l10n.searchNoResults,
+                    message: l10n.searchNoResultsMessage,
+                    actionLabel: l10n.searchEdit,
+                    onAction: _searchFocus.requestFocus,
+                    icon: Icons.search_off_rounded,
+                  );
+                }
+                var index = 0;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    if (data.users.isNotEmpty) ...<Widget>[
+                      Text(
+                        l10n.searchPeople,
+                        style: SyloraTokens.title(20),
                       ),
-                  ],
-                  if (data.posts.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Posts',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    for (final post in data.posts) ...<Widget>[
-                      PostCard(post: post),
                       const SizedBox(height: 12),
+                      for (final user in data.users)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: SyloraStaggeredReveal(
+                            index: index++,
+                            child: SyloraGlassTile(
+                              onTap: () => context.pushNamed(
+                                'public-profile',
+                                pathParameters: <String, String>{
+                                  'handle': user.handle!,
+                                },
+                              ),
+                              child: Row(
+                                children: <Widget>[
+                                  SyloraAvatarOrb(
+                                    label: user.displayName,
+                                    size: 46,
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          user.displayName,
+                                          style: SyloraTokens.title(16),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          '@${user.handle}',
+                                          style: SyloraTokens.body(
+                                            13,
+                                            color: SyloraTokens.inkMute,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                    if (data.posts.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 8),
+                      Text(l10n.searchPosts, style: SyloraTokens.title(20)),
+                      const SizedBox(height: 12),
+                      for (final post in data.posts)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SyloraStaggeredReveal(
+                            index: index++,
+                            child: PostCard(post: post),
+                          ),
+                        ),
+                    ],
+                    if (data.communities.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.searchCommunities,
+                        style: SyloraTokens.title(20),
+                      ),
+                      const SizedBox(height: 12),
+                      for (final community in data.communities)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: SyloraStaggeredReveal(
+                            index: index++,
+                            child: SyloraGlassTile(
+                              onTap: () => context.pushNamed(
+                                'community',
+                                pathParameters: <String, String>{
+                                  'slug': requireString(community.raw, 'slug'),
+                                },
+                              ),
+                              child: Row(
+                                children: <Widget>[
+                                  const Icon(
+                                    Icons.groups_2_rounded,
+                                    color: SyloraTokens.violet,
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          community.label,
+                                          style: SyloraTokens.title(16),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (community.description != null)
+                                          Text(
+                                            community.description!,
+                                            style: SyloraTokens.body(
+                                              13,
+                                              color: SyloraTokens.inkMute,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ],
-                  if (data.communities.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Communities',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    for (final community in data.communities)
-                      ListTile(
-                        title: Text(community.label),
-                        subtitle: Text(community.description ?? ''),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => context.pushNamed(
-                          'community',
-                          pathParameters: <String, String>{
-                            'slug': requireString(community.raw, 'slug'),
-                          },
-                        ),
-                      ),
-                  ],
-                ],
-              );
-            },
-          ),
-      ],
-    ),
-  );
+                );
+              },
+            ),
+    );
+  }
 
   void _search() {
+    final l10n = AppLocalizations.of(context);
     final query = _query.text.trim();
     if (query.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter at least two characters.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.searchMinChars)));
       return;
     }
     setState(() {
@@ -997,7 +1118,7 @@ final class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     final value = ref.watch(friendsSnapshotProvider);
     return SyloraModuleScaffold(
       title: l10n.friendsTitle,
-      subtitle: 'Real friendships, requests, and people you may know.',
+      subtitle: l10n.friendsSubtitle,
       showAuraPresence: true,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       actions: <Widget>[
@@ -2032,46 +2153,54 @@ final class PublicProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(publicProfileProvider(handle));
+    final width = MediaQuery.sizeOf(context).width;
+    final actionWidth = width < 620 ? double.infinity : 200.0;
     return LumenPage(
       title: '@$handle',
-      subtitle: 'Public profile and relationship controls from the social API.',
+      subtitle: l10n.profileSubtitle,
+      intensity: 0.9,
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.feed,
       child: LumenAsyncView<ProfileModel>(
         value: value,
         onRetry: () => ref.invalidate(publicProfileProvider(handle)),
-        data: (profile) => LumenSurface(
-          child: Column(
-            children: <Widget>[
-              CircleAvatar(
-                radius: 44,
-                backgroundImage: profile.avatarUrl == null
-                    ? null
-                    : NetworkImage(profile.avatarUrl!),
-                child: profile.avatarUrl == null
-                    ? Text(profile.displayName.characters.first.toUpperCase())
-                    : null,
+        data: (profile) => Column(
+          children: <Widget>[
+            SyloraStaggeredReveal(
+              index: 0,
+              child: SyloraUniverseHero(
+                eyebrow: l10n.navProfile.toUpperCase(),
+                title: profile.displayName,
+                body: profile.bio?.trim().isNotEmpty == true
+                    ? profile.bio!
+                    : '@${profile.handle}',
+                trailing: Center(
+                  child: SyloraPulseGlow(
+                    child: SyloraAvatarOrb(
+                      label: profile.displayName,
+                      imageUrl: profile.avatarUrl,
+                      size: 88,
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                profile.displayName,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              Text('@${profile.handle}'),
-              if (profile.bio != null) ...<Widget>[
-                const SizedBox(height: 12),
-                Text(profile.bio!, textAlign: TextAlign.center),
-              ],
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+            ),
+            const SizedBox(height: SyloraTokens.space4),
+            SyloraStaggeredReveal(
+              index: 1,
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
                 alignment: WrapAlignment.center,
                 children: <Widget>[
                   SizedBox(
-                    width: 180,
+                    width: actionWidth,
                     child: LumenPrimaryButton(
-                      label: profile.followedByViewer ? 'Unfollow' : 'Follow',
+                      label: profile.followedByViewer
+                          ? l10n.profileUnfollow
+                          : l10n.profileFollow,
                       icon: Icons.person_add_alt_1_rounded,
                       onPressed: () async {
                         final repository = ref.read(socialRepositoryProvider);
@@ -2081,7 +2210,7 @@ final class PublicProfileScreen extends ConsumerWidget {
                           final status = await repository.follow(handle);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Follow status: $status')),
+                              SnackBar(content: Text(status)),
                             );
                           }
                         }
@@ -2090,16 +2219,16 @@ final class PublicProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(
-                    width: 180,
+                    width: actionWidth,
                     child: _ProfileFriendButton(
                       handle: handle,
                       profile: profile,
                     ),
                   ),
                   SizedBox(
-                    width: 180,
+                    width: actionWidth,
                     child: LumenSecondaryButton(
-                      label: 'Message',
+                      label: l10n.profileMessage,
                       icon: Icons.chat_outlined,
                       onPressed: () async {
                         final conversation = await ref
@@ -2118,38 +2247,36 @@ final class PublicProfileScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: <Widget>[
-                  TextButton(
-                    onPressed: () async {
-                      await ref
-                          .read(socialRepositoryProvider)
-                          .mute(handle, true);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Account muted.')),
-                        );
-                      }
-                    },
-                    child: const Text('Mute'),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      await ref
-                          .read(socialRepositoryProvider)
-                          .block(handle, true);
-                      if (context.mounted) {
-                        context.pop();
-                      }
-                    },
-                    child: const Text('Block'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: SyloraTokens.space3),
+            Wrap(
+              spacing: 8,
+              children: <Widget>[
+                TextButton(
+                  onPressed: () async {
+                    await ref.read(socialRepositoryProvider).mute(handle, true);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.profileMuted)),
+                      );
+                    }
+                  },
+                  child: Text(l10n.profileMute),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await ref
+                        .read(socialRepositoryProvider)
+                        .block(handle, true);
+                    if (context.mounted) {
+                      context.pop();
+                    }
+                  },
+                  child: Text(l10n.profileBlock),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -2245,56 +2372,92 @@ final class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(notificationsProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () async {
-              await ref.read(socialRepositoryProvider).readAllNotifications();
-              ref.invalidate(notificationsProvider);
-            },
-            child: const Text('Read all'),
-          ),
-        ],
+    return LumenPage(
+      title: l10n.notificationsTitle,
+      subtitle: l10n.notificationsEmptyMessage,
+      intensity: 0.88,
+      actions: <Widget>[
+        TextButton(
+          onPressed: () async {
+            await ref.read(socialRepositoryProvider).readAllNotifications();
+            ref.invalidate(notificationsProvider);
+          },
+          child: Text(l10n.notificationsReadAll),
+        ),
+      ],
+      header: SyloraUniverseHero(
+        eyebrow: l10n.notificationsTitle.toUpperCase(),
+        title: l10n.notificationsTitle,
+        body: l10n.notificationsEmptyMessage,
       ),
-      body: LumenAsyncView<CursorPage<NamedResource>>(
+      child: LumenAsyncView<CursorPage<NamedResource>>(
         value: value,
         onRetry: () => ref.invalidate(notificationsProvider),
         data: (page) => page.items.isEmpty
             ? LumenEmptyView(
-                title: 'No notifications',
-                message: 'The API returned no notification events.',
-                actionLabel: 'Refresh',
+                title: l10n.notificationsEmpty,
+                message: l10n.notificationsEmptyMessage,
+                actionLabel: l10n.commonRefresh,
                 onAction: () => ref.invalidate(notificationsProvider),
+                icon: Icons.notifications_none_rounded,
               )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: page.items.length,
-                itemBuilder: (context, index) {
-                  final item = page.items[index];
-                  return ListTile(
-                    leading: const Icon(Icons.notifications_outlined),
-                    title: Text(item.label),
-                    onTap: () async {
-                      await ref
-                          .read(socialRepositoryProvider)
-                          .readNotification(item.id);
-                      ref.invalidate(notificationsProvider);
-                    },
-                    trailing: IconButton(
-                      tooltip: 'Mute this notification type',
-                      onPressed: () async {
-                        await ref
-                            .read(socialRepositoryProvider)
-                            .muteNotificationType(item.label, true);
-                        ref.invalidate(notificationsProvider);
-                      },
-                      icon: const Icon(Icons.notifications_off_outlined),
+            : Column(
+                children: <Widget>[
+                  for (var i = 0; i < page.items.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: SyloraStaggeredReveal(
+                        index: i,
+                        child: SyloraGlassTile(
+                          onTap: () async {
+                            await ref
+                                .read(socialRepositoryProvider)
+                                .readNotification(page.items[i].id);
+                            ref.invalidate(notificationsProvider);
+                          },
+                          child: Row(
+                            children: <Widget>[
+                              SyloraPulseGlow(
+                                child: const Icon(
+                                  Icons.notifications_active_outlined,
+                                  color: SyloraTokens.violet,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  page.items[i].label,
+                                  style: SyloraTokens.body(
+                                    15,
+                                    color: SyloraTokens.ink,
+                                    weight: FontWeight.w500,
+                                  ),
+                                  softWrap: true,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: l10n.notificationsMuteType,
+                                onPressed: () async {
+                                  await ref
+                                      .read(socialRepositoryProvider)
+                                      .muteNotificationType(
+                                        page.items[i].label,
+                                        true,
+                                      );
+                                  ref.invalidate(notificationsProvider);
+                                },
+                                icon: const Icon(
+                                  Icons.notifications_off_outlined,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  );
-                },
+                ],
               ),
       ),
     );
@@ -2310,6 +2473,10 @@ final class ConversationsScreen extends ConsumerWidget {
     final value = ref.watch(conversationsProvider);
     return LumenPage(
       title: l10n.messagesTitle,
+      subtitle: l10n.messagesSubtitle,
+      intensity: 0.94,
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.feed,
       actions: <Widget>[
         IconButton(
           tooltip: l10n.messagesNewConversation,
@@ -2317,6 +2484,16 @@ final class ConversationsScreen extends ConsumerWidget {
           icon: const Icon(Icons.add_comment_outlined),
         ),
       ],
+      header: SyloraUniverseHero(
+        eyebrow: l10n.messagesHeroEyebrow,
+        title: l10n.messagesTitle,
+        body: l10n.messagesHeroBody,
+        trailing: SyloraPortalChip(
+          label: l10n.messagesNewConversation,
+          icon: Icons.edit_square,
+          onTap: () => _createConversation(context, ref),
+        ),
+      ),
       child: LumenAsyncView<List<ConversationModel>>(
         value: value,
         onRetry: () => ref.invalidate(conversationsProvider),
@@ -2330,50 +2507,12 @@ final class ConversationsScreen extends ConsumerWidget {
               )
             : Column(
                 children: <Widget>[
-                  for (final conversation in items)
-                    Card(
-                      child: ListTile(
-                        leading: const CircleAvatar(
-                          child: Icon(Icons.person_outline),
-                        ),
-                        title: Text(
-                          '${l10n.messagesConversationTitle} '
-                          '${conversation.id.substring(0, 8)}',
-                        ),
-                        subtitle: Text(conversation.state),
-                        trailing: conversation.state == 'request'
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  IconButton(
-                                    tooltip: l10n.messagesDeclineRequest,
-                                    onPressed: () async {
-                                      await ref
-                                          .read(messagingRepositoryProvider)
-                                          .declineRequest(conversation.id);
-                                      ref.invalidate(conversationsProvider);
-                                    },
-                                    icon: const Icon(Icons.close_rounded),
-                                  ),
-                                  IconButton.filledTonal(
-                                    tooltip: l10n.messagesAcceptRequest,
-                                    onPressed: () async {
-                                      await ref
-                                          .read(messagingRepositoryProvider)
-                                          .acceptRequest(conversation.id);
-                                      ref.invalidate(conversationsProvider);
-                                    },
-                                    icon: const Icon(Icons.check_rounded),
-                                  ),
-                                ],
-                              )
-                            : const Icon(Icons.chevron_right_rounded),
-                        onTap: () => context.pushNamed(
-                          'conversation',
-                          pathParameters: <String, String>{
-                            'id': conversation.id,
-                          },
-                        ),
+                  for (var i = 0; i < items.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: SyloraStaggeredReveal(
+                        index: i,
+                        child: _ConversationRow(conversation: items[i]),
                       ),
                     ),
                 ],
@@ -2437,6 +2576,85 @@ final class ConversationsScreen extends ConsumerWidget {
   }
 }
 
+final class _ConversationRow extends ConsumerWidget {
+  const _ConversationRow({required this.conversation});
+
+  final ConversationModel conversation;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final isRequest = conversation.state == 'request';
+    final stamp = DateFormat.MMMd().add_Hm().format(conversation.updatedAt.toLocal());
+    return SyloraGlassTile(
+      onTap: () => context.pushNamed(
+        'conversation',
+        pathParameters: <String, String>{'id': conversation.id},
+      ),
+      child: Row(
+        children: <Widget>[
+          SyloraPulseGlow(
+            color: isRequest ? SyloraTokens.petal : SyloraTokens.ion,
+            child: SyloraAvatarOrb(
+              label: conversation.id,
+              size: 48,
+              online: !isRequest,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '${l10n.messagesConversationTitle} '
+                  '${conversation.id.substring(0, 8)}',
+                  style: SyloraTokens.title(16),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isRequest ? l10n.messagesRequestBadge : stamp,
+                  style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
+                ),
+              ],
+            ),
+          ),
+          if (isRequest)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                IconButton(
+                  tooltip: l10n.messagesDeclineRequest,
+                  onPressed: () async {
+                    await ref
+                        .read(messagingRepositoryProvider)
+                        .declineRequest(conversation.id);
+                    ref.invalidate(conversationsProvider);
+                  },
+                  icon: const Icon(Icons.close_rounded),
+                ),
+                IconButton.filledTonal(
+                  tooltip: l10n.messagesAcceptRequest,
+                  onPressed: () async {
+                    await ref
+                        .read(messagingRepositoryProvider)
+                        .acceptRequest(conversation.id);
+                    ref.invalidate(conversationsProvider);
+                  },
+                  icon: const Icon(Icons.check_rounded),
+                ),
+              ],
+            )
+          else
+            const Icon(Icons.chevron_right_rounded),
+        ],
+      ),
+    );
+  }
+}
+
 final class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({required this.conversationId, super.key});
 
@@ -2476,107 +2694,182 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final value = ref.watch(messageHistoryProvider(widget.conversationId));
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.messagesConversationTitle)),
-      body: Column(
-        children: <Widget>[
-          if (!realtimeSupported)
-            MaterialBanner(
-              content: Text(realtimeUnsupportedReason!),
-              actions: const <Widget>[SizedBox.shrink()],
-            ),
-          Expanded(
-            child: LumenAsyncView<CursorPage<MessageModel>>(
-              value: value,
-              onRetry: () =>
-                  ref.invalidate(messageHistoryProvider(widget.conversationId)),
-              data: (page) {
-                if (page.items.isNotEmpty &&
-                    _lastReadMessageId != page.items.first.id) {
-                  _lastReadMessageId = page.items.first.id;
-                  WidgetsBinding.instance.addPostFrameCallback((_) async {
-                    try {
-                      await ref
-                          .read(messagingRepositoryProvider)
-                          .markRead(widget.conversationId, page.items.first.id);
-                    } on Object catch (error) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(messageFor(error))),
-                        );
-                      }
-                    }
-                  });
-                }
-                return page.items.isEmpty
-                    ? LumenEmptyView(
-                        title: l10n.messagesEmpty,
-                        message: l10n.messagesEmptyMessage,
-                        actionLabel: l10n.messagesTypeMessage,
-                        onAction: _messageFocus.requestFocus,
-                        icon: Icons.mark_chat_unread_outlined,
-                      )
-                    : ListView.builder(
-                        reverse: true,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: page.items.length,
-                        itemBuilder: (context, index) {
-                          final message = page.items[index];
-                          return Align(
-                            alignment: Alignment.centerLeft,
-                            child: Card(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Text(message.body),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-              },
-            ),
+    final me = ref.watch(authControllerProvider).user?.id;
+    return SyloraLivingScaffold(
+      intensity: 0.86,
+      showOrbits: MediaQuery.sizeOf(context).width < 900,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: SyloraTokens.glassStrong,
+          title: Text(
+            l10n.messagesConversationTitle,
+            style: SyloraTokens.title(18),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextField(
-                      controller: _message,
-                      focusNode: _messageFocus,
-                      minLines: 1,
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        labelText: l10n.messagesTypeMessage,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    tooltip: l10n.messagesSend,
-                    onPressed: () async {
-                      final text = _message.text.trim();
-                      if (text.isEmpty) {
-                        return;
+        ),
+        body: Column(
+          children: <Widget>[
+            if (!realtimeSupported)
+              MaterialBanner(
+                content: Text(realtimeUnsupportedReason!),
+                actions: const <Widget>[SizedBox.shrink()],
+              ),
+            Expanded(
+              child: LumenAsyncView<CursorPage<MessageModel>>(
+                value: value,
+                onRetry: () => ref.invalidate(
+                  messageHistoryProvider(widget.conversationId),
+                ),
+                data: (page) {
+                  if (page.items.isNotEmpty &&
+                      _lastReadMessageId != page.items.first.id) {
+                    _lastReadMessageId = page.items.first.id;
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      try {
+                        await ref
+                            .read(messagingRepositoryProvider)
+                            .markRead(
+                              widget.conversationId,
+                              page.items.first.id,
+                            );
+                      } on Object catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(messageFor(error))),
+                          );
+                        }
                       }
-                      await ref
-                          .read(messagingRepositoryProvider)
-                          .send(widget.conversationId, text);
-                      _message.clear();
-                      ref.invalidate(
-                        messageHistoryProvider(widget.conversationId),
-                      );
-                    },
-                    icon: const Icon(Icons.send_rounded),
-                  ),
-                ],
+                    });
+                  }
+                  return page.items.isEmpty
+                      ? LumenEmptyView(
+                          title: l10n.messagesEmpty,
+                          message: l10n.messagesEmptyMessage,
+                          actionLabel: l10n.messagesTypeMessage,
+                          onAction: _messageFocus.requestFocus,
+                          icon: Icons.mark_chat_unread_outlined,
+                        )
+                      : ListView.builder(
+                          reverse: true,
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          itemCount: page.items.length,
+                          itemBuilder: (context, index) {
+                            final message = page.items[index];
+                            final mine = me != null && message.senderId == me;
+                            return SyloraStaggeredReveal(
+                              index: index,
+                              slide: 10,
+                              child: Align(
+                                alignment: mine
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.sizeOf(context).width * 0.78,
+                                  ),
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        SyloraTokens.radiusMd,
+                                      ),
+                                      gradient: LinearGradient(
+                                        colors: mine
+                                            ? const <Color>[
+                                                SyloraTokens.ion,
+                                                SyloraTokens.violet,
+                                              ]
+                                            : <Color>[
+                                                Colors.white.withValues(
+                                                  alpha: 0.92,
+                                                ),
+                                                SyloraTokens.mist.withValues(
+                                                  alpha: 0.35,
+                                                ),
+                                              ],
+                                      ),
+                                      boxShadow: mine
+                                          ? SyloraTokens.glow(
+                                              SyloraTokens.violet,
+                                              blur: 16,
+                                              opacity: 0.2,
+                                            )
+                                          : null,
+                                    ),
+                                    child: Text(
+                                      message.body,
+                                      style: SyloraTokens.body(
+                                        15,
+                                        color: mine
+                                            ? Colors.white
+                                            : SyloraTokens.ink,
+                                        weight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                },
               ),
             ),
-          ),
-        ],
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: SyloraGlass(
+                  radius: SyloraTokens.radiusPill,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: TextField(
+                          controller: _message,
+                          focusNode: _messageFocus,
+                          minLines: 1,
+                          maxLines: 5,
+                          decoration: InputDecoration(
+                            hintText: l10n.messagesTypeMessage,
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      IconButton.filled(
+                        tooltip: l10n.messagesSend,
+                        onPressed: () async {
+                          final text = _message.text.trim();
+                          if (text.isEmpty) {
+                            return;
+                          }
+                          await ref
+                              .read(messagingRepositoryProvider)
+                              .send(widget.conversationId, text);
+                          _message.clear();
+                          ref.invalidate(
+                            messageHistoryProvider(widget.conversationId),
+                          );
+                        },
+                        icon: const Icon(Icons.send_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

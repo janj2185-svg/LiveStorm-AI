@@ -601,4 +601,184 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get homeComposeHint => 'Podziel się sygnałem z wszechświatem…';
+
+  @override
+  String get searchTitle => 'Explore';
+
+  @override
+  String get searchSubtitle =>
+      'Find people, posts, and communities across the living network.';
+
+  @override
+  String get searchHint => 'Search SYLORA';
+
+  @override
+  String get searchFindPeople => 'Discover the network';
+
+  @override
+  String get searchFindPeopleMessage =>
+      'Enter at least two characters to query people, posts, and communities.';
+
+  @override
+  String get searchFocus => 'Focus search';
+
+  @override
+  String get searchNoResults => 'No results';
+
+  @override
+  String get searchNoResultsMessage =>
+      'Nothing matched this query. Try another handle, keyword, or community.';
+
+  @override
+  String get searchEdit => 'Edit search';
+
+  @override
+  String get searchMinChars => 'Enter at least two characters.';
+
+  @override
+  String get searchPeople => 'People';
+
+  @override
+  String get searchPosts => 'Posts';
+
+  @override
+  String get searchCommunities => 'Communities';
+
+  @override
+  String get searchHeroEyebrow => 'DISCOVER';
+
+  @override
+  String get messagesSubtitle =>
+      'Direct signals, requests, and living conversations.';
+
+  @override
+  String get messagesHeroEyebrow => 'INBOX';
+
+  @override
+  String get messagesHeroBody =>
+      'Private threads with cinematic presence — requests, replies, and Aura-ready context.';
+
+  @override
+  String get messagesRequestBadge => 'Request';
+
+  @override
+  String get friendsSubtitle =>
+      'Real friendships, requests, and people you may know.';
+
+  @override
+  String get profileSubtitle => 'Public presence and relationship controls.';
+
+  @override
+  String get profileFollow => 'Follow';
+
+  @override
+  String get profileUnfollow => 'Unfollow';
+
+  @override
+  String get profileMessage => 'Message';
+
+  @override
+  String get profileMute => 'Mute';
+
+  @override
+  String get profileBlock => 'Block';
+
+  @override
+  String get profileMuted => 'Account muted.';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsReadAll => 'Read all';
+
+  @override
+  String get notificationsEmpty => 'No notifications';
+
+  @override
+  String get notificationsEmptyMessage =>
+      'When the network moves, signals appear here.';
+
+  @override
+  String get notificationsMuteType => 'Mute this notification type';
+
+  @override
+  String get moreHeroEyebrow => 'YOUR HUB';
+
+  @override
+  String get moreHeroBody =>
+      'Wallet, Live, Aura, learning, and creator tools — one luminous control surface.';
+
+  @override
+  String get moreQuickActions => 'QUICK ACTIONS';
+
+  @override
+  String get moreConferences => 'Conferences';
+
+  @override
+  String get moreGoLive => 'Go Live';
+
+  @override
+  String get moreOpenWallet => 'Wallet';
+
+  @override
+  String get moreEditProfile => 'Edit profile';
+
+  @override
+  String get liveTitle => 'Live';
+
+  @override
+  String get liveSubtitle =>
+      'Go live with WHIP, OBS, or studio tools — honest platform integrations only.';
+
+  @override
+  String get liveHeroEyebrow => 'BROADCAST';
+
+  @override
+  String get liveHeroBody =>
+      'Stage a session, open Creator Studio, and keep every integration real.';
+
+  @override
+  String get liveIntegrations => 'Integrations';
+
+  @override
+  String get liveSessions => 'Sessions';
+
+  @override
+  String get liveCreateSession => 'Create session';
+
+  @override
+  String get liveNoSessions => 'No live sessions';
+
+  @override
+  String get liveNoSessionsMessage =>
+      'Create a session to receive a reveal-once stream key.';
+
+  @override
+  String get liveOpenStudio => 'Open Creator Studio';
+
+  @override
+  String get liveGoLive => 'Go Live';
+
+  @override
+  String get liveSessionTitle => 'Session title';
+
+  @override
+  String get liveCopyStreamKey => 'Copy your stream key now';
+
+  @override
+  String get liveStreamKeyOnce =>
+      'This secret is returned once and cannot be recovered. Store it in your streaming software.';
+
+  @override
+  String get liveCopyClose => 'Copy and close';
+
+  @override
+  String get liveHealthCheck => 'Run health check';
+
+  @override
+  String get commonRefresh => 'Refresh';
+
+  @override
+  String get commonCreate => 'Create';
 }

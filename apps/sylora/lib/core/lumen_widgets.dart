@@ -270,30 +270,46 @@ final class LumenResponsiveShell extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final width = constraints.maxWidth;
-      if (width < 768) {
+      if (SyloraBreakpoints.isPhone(width)) {
         final mobileDestinations = compactDestinations ?? destinations;
         final mobileIndex = compactSelectedIndex ?? selectedIndex;
         return Scaffold(
           backgroundColor: Colors.transparent,
           body: body,
-          bottomNavigationBar: NavigationBar(
-            backgroundColor: SyloraTokens.glassStrong,
-            elevation: 0,
-            selectedIndex: mobileIndex.clamp(0, mobileDestinations.length - 1),
-            onDestinationSelected:
-                onCompactDestinationSelected ?? onDestinationSelected,
-            destinations: <NavigationDestination>[
-              for (final destination in mobileDestinations)
-                NavigationDestination(
-                  icon: Icon(destination.icon),
-                  selectedIcon: Icon(destination.selectedIcon),
-                  label: destination.label,
-                ),
-            ],
+          bottomNavigationBar: NavigationBarTheme(
+            data: NavigationBarThemeData(
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                final selected = states.contains(WidgetState.selected);
+                return SyloraTokens.body(
+                  11.5,
+                  color: selected ? SyloraTokens.violet : SyloraTokens.inkMute,
+                  weight: FontWeight.w600,
+                );
+              }),
+              height: 68,
+            ),
+            child: NavigationBar(
+              backgroundColor: SyloraTokens.glassStrong,
+              elevation: 0,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              selectedIndex:
+                  mobileIndex.clamp(0, mobileDestinations.length - 1),
+              onDestinationSelected:
+                  onCompactDestinationSelected ?? onDestinationSelected,
+              destinations: <NavigationDestination>[
+                for (final destination in mobileDestinations)
+                  NavigationDestination(
+                    icon: Icon(destination.icon),
+                    selectedIcon: Icon(destination.selectedIcon),
+                    label: destination.label,
+                  ),
+              ],
+            ),
           ),
         );
       }
-      final expanded = width >= 1280;
+      final expanded = SyloraBreakpoints.isWide(width);
+      final tablet = SyloraBreakpoints.isTablet(width);
       return Scaffold(
         backgroundColor: Colors.transparent,
         body: Row(
@@ -311,6 +327,7 @@ final class LumenResponsiveShell extends StatelessWidget {
               child: NavigationRail(
                 backgroundColor: Colors.transparent,
                 extended: expanded,
+                minWidth: tablet ? 76 : 72,
                 selectedIndex: selectedIndex,
                 onDestinationSelected: onDestinationSelected,
                 leading: Padding(
@@ -331,7 +348,12 @@ final class LumenResponsiveShell extends StatelessWidget {
                     NavigationRailDestination(
                       icon: Icon(destination.icon),
                       selectedIcon: Icon(destination.selectedIcon),
-                      label: Text(destination.label),
+                      label: Text(
+                        destination.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                      ),
                     ),
                 ],
               ),

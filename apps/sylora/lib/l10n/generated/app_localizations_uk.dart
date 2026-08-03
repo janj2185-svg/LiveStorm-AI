@@ -601,4 +601,183 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get homeComposeHint => 'Поділись сигналом із всесвітом…';
+
+  @override
+  String get searchTitle => 'Огляд';
+
+  @override
+  String get searchSubtitle =>
+      'Знайди людей, дописи та спільноти в живій мережі.';
+
+  @override
+  String get searchHint => 'Пошук SYLORA';
+
+  @override
+  String get searchFindPeople => 'Відкрий мережу';
+
+  @override
+  String get searchFindPeopleMessage =>
+      'Введи щонайменше два символи, щоб шукати людей, дописи та спільноти.';
+
+  @override
+  String get searchFocus => 'У фокус пошуку';
+
+  @override
+  String get searchNoResults => 'Нічого не знайдено';
+
+  @override
+  String get searchNoResultsMessage =>
+      'За цим запитом немає збігів. Спробуй інший нік, слово або спільноту.';
+
+  @override
+  String get searchEdit => 'Змінити пошук';
+
+  @override
+  String get searchMinChars => 'Введи щонайменше два символи.';
+
+  @override
+  String get searchPeople => 'Люди';
+
+  @override
+  String get searchPosts => 'Дописи';
+
+  @override
+  String get searchCommunities => 'Спільноти';
+
+  @override
+  String get searchHeroEyebrow => 'ВІДКРИТТЯ';
+
+  @override
+  String get messagesSubtitle => 'Особисті сигнали, запити та живі розмови.';
+
+  @override
+  String get messagesHeroEyebrow => 'ВХІДНІ';
+
+  @override
+  String get messagesHeroBody =>
+      'Приватні чати з кінематографічною присутністю — запити, відповіді та контекст Aura.';
+
+  @override
+  String get messagesRequestBadge => 'Запит';
+
+  @override
+  String get friendsSubtitle =>
+      'Справжня дружба, запити та люди, яких ти можеш знати.';
+
+  @override
+  String get profileSubtitle => 'Публічний профіль і керування зв’язками.';
+
+  @override
+  String get profileFollow => 'Підписатися';
+
+  @override
+  String get profileUnfollow => 'Відписатися';
+
+  @override
+  String get profileMessage => 'Написати';
+
+  @override
+  String get profileMute => 'Вимкнути';
+
+  @override
+  String get profileBlock => 'Заблокувати';
+
+  @override
+  String get profileMuted => 'Акаунт вимкнено.';
+
+  @override
+  String get notificationsTitle => 'Сповіщення';
+
+  @override
+  String get notificationsReadAll => 'Прочитати все';
+
+  @override
+  String get notificationsEmpty => 'Немає сповіщень';
+
+  @override
+  String get notificationsEmptyMessage =>
+      'Коли мережа оживає, сигнали з’являються тут.';
+
+  @override
+  String get notificationsMuteType => 'Вимкнути цей тип сповіщень';
+
+  @override
+  String get moreHeroEyebrow => 'ТВІЙ ЦЕНТР';
+
+  @override
+  String get moreHeroBody =>
+      'Гаманець, Live, Aura, навчання та інструменти творця — одна світлова панель.';
+
+  @override
+  String get moreQuickActions => 'ШВИДКІ ДІЇ';
+
+  @override
+  String get moreConferences => 'Конференції';
+
+  @override
+  String get moreGoLive => 'В ефір';
+
+  @override
+  String get moreOpenWallet => 'Гаманець';
+
+  @override
+  String get moreEditProfile => 'Редагувати профіль';
+
+  @override
+  String get liveTitle => 'Live';
+
+  @override
+  String get liveSubtitle =>
+      'Ефір через WHIP, OBS або студію — лише чесні інтеграції.';
+
+  @override
+  String get liveHeroEyebrow => 'ЕФІР';
+
+  @override
+  String get liveHeroBody =>
+      'Створи сесію, відкрий Creator Studio й тримай інтеграції реальними.';
+
+  @override
+  String get liveIntegrations => 'Інтеграції';
+
+  @override
+  String get liveSessions => 'Сесії';
+
+  @override
+  String get liveCreateSession => 'Створити сесію';
+
+  @override
+  String get liveNoSessions => 'Немає live-сесій';
+
+  @override
+  String get liveNoSessionsMessage =>
+      'Створи сесію, щоб отримати одноразовий ключ стріму.';
+
+  @override
+  String get liveOpenStudio => 'Відкрити Creator Studio';
+
+  @override
+  String get liveGoLive => 'В ефір';
+
+  @override
+  String get liveSessionTitle => 'Назва сесії';
+
+  @override
+  String get liveCopyStreamKey => 'Скопіюй ключ стріму зараз';
+
+  @override
+  String get liveStreamKeyOnce =>
+      'Цей секрет показується один раз і не відновлюється. Збережи його в налаштуваннях стрімінгу.';
+
+  @override
+  String get liveCopyClose => 'Скопіювати й закрити';
+
+  @override
+  String get liveHealthCheck => 'Перевірити стан';
+
+  @override
+  String get commonRefresh => 'Оновити';
+
+  @override
+  String get commonCreate => 'Створити';
 }

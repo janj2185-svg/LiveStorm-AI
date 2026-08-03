@@ -603,4 +603,180 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get homeComposeHint => 'Teile ein Signal mit dem Universum…';
+
+  @override
+  String get searchTitle => 'Entdecken';
+
+  @override
+  String get searchSubtitle =>
+      'Finde Menschen, Beiträge und Communities im lebendigen Netzwerk.';
+
+  @override
+  String get searchHint => 'SYLORA suchen';
+
+  @override
+  String get searchFindPeople => 'Netzwerk entdecken';
+
+  @override
+  String get searchFindPeopleMessage =>
+      'Gib mindestens zwei Zeichen ein, um zu suchen.';
+
+  @override
+  String get searchFocus => 'Suche fokussieren';
+
+  @override
+  String get searchNoResults => 'Keine Treffer';
+
+  @override
+  String get searchNoResultsMessage =>
+      'Nichts gefunden. Versuche einen anderen Begriff.';
+
+  @override
+  String get searchEdit => 'Suche bearbeiten';
+
+  @override
+  String get searchMinChars => 'Mindestens zwei Zeichen eingeben.';
+
+  @override
+  String get searchPeople => 'Menschen';
+
+  @override
+  String get searchPosts => 'Beiträge';
+
+  @override
+  String get searchCommunities => 'Communities';
+
+  @override
+  String get searchHeroEyebrow => 'ENTDECKEN';
+
+  @override
+  String get messagesSubtitle => 'Direkte Signale, Anfragen und Gespräche.';
+
+  @override
+  String get messagesHeroEyebrow => 'POSTEINGANG';
+
+  @override
+  String get messagesHeroBody => 'Private Threads mit cinematic Presence.';
+
+  @override
+  String get messagesRequestBadge => 'Anfrage';
+
+  @override
+  String get friendsSubtitle =>
+      'Echte Freundschaften, Anfragen und Vorschläge.';
+
+  @override
+  String get profileSubtitle =>
+      'Öffentliches Profil und Beziehungssteuerungen.';
+
+  @override
+  String get profileFollow => 'Folgen';
+
+  @override
+  String get profileUnfollow => 'Entfolgen';
+
+  @override
+  String get profileMessage => 'Nachricht';
+
+  @override
+  String get profileMute => 'Stummschalten';
+
+  @override
+  String get profileBlock => 'Blockieren';
+
+  @override
+  String get profileMuted => 'Konto stummgeschaltet.';
+
+  @override
+  String get notificationsTitle => 'Benachrichtigungen';
+
+  @override
+  String get notificationsReadAll => 'Alle gelesen';
+
+  @override
+  String get notificationsEmpty => 'Keine Benachrichtigungen';
+
+  @override
+  String get notificationsEmptyMessage => 'Signale erscheinen hier.';
+
+  @override
+  String get notificationsMuteType => 'Diesen Typ stummschalten';
+
+  @override
+  String get moreHeroEyebrow => 'DEIN HUB';
+
+  @override
+  String get moreHeroBody =>
+      'Wallet, Live, Aura, Lernen und Creator-Tools — eine Oberfläche.';
+
+  @override
+  String get moreQuickActions => 'SCHNELLAKTIONEN';
+
+  @override
+  String get moreConferences => 'Konferenzen';
+
+  @override
+  String get moreGoLive => 'Live gehen';
+
+  @override
+  String get moreOpenWallet => 'Wallet';
+
+  @override
+  String get moreEditProfile => 'Profil bearbeiten';
+
+  @override
+  String get liveTitle => 'Live';
+
+  @override
+  String get liveSubtitle =>
+      'Live mit WHIP, OBS oder Studio — nur echte Integrationen.';
+
+  @override
+  String get liveHeroEyebrow => 'BROADCAST';
+
+  @override
+  String get liveHeroBody => 'Session starten und Creator Studio öffnen.';
+
+  @override
+  String get liveIntegrations => 'Integrationen';
+
+  @override
+  String get liveSessions => 'Sessions';
+
+  @override
+  String get liveCreateSession => 'Session erstellen';
+
+  @override
+  String get liveNoSessions => 'Keine Live-Sessions';
+
+  @override
+  String get liveNoSessionsMessage =>
+      'Erstelle eine Session für einen einmaligen Stream-Key.';
+
+  @override
+  String get liveOpenStudio => 'Creator Studio öffnen';
+
+  @override
+  String get liveGoLive => 'Live gehen';
+
+  @override
+  String get liveSessionTitle => 'Sessiontitel';
+
+  @override
+  String get liveCopyStreamKey => 'Stream-Key jetzt kopieren';
+
+  @override
+  String get liveStreamKeyOnce => 'Dieser Schlüssel wird nur einmal angezeigt.';
+
+  @override
+  String get liveCopyClose => 'Kopieren und schließen';
+
+  @override
+  String get liveHealthCheck => 'Health-Check';
+
+  @override
+  String get commonRefresh => 'Aktualisieren';
+
+  @override
+  String get commonCreate => 'Erstellen';
 }

@@ -106,7 +106,8 @@ abstract final class SyloraTokens {
         fontSize: size,
         height: height,
         fontWeight: FontWeight.w600,
-        letterSpacing: (size * 0.04).clamp(1.0, 8.0),
+        // Keep letter-spacing modest so UK/PL/CJK labels do not visually stretch.
+        letterSpacing: size >= 40 ? 0.4 : 0.15,
         color: color,
       );
 
@@ -134,9 +135,9 @@ abstract final class SyloraTokens {
   static TextStyle label(double size, {Color color = inkSoft}) => TextStyle(
     fontFamily: 'Instrument Sans',
     fontSize: size,
-    height: 1.2,
+    height: 1.25,
     fontWeight: FontWeight.w600,
-    letterSpacing: 1.4,
+    letterSpacing: 0.7,
     color: color,
   );
 }

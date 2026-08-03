@@ -14,6 +14,7 @@ import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../core/realtime.dart';
 import '../../design/sylora.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import 'repositories.dart';
 
@@ -2113,140 +2114,227 @@ final class LiveScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(liveProvider);
     return LumenPage(
-      title: 'Live',
-      subtitle:
-          'MediaMTX ingest, browser WHIP publishing, OBS companion setup, and official integration control.',
+      title: l10n.liveTitle,
+      subtitle: l10n.liveSubtitle,
+      intensity: 0.96,
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.live,
       actions: <Widget>[
         IconButton(
-          tooltip: 'Open Creator Studio',
+          tooltip: l10n.liveOpenStudio,
           onPressed: () => context.goNamed('creator-studio'),
           icon: const Icon(Icons.video_camera_front_outlined),
         ),
         IconButton(
-          tooltip: 'Create live session',
+          tooltip: l10n.liveCreateSession,
           onPressed: () => _createSession(context, ref),
           icon: const Icon(Icons.add_circle_outline_rounded),
         ),
       ],
+      header: SyloraUniverseHero(
+        eyebrow: l10n.liveHeroEyebrow,
+        title: l10n.liveTitle,
+        body: l10n.liveHeroBody,
+        trailing: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            SyloraPortalChip(
+              label: l10n.liveGoLive,
+              icon: Icons.podcasts_rounded,
+              onTap: () => _createSession(context, ref),
+            ),
+            SyloraPortalChip(
+              label: l10n.liveOpenStudio,
+              icon: Icons.video_camera_front_outlined,
+              onTap: () => context.goNamed('creator-studio'),
+            ),
+          ],
+        ),
+      ),
       child: LumenAsyncView<LiveSnapshot>(
         value: value,
         onRetry: () => ref.invalidate(liveProvider),
-        data: (snapshot) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Integrations',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 12),
-            const _TikTokLiveControlPanel(),
-            const SizedBox(height: 16),
-            if (snapshot.integrationsError != null)
-              LumenSurface(
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      color: Theme.of(context).colorScheme.error,
+        data: (snapshot) {
+          var index = 0;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(l10n.liveIntegrations, style: SyloraTokens.title(20)),
+              const SizedBox(height: 12),
+              SyloraStaggeredReveal(
+                index: index++,
+                child: const _TikTokLiveControlPanel(),
+              ),
+              const SizedBox(height: 16),
+              if (snapshot.integrationsError != null)
+                SyloraStaggeredReveal(
+                  index: index++,
+                  child: SyloraGlassTile(
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            messageFor(snapshot.integrationsError!),
+                            softWrap: true,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => ref.invalidate(liveProvider),
+                          child: Text(l10n.commonRetry),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Official integrations are unavailable: '
-                        '${messageFor(snapshot.integrationsError!)} '
-                        'Direct MediaMTX session controls remain available.',
-                      ),
+                  ),
+                )
+              else if (snapshot.integrations.isEmpty)
+                SyloraStaggeredReveal(
+                  index: index++,
+                  child: SyloraGlassTile(
+                    child: Row(
+                      children: <Widget>[
+                        const Icon(Icons.link_off_rounded),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(l10n.liveSubtitle, softWrap: true),
+                        ),
+                        TextButton(
+                          onPressed: () => ref.invalidate(liveProvider),
+                          child: Text(l10n.commonRefresh),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () => ref.invalidate(liveProvider),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              )
-            else if (snapshot.integrations.isEmpty)
-              LumenSurface(
-                child: Row(
-                  children: <Widget>[
-                    const Icon(Icons.link_off_rounded),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'No integrations were returned. Sessions can still expose direct MediaMTX ingest.',
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => ref.invalidate(liveProvider),
-                      child: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-              )
-            else
-              LumenSurface(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: <Widget>[
-                    for (final integration in snapshot.integrations)
-                      ListTile(
-                        leading: const Icon(Icons.hub_outlined),
-                        title: Text(integration.label),
-                        subtitle: Text(integration.status ?? ''),
-                        trailing: IconButton(
-                          tooltip: 'Run health check',
-                          onPressed: () async {
-                            final result = await ref
-                                .read(liveRepositoryProvider)
-                                .integrationHealth(integration.id);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Health: ${result['status']}'),
-                                ),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.health_and_safety_outlined),
+                  ),
+                )
+              else
+                for (final integration in snapshot.integrations)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SyloraStaggeredReveal(
+                      index: index++,
+                      child: SyloraGlassTile(
+                        child: Row(
+                          children: <Widget>[
+                            SyloraPulseGlow(
+                              child: const Icon(
+                                Icons.hub_outlined,
+                                color: SyloraTokens.violet,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    integration.label,
+                                    style: SyloraTokens.title(16),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (integration.status != null)
+                                    Text(
+                                      integration.status!,
+                                      style: SyloraTokens.body(
+                                        13,
+                                        color: SyloraTokens.inkMute,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: l10n.liveHealthCheck,
+                              onPressed: () async {
+                                final result = await ref
+                                    .read(liveRepositoryProvider)
+                                    .integrationHealth(integration.id);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('${result['status']}'),
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: const Icon(
+                                Icons.health_and_safety_outlined,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 28),
-            Text('Sessions', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 12),
-            if (snapshot.sessions.isEmpty)
-              LumenEmptyView(
-                title: 'No live sessions',
-                message:
-                    'The API returned no sessions. Create one to receive a reveal-once stream key.',
-                actionLabel: 'Create session',
-                onAction: () => _createSession(context, ref),
-                icon: Icons.sensors_outlined,
-              )
-            else
-              LumenSurface(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: <Widget>[
-                    for (final session in snapshot.sessions)
-                      ListTile(
-                        leading: const Icon(Icons.sensors_rounded),
-                        title: Text(session.title),
-                        subtitle: Text(session.state),
-                        trailing: const Icon(Icons.chevron_right_rounded),
+                    ),
+                  ),
+              const SizedBox(height: 24),
+              Text(l10n.liveSessions, style: SyloraTokens.title(20)),
+              const SizedBox(height: 12),
+              if (snapshot.sessions.isEmpty)
+                LumenEmptyView(
+                  title: l10n.liveNoSessions,
+                  message: l10n.liveNoSessionsMessage,
+                  actionLabel: l10n.liveCreateSession,
+                  onAction: () => _createSession(context, ref),
+                  icon: Icons.sensors_outlined,
+                )
+              else
+                for (final session in snapshot.sessions)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SyloraStaggeredReveal(
+                      index: index++,
+                      child: SyloraGlassTile(
                         onTap: () => context.pushNamed(
                           'live-session',
                           pathParameters: <String, String>{'id': session.id},
                         ),
+                        child: Row(
+                          children: <Widget>[
+                            SyloraPulseGlow(
+                              color: SyloraTokens.petal,
+                              child: const Icon(
+                                Icons.sensors_rounded,
+                                color: SyloraTokens.petal,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    session.title,
+                                    style: SyloraTokens.title(16),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    session.state,
+                                    style: SyloraTokens.body(
+                                      13,
+                                      color: SyloraTokens.inkMute,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded),
+                          ],
+                        ),
                       ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+                    ),
+                  ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -2255,20 +2343,21 @@ final class LiveScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final title = TextEditingController();
     final session = await showDialog<LiveSessionModel>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Create live session'),
+        title: Text(l10n.liveCreateSession),
         content: TextField(
           controller: title,
           maxLength: 200,
-          decoration: const InputDecoration(labelText: 'Session title'),
+          decoration: InputDecoration(labelText: l10n.liveSessionTitle),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -2290,7 +2379,7 @@ final class LiveScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('Create'),
+            child: Text(l10n.commonCreate),
           ),
         ],
       ),
@@ -2314,6 +2403,7 @@ final class LiveScreen extends ConsumerWidget {
     BuildContext context,
     LiveSessionModel session,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final key = session.streamKeyOnce;
     if (key == null) {
       return;
@@ -2322,14 +2412,12 @@ final class LiveScreen extends ConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Copy your stream key now'),
+        title: Text(l10n.liveCopyStreamKey),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text(
-              'This secret is returned once and cannot be recovered. Store it in your streaming software’s secure configuration.',
-            ),
+            Text(l10n.liveStreamKeyOnce),
             const SizedBox(height: 12),
             SelectableText(
               key,
@@ -2346,7 +2434,7 @@ final class LiveScreen extends ConsumerWidget {
               }
             },
             icon: const Icon(Icons.copy_rounded),
-            label: const Text('Copy and close'),
+            label: Text(l10n.liveCopyClose),
           ),
         ],
       ),

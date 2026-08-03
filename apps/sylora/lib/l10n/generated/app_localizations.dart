@@ -1261,6 +1261,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share a signal with the universe…'**
   String get homeComposeHint;
+
+  /// No description provided for @searchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get searchTitle;
+
+  /// No description provided for @searchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find people, posts, and communities across the living network.'**
+  String get searchSubtitle;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search SYLORA'**
+  String get searchHint;
+
+  /// No description provided for @searchFindPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover the network'**
+  String get searchFindPeople;
+
+  /// No description provided for @searchFindPeopleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least two characters to query people, posts, and communities.'**
+  String get searchFindPeopleMessage;
+
+  /// No description provided for @searchFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus search'**
+  String get searchFocus;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get searchNoResults;
+
+  /// No description provided for @searchNoResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matched this query. Try another handle, keyword, or community.'**
+  String get searchNoResultsMessage;
+
+  /// No description provided for @searchEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit search'**
+  String get searchEdit;
+
+  /// No description provided for @searchMinChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least two characters.'**
+  String get searchMinChars;
+
+  /// No description provided for @searchPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get searchPeople;
+
+  /// No description provided for @searchPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get searchPosts;
+
+  /// No description provided for @searchCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get searchCommunities;
+
+  /// No description provided for @searchHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'DISCOVER'**
+  String get searchHeroEyebrow;
+
+  /// No description provided for @messagesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct signals, requests, and living conversations.'**
+  String get messagesSubtitle;
+
+  /// No description provided for @messagesHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'INBOX'**
+  String get messagesHeroEyebrow;
+
+  /// No description provided for @messagesHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Private threads with cinematic presence — requests, replies, and Aura-ready context.'**
+  String get messagesHeroBody;
+
+  /// No description provided for @messagesRequestBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get messagesRequestBadge;
+
+  /// No description provided for @friendsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Real friendships, requests, and people you may know.'**
+  String get friendsSubtitle;
+
+  /// No description provided for @profileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public presence and relationship controls.'**
+  String get profileSubtitle;
+
+  /// No description provided for @profileFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get profileFollow;
+
+  /// No description provided for @profileUnfollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfollow'**
+  String get profileUnfollow;
+
+  /// No description provided for @profileMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get profileMessage;
+
+  /// No description provided for @profileMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get profileMute;
+
+  /// No description provided for @profileBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get profileBlock;
+
+  /// No description provided for @profileMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account muted.'**
+  String get profileMuted;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsReadAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Read all'**
+  String get notificationsReadAll;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'When the network moves, signals appear here.'**
+  String get notificationsEmptyMessage;
+
+  /// No description provided for @notificationsMuteType.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute this notification type'**
+  String get notificationsMuteType;
+
+  /// No description provided for @moreHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR HUB'**
+  String get moreHeroEyebrow;
+
+  /// No description provided for @moreHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet, Live, Aura, learning, and creator tools — one luminous control surface.'**
+  String get moreHeroBody;
+
+  /// No description provided for @moreQuickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'QUICK ACTIONS'**
+  String get moreQuickActions;
+
+  /// No description provided for @moreConferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Conferences'**
+  String get moreConferences;
+
+  /// No description provided for @moreGoLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Live'**
+  String get moreGoLive;
+
+  /// No description provided for @moreOpenWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get moreOpenWallet;
+
+  /// No description provided for @moreEditProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get moreEditProfile;
+
+  /// No description provided for @liveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get liveTitle;
+
+  /// No description provided for @liveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Go live with WHIP, OBS, or studio tools — honest platform integrations only.'**
+  String get liveSubtitle;
+
+  /// No description provided for @liveHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'BROADCAST'**
+  String get liveHeroEyebrow;
+
+  /// No description provided for @liveHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage a session, open Creator Studio, and keep every integration real.'**
+  String get liveHeroBody;
+
+  /// No description provided for @liveIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get liveIntegrations;
+
+  /// No description provided for @liveSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get liveSessions;
+
+  /// No description provided for @liveCreateSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Create session'**
+  String get liveCreateSession;
+
+  /// No description provided for @liveNoSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'No live sessions'**
+  String get liveNoSessions;
+
+  /// No description provided for @liveNoSessionsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a session to receive a reveal-once stream key.'**
+  String get liveNoSessionsMessage;
+
+  /// No description provided for @liveOpenStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Creator Studio'**
+  String get liveOpenStudio;
+
+  /// No description provided for @liveGoLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Live'**
+  String get liveGoLive;
+
+  /// No description provided for @liveSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session title'**
+  String get liveSessionTitle;
+
+  /// No description provided for @liveCopyStreamKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy your stream key now'**
+  String get liveCopyStreamKey;
+
+  /// No description provided for @liveStreamKeyOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'This secret is returned once and cannot be recovered. Store it in your streaming software.'**
+  String get liveStreamKeyOnce;
+
+  /// No description provided for @liveCopyClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy and close'**
+  String get liveCopyClose;
+
+  /// No description provided for @liveHealthCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Run health check'**
+  String get liveHealthCheck;
+
+  /// No description provided for @commonRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get commonRefresh;
+
+  /// No description provided for @commonCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get commonCreate;
 }
 
 class _AppLocalizationsDelegate

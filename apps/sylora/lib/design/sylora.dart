@@ -8,4 +8,5 @@ export 'sylora_icons.dart';
 export 'sylora_living_canvas.dart';
 export 'sylora_module_scaffold.dart';
 export 'sylora_motion.dart';
+export 'sylora_surfaces.dart';
 export 'sylora_tokens.dart';

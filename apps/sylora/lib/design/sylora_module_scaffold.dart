@@ -177,7 +177,10 @@ final class _ModuleHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: SyloraTokens.display(compact ? 34 : 44),
+                style: SyloraTokens.display(compact ? 30 : 40),
+                maxLines: 2,
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -191,6 +194,7 @@ final class _ModuleHeader extends StatelessWidget {
               color: SyloraTokens.inkSoft,
               weight: FontWeight.w500,
             ),
+            softWrap: true,
           ),
         ],
       ],
