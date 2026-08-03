@@ -289,53 +289,38 @@ final class SyloraLogo extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     label: 'SYLORA',
     image: true,
-    child: CustomPaint(
-      size: Size.square(size),
-      painter: _SyloraLogoPainter(
-        dark: Theme.of(context).brightness == Brightness.dark,
+    child: Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const SweepGradient(
+          colors: [
+            LumenColors.aetherBright,
+            LumenColors.pulse,
+            LumenColors.bloom,
+            LumenColors.verdigris,
+            LumenColors.aetherBright,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: LumenColors.pulse.withValues(alpha: 0.28),
+            blurRadius: size * 0.55,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: size * 0.38,
+          height: size * 0.38,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
+        ),
       ),
     ),
   );
 }
 
-final class _SyloraLogoPainter extends CustomPainter {
-  const _SyloraLogoPainter({required this.dark});
-
-  final bool dark;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.saveLayer(Offset.zero & size, Paint());
-    final radius = size.shortestSide * 0.27;
-    final centers = <Offset>[
-      Offset(size.width * 0.39, size.height * 0.38),
-      Offset(size.width * 0.61, size.height * 0.38),
-      Offset(size.width * 0.5, size.height * 0.59),
-    ];
-    final colors = dark
-        ? const <Color>[
-            LumenColors.aetherBright,
-            Color(0xFF9D8BE8),
-            Color(0xFFF06AB4),
-          ]
-        : const <Color>[
-            Color(0xFF18A7B5),
-            LumenColors.pulse,
-            LumenColors.bloom,
-          ];
-    for (var index = 0; index < centers.length; index++) {
-      canvas.drawCircle(
-        centers[index],
-        radius,
-        Paint()
-          ..color = colors[index].withValues(alpha: dark ? 0.75 : 0.7)
-          ..blendMode = dark ? BlendMode.screen : BlendMode.multiply,
-      );
-    }
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _SyloraLogoPainter oldDelegate) =>
-      oldDelegate.dark != dark;
-}

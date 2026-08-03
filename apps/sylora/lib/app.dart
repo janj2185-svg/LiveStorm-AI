@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'core/lumen_theme.dart';
 import 'core/lumen_widgets.dart';
+import 'design/sylora.dart';
 import 'features/admin/admin_screens.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
@@ -548,22 +549,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 Page<void> _page(GoRouterState state, Widget child, bool reducedMotion) {
-  if (reducedMotion) {
-    return NoTransitionPage<void>(key: state.pageKey, child: child);
-  }
-  return CustomTransitionPage<void>(
+  return SyloraMotion.worldPage(
     key: state.pageKey,
     child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-        FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: const Cubic(0.16, 1, 0.3, 1),
-          ),
-          child: child,
-        ),
-    transitionDuration: const Duration(milliseconds: 200),
-    reverseTransitionDuration: const Duration(milliseconds: 140),
+    reducedMotion: reducedMotion,
   );
 }
 

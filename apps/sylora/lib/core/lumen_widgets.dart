@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../design/sylora.dart';
 import 'api.dart';
 import 'lumen_theme.dart';
 
@@ -18,36 +19,10 @@ final class LumenSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(radius),
-        border: dark
-            ? Border.all(color: Theme.of(context).colorScheme.outlineVariant)
-            : null,
-        boxShadow: dark
-            ? null
-            : const <BoxShadow>[
-                BoxShadow(
-                  color: Color(0x122C405A),
-                  blurRadius: 24,
-                  offset: Offset(0, 10),
-                ),
-                BoxShadow(
-                  color: Color(0x0D2C405A),
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: Material(
-          type: MaterialType.transparency,
-          child: Padding(padding: padding, child: child),
-        ),
-      ),
+    return SyloraGlass(
+      padding: padding,
+      radius: radius.toDouble(),
+      child: child,
     );
   }
 }
@@ -70,15 +45,11 @@ final class LumenPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final button = ElevatedButton.icon(
-      onPressed: busy ? null : onPressed,
-      icon: busy
-          ? const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(icon ?? Icons.arrow_forward_rounded),
-      label: Text(label),
+    final button = SyloraButton(
+      label: label,
+      onPressed: onPressed,
+      busy: busy,
+      icon: icon ?? Icons.arrow_forward_rounded,
     );
     if (onPressed == null && disabledReason != null) {
       return Semantics(
@@ -107,10 +78,11 @@ final class LumenSecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final button = OutlinedButton.icon(
+    final button = SyloraButton(
+      label: label,
       onPressed: onPressed,
-      icon: Icon(icon ?? Icons.tune_rounded),
-      label: Text(label),
+      icon: icon ?? Icons.tune_rounded,
+      variant: SyloraButtonVariant.secondary,
     );
     if (onPressed == null && disabledReason != null) {
       return Semantics(

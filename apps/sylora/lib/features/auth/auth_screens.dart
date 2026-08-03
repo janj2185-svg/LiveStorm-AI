@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
+import '../../design/sylora.dart';
 import '../landing/landing_tokens.dart';
 import 'auth.dart';
 
@@ -242,115 +243,152 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final wide = MediaQuery.sizeOf(context).width >= 900;
     return Theme(
       data: ThemeData(
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
-          primary: LandingTokens.violet,
-          secondary: LandingTokens.ion,
-          surface: LandingTokens.pearl,
-          onSurface: LandingTokens.ink,
+          primary: SyloraTokens.violet,
+          secondary: SyloraTokens.ion,
+          surface: SyloraTokens.pearl,
+          onSurface: SyloraTokens.ink,
         ),
-        scaffoldBackgroundColor: LandingTokens.canvas,
+        scaffoldBackgroundColor: SyloraTokens.canvas,
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.82),
-          labelStyle: LandingTokens.body(13),
+          fillColor: Colors.white.withValues(alpha: 0.86),
+          labelStyle: SyloraTokens.body(13),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: LandingTokens.ink.withValues(alpha: 0.12)),
+            borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
+            borderSide: BorderSide(color: SyloraTokens.ink.withValues(alpha: 0.1)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: LandingTokens.ink.withValues(alpha: 0.12)),
+            borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
+            borderSide: BorderSide(color: SyloraTokens.ink.withValues(alpha: 0.1)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: LandingTokens.violet, width: 1.6),
+            borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
+            borderSide: const BorderSide(color: SyloraTokens.violet, width: 1.6),
           ),
         ),
-        dividerColor: LandingTokens.ink.withValues(alpha: 0.1),
+        dividerColor: SyloraTokens.ink.withValues(alpha: 0.1),
         textTheme: TextTheme(
-          labelMedium: LandingTokens.body(12),
-          bodyMedium: LandingTokens.body(14, color: LandingTokens.ink),
+          labelMedium: SyloraTokens.body(12),
+          bodyMedium: SyloraTokens.body(14, color: SyloraTokens.ink),
         ),
       ),
-      child: Scaffold(
-      backgroundColor: LandingTokens.canvas,
-      body: _AuthAtmosphere(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Text(
-                      'SYLORA',
-                      textAlign: TextAlign.center,
-                      style: LandingTokens.display(32).copyWith(letterSpacing: 4),
+      child: SyloraLivingScaffold(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: wide ? 920 : 420),
+              child: wide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(child: _authHero()),
+                        const SizedBox(width: 28),
+                        Expanded(child: _authPanel(auth)),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        _authHero(compact: true),
+                        const SizedBox(height: 18),
+                        _authPanel(auth),
+                      ],
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      _pane == _AuthPane.chooser
-                          ? 'Увійдіть у свою AI-екосистему'
-                          : _pane == _AuthPane.phone
-                          ? 'Телефон'
-                          : 'Електронна пошта',
-                      textAlign: TextAlign.center,
-                      style: LandingTokens.body(16),
-                    ),
-                    const SizedBox(height: 28),
-                    FadeTransition(
-                      opacity: _paneMotion,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton(
-                              onPressed: _pane == _AuthPane.chooser
-                                  ? () => context.goNamed('welcome')
-                                  : () => _switchPane(_AuthPane.chooser),
-                              child: Text(
-                                _pane == _AuthPane.chooser
-                                    ? '← Назад до світу'
-                                    : '← Назад',
-                                style: LandingTokens.body(
-                                  14,
-                                  color: LandingTokens.ink.withValues(alpha: 0.55),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (_pane == _AuthPane.chooser) _chooser(auth),
-                          if (_pane == _AuthPane.phone) _phonePane(auth),
-                          if (_pane == _AuthPane.email) _emailPane(auth),
-                        ],
-                      ),
-                    ),
-                    if (_methodsError != null) ...<Widget>[
-                      const SizedBox(height: 12),
-                      _MessageBanner(message: _methodsError!, error: true),
-                    ],
-                    if (auth.error != null) ...<Widget>[
-                      const SizedBox(height: 14),
-                      _MessageBanner(message: auth.error!, error: true),
-                    ],
-                    if (auth.notice != null) ...<Widget>[
-                      const SizedBox(height: 14),
-                      _MessageBanner(message: auth.notice!),
-                    ],
-                  ],
-                ),
-              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _authHero({bool compact = false}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SyloraAura(
+          size: compact ? 96 : 150,
+          emotion: AuraEmotion.greeting,
+          label: 'Aura · AI companion',
+        ),
+        SizedBox(height: compact ? 10 : 18),
+        Text(
+          'Ласкаво просимо до екосистеми',
+          textAlign: TextAlign.center,
+          style: SyloraTokens.body(14, color: SyloraTokens.violet, weight: FontWeight.w600),
+        ),
+        if (!compact) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Один вхід — у світ AI, Live, спільноти й творчості.',
+            textAlign: TextAlign.center,
+            style: SyloraTokens.body(14),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _authPanel(AuthState auth) {
+    return SyloraGlass(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          const Center(child: SyloraBrandLockup(size: 30)),
+          const SizedBox(height: 12),
+          Text(
+            _pane == _AuthPane.chooser
+                ? 'Увійдіть у свою AI-екосистему'
+                : _pane == _AuthPane.phone
+                ? 'Телефон'
+                : 'Електронна пошта',
+            textAlign: TextAlign.center,
+            style: SyloraTokens.body(15, color: SyloraTokens.inkSoft),
+          ),
+          const SizedBox(height: 18),
+          FadeTransition(
+            opacity: _paneMotion,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: _pane == _AuthPane.chooser
+                        ? () => context.goNamed('welcome')
+                        : () => _switchPane(_AuthPane.chooser),
+                    child: Text(
+                      _pane == _AuthPane.chooser
+                          ? '← Назад до світу'
+                          : '← Назад',
+                      style: SyloraTokens.body(14, color: SyloraTokens.inkMute),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (_pane == _AuthPane.chooser) _chooser(auth),
+                if (_pane == _AuthPane.phone) _phonePane(auth),
+                if (_pane == _AuthPane.email) _emailPane(auth),
+              ],
+            ),
+          ),
+          if (_methodsError != null) ...<Widget>[
+            const SizedBox(height: 12),
+            SyloraBanner(message: _methodsError!, error: true),
+          ],
+          if (auth.error != null) ...<Widget>[
+            const SizedBox(height: 14),
+            SyloraBanner(message: auth.error!, error: true),
+          ],
+          if (auth.notice != null) ...<Widget>[
+            const SizedBox(height: 14),
+            SyloraBanner(message: auth.notice!),
+          ],
+        ],
       ),
     );
   }
@@ -367,10 +405,10 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _AuthPillButton(
+        SyloraButton(
           label: 'Увійти',
           busy: auth.busy,
-          filled: true,
+          icon: SyloraIcons.lock,
           onPressed: methods.email
               ? () {
                   setState(() => _emailMode = _EmailMode.password);
@@ -379,9 +417,10 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
               : null,
         ),
         const SizedBox(height: 12),
-        _AuthPillButton(
+        SyloraButton(
           label: 'Створити акаунт',
-          filled: false,
+          variant: SyloraButtonVariant.secondary,
+          icon: SyloraIcons.person,
           onPressed: methods.email
               ? () {
                   setState(() => _emailMode = _EmailMode.register);
@@ -390,10 +429,11 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
               : null,
         ),
         const SizedBox(height: 18),
-        _AuthPillButton(
+        SyloraButton(
           label: 'Продовжити з телефоном',
+          variant: SyloraButtonVariant.secondary,
           busy: auth.busy,
-          filled: false,
+          icon: SyloraIcons.phone,
           onPressed: methods.phone ? () => _switchPane(_AuthPane.phone) : null,
         ),
         if (!methods.phone) ...<Widget>[
@@ -401,13 +441,14 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           Text(
             'Вхід за телефоном тимчасово недоступний.',
             textAlign: TextAlign.center,
-            style: LandingTokens.body(13, color: LandingTokens.ink.withValues(alpha: 0.45)),
+            style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
           ),
         ],
         const SizedBox(height: 12),
-        _AuthPillButton(
+        SyloraButton(
           label: 'Увійти кодом на пошту',
-          filled: false,
+          variant: SyloraButtonVariant.secondary,
+          icon: SyloraIcons.mail,
           onPressed: methods.email && methods.emailOtp
               ? () {
                   setState(() => _emailMode = _EmailMode.otp);
@@ -486,10 +527,9 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           ),
         ],
         const SizedBox(height: 16),
-        _AuthPillButton(
+        SyloraButton(
           label: _phoneCodeSent ? 'Увійти' : 'Надіслати код',
           busy: auth.busy,
-          filled: true,
           onPressed: () =>
               _phoneCodeSent ? _verifyPhone(auth) : _startPhone(auth),
         ),
@@ -1196,45 +1236,7 @@ final class _AuthAtmosphere extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(gradient: LandingTokens.heroGradient),
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Positioned(
-            top: -90,
-            right: -50,
-            child: IgnorePointer(
-              child: Container(
-                width: 240,
-                height: 240,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: LandingTokens.violet.withValues(alpha: 0.28),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -70,
-            left: -40,
-            child: IgnorePointer(
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: LandingTokens.ion.withValues(alpha: 0.14),
-                ),
-              ),
-            ),
-          ),
-          child,
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SyloraLivingCanvas(child: child);
 }
 
 final class _AuthPillButton extends StatelessWidget {
@@ -1251,58 +1253,14 @@ final class _AuthPillButton extends StatelessWidget {
   final bool busy;
 
   @override
-  Widget build(BuildContext context) {
-    final enabled = onPressed != null && !busy;
-    if (filled) {
-      return SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: FilledButton(
-          onPressed: enabled ? onPressed : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: LandingTokens.violet,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: LandingTokens.violet.withValues(alpha: 0.28),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999),
-            ),
-            textStyle: LandingTokens.body(
-              15,
-              weight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          child: busy
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(label),
-        ),
-      );
-    }
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        onPressed: enabled ? onPressed : null,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: LandingTokens.ink,
-          side: BorderSide(color: LandingTokens.ink.withValues(alpha: 0.28)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-          ),
-          textStyle: LandingTokens.body(15, weight: FontWeight.w600),
-        ),
-        child: Text(label),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SyloraButton(
+    label: label,
+    onPressed: onPressed,
+    busy: busy,
+    variant: filled
+        ? SyloraButtonVariant.primary
+        : SyloraButtonVariant.secondary,
+  );
 }
 
 final class _DividerLabel extends StatelessWidget {
@@ -1330,20 +1288,8 @@ final class _MessageBanner extends StatelessWidget {
   final bool error;
 
   @override
-  Widget build(BuildContext context) {
-    final color = error
-        ? Theme.of(context).colorScheme.error
-        : LumenColors.verdigris;
-    return Semantics(
-      liveRegion: true,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(message, style: TextStyle(color: color)),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    child: SyloraBanner(message: message, error: error),
+  );
 }
