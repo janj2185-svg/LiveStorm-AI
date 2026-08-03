@@ -138,12 +138,21 @@ def starter_candidates(
     candidates: list[StarterCandidate] = []
     for slug in READY_STARTER_SLUGS[:limit]:
         gift_dir = library / slug
-        spec = _read_json(gift_dir / "spec.json")
+        spec_path = gift_dir / "spec.json"
+        # Prefer library specs when present; otherwise seed a procedural starter
+        # from catalog metadata so container deploys without artifacts mounted.
+        spec = _read_json(spec_path) if spec_path.is_file() else {}
         metadata_path = gift_dir / "metadata.json"
         metadata = _read_json(metadata_path) if metadata_path.is_file() else {}
         entry = catalog.get(slug, {})
+        if not spec and not entry and not metadata:
+            # Still allow procedural seed with slug-derived defaults.
+            entry = {"slug": slug, "name": slug.replace("-", " ").title()}
         duration_ms = int(
-            metadata.get("duration_ms") or spec.get("duration_ms") or entry.get("duration_ms")
+            metadata.get("duration_ms")
+            or spec.get("duration_ms")
+            or entry.get("duration_ms")
+            or 3200
         )
         form_family = str(spec.get("form_family") or entry.get("form_family") or "procedural_lumen")
         vfx_family = str(spec.get("vfx_family") or entry.get("vfx_family") or "lumen_motes")
