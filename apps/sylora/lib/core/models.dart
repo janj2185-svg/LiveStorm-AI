@@ -614,6 +614,34 @@ final class LiveDestinationModel {
 }
 
 @immutable
+final class LiveReplayModel {
+  const LiveReplayModel({
+    required this.id,
+    required this.status,
+    required this.storageKey,
+    required this.durationSeconds,
+    required this.createdAt,
+    this.thumbnailKey,
+  });
+
+  factory LiveReplayModel.fromJson(JsonObject json) => LiveReplayModel(
+    id: requireString(json, 'id'),
+    status: requireString(json, 'status'),
+    storageKey: requireString(json, 'storage_key'),
+    durationSeconds: requireInt(json, 'duration_seconds'),
+    thumbnailKey: optionalString(json, 'thumbnail_key'),
+    createdAt: requireDateTime(json, 'created_at'),
+  );
+
+  final String id;
+  final String status;
+  final String storageKey;
+  final int durationSeconds;
+  final String? thumbnailKey;
+  final DateTime createdAt;
+}
+
+@immutable
 final class LiveSessionModel {
   const LiveSessionModel({
     required this.id,
@@ -623,6 +651,7 @@ final class LiveSessionModel {
     required this.ingestProvisioned,
     this.streamKeyOnce,
     this.destinations = const <LiveDestinationModel>[],
+    this.replay,
   });
 
   factory LiveSessionModel.fromJson(JsonObject json) => LiveSessionModel(
@@ -639,6 +668,11 @@ final class LiveSessionModel {
           ),
         )
         .toList(growable: false),
+    replay: json['replay'] == null
+        ? null
+        : LiveReplayModel.fromJson(
+            requireObject(json['replay'], 'live replay'),
+          ),
   );
 
   final String id;
@@ -648,4 +682,5 @@ final class LiveSessionModel {
   final bool ingestProvisioned;
   final String? streamKeyOnce;
   final List<LiveDestinationModel> destinations;
+  final LiveReplayModel? replay;
 }

@@ -1292,6 +1292,7 @@ abstract interface class LiveRepository {
   Future<LiveSessionModel> session(String id);
   Future<JsonObject> mediaCapability(String sessionId);
   Future<JsonObject> publishCredentials(String sessionId);
+  Future<JsonObject> replayPlayback(String replayId);
   Future<JsonObject> obsScenes(String sessionId);
   Future<JsonObject> selectObsScene(String sessionId, String sceneName);
   Future<JsonObject> startObsRecording(String sessionId);
@@ -1434,6 +1435,12 @@ final class DioLiveRepository implements LiveRepository {
       method: 'POST',
     );
     return requireObject(response.data, 'live publish credentials');
+  }
+
+  @override
+  Future<JsonObject> replayPlayback(String replayId) async {
+    final response = await _client.request('live/replays/$replayId');
+    return requireObject(response.data, 'live replay playback');
   }
 
   @override

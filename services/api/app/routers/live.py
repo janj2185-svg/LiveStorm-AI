@@ -44,6 +44,8 @@ from app.live_models import (
     LiveGameSession,
     LiveModerationDecision,
     LiveNormalizedEvent,
+    LiveReplay,
+    LiveReplayStatus,
     LiveSession,
     LiveSessionState,
 )
@@ -65,6 +67,9 @@ from app.live_schemas import (
     LiveDestinationResponse,
     LiveMediaCapabilityResponse,
     LivePublishCredentialsResponse,
+    LiveReplayPlaybackResponse,
+    LiveReplayRegister,
+    LiveReplayResponse,
     LiveSessionCreate,
     LiveSessionCreated,
     LiveSessionPatch,
@@ -208,6 +213,7 @@ def integration_response(record: IntegrationConnection) -> IntegrationConnection
 
 async def session_response(db: AsyncSession, record: LiveSession) -> LiveSessionResponse:
     destinations = await session_destinations(db, record.id)
+    replay = await latest_session_replay(db, record.id)
     return LiveSessionResponse(
         id=record.id,
         workspace_id=record.workspace_id,
@@ -227,7 +233,38 @@ async def session_response(db: AsyncSession, record: LiveSession) -> LiveSession
         created_at=record.created_at,
         updated_at=record.updated_at,
         destinations=[LiveDestinationResponse.model_validate(item) for item in destinations],
+        replay=LiveReplayResponse.model_validate(replay) if replay else None,
     )
+
+
+async def latest_session_replay(db: AsyncSession, session_id: uuid.UUID) -> LiveReplay | None:
+    return await db.scalar(
+        select(LiveReplay)
+        .where(LiveReplay.session_id == session_id)
+        .order_by(LiveReplay.created_at.desc(), LiveReplay.id.desc())
+        .limit(1)
+    )
+
+
+async def owned_replay(
+    db: AsyncSession, replay_id: uuid.UUID, owner_user_id: uuid.UUID
+) -> LiveReplay:
+    record = await db.scalar(
+        select(LiveReplay)
+        .join(LiveSession, LiveSession.id == LiveReplay.session_id)
+        .where(
+            LiveReplay.id == replay_id,
+            LiveSession.owner_user_id == owner_user_id,
+        )
+    )
+    if record is None:
+        raise APIError(
+            404,
+            "live_replay_not_found",
+            "Live replay not found",
+            "The replay does not exist.",
+        )
+    return record
 
 
 async def publish_latest(request: Request, session_id: uuid.UUID) -> None:
@@ -552,6 +589,74 @@ async def get_session_endpoint(
     db: AsyncSession = Depends(get_session),
 ) -> LiveSessionResponse:
     return await session_response(db, await owned_live_session(db, session_id, auth.user.id))
+
+
+@router.post(
+    "/sessions/{session_id}/replay",
+    response_model=LiveReplayResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_session_replay(
+    session_id: uuid.UUID,
+    payload: LiveReplayRegister,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+) -> LiveReplay:
+    await live_rate_limit(request, auth.user.id)
+    session = await owned_live_session(db, session_id, auth.user.id)
+    record = LiveReplay(session_id=session.id, **payload.model_dump(mode="json"))
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
+    return record
+
+
+@router.get("/sessions/{session_id}/replay", response_model=LiveReplayResponse)
+async def get_session_replay(
+    session_id: uuid.UUID,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+) -> LiveReplay:
+    await owned_live_session(db, session_id, auth.user.id)
+    record = await latest_session_replay(db, session_id)
+    if record is None:
+        raise APIError(
+            404,
+            "live_replay_not_found",
+            "Live replay not found",
+            "No replay has been registered for this live session.",
+        )
+    return record
+
+
+@router.get("/replays/{replay_id}", response_model=LiveReplayPlaybackResponse)
+async def get_replay_playback(
+    replay_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LiveReplayPlaybackResponse:
+    record = await owned_replay(db, replay_id, auth.user.id)
+    if record.status != LiveReplayStatus.ready:
+        raise APIError(
+            409,
+            "live_replay_not_ready",
+            "Live replay is not ready",
+            "A playback URL is available only after replay processing succeeds.",
+        )
+    storage = request.app.state.object_storage
+    playback_url = await storage.presign_get(object_key=record.storage_key)
+    thumbnail_url = (
+        await storage.presign_get(object_key=record.thumbnail_key) if record.thumbnail_key else None
+    )
+    return LiveReplayPlaybackResponse(
+        **LiveReplayResponse.model_validate(record).model_dump(),
+        playback_url=playback_url,
+        thumbnail_url=thumbnail_url,
+        expires_in_seconds=settings.s3_presign_seconds,
+    )
 
 
 @router.get(

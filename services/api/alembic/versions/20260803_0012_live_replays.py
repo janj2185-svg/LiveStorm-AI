@@ -1,0 +1,26 @@
+"""Add live replay/VOD assets.
+
+Revision ID: 20260803_0012_live_replays
+Revises: 20260803_0011_push_notifications
+Create Date: 2026-08-03
+"""
+
+from __future__ import annotations
+
+from alembic import op
+from app.models import Base
+
+revision = "20260803_0012_live_replays"
+down_revision = "20260803_0011_push_notifications"
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    connection = op.get_bind()
+    Base.metadata.tables["live_replays"].create(bind=connection, checkfirst=True)
+
+
+def downgrade() -> None:
+    connection = op.get_bind()
+    Base.metadata.tables["live_replays"].drop(bind=connection, checkfirst=True)

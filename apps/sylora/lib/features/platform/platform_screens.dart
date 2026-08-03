@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api.dart';
 import '../../core/lumen_theme.dart';
@@ -2445,6 +2446,26 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            if (session.replay case final replay?
+                when replay.status == 'ready') ...<Widget>[
+              LumenSurface(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.movie_creation_outlined),
+                  title: const Text('Replay ready'),
+                  subtitle: Text(
+                    '${_formatReplayDuration(replay.durationSeconds)} • '
+                    'Created ${DateFormat.yMMMd().add_jm().format(replay.createdAt.toLocal())}',
+                  ),
+                  trailing: LumenSecondaryButton(
+                    label: 'Open replay',
+                    icon: Icons.open_in_new_rounded,
+                    onPressed: () => _openReplay(replay.id),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             LumenSurface(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2641,6 +2662,28 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
       if (destination.analyticsEnabled) 'analytics',
     ];
     return values.isEmpty ? 'no enabled capabilities' : values.join(', ');
+  }
+
+  static String _formatReplayDuration(int totalSeconds) {
+    final duration = Duration(seconds: totalSeconds);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return hours > 0 ? '$hours:$minutes:$seconds' : '$minutes:$seconds';
+  }
+
+  Future<void> _openReplay(String replayId) async {
+    try {
+      final result = await ref
+          .read(liveRepositoryProvider)
+          .replayPlayback(replayId);
+      await launchUrl(
+        Uri.parse(requireString(result, 'playback_url')),
+        mode: LaunchMode.externalApplication,
+      );
+    } on Object catch (error) {
+      setState(() => _status = 'Replay could not be opened: $error');
+    }
   }
 
   Future<void> _showAddDestination(

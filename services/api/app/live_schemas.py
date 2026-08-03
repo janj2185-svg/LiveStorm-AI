@@ -27,6 +27,7 @@ from app.live_models import (
     LiveDestinationState,
     LiveModerationMode,
     LiveNormalizedEventType,
+    LiveReplayStatus,
     LiveRuleRisk,
     LiveSessionState,
     LiveTurnStatus,
@@ -38,6 +39,7 @@ from app.social_schemas import validate_plain_text
 REFERENCE_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._:/-]{1,254}$")
 SCOPE_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$")
 ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,254}$")
+OBJECT_KEY_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._=/+-]{0,1023}$")
 
 
 class StrictSchema(BaseModel):
@@ -57,6 +59,17 @@ def safe_json_object(value: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(result, dict):
         raise ValueError("value must be a JSON object")
     return result
+
+
+def safe_object_key(value: str) -> str:
+    stripped = value.strip()
+    if (
+        not OBJECT_KEY_PATTERN.fullmatch(stripped)
+        or "//" in stripped
+        or "/../" in f"/{stripped}/"
+    ):
+        raise ValueError("object key must be a relative S3 object key")
+    return stripped
 
 
 class PluginManifestInput(StrictSchema):
@@ -286,6 +299,34 @@ class LiveDestinationResponse(ORMStrictSchema):
     updated_at: datetime
 
 
+class LiveReplayRegister(StrictSchema):
+    status: LiveReplayStatus = LiveReplayStatus.ready
+    storage_key: str = Field(min_length=1, max_length=1024)
+    duration_seconds: int = Field(ge=0, le=60 * 60 * 24)
+    thumbnail_key: str | None = Field(default=None, min_length=1, max_length=1024)
+
+    _storage_key = field_validator("storage_key")(safe_object_key)
+    _thumbnail_key = field_validator("thumbnail_key")(
+        lambda value: safe_object_key(value) if value else value
+    )
+
+
+class LiveReplayResponse(ORMStrictSchema):
+    id: uuid.UUID
+    session_id: uuid.UUID
+    status: LiveReplayStatus
+    storage_key: str
+    duration_seconds: int
+    thumbnail_key: str | None
+    created_at: datetime
+
+
+class LiveReplayPlaybackResponse(LiveReplayResponse):
+    playback_url: str
+    thumbnail_url: str | None = None
+    expires_in_seconds: int
+
+
 class LiveSessionResponse(ORMStrictSchema):
     id: uuid.UUID
     workspace_id: uuid.UUID | None
@@ -305,6 +346,7 @@ class LiveSessionResponse(ORMStrictSchema):
     created_at: datetime
     updated_at: datetime
     destinations: list[LiveDestinationResponse] = Field(default_factory=list)
+    replay: LiveReplayResponse | None = None
 
 
 class LiveSessionCreated(LiveSessionResponse):

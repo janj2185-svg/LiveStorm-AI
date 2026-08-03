@@ -251,6 +251,15 @@ async def connect_test_integration(
     return response.json()
 
 
+class ReplayStorage:
+    def __init__(self) -> None:
+        self.requested_keys: list[str] = []
+
+    async def presign_get(self, *, object_key: str) -> str:
+        self.requested_keys.append(object_key)
+        return f"https://storage.test/{object_key}?signed=1"
+
+
 @pytest.mark.asyncio
 async def test_platform_capability_gating_and_secret_redaction(
     api_factory: Any,
@@ -382,6 +391,85 @@ async def test_publish_credentials_fail_closed_when_mediamtx_unset(api_factory: 
         assert body["bearer_token"] is None
         assert body["token_expires_in_seconds"] == 0
         assert body["ice_servers"] == []
+
+
+@pytest.mark.asyncio
+async def test_live_replay_registration_fails_closed_without_s3(api_factory: Any) -> None:
+    async with api_factory() as api:
+        headers, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=headers,
+            json={"title": "Replay fail closed", "recording_enabled": True},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+
+        registered = await api.client.post(
+            f"/v1/live/sessions/{session_id}/replay",
+            headers=headers,
+            json={
+                "status": "ready",
+                "storage_key": f"live/replays/{session_id}.mp4",
+                "duration_seconds": 73,
+                "thumbnail_key": f"live/replays/{session_id}.jpg",
+            },
+        )
+        assert registered.status_code == 201, registered.text
+        replay = registered.json()
+        assert replay["session_id"] == session_id
+        assert replay["status"] == "ready"
+        assert replay["duration_seconds"] == 73
+
+        session = await api.client.get(f"/v1/live/sessions/{session_id}", headers=headers)
+        assert session.status_code == 200, session.text
+        assert session.json()["replay"]["id"] == replay["id"]
+
+        playback = await api.client.get(f"/v1/live/replays/{replay['id']}", headers=headers)
+        assert playback.status_code == 503
+        assert playback.json()["code"] == "object_storage_unavailable"
+
+
+@pytest.mark.asyncio
+async def test_live_replay_playback_presigns_storage_objects(api_factory: Any) -> None:
+    storage = ReplayStorage()
+    async with api_factory(object_storage=storage) as api:
+        headers, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=headers,
+            json={"title": "Replay happy path", "recording_enabled": True},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+
+        registered = await api.client.post(
+            f"/v1/live/sessions/{session_id}/replay",
+            headers=headers,
+            json={
+                "status": "ready",
+                "storage_key": "live/replays/session-vod.mp4",
+                "duration_seconds": 120,
+                "thumbnail_key": "live/replays/session-vod.jpg",
+            },
+        )
+        assert registered.status_code == 201, registered.text
+        replay = registered.json()
+
+        latest = await api.client.get(f"/v1/live/sessions/{session_id}/replay", headers=headers)
+        assert latest.status_code == 200, latest.text
+        assert latest.json()["id"] == replay["id"]
+
+        playback = await api.client.get(f"/v1/live/replays/{replay['id']}", headers=headers)
+        assert playback.status_code == 200, playback.text
+        body = playback.json()
+        assert body["playback_url"] == "https://storage.test/live/replays/session-vod.mp4?signed=1"
+        assert body["thumbnail_url"] == "https://storage.test/live/replays/session-vod.jpg?signed=1"
+        assert body["expires_in_seconds"] == 900
+        assert storage.requested_keys == [
+            "live/replays/session-vod.mp4",
+            "live/replays/session-vod.jpg",
+        ]
 
 
 @pytest.mark.asyncio

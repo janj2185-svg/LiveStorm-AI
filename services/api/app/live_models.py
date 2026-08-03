@@ -78,6 +78,13 @@ class LiveSessionState(enum.StrEnum):
     failed = "failed"
 
 
+class LiveReplayStatus(enum.StrEnum):
+    pending = "pending"
+    processing = "processing"
+    ready = "ready"
+    failed = "failed"
+
+
 class LiveDestinationState(enum.StrEnum):
     pending = "pending"
     ready = "ready"
@@ -288,6 +295,30 @@ class LiveSession(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class LiveReplay(Base):
+    __tablename__ = "live_replays"
+    __table_args__ = (
+        CheckConstraint("duration_seconds >= 0", name="ck_live_replay_duration_nonnegative"),
+        Index("ix_live_replay_session_created", "session_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("live_sessions.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[LiveReplayStatus] = mapped_column(
+        Enum(LiveReplayStatus, native_enum=False, length=16),
+        default=LiveReplayStatus.pending,
+        index=True,
+    )
+    storage_key: Mapped[str] = mapped_column(String(1024))
+    duration_seconds: Mapped[int] = mapped_column(Integer, default=0)
+    thumbnail_key: Mapped[str | None] = mapped_column(String(1024))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
 
 
