@@ -71,4 +71,6 @@ BOOTSTRAP_READY_GIFTS=true
 
 - API focused suites (vector/payments/trust/live/gifts/push/obs/replay): green in agent runs
 - Flutter analyze: green after i18n + creator studio
-- Full manual product audit: pending deploy
+- Full API suite: 150 passed, 1 skipped
+- Staging cutover: API migrated to 0013, 10 READY gifts seeded, web `production-wave-ab` / `408543f`
+- Full manual product audit: in progress
