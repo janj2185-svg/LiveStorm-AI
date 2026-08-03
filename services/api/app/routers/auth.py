@@ -7,6 +7,12 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_audit_event
+from app.auth_otp import (
+    start_email_otp,
+    start_phone_otp,
+    verify_email_otp,
+    verify_phone_otp,
+)
 from app.auth_service import (
     authenticate_password,
     begin_totp_setup,
@@ -27,12 +33,18 @@ from app.errors import APIError
 from app.models import AccessSession
 from app.rate_limit import auth_rate_limit
 from app.schemas import (
+    AuthMethodsResponse,
+    EmailOtpStartRequest,
+    EmailOtpVerifyRequest,
     EmailRequest,
     LoginRequest,
     LoginResponse,
     MessageResponse,
     MFAVerifyRequest,
+    OtpStartResponse,
     PasswordResetConsumeRequest,
+    PhoneStartRequest,
+    PhoneVerifyRequest,
     RefreshRequest,
     RegisterRequest,
     SessionResponse,
@@ -45,8 +57,95 @@ from app.schemas import (
     UserResponse,
 )
 from app.security import utcnow
+from app.sms import build_sms_provider
 
 router = APIRouter(prefix="/auth", tags=["Identity"])
+
+
+@router.get("/methods", response_model=AuthMethodsResponse)
+async def auth_methods(settings: Settings = Depends(get_settings)) -> AuthMethodsResponse:
+    """Public capability flags for the consumer Flutter auth UI."""
+    return AuthMethodsResponse(**settings.auth_methods())
+
+
+@router.post(
+    "/phone/start",
+    response_model=OtpStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def phone_start(
+    payload: PhoneStartRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OtpStartResponse:
+    assert_stand_accepting_testers(settings)
+    result = await start_phone_otp(
+        db, request, settings, build_sms_provider(settings), payload.phone
+    )
+    return OtpStartResponse(**result)
+
+
+@router.post(
+    "/phone/verify",
+    response_model=TokenResponse,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def phone_verify(
+    payload: PhoneVerifyRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> TokenResponse:
+    assert_stand_accepting_testers(settings)
+    return await verify_phone_otp(
+        db,
+        request,
+        settings,
+        payload.phone,
+        payload.code,
+        payload.device_label,
+    )
+
+
+@router.post(
+    "/email/otp/start",
+    response_model=OtpStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def email_otp_start(
+    payload: EmailOtpStartRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OtpStartResponse:
+    assert_stand_accepting_testers(settings)
+    result = await start_email_otp(db, request, settings, payload.email)
+    return OtpStartResponse(**result)
+
+
+@router.post(
+    "/email/otp/verify",
+    response_model=TokenResponse,
+    dependencies=[Depends(auth_rate_limit)],
+)
+async def email_otp_verify(
+    payload: EmailOtpVerifyRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> TokenResponse:
+    assert_stand_accepting_testers(settings)
+    return await verify_email_otp(
+        db,
+        request,
+        settings,
+        payload.email,
+        payload.code,
+        payload.device_label,
+    )
 
 
 @router.post(
@@ -240,6 +339,8 @@ async def me(auth: AuthContext = Depends(current_auth)) -> UserResponse:
     return UserResponse(
         id=auth.user.id,
         email=auth.user.email,
+        phone_e164=auth.user.phone_e164,
+        phone_verified_at=auth.user.phone_verified_at,
         status=auth.user.status,
         email_verified_at=auth.user.email_verified_at,
         created_at=auth.user.created_at,

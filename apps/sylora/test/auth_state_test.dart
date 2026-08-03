@@ -49,6 +49,16 @@ final class _FakeAuthRepository implements AuthRepository {
   );
 
   @override
+  Future<AuthMethods> authMethods() async => const AuthMethods(
+    phone: false,
+    email: true,
+    tiktok: false,
+    facebook: false,
+    google: false,
+    apple: false,
+  );
+
+  @override
   Future<UserAccount?> restore() async => null;
 
   @override
@@ -74,6 +84,29 @@ final class _FakeAuthRepository implements AuthRepository {
     required String code,
     required String deviceLabel,
   }) async => user;
+
+  @override
+  Future<void> startPhoneOtp(String phone) async {}
+
+  @override
+  Future<UserAccount> verifyPhoneOtp({
+    required String phone,
+    required String code,
+    required String deviceLabel,
+  }) async => user;
+
+  @override
+  Future<void> startEmailOtp(String email) async {}
+
+  @override
+  Future<UserAccount> verifyEmailOtp({
+    required String email,
+    required String code,
+    required String deviceLabel,
+  }) async => user;
+
+  @override
+  Future<UserAccount> completeOAuthSession() async => user;
 
   @override
   Future<List<String>> confirmTotp(String code) async => <String>[];

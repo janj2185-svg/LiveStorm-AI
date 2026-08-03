@@ -8,6 +8,23 @@ final class FakeAuthRepository implements AuthRepository {
 
   final Object? loginError;
 
+  static const _user = UserAccount(
+    id: 'user-id',
+    email: 'person@example.test',
+    status: 'active',
+    roles: <String>['user'],
+  );
+
+  @override
+  Future<AuthMethods> authMethods() async => const AuthMethods(
+    phone: false,
+    email: true,
+    tiktok: false,
+    facebook: false,
+    google: false,
+    apple: false,
+  );
+
   @override
   Future<UserAccount?> restore() async => null;
 
@@ -20,15 +37,31 @@ final class FakeAuthRepository implements AuthRepository {
     if (loginError != null) {
       throw loginError!;
     }
-    return const LoginResult.authenticated(
-      UserAccount(
-        id: 'user-id',
-        email: 'person@example.test',
-        status: 'active',
-        roles: <String>['user'],
-      ),
-    );
+    return const LoginResult.authenticated(_user);
   }
+
+  @override
+  Future<void> startPhoneOtp(String phone) async {}
+
+  @override
+  Future<UserAccount> verifyPhoneOtp({
+    required String phone,
+    required String code,
+    required String deviceLabel,
+  }) async => _user;
+
+  @override
+  Future<void> startEmailOtp(String email) async {}
+
+  @override
+  Future<UserAccount> verifyEmailOtp({
+    required String email,
+    required String code,
+    required String deviceLabel,
+  }) async => _user;
+
+  @override
+  Future<UserAccount> completeOAuthSession() async => _user;
 
   @override
   Future<List<String>> confirmTotp(String code) async => <String>[];
@@ -76,12 +109,7 @@ final class FakeAuthRepository implements AuthRepository {
     required String challengeToken,
     required String code,
     required String deviceLabel,
-  }) async => const UserAccount(
-    id: 'user-id',
-    email: 'person@example.test',
-    status: 'active',
-    roles: <String>['user'],
-  );
+  }) async => _user;
 }
 
 final class FakeWalletRepository implements WalletRepository {

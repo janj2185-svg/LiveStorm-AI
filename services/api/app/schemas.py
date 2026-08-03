@@ -14,6 +14,41 @@ class MessageResponse(BaseModel):
     status: str
 
 
+class AuthMethodsResponse(BaseModel):
+    phone: bool
+    email: bool
+    tiktok: bool
+    facebook: bool
+    google: bool
+    apple: bool
+
+
+class PhoneStartRequest(BaseModel):
+    phone: str = Field(min_length=8, max_length=32)
+
+
+class PhoneVerifyRequest(BaseModel):
+    phone: str = Field(min_length=8, max_length=32)
+    code: str = Field(min_length=4, max_length=12)
+    device_label: str = Field(default="Phone", min_length=1, max_length=100)
+
+
+class EmailOtpStartRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+
+
+class EmailOtpVerifyRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    code: str = Field(min_length=4, max_length=12)
+    device_label: str = Field(default="Email", min_length=1, max_length=100)
+
+
+class OtpStartResponse(BaseModel):
+    status: str
+    expires_in: int
+    resend_after: int
+
+
 class RegisterRequest(BaseModel):
     email: str = Field(min_length=3, max_length=320)
     password: str = Field(min_length=12, max_length=1024)
@@ -67,7 +102,9 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    email: str
+    email: str | None
+    phone_e164: str | None = None
+    phone_verified_at: datetime | None = None
     status: UserStatus
     email_verified_at: datetime | None
     created_at: datetime

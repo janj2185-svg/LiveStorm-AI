@@ -134,6 +134,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             _page(state, const AuthScreen(), reducedMotion),
       ),
       GoRoute(
+        path: '/auth/oauth/complete',
+        name: 'oauth-complete',
+        pageBuilder: (context, state) =>
+            _page(state, const OAuthCompleteScreen(), reducedMotion),
+      ),
+      GoRoute(
         path: '/mfa',
         name: 'mfa',
         pageBuilder: (context, state) =>

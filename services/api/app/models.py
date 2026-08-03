@@ -37,8 +37,10 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    email: Mapped[str | None] = mapped_column(String(320), unique=True, index=True, nullable=True)
     password_hash: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    phone_e164: Mapped[str | None] = mapped_column(String(20), unique=True, index=True)
+    phone_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[UserStatus] = mapped_column(
         Enum(UserStatus, native_enum=False, length=16), default=UserStatus.pending, index=True
     )
@@ -245,9 +247,37 @@ class OAuthIdentity(Base):
     )
     provider: Mapped[str] = mapped_column(String(64))
     external_subject: Mapped[str] = mapped_column(String(255))
-    provider_email: Mapped[str] = mapped_column(String(320))
+    provider_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class AuthOtpChannel(enum.StrEnum):
+    phone = "phone"
+    email = "email"
+
+
+class AuthOtpChallenge(Base):
+    """Hashed one-time codes for phone/email passwordless sign-in."""
+
+    __tablename__ = "auth_otp_challenges"
+    __table_args__ = (
+        Index("ix_auth_otp_destination_channel", "destination", "channel"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    channel: Mapped[AuthOtpChannel] = mapped_column(
+        Enum(AuthOtpChannel, native_enum=False, length=16), index=True
+    )
+    destination: Mapped[str] = mapped_column(String(320), index=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    max_attempts: Mapped[int] = mapped_column(Integer, default=5)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ip_hash: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class SecurityAuditEvent(Base):

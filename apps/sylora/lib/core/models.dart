@@ -16,14 +16,16 @@ PostLifecycle parsePostLifecycle(String value) => switch (value) {
 final class UserAccount {
   const UserAccount({
     required this.id,
-    required this.email,
     required this.status,
     required this.roles,
+    this.email,
+    this.phoneE164,
   });
 
   factory UserAccount.fromJson(JsonObject json) => UserAccount(
     id: requireString(json, 'id'),
-    email: requireString(json, 'email'),
+    email: optionalString(json, 'email'),
+    phoneE164: optionalString(json, 'phone_e164'),
     status: requireString(json, 'status'),
     roles: requireList(
       json,
@@ -32,7 +34,8 @@ final class UserAccount {
   );
 
   final String id;
-  final String email;
+  final String? email;
+  final String? phoneE164;
   final String status;
   final List<String> roles;
 }

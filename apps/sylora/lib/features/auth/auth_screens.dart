@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import 'auth.dart';
+
+enum _AuthPane { chooser, phone, email }
 
 final class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -24,19 +28,19 @@ final class WelcomeScreen extends StatelessWidget {
                 const SyloraLogo(size: 92),
                 const SizedBox(height: 28),
                 Text(
-                  'A brighter place to create together.',
+                  'Яскравіше місце, щоб творити разом.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.displaySmall,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Your community, conversations, gifts, AI tools, and live control plane—connected to your SYLORA account.',
+                  'Спільнота, розмови, подарунки, AI та ефір — у вашому акаунті SYLORA.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 32),
                 LumenPrimaryButton(
-                  label: 'Continue',
+                  label: 'Продовжити',
                   onPressed: () => context.goNamed('auth'),
                 ),
               ],
@@ -61,10 +65,18 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     with SingleTickerProviderStateMixin {
   final _signInKey = GlobalKey<FormState>();
   final _registerKey = GlobalKey<FormState>();
+  final _phoneKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _displayName = TextEditingController();
+  final _phone = TextEditingController();
+  final _otp = TextEditingController();
   late final TabController _tabs;
+  _AuthPane _pane = _AuthPane.chooser;
+  AuthMethods? _methods;
+  String? _methodsError;
+  bool _phoneCodeSent = false;
+  bool _loadingMethods = true;
 
   @override
   void initState() {
@@ -74,6 +86,38 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       vsync: this,
       initialIndex: widget.initialCreateAccount ? 1 : 0,
     );
+    unawaited(_loadMethods());
+  }
+
+  Future<void> _loadMethods() async {
+    try {
+      final methods = await ref.read(authRepositoryProvider).authMethods();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _methods = methods;
+        _loadingMethods = false;
+        _methodsError = null;
+      });
+    } on Object catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _loadingMethods = false;
+        _methodsError = messageFor(error);
+        // Safe defaults: email password always available; social/phone off.
+        _methods = const AuthMethods(
+          phone: false,
+          email: true,
+          tiktok: false,
+          facebook: false,
+          google: false,
+          apple: false,
+        );
+      });
+    }
   }
 
   @override
@@ -82,6 +126,8 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     _email.dispose();
     _password.dispose();
     _displayName.dispose();
+    _phone.dispose();
+    _otp.dispose();
     super.dispose();
   }
 
@@ -106,24 +152,41 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      'Welcome to SYLORA',
+                      'Вхід до SYLORA',
                       style: Theme.of(context).textTheme.headlineLarge,
                     ),
-                    const SizedBox(height: 20),
-                    TabBar(
-                      controller: _tabs,
-                      tabs: const <Tab>[
-                        Tab(text: 'Sign in'),
-                        Tab(text: 'Create account'),
-                      ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Соціальна платформа для спільноти. Оберіть зручний спосіб входу.',
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 20),
-                    AnimatedBuilder(
-                      animation: _tabs,
-                      builder: (context, child) => _tabs.index == 0
-                          ? _signInForm(auth)
-                          : _registerForm(auth),
-                    ),
+                    if (_loadingMethods)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else ...<Widget>[
+                      if (_pane != _AuthPane.chooser)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: () => setState(() {
+                              _pane = _AuthPane.chooser;
+                              _phoneCodeSent = false;
+                            }),
+                            icon: const Icon(Icons.arrow_back_rounded),
+                            label: const Text('Назад'),
+                          ),
+                        ),
+                      if (_pane == _AuthPane.chooser) _chooser(auth),
+                      if (_pane == _AuthPane.phone) _phonePane(auth),
+                      if (_pane == _AuthPane.email) _emailPane(auth),
+                    ],
+                    if (_methodsError != null) ...<Widget>[
+                      const SizedBox(height: 12),
+                      _MessageBanner(message: _methodsError!, error: true),
+                    ],
                     if (auth.error != null) ...<Widget>[
                       const SizedBox(height: 14),
                       _MessageBanner(message: auth.error!, error: true),
@@ -131,25 +194,6 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
                     if (auth.notice != null) ...<Widget>[
                       const SizedBox(height: 14),
                       _MessageBanner(message: auth.notice!),
-                    ],
-                    const SizedBox(height: 24),
-                    const _DividerLabel(label: 'or continue with'),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: <Widget>[
-                        _oauthButton('google'),
-                        _oauthButton('apple'),
-                        _oauthButton('github'),
-                      ],
-                    ),
-                    if (!kIsWeb) ...<Widget>[
-                      const SizedBox(height: 12),
-                      Text(
-                        'OAuth is disabled in this native build because an app deep-link callback has not been configured. Email sign-in remains available.',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
                     ],
                   ],
                 ),
@@ -160,6 +204,134 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       ),
     );
   }
+
+  Widget _chooser(AuthState auth) {
+    final methods = _methods!;
+    final social = <(String, String, IconData)>[
+      if (methods.tiktok) ('tiktok', 'TikTok', Icons.music_note_rounded),
+      if (methods.facebook) ('facebook', 'Facebook', Icons.facebook_rounded),
+      if (methods.google) ('google', 'Google', Icons.g_mobiledata_rounded),
+      if (methods.apple) ('apple', 'Apple', Icons.apple_rounded),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        LumenPrimaryButton(
+          label: 'Продовжити з номером телефону',
+          icon: Icons.sms_outlined,
+          busy: auth.busy,
+          onPressed: methods.phone
+              ? () => setState(() => _pane = _AuthPane.phone)
+              : null,
+          disabledReason: methods.phone
+              ? null
+              : 'Вхід за телефоном тимчасово недоступний.',
+        ),
+        const SizedBox(height: 12),
+        LumenSecondaryButton(
+          label: 'Продовжити з електронною поштою',
+          icon: Icons.mail_outline_rounded,
+          onPressed: methods.email
+              ? () => setState(() => _pane = _AuthPane.email)
+              : null,
+          disabledReason: methods.email
+              ? null
+              : 'Вхід за електронною поштою недоступний.',
+        ),
+        if (social.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 24),
+          const _DividerLabel(label: 'або продовжити через'),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: <Widget>[
+              for (final entry in social)
+                _oauthButton(entry.$1, entry.$2, entry.$3),
+            ],
+          ),
+        ],
+        if (!kIsWeb) ...<Widget>[
+          const SizedBox(height: 12),
+          Text(
+            'Соціальний вхід у цій збірці вимкнено, доки не налаштовано deep-link.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _phonePane(AuthState auth) => Form(
+    key: _phoneKey,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          'Номер телефону',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Ми надішлемо одноразовий код у SMS.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _phone,
+          keyboardType: TextInputType.phone,
+          autofillHints: const <String>[AutofillHints.telephoneNumber],
+          decoration: const InputDecoration(
+            labelText: 'Телефон',
+            hintText: '+380…',
+            prefixIcon: Icon(Icons.phone_iphone_rounded),
+          ),
+          validator: validatePhone,
+        ),
+        if (_phoneCodeSent) ...<Widget>[
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: _otp,
+            keyboardType: TextInputType.number,
+            autofillHints: const <String>[AutofillHints.oneTimeCode],
+            decoration: const InputDecoration(
+              labelText: 'Код з SMS',
+              prefixIcon: Icon(Icons.pin_outlined),
+            ),
+            validator: (value) =>
+                (value == null || value.trim().length < 4)
+                ? 'Введіть код із SMS.'
+                : null,
+          ),
+        ],
+        const SizedBox(height: 20),
+        LumenPrimaryButton(
+          label: _phoneCodeSent ? 'Увійти' : 'Надіслати код',
+          busy: auth.busy,
+          onPressed: () => _phoneCodeSent ? _verifyPhone(auth) : _startPhone(auth),
+        ),
+      ],
+    ),
+  );
+
+  Widget _emailPane(AuthState auth) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      TabBar(
+        controller: _tabs,
+        tabs: const <Tab>[
+          Tab(text: 'Увійти'),
+          Tab(text: 'Створити акаунт'),
+        ],
+      ),
+      const SizedBox(height: 20),
+      AnimatedBuilder(
+        animation: _tabs,
+        builder: (context, child) =>
+            _tabs.index == 0 ? _signInForm(auth) : _registerForm(auth),
+      ),
+    ],
+  );
 
   Widget _signInForm(AuthState auth) => Form(
     key: _signInKey,
@@ -172,7 +344,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           autofillHints: const <String>[AutofillHints.username],
           textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
-            labelText: 'Email',
+            labelText: 'Електронна пошта',
             prefixIcon: Icon(Icons.mail_outline_rounded),
           ),
           validator: validateEmail,
@@ -184,7 +356,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           autofillHints: const <String>[AutofillHints.password],
           textInputAction: TextInputAction.done,
           decoration: const InputDecoration(
-            labelText: 'Password',
+            labelText: 'Пароль',
             prefixIcon: Icon(Icons.lock_outline_rounded),
           ),
           validator: validatePassword,
@@ -194,11 +366,11 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: () => context.pushNamed('password-reset'),
-            child: const Text('Forgot password?'),
+            child: const Text('Забули пароль?'),
           ),
         ),
         LumenPrimaryButton(
-          label: 'Sign in',
+          label: 'Увійти',
           icon: Icons.login_rounded,
           busy: auth.busy,
           onPressed: () => _signIn(auth),
@@ -206,7 +378,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         const SizedBox(height: 8),
         TextButton(
           onPressed: () => context.pushNamed('email-verification'),
-          child: const Text('Verify email or resend link'),
+          child: const Text('Підтвердити пошту або надіслати лист ще раз'),
         ),
       ],
     ),
@@ -222,11 +394,11 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           autofillHints: const <String>[AutofillHints.name],
           textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
-            labelText: 'Display name',
+            labelText: 'Ім’я для профілю',
             prefixIcon: Icon(Icons.person_outline_rounded),
           ),
           validator: (value) => (value?.trim().isEmpty ?? true)
-              ? 'Enter your display name.'
+              ? 'Вкажіть ім’я для профілю.'
               : null,
         ),
         const SizedBox(height: 14),
@@ -236,7 +408,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           autofillHints: const <String>[AutofillHints.newUsername],
           textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
-            labelText: 'Email',
+            labelText: 'Електронна пошта',
             prefixIcon: Icon(Icons.mail_outline_rounded),
           ),
           validator: validateEmail,
@@ -248,8 +420,8 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           autofillHints: const <String>[AutofillHints.newPassword],
           textInputAction: TextInputAction.done,
           decoration: const InputDecoration(
-            labelText: 'Password',
-            helperText: 'At least 12 characters',
+            labelText: 'Пароль',
+            helperText: 'Щонайменше 12 символів',
             prefixIcon: Icon(Icons.lock_outline_rounded),
           ),
           validator: (value) => validatePassword(value, registration: true),
@@ -257,7 +429,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         ),
         const SizedBox(height: 20),
         LumenPrimaryButton(
-          label: 'Create account',
+          label: 'Створити акаунт',
           icon: Icons.person_add_alt_1_rounded,
           busy: auth.busy,
           onPressed: () => _register(auth),
@@ -288,29 +460,118 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
         );
   }
 
-  Widget _oauthButton(String provider) {
+  Future<void> _startPhone(AuthState auth) async {
+    if (auth.busy || !_phoneKey.currentState!.validate()) {
+      return;
+    }
+    final ok = await ref
+        .read(authControllerProvider.notifier)
+        .startPhoneOtp(_phone.text.trim());
+    if (ok && mounted) {
+      setState(() => _phoneCodeSent = true);
+    }
+  }
+
+  Future<void> _verifyPhone(AuthState auth) async {
+    if (auth.busy || !_phoneKey.currentState!.validate()) {
+      return;
+    }
+    await ref
+        .read(authControllerProvider.notifier)
+        .verifyPhoneOtp(phone: _phone.text.trim(), code: _otp.text.trim());
+  }
+
+  Widget _oauthButton(String provider, String label, IconData icon) {
     final reason =
-        'Native OAuth requires a configured deep-link callback for this app.';
+        'Соціальний вхід у цій збірці потребує налаштованого deep-link.';
     return LumenSecondaryButton(
-      label: provider[0].toUpperCase() + provider.substring(1),
-      icon: Icons.open_in_browser_rounded,
+      label: label,
+      icon: icon,
       onPressed: kIsWeb
           ? () async {
               final config = ref.read(appConfigProvider);
               final uri = config.endpoint('auth/oauth/$provider/start');
-              final launched = await launchUrl(uri, webOnlyWindowName: '_self');
-              if (!launched && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('The OAuth page could not be opened.'),
-                  ),
+              try {
+                final launched = await launchUrl(
+                  uri,
+                  webOnlyWindowName: '_self',
                 );
+                if (!launched && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Не вдалося відкрити сторінку входу.'),
+                    ),
+                  );
+                }
+              } on Object {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Провайдер недоступний. Спробуйте інший спосіб входу.',
+                      ),
+                    ),
+                  );
+                }
               }
             }
           : null,
       disabledReason: kIsWeb ? null : reason,
     );
   }
+}
+
+final class OAuthCompleteScreen extends ConsumerStatefulWidget {
+  const OAuthCompleteScreen({super.key});
+
+  @override
+  ConsumerState<OAuthCompleteScreen> createState() =>
+      _OAuthCompleteScreenState();
+}
+
+final class _OAuthCompleteScreenState extends ConsumerState<OAuthCompleteScreen> {
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_complete());
+  }
+
+  Future<void> _complete() async {
+    try {
+      await ref.read(authControllerProvider.notifier).completeOAuthSession();
+      if (mounted) {
+        context.goNamed('home');
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _error = messageFor(error));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: _error == null
+            ? const CircularProgressIndicator()
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  _MessageBanner(message: _error!, error: true),
+                  const SizedBox(height: 16),
+                  LumenPrimaryButton(
+                    label: 'Повернутися до входу',
+                    onPressed: () => context.goNamed('auth'),
+                  ),
+                ],
+              ),
+      ),
+    ),
+  );
 }
 
 final class MfaScreen extends ConsumerStatefulWidget {
@@ -334,7 +595,7 @@ final class _MfaScreenState extends ConsumerState<MfaScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Two-factor authentication')),
+      appBar: AppBar(title: const Text('Двофакторна автентифікація')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -347,7 +608,7 @@ final class _MfaScreenState extends ConsumerState<MfaScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Text(
-                      'Enter your authenticator code',
+                      'Введіть код із застосунку-автентифікатора',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 18),
@@ -356,9 +617,9 @@ final class _MfaScreenState extends ConsumerState<MfaScreen> {
                       autofocus: true,
                       autofillHints: const <String>[AutofillHints.oneTimeCode],
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Code'),
+                      decoration: const InputDecoration(labelText: 'Код'),
                       validator: (value) => (value == null || value.length < 6)
-                          ? 'Enter a valid code.'
+                          ? 'Введіть чинний код.'
                           : null,
                     ),
                     if (auth.error != null) ...<Widget>[
@@ -367,7 +628,7 @@ final class _MfaScreenState extends ConsumerState<MfaScreen> {
                     ],
                     const SizedBox(height: 20),
                     LumenPrimaryButton(
-                      label: 'Verify',
+                      label: 'Підтвердити',
                       busy: auth.busy,
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
@@ -429,7 +690,9 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(_verification ? 'Email verification' : 'Password reset'),
+      title: Text(
+        _verification ? 'Підтвердження пошти' : 'Скидання пароля',
+      ),
     ),
     body: Center(
       child: SingleChildScrollView(
@@ -446,8 +709,8 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
                     children: <Widget>[
                       Text(
                         _verification
-                            ? 'Send a new verification link'
-                            : 'Request a reset link',
+                            ? 'Надіслати новий лист підтвердження'
+                            : 'Запросити посилання для скидання',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 16),
@@ -455,12 +718,14 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const <String>[AutofillHints.email],
-                        decoration: const InputDecoration(labelText: 'Email'),
+                        decoration: const InputDecoration(
+                          labelText: 'Електронна пошта',
+                        ),
                         validator: validateEmail,
                       ),
                       const SizedBox(height: 16),
                       LumenSecondaryButton(
-                        label: 'Send email',
+                        label: 'Надіслати лист',
                         icon: Icons.send_outlined,
                         onPressed: _busy ? null : _request,
                       ),
@@ -477,16 +742,16 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
                     children: <Widget>[
                       Text(
                         _verification
-                            ? 'Verify with a token'
-                            : 'Set a new password',
+                            ? 'Підтвердити токеном'
+                            : 'Встановити новий пароль',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _token,
-                        decoration: const InputDecoration(labelText: 'Token'),
+                        decoration: const InputDecoration(labelText: 'Токен'),
                         validator: (value) => (value?.length ?? 0) < 32
-                            ? 'Enter the token from your email.'
+                            ? 'Введіть токен із листа.'
                             : null,
                       ),
                       if (!_verification) ...<Widget>[
@@ -498,7 +763,7 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
                             AutofillHints.newPassword,
                           ],
                           decoration: const InputDecoration(
-                            labelText: 'New password',
+                            labelText: 'Новий пароль',
                           ),
                           validator: (value) =>
                               validatePassword(value, registration: true),
@@ -507,8 +772,8 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
                       const SizedBox(height: 16),
                       LumenPrimaryButton(
                         label: _verification
-                            ? 'Verify email'
-                            : 'Reset password',
+                            ? 'Підтвердити пошту'
+                            : 'Скинути пароль',
                         busy: _busy,
                         onPressed: _consume,
                       ),
@@ -538,7 +803,7 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
       } else {
         await repository.requestPasswordReset(_email.text.trim());
       }
-      return 'If the account is eligible, an email has been sent.';
+      return 'Якщо акаунт підходить, ми надіслали лист.';
     });
   }
 
@@ -550,10 +815,10 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
       final repository = ref.read(authRepositoryProvider);
       if (_verification) {
         await repository.consumeEmailVerification(_token.text.trim());
-        return 'Email verified. You can now sign in.';
+        return 'Пошту підтверджено. Тепер можна увійти.';
       }
       await repository.consumePasswordReset(_token.text.trim(), _password.text);
-      return 'Password reset. You can now sign in.';
+      return 'Пароль змінено. Тепер можна увійти.';
     });
   }
 

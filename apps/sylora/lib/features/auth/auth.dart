@@ -8,6 +8,34 @@ import '../../core/config.dart';
 import '../../core/models.dart';
 
 @immutable
+final class AuthMethods {
+  const AuthMethods({
+    required this.phone,
+    required this.email,
+    required this.tiktok,
+    required this.facebook,
+    required this.google,
+    required this.apple,
+  });
+
+  factory AuthMethods.fromJson(JsonObject json) => AuthMethods(
+    phone: requireBool(json, 'phone'),
+    email: requireBool(json, 'email'),
+    tiktok: requireBool(json, 'tiktok'),
+    facebook: requireBool(json, 'facebook'),
+    google: requireBool(json, 'google'),
+    apple: requireBool(json, 'apple'),
+  );
+
+  final bool phone;
+  final bool email;
+  final bool tiktok;
+  final bool facebook;
+  final bool google;
+  final bool apple;
+}
+
+@immutable
 final class LoginResult {
   const LoginResult.authenticated(this.user)
     : challengeToken = null,
@@ -43,6 +71,7 @@ final class SessionModel {
 }
 
 abstract interface class AuthRepository {
+  Future<AuthMethods> authMethods();
   Future<UserAccount?> restore();
   Future<LoginResult> login({
     required String email,
@@ -60,6 +89,19 @@ abstract interface class AuthRepository {
     required String displayName,
     required String deviceLabel,
   });
+  Future<void> startPhoneOtp(String phone);
+  Future<UserAccount> verifyPhoneOtp({
+    required String phone,
+    required String code,
+    required String deviceLabel,
+  });
+  Future<void> startEmailOtp(String email);
+  Future<UserAccount> verifyEmailOtp({
+    required String email,
+    required String code,
+    required String deviceLabel,
+  });
+  Future<UserAccount> completeOAuthSession();
   Future<void> requestEmailVerification(String email);
   Future<void> consumeEmailVerification(String token);
   Future<void> requestPasswordReset(String email);
@@ -80,6 +122,16 @@ final class DioAuthRepository implements AuthRepository {
   final TokenStore tokenStore;
 
   @override
+  Future<AuthMethods> authMethods() async {
+    final response = await client.request(
+      'auth/methods',
+      authentication: false,
+      refreshOnUnauthorized: false,
+    );
+    return AuthMethods.fromJson(requireObject(response.data, 'auth methods'));
+  }
+
+  @override
   Future<UserAccount?> restore() async {
     if (!await client.restoreSession()) {
       return null;
@@ -90,6 +142,73 @@ final class DioAuthRepository implements AuthRepository {
   Future<UserAccount> _me() async {
     final response = await client.request('auth/me');
     return UserAccount.fromJson(requireObject(response.data, 'current user'));
+  }
+
+  Future<UserAccount> _saveTokensAndMe(JsonObject tokens) async {
+    await tokenStore.save(AuthTokens.fromJson(tokens));
+    return _me();
+  }
+
+  @override
+  Future<void> startPhoneOtp(String phone) => _publicPost(
+    'auth/phone/start',
+    <String, dynamic>{'phone': phone},
+  );
+
+  @override
+  Future<UserAccount> verifyPhoneOtp({
+    required String phone,
+    required String code,
+    required String deviceLabel,
+  }) async {
+    final response = await client.request(
+      'auth/phone/verify',
+      method: 'POST',
+      authentication: false,
+      refreshOnUnauthorized: false,
+      data: <String, dynamic>{
+        'phone': phone,
+        'code': code,
+        'device_label': deviceLabel,
+      },
+    );
+    return _saveTokensAndMe(requireObject(response.data, 'phone tokens'));
+  }
+
+  @override
+  Future<void> startEmailOtp(String email) => _publicPost(
+    'auth/email/otp/start',
+    <String, dynamic>{'email': email},
+  );
+
+  @override
+  Future<UserAccount> verifyEmailOtp({
+    required String email,
+    required String code,
+    required String deviceLabel,
+  }) async {
+    final response = await client.request(
+      'auth/email/otp/verify',
+      method: 'POST',
+      authentication: false,
+      refreshOnUnauthorized: false,
+      data: <String, dynamic>{
+        'email': email,
+        'code': code,
+        'device_label': deviceLabel,
+      },
+    );
+    return _saveTokensAndMe(requireObject(response.data, 'email otp tokens'));
+  }
+
+  @override
+  Future<UserAccount> completeOAuthSession() async {
+    final response = await client.request(
+      'auth/oauth/session-complete',
+      authentication: false,
+      refreshOnUnauthorized: false,
+    );
+    return _saveTokensAndMe(requireObject(response.data, 'oauth tokens'));
   }
 
   @override
@@ -362,7 +481,7 @@ final class AuthController extends StateNotifier<AuthState> {
     final challenge = state.challengeToken;
     if (challenge == null) {
       state = const AuthState.unauthenticated(
-        error: 'The MFA challenge expired. Sign in again.',
+        error: 'Час на код двофакторної перевірки минув. Увійдіть знову.',
       );
       return;
     }
@@ -393,10 +512,53 @@ final class AuthController extends StateNotifier<AuthState> {
         deviceLabel: 'SYLORA client',
       );
       state = const AuthState.unauthenticated(
-        notice: 'Check your email to verify your account.',
+        notice: 'Перевірте пошту, щоб підтвердити акаунт.',
       );
     } on Object catch (error) {
       state = AuthState.unauthenticated(error: messageFor(error));
+    }
+  }
+
+  Future<bool> startPhoneOtp(String phone) async {
+    state = state.copyWith(busy: true, clearMessages: true);
+    try {
+      await _repository.startPhoneOtp(phone);
+      state = state.copyWith(
+        busy: false,
+        notice: 'Якщо номер коректний, код надіслано в SMS.',
+      );
+      return true;
+    } on Object catch (error) {
+      state = AuthState.unauthenticated(error: messageFor(error));
+      return false;
+    }
+  }
+
+  Future<void> verifyPhoneOtp({
+    required String phone,
+    required String code,
+  }) async {
+    state = state.copyWith(busy: true, clearMessages: true);
+    try {
+      final user = await _repository.verifyPhoneOtp(
+        phone: phone,
+        code: code,
+        deviceLabel: 'SYLORA client',
+      );
+      state = AuthState(status: AuthStatus.authenticated, user: user);
+    } on Object catch (error) {
+      state = AuthState.unauthenticated(error: messageFor(error));
+    }
+  }
+
+  Future<void> completeOAuthSession() async {
+    state = state.copyWith(busy: true, clearMessages: true);
+    try {
+      final user = await _repository.completeOAuthSession();
+      state = AuthState(status: AuthStatus.authenticated, user: user);
+    } on Object catch (error) {
+      state = AuthState.unauthenticated(error: messageFor(error));
+      rethrow;
     }
   }
 
@@ -407,7 +569,7 @@ final class AuthController extends StateNotifier<AuthState> {
 
   void expire() {
     state = const AuthState.unauthenticated(
-      error: 'Your session ended. Sign in again.',
+      error: 'Сесію завершено. Увійдіть знову.',
     );
   }
 }
@@ -437,10 +599,10 @@ String messageFor(Object error) {
 String? validateEmail(String? value) {
   final email = value?.trim() ?? '';
   if (email.isEmpty) {
-    return 'Enter your email address.';
+    return 'Вкажіть електронну пошту.';
   }
   if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-    return 'Enter a valid email address.';
+    return 'Вкажіть коректну електронну пошту.';
   }
   return null;
 }
@@ -448,10 +610,21 @@ String? validateEmail(String? value) {
 String? validatePassword(String? value, {bool registration = false}) {
   final password = value ?? '';
   if (password.isEmpty) {
-    return 'Enter your password.';
+    return 'Вкажіть пароль.';
   }
   if (registration && password.length < 12) {
-    return 'Use at least 12 characters.';
+    return 'Використайте щонайменше 12 символів.';
+  }
+  return null;
+}
+
+String? validatePhone(String? value) {
+  final phone = value?.trim() ?? '';
+  if (phone.isEmpty) {
+    return 'Вкажіть номер телефону.';
+  }
+  if (phone.replaceAll(RegExp(r'[\s\-()]'), '').length < 8) {
+    return 'Вкажіть коректний номер телефону.';
   }
   return null;
 }

@@ -4,8 +4,6 @@ import base64
 import hashlib
 import secrets
 from typing import Any
-from urllib.parse import urlencode
-
 import httpx
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -30,6 +28,12 @@ from app.models import (
     UserRole,
     UserStatus,
 )
+from app.oauth_providers import (
+    BUILTIN_OAUTH_DISCOVERY,
+    DEVELOPMENT_ONLY_OAUTH_PROVIDERS,
+    authorize_query,
+    token_form,
+)
 from app.security import (
     create_oauth_state,
     decode_oauth_state,
@@ -42,7 +46,18 @@ STATE_COOKIE = "sylora_oauth_state"
 
 
 def provider_or_error(settings: Settings, provider: str) -> OAuthProviderSettings:
-    configuration = settings.oauth_provider(provider)
+    name = provider.lower().strip()
+    if name in DEVELOPMENT_ONLY_OAUTH_PROVIDERS and settings.environment not in {
+        "development",
+        "test",
+    }:
+        raise APIError(
+            503,
+            "oauth_provider_unavailable",
+            "OAuth provider unavailable",
+            "This OAuth provider is not available for consumer sign-in.",
+        )
+    configuration = settings.oauth_provider(name)
     if configuration is None:
         raise APIError(
             503,
@@ -54,9 +69,23 @@ def provider_or_error(settings: Settings, provider: str) -> OAuthProviderSetting
 
 
 async def fetch_json(url: str, *, headers: dict[str, str] | None = None) -> dict[str, Any]:
+    if url.startswith("builtin:"):
+        key = url.removeprefix("builtin:").strip().lower()
+        data = BUILTIN_OAUTH_DISCOVERY.get(key)
+        if data is None:
+            raise APIError(
+                503,
+                "oauth_provider_unavailable",
+                "OAuth provider unavailable",
+                "The OAuth provider metadata is incomplete.",
+            )
+        return dict(data)
     try:
+        request_headers = {"Accept": "application/json", "User-Agent": "sylora-api"}
+        if headers:
+            request_headers.update(headers)
         async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
-            response = await client.get(url, headers=headers)
+            response = await client.get(url, headers=request_headers)
             response.raise_for_status()
             data = response.json()
     except (httpx.HTTPError, ValueError) as exc:
@@ -109,17 +138,12 @@ async def oauth_start(
         },
         settings,
     )
-    query = urlencode(
-        {
-            "response_type": "code",
-            "client_id": configuration.client_id,
-            "redirect_uri": configuration.redirect_uri,
-            "scope": configuration.scopes,
-            "state": state,
-            "nonce": nonce,
-            "code_challenge": challenge,
-            "code_challenge_method": "S256",
-        }
+    query = authorize_query(
+        configuration,
+        discovery,
+        state=state,
+        nonce=nonce,
+        challenge=challenge,
     )
     response = RedirectResponse(f"{authorization_endpoint}?{query}", status_code=307)
     response.set_cookie(
@@ -129,7 +153,7 @@ async def oauth_start(
         httponly=True,
         secure=True,
         samesite="lax",
-        path=f"/v1/auth/oauth/{provider}",
+        path=f"/v1/auth/oauth/{configuration.name}",
     )
     return response
 
@@ -148,22 +172,15 @@ async def exchange_code(
             "OAuth provider unavailable",
             "The OAuth provider metadata is incomplete.",
         )
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": configuration.redirect_uri,
-        "client_id": configuration.client_id,
-        "code_verifier": verifier,
-    }
+    data = token_form(configuration, discovery, code=code, verifier=verifier)
     methods = discovery.get("token_endpoint_auth_methods_supported", [])
     basic_auth: tuple[str, str] | None = None
-    if "client_secret_basic" in methods:
+    if "client_secret_basic" in methods and configuration.name not in {"tiktok"}:
         basic_auth = (
             configuration.client_id,
             configuration.client_secret.get_secret_value(),
         )
-    else:
-        data["client_secret"] = configuration.client_secret.get_secret_value()
+        data.pop("client_secret", None)
     try:
         async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
             if basic_auth is not None:
@@ -171,13 +188,13 @@ async def exchange_code(
                     token_endpoint,
                     data=data,
                     auth=basic_auth,
-                    headers={"Accept": "application/json"},
+                    headers={"Accept": "application/json", "User-Agent": "sylora-api"},
                 )
             else:
                 response = await client.post(
                     token_endpoint,
                     data=data,
-                    headers={"Accept": "application/json"},
+                    headers={"Accept": "application/json", "User-Agent": "sylora-api"},
                 )
             response.raise_for_status()
             payload = response.json()
@@ -195,7 +212,92 @@ async def exchange_code(
             "OAuth authorization failed",
             "The provider returned an invalid token response.",
         )
+    # TikTok nests token fields under data.
+    if configuration.name == "tiktok" and isinstance(payload.get("data"), dict):
+        nested = dict(payload["data"])
+        nested.setdefault("access_token", nested.get("access_token"))
+        return nested
     return payload
+
+
+async def _provider_userinfo(
+    configuration: OAuthProviderSettings,
+    discovery: dict[str, Any],
+    access_token: str,
+) -> dict[str, Any]:
+    userinfo_endpoint = discovery.get("userinfo_endpoint")
+    if not isinstance(userinfo_endpoint, str):
+        raise APIError(
+            401,
+            "oauth_identity_invalid",
+            "OAuth identity invalid",
+            "The provider did not supply a verifiable identity.",
+        )
+    if configuration.name == "facebook":
+        url = f"{userinfo_endpoint}?fields=id,name,email&access_token={access_token}"
+        data = await fetch_json(url)
+        if "id" in data and "sub" not in data:
+            data["sub"] = str(data["id"])
+        if data.get("email"):
+            data["email_verified"] = True
+        return data
+    if configuration.name == "tiktok":
+        url = f"{userinfo_endpoint}?fields=open_id,union_id,display_name,avatar_url"
+        data = await fetch_json(url, headers={"Authorization": f"Bearer {access_token}"})
+        user = data.get("data", {}).get("user") if isinstance(data.get("data"), dict) else None
+        if not isinstance(user, dict):
+            raise APIError(
+                401,
+                "oauth_identity_invalid",
+                "OAuth identity invalid",
+                "The provider did not supply a verifiable identity.",
+            )
+        subject = user.get("open_id") or user.get("union_id")
+        return {
+            "sub": str(subject) if subject else None,
+            "name": user.get("display_name"),
+            "email": None,
+            "email_verified": False,
+        }
+    if configuration.name == "github":
+        data = await fetch_json(
+            userinfo_endpoint,
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        if "id" in data and "sub" not in data:
+            data["sub"] = str(data["id"])
+        return data
+    return await fetch_json(
+        userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+
+async def fetch_json_list(
+    url: str, *, headers: dict[str, str] | None = None
+) -> list[dict[str, Any]]:
+    try:
+        request_headers = {"Accept": "application/json", "User-Agent": "sylora-api"}
+        if headers:
+            request_headers.update(headers)
+        async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
+            response = await client.get(url, headers=request_headers)
+            response.raise_for_status()
+            data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise APIError(
+            401,
+            "oauth_identity_invalid",
+            "OAuth identity invalid",
+            "The provider did not supply a verifiable identity.",
+        ) from exc
+    if not isinstance(data, list):
+        raise APIError(
+            401,
+            "oauth_identity_invalid",
+            "OAuth identity invalid",
+            "The provider did not supply a verifiable identity.",
+        )
+    return [item for item in data if isinstance(item, dict)]
 
 
 async def validated_claims(
@@ -256,16 +358,118 @@ async def validated_claims(
                 "The provider identity token could not be validated.",
             ) from exc
 
-    userinfo_endpoint = discovery.get("userinfo_endpoint")
     access_token = token_payload.get("access_token")
-    if not isinstance(userinfo_endpoint, str) or not isinstance(access_token, str):
+    if not isinstance(access_token, str):
         raise APIError(
             401,
             "oauth_identity_invalid",
             "OAuth identity invalid",
             "The provider did not supply a verifiable identity.",
         )
-    return await fetch_json(userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
+    claims = await _provider_userinfo(configuration, discovery, access_token)
+    if configuration.name == "github":
+        emails = await fetch_json_list(
+            "https://api.github.com/user/emails",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        selected = next(
+            (
+                item
+                for item in emails
+                if item.get("primary") is True and item.get("verified") is True
+            ),
+            None,
+        )
+        if selected is None:
+            selected = next((item for item in emails if item.get("verified") is True), None)
+        if selected and isinstance(selected.get("email"), str):
+            claims["email"] = selected["email"]
+            claims["email_verified"] = True
+        if claims.get("id") is not None and not claims.get("sub"):
+            claims["sub"] = str(claims["id"])
+    return claims
+
+
+async def resolve_oauth_user(
+    db: AsyncSession,
+    configuration: OAuthProviderSettings,
+    claims: dict[str, Any],
+) -> tuple[User, OAuthIdentity]:
+    subject = claims.get("sub")
+    if not isinstance(subject, str) or not subject:
+        raise APIError(
+            401,
+            "oauth_identity_invalid",
+            "OAuth identity invalid",
+            "The provider did not supply a verifiable identity.",
+        )
+
+    email: str | None = None
+    email_verified = claims.get("email_verified") in {True, "true"}
+    email_claim = claims.get("email")
+    if isinstance(email_claim, str) and email_claim.strip() and email_verified:
+        email = normalize_email(email_claim)
+
+    identity = await db.scalar(
+        select(OAuthIdentity).where(
+            OAuthIdentity.provider == configuration.name,
+            OAuthIdentity.external_subject == subject,
+        )
+    )
+    user = await db.get(User, identity.user_id) if identity else None
+    if user is not None:
+        return user, identity
+
+    # Only auto-link by email when the provider asserted a verified email.
+    if email is not None:
+        user = await db.scalar(select(User).where(User.email == email))
+        if user is not None and user.status in {UserStatus.suspended, UserStatus.deleted}:
+            raise APIError(
+                403,
+                "account_unavailable",
+                "Account unavailable",
+                "This account cannot sign in with OAuth.",
+            )
+        if user is not None and user.email_verified_at is None:
+            # Do not merge into an unverified local email account.
+            user = None
+
+    if user is None:
+        display_name = str(
+            claims.get("name") or (email.split("@", 1)[0] if email else configuration.name)
+        )[:100]
+        user = User(
+            email=email,
+            password_hash=None,
+            status=UserStatus.active,
+            email_verified_at=utcnow() if email else None,
+        )
+        user.profile = Profile(display_name=display_name, locale="uk")
+        user.settings = AccountSettings()
+        db.add(user)
+        await db.flush()
+        default_role = await db.scalar(select(Role).where(Role.name == "user"))
+        if default_role is None:
+            raise APIError(
+                503,
+                "service_not_ready",
+                "Service not ready",
+                "Identity roles have not been initialized.",
+            )
+        db.add(UserRole(user_id=user.id, role_id=default_role.id))
+    elif user.status == UserStatus.pending:
+        user.status = UserStatus.active
+        if email and user.email_verified_at is None:
+            user.email_verified_at = utcnow()
+
+    identity = OAuthIdentity(
+        user_id=user.id,
+        provider=configuration.name,
+        external_subject=subject,
+        provider_email=email,
+    )
+    db.add(identity)
+    return user, identity
 
 
 @router.get("/{provider}/callback")
@@ -302,79 +506,7 @@ async def oauth_callback(
     claims = await validated_claims(
         configuration, discovery, token_payload, str(state_data["nonce"])
     )
-    subject = claims.get("sub")
-    email_claim = claims.get("email")
-    verified_claim = claims.get("email_verified")
-    if (
-        not isinstance(subject, str)
-        or not isinstance(email_claim, str)
-        or verified_claim not in {True, "true"}
-    ):
-        raise APIError(
-            403,
-            "oauth_email_unverified",
-            "Verified provider email required",
-            "The OAuth provider did not return a verified email address.",
-        )
-    email = normalize_email(email_claim)
-
-    identity = await db.scalar(
-        select(OAuthIdentity).where(
-            OAuthIdentity.provider == configuration.name,
-            OAuthIdentity.external_subject == subject,
-        )
-    )
-    user = await db.get(User, identity.user_id) if identity else None
-    if user is None:
-        user = await db.scalar(select(User).where(User.email == email))
-        if user is not None and user.status in {
-            UserStatus.suspended,
-            UserStatus.deleted,
-        }:
-            raise APIError(
-                403,
-                "account_unavailable",
-                "Account unavailable",
-                "This account cannot sign in with OAuth.",
-            )
-        if user is None:
-            display_name = str(claims.get("name") or email.split("@", 1)[0])[:100]
-            user = User(
-                email=email,
-                password_hash=None,
-                status=UserStatus.active,
-                email_verified_at=utcnow(),
-            )
-            user.profile = Profile(display_name=display_name)
-            user.settings = AccountSettings()
-            db.add(user)
-            await db.flush()
-            default_role = await db.scalar(select(Role).where(Role.name == "user"))
-            if default_role is None:
-                raise APIError(
-                    503,
-                    "service_not_ready",
-                    "Service not ready",
-                    "Identity roles have not been initialized.",
-                )
-            db.add(UserRole(user_id=user.id, role_id=default_role.id))
-        elif user.status == UserStatus.pending:
-            user.status = UserStatus.active
-            user.email_verified_at = utcnow()
-        identity = OAuthIdentity(
-            user_id=user.id,
-            provider=configuration.name,
-            external_subject=subject,
-            provider_email=email,
-        )
-        db.add(identity)
-    if identity is None:
-        raise APIError(
-            500,
-            "oauth_identity_unavailable",
-            "OAuth identity unavailable",
-            "The OAuth identity could not be persisted.",
-        )
+    user, identity = await resolve_oauth_user(db, configuration, claims)
     if user.status != UserStatus.active:
         raise APIError(
             403,
@@ -399,11 +531,69 @@ async def oauth_callback(
         },
     )
     await db.commit()
-    response = JSONResponse(tokens.model_dump())
+    bundle = create_oauth_state(
+        {
+            "tokens": tokens.model_dump(),
+            "provider": configuration.name,
+        },
+        settings,
+    )
+    wants_json = "application/json" in (request.headers.get("accept") or "").lower()
+    if wants_json:
+        response: JSONResponse | RedirectResponse = JSONResponse(tokens.model_dump())
+    else:
+        redirect_target = (
+            f"{settings.web_base_url.rstrip('/')}/auth/oauth/complete"
+            f"?provider={configuration.name}"
+        )
+        response = RedirectResponse(redirect_target, status_code=303)
+    response.set_cookie(
+        "sylora_oauth_bundle",
+        bundle,
+        max_age=120,
+        httponly=True,
+        secure=settings.environment != "test",
+        samesite="lax",
+        path="/v1/auth/oauth",
+    )
     response.delete_cookie(
         STATE_COOKIE,
-        path=f"/v1/auth/oauth/{provider}",
+        path=f"/v1/auth/oauth/{configuration.name}",
         secure=True,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
+
+
+@router.get("/session-complete", response_model=None)
+async def oauth_session_complete(
+    request: Request,
+    settings: Settings = Depends(get_settings),
+) -> JSONResponse:
+    """Exchange the short-lived HttpOnly OAuth bundle cookie for tokens once."""
+    bundle = request.cookies.get("sylora_oauth_bundle")
+    if not bundle:
+        raise APIError(
+            401,
+            "oauth_session_missing",
+            "OAuth session missing",
+            "Complete the provider sign-in again.",
+        )
+    payload = decode_oauth_state(bundle, settings)
+    tokens = payload.get("tokens")
+    if not isinstance(tokens, dict):
+        raise APIError(
+            401,
+            "oauth_session_missing",
+            "OAuth session missing",
+            "Complete the provider sign-in again.",
+        )
+    response = JSONResponse(tokens)
+    response.delete_cookie(
+        "sylora_oauth_bundle",
+        path="/v1/auth/oauth",
+        secure=settings.environment != "test",
         httponly=True,
         samesite="lax",
     )

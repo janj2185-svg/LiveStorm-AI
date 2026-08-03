@@ -19,6 +19,27 @@ class OAuthProviderSettings(BaseModel):
     scopes: str = "openid email profile"
 
 
+# Consumer-facing providers. GitHub remains backend-capable but is never exposed
+# via GET /v1/auth/methods for the public Flutter UI.
+PUBLIC_OAUTH_PROVIDERS = ("tiktok", "facebook", "google", "apple")
+
+OAUTH_DEFAULT_DISCOVERY: dict[str, str] = {
+    "google": "https://accounts.google.com/.well-known/openid-configuration",
+    "apple": "https://appleid.apple.com/.well-known/openid-configuration",
+    "github": "builtin:github",
+    "tiktok": "builtin:tiktok",
+    "facebook": "builtin:facebook",
+}
+
+OAUTH_DEFAULT_SCOPES: dict[str, str] = {
+    "google": "openid email profile",
+    "apple": "openid email name",
+    "github": "read:user user:email",
+    "tiktok": "user.info.basic",
+    "facebook": "email,public_profile",
+}
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -42,6 +63,16 @@ class Settings(BaseSettings):
     refresh_token_days: int = Field(default=30, ge=1, le=90)
     verification_token_hours: int = Field(default=24, ge=1, le=72)
     password_reset_minutes: int = Field(default=30, ge=5, le=120)
+    auth_otp_minutes: int = Field(default=10, ge=2, le=30)
+    auth_otp_resend_seconds: int = Field(default=60, ge=15, le=600)
+    auth_otp_max_attempts: int = Field(default=5, ge=3, le=10)
+    phone_default_region: str = "UA"
+    # SMS provider: twilio | vonage | none. Phone auth stays unavailable until set.
+    sms_provider: str | None = None
+    sms_api_key: SecretStr | None = None
+    sms_api_secret: SecretStr | None = None
+    sms_account_sid: str | None = None
+    sms_from_number: str | None = None
     data_encryption_key: SecretStr
 
     cors_origins: list[str] = Field(default_factory=list)
@@ -241,35 +272,71 @@ class Settings(BaseSettings):
         return self.celery_result_backend or self.redis_url
 
     def oauth_provider(self, name: str) -> OAuthProviderSettings | None:
-        safe_name = name.upper().replace("-", "_")
+        provider = name.lower().strip()
+        safe_name = provider.upper().replace("-", "_")
         if not safe_name.replace("_", "").isalnum():
             return None
         prefix = f"OAUTH_{safe_name}_"
         dotenv_path = find_dotenv(usecwd=True)
         file_values = dotenv_values(dotenv_path) if dotenv_path else {}
 
-        def configured_value(suffix: str) -> str | None:
-            value = os.getenv(prefix + suffix)
-            if value is None:
-                value = file_values.get(prefix + suffix)
-            return str(value) if value else None
+        def first_configured(*keys: str) -> str | None:
+            for key in keys:
+                value = os.getenv(key)
+                if value is None:
+                    value = file_values.get(key)
+                if value is not None and str(value).strip():
+                    return str(value).strip()
+            return None
 
-        values = {
-            "client_id": configured_value("CLIENT_ID"),
-            "client_secret": configured_value("CLIENT_SECRET"),
-            "discovery_url": configured_value("DISCOVERY_URL"),
-            "redirect_uri": configured_value("REDIRECT_URI"),
-        }
-        if not all(values.values()):
+        def configured_value(suffix: str) -> str | None:
+            return first_configured(prefix + suffix)
+
+        client_id = first_configured(
+            prefix + "CLIENT_ID",
+            f"{safe_name}_CLIENT_ID",
+            f"AUTH_{safe_name}_ID",
+            f"AUTH_{safe_name}_CLIENT_ID",
+        )
+        client_secret = first_configured(
+            prefix + "CLIENT_SECRET",
+            f"{safe_name}_CLIENT_SECRET",
+            f"AUTH_{safe_name}_SECRET",
+            f"AUTH_{safe_name}_CLIENT_SECRET",
+        )
+        discovery_url = configured_value("DISCOVERY_URL") or OAUTH_DEFAULT_DISCOVERY.get(
+            provider
+        )
+        redirect_uri = configured_value("REDIRECT_URI") or (
+            f"{self.web_base_url.rstrip('/')}/v1/auth/oauth/{provider}/callback"
+        )
+        scopes = (
+            configured_value("SCOPES")
+            or OAUTH_DEFAULT_SCOPES.get(provider)
+            or "openid email profile"
+        )
+        if not client_id or not client_secret or not discovery_url or not redirect_uri:
             return None
         return OAuthProviderSettings(
-            name=name.lower(),
-            client_id=str(values["client_id"]),
-            client_secret=SecretStr(str(values["client_secret"])),
-            discovery_url=str(values["discovery_url"]),
-            redirect_uri=str(values["redirect_uri"]),
-            scopes=configured_value("SCOPES") or "openid email profile",
+            name=provider,
+            client_id=client_id,
+            client_secret=SecretStr(client_secret),
+            discovery_url=discovery_url,
+            redirect_uri=redirect_uri,
+            scopes=scopes,
         )
+
+    def auth_methods(self) -> dict[str, bool]:
+        from app.sms import sms_configured
+
+        return {
+            "phone": sms_configured(self),
+            "email": True,
+            "tiktok": self.oauth_provider("tiktok") is not None,
+            "facebook": self.oauth_provider("facebook") is not None,
+            "google": self.oauth_provider("google") is not None,
+            "apple": self.oauth_provider("apple") is not None,
+        }
 
 
 @lru_cache
