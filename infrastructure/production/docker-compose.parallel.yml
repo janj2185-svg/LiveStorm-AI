@@ -168,6 +168,29 @@ services:
     networks:
       - data
 
+  # Writable checkout copy — base compose mounts apps/sylora :ro which blocks pub get.
+  web:
+    volumes:
+      - ../../apps/sylora:/src:ro
+      - web-dist:/out
+    environment:
+      SYLORA_API_BASE_URL: "https://${DOMAIN}"
+    entrypoint:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        rm -rf /build
+        mkdir -p /build
+        cp -a /src/. /build/
+        cd /build
+        flutter config --enable-web
+        flutter pub get
+        flutter build web --release --dart-define=SYLORA_API_BASE_URL=https://${DOMAIN}
+        rm -rf /out/*
+        cp -a build/web/. /out/
+        echo "web build complete"
+
   # Serve Flutter web dist on loopback for pre-cutover checks (not public).
   web-preview:
     image: nginx:1.27-alpine

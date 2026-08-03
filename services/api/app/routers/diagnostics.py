@@ -5,6 +5,7 @@ Never exposes secrets. Disabled (404) when ENVIRONMENT=production.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 from pathlib import Path
@@ -95,10 +96,16 @@ async def diagnostics(request: Request) -> dict[str, Any]:
         redis_detail = type(exc).__name__
 
     storage = request.app.state.object_storage
-    storage_configured = bool(getattr(storage, "configured", False) or getattr(storage, "client", None))
-    # S3ObjectStorage may always exist; treat missing endpoint as unconfigured
-    if not (settings.s3_endpoint_url and settings.s3_bucket):
-        storage_configured = False
+    storage_configured = bool(settings.s3_configured)
+    storage_detail = "configured" if storage_configured else "Provider not configured"
+    if storage_configured:
+        try:
+            # Light connectivity probe without exposing credentials.
+            client = storage._s3_client()  # noqa: SLF001 - diagnostics-only probe
+            await asyncio.to_thread(client.head_bucket, Bucket=storage.bucket)
+            storage_detail = "reachable"
+        except Exception as exc:  # noqa: BLE001 - diagnostics must stay non-fatal
+            storage_detail = type(exc).__name__
 
     payment = request.app.state.payment_provider
     payment_name = type(payment).__name__
@@ -108,20 +115,40 @@ async def diagnostics(request: Request) -> dict[str, Any]:
     if not payment_ok and "payment_provider" not in missing:
         missing.append("payment_provider")
 
-    # Gift library honesty snapshot
+    # Gift library honesty snapshot — prefer official SYLORA 100 catalog / STAND_ARTIFACTS_ROOT.
     gift_summary: dict[str, Any] = {"ready": 0, "assets_built_not_ready": 0, "spec_only": 0, "total": 0}
-    catalog_path = REPO_ROOT / "artifacts" / "gift-library" / "catalog.json"
+    stand_root = os.environ.get("STAND_ARTIFACTS_ROOT")
+    catalog_candidates = [
+        Path(stand_root) / "catalog.json" if stand_root else None,
+        REPO_ROOT / "artifacts" / "sylora-gift-100-originals" / "catalog.json",
+        Path("/artifacts/sylora-gift-100-originals/catalog.json"),
+        REPO_ROOT / "artifacts" / "gift-library" / "catalog.json",
+    ]
+    catalog_path = next((p for p in catalog_candidates if p is not None and p.is_file()), None)
     try:
         import json
 
+        if catalog_path is None:
+            raise FileNotFoundError("gift catalog not found")
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
         gifts = catalog.get("gifts", [])
-        gift_summary["total"] = len(gifts)
-        gift_summary["ready"] = sum(1 for g in gifts if g.get("status") == "READY")
-        gift_summary["assets_built_not_ready"] = sum(
-            1 for g in gifts if g.get("status") == "ASSETS_BUILT_NOT_READY"
+        gift_summary["total"] = int(catalog.get("total") or len(gifts))
+        gift_summary["ready"] = int(
+            catalog.get("ready_count")
+            if catalog.get("ready_count") is not None
+            else sum(1 for g in gifts if g.get("status") == "READY")
         )
-        gift_summary["spec_only"] = sum(1 for g in gifts if g.get("status") == "SPEC_ONLY")
+        gift_summary["assets_built_not_ready"] = int(
+            catalog.get("assets_built_not_ready_count")
+            if catalog.get("assets_built_not_ready_count") is not None
+            else sum(1 for g in gifts if g.get("status") == "ASSETS_BUILT_NOT_READY")
+        )
+        gift_summary["spec_only"] = int(
+            catalog.get("spec_only_count")
+            if catalog.get("spec_only_count") is not None
+            else sum(1 for g in gifts if g.get("status") == "SPEC_ONLY")
+        )
+        gift_summary["catalog_path"] = str(catalog_path)
     except Exception:
         gift_summary["error"] = "catalog_unreadable"
 
