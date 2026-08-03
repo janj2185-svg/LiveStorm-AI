@@ -274,15 +274,20 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
-                            if (_pane != _AuthPane.chooser)
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton.icon(
-                                  onPressed: () => _switchPane(_AuthPane.chooser),
-                                  icon: const Icon(Icons.arrow_back_rounded),
-                                  label: const Text('Назад'),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: _pane == _AuthPane.chooser
+                                    ? () => context.goNamed('welcome')
+                                    : () => _switchPane(_AuthPane.chooser),
+                                icon: const Icon(Icons.arrow_back_rounded),
+                                label: Text(
+                                  _pane == _AuthPane.chooser
+                                      ? 'Назад до світу'
+                                      : 'Назад',
                                 ),
                               ),
+                            ),
                             if (_pane == _AuthPane.chooser) _chooser(auth),
                             if (_pane == _AuthPane.phone) _phonePane(auth),
                             if (_pane == _AuthPane.email) _emailPane(auth),

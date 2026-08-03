@@ -9,6 +9,7 @@ import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
 import 'features/creator/creator_screens.dart';
+import 'features/landing/landing_experience.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
 import 'features/more/more_screen.dart';
@@ -125,13 +126,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/welcome',
         name: 'welcome',
         pageBuilder: (context, state) =>
-            _page(state, const WelcomeScreen(), reducedMotion),
+            _page(state, const LandingExperience(), reducedMotion),
       ),
       GoRoute(
         path: '/auth',
         name: 'auth',
-        pageBuilder: (context, state) =>
-            _page(state, const AuthScreen(), reducedMotion),
+        pageBuilder: (context, state) => _page(
+          state,
+          AuthScreen(
+            initialCreateAccount: state.uri.queryParameters['create'] == '1',
+          ),
+          reducedMotion,
+        ),
       ),
       GoRoute(
         path: '/auth/oauth/complete',
