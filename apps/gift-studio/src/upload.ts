@@ -27,9 +27,16 @@ function ascii(bytes: Uint8Array, start: number, length: number): string {
   return new TextDecoder().decode(bytes.slice(start, start + length));
 }
 
-async function digest(bytes: ArrayBuffer): Promise<string> {
+async function digest(source: BufferSource): Promise<string> {
   if (!crypto.subtle) throw new Error("Web Crypto SHA-256 is required for asset import");
-  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
+  // Copy into a fresh Uint8Array so Node/jsdom realm mismatches (and sliced
+  // ArrayBuffers from File.arrayBuffer polyfills) remain valid BufferSources.
+  const bytes =
+    source instanceof ArrayBuffer
+      ? new Uint8Array(source)
+      : new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
+  const copy = bytes.slice();
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", copy))]
     .map((value) => value.toString(16).padStart(2, "0"))
     .join("");
 }
@@ -175,7 +182,7 @@ export async function prepareAsset(
     extension,
     contentType,
     byteSize: file.size,
-    sha256: await digest(buffer),
+    sha256: await digest(bytes),
     platform: sourceOnly ? "source" : "web",
     qualityTier: sourceOnly ? "source" : qualityTier,
     kind,

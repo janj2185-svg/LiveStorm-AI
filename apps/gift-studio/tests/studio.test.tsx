@@ -102,13 +102,13 @@ function assetFixture(state: "pending" | "verified" = "verified"): GiftAsset {
 }
 
 function fileWithBuffer(name: string, bytes: Uint8Array, type = ""): File {
-  const data = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  const file = new File([data], name, { type });
-  if (!("arrayBuffer" in file)) {
-    Object.defineProperty(file, "arrayBuffer", {
-      value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
-    });
-  }
+  // Always materialize a contiguous copy so Vitest/jsdom File + Node SubtleCrypto agree.
+  const copy = bytes.slice();
+  const file = new File([copy], name, { type });
+  Object.defineProperty(file, "arrayBuffer", {
+    configurable: true,
+    value: async () => copy.slice().buffer
+  });
   return file;
 }
 
