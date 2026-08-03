@@ -35,6 +35,7 @@ from app.live_adapters import (
 from app.live_models import (
     AILivePersona,
     AILiveRule,
+    AILiveTurn,
     IntegrationConnection,
     IntegrationPlatform,
     LiveAction,

@@ -87,7 +87,10 @@ final class ConferenceRepository {
       method: 'POST',
     );
     return ConferenceRoom.fromJson(
-      requireObject(response.data, 'join response')['conference'] as Object?,
+      requireObject(
+        requireObject(response.data, 'join response')['conference'],
+        'conference',
+      ),
     );
   }
 
@@ -97,7 +100,10 @@ final class ConferenceRepository {
       method: 'POST',
     );
     return ConferenceRoom.fromJson(
-      requireObject(response.data, 'leave response')['conference'] as Object?,
+      requireObject(
+        requireObject(response.data, 'leave response')['conference'],
+        'conference',
+      ),
     );
   }
 
@@ -195,7 +201,7 @@ final class ConferencesScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: purpose,
+                initialValue: purpose,
                 decoration: const InputDecoration(labelText: 'Purpose'),
                 items: const <DropdownMenuItem<String>>[
                   DropdownMenuItem(value: 'business', child: Text('Business')),

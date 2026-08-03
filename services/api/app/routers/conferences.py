@@ -352,9 +352,18 @@ async def ask_aura(
 
 def _conference_system_hint(record: LiveConference) -> str:
     purpose_hint = {
-        "business": "Keep replies crisp, practical, and suitable for meetings, strategy, and operating decisions.",
-        "education": "Act like a patient teaching assistant: explain concepts, surface examples, and support learning outcomes.",
-        "social": "Keep the room warm, inclusive, and conversational without pretending to see or hear unprovided media.",
+        "business": (
+            "Keep replies crisp, practical, and suitable for meetings, strategy, "
+            "and operating decisions."
+        ),
+        "education": (
+            "Act like a patient teaching assistant: explain concepts, surface examples, "
+            "and support learning outcomes."
+        ),
+        "social": (
+            "Keep the room warm, inclusive, and conversational without pretending to see "
+            "or hear unprovided media."
+        ),
     }[record.purpose.value]
     return (
         "You are Aura inside a SYLORA video conference. "
