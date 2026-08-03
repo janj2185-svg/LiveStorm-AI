@@ -26,7 +26,7 @@ from app.dependencies import (
     require_permission,
 )
 from app.errors import APIError
-from app.live_adapters import AdapterRegistry
+from app.live_adapters import AdapterError, AdapterRegistry
 from app.live_models import (
     AILivePersona,
     AILiveRule,
@@ -34,7 +34,9 @@ from app.live_models import (
     IntegrationCapabilitySnapshot,
     IntegrationConnection,
     IntegrationPlatform,
+    IntegrationState,
     LiveAction,
+    LiveCapability,
     LiveDestination,
     LiveEvent,
     LiveGameQuestion,
@@ -75,6 +77,10 @@ from app.live_schemas import (
     OAuthCallbackRequest,
     OAuthStartRequest,
     OAuthStartResponse,
+    OBSRecordStatusResponse,
+    OBSSceneListResponse,
+    OBSSceneResponse,
+    OBSSceneSelectRequest,
     PersonaCreate,
     PersonaPatch,
     PersonaResponse,
@@ -94,6 +100,7 @@ from app.live_service import (
     add_destination,
     answer_game_question,
     approve_live_action,
+    connection_context,
     create_game,
     create_integration_connection,
     create_live_session,
@@ -235,6 +242,60 @@ async def publish_latest(request: Request, session_id: uuid.UUID) -> None:
             await request.app.state.live_event_hub.publish(
                 session_id, replay_event(record, request.app.state.settings)
             )
+
+
+async def owned_obs_destination(
+    db: AsyncSession,
+    session_id: uuid.UUID,
+    owner_user_id: uuid.UUID,
+    required_capability: LiveCapability,
+) -> tuple[IntegrationConnection, LiveDestination]:
+    record = await owned_live_session(db, session_id, owner_user_id)
+    row = (
+        await db.execute(
+            select(IntegrationConnection, LiveDestination)
+            .join(LiveDestination, LiveDestination.connection_id == IntegrationConnection.id)
+            .where(
+                LiveDestination.session_id == record.id,
+                IntegrationConnection.owner_user_id == owner_user_id,
+                IntegrationConnection.platform == IntegrationPlatform.obs,
+            )
+            .order_by(LiveDestination.created_at.asc(), LiveDestination.id.asc())
+            .limit(1)
+        )
+    ).first()
+    if row is None:
+        raise APIError(
+            409,
+            "live_obs_destination_unavailable",
+            "OBS destination unavailable",
+            "Connect OBS companion and add it as a destination for this live session.",
+        )
+    connection, destination = row
+    if connection.state not in {IntegrationState.connected, IntegrationState.degraded}:
+        raise APIError(
+            409,
+            "live_obs_integration_not_connected",
+            "OBS integration not connected",
+            "Reconnect OBS companion before using studio OBS controls.",
+        )
+    if required_capability.value not in set(connection.verified_capabilities):
+        raise APIError(
+            409,
+            "live_obs_capability_unavailable",
+            "OBS capability unavailable",
+            f"The OBS connection has not verified {required_capability.value}.",
+        )
+    return connection, destination
+
+
+def obs_api_error(exc: AdapterError, *, operation: str) -> APIError:
+    return APIError(
+        503,
+        exc.code,
+        f"OBS {operation} unavailable",
+        f"OBS companion could not complete {operation}; status is {exc.code}.",
+    )
 
 
 @router.get("/integrations", response_model=list[IntegrationConnectionResponse])
@@ -537,6 +598,139 @@ async def publish_credentials_endpoint(
     await live_rate_limit(request, auth.user.id)
     record = await owned_live_session(db, session_id, auth.user.id)
     return publish_credentials_response(settings, record)
+
+
+@router.get(
+    "/sessions/{session_id}/obs/scenes",
+    response_model=OBSSceneListResponse,
+)
+async def list_obs_scenes_endpoint(
+    session_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OBSSceneListResponse:
+    connection, destination = await owned_obs_destination(
+        db, session_id, auth.user.id, LiveCapability.obs_scene
+    )
+    adapter = registry(request).resolve(IntegrationPlatform.obs)
+    if not hasattr(adapter, "list_scenes"):
+        raise APIError(
+            503,
+            "live_obs_scene_control_unavailable",
+            "OBS scene control unavailable",
+            "The configured OBS adapter does not expose scene listing.",
+        )
+    try:
+        scenes, current = await adapter.list_scenes(connection_context(connection, settings))
+    except AdapterError as exc:
+        raise obs_api_error(exc, operation="scene list") from exc
+    return OBSSceneListResponse(
+        connection_id=connection.id,
+        destination_id=destination.id,
+        current_scene=current,
+        scenes=[OBSSceneResponse(name=name, current=name == current) for name in scenes],
+    )
+
+
+@router.post(
+    "/sessions/{session_id}/obs/scenes/select",
+    response_model=OBSSceneListResponse,
+)
+async def select_obs_scene_endpoint(
+    session_id: uuid.UUID,
+    payload: OBSSceneSelectRequest,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OBSSceneListResponse:
+    connection, destination = await owned_obs_destination(
+        db, session_id, auth.user.id, LiveCapability.obs_scene
+    )
+    adapter = registry(request).resolve(IntegrationPlatform.obs)
+    if not hasattr(adapter, "set_current_scene") or not hasattr(adapter, "list_scenes"):
+        raise APIError(
+            503,
+            "live_obs_scene_control_unavailable",
+            "OBS scene control unavailable",
+            "The configured OBS adapter does not expose scene selection.",
+        )
+    try:
+        context = connection_context(connection, settings)
+        await adapter.set_current_scene(context, payload.scene_name)
+        scenes, current = await adapter.list_scenes(context)
+    except AdapterError as exc:
+        raise obs_api_error(exc, operation="scene selection") from exc
+    return OBSSceneListResponse(
+        connection_id=connection.id,
+        destination_id=destination.id,
+        current_scene=current,
+        scenes=[OBSSceneResponse(name=name, current=name == current) for name in scenes],
+    )
+
+
+@router.post(
+    "/sessions/{session_id}/obs/record/start",
+    response_model=OBSRecordStatusResponse,
+)
+async def start_obs_record_endpoint(
+    session_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OBSRecordStatusResponse:
+    return await set_obs_recording(session_id, request, auth, db, settings, active=True)
+
+
+@router.post(
+    "/sessions/{session_id}/obs/record/stop",
+    response_model=OBSRecordStatusResponse,
+)
+async def stop_obs_record_endpoint(
+    session_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> OBSRecordStatusResponse:
+    return await set_obs_recording(session_id, request, auth, db, settings, active=False)
+
+
+async def set_obs_recording(
+    session_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext,
+    db: AsyncSession,
+    settings: Settings,
+    *,
+    active: bool,
+) -> OBSRecordStatusResponse:
+    connection, destination = await owned_obs_destination(
+        db, session_id, auth.user.id, LiveCapability.record_control
+    )
+    adapter = registry(request).resolve(IntegrationPlatform.obs)
+    if not hasattr(adapter, "set_recording"):
+        raise APIError(
+            503,
+            "live_obs_record_control_unavailable",
+            "OBS record control unavailable",
+            "The configured OBS adapter does not expose recording control.",
+        )
+    try:
+        status_payload = await adapter.set_recording(
+            connection_context(connection, settings), active=active
+        )
+    except AdapterError as exc:
+        raise obs_api_error(exc, operation="record control") from exc
+    return OBSRecordStatusResponse(
+        connection_id=connection.id,
+        destination_id=destination.id,
+        active=bool(status_payload.get("outputActive")),
+        output_path=str(status_payload.get("outputPath") or "") or None,
+    )
 
 
 @router.patch("/sessions/{session_id}", response_model=LiveSessionResponse)

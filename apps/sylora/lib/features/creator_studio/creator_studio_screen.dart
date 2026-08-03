@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api.dart';
+import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../design/sylora.dart';
@@ -27,6 +28,14 @@ final class _CreatorStudioScreenState
     extends ConsumerState<CreatorStudioScreen> {
   late final CreatorMediaController _publisher;
   late final SyloraAuraPresenceController _aura;
+  final TextEditingController _lowerThirdText = TextEditingController(
+    text: 'Welcome to SYLORA Live',
+  );
+  final List<_StudioScene> _scenes = <_StudioScene>[
+    const _StudioScene(name: 'Main', localDraft: true),
+    const _StudioScene(name: 'Intermission', localDraft: true),
+    const _StudioScene(name: 'Q&A', localDraft: true),
+  ];
   List<CreatorMediaDevice> _devices = const <CreatorMediaDevice>[];
   String? _sessionId;
   String? _audioDeviceId;
@@ -34,7 +43,17 @@ final class _CreatorStudioScreenState
   JsonObject? _capability;
   JsonObject? _credentials;
   String? _status;
+  String _selectedSceneName = 'Main';
+  String? _sceneStatus;
+  String? _recordingMode;
   bool _busy = false;
+  bool _scenesBusy = false;
+  bool _obsScenesAvailable = false;
+  bool _browserPublishing = false;
+  bool _recording = false;
+  bool _recordingBusy = false;
+  bool _alertPlaceholderEnabled = true;
+  bool _auraDockEnabled = true;
 
   @override
   void initState() {
@@ -50,7 +69,8 @@ final class _CreatorStudioScreenState
 
   @override
   void dispose() {
-    _publisher.stop();
+    _lowerThirdText.dispose();
+    _publisher.dispose();
     _aura.dispose();
     super.dispose();
   }
@@ -63,7 +83,7 @@ final class _CreatorStudioScreenState
       title: 'Creator Studio',
       subtitle:
           'Web camera publishing for SYLORA Live through MediaMTX WHIP, with OBS kept as the companion path.',
-      showAuraPresence: true,
+      showAuraPresence: _auraDockEnabled,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.creatorStudio,
       actions: <Widget>[
@@ -138,6 +158,8 @@ final class _CreatorStudioScreenState
                     _sessionId = value;
                     _capability = null;
                     _credentials = null;
+                    _obsScenesAvailable = false;
+                    _sceneStatus = null;
                   }),
                 ),
               if (session != null) ...<Widget>[
@@ -150,6 +172,8 @@ final class _CreatorStudioScreenState
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        _buildWaveBSections(session),
         const SizedBox(height: 16),
         LumenSurface(
           child: Column(
@@ -280,6 +304,230 @@ final class _CreatorStudioScreenState
     );
   }
 
+  Widget _buildWaveBSections(LiveSessionModel? session) {
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: <Widget>[
+        SizedBox(width: 420, child: _buildScenesSection(session)),
+        SizedBox(width: 420, child: _buildOverlaysSection()),
+        SizedBox(width: 420, child: _buildAudioSection()),
+        SizedBox(width: 420, child: _buildRecordingSection(session)),
+      ],
+    );
+  }
+
+  Widget _buildScenesSection(LiveSessionModel? session) {
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Scenes',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              LumenBadge(
+                label: _obsScenesAvailable ? 'OBS synced' : 'local draft',
+                color: _obsScenesAvailable
+                    ? LumenColors.aether
+                    : LumenColors.solar,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _obsScenesAvailable
+                ? 'Selecting an OBS scene updates the connected companion.'
+                : 'Local drafts are shown until an OBS destination is connected and synced.',
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              LumenSecondaryButton(
+                label: 'Sync OBS',
+                icon: Icons.sync_rounded,
+                onPressed: session == null || _scenesBusy
+                    ? null
+                    : () => _syncObsScenes(session),
+                disabledReason: 'Select a live session first.',
+              ),
+              LumenSecondaryButton(
+                label: 'Add draft',
+                icon: Icons.add_rounded,
+                onPressed: _addScene,
+              ),
+              LumenSecondaryButton(
+                label: 'Rename draft',
+                icon: Icons.edit_outlined,
+                onPressed: _renameSelectedScene,
+              ),
+            ],
+          ),
+          if (_sceneStatus != null) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(_sceneStatus!),
+          ],
+          const SizedBox(height: 12),
+          for (final scene in _scenes)
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                selected: scene.name == _selectedSceneName,
+                leading: Icon(
+                  scene.localDraft
+                      ? Icons.edit_note_rounded
+                      : Icons.desktop_windows_outlined,
+                ),
+                title: Text(scene.name),
+                subtitle: Text(
+                  scene.localDraft ? 'Local draft scene' : 'OBS program scene',
+                ),
+                trailing: LumenBadge(
+                  label: scene.localDraft ? 'local draft' : 'OBS',
+                  color: scene.localDraft
+                      ? LumenColors.solar
+                      : LumenColors.aether,
+                ),
+                onTap: () => _selectScene(session, scene),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverlaysSection() {
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text('Overlays', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 8),
+          const Text(
+            'Draft overlay controls for Wave B. OBS source wiring stays explicit when a companion is connected.',
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _lowerThirdText,
+            decoration: const InputDecoration(
+              labelText: 'Lower-third text',
+              prefixIcon: Icon(Icons.subtitles_outlined),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Alert placeholder'),
+            subtitle: const Text('Reserve an overlay slot for future alerts.'),
+            value: _alertPlaceholderEnabled,
+            onChanged: (value) =>
+                setState(() => _alertPlaceholderEnabled = value),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Aura cohost dock'),
+            subtitle: const Text('Show Aura presence while producing.'),
+            value: _auraDockEnabled,
+            onChanged: (value) => setState(() => _auraDockEnabled = value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAudioSection() {
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text(
+            'Audio meters',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _publisher.supported
+                ? _publisher.hasAudioTrack
+                      ? 'Live microphone analyser from the preview stream.'
+                      : 'Start preview with a microphone to activate the analyser.'
+                : 'Use OBS companion audio meters on this platform.',
+          ),
+          const SizedBox(height: 16),
+          AnimatedBuilder(
+            animation: _publisher.audioLevel,
+            builder: (context, _) {
+              final level = _publisher.audioLevel.value;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  _audioMeterRow('Mic L', level),
+                  const SizedBox(height: 10),
+                  _audioMeterRow(
+                    'Mic R',
+                    (level * 0.86).clamp(0, 1).toDouble(),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _audioMeterRow(String label, double value) {
+    return Row(
+      children: <Widget>[
+        SizedBox(width: 56, child: Text(label)),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(minHeight: 12, value: value),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text('${(value * 100).round()}%'),
+      ],
+    );
+  }
+
+  Widget _buildRecordingSection(LiveSessionModel? session) {
+    final canRecord =
+        session != null || (_publisher.supported && _browserPublishing);
+    final mode = _obsScenesAvailable
+        ? 'OBS companion record control'
+        : _browserPublishing
+        ? 'Browser MediaRecorder fallback'
+        : 'Connect OBS or start browser WHIP publishing first.';
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text('Recording', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 8),
+          Text(mode),
+          const SizedBox(height: 16),
+          LumenPrimaryButton(
+            label: _recording ? 'Stop recording' : 'Start recording',
+            icon: _recording
+                ? Icons.stop_circle_outlined
+                : Icons.fiber_manual_record,
+            busy: _recordingBusy,
+            onPressed: canRecord ? () => _toggleRecording(session) : null,
+            disabledReason:
+                'Select a session for OBS or start browser publishing for MediaRecorder.',
+          ),
+        ],
+      ),
+    );
+  }
+
   LiveSessionModel? _selectedSession(List<LiveSessionModel> sessions) {
     if (sessions.isEmpty) {
       return null;
@@ -316,6 +564,255 @@ final class _CreatorStudioScreenState
       ],
       onChanged: (value) => onChanged(value?.isEmpty == true ? null : value),
     );
+  }
+
+  Future<void> _syncObsScenes(LiveSessionModel session) async {
+    setState(() => _scenesBusy = true);
+    _aura.think('Aura is syncing OBS scenes.');
+    try {
+      final response = await ref
+          .read(liveRepositoryProvider)
+          .obsScenes(session.id);
+      if (!mounted) {
+        return;
+      }
+      _applyObsScenes(response);
+      if (mounted) {
+        setState(() {
+          _obsScenesAvailable = true;
+          _sceneStatus = 'OBS scenes synced.';
+        });
+        _aura.speak('OBS scenes are available in Creator Studio.');
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _obsScenesAvailable = false;
+          _sceneStatus =
+              'OBS unavailable: ${messageFor(error)} Local draft scenes remain active.';
+        });
+        _aura.focus('Creator Studio is using local draft scenes.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _scenesBusy = false);
+      }
+    }
+  }
+
+  Future<void> _selectScene(
+    LiveSessionModel? session,
+    _StudioScene scene,
+  ) async {
+    setState(() => _selectedSceneName = scene.name);
+    if (scene.localDraft || !_obsScenesAvailable || session == null) {
+      return;
+    }
+    try {
+      final response = await ref
+          .read(liveRepositoryProvider)
+          .selectObsScene(session.id, scene.name);
+      if (!mounted) {
+        return;
+      }
+      _applyObsScenes(response);
+      if (mounted) {
+        setState(() => _sceneStatus = 'OBS scene selected: ${scene.name}.');
+      }
+    } on Object catch (error) {
+      _showError(error);
+    }
+  }
+
+  Future<void> _addScene() async {
+    final name = await _sceneNameDialog(title: 'Add draft scene');
+    if (name == null || !mounted) {
+      return;
+    }
+    final uniqueName = _uniqueSceneName(name);
+    setState(() {
+      _scenes.add(_StudioScene(name: uniqueName, localDraft: true));
+      _selectedSceneName = uniqueName;
+      _sceneStatus = 'Local draft scene added.';
+    });
+  }
+
+  Future<void> _renameSelectedScene() async {
+    final index = _scenes.indexWhere(
+      (scene) => scene.name == _selectedSceneName,
+    );
+    if (index < 0) {
+      return;
+    }
+    final scene = _scenes[index];
+    if (!scene.localDraft) {
+      setState(() {
+        _sceneStatus = 'Rename OBS scenes in OBS; Creator Studio mirrors them.';
+      });
+      return;
+    }
+    final name = await _sceneNameDialog(
+      title: 'Rename draft scene',
+      initialValue: scene.name,
+    );
+    if (name == null || !mounted) {
+      return;
+    }
+    final uniqueName = _uniqueSceneName(name, except: scene.name);
+    setState(() {
+      _scenes[index] = _StudioScene(name: uniqueName, localDraft: true);
+      _selectedSceneName = uniqueName;
+      _sceneStatus = 'Local draft scene renamed.';
+    });
+  }
+
+  Future<void> _toggleRecording(LiveSessionModel? session) async {
+    setState(() => _recordingBusy = true);
+    try {
+      final message = _recording
+          ? await _stopRecording(session)
+          : await _startRecording(session);
+      if (mounted) {
+        setState(() => _status = message);
+      }
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _recordingBusy = false);
+      }
+    }
+  }
+
+  Future<String> _startRecording(LiveSessionModel? session) async {
+    if (session != null) {
+      try {
+        final response = await ref
+            .read(liveRepositoryProvider)
+            .startObsRecording(session.id);
+        _recordingMode = 'obs';
+        _recording = response['active'] == true;
+        return 'OBS recording started.';
+      } on Object catch (error) {
+        if (!_browserPublishing || !_publisher.supported) {
+          rethrow;
+        }
+        setState(() {
+          _status =
+              'OBS recording unavailable: ${messageFor(error)} Falling back to browser recording.';
+        });
+      }
+    }
+    if (!_browserPublishing) {
+      throw StateError(
+        'Start browser publishing before MediaRecorder fallback.',
+      );
+    }
+    final message = await _publisher.startBrowserRecording();
+    _recordingMode = 'browser';
+    _recording = true;
+    return message;
+  }
+
+  Future<String> _stopRecording(LiveSessionModel? session) async {
+    if (_recordingMode == 'obs' && session != null) {
+      final response = await ref
+          .read(liveRepositoryProvider)
+          .stopObsRecording(session.id);
+      _recording = response['active'] == true;
+      _recordingMode = _recording ? 'obs' : null;
+      return 'OBS recording stopped.';
+    }
+    final message = await _publisher.stopBrowserRecording();
+    _recording = false;
+    _recordingMode = null;
+    return message;
+  }
+
+  void _applyObsScenes(JsonObject response) {
+    final sceneObjects = requireList(
+      response,
+      'scenes',
+    ).map((value) => requireObject(value, 'OBS scene')).toList(growable: false);
+    final currentScene = optionalString(response, 'current_scene');
+    final obsScenes = sceneObjects
+        .map(
+          (scene) => _StudioScene(
+            name: requireString(scene, 'name'),
+            localDraft: false,
+          ),
+        )
+        .toList(growable: false);
+    final localDrafts = _scenes
+        .where((scene) => scene.localDraft)
+        .toList(growable: false);
+    setState(() {
+      _scenes
+        ..clear()
+        ..addAll(obsScenes)
+        ..addAll(localDrafts);
+      _selectedSceneName =
+          currentScene ??
+          (obsScenes.isNotEmpty ? obsScenes.first.name : _selectedSceneName);
+    });
+  }
+
+  String _uniqueSceneName(String requested, {String? except}) {
+    var name = requested.trim();
+    if (name.isEmpty) {
+      name = 'Untitled scene';
+    }
+    final existing = _scenes
+        .where((scene) => scene.name != except)
+        .map((scene) => scene.name.toLowerCase())
+        .toSet();
+    if (!existing.contains(name.toLowerCase())) {
+      return name;
+    }
+    var index = 2;
+    while (existing.contains('$name $index'.toLowerCase())) {
+      index += 1;
+    }
+    return '$name $index';
+  }
+
+  Future<String?> _sceneNameDialog({
+    required String title,
+    String initialValue = '',
+  }) async {
+    final controller = TextEditingController(text: initialValue);
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Scene name'),
+            onSubmitted: (value) => Navigator.pop(
+              context,
+              value.trim().isEmpty ? null : value.trim(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = controller.text.trim();
+                Navigator.pop(context, value.isEmpty ? null : value);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      controller.dispose();
+    }
   }
 
   Future<void> _loadDevices() async {
@@ -389,6 +886,7 @@ final class _CreatorStudioScreenState
         setState(() {
           _credentials = credentials;
           _status = message;
+          _browserPublishing = true;
         });
         _aura.speak('Browser publishing is connected.');
       }
@@ -469,4 +967,11 @@ final class _CreatorStudioScreenState
       }
     });
   }
+}
+
+final class _StudioScene {
+  const _StudioScene({required this.name, required this.localDraft});
+
+  final String name;
+  final bool localDraft;
 }

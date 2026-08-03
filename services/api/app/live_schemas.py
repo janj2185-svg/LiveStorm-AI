@@ -357,6 +357,31 @@ class LivePublishCredentialsResponse(LiveMediaCapabilityResponse):
     ice_servers: list[LiveIceServerResponse] = Field(default_factory=list)
 
 
+class OBSSceneResponse(StrictSchema):
+    name: str
+    current: bool = False
+
+
+class OBSSceneListResponse(StrictSchema):
+    connection_id: uuid.UUID
+    destination_id: uuid.UUID
+    current_scene: str | None
+    scenes: list[OBSSceneResponse] = Field(default_factory=list)
+
+
+class OBSSceneSelectRequest(StrictSchema):
+    scene_name: str = Field(min_length=1, max_length=255)
+
+    _scene_name = field_validator("scene_name")(safe_text)
+
+
+class OBSRecordStatusResponse(StrictSchema):
+    connection_id: uuid.UUID
+    destination_id: uuid.UUID
+    active: bool
+    output_path: str | None = None
+
+
 class CursorPage(StrictSchema):
     next_cursor: str | None
 

@@ -27,6 +27,7 @@ from app.live_models import (
     LiveCapability,
     LiveNormalizedEventType,
 )
+
 MAX_ADAPTER_RESPONSE_BYTES = 4 * 1024 * 1024
 YOUTUBE_API = "https://www.googleapis.com/youtube/v3"
 YOUTUBE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -1653,6 +1654,36 @@ class OBSAdapter(BasePlatformAdapter):
             )
         except AdapterError as exc:
             return AdapterHealth(ok=False, status=exc.code)
+
+    async def list_scenes(self, context: AdapterConnectionContext) -> tuple[list[str], str | None]:
+        response = await self._request(context, "GetSceneList")
+        raw_scenes = response.get("scenes", [])
+        scenes: list[str] = []
+        if isinstance(raw_scenes, Sequence) and not isinstance(raw_scenes, (str, bytes)):
+            for item in raw_scenes:
+                if isinstance(item, Mapping) and item.get("sceneName"):
+                    scenes.append(str(item["sceneName"]))
+        return scenes, str(response.get("currentProgramSceneName") or "") or None
+
+    async def set_current_scene(
+        self, context: AdapterConnectionContext, scene_name: str
+    ) -> AdapterActionResult:
+        await self._request(context, "SetCurrentProgramScene", {"sceneName": scene_name})
+        return AdapterActionResult(provider_reference=scene_name)
+
+    async def record_status(self, context: AdapterConnectionContext) -> Mapping[str, Any]:
+        return await self._request(context, "GetRecordStatus")
+
+    async def set_recording(
+        self, context: AdapterConnectionContext, *, active: bool
+    ) -> Mapping[str, Any]:
+        status = await self.record_status(context)
+        is_active = bool(status.get("outputActive"))
+        if active and not is_active:
+            await self._request(context, "StartRecord")
+        elif not active and is_active:
+            await self._request(context, "StopRecord")
+        return await self.record_status(context)
 
     async def create_broadcast(
         self, context: AdapterConnectionContext, configuration: Mapping[str, Any]

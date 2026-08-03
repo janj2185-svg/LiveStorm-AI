@@ -1292,6 +1292,10 @@ abstract interface class LiveRepository {
   Future<LiveSessionModel> session(String id);
   Future<JsonObject> mediaCapability(String sessionId);
   Future<JsonObject> publishCredentials(String sessionId);
+  Future<JsonObject> obsScenes(String sessionId);
+  Future<JsonObject> selectObsScene(String sessionId, String sceneName);
+  Future<JsonObject> startObsRecording(String sessionId);
+  Future<JsonObject> stopObsRecording(String sessionId);
   Future<JsonObject> addDestination(
     String sessionId,
     String connectionId, {
@@ -1430,6 +1434,42 @@ final class DioLiveRepository implements LiveRepository {
       method: 'POST',
     );
     return requireObject(response.data, 'live publish credentials');
+  }
+
+  @override
+  Future<JsonObject> obsScenes(String sessionId) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/obs/scenes',
+    );
+    return requireObject(response.data, 'OBS scene list');
+  }
+
+  @override
+  Future<JsonObject> selectObsScene(String sessionId, String sceneName) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/obs/scenes/select',
+      method: 'POST',
+      data: <String, dynamic>{'scene_name': sceneName},
+    );
+    return requireObject(response.data, 'OBS scene selection');
+  }
+
+  @override
+  Future<JsonObject> startObsRecording(String sessionId) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/obs/record/start',
+      method: 'POST',
+    );
+    return requireObject(response.data, 'OBS recording start');
+  }
+
+  @override
+  Future<JsonObject> stopObsRecording(String sessionId) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/obs/record/stop',
+      method: 'POST',
+    );
+    return requireObject(response.data, 'OBS recording stop');
   }
 
   @override
