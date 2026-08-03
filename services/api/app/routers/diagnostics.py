@@ -227,10 +227,7 @@ async def diagnostics(request: Request) -> dict[str, Any]:
                 "/v1/gifts/ws",
             ],
         },
-        "storage": _bool_status(
-            storage_configured,
-            "configured" if storage_configured else "Provider not configured",
-        ),
+        "storage": _bool_status(storage_configured, storage_detail),
         "workers": _bool_status(
             celery_broker,
             "broker configured (verify celery process separately)",

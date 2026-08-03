@@ -168,11 +168,9 @@ services:
     networks:
       - data
 
-  # Writable checkout copy — base compose mounts apps/sylora :ro which blocks pub get.
+  # Base compose mounts apps/sylora at /build:ro. Keep that mount, copy into /tmp.
   web:
-    volumes:
-      - ../../apps/sylora:/src:ro
-      - web-dist:/out
+    working_dir: /tmp/sylora-web
     environment:
       SYLORA_API_BASE_URL: "https://${DOMAIN}"
     entrypoint:
@@ -180,10 +178,10 @@ services:
       - -lc
       - |
         set -euo pipefail
-        rm -rf /build
-        mkdir -p /build
-        cp -a /src/. /build/
-        cd /build
+        rm -rf /tmp/sylora-web
+        mkdir -p /tmp/sylora-web
+        cp -a /build/. /tmp/sylora-web/
+        cd /tmp/sylora-web
         flutter config --enable-web
         flutter pub get
         flutter build web --release --dart-define=SYLORA_API_BASE_URL=https://${DOMAIN}
