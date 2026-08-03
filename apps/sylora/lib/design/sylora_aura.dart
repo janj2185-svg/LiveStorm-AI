@@ -142,8 +142,7 @@ final class _AuraPainter extends CustomPainter {
     final glow = Paint()
       ..shader = RadialGradient(
         colors: [
-          Colors.white.withValues(alpha: 0.95),
-          SyloraTokens.mist.withValues(alpha: 0.35),
+          Colors.white.withValues(alpha: 0.9),
           SyloraTokens.violet.withValues(alpha: 0),
         ],
       ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: size.width * 0.48));
@@ -173,7 +172,7 @@ final class _AuraPainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFEEF4FF), Color(0xFFD7E4FF)],
+          colors: [Colors.white, Color(0xFFD7E4FF)],
         ).createShader(head.outerRect),
     );
     canvas.drawRRect(
@@ -203,8 +202,8 @@ final class _AuraPainter extends CustomPainter {
       canvas.drawOval(
         rect,
         Paint()
-          ..shader = RadialGradient(
-            colors: const [Color(0xFFDFFFFA), SyloraTokens.ion, SyloraTokens.violet],
+          ..shader = const RadialGradient(
+            colors: [Color(0xFFDFFFFA), SyloraTokens.violet],
           ).createShader(rect),
       );
     }

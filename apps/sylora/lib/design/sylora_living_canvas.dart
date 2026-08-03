@@ -203,12 +203,11 @@ final class _LivingPainter extends CustomPainter {
             ..shader = ui.Gradient.linear(
               Offset(0, y),
               Offset(size.width, y + 40),
+              // CanvasKit dart:ui gradients are safest with exactly two stops.
               [
-                SyloraTokens.violet.withValues(alpha: 0.035 * intensity),
-                SyloraTokens.aqua.withValues(alpha: 0.04 * intensity),
-                SyloraTokens.petal.withValues(alpha: 0.02 * intensity),
+                SyloraTokens.violet.withValues(alpha: 0.04 * intensity),
+                SyloraTokens.aqua.withValues(alpha: 0.02 * intensity),
               ],
-              const [0, 0.55, 1],
             ),
         );
       }

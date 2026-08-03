@@ -104,7 +104,7 @@ final class _SyloraButtonState extends State<SyloraButton> {
           borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
           gradient: LinearGradient(
             colors: enabled
-                ? const [SyloraTokens.ion, SyloraTokens.violet, SyloraTokens.petal]
+                ? const [SyloraTokens.ion, SyloraTokens.petal]
                 : [
                     SyloraTokens.violet.withValues(alpha: 0.35),
                     SyloraTokens.violet.withValues(alpha: 0.25),
