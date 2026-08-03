@@ -3,9 +3,9 @@
     "short_name": "SYLORA",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#F7F5EF",
-    "theme_color": "#087F91",
-    "description": "The official SYLORA client.",
+    "background_color": "#F3F7FF",
+    "theme_color": "#7B6CFF",
+    "description": "SYLORA — єдина AI-екосистема.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

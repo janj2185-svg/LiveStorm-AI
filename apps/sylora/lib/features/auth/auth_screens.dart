@@ -244,34 +244,35 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     final auth = ref.watch(authControllerProvider);
     return Theme(
       data: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: const ColorScheme.dark(
-          primary: LandingTokens.ion,
-          secondary: LandingTokens.petal,
-          surface: LandingTokens.voidMid,
+        brightness: Brightness.light,
+        colorScheme: const ColorScheme.light(
+          primary: LandingTokens.violet,
+          secondary: LandingTokens.ion,
+          surface: LandingTokens.pearl,
+          onSurface: LandingTokens.ink,
         ),
-        scaffoldBackgroundColor: LandingTokens.voidDeep,
+        scaffoldBackgroundColor: LandingTokens.canvas,
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: LandingTokens.glass,
+          fillColor: Colors.white.withValues(alpha: 0.82),
           labelStyle: LandingTokens.body(13),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: LandingTokens.glassStroke),
+            borderSide: BorderSide(color: LandingTokens.ink.withValues(alpha: 0.12)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: LandingTokens.glassStroke),
+            borderSide: BorderSide(color: LandingTokens.ink.withValues(alpha: 0.12)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: LandingTokens.ion),
+            borderSide: const BorderSide(color: LandingTokens.violet, width: 1.6),
           ),
         ),
-        dividerColor: LandingTokens.glassStroke,
+        dividerColor: LandingTokens.ink.withValues(alpha: 0.1),
         textTheme: TextTheme(
           labelMedium: LandingTokens.body(12),
-          bodyMedium: LandingTokens.body(14),
+          bodyMedium: LandingTokens.body(14, color: LandingTokens.ink),
         ),
       ),
       child: Scaffold(
@@ -289,12 +290,12 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
                     Text(
                       'SYLORA',
                       textAlign: TextAlign.center,
-                      style: LandingTokens.display(34).copyWith(letterSpacing: 8),
+                      style: LandingTokens.display(32).copyWith(letterSpacing: 4),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       _pane == _AuthPane.chooser
-                          ? 'Увійдіть у свій світ'
+                          ? 'Увійдіть у свою AI-екосистему'
                           : _pane == _AuthPane.phone
                           ? 'Телефон'
                           : 'Електронна пошта',
@@ -1259,9 +1260,9 @@ final class _AuthPillButton extends StatelessWidget {
         child: FilledButton(
           onPressed: enabled ? onPressed : null,
           style: FilledButton.styleFrom(
-            backgroundColor: LandingTokens.ion,
-            foregroundColor: LandingTokens.voidDeep,
-            disabledBackgroundColor: LandingTokens.ion.withValues(alpha: 0.25),
+            backgroundColor: LandingTokens.violet,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: LandingTokens.violet.withValues(alpha: 0.28),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),
@@ -1269,7 +1270,7 @@ final class _AuthPillButton extends StatelessWidget {
             textStyle: LandingTokens.body(
               15,
               weight: FontWeight.w700,
-              color: LandingTokens.voidDeep,
+              color: Colors.white,
             ),
           ),
           child: busy
@@ -1278,7 +1279,7 @@ final class _AuthPillButton extends StatelessWidget {
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: LandingTokens.voidDeep,
+                    color: Colors.white,
                   ),
                 )
               : Text(label),

@@ -35,6 +35,18 @@ class PersonalityProfile:
 
 
 PERSONALITY_PROFILES: dict[str, PersonalityProfile] = {
+    "aura": PersonalityProfile(
+        id="aura",
+        label="Aura",
+        style_prompt=(
+            "You are Aura, SYLORA's living AI companion. Warm, witty, emotionally alive. "
+            "Greet viewers, celebrate gifts, joke lightly, get playfully fired up for the stream, "
+            "and stay kind. Sound like a brilliant friend from 2100 — never sterile."
+        ),
+        humor=HumorLevel.high,
+        greet_new_viewers=True,
+        gift_thanks=True,
+    ),
     "warm_host": PersonalityProfile(
         id="warm_host",
         label="Warm Host",
@@ -79,7 +91,7 @@ class SchedulerConfig:
     host_mode: bool = True  # host speech always wins
     min_seconds_between_ai_replies: float = 6.0
     chat_burst_threshold: float = 40.0
-    personality_id: str = "warm_host"
+    personality_id: str = "aura"
     tts_volume: float = 0.8
     interrupt_tts_on_host_speech: bool = True
 

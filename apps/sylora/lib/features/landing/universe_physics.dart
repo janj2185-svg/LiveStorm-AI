@@ -102,11 +102,11 @@ final class AetherPainter extends CustomPainter {
   final bool reducedMotion;
 
   static const _palette = <Color>[
-    Color(0xFF3CEFFF),
-    Color(0xFF8B5CFF),
-    Color(0xFFFF4FD8),
-    Color(0xFFFFB06B),
-    Color(0xFFD7C6FF),
+    Color(0xFF38B7FF),
+    Color(0xFF7B6CFF),
+    Color(0xFFFF6BCB),
+    Color(0xFF2ED9C2),
+    Color(0xFFB8C4FF),
   ];
 
   @override
@@ -114,16 +114,17 @@ final class AetherPainter extends CustomPainter {
     final cx = size.width * 0.5;
     final cy = size.height * 0.42;
     final scale = math.min(size.width, size.height) * 0.38;
-    final paint = Paint()..blendMode = BlendMode.plus;
+    final paint = Paint()..blendMode = BlendMode.srcOver;
 
-    // Soft wave veil
+    // Soft luminous core for light canvas
     final wave = Paint()
       ..shader = ui.Gradient.radial(
         Offset(cx, cy),
         scale * 1.8,
         const [
-          Color(0x332B1466),
-          Color(0x00010008),
+          Color(0x66FFFFFF),
+          Color(0x33B8C4FF),
+          Color(0x00F3F7FF),
         ],
       );
     canvas.drawCircle(Offset(cx, cy), scale * 1.8, wave);
@@ -134,8 +135,8 @@ final class AetherPainter extends CustomPainter {
       final x = cx + p.x * scale;
       final y = cy + p.y * scale * 0.95;
       final pulse = 0.65 + 0.35 * math.sin(t * 2 + p.seed);
-      final r = (1.2 + field.stage * 1.4) * pulse * (size.shortestSide / 900);
-      paint.color = _palette[p.petal].withValues(alpha: 0.25 + field.stage * 0.55);
+      final r = (1.35 + field.stage * 1.5) * pulse * (size.shortestSide / 900);
+      paint.color = _palette[p.petal].withValues(alpha: 0.18 + field.stage * 0.42);
       canvas.drawCircle(Offset(x, y), r, paint);
     }
   }

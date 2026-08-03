@@ -86,27 +86,28 @@ final visualSettingsProvider =
     );
 
 abstract final class LumenColors {
-  static const porcelainCanvas = Color(0xFFF7F5EF);
-  static const porcelainSurface = Color(0xFFFFFEFB);
-  static const porcelainHover = Color(0xFFF0F1EF);
-  static const porcelainBorder = Color(0xFFCACDD0);
-  static const porcelainMuted = Color(0xFF5C626B);
-  static const porcelainInk = Color(0xFF20242C);
+  // SYLORA Lumen — light cosmic product surfaces
+  static const porcelainCanvas = Color(0xFFF3F7FF);
+  static const porcelainSurface = Color(0xFFFAFCFF);
+  static const porcelainHover = Color(0xFFEAF1FF);
+  static const porcelainBorder = Color(0xFFD5DEF5);
+  static const porcelainMuted = Color(0xFF4A5378);
+  static const porcelainInk = Color(0xFF161B33);
 
-  static const darkCanvas = Color(0xFF171A20);
-  static const darkSurface = Color(0xFF20242C);
-  static const darkRaised = Color(0xFF282D36);
-  static const darkBorder = Color(0xFF4D5562);
-  static const darkMuted = Color(0xFFC0C6D0);
-  static const darkInk = Color(0xFFF9F8F4);
+  static const darkCanvas = Color(0xFF0E1430);
+  static const darkSurface = Color(0xFF1A2348);
+  static const darkRaised = Color(0xFF243058);
+  static const darkBorder = Color(0xFF3D4A78);
+  static const darkMuted = Color(0xFFB8C4FF);
+  static const darkInk = Color(0xFFFAFCFF);
 
-  static const aether = Color(0xFF087F91);
-  static const aetherBright = Color(0xFF42C6D5);
-  static const pulse = Color(0xFF6C55B8);
-  static const bloom = Color(0xFFB93886);
-  static const verdigris = Color(0xFF247B51);
-  static const solar = Color(0xFF8A6512);
-  static const rose = Color(0xFFB4453D);
+  static const aether = Color(0xFF2A9FD9);
+  static const aetherBright = Color(0xFF38B7FF);
+  static const pulse = Color(0xFF7B6CFF);
+  static const bloom = Color(0xFFFF6BCB);
+  static const verdigris = Color(0xFF2ED9C2);
+  static const solar = Color(0xFFFFD0E8);
+  static const rose = Color(0xFFE85A8C);
 }
 
 abstract final class LumenTheme {
@@ -185,25 +186,25 @@ abstract final class LumenTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: dark ? LumenColors.darkCanvas : const Color(0xFFF2F1EC),
+        fillColor: dark ? LumenColors.darkRaised : const Color(0xFFFFFFFF),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colorScheme.error),
         ),
       ),
@@ -212,7 +213,7 @@ abstract final class LumenTheme {
           minimumSize: const Size(44, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(999),
           ),
           elevation: 0,
         ),
@@ -222,7 +223,7 @@ abstract final class LumenTheme {
           minimumSize: const Size(44, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(999),
           ),
           side: BorderSide(color: border),
         ),

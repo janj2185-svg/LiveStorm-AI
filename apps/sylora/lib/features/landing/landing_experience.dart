@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/lumen_theme.dart';
+import '../../design/sylora_tokens.dart';
 import 'aether_bridge.dart' if (dart.library.html) 'aether_bridge_web.dart' as aether_bridge;
 import 'landing_tokens.dart';
 import 'universe_physics.dart';
@@ -22,7 +23,7 @@ const _ecosystem = <String>[
   'Creator Tools',
 ];
 
-/// Cinematic SYLORA Aether entry — not a marketing page.
+/// Light Lumen entry — Flutter fallback when the HTML shell is unavailable.
 final class LandingExperience extends ConsumerStatefulWidget {
   const LandingExperience({super.key});
 
@@ -46,7 +47,7 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
     final mobile = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.android);
-    _field = AetherField(count: mobile ? 1400 : 2800);
+    _field = AetherField(count: mobile ? 900 : 1600);
     _ticker = createTicker((d) {
       final dt = ((_elapsed == Duration.zero ? d : d - _elapsed).inMicroseconds) /
           1e6;
@@ -69,7 +70,6 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
       setState(() => _hot = (_hot + 1) % _ecosystem.length);
     });
     if (kIsWeb) {
-      // Prefer the instant HTML/WebGL shell when available.
       aether_bridge.revealAetherShell();
     }
   }
@@ -87,19 +87,23 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
       aether_bridge.enterAetherApp(create: create);
       return;
     }
-    context.goNamed('auth', queryParameters: create ? const {'create': '1'} : const {});
+    context.goNamed(
+      'auth',
+      queryParameters: create ? const {'create': '1'} : const {},
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // On web the HTML aether covers the view; keep a matching Flutter fallback.
     final t = _elapsed.inMilliseconds / 1000;
     _reducedMotion =
         ref.watch(visualSettingsProvider.select((value) => value.reducedMotion));
-    final showHud = _reducedMotion || _field.stage > 0.68;
+    final showHud = _reducedMotion || _field.stage > 0.55;
+    final width = MediaQuery.sizeOf(context).width;
+    final brandSize = (width * 0.14).clamp(34.0, 72.0);
 
     return Scaffold(
-      backgroundColor: LandingTokens.voidDeep,
+      backgroundColor: SyloraTokens.canvas,
       body: Listener(
         onPointerHover: (e) => _mapPointer(e.localPosition, context),
         onPointerMove: (e) => _mapPointer(e.localPosition, context),
@@ -109,8 +113,8 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            DecoratedBox(
-              decoration: const BoxDecoration(gradient: LandingTokens.heroGradient),
+            const DecoratedBox(
+              decoration: BoxDecoration(gradient: SyloraTokens.heroGradient),
             ),
             CustomPaint(
               painter: AetherPainter(
@@ -120,17 +124,17 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
               ),
               size: Size.infinite,
             ),
-            const DecoratedBox(
+            DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(0, -0.1),
-                  radius: 1.15,
+                  center: const Alignment(0, -0.15),
+                  radius: 1.2,
                   colors: [
+                    Colors.white.withValues(alpha: 0.35),
                     Colors.transparent,
-                    Color(0x99010008),
-                    Color(0xE0010008),
+                    SyloraTokens.canvas.withValues(alpha: 0.55),
                   ],
-                  stops: [0.35, 0.78, 1],
+                  stops: const [0.2, 0.62, 1],
                 ),
               ),
             ),
@@ -139,115 +143,108 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                 duration: const Duration(milliseconds: 700),
                 opacity: showHud ? 1 : 0,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
                   child: Column(
                     children: [
                       Row(
                         children: [
                           Container(
-                            width: 18,
-                            height: 18,
-                            decoration: const BoxDecoration(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: RadialGradient(
+                              gradient: const SweepGradient(
                                 colors: [
-                                  LandingTokens.ion,
-                                  LandingTokens.violet,
-                                  LandingTokens.petal,
+                                  SyloraTokens.ion,
+                                  SyloraTokens.violet,
+                                  SyloraTokens.petal,
+                                  SyloraTokens.aqua,
+                                  SyloraTokens.ion,
                                 ],
+                              ),
+                              boxShadow: SyloraTokens.glow(SyloraTokens.violet, blur: 16),
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 11,
+                                height: 11,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            'SYLORA',
-                            style: LandingTokens.body(
-                              12,
-                              color: LandingTokens.ink,
-                              weight: FontWeight.w700,
-                            ).copyWith(letterSpacing: 4),
+                          Flexible(
+                            child: Text(
+                              'SYLORA',
+                              overflow: TextOverflow.ellipsis,
+                              style: LandingTokens.body(
+                                13,
+                                color: LandingTokens.ink,
+                                weight: FontWeight.w700,
+                              ).copyWith(letterSpacing: 3),
+                            ),
                           ),
-                          const Spacer(),
                           TextButton(
                             onPressed: () => _goAuth(create: false),
                             child: Text(
                               'Увійти',
                               style: LandingTokens.body(
-                                12,
-                                color: LandingTokens.mist,
+                                13,
+                                color: LandingTokens.inkSoft,
                                 weight: FontWeight.w600,
-                              ).copyWith(letterSpacing: 1.2),
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const Spacer(),
                       Text(
-                        'AI-ЕКОСИСТЕМА',
+                        'ЄДИНА AI-ЕКОСИСТЕМА',
+                        textAlign: TextAlign.center,
                         style: LandingTokens.body(
                           11,
-                          color: LandingTokens.ion,
-                          weight: FontWeight.w600,
-                        ).copyWith(letterSpacing: 3),
+                          color: SyloraTokens.violet,
+                          weight: FontWeight.w700,
+                        ).copyWith(letterSpacing: 2.4),
                       ),
-                      const SizedBox(height: 14),
-                      ShaderMask(
-                        blendMode: BlendMode.srcIn,
-                        shaderCallback: (bounds) => const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.white,
-                            LandingTokens.mist,
-                            LandingTokens.violet,
-                          ],
-                        ).createShader(bounds),
+                      const SizedBox(height: 12),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
                         child: Text(
                           'SYLORA',
-                          style: LandingTokens.display(
-                            MediaQuery.sizeOf(context).width < 420 ? 52 : 68,
-                          ).copyWith(letterSpacing: 6, color: Colors.white),
+                          maxLines: 1,
+                          style: LandingTokens.display(brandSize).copyWith(
+                            letterSpacing: brandSize * 0.06,
+                            color: SyloraTokens.ink,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 440),
                         child: Text(
-                          'Жива цифрова платформа: штучний інтелект, live, спільнота, бізнес і творчість в одному просторі.',
+                          'Створюйте, спілкуйтеся й розвивайте бізнес у живому цифровому просторі — AI, Live, спільнота і творчість разом.',
                           textAlign: TextAlign.center,
                           style: LandingTokens.body(15),
                         ),
                       ),
                       const SizedBox(height: 22),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          _AetherButton(
-                            label: 'Почати',
-                            filled: true,
-                            onPressed: () => _goAuth(create: true),
-                          ),
-                          _AetherButton(
-                            label: 'Створити акаунт',
-                            filled: false,
-                            onPressed: () => _goAuth(create: true),
-                          ),
-                          _AetherButton(
-                            label: 'Увійти',
-                            filled: false,
-                            onPressed: () => _goAuth(create: false),
-                          ),
-                        ],
+                      _AetherButton(
+                        label: 'Почати',
+                        filled: true,
+                        onPressed: () => _goAuth(create: true),
                       ),
                       const Spacer(),
                       Text(
-                        'МОЖЛИВОСТІ ЕКОСИСТЕМИ',
+                        'МОДУЛІ ЕКОСИСТЕМИ',
                         style: LandingTokens.body(
                           10,
-                          color: LandingTokens.mist.withValues(alpha: 0.55),
-                        ).copyWith(letterSpacing: 3),
+                          color: SyloraTokens.inkMute,
+                          weight: FontWeight.w600,
+                        ).copyWith(letterSpacing: 2.2),
                       ),
                       const SizedBox(height: 10),
                       Wrap(
@@ -266,22 +263,23 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                                 borderRadius: BorderRadius.circular(999),
                                 border: Border.all(
                                   color: i == _hot
-                                      ? LandingTokens.ion.withValues(alpha: 0.7)
-                                      : LandingTokens.glassStroke,
+                                      ? SyloraTokens.ion.withValues(alpha: 0.55)
+                                      : SyloraTokens.ink.withValues(alpha: 0.08),
                                 ),
                                 color: i == _hot
-                                    ? LandingTokens.ion.withValues(alpha: 0.12)
-                                    : LandingTokens.glass,
+                                    ? SyloraTokens.ion.withValues(alpha: 0.1)
+                                    : Colors.white.withValues(alpha: 0.62),
+                                boxShadow: i == _hot
+                                    ? SyloraTokens.glow(SyloraTokens.ion, blur: 18, opacity: 0.18)
+                                    : null,
                               ),
                               child: Text(
                                 _ecosystem[i].toUpperCase(),
                                 style: LandingTokens.body(
                                   10,
-                                  color: i == _hot
-                                      ? LandingTokens.ink
-                                      : LandingTokens.inkDim,
+                                  color: SyloraTokens.inkSoft,
                                   weight: FontWeight.w600,
-                                ).copyWith(letterSpacing: 1.2),
+                                ).copyWith(letterSpacing: 1.1),
                               ),
                             ),
                         ],
@@ -311,55 +309,45 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
 final class _AetherButton extends StatefulWidget {
   const _AetherButton({
     required this.label,
-    required this.filled,
     required this.onPressed,
+    this.filled = false,
   });
 
   final String label;
-  final bool filled;
   final VoidCallback onPressed;
+  final bool filled;
 
   @override
   State<_AetherButton> createState() => _AetherButtonState();
 }
 
 final class _AetherButtonState extends State<_AetherButton> {
-  bool _hot = false;
+  bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _hot = true),
-      onExit: (_) => setState(() => _hot = false),
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
       child: AnimatedScale(
-        scale: _hot ? 1.03 : 1,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
+        scale: _hover ? 1.03 : 1,
+        duration: SyloraTokens.durFast,
+        curve: SyloraTokens.curveSoft,
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: _hot
-                  ? LandingTokens.ion.withValues(alpha: 0.75)
-                  : LandingTokens.glassStroke,
-            ),
             gradient: widget.filled
-                ? LinearGradient(
-                    colors: [
-                      LandingTokens.ion.withValues(alpha: _hot ? 0.28 : 0.16),
-                      LandingTokens.petal.withValues(alpha: _hot ? 0.24 : 0.14),
-                    ],
+                ? const LinearGradient(
+                    colors: [SyloraTokens.ion, SyloraTokens.violet, SyloraTokens.petal],
                   )
                 : null,
-            color: widget.filled ? null : LandingTokens.glass,
-            boxShadow: _hot
-                ? [
-                    BoxShadow(
-                      color: LandingTokens.violet.withValues(alpha: 0.35),
-                      blurRadius: 28,
-                    ),
-                  ]
-                : null,
+            color: widget.filled ? null : Colors.white.withValues(alpha: 0.7),
+            border: widget.filled
+                ? null
+                : Border.all(color: SyloraTokens.ink.withValues(alpha: 0.12)),
+            boxShadow: widget.filled
+                ? SyloraTokens.glow(SyloraTokens.violet, blur: 22, opacity: 0.28)
+                : SyloraTokens.softElevation,
           ),
           child: Material(
             color: Colors.transparent,
@@ -367,14 +355,15 @@ final class _AetherButtonState extends State<_AetherButton> {
               borderRadius: BorderRadius.circular(999),
               onTap: widget.onPressed,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                 child: Text(
                   widget.label,
+                  textAlign: TextAlign.center,
                   style: LandingTokens.body(
-                    12,
-                    color: LandingTokens.ink,
+                    14,
+                    color: widget.filled ? Colors.white : SyloraTokens.ink,
                     weight: FontWeight.w700,
-                  ).copyWith(letterSpacing: 2),
+                  ).copyWith(letterSpacing: 1.2),
                 ),
               ),
             ),
