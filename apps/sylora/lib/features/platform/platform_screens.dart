@@ -12,6 +12,7 @@ import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../core/realtime.dart';
+import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import 'repositories.dart';
 
@@ -367,9 +368,9 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
                         error is ApiProblem &&
                             error.code == 'payment_provider_unavailable'
                         ? 'Payment provider unavailable: ${error.detail}. '
-                            'Local sandbox (not card charges): '
-                            'python3 scripts/sandbox_topup.py '
-                            '--email user@sylora.dev --amount 25000'
+                              'Local sandbox (not card charges): '
+                              'python3 scripts/sandbox_topup.py '
+                              '--email user@sylora.dev --amount 25000'
                         : messageFor(error);
                     _operationError = true;
                   });
@@ -491,8 +492,7 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
               data: (page) {
                 final items = page.items
                     .where(
-                      (gift) =>
-                          _tierFilter == null || gift.tier == _tierFilter,
+                      (gift) => _tierFilter == null || gift.tier == _tierFilter,
                     )
                     .toList(growable: false);
                 if (page.items.isEmpty) {
@@ -1046,6 +1046,11 @@ final class AiScreen extends ConsumerWidget {
     final value = ref.watch(aiProvider);
     return LumenPage(
       title: 'AI',
+      subtitle:
+          'Provider-backed conversations, memory, moderation, and generation.',
+      showAuraDock: true,
+      auraEmotion: AuraEmotion.thinking,
+      auraLabel: 'Aura online',
       actions: <Widget>[
         IconButton(
           tooltip: 'AI memory',
@@ -1366,41 +1371,50 @@ final class _AiConversationScreenState
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(aiMessagesProvider(widget.conversationId));
-    return Scaffold(
-      appBar: AppBar(title: const Text('AI conversation')),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: LumenAsyncView<CursorPage<AiMessageModel>>(
-              value: messages,
-              onRetry: () =>
-                  ref.invalidate(aiMessagesProvider(widget.conversationId)),
-              data: (page) => page.items.isEmpty
-                  ? LumenEmptyView(
-                      title: 'Start the conversation',
-                      message:
-                          'No messages were returned. Your first request will be sent to the configured provider.',
-                      actionLabel: 'Focus message field',
-                      onAction: _messageFocus.requestFocus,
-                      icon: Icons.auto_awesome_outlined,
-                    )
-                  : ListView.builder(
-                      reverse: true,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: page.items.length,
-                      itemBuilder: (context, index) => _AiMessageCard(
-                        conversationId: widget.conversationId,
-                        message: page.items[index],
-                        onChanged: () => ref.invalidate(
-                          aiMessagesProvider(widget.conversationId),
+    final conversationHeight = (MediaQuery.sizeOf(context).height - 260).clamp(
+      420.0,
+      760.0,
+    );
+    return LumenPage(
+      title: 'AI conversation',
+      subtitle: 'Ask Aura through the configured provider pipeline.',
+      showAuraDock: true,
+      auraEmotion: _sending ? AuraEmotion.thinking : AuraEmotion.listening,
+      auraLabel: _sending ? 'Thinking' : 'Listening',
+      child: SizedBox(
+        height: conversationHeight,
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: LumenAsyncView<CursorPage<AiMessageModel>>(
+                value: messages,
+                onRetry: () =>
+                    ref.invalidate(aiMessagesProvider(widget.conversationId)),
+                data: (page) => page.items.isEmpty
+                    ? LumenEmptyView(
+                        title: 'Start the conversation',
+                        message:
+                            'No messages were returned. Your first request will be sent to the configured provider.',
+                        actionLabel: 'Focus message field',
+                        onAction: _messageFocus.requestFocus,
+                        icon: Icons.auto_awesome_outlined,
+                      )
+                    : ListView.builder(
+                        reverse: true,
+                        padding: const EdgeInsets.only(bottom: 12),
+                        itemCount: page.items.length,
+                        itemBuilder: (context, index) => _AiMessageCard(
+                          conversationId: widget.conversationId,
+                          message: page.items[index],
+                          onChanged: () => ref.invalidate(
+                            aiMessagesProvider(widget.conversationId),
+                          ),
                         ),
                       ),
-                    ),
+              ),
             ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
+            const SizedBox(height: 12),
+            LumenSurface(
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: <Widget>[
@@ -1429,8 +1443,8 @@ final class _AiConversationScreenState
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1554,44 +1568,46 @@ final class AiMemoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final value = ref.watch(aiMemoryProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI memory'),
-        actions: <Widget>[
-          IconButton(
-            tooltip: 'Export memory',
-            onPressed: () async {
-              final exported = await ref
-                  .read(aiRepositoryProvider)
-                  .exportMemory();
-              if (context.mounted) {
-                await showDialog<void>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Memory export'),
-                    content: SelectableText(
-                      const JsonEncoder.withIndent('  ').convert(exported),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Close'),
-                      ),
-                    ],
+    return LumenPage(
+      title: 'AI memory',
+      subtitle: 'Preference memory controlled by persisted AI settings.',
+      showAuraDock: true,
+      auraEmotion: AuraEmotion.focused,
+      auraLabel: 'Memory',
+      actions: <Widget>[
+        IconButton(
+          tooltip: 'Export memory',
+          onPressed: () async {
+            final exported = await ref
+                .read(aiRepositoryProvider)
+                .exportMemory();
+            if (context.mounted) {
+              await showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Memory export'),
+                  content: SelectableText(
+                    const JsonEncoder.withIndent('  ').convert(exported),
                   ),
-                );
-              }
-            },
-            icon: const Icon(Icons.download_outlined),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _addMemory(context, ref),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add memory'),
-      ),
-      body: LumenAsyncView<List<NamedResource>>(
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+          icon: const Icon(Icons.download_outlined),
+        ),
+        IconButton(
+          tooltip: 'Add memory',
+          onPressed: () => _addMemory(context, ref),
+          icon: const Icon(Icons.add_rounded),
+        ),
+      ],
+      child: LumenAsyncView<List<NamedResource>>(
         value: value,
         onRetry: () => ref.invalidate(aiMemoryProvider),
         data: (items) => items.isEmpty
@@ -1602,28 +1618,29 @@ final class AiMemoryScreen extends ConsumerWidget {
                 onAction: () => _addMemory(context, ref),
                 icon: Icons.psychology_alt_outlined,
               )
-            : ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return Card(
-                    child: ListTile(
-                      title: Text(item.label),
-                      subtitle: Text(item.status ?? ''),
-                      trailing: IconButton(
-                        tooltip: 'Delete memory',
-                        onPressed: () async {
-                          await ref
-                              .read(aiRepositoryProvider)
-                              .deleteMemory(item.id);
-                          ref.invalidate(aiMemoryProvider);
-                        },
-                        icon: const Icon(Icons.delete_outline_rounded),
+            : Column(
+                children: <Widget>[
+                  for (final item in items) ...<Widget>[
+                    LumenSurface(
+                      padding: EdgeInsets.zero,
+                      child: ListTile(
+                        title: Text(item.label),
+                        subtitle: Text(item.status ?? ''),
+                        trailing: IconButton(
+                          tooltip: 'Delete memory',
+                          onPressed: () async {
+                            await ref
+                                .read(aiRepositoryProvider)
+                                .deleteMemory(item.id);
+                            ref.invalidate(aiMemoryProvider);
+                          },
+                          icon: const Icon(Icons.delete_outline_rounded),
+                        ),
                       ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 12),
+                  ],
+                ],
               ),
       ),
     );
@@ -1689,92 +1706,98 @@ final class _AiJobsScreenState extends ConsumerState<AiJobsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('AI generation jobs')),
-    floatingActionButton: FutureBuilder<AiProviderStatus>(
-      future: _status,
-      builder: (context, snapshot) {
-        final capabilities = snapshot.hasData
-            ? _generationCapabilities(snapshot.requireData)
-            : const <String>[];
-        if (capabilities.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        return FloatingActionButton.extended(
-          onPressed: () => _createJob(capabilities),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('Create job'),
-        );
-      },
-    ),
-    body: FutureBuilder<AiProviderStatus>(
-      future: _status,
-      builder: (context, statusSnapshot) {
-        if (statusSnapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (statusSnapshot.hasError) {
-          return LumenErrorView(
-            error: statusSnapshot.error!,
-            onRetry: () => setState(
-              () => _status = ref.read(aiRepositoryProvider).providerStatus(),
+  Widget build(BuildContext context) => FutureBuilder<AiProviderStatus>(
+    future: _status,
+    builder: (context, statusSnapshot) {
+      final capabilities = statusSnapshot.hasData
+          ? _generationCapabilities(statusSnapshot.requireData)
+          : const <String>[];
+      return LumenPage(
+        title: 'AI generation jobs',
+        subtitle:
+            'Queued provider work for image, video, music, voice, or avatar generation.',
+        showAuraDock: true,
+        auraEmotion: AuraEmotion.focused,
+        auraLabel: 'Jobs',
+        actions: <Widget>[
+          if (capabilities.isNotEmpty)
+            IconButton(
+              tooltip: 'Create job',
+              onPressed: () => _createJob(capabilities),
+              icon: const Icon(Icons.add_rounded),
             ),
-          );
-        }
-        final capabilities = _generationCapabilities(
-          statusSnapshot.requireData,
-        );
-        if (capabilities.isEmpty) {
-          return LumenEmptyView(
-            title: 'Generation provider unavailable',
-            message:
-                'The backend reports no available image, video, music, voice, or avatar capability.',
-            actionLabel: 'Check again',
-            onAction: () => setState(
-              () => _status = ref.read(aiRepositoryProvider).providerStatus(),
-            ),
-            icon: Icons.work_history_outlined,
-          );
-        }
-        return FutureBuilder<CursorPage<NamedResource>>(
-          future: _jobs,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
+        ],
+        child: Builder(
+          builder: (context) {
+            if (statusSnapshot.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (snapshot.hasError) {
+            if (statusSnapshot.hasError) {
               return LumenErrorView(
-                error: snapshot.error!,
+                error: statusSnapshot.error!,
                 onRetry: () => setState(
-                  () => _jobs = ref.read(aiRepositoryProvider).jobs(),
+                  () =>
+                      _status = ref.read(aiRepositoryProvider).providerStatus(),
                 ),
               );
             }
-            final items = snapshot.requireData.items;
-            if (items.isEmpty) {
+            if (capabilities.isEmpty) {
               return LumenEmptyView(
-                title: 'No generation jobs',
-                message: 'The API returned no generation jobs.',
-                actionLabel: 'Create a job',
-                onAction: () => _createJob(capabilities),
+                title: 'Generation provider unavailable',
+                message:
+                    'The backend reports no available image, video, music, voice, or avatar capability.',
+                actionLabel: 'Check again',
+                onAction: () => setState(
+                  () =>
+                      _status = ref.read(aiRepositoryProvider).providerStatus(),
+                ),
                 icon: Icons.work_history_outlined,
               );
             }
-            return ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return ListTile(
-                  title: Text(item.label),
-                  subtitle: Text(item.status ?? ''),
+            return FutureBuilder<CursorPage<NamedResource>>(
+              future: _jobs,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return LumenErrorView(
+                    error: snapshot.error!,
+                    onRetry: () => setState(
+                      () => _jobs = ref.read(aiRepositoryProvider).jobs(),
+                    ),
+                  );
+                }
+                final items = snapshot.requireData.items;
+                if (items.isEmpty) {
+                  return LumenEmptyView(
+                    title: 'No generation jobs',
+                    message: 'The API returned no generation jobs.',
+                    actionLabel: 'Create a job',
+                    onAction: () => _createJob(capabilities),
+                    icon: Icons.work_history_outlined,
+                  );
+                }
+                return Column(
+                  children: <Widget>[
+                    for (final item in items) ...<Widget>[
+                      LumenSurface(
+                        padding: EdgeInsets.zero,
+                        child: ListTile(
+                          title: Text(item.label),
+                          subtitle: Text(item.status ?? ''),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
                 );
               },
             );
           },
-        );
-      },
-    ),
+        ),
+      );
+    },
   );
 
   List<String> _generationCapabilities(AiProviderStatus status) => status
@@ -1924,8 +1947,13 @@ final class LiveScreen extends ConsumerWidget {
     return LumenPage(
       title: 'Live',
       subtitle:
-          'MediaMTX ingest and official integration control. Camera capture and video encoding are not provided by this client.',
+          'MediaMTX ingest, browser WHIP publishing, OBS companion setup, and official integration control.',
       actions: <Widget>[
+        IconButton(
+          tooltip: 'Open Creator Studio',
+          onPressed: () => context.goNamed('creator-studio'),
+          icon: const Icon(Icons.video_camera_front_outlined),
+        ),
         IconButton(
           tooltip: 'Create live session',
           onPressed: () => _createSession(context, ref),
@@ -2233,13 +2261,18 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Use this server-provided path with your configured MediaMTX RTMP or WHIP endpoint. This client does not capture, encode, or pretend to publish video.',
+                    'Use this server-provided path with OBS or open Creator Studio for browser WHIP publishing when MediaMTX is configured.',
                   ),
                   const SizedBox(height: 20),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: <Widget>[
+                      LumenSecondaryButton(
+                        label: 'Creator Studio',
+                        icon: Icons.video_camera_front_outlined,
+                        onPressed: () => context.goNamed('creator-studio'),
+                      ),
                       LumenSecondaryButton(
                         label: 'Preflight',
                         icon: Icons.fact_check_outlined,
@@ -2776,17 +2809,22 @@ final class _TikTokLiveControlPanel extends ConsumerWidget {
           final status = '${panel['integration_status'] ?? 'unknown'}';
           final adapter = '${panel['adapter_status'] ?? 'unknown'}';
           final limitation = '${panel['limitation'] ?? ''}';
-          final personalities = (panel['personalities'] as List<dynamic>? ?? const [])
-              .map((item) => '$item')
-              .join(', ');
-          final events = (panel['supported_events'] as List<dynamic>? ?? const [])
-              .map((item) => '$item')
-              .take(8)
-              .join(', ');
+          final personalities =
+              (panel['personalities'] as List<dynamic>? ?? const [])
+                  .map((item) => '$item')
+                  .join(', ');
+          final events =
+              (panel['supported_events'] as List<dynamic>? ?? const [])
+                  .map((item) => '$item')
+                  .take(8)
+                  .join(', ');
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('TikTok LIVE', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'TikTok LIVE',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 8),
               Text('Status: $status'),
               Text('Adapter: $adapter'),

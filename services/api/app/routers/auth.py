@@ -32,7 +32,6 @@ from app.auth_service import (
     verify_email_token,
     verify_mfa_challenge,
 )
-from app.stand_provisioning import assert_stand_accepting_testers, provision_stand_tester
 from app.config import Settings
 from app.dependencies import AuthContext, current_auth, get_session, get_settings
 from app.errors import APIError
@@ -67,6 +66,7 @@ from app.schemas import (
 )
 from app.security import utcnow
 from app.sms import build_sms_provider
+from app.stand_provisioning import assert_stand_accepting_testers, provision_stand_tester
 
 router = APIRouter(prefix="/auth", tags=["Identity"])
 
@@ -178,6 +178,7 @@ async def phone_password_reset_start(
 @router.post(
     "/password-reset/phone/consume",
     response_model=MessageResponse,
+    response_model_exclude_none=True,
     dependencies=[Depends(auth_rate_limit)],
 )
 async def phone_password_reset_consume(
@@ -287,6 +288,7 @@ async def email_link_verify(
 @router.post(
     "/register",
     response_model=MessageResponse,
+    response_model_exclude_none=True,
     status_code=status.HTTP_202_ACCEPTED,
     dependencies=[Depends(auth_rate_limit)],
 )
@@ -308,6 +310,7 @@ async def register(
 @router.post(
     "/email-verification/request",
     response_model=MessageResponse,
+    response_model_exclude_none=True,
     status_code=status.HTTP_202_ACCEPTED,
     dependencies=[Depends(auth_rate_limit)],
 )
@@ -322,7 +325,11 @@ async def request_verification(
     return MessageResponse(status="accepted")
 
 
-@router.post("/email-verification/consume", response_model=MessageResponse)
+@router.post(
+    "/email-verification/consume",
+    response_model=MessageResponse,
+    response_model_exclude_none=True,
+)
 async def consume_verification(
     payload: TokenConsumeRequest,
     request: Request,
@@ -382,7 +389,7 @@ async def refresh(
     return await rotate_refresh_token(db, request, payload.refresh_token, settings)
 
 
-@router.post("/logout", response_model=MessageResponse)
+@router.post("/logout", response_model=MessageResponse, response_model_exclude_none=True)
 async def logout(
     request: Request,
     auth: AuthContext = Depends(current_auth),
@@ -405,7 +412,7 @@ async def logout(
     return MessageResponse(status="logged_out")
 
 
-@router.post("/logout-all", response_model=MessageResponse)
+@router.post("/logout-all", response_model=MessageResponse, response_model_exclude_none=True)
 async def logout_all(
     request: Request,
     auth: AuthContext = Depends(current_auth),
@@ -442,6 +449,7 @@ async def logout_all(
 @router.post(
     "/password-reset/request",
     response_model=MessageResponse,
+    response_model_exclude_none=True,
     status_code=status.HTTP_202_ACCEPTED,
     dependencies=[Depends(auth_rate_limit)],
 )
@@ -467,6 +475,7 @@ async def reset_request(
 @router.post(
     "/password-reset/consume",
     response_model=MessageResponse,
+    response_model_exclude_none=True,
     dependencies=[Depends(auth_rate_limit)],
 )
 async def reset_consume(
@@ -523,6 +532,7 @@ async def list_sessions(
 @router.delete(
     "/sessions/{session_id}",
     response_model=MessageResponse,
+    response_model_exclude_none=True,
     status_code=status.HTTP_200_OK,
 )
 async def revoke_session(
@@ -577,7 +587,7 @@ async def totp_confirm(
     return TOTPConfirmResponse(recovery_codes=recovery_codes)
 
 
-@router.post("/totp/disable", response_model=MessageResponse)
+@router.post("/totp/disable", response_model=MessageResponse, response_model_exclude_none=True)
 async def totp_disable(
     payload: TOTPDisableRequest,
     request: Request,

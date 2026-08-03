@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/lumen_widgets.dart';
+import '../../design/sylora.dart';
 import '../auth/auth.dart';
 
 @immutable
@@ -38,6 +39,12 @@ const _entries = <MoreEntry>[
   ),
   MoreEntry(label: 'AI', routeName: 'ai', icon: Icons.auto_awesome_outlined),
   MoreEntry(label: 'Live', routeName: 'live', icon: Icons.sensors_outlined),
+  MoreEntry(
+    label: 'Creator Studio',
+    routeName: 'creator-studio',
+    icon: Icons.video_camera_front_outlined,
+    roles: <String>{'creator', 'admin'},
+  ),
   MoreEntry(
     label: 'Creator',
     routeName: 'creator',
@@ -96,28 +103,23 @@ final class MoreScreen extends ConsumerWidget {
         itemCount: entries.length,
         itemBuilder: (context, index) {
           final entry = entries[index];
-          return LumenSurface(
-            padding: EdgeInsets.zero,
-            child: InkWell(
-              onTap: () => context.goNamed(entry.routeName),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Icon(
-                      entry.icon,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const Spacer(),
-                    Text(
-                      entry.label,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
+          return SyloraCard(
+            onTap: () => context.goNamed(entry.routeName),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Icon(
+                  entry.icon,
+                  size: 32,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-              ),
+                const Spacer(),
+                Text(
+                  entry.label,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
             ),
           );
         },

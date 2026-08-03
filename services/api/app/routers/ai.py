@@ -593,7 +593,7 @@ async def add_memory(
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> AIMemoryResponse:
-    record = await create_memory(db, auth.user.id, payload, settings)
+    record = await create_memory(db, auth.user.id, payload, settings, _registry(request))
     add_audit_event(
         db,
         request,
@@ -604,6 +604,7 @@ async def add_memory(
         metadata={"memory_id": str(record.id), "kind": record.kind.value},
     )
     await db.commit()
+    await db.refresh(record)
     return memory_response(record, settings)
 
 
@@ -611,11 +612,12 @@ async def add_memory(
 async def edit_memory(
     memory_id: uuid.UUID,
     payload: AIMemoryPatch,
+    request: Request,
     auth: AuthContext = Depends(current_auth),
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> AIMemoryResponse:
-    record = await patch_memory(db, auth.user.id, memory_id, payload, settings)
+    record = await patch_memory(db, auth.user.id, memory_id, payload, settings, _registry(request))
     return memory_response(record, settings)
 
 

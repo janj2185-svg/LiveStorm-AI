@@ -90,6 +90,7 @@ from app.gift_service import (
     published_version,
     record_affinity,
 )
+from app.push_service import PushMessage, dispatch_push_best_effort
 from app.rate_limit import rate_limit
 from app.routers.messaging import websocket_user
 from app.security import utcnow
@@ -561,6 +562,19 @@ async def send_gift_endpoint(
             await db.commit()
             await db.refresh(gift_send)
             await publish_gift_events(request, settings, events)
+            await dispatch_push_best_effort(
+                db,
+                request.app.state.push_dispatcher,
+                user_ids={gift_send.recipient_user_id},
+                message=PushMessage(
+                    title="You received a SYLORA gift",
+                    body=gift_send.message or "A creator gift just arrived.",
+                    data={"type": "gift_received", "gift_send_id": str(gift_send.id)},
+                ),
+                action="push.gift_dispatch_failed",
+                actor_user_id=auth.user.id,
+                metadata={"gift_send_id": gift_send.id},
+            )
     return gift_send
 
 

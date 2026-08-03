@@ -332,6 +332,31 @@ class PreflightResponse(StrictSchema):
     checks: list[PreflightCheck]
 
 
+class LiveIceServerResponse(StrictSchema):
+    urls: list[str] = Field(min_length=1, max_length=16)
+    username: str | None = None
+    credential: str | None = None
+
+
+class LiveMediaCapabilityResponse(StrictSchema):
+    session_id: uuid.UUID
+    status: Literal["available", "unavailable"]
+    reason: str | None
+    whip_available: bool
+    playback_available: bool
+    obs_available: bool = True
+    ingest_path: str
+
+
+class LivePublishCredentialsResponse(LiveMediaCapabilityResponse):
+    whip_url: str | None
+    playback_url: str | None
+    bearer_token: str | None
+    token_expires_at: datetime | None
+    token_expires_in_seconds: int
+    ice_servers: list[LiveIceServerResponse] = Field(default_factory=list)
+
+
 class CursorPage(StrictSchema):
     next_cursor: str | None
 

@@ -274,8 +274,11 @@ final class LumenResponsiveShell extends StatelessWidget {
         final mobileDestinations = compactDestinations ?? destinations;
         final mobileIndex = compactSelectedIndex ?? selectedIndex;
         return Scaffold(
+          backgroundColor: Colors.transparent,
           body: body,
           bottomNavigationBar: NavigationBar(
+            backgroundColor: SyloraTokens.glassStrong,
+            elevation: 0,
             selectedIndex: mobileIndex.clamp(0, mobileDestinations.length - 1),
             onDestinationSelected:
                 onCompactDestinationSelected ?? onDestinationSelected,
@@ -292,46 +295,60 @@ final class LumenResponsiveShell extends StatelessWidget {
       }
       final expanded = width >= 1280;
       return Scaffold(
+        backgroundColor: Colors.transparent,
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            NavigationRail(
-              extended: expanded,
-              selectedIndex: selectedIndex,
-              onDestinationSelected: onDestinationSelected,
-              leading: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: expanded
-                    ? const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          SyloraLogo(),
-                          SizedBox(width: 12),
-                          Text('SYLORA'),
-                        ],
-                      )
-                    : const SyloraLogo(),
-              ),
-              destinations: <NavigationRailDestination>[
-                for (final destination in destinations)
-                  NavigationRailDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.selectedIcon),
-                    label: Text(destination.label),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: SyloraTokens.glassStrong,
+                border: Border(
+                  right: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.62),
                   ),
-              ],
-            ),
-            VerticalDivider(
-              width: 1,
-              color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+              child: NavigationRail(
+                backgroundColor: Colors.transparent,
+                extended: expanded,
+                selectedIndex: selectedIndex,
+                onDestinationSelected: onDestinationSelected,
+                leading: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: expanded
+                      ? const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            SyloraLogo(),
+                            SizedBox(width: 12),
+                            Text('SYLORA'),
+                          ],
+                        )
+                      : const SyloraLogo(),
+                ),
+                destinations: <NavigationRailDestination>[
+                  for (final destination in destinations)
+                    NavigationRailDestination(
+                      icon: Icon(destination.icon),
+                      selectedIcon: Icon(destination.selectedIcon),
+                      label: Text(destination.label),
+                    ),
+                ],
+              ),
             ),
             Expanded(child: body),
             if (expanded && contextPanel != null) ...<Widget>[
-              VerticalDivider(
-                width: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: SyloraTokens.glass.withValues(alpha: 0.78),
+                  border: Border(
+                    left: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.58),
+                    ),
+                  ),
+                ),
+                child: SizedBox(width: 340, child: contextPanel),
               ),
-              SizedBox(width: 340, child: contextPanel),
             ],
           ],
         ),
@@ -347,29 +364,27 @@ final class LumenPage extends StatelessWidget {
     super.key,
     this.actions = const <Widget>[],
     this.subtitle,
+    this.showAuraDock = false,
+    this.auraEmotion = AuraEmotion.idle,
+    this.auraLabel = 'Aura',
   });
 
   final String title;
   final String? subtitle;
   final List<Widget> actions;
   final Widget child;
+  final bool showAuraDock;
+  final AuraEmotion auraEmotion;
+  final String auraLabel;
 
   @override
-  Widget build(BuildContext context) => CustomScrollView(
-    slivers: <Widget>[
-      SliverAppBar.large(pinned: true, title: Text(title), actions: actions),
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
-        sliver: SliverList.list(
-          children: <Widget>[
-            if (subtitle != null) ...<Widget>[
-              Text(subtitle!, style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 20),
-            ],
-            child,
-          ],
-        ),
-      ),
-    ],
+  Widget build(BuildContext context) => SyloraModuleScaffold(
+    title: title,
+    subtitle: subtitle,
+    actions: actions,
+    showAuraDock: showAuraDock,
+    auraEmotion: auraEmotion,
+    auraLabel: auraLabel,
+    child: child,
   );
 }

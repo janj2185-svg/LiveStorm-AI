@@ -61,6 +61,8 @@ from app.live_schemas import (
     LiveActionResponse,
     LiveDestinationCreate,
     LiveDestinationResponse,
+    LiveMediaCapabilityResponse,
+    LivePublishCredentialsResponse,
     LiveSessionCreate,
     LiveSessionCreated,
     LiveSessionPatch,
@@ -101,6 +103,7 @@ from app.live_service import (
     execute_live_action,
     generate_live_ai_turn,
     health_connection,
+    media_capability_response,
     moderate_live_event,
     oauth_callback_connection,
     oauth_start,
@@ -108,6 +111,7 @@ from app.live_service import (
     owned_game,
     owned_live_session,
     preflight_session,
+    publish_credentials_response,
     reconnect_session,
     record_human_moderation_decision,
     replay_event,
@@ -116,6 +120,7 @@ from app.live_service import (
     start_game,
     start_session,
 )
+from app.push_service import PushMessage, dispatch_push_best_effort
 from app.rate_limit import rate_limit
 from app.routers.messaging import websocket_user
 from app.schemas import MessageResponse
@@ -487,6 +492,52 @@ async def get_session_endpoint(
     return await session_response(db, await owned_live_session(db, session_id, auth.user.id))
 
 
+@router.get(
+    "/sessions/{session_id}/media-capability",
+    response_model=LiveMediaCapabilityResponse,
+)
+async def get_session_media_capability(
+    session_id: uuid.UUID,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LiveMediaCapabilityResponse:
+    record = await owned_live_session(db, session_id, auth.user.id)
+    return media_capability_response(settings, record)
+
+
+@router.post(
+    "/sessions/{session_id}/media-capability",
+    response_model=LiveMediaCapabilityResponse,
+)
+async def refresh_session_media_capability(
+    session_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LiveMediaCapabilityResponse:
+    await live_rate_limit(request, auth.user.id)
+    record = await owned_live_session(db, session_id, auth.user.id)
+    return media_capability_response(settings, record)
+
+
+@router.post(
+    "/sessions/{session_id}/publish-credentials",
+    response_model=LivePublishCredentialsResponse,
+)
+async def publish_credentials_endpoint(
+    session_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LivePublishCredentialsResponse:
+    await live_rate_limit(request, auth.user.id)
+    record = await owned_live_session(db, session_id, auth.user.id)
+    return publish_credentials_response(settings, record)
+
+
 @router.patch("/sessions/{session_id}", response_model=LiveSessionResponse)
 async def patch_session_endpoint(
     session_id: uuid.UUID,
@@ -598,6 +649,20 @@ async def start_session_endpoint(
     record = await owned_live_session(db, session_id, auth.user.id)
     record = await start_session(db, registry(request), settings, record)
     await publish_latest(request, session_id)
+    if record.owner_user_id is not None:
+        await dispatch_push_best_effort(
+            db,
+            request.app.state.push_dispatcher,
+            user_ids={record.owner_user_id},
+            message=PushMessage(
+                title="SYLORA live session started",
+                body=f"{record.title} is live.",
+                data={"type": "live_session_started", "session_id": str(record.id)},
+            ),
+            action="push.live_start_dispatch_failed",
+            actor_user_id=auth.user.id,
+            metadata={"session_id": record.id},
+        )
     return await session_response(db, record)
 
 

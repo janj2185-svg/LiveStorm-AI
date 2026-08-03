@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api.dart';
+import '../../core/locale_controller.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
+import '../../core/push_service.dart';
+import '../../design/sylora.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import '../platform/repositories.dart';
 
@@ -35,15 +41,40 @@ final sessionsProvider = FutureProvider.autoDispose<List<SessionModel>>(
   (ref) => ref.watch(authRepositoryProvider).sessions(),
 );
 
+final pushServiceProvider = StateNotifierProvider<PushService, bool>(
+  (ref) => PushService(
+    client: ApiPushRegistrationClient(ref.watch(apiClientProvider)),
+  ),
+);
+
+String _localeLabel(AppLocalizations l10n, Locale locale) =>
+    switch (locale.languageCode) {
+      'en' => l10n.settingsLanguageEnglish,
+      'uk' => l10n.settingsLanguageUkrainian,
+      'pl' => l10n.settingsLanguagePolish,
+      'de' => l10n.settingsLanguageGerman,
+      'es' => l10n.settingsLanguageSpanish,
+      'fr' => l10n.settingsLanguageFrench,
+      'it' => l10n.settingsLanguageItalian,
+      'pt' => l10n.settingsLanguagePortuguese,
+      'ja' => l10n.settingsLanguageJapanese,
+      'ko' => l10n.settingsLanguageKorean,
+      'zh' => l10n.settingsLanguageChinese,
+      _ => SyloraLocales.labelFor(locale),
+    };
+
 final class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final account = ref.watch(accountProvider);
     final visual = ref.watch(visualSettingsProvider);
+    final locale = ref.watch(localeControllerProvider);
+    final notificationsEnabled = ref.watch(pushServiceProvider);
     return LumenPage(
-      title: 'Settings',
+      title: l10n.navSettings,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
@@ -94,10 +125,12 @@ final class SettingsScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          OutlinedButton(
+                          SyloraButton(
+                            label: 'Edit profile',
+                            variant: SyloraButtonVariant.secondary,
+                            expanded: false,
                             onPressed: () =>
                                 _editProfile(context, ref, snapshot.profile),
-                            child: const Text('Edit profile'),
                           ),
                         ],
                       ),
@@ -144,6 +177,16 @@ final class SettingsScreen extends ConsumerWidget {
                           <String, dynamic>{'security_emails': value},
                         ),
                       ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Enable notifications'),
+                        subtitle: const Text(
+                          'Native push token wiring can plug into this preference.',
+                        ),
+                        value: notificationsEnabled,
+                        onChanged: (value) =>
+                            unawaited(_setNotifications(context, ref, value)),
+                      ),
                       DropdownButtonFormField<String>(
                         initialValue: snapshot.settings.profileVisibility,
                         decoration: const InputDecoration(
@@ -179,10 +222,32 @@ final class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Display & accessibility',
+                  l10n.settingsDisplayAccessibility,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
+                DropdownButtonFormField<Locale>(
+                  initialValue: locale,
+                  decoration: InputDecoration(
+                    labelText: l10n.settingsLanguage,
+                    helperText: l10n.settingsLanguageDescription,
+                  ),
+                  items: <DropdownMenuItem<Locale>>[
+                    for (final option in SyloraLocales.options)
+                      DropdownMenuItem<Locale>(
+                        value: option.locale,
+                        child: Text(_localeLabel(l10n, option.locale)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      ref
+                          .read(localeControllerProvider.notifier)
+                          .setLocale(value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<LumenThemeMode>(
                   initialValue: visual.themeMode,
                   decoration: const InputDecoration(labelText: 'Theme'),
@@ -276,6 +341,22 @@ final class SettingsScreen extends ConsumerWidget {
   static Future<void> _updateAccount(WidgetRef ref, JsonObject patch) async {
     await ref.read(accountRepositoryProvider).updateSettings(patch);
     ref.invalidate(accountProvider);
+  }
+
+  static Future<void> _setNotifications(
+    BuildContext context,
+    WidgetRef ref,
+    bool enabled,
+  ) async {
+    try {
+      await ref.read(pushServiceProvider.notifier).setEnabled(enabled);
+    } on Object catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    }
   }
 
   static Future<void> _editProfile(

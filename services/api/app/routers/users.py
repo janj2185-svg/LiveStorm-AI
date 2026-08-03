@@ -216,7 +216,7 @@ def apply_settings_patch(account_settings: AccountSettings, payload: AccountSett
             setattr(account_settings, field, value)
 
 
-@router.delete("/users/me", response_model=MessageResponse)
+@router.delete("/users/me", response_model=MessageResponse, response_model_exclude_none=True)
 async def delete_own_account(
     payload: SoftDeleteRequest,
     request: Request,

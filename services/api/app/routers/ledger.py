@@ -562,11 +562,22 @@ async def settle_payment_operation(
 async def payment_webhook(
     provider_name: str,
     request: Request,
-    signature: Annotated[str, Header(alias="X-Payment-Signature", min_length=1)],
+    payment_signature: Annotated[
+        str | None, Header(alias="X-Payment-Signature", min_length=1)
+    ] = None,
+    stripe_signature: Annotated[str | None, Header(alias="Stripe-Signature", min_length=1)] = None,
     db: AsyncSession = Depends(get_session),
 ) -> dict[str, str]:
     provider: PaymentProvider = request.app.state.payment_provider
     raw_body = await request.body()
+    signature = stripe_signature or payment_signature
+    if signature is None:
+        raise APIError(
+            400,
+            "payment_webhook_signature_required",
+            "Payment webhook signature required",
+            "Provide Stripe-Signature or X-Payment-Signature.",
+        )
     verified = await provider.verify_webhook(raw_body=raw_body, signature=signature)
     if provider.name != provider_name:
         raise APIError(

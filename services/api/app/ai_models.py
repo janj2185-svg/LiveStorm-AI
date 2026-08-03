@@ -365,6 +365,28 @@ class AIMemory(Base):
     )
 
 
+class AIMemoryEmbedding(Base):
+    __tablename__ = "ai_memory_embeddings"
+    __table_args__ = (
+        CheckConstraint("dimension > 0", name="ck_ai_memory_embedding_positive_dimension"),
+    )
+
+    memory_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("ai_memories.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    provider: Mapped[str] = mapped_column(String(64))
+    model: Mapped[str] = mapped_column(String(128))
+    dimension: Mapped[int] = mapped_column(Integer)
+    vector_json: Mapped[list[float]] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class AIUsageRecord(Base):
     __tablename__ = "ai_usage_records"
     __table_args__ = (
@@ -534,6 +556,12 @@ Index(
     AIMessage.id,
 )
 Index("ix_ai_memories_user_created", AIMemory.user_id, AIMemory.created_at, AIMemory.id)
+Index(
+    "ix_ai_memory_embeddings_user_updated",
+    AIMemoryEmbedding.user_id,
+    AIMemoryEmbedding.updated_at,
+    AIMemoryEmbedding.memory_id,
+)
 Index(
     "ix_ai_usage_user_created",
     AIUsageRecord.user_id,

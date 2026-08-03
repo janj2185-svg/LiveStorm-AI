@@ -25,6 +25,7 @@ from app.ai_models import (
     AIJob,
     AIJobStatus,
     AIMemory,
+    AIMemoryEmbedding,
     AIMessage,
     AIMessageRole,
     AIMessageStatus,
@@ -73,6 +74,13 @@ from app.ai_schemas import (
     SettingsToolInput,
     validate_plain_text,
     validate_safe_json,
+)
+from app.ai_vector import (
+    DEFAULT_SEMANTIC_LIMIT,
+    delete_embedding,
+    embed_and_index,
+    memory_embedding_text,
+    semantic_search,
 )
 from app.audit import add_audit_event
 from app.config import Settings
@@ -363,11 +371,19 @@ def _source(
     )
 
 
+def _memory_source(memory: AIMemory, settings: Settings) -> GroundingSource:
+    text = memory_embedding_text(memory, settings)
+    return _source("ai_memory", str(memory.id), text, text)
+
+
 async def resolve_grounding_context(
     db: AsyncSession,
     user_id: uuid.UUID,
     user_settings: AIUserSettings,
     settings: Settings,
+    *,
+    registry: ProviderRegistry | None = None,
+    query: str | None = None,
 ) -> list[GroundingSource]:
     sources: list[GroundingSource] = []
     if user_settings.analytics_context_enabled:
@@ -426,6 +442,19 @@ async def resolve_grounding_context(
             )
 
     if user_settings.memory_enabled and user_settings.personalization_enabled:
+        seen_memory_ids: set[uuid.UUID] = set()
+        if registry is not None and query:
+            for hit in await semantic_search(
+                db,
+                registry,
+                settings,
+                user_id,
+                query,
+                k=DEFAULT_SEMANTIC_LIMIT,
+            ):
+                sources.append(_memory_source(hit.memory, settings))
+                seen_memory_ids.add(hit.memory.id)
+
         memories = (
             await db.scalars(
                 select(AIMemory)
@@ -439,17 +468,9 @@ async def resolve_grounding_context(
             )
         ).all()
         for memory in memories:
-            if memory.encrypted_content:
-                value = decrypt_secret(memory.encrypted_content, settings)
-            else:
-                value = json.dumps(memory.structured_value, sort_keys=True, separators=(",", ":"))
-            sources.append(
-                _source(
-                    "ai_memory",
-                    str(memory.id),
-                    f"{memory.kind.value}: {value}"[:500],
-                )
-            )
+            if memory.id in seen_memory_ids:
+                continue
+            sources.append(_memory_source(memory, settings))
     return sources
 
 
@@ -760,7 +781,14 @@ async def send_chat_message(
     )
     history.insert(0, {"role": "system", "content": system_content})
     history.append({"role": "user", "content": payload.content})
-    sources = await resolve_grounding_context(db, user_id, user_settings, settings)
+    sources = await resolve_grounding_context(
+        db,
+        user_id,
+        user_settings,
+        settings,
+        registry=registry,
+        query=payload.content,
+    )
     contracts = await _tool_contracts(db)
     provider_request = ChatProviderRequest(
         messages=history,
@@ -1190,6 +1218,7 @@ async def create_memory(
     user_id: uuid.UUID,
     payload: AIMemoryCreate,
     settings: Settings,
+    registry: ProviderRegistry,
 ) -> AIMemory:
     user_settings = await settings_for(db, user_id)
     require_consent(user_settings, AICapability.chat)
@@ -1227,6 +1256,7 @@ async def create_memory(
     )
     db.add(record)
     await db.flush()
+    await embed_and_index(db, registry, settings, record)
     return record
 
 
@@ -1236,6 +1266,7 @@ async def patch_memory(
     memory_id: uuid.UUID,
     payload: AIMemoryPatch,
     settings: Settings,
+    registry: ProviderRegistry,
 ) -> AIMemory:
     record = await db.scalar(
         select(AIMemory).where(
@@ -1252,20 +1283,26 @@ async def patch_memory(
             "The memory item does not exist.",
         )
     values = payload.model_dump(exclude_unset=True)
+    needs_embedding = False
     if "kind" in values:
         record.kind = values["kind"]
+        needs_embedding = True
     if payload.content is not None:
         record.encrypted_content = encrypt_secret(payload.content, settings)
         record.structured_value = None
         record.embedding_state = AIEmbeddingState.disabled
         record.embedding_ref = None
+        needs_embedding = True
     elif payload.structured_value is not None:
         record.structured_value = payload.structured_value
         record.encrypted_content = None
         record.embedding_state = AIEmbeddingState.disabled
         record.embedding_ref = None
+        needs_embedding = True
     if "expires_at" in values:
         record.expires_at = payload.expires_at
+    if needs_embedding:
+        await embed_and_index(db, registry, settings, record)
     await db.commit()
     await db.refresh(record)
     return record
@@ -1293,6 +1330,7 @@ async def delete_memories(
         )
     now = utcnow()
     for record in records:
+        await delete_embedding(db, record.id)
         record.encrypted_content = encrypt_secret("[deleted]", settings)
         record.structured_value = None
         record.deleted_at = now
@@ -1847,6 +1885,7 @@ async def scrub_ai_user_records(
     settings: Settings,
 ) -> None:
     """Scrub AI content while retaining minimal pseudonymized append-only usage/audit rows."""
+    await db.execute(delete(AIMemoryEmbedding).where(AIMemoryEmbedding.user_id == user_id))
     await db.execute(delete(AIMemory).where(AIMemory.user_id == user_id))
     await db.execute(delete(AIEvent).where(AIEvent.user_id == user_id))
     await db.execute(delete(AIJob).where(AIJob.user_id == user_id))

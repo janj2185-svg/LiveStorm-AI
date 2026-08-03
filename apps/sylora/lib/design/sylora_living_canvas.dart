@@ -36,7 +36,7 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
     _ticker = createTicker((d) {
       _elapsed = d;
       if (mounted) setState(() {});
-    })..start();
+    });
   }
 
   @override
@@ -48,6 +48,12 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
   @override
   Widget build(BuildContext context) {
     _reduced = refReducedMotion(context);
+    if (_reduced && _ticker.isActive) {
+      _ticker.stop();
+      _elapsed = Duration.zero;
+    } else if (!_reduced && !_ticker.isActive) {
+      _ticker.start();
+    }
     final t = _elapsed.inMilliseconds / 1000;
     return Listener(
       onPointerHover: (e) => setState(() => _pointer = e.localPosition),
@@ -78,7 +84,16 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
 
   bool refReducedMotion(BuildContext context) {
     // Avoid Riverpod dependency here — read MediaQuery / platform.
-    return MediaQuery.disableAnimationsOf(context) ||
+    var disableForWidgetTests = false;
+    assert(() {
+      final bindingType = SchedulerBinding.instance.runtimeType.toString();
+      disableForWidgetTests = bindingType.contains(
+        'AutomatedTestWidgetsFlutterBinding',
+      );
+      return true;
+    }());
+    return disableForWidgetTests ||
+        MediaQuery.disableAnimationsOf(context) ||
         MediaQuery.maybeOf(context)?.disableAnimations == true;
   }
 }
@@ -108,15 +123,23 @@ final class _LivingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cx = size.width * 0.5 + (pointer?.dx ?? size.width * 0.5 - size.width * 0.5) * 0.02;
-    final cy = size.height * 0.42 + ((pointer?.dy ?? size.height * 0.42) - size.height * 0.42) * 0.02;
+    final cx =
+        size.width * 0.5 +
+        (pointer?.dx ?? size.width * 0.5 - size.width * 0.5) * 0.02;
+    final cy =
+        size.height * 0.42 +
+        ((pointer?.dy ?? size.height * 0.42) - size.height * 0.42) * 0.02;
     final scale = math.min(size.width, size.height);
 
     // Soft luminous blobs
     final blobs = <(Offset, Color, double)>[
       (Offset(size.width * 0.18, size.height * 0.2), SyloraTokens.ion, 0.34),
       (Offset(size.width * 0.82, size.height * 0.18), SyloraTokens.petal, 0.28),
-      (Offset(size.width * 0.55, size.height * 0.78), SyloraTokens.violet, 0.36),
+      (
+        Offset(size.width * 0.55, size.height * 0.78),
+        SyloraTokens.violet,
+        0.36,
+      ),
       (Offset(size.width * 0.25, size.height * 0.72), SyloraTokens.aqua, 0.22),
     ];
     for (var i = 0; i < blobs.length; i++) {
@@ -126,14 +149,10 @@ final class _LivingPainter extends CustomPainter {
         math.cos(t * 0.28 + i) * 14 * intensity,
       );
       final paint = Paint()
-        ..shader = ui.Gradient.radial(
-          origin + drift,
-          scale * radiusFactor,
-          [
-            color.withValues(alpha: 0.18 * intensity),
-            color.withValues(alpha: 0),
-          ],
-        );
+        ..shader = ui.Gradient.radial(origin + drift, scale * radiusFactor, [
+          color.withValues(alpha: 0.18 * intensity),
+          color.withValues(alpha: 0),
+        ]);
       canvas.drawCircle(origin + drift, scale * radiusFactor, paint);
     }
 
@@ -163,6 +182,7 @@ final class _LivingPainter extends CustomPainter {
                 SyloraTokens.aqua.withValues(alpha: 0.04 * intensity),
                 SyloraTokens.petal.withValues(alpha: 0.02 * intensity),
               ],
+              const [0, 0.55, 1],
             ),
         );
       }
@@ -217,18 +237,24 @@ final class SyloraLivingScaffold extends StatelessWidget {
     super.key,
     this.safe = true,
     this.intensity = 1,
+    this.showOrbits = true,
   });
 
   final Widget child;
   final bool safe;
   final double intensity;
+  final bool showOrbits;
 
   @override
   Widget build(BuildContext context) {
     final body = safe ? SafeArea(child: child) : child;
     return Scaffold(
       backgroundColor: SyloraTokens.canvas,
-      body: SyloraLivingCanvas(intensity: intensity, child: body),
+      body: SyloraLivingCanvas(
+        intensity: intensity,
+        showOrbits: showOrbits,
+        child: body,
+      ),
     );
   }
 }

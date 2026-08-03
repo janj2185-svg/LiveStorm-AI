@@ -12,7 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.dependencies import AuthContext, aware, current_auth, get_session, get_settings
 from app.errors import APIError
+from app.gift_schemas import WebSocketTicketResponse
 from app.models import AccessSession, User, UserStatus
+from app.push_service import PushMessage, dispatch_push_best_effort
 from app.rate_limit import rate_limit
 from app.schemas import MessageResponse as StatusResponse
 from app.security import decode_jwt, utcnow
@@ -29,7 +31,6 @@ from app.social_models import (
     MessageReceipt,
     ParticipantState,
 )
-from app.gift_schemas import WebSocketTicketResponse
 from app.social_schemas import (
     ConversationCreate,
     ConversationParticipantResponse,
@@ -42,7 +43,6 @@ from app.social_schemas import (
     ReadReceiptResponse,
     WebSocketEvent,
 )
-from app.ws_tickets import consume_websocket_ticket, mint_websocket_ticket
 from app.social_service import (
     apply_cursor,
     are_friends,
@@ -56,6 +56,7 @@ from app.social_service import (
     profile_for_handle,
     require_handle,
 )
+from app.ws_tickets import consume_websocket_ticket, mint_websocket_ticket
 
 router = APIRouter(tags=["Messaging"])
 
@@ -252,6 +253,37 @@ async def publish_records(
     hub: MessageConnectionHub = request.app.state.message_hub
     for record in records:
         await hub.publish(record.user_id, await event_response(db, settings, record))
+
+
+async def dispatch_message_push(
+    request: Request,
+    db: AsyncSession,
+    *,
+    sender_id: uuid.UUID,
+    message: Message,
+    records: list[MessageEvent],
+) -> None:
+    recipient_ids = {record.user_id for record in records if record.user_id != sender_id}
+    if not recipient_ids:
+        return
+    await dispatch_push_best_effort(
+        db,
+        request.app.state.push_dispatcher,
+        user_ids=recipient_ids,
+        message=PushMessage(
+            title="New SYLORA message",
+            body=message.body[:120],
+            data={
+                "type": "message",
+                "message_id": str(message.id),
+                "conversation_id": str(message.conversation_id or ""),
+                "channel_id": str(message.channel_id or ""),
+            },
+        ),
+        action="push.message_dispatch_failed",
+        actor_user_id=sender_id,
+        metadata={"message_id": message.id},
+    )
 
 
 @router.post(
@@ -491,6 +523,13 @@ async def send_message(
     await db.commit()
     await db.refresh(message)
     await publish_records(request, db, settings, records)
+    await dispatch_message_push(
+        request,
+        db,
+        sender_id=auth.user.id,
+        message=message,
+        records=records,
+    )
     return message
 
 
@@ -539,6 +578,13 @@ async def edit_message(
     await db.commit()
     await db.refresh(message)
     await publish_records(request, db, settings, records)
+    await dispatch_message_push(
+        request,
+        db,
+        sender_id=auth.user.id,
+        message=message,
+        records=records,
+    )
     return message
 
 

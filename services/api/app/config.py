@@ -6,7 +6,7 @@ from functools import lru_cache
 from typing import Literal
 
 from dotenv import dotenv_values, find_dotenv
-from pydantic import BaseModel, EmailStr, Field, SecretStr, model_validator
+from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -93,10 +93,19 @@ class Settings(BaseSettings):
     purchase_rate_limit: int = Field(default=20, ge=1, le=1000)
     gift_send_rate_limit: int = Field(default=30, ge=1, le=2000)
     topup_rate_limit: int = Field(default=5, ge=1, le=100)
+    push_enabled: bool = False
+    fcm_project_id: str | None = None
+    fcm_service_account_json: SecretStr | None = None
+    payment_provider: Literal["stripe", "none"] = "none"
+    stripe_secret_key: SecretStr | None = None
+    stripe_webhook_secret: SecretStr | None = None
+    stripe_publishable_key: str | None = None
+    payment_sandbox_mode: bool = False
     ai_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
     ai_chat_rate_limit: int = Field(default=30, ge=1, le=1000)
     ai_generation_rate_limit: int = Field(default=10, ge=1, le=1000)
     ai_tool_rate_limit: int = Field(default=30, ge=1, le=1000)
+    ai_vector_backend: Literal["postgres", "none"] = "postgres"
     live_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
     live_manage_rate_limit: int = Field(default=60, ge=1, le=5000)
     live_webhook_rate_limit: int = Field(default=600, ge=1, le=100_000)
@@ -129,6 +138,11 @@ class Settings(BaseSettings):
     mediamtx_control_url: str | None = None
     mediamtx_control_username: str | None = None
     mediamtx_control_password: SecretStr | None = None
+    mediamtx_whip_base_url: str | None = None
+    mediamtx_playback_base_url: str | None = None
+    turn_urls: list[str] = Field(default_factory=list)
+    turn_username: str | None = None
+    turn_credential: SecretStr | None = None
     live_obs_allowed_hosts: list[str] = Field(
         default_factory=lambda: ["127.0.0.1", "::1", "localhost"]
     )
@@ -159,6 +173,13 @@ class Settings(BaseSettings):
     smtp_password: SecretStr | None = None
     smtp_timeout_seconds: float = Field(default=15, ge=1, le=60)
     web_base_url: str = "http://localhost:5173"
+
+    @field_validator("turn_urls", mode="before")
+    @classmethod
+    def parse_turn_urls(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
 
     @model_validator(mode="after")
     def validate_security_configuration(self) -> Settings:
@@ -193,12 +214,23 @@ class Settings(BaseSettings):
                 "MEDIAMTX_CONTROL_USERNAME and MEDIAMTX_CONTROL_PASSWORD "
                 "must be configured together"
             )
+        if bool(self.turn_username) != bool(self.turn_credential):
+            raise ValueError("TURN_USERNAME and TURN_CREDENTIAL must be configured together")
         if (
             self.mediamtx_control_url
             and self.environment == "production"
             and not self.mediamtx_control_url.startswith("https://")
         ):
             raise ValueError("production MEDIAMTX_CONTROL_URL must use HTTPS")
+        for field_name, url in (
+            ("MEDIAMTX_WHIP_BASE_URL", self.mediamtx_whip_base_url),
+            ("MEDIAMTX_PLAYBACK_BASE_URL", self.mediamtx_playback_base_url),
+        ):
+            if url and self.environment == "production" and not url.startswith("https://"):
+                raise ValueError(f"production {field_name} must use HTTPS")
+        for url in self.turn_urls:
+            if not url.startswith(("stun:", "stuns:", "turn:", "turns:")):
+                raise ValueError("TURN_URLS entries must be STUN or TURN URLs")
         for redirect_uri in (self.youtube_redirect_uri, self.twitch_redirect_uri):
             if (
                 redirect_uri
@@ -208,8 +240,14 @@ class Settings(BaseSettings):
                 raise ValueError("production live OAuth redirect URIs must use HTTPS")
 
         if self.environment == "production":
-            if self.test_stand_mode or self.test_stand_auto_verify_email or self.test_stand_sandbox_wallet:
+            if (
+                self.test_stand_mode
+                or self.test_stand_auto_verify_email
+                or self.test_stand_sandbox_wallet
+            ):
                 raise ValueError("test stand flags are forbidden in production")
+            if self.payment_sandbox_mode:
+                raise ValueError("PAYMENT_SANDBOX_MODE is forbidden in production")
             if not self.database_url.startswith("postgresql+asyncpg://"):
                 raise ValueError("production DATABASE_URL must use PostgreSQL with asyncpg")
             if not self.redis_url.startswith(("redis://", "rediss://")):

@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator, Mapping, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
+import jwt
 import pytest
 from fastapi import WebSocketDisconnect
 from sqlalchemy import select
@@ -343,6 +344,106 @@ async def test_session_preflight_state_machine_and_reveal_once_key(
         assert rotated.status_code == 200
         assert rotated.json()["stream_key_once"] != raw_key
         assert rotated.json()["key_version"] == 2
+
+
+@pytest.mark.asyncio
+async def test_publish_credentials_fail_closed_when_mediamtx_unset(api_factory: Any) -> None:
+    async with api_factory() as api:
+        headers, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=headers,
+            json={"title": "No media plane"},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+
+        capability = await api.client.get(
+            f"/v1/live/sessions/{session_id}/media-capability",
+            headers=headers,
+        )
+        assert capability.status_code == 200
+        assert capability.json()["status"] == "unavailable"
+        assert capability.json()["reason"] == "mediamtx_control_unconfigured"
+        assert capability.json()["whip_available"] is False
+
+        credentials = await api.client.post(
+            f"/v1/live/sessions/{session_id}/publish-credentials",
+            headers=headers,
+        )
+        assert credentials.status_code == 200
+        body = credentials.json()
+        assert body["status"] == "unavailable"
+        assert body["whip_url"] is None
+        assert body["playback_url"] is None
+        assert body["bearer_token"] is None
+        assert body["token_expires_in_seconds"] == 0
+        assert body["ice_servers"] == []
+
+
+@pytest.mark.asyncio
+async def test_publish_credentials_shape_when_mediamtx_configured(api_factory: Any) -> None:
+    media = TestAdapter(
+        IntegrationPlatform.rtmp_webrtc,
+        frozenset({LiveCapability.publish, LiveCapability.first_party_ingest}),
+    )
+    async with api_factory(
+        live_adapter_registry=TestRegistry([media]),
+        mediamtx_control_url="http://mediamtx.test:9997",
+        mediamtx_whip_base_url="https://live.test.sylora.local",
+        mediamtx_playback_base_url="https://watch.test.sylora.local",
+        turn_urls=["turns:turn.test.sylora.local:5349"],
+        turn_username="creator",
+        turn_credential="turn-secret",
+    ) as api:
+        headers, user_id = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=headers,
+            json={"title": "WHIP media plane"},
+        )
+        assert created.status_code == 201, created.text
+        created_body = created.json()
+        session_id = created_body["id"]
+        ingest_path = created_body["ingest_path"]
+
+        capability = await api.client.post(
+            f"/v1/live/sessions/{session_id}/media-capability",
+            headers=headers,
+        )
+        assert capability.status_code == 200
+        assert capability.json()["status"] == "available"
+        assert capability.json()["reason"] is None
+        assert capability.json()["whip_available"] is True
+
+        credentials = await api.client.post(
+            f"/v1/live/sessions/{session_id}/publish-credentials",
+            headers=headers,
+        )
+        assert credentials.status_code == 200, credentials.text
+        body = credentials.json()
+        assert body["status"] == "available"
+        assert body["whip_url"] == f"https://live.test.sylora.local/{ingest_path}/whip"
+        assert body["playback_url"] == f"https://watch.test.sylora.local/{ingest_path}"
+        assert body["token_expires_in_seconds"] == 300
+        assert body["ice_servers"] == [
+            {
+                "urls": ["turns:turn.test.sylora.local:5349"],
+                "username": "creator",
+                "credential": "turn-secret",
+            }
+        ]
+        payload = jwt.decode(
+            body["bearer_token"],
+            api.app.state.settings.jwt_secret.get_secret_value(),
+            algorithms=["HS256"],
+            audience=api.app.state.settings.jwt_audience,
+            issuer=api.app.state.settings.jwt_issuer,
+        )
+        assert payload["type"] == "live_whip_publish"
+        assert payload["sid"] == session_id
+        assert payload["path"] == ingest_path
+        assert payload["sub"] == str(user_id)
 
 
 @pytest.mark.asyncio

@@ -49,6 +49,7 @@ from app.platform_service import (
     UnconfiguredCertificateRenderer,
     UnconfiguredContentProcessor,
 )
+from app.push_service import PushDispatcher, configured_push_dispatcher
 from app.routers import (
     admin,
     admin_ai,
@@ -68,8 +69,10 @@ from app.routers import (
     marketplace,
     messaging,
     oauth,
+    push,
     social,
     test_stand,
+    trust_safety,
     users,
 )
 from app.routers.messaging import MessageConnectionHub
@@ -93,6 +96,7 @@ def create_app(
     esignature_provider: ESignatureProvider | None = None,
     accounting_provider: AccountingProvider | None = None,
     calendar_sync_provider: CalendarSyncProvider | None = None,
+    push_dispatcher: PushDispatcher | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     resolved_engine = engine or create_engine(resolved_settings)
@@ -155,6 +159,20 @@ def create_app(
                     import logging
 
                     logging.getLogger(__name__).exception("soft-ping stand bootstrap failed")
+            if os.environ.get("BOOTSTRAP_READY_GIFTS", "").lower() in {"1", "true", "yes"}:
+                import logging
+
+                if resolved_settings.environment == "production":
+                    logging.getLogger(__name__).warning(
+                        "BOOTSTRAP_READY_GIFTS ignored in production"
+                    )
+                else:
+                    from app.gift_seed import seed_ready_starter_gifts
+
+                    try:
+                        await seed_ready_starter_gifts(session)
+                    except Exception:  # noqa: BLE001 - sandbox boot should report failure but continue
+                        logging.getLogger(__name__).exception("ready gift bootstrap failed")
         application.state.ready = True
         try:
             yield
@@ -185,6 +203,7 @@ def create_app(
             {"name": "Messaging", "description": "Persisted direct and community messaging"},
             {"name": "Wallet", "description": "Immutable double-entry credit ledger"},
             {"name": "Payments", "description": "Configured external payment boundary"},
+            {"name": "Trust & Safety", "description": "Moderation queues and appeals"},
             {"name": "Gifts", "description": "Gift catalog, inventory, sends, and events"},
             {"name": "Gift authoring", "description": "Versioned gift runtime contracts"},
             {
@@ -233,6 +252,7 @@ def create_app(
     app.state.esignature_provider = esignature_provider or UnconfiguredESignatureProvider()
     app.state.accounting_provider = accounting_provider or UnconfiguredAccountingProvider()
     app.state.calendar_sync_provider = calendar_sync_provider or UnconfiguredCalendarSyncProvider()
+    app.state.push_dispatcher = push_dispatcher or configured_push_dispatcher(resolved_settings)
     app.state.ready = False
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=resolved_settings.allowed_hosts)
@@ -246,6 +266,7 @@ def create_app(
                 "Authorization",
                 "Content-Type",
                 "Idempotency-Key",
+                "Stripe-Signature",
                 "X-Payment-Signature",
                 "X-Request-ID",
                 "X-Service-Signature",
@@ -269,7 +290,9 @@ def create_app(
     app.include_router(admin_ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
+    app.include_router(trust_safety.router, prefix=resolved_settings.api_prefix)
     app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
+    app.include_router(push.router, prefix=resolved_settings.api_prefix)
     app.include_router(ledger.router, prefix=resolved_settings.api_prefix)
     app.include_router(live.router, prefix=resolved_settings.api_prefix)
     app.include_router(live.admin_router, prefix=resolved_settings.api_prefix)

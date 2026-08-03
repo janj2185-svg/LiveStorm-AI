@@ -248,44 +248,46 @@ final class RecommendationsPanel extends ConsumerWidget {
     final value = ref.watch(recommendationsProvider);
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: value.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('Recommendations unavailable'),
-            TextButton(
-              onPressed: () => ref.invalidate(recommendationsProvider),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-        data: (posts) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text('For you', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 16),
-            if (posts.isEmpty)
-              Text(
-                'The API has no recommendations yet.',
-                style: Theme.of(context).textTheme.bodySmall,
-              )
-            else
-              for (final post in posts.take(4))
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('@${post.authorHandle}'),
-                  subtitle: Text(
-                    post.body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+      child: LumenSurface(
+        child: value.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) => Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text('Recommendations unavailable'),
+              TextButton(
+                onPressed: () => ref.invalidate(recommendationsProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+          data: (posts) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('For you', style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 16),
+              if (posts.isEmpty)
+                Text(
+                  'The API has no recommendations yet.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                )
+              else
+                for (final post in posts.take(4))
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('@${post.authorHandle}'),
+                    subtitle: Text(
+                      post.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () => context.pushNamed(
+                      'post',
+                      pathParameters: <String, String>{'id': post.id},
+                    ),
                   ),
-                  onTap: () => context.pushNamed(
-                    'post',
-                    pathParameters: <String, String>{'id': post.id},
-                  ),
-                ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -752,134 +754,133 @@ final class PublicProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final value = ref.watch(publicProfileProvider(handle));
-    return Scaffold(
-      appBar: AppBar(title: Text('@$handle')),
-      body: value.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => LumenErrorView(
-          error: error,
-          onRetry: () => ref.invalidate(publicProfileProvider(handle)),
-        ),
-        data: (profile) => ListView(
-          padding: const EdgeInsets.all(20),
-          children: <Widget>[
-            LumenSurface(
-              child: Column(
+    return LumenPage(
+      title: '@$handle',
+      subtitle: 'Public profile and relationship controls from the social API.',
+      child: LumenAsyncView<ProfileModel>(
+        value: value,
+        onRetry: () => ref.invalidate(publicProfileProvider(handle)),
+        data: (profile) => LumenSurface(
+          child: Column(
+            children: <Widget>[
+              CircleAvatar(
+                radius: 44,
+                backgroundImage: profile.avatarUrl == null
+                    ? null
+                    : NetworkImage(profile.avatarUrl!),
+                child: profile.avatarUrl == null
+                    ? Text(profile.displayName.characters.first.toUpperCase())
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                profile.displayName,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              Text('@${profile.handle}'),
+              if (profile.bio != null) ...<Widget>[
+                const SizedBox(height: 12),
+                Text(profile.bio!, textAlign: TextAlign.center),
+              ],
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
                 children: <Widget>[
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: profile.avatarUrl == null
-                        ? null
-                        : NetworkImage(profile.avatarUrl!),
-                    child: profile.avatarUrl == null
-                        ? Text(
-                            profile.displayName.characters.first.toUpperCase(),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    profile.displayName,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  Text('@${profile.handle}'),
-                  if (profile.bio != null) ...<Widget>[
-                    const SizedBox(height: 12),
-                    Text(profile.bio!, textAlign: TextAlign.center),
-                  ],
-                  const SizedBox(height: 20),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: <Widget>[
-                      LumenPrimaryButton(
-                        label: profile.followedByViewer ? 'Unfollow' : 'Follow',
-                        icon: Icons.person_add_alt_1_rounded,
-                        onPressed: () async {
-                          final repository = ref.read(socialRepositoryProvider);
-                          if (profile.followedByViewer) {
-                            await repository.unfollow(handle);
-                          } else {
-                            final status = await repository.follow(handle);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Follow status: $status'),
-                                ),
-                              );
-                            }
-                          }
-                          ref.invalidate(publicProfileProvider(handle));
-                        },
-                      ),
-                      LumenSecondaryButton(
-                        label: 'Friend',
-                        icon: Icons.group_add_outlined,
-                        onPressed: () async {
-                          final status = await ref
-                              .read(socialRepositoryProvider)
-                              .friend(handle);
+                  SizedBox(
+                    width: 180,
+                    child: LumenPrimaryButton(
+                      label: profile.followedByViewer ? 'Unfollow' : 'Follow',
+                      icon: Icons.person_add_alt_1_rounded,
+                      onPressed: () async {
+                        final repository = ref.read(socialRepositoryProvider);
+                        if (profile.followedByViewer) {
+                          await repository.unfollow(handle);
+                        } else {
+                          final status = await repository.follow(handle);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Friend status: $status')),
+                              SnackBar(content: Text('Follow status: $status')),
                             );
                           }
-                        },
-                      ),
-                      LumenSecondaryButton(
-                        label: 'Message',
-                        icon: Icons.chat_outlined,
-                        onPressed: () async {
-                          final conversation = await ref
-                              .read(messagingRepositoryProvider)
-                              .createConversation(handle);
-                          if (context.mounted) {
-                            await context.pushNamed(
-                              'conversation',
-                              pathParameters: <String, String>{
-                                'id': conversation.id,
-                              },
-                            );
-                          }
-                        },
-                      ),
-                    ],
+                        }
+                        ref.invalidate(publicProfileProvider(handle));
+                      },
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: <Widget>[
-                      TextButton(
-                        onPressed: () async {
-                          await ref
-                              .read(socialRepositoryProvider)
-                              .mute(handle, true);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Account muted.')),
-                            );
-                          }
-                        },
-                        child: const Text('Mute'),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          await ref
-                              .read(socialRepositoryProvider)
-                              .block(handle, true);
-                          if (context.mounted) {
-                            context.pop();
-                          }
-                        },
-                        child: const Text('Block'),
-                      ),
-                    ],
+                  SizedBox(
+                    width: 180,
+                    child: LumenSecondaryButton(
+                      label: 'Friend',
+                      icon: Icons.group_add_outlined,
+                      onPressed: () async {
+                        final status = await ref
+                            .read(socialRepositoryProvider)
+                            .friend(handle);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Friend status: $status')),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 180,
+                    child: LumenSecondaryButton(
+                      label: 'Message',
+                      icon: Icons.chat_outlined,
+                      onPressed: () async {
+                        final conversation = await ref
+                            .read(messagingRepositoryProvider)
+                            .createConversation(handle);
+                        if (context.mounted) {
+                          await context.pushNamed(
+                            'conversation',
+                            pathParameters: <String, String>{
+                              'id': conversation.id,
+                            },
+                          );
+                        }
+                      },
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: <Widget>[
+                  TextButton(
+                    onPressed: () async {
+                      await ref
+                          .read(socialRepositoryProvider)
+                          .mute(handle, true);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Account muted.')),
+                        );
+                      }
+                    },
+                    child: const Text('Mute'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await ref
+                          .read(socialRepositoryProvider)
+                          .block(handle, true);
+                      if (context.mounted) {
+                        context.pop();
+                      }
+                    },
+                    child: const Text('Block'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

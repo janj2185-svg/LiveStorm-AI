@@ -122,6 +122,7 @@ def api_factory(tmp_path: Path):
                 "content_processor",
                 "certificate_renderer",
                 "content_publish_dispatcher",
+                "push_dispatcher",
             )
             if key in overrides
         }
@@ -186,7 +187,9 @@ async def register_and_verify(
         },
     )
     assert response.status_code == 202, response.text
-    assert "token" not in response.text.lower()
+    body = response.json()
+    assert body.get("debug_token") is None
+    assert body.get("debug_link") is None
     token = await api.outbox_token("email_verification", email)
     response = await api.client.post("/v1/auth/email-verification/consume", json={"token": token})
     assert response.status_code == 200, response.text

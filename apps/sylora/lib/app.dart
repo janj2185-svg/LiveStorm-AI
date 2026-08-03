@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/locale_controller.dart';
 import 'core/lumen_theme.dart';
 import 'core/lumen_widgets.dart';
 import 'design/sylora.dart';
@@ -10,6 +11,7 @@ import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
 import 'features/creator/creator_screens.dart';
+import 'features/creator_studio/creator_studio_screen.dart';
 import 'features/landing/landing_experience.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
@@ -17,6 +19,7 @@ import 'features/more/more_screen.dart';
 import 'features/platform/platform_screens.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/social/social_screens.dart';
+import 'l10n/generated/app_localizations.dart';
 
 const _homeDestination = ShellDestination(
   label: 'Home',
@@ -96,7 +99,10 @@ bool canAccessRoleRoute(Iterable<String> roles, String path) {
   if (path == '/marketplace/seller') {
     return roleSet.contains('creator') || roleSet.contains('admin');
   }
-  if (path == '/creator' || path.startsWith('/creator/')) {
+  if (path == '/creator' ||
+      path.startsWith('/creator/') ||
+      path == '/creator-studio' ||
+      path.startsWith('/creator-studio/')) {
     return roleSet.contains('creator') || roleSet.contains('admin');
   }
   if (path == '/business' || path.startsWith('/business/')) {
@@ -193,15 +199,23 @@ final routerProvider = Provider<GoRouter>((ref) {
             state.uri.path,
             _compactDestinations,
           );
+          final localizedDestinations = _localizedDestinations(
+            context,
+            destinations,
+          );
+          final localizedCompactDestinations = _localizedDestinations(
+            context,
+            _compactDestinations,
+          );
           return LumenResponsiveShell(
-            destinations: destinations,
+            destinations: localizedDestinations,
             selectedIndex: index,
             onDestinationSelected: (value) =>
-                context.go(destinations[value].path),
-            compactDestinations: _compactDestinations,
+                context.go(localizedDestinations[value].path),
+            compactDestinations: localizedCompactDestinations,
             compactSelectedIndex: compactIndex,
             onCompactDestinationSelected: (value) =>
-                context.go(_compactDestinations[value].path),
+                context.go(localizedCompactDestinations[value].path),
             contextPanel: index == 0 ? const RecommendationsPanel() : null,
             body: child,
           );
@@ -242,6 +256,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'creator',
             pageBuilder: (context, state) =>
                 _page(state, const CreatorScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/creator-studio',
+            name: 'creator-studio',
+            pageBuilder: (context, state) =>
+                _page(state, const CreatorStudioScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/business',
@@ -569,12 +589,42 @@ int _destinationIndex(String path, List<ShellDestination> destinations) {
   return index < 0 ? 0 : index;
 }
 
+List<ShellDestination> _localizedDestinations(
+  BuildContext context,
+  List<ShellDestination> destinations,
+) {
+  final l10n = AppLocalizations.of(context);
+  return <ShellDestination>[
+    for (final destination in destinations)
+      ShellDestination(
+        label: _localizedDestinationLabel(l10n, destination.path),
+        icon: destination.icon,
+        selectedIcon: destination.selectedIcon,
+        path: destination.path,
+      ),
+  ];
+}
+
+String _localizedDestinationLabel(AppLocalizations l10n, String path) =>
+    switch (path) {
+      '/home' => l10n.navHome,
+      '/search' => l10n.navSearch,
+      '/messages' => l10n.navMessages,
+      '/marketplace' => l10n.navMarket,
+      '/creator' => l10n.navCreator,
+      '/business' => l10n.navWorkspace,
+      '/admin' => l10n.navAdmin,
+      '/more' => l10n.navMore,
+      _ => l10n.navMore,
+    };
+
 final class SyloraApp extends ConsumerWidget {
   const SyloraApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final visual = ref.watch(visualSettingsProvider);
+    final locale = ref.watch(localeControllerProvider);
     final router = ref.watch(routerProvider);
     final mode = switch (visual.themeMode) {
       LumenThemeMode.system => ThemeMode.system,
@@ -582,8 +632,11 @@ final class SyloraApp extends ConsumerWidget {
       LumenThemeMode.dark => ThemeMode.dark,
     };
     return MaterialApp.router(
-      title: 'SYLORA',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: SyloraLocales.supported,
       themeMode: mode,
       theme: LumenTheme.light(highContrast: visual.highContrast),
       darkTheme: LumenTheme.dark(highContrast: visual.highContrast),

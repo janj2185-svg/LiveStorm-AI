@@ -47,6 +47,8 @@ from app.live_adapters import (
     YouTubeAdapter,
     retry_delay_seconds,
 )
+from app.live_media import media_capability as session_media_capability
+from app.live_media import publish_credentials as session_publish_credentials
 from app.live_models import (
     AILivePersona,
     AILiveRule,
@@ -82,6 +84,7 @@ from app.live_models import (
     LiveViewerMemory,
     ModerationDisposition,
 )
+from app.live_platforms.common.cohost import PERSONALITY_PROFILES
 from app.live_rules import evaluate_condition
 from app.live_schemas import (
     GameAnswerRequest,
@@ -89,6 +92,9 @@ from app.live_schemas import (
     GameCreate,
     IntegrationConnectRequest,
     LiveDestinationCreate,
+    LiveIceServerResponse,
+    LiveMediaCapabilityResponse,
+    LivePublishCredentialsResponse,
     LiveReplayEvent,
     LiveSessionCreate,
     PreflightCheck,
@@ -594,6 +600,66 @@ async def owned_live_session(
             "The live session does not exist.",
         )
     return record
+
+
+def media_capability_response(
+    settings: Settings, live_session: LiveSession
+) -> LiveMediaCapabilityResponse:
+    capability = session_media_capability(settings, live_session)
+    return LiveMediaCapabilityResponse(
+        session_id=live_session.id,
+        status=capability.status,
+        reason=capability.reason,
+        whip_available=capability.whip_available,
+        playback_available=capability.playback_available,
+        obs_available=capability.obs_available,
+        ingest_path=live_session.ingest_path,
+    )
+
+
+def publish_credentials_response(
+    settings: Settings, live_session: LiveSession
+) -> LivePublishCredentialsResponse:
+    credentials = session_publish_credentials(settings, live_session)
+    capability = credentials.capability
+    return LivePublishCredentialsResponse(
+        session_id=live_session.id,
+        status=capability.status,
+        reason=capability.reason,
+        whip_available=capability.whip_available,
+        playback_available=capability.playback_available,
+        obs_available=capability.obs_available,
+        ingest_path=live_session.ingest_path,
+        whip_url=credentials.whip_url,
+        playback_url=credentials.playback_url,
+        bearer_token=credentials.bearer_token,
+        token_expires_at=credentials.token_expires_at,
+        token_expires_in_seconds=credentials.token_expires_in_seconds,
+        ice_servers=[
+            LiveIceServerResponse(
+                urls=list(server.urls),
+                username=server.username,
+                credential=server.credential,
+            )
+            for server in credentials.ice_servers
+        ],
+    )
+
+
+def _cohost_system_prompt(content: str, persona: AILivePersona) -> str:
+    personality_id = str(persona.speaking_style.get("personality_id") or "aura")
+    profile = PERSONALITY_PROFILES.get(personality_id, PERSONALITY_PROFILES["aura"])
+    # TODO: Wire DialogueScheduler decisions once live event cadence and host-speech
+    # state are available in this service. Stage-A applies the profile prompt hints
+    # where AI turns are generated without changing existing event routing.
+    return (
+        f"{content}\n\n"
+        "SYLORA cohost personality hints:\n"
+        f"- Profile: {profile.label} ({profile.id})\n"
+        f"- Style: {profile.style_prompt}\n"
+        f"- Humor: {profile.humor.value}\n"
+        f"- Profanity cap: {profile.profanity.value}\n"
+    )
 
 
 def media_context() -> AdapterConnectionContext:
@@ -1709,7 +1775,7 @@ async def generate_live_ai_turn(
             AIMessage(
                 conversation_id=conversation.id,
                 role=AIMessageRole.system,
-                content=prompt.content,
+                content=_cohost_system_prompt(prompt.content, persona),
                 structured_content_refs=[],
                 status=AIMessageStatus.completed,
                 completed_at=utcnow(),

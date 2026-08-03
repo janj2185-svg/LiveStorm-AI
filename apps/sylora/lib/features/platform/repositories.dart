@@ -1290,6 +1290,8 @@ abstract interface class LiveRepository {
   Future<List<LiveSessionModel>> sessions();
   Future<LiveSessionModel> createSession(String title);
   Future<LiveSessionModel> session(String id);
+  Future<JsonObject> mediaCapability(String sessionId);
+  Future<JsonObject> publishCredentials(String sessionId);
   Future<JsonObject> addDestination(
     String sessionId,
     String connectionId, {
@@ -1411,6 +1413,23 @@ final class DioLiveRepository implements LiveRepository {
     return LiveSessionModel.fromJson(
       requireObject(response.data, 'live session'),
     );
+  }
+
+  @override
+  Future<JsonObject> mediaCapability(String sessionId) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/media-capability',
+    );
+    return requireObject(response.data, 'live media capability');
+  }
+
+  @override
+  Future<JsonObject> publishCredentials(String sessionId) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/publish-credentials',
+      method: 'POST',
+    );
+    return requireObject(response.data, 'live publish credentials');
   }
 
   @override
