@@ -367,6 +367,9 @@ final class LumenPage extends StatelessWidget {
     this.showAuraDock = false,
     this.auraEmotion = AuraEmotion.idle,
     this.auraLabel = 'Aura',
+    this.showAuraPresence = false,
+    this.auraPresenceController,
+    this.auraPresencePreset = SyloraAuraContextPreset.ai,
   });
 
   final String title;
@@ -376,6 +379,9 @@ final class LumenPage extends StatelessWidget {
   final bool showAuraDock;
   final AuraEmotion auraEmotion;
   final String auraLabel;
+  final bool showAuraPresence;
+  final SyloraAuraPresenceController? auraPresenceController;
+  final SyloraAuraContextPreset auraPresencePreset;
 
   @override
   Widget build(BuildContext context) => SyloraModuleScaffold(
@@ -385,6 +391,9 @@ final class LumenPage extends StatelessWidget {
     showAuraDock: showAuraDock,
     auraEmotion: auraEmotion,
     auraLabel: auraLabel,
+    showAuraPresence: showAuraPresence,
+    auraPresenceController: auraPresenceController,
+    auraPresencePreset: auraPresencePreset,
     child: child,
   );
 }

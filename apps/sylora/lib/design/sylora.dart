@@ -2,6 +2,7 @@
 library;
 
 export 'sylora_aura.dart';
+export 'sylora_aura_presence.dart';
 export 'sylora_components.dart';
 export 'sylora_icons.dart';
 export 'sylora_living_canvas.dart';

@@ -1038,12 +1038,32 @@ final class _GiftAuthoringScreenState
   }
 }
 
-final class AiScreen extends ConsumerWidget {
+final class AiScreen extends ConsumerStatefulWidget {
   const AiScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AiScreen> createState() => _AiScreenState();
+}
+
+final class _AiScreenState extends ConsumerState<AiScreen> {
+  late final SyloraAuraPresenceController _aura;
+
+  @override
+  void initState() {
+    super.initState();
+    _aura = SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.ai);
+  }
+
+  @override
+  void dispose() {
+    _aura.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final value = ref.watch(aiProvider);
+    _syncAura(value);
     return LumenPage(
       title: 'AI',
       subtitle:
@@ -1051,6 +1071,9 @@ final class AiScreen extends ConsumerWidget {
       showAuraDock: true,
       auraEmotion: AuraEmotion.thinking,
       auraLabel: 'Aura online',
+      showAuraPresence: true,
+      auraPresenceController: _aura,
+      auraPresencePreset: SyloraAuraContextPreset.ai,
       actions: <Widget>[
         IconButton(
           tooltip: 'AI memory',
@@ -1214,6 +1237,31 @@ final class AiScreen extends ConsumerWidget {
     );
   }
 
+  void _syncAura(AsyncValue<AiSnapshot> value) {
+    final next = value.isLoading
+        ? (
+            emotion: AuraEmotion.thinking,
+            tip: 'Aura is checking AI provider status.',
+          )
+        : value.hasError
+        ? (
+            emotion: AuraEmotion.focused,
+            tip: 'Aura needs the AI status check to recover.',
+          )
+        : (
+            emotion: AuraEmotion.greeting,
+            tip: 'Aura is ready for your next prompt.',
+          );
+    if (_aura.emotion == next.emotion && _aura.tip == next.tip) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _aura.update(emotion: next.emotion, tip: next.tip);
+      }
+    });
+  }
+
   static Future<void> _createConversation(
     BuildContext context,
     WidgetRef ref,
@@ -1359,10 +1407,20 @@ final class _AiConversationScreenState
     extends ConsumerState<AiConversationScreen> {
   final _message = TextEditingController();
   final _messageFocus = FocusNode();
+  late final SyloraAuraPresenceController _aura;
   bool _sending = false;
 
   @override
+  void initState() {
+    super.initState();
+    _aura = SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.ai);
+    _messageFocus.addListener(_syncAuraForFocus);
+  }
+
+  @override
   void dispose() {
+    _messageFocus.removeListener(_syncAuraForFocus);
+    _aura.dispose();
     _message.dispose();
     _messageFocus.dispose();
     super.dispose();
@@ -1381,6 +1439,9 @@ final class _AiConversationScreenState
       showAuraDock: true,
       auraEmotion: _sending ? AuraEmotion.thinking : AuraEmotion.listening,
       auraLabel: _sending ? 'Thinking' : 'Listening',
+      showAuraPresence: true,
+      auraPresenceController: _aura,
+      auraPresencePreset: SyloraAuraContextPreset.ai,
       child: SizedBox(
         height: conversationHeight,
         child: Column(
@@ -1455,11 +1516,14 @@ final class _AiConversationScreenState
       return;
     }
     setState(() => _sending = true);
+    _aura.think('Aura is thinking through your request.');
     try {
       await ref.read(aiRepositoryProvider).send(widget.conversationId, content);
       _message.clear();
       ref.invalidate(aiMessagesProvider(widget.conversationId));
+      _aura.speak('Aura sent a provider-backed reply.');
     } on Object catch (error) {
+      _aura.focus('Aura hit a provider blocker.');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -1468,7 +1532,19 @@ final class _AiConversationScreenState
     } finally {
       if (mounted) {
         setState(() => _sending = false);
+        _syncAuraForFocus();
       }
+    }
+  }
+
+  void _syncAuraForFocus() {
+    if (_sending) {
+      return;
+    }
+    if (_messageFocus.hasFocus) {
+      _aura.listen('Aura is listening to your prompt.');
+    } else {
+      _aura.greet('Aura is ready for your next prompt.');
     }
   }
 }

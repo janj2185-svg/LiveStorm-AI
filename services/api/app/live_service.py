@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import secrets
+import time
 import uuid
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Mapping, Sequence
@@ -24,9 +25,11 @@ from app.ai_models import (
     AIMessage,
     AIMessageRole,
     AIMessageStatus,
+    AIUserSettings,
     PromptTemplate,
     PromptTemplateState,
 )
+from app.ai_providers import ProviderUnavailableError
 from app.ai_schemas import AISendMessageRequest, validate_safe_json
 from app.ai_service import (
     create_generation_job,
@@ -84,7 +87,18 @@ from app.live_models import (
     LiveViewerMemory,
     ModerationDisposition,
 )
-from app.live_platforms.common.cohost import PERSONALITY_PROFILES
+from app.live_platforms.common.cohost import (
+    PERSONALITY_PROFILES,
+    DialogueDecision,
+    DialogueScheduler,
+    SchedulerConfig,
+)
+from app.live_platforms.common.events import (
+    NormalizedLiveEvent as CohostNormalizedLiveEvent,
+)
+from app.live_platforms.common.events import (
+    NormalizedLiveEventType as CohostNormalizedLiveEventType,
+)
 from app.live_rules import evaluate_condition
 from app.live_schemas import (
     GameAnswerRequest,
@@ -649,9 +663,6 @@ def publish_credentials_response(
 def _cohost_system_prompt(content: str, persona: AILivePersona) -> str:
     personality_id = str(persona.speaking_style.get("personality_id") or "aura")
     profile = PERSONALITY_PROFILES.get(personality_id, PERSONALITY_PROFILES["aura"])
-    # TODO: Wire DialogueScheduler decisions once live event cadence and host-speech
-    # state are available in this service. Stage-A applies the profile prompt hints
-    # where AI turns are generated without changing existing event routing.
     return (
         f"{content}\n\n"
         "SYLORA cohost personality hints:\n"
@@ -659,6 +670,213 @@ def _cohost_system_prompt(content: str, persona: AILivePersona) -> str:
         f"- Style: {profile.style_prompt}\n"
         f"- Humor: {profile.humor.value}\n"
         f"- Profanity cap: {profile.profanity.value}\n"
+    )
+
+
+_DIALOGUE_SCHEDULER_TTL_SECONDS = 30 * 60
+_DIALOGUE_SCHEDULERS: dict[uuid.UUID, tuple[float, DialogueScheduler]] = {}
+
+
+def _bool_setting(value: Any, default: bool) -> bool:
+    return value if isinstance(value, bool) else default
+
+
+def _float_setting(value: Any, default: float) -> float:
+    if isinstance(value, int | float) and value >= 0:
+        return float(value)
+    return default
+
+
+def _scheduler_config_for_persona(persona: AILivePersona) -> SchedulerConfig:
+    style = persona.speaking_style or {}
+    return SchedulerConfig(
+        muted=_bool_setting(style.get("muted"), False),
+        host_speaking=_bool_setting(style.get("host_speaking"), False),
+        respond_to_gifts=_bool_setting(style.get("respond_to_gifts"), True),
+        respond_to_new_viewers=_bool_setting(style.get("respond_to_new_viewers"), False),
+        host_mode=_bool_setting(style.get("host_mode"), True),
+        min_seconds_between_ai_replies=_float_setting(
+            style.get("min_seconds_between_ai_replies"),
+            SchedulerConfig.min_seconds_between_ai_replies,
+        ),
+        chat_burst_threshold=_float_setting(
+            style.get("chat_burst_threshold"),
+            SchedulerConfig.chat_burst_threshold,
+        ),
+        personality_id=str(style.get("personality_id") or "aura"),
+        tts_volume=_float_setting(style.get("tts_volume"), SchedulerConfig.tts_volume),
+        interrupt_tts_on_host_speech=_bool_setting(
+            style.get("interrupt_tts_on_host_speech"),
+            True,
+        ),
+    )
+
+
+def _dialogue_scheduler_for_session(
+    session_id: uuid.UUID, persona: AILivePersona, *, now: float
+) -> DialogueScheduler:
+    for cached_session_id, (last_seen, _) in list(_DIALOGUE_SCHEDULERS.items()):
+        if now - last_seen > _DIALOGUE_SCHEDULER_TTL_SECONDS:
+            del _DIALOGUE_SCHEDULERS[cached_session_id]
+
+    config = _scheduler_config_for_persona(persona)
+    entry = _DIALOGUE_SCHEDULERS.get(session_id)
+    if entry is None:
+        scheduler = DialogueScheduler(config=config)
+    else:
+        scheduler = entry[1]
+        scheduler.config = config
+    _DIALOGUE_SCHEDULERS[session_id] = (now, scheduler)
+    return scheduler
+
+
+def _cohost_event_type(
+    event_type: LiveNormalizedEventType,
+) -> CohostNormalizedLiveEventType | None:
+    return {
+        LiveNormalizedEventType.chat: CohostNormalizedLiveEventType.chat_message,
+        LiveNormalizedEventType.platform_gift: CohostNormalizedLiveEventType.gift,
+        LiveNormalizedEventType.follow: CohostNormalizedLiveEventType.follow,
+    }.get(event_type)
+
+
+def _event_payload(event: LiveNormalizedEvent) -> dict[str, Any]:
+    payload = event.safe_metadata.get("payload") if isinstance(event.safe_metadata, dict) else None
+    data = dict(payload) if isinstance(payload, Mapping) else {}
+    if event.event_type is LiveNormalizedEventType.chat and event.text:
+        data.setdefault("comment", event.text)
+        data.setdefault("text", event.text)
+    if event.event_type is LiveNormalizedEventType.platform_gift:
+        data.setdefault("giftName", event.safe_metadata.get("gift_name") or "gift")
+        if isinstance(event.monetary_minor, int):
+            data.setdefault("diamondCount", event.monetary_minor)
+    return data
+
+
+def _scheduler_event_from_live_event(
+    event: LiveNormalizedEvent,
+) -> CohostNormalizedLiveEvent | None:
+    cohost_type = _cohost_event_type(event.event_type)
+    if cohost_type is None:
+        return None
+    metadata = event.safe_metadata if isinstance(event.safe_metadata, dict) else {}
+    raw_provider_event = metadata.get("raw_provider_event")
+    confidence = metadata.get("confidence")
+    return CohostNormalizedLiveEvent(
+        event_id=str(event.id),
+        source=str(metadata.get("source") or "live_service"),
+        type=cohost_type,
+        timestamp=event.occurred_at,
+        room_id=str(metadata.get("room_id")) if metadata.get("room_id") else None,
+        user_id=event.actor_platform_id,
+        username=str(metadata.get("username") or event.actor_platform_id or "") or None,
+        display_name=event.actor_display_name,
+        payload=_event_payload(event),
+        raw_provider_event=dict(raw_provider_event)
+        if isinstance(raw_provider_event, Mapping)
+        else {},
+        deduplication_key=event.platform_event_id,
+        sequence_number=event.sequence,
+        confidence=float(confidence) if isinstance(confidence, int | float) else 1.0,
+        provider_latency_ms=metadata.get("provider_latency_ms")
+        if isinstance(metadata.get("provider_latency_ms"), int)
+        else None,
+    )
+
+
+def _dialogue_decision_for_turn(
+    live_session: LiveSession,
+    event: LiveNormalizedEvent,
+    persona: AILivePersona,
+) -> DialogueDecision | None:
+    cohost_event = _scheduler_event_from_live_event(event)
+    if cohost_event is None:
+        return None
+    now = time.time()
+    scheduler = _dialogue_scheduler_for_session(live_session.id, persona, now=now)
+    return scheduler.evaluate(cohost_event, now=now)
+
+
+async def _can_consult_dialogue_scheduler(
+    db: AsyncSession,
+    request: Request,
+    user_id: uuid.UUID,
+) -> bool:
+    user_settings = await db.get(AIUserSettings, user_id)
+    if (
+        user_settings is None
+        or not user_settings.consent_granted
+        or user_settings.consented_at is None
+        or user_settings.capability_flags.get(AICapability.chat.value, True) is False
+    ):
+        return False
+    try:
+        request.app.state.ai_provider_registry.resolve(AICapability.chat)
+    except ProviderUnavailableError:
+        return False
+    return True
+
+
+def _scheduler_failure_code(reason: str) -> str:
+    cleaned = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in reason.lower())
+    return f"live_ai_scheduler_{cleaned}"[:96]
+
+
+def _turn_prompt_content(event: LiveNormalizedEvent, decision: DialogueDecision | None) -> str:
+    base = event.text or _event_prompt_summary(event)
+    if decision is None:
+        return base
+    hint_payload = {
+        "reason": decision.reason,
+        "target_username": decision.target_username,
+        "merge_with_previous": decision.merge_with_previous,
+        "defer_seconds": decision.defer_seconds,
+        "avatar_reaction": decision.avatar_reaction,
+        "prompt_hints": decision.prompt_hints,
+    }
+    return f"{base}\n\nSYLORA cohost scheduler context:\n{json.dumps(hint_payload, sort_keys=True)}"
+
+
+def _event_prompt_summary(event: LiveNormalizedEvent) -> str:
+    actor = event.actor_display_name or event.actor_platform_id or "a viewer"
+    payload = _event_payload(event)
+    if event.event_type is LiveNormalizedEventType.platform_gift:
+        gift_name = payload.get("giftName") or "gift"
+        return f"{actor} sent {gift_name}. Thank them briefly as Aura."
+    if event.event_type is LiveNormalizedEventType.follow:
+        return f"{actor} followed the stream. Welcome them briefly as Aura."
+    return f"Respond briefly to the {event.event_type.value} live event from {actor}."
+
+
+def _attach_scheduler_metadata_if_supported(
+    turn: AILiveTurn,
+    decision: DialogueDecision | None,
+) -> None:
+    if decision is None:
+        return
+    metadata_field = next(
+        (field for field in ("metadata", "event_metadata") if field in AILiveTurn.__mapper__.attrs),
+        None,
+    )
+    if metadata_field is None:
+        return
+    current = getattr(turn, metadata_field) or {}
+    setattr(
+        turn,
+        metadata_field,
+        {
+            **current,
+            "dialogue_scheduler": {
+                "reason": decision.reason,
+                "should_respond": decision.should_respond,
+                "merge_with_previous": decision.merge_with_previous,
+                "yield_to_host": decision.yield_to_host,
+                "speak_voice": decision.speak_voice,
+                "show_text": decision.show_text,
+                "defer_seconds": decision.defer_seconds,
+                "priority": decision.priority,
+            },
+        },
     )
 
 
@@ -1744,11 +1962,27 @@ async def generate_live_ai_turn(
         turn.failure_code = "live_persona_prompt_unavailable"
         await db.commit()
         return turn
-    if not event.text:
+    scheduler_decision = (
+        _dialogue_decision_for_turn(live_session, event, persona)
+        if await _can_consult_dialogue_scheduler(
+            db,
+            request,
+            live_session.owner_user_id,
+        )
+        else None
+    )
+    _attach_scheduler_metadata_if_supported(turn, scheduler_decision)
+    if scheduler_decision is not None and not scheduler_decision.should_respond:
+        turn.status = LiveTurnStatus.unavailable
+        turn.failure_code = _scheduler_failure_code(scheduler_decision.reason)
+        await db.commit()
+        return turn
+    if not event.text and scheduler_decision is None:
         turn.status = LiveTurnStatus.unavailable
         turn.failure_code = "live_event_text_unavailable"
         await db.commit()
         return turn
+    turn_content = _turn_prompt_content(event, scheduler_decision)
     conversation_title = f"live:{live_session.id}:{persona.id}"
     conversation = await db.scalar(
         select(AIConversation).where(
@@ -1791,7 +2025,7 @@ async def generate_live_ai_turn(
             request,
             user_id=live_session.owner_user_id,
             conversation_id=conversation.id,
-            payload=AISendMessageRequest(content=event.text),
+            payload=AISendMessageRequest(content=turn_content),
         )
         completed_turn = await db.get(AILiveTurn, turn_id)
         assert completed_turn is not None
@@ -1806,7 +2040,14 @@ async def generate_live_ai_turn(
         )
         action_payload: dict[str, Any] = {"text": response.content}
         effective_action_type = action_type
-        if action_type == LiveActionType.respond_voice:
+        if (
+            scheduler_decision is not None
+            and action_type == LiveActionType.respond_voice
+            and not scheduler_decision.speak_voice
+            and scheduler_decision.show_text
+        ):
+            effective_action_type = LiveActionType.respond_text
+        if effective_action_type == LiveActionType.respond_voice:
             try:
                 job = await create_generation_job(
                     db,
@@ -1829,7 +2070,11 @@ async def generate_live_ai_turn(
             except APIError as exc:
                 if not allow_text_fallback:
                     completed_turn.status = LiveTurnStatus.unavailable
-                    completed_turn.failure_code = exc.code
+                    completed_turn.failure_code = (
+                        "live_voice_provider_unavailable"
+                        if exc.code == "ai_provider_unavailable"
+                        else exc.code
+                    )
                     await db.commit()
                     return completed_turn
                 effective_action_type = LiveActionType.respond_text

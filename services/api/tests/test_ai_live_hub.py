@@ -37,6 +37,7 @@ from app.live_models import (
     LiveDestination,
     LiveDestinationState,
     LiveEvent,
+    LiveNormalizedEvent,
     LiveNormalizedEventType,
     LiveRuleRisk,
     LiveSession,
@@ -44,6 +45,8 @@ from app.live_models import (
 )
 from app.live_rules import evaluate_condition, validate_condition_dsl
 from app.live_service import (
+    _DIALOGUE_SCHEDULERS,
+    _dialogue_decision_for_turn,
     normalize_sylora_gift_event,
     persist_normalized_event,
     process_webhook_delivery,
@@ -723,6 +726,64 @@ def test_obs_protocol_authentication_vector() -> None:
         )
         == "+UZaMFHmE3gWi1HmrojM/MKlweFIylccEklCP137Ff0="
     )
+
+
+def test_live_ai_turn_scheduler_gates_burst_chat_per_session() -> None:
+    _DIALOGUE_SCHEDULERS.clear()
+    session_id = uuid.uuid4()
+    live_session = LiveSession(
+        id=session_id,
+        owner_user_id=uuid.uuid4(),
+        owner_subject_hash="a" * 64,
+        title="Scheduler",
+        language="en",
+        state=LiveSessionState.live,
+        ingest_path=f"live/{uuid.uuid4()}",
+        ingest_key_hash="b" * 64,
+        ingest_provisioned=True,
+    )
+    persona = AILivePersona(
+        owner_user_id=live_session.owner_user_id,
+        name="Aura",
+        system_prompt_reference="live.host",
+        system_prompt_version=1,
+        languages=["en"],
+        speaking_style={"min_seconds_between_ai_replies": 60},
+    )
+
+    first = LiveNormalizedEvent(
+        session_id=session_id,
+        sequence=1,
+        event_type=LiveNormalizedEventType.chat,
+        platform_event_id="chat-1",
+        actor_platform_id="viewer",
+        actor_display_name="Viewer",
+        text="hello aura?",
+        safe_metadata={},
+        occurred_at=datetime.now(UTC),
+    )
+    second = LiveNormalizedEvent(
+        session_id=session_id,
+        sequence=2,
+        event_type=LiveNormalizedEventType.chat,
+        platform_event_id="chat-2",
+        actor_platform_id="viewer",
+        actor_display_name="Viewer",
+        text="one more thought",
+        safe_metadata={},
+        occurred_at=datetime.now(UTC),
+    )
+
+    first_decision = _dialogue_decision_for_turn(live_session, first, persona)
+    second_decision = _dialogue_decision_for_turn(live_session, second, persona)
+
+    assert first_decision is not None
+    assert first_decision.should_respond is True
+    assert second_decision is not None
+    assert second_decision.should_respond is False
+    assert second_decision.merge_with_previous is True
+    assert second_decision.reason == "deferred_rate"
+    _DIALOGUE_SCHEDULERS.clear()
 
 
 @pytest.mark.asyncio

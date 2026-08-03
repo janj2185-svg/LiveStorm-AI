@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'sylora_aura.dart';
+import 'sylora_aura_presence.dart';
 import 'sylora_components.dart';
 import 'sylora_living_canvas.dart';
 import 'sylora_tokens.dart';
@@ -19,6 +20,9 @@ final class SyloraModuleScaffold extends StatelessWidget {
     this.showAuraDock = false,
     this.auraEmotion = AuraEmotion.idle,
     this.auraLabel = 'Aura',
+    this.showAuraPresence = false,
+    this.auraPresenceController,
+    this.auraPresencePreset = SyloraAuraContextPreset.ai,
     this.maxContentWidth = 980,
     this.padding = const EdgeInsets.fromLTRB(20, 16, 20, 40),
     this.railPadding = const EdgeInsets.all(SyloraTokens.space5),
@@ -33,6 +37,9 @@ final class SyloraModuleScaffold extends StatelessWidget {
   final bool showAuraDock;
   final AuraEmotion auraEmotion;
   final String auraLabel;
+  final bool showAuraPresence;
+  final SyloraAuraPresenceController? auraPresenceController;
+  final SyloraAuraContextPreset auraPresencePreset;
   final double maxContentWidth;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry railPadding;
@@ -51,7 +58,7 @@ final class SyloraModuleScaffold extends StatelessWidget {
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 720;
             final showDock = showAuraDock && constraints.maxWidth >= 1040;
-            return Stack(
+            final stack = Stack(
               children: <Widget>[
                 CustomScrollView(
                   slivers: <Widget>[
@@ -110,7 +117,19 @@ final class SyloraModuleScaffold extends StatelessWidget {
                       ),
                     ),
                   ),
+                if (showAuraPresence)
+                  SyloraAuraPresence(
+                    controller: auraPresenceController,
+                    preset: auraPresencePreset,
+                  ),
               ],
+            );
+            if (auraPresenceController == null) {
+              return stack;
+            }
+            return SyloraAuraPresenceScope(
+              controller: auraPresenceController!,
+              child: stack,
             );
           },
         ),

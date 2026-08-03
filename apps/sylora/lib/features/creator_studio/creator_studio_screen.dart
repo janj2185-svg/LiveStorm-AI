@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
+import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import '../platform/repositories.dart';
 import 'media_publisher.dart';
@@ -18,11 +19,14 @@ final class CreatorStudioScreen extends ConsumerStatefulWidget {
   const CreatorStudioScreen({super.key});
 
   @override
-  ConsumerState<CreatorStudioScreen> createState() => _CreatorStudioScreenState();
+  ConsumerState<CreatorStudioScreen> createState() =>
+      _CreatorStudioScreenState();
 }
 
-final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen> {
+final class _CreatorStudioScreenState
+    extends ConsumerState<CreatorStudioScreen> {
   late final CreatorMediaController _publisher;
+  late final SyloraAuraPresenceController _aura;
   List<CreatorMediaDevice> _devices = const <CreatorMediaDevice>[];
   String? _sessionId;
   String? _audioDeviceId;
@@ -36,6 +40,9 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
   void initState() {
     super.initState();
     _publisher = CreatorMediaController();
+    _aura = SyloraAuraPresenceController.forPreset(
+      SyloraAuraContextPreset.creatorStudio,
+    );
     if (_publisher.supported) {
       _loadDevices();
     }
@@ -44,16 +51,21 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
   @override
   void dispose() {
     _publisher.stop();
+    _aura.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final sessions = ref.watch(creatorStudioSessionsProvider);
+    _syncAuraForSessions(sessions);
     return LumenPage(
       title: 'Creator Studio',
       subtitle:
           'Web camera publishing for SYLORA Live through MediaMTX WHIP, with OBS kept as the companion path.',
+      showAuraPresence: true,
+      auraPresenceController: _aura,
+      auraPresencePreset: SyloraAuraContextPreset.creatorStudio,
       actions: <Widget>[
         IconButton(
           tooltip: 'Open Live',
@@ -71,8 +83,12 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
 
   Widget _buildStudio(List<LiveSessionModel> sessions) {
     final session = _selectedSession(sessions);
-    final audioDevices = _devices.where((device) => device.kind == 'audioinput').toList();
-    final videoDevices = _devices.where((device) => device.kind == 'videoinput').toList();
+    final audioDevices = _devices
+        .where((device) => device.kind == 'audioinput')
+        .toList();
+    final videoDevices = _devices
+        .where((device) => device.kind == 'videoinput')
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -101,7 +117,8 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
               if (sessions.isEmpty)
                 LumenEmptyView(
                   title: 'No live sessions',
-                  message: 'Create a live session first, then return to Creator Studio.',
+                  message:
+                      'Create a live session first, then return to Creator Studio.',
                   actionLabel: 'Open Live',
                   onAction: () => context.goNamed('live'),
                   icon: Icons.sensors_outlined,
@@ -152,7 +169,8 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
                       label: 'Camera',
                       value: _videoDeviceId,
                       devices: videoDevices,
-                      onChanged: (value) => setState(() => _videoDeviceId = value),
+                      onChanged: (value) =>
+                          setState(() => _videoDeviceId = value),
                     ),
                   ),
                   SizedBox(
@@ -161,7 +179,8 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
                       label: 'Microphone',
                       value: _audioDeviceId,
                       devices: audioDevices,
-                      onChanged: (value) => setState(() => _audioDeviceId = value),
+                      onChanged: (value) =>
+                          setState(() => _audioDeviceId = value),
                     ),
                   ),
                 ],
@@ -175,7 +194,8 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
                     label: 'Refresh devices',
                     icon: Icons.refresh_rounded,
                     onPressed: _publisher.supported ? _loadDevices : null,
-                    disabledReason: 'Device enumeration is available only on web.',
+                    disabledReason:
+                        'Device enumeration is available only on web.',
                   ),
                   LumenPrimaryButton(
                     label: 'Start preview',
@@ -207,15 +227,18 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
                   LumenSecondaryButton(
                     label: 'Check media capability',
                     icon: Icons.fact_check_outlined,
-                    onPressed: session == null ? null : () => _checkCapability(session),
+                    onPressed: session == null
+                        ? null
+                        : () => _checkCapability(session),
                     disabledReason: 'Select a live session first.',
                   ),
                   LumenPrimaryButton(
                     label: 'Start with browser (WHIP)',
                     icon: Icons.podcasts_rounded,
                     busy: _busy,
-                    onPressed:
-                        session != null && _publisher.supported ? () => _publish(session) : null,
+                    onPressed: session != null && _publisher.supported
+                        ? () => _publish(session)
+                        : null,
                     disabledReason: _publisher.supported
                         ? 'Select a live session first.'
                         : 'Browser WHIP publishing is available only on web.',
@@ -223,7 +246,9 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
                   LumenSecondaryButton(
                     label: 'Connect OBS',
                     icon: Icons.desktop_windows_outlined,
-                    onPressed: session == null ? null : () => _showObsPath(session),
+                    onPressed: session == null
+                        ? null
+                        : () => _showObsPath(session),
                     disabledReason: 'Select a live session first.',
                   ),
                 ],
@@ -275,27 +300,31 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
     required List<CreatorMediaDevice> devices,
     required ValueChanged<String?> onChanged,
   }) {
-    final effectiveValue = devices.any((device) => device.id == value) ? value : null;
+    final effectiveValue = devices.any((device) => device.id == value)
+        ? value
+        : null;
     return DropdownButtonFormField<String>(
       initialValue: effectiveValue,
       decoration: InputDecoration(labelText: label),
       items: <DropdownMenuItem<String>>[
-        const DropdownMenuItem<String>(value: '', child: Text('Browser default')),
+        const DropdownMenuItem<String>(
+          value: '',
+          child: Text('Browser default'),
+        ),
         for (final device in devices)
-          DropdownMenuItem<String>(
-            value: device.id,
-            child: Text(device.label),
-          ),
+          DropdownMenuItem<String>(value: device.id, child: Text(device.label)),
       ],
       onChanged: (value) => onChanged(value?.isEmpty == true ? null : value),
     );
   }
 
   Future<void> _loadDevices() async {
+    _aura.think('Aura is scanning camera and microphone options.');
     try {
       final devices = await _publisher.devices();
       if (mounted) {
         setState(() => _devices = devices);
+        _aura.focus('Devices are ready for preview.');
       }
     } on Object catch (error) {
       _showError(error);
@@ -304,6 +333,7 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
 
   Future<void> _startPreview() async {
     setState(() => _busy = true);
+    _aura.think('Aura is starting your preview.');
     try {
       await _publisher.startPreview(
         audioDeviceId: _audioDeviceId,
@@ -311,6 +341,7 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
       );
       if (mounted) {
         setState(() => _status = 'Camera preview is running.');
+        _aura.speak('Preview is live in the studio.');
       }
       await _loadDevices();
     } on Object catch (error) {
@@ -323,10 +354,14 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
   }
 
   Future<void> _checkCapability(LiveSessionModel session) async {
+    _aura.think('Aura is checking media capability.');
     try {
-      final capability = await ref.read(liveRepositoryProvider).mediaCapability(session.id);
+      final capability = await ref
+          .read(liveRepositoryProvider)
+          .mediaCapability(session.id);
       if (mounted) {
         setState(() => _capability = capability);
+        _aura.focus('Capability check returned ${capability['status']}.');
       }
     } on Object catch (error) {
       _showError(error);
@@ -335,13 +370,18 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
 
   Future<void> _publish(LiveSessionModel session) async {
     setState(() => _busy = true);
+    _aura.think('Aura is preparing the WHIP publishing path.');
     try {
-      final credentials = await ref.read(liveRepositoryProvider).publishCredentials(session.id);
+      final credentials = await ref
+          .read(liveRepositoryProvider)
+          .publishCredentials(session.id);
       if (credentials['status'] != 'available') {
         setState(() {
           _credentials = credentials;
-          _status = 'WHIP unavailable: ${credentials['reason'] ?? 'unknown_reason'}';
+          _status =
+              'WHIP unavailable: ${credentials['reason'] ?? 'unknown_reason'}';
         });
+        _aura.focus('WHIP is unavailable for this session.');
         return;
       }
       final message = await _publisher.publishWhip(credentials);
@@ -350,6 +390,7 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
           _credentials = credentials;
           _status = message;
         });
+        _aura.speak('Browser publishing is connected.');
       }
     } on Object catch (error) {
       _showError(error);
@@ -401,8 +442,31 @@ final class _CreatorStudioScreenState extends ConsumerState<CreatorStudioScreen>
       return;
     }
     setState(() => _status = messageFor(error));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(messageFor(error))),
-    );
+    _aura.focus('Aura found a studio blocker.');
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+  }
+
+  void _syncAuraForSessions(AsyncValue<List<LiveSessionModel>> sessions) {
+    final next = sessions.isLoading
+        ? (emotion: AuraEmotion.thinking, tip: 'Aura is loading live sessions.')
+        : sessions.hasError
+        ? (
+            emotion: AuraEmotion.focused,
+            tip: 'Aura needs the live session list to recover.',
+          )
+        : (
+            emotion: AuraEmotion.greeting,
+            tip: 'Aura is ready to help you publish.',
+          );
+    if (_aura.emotion == next.emotion && _aura.tip == next.tip) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _aura.update(emotion: next.emotion, tip: next.tip);
+      }
+    });
   }
 }
