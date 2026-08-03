@@ -75,7 +75,7 @@ final class _SyloraButtonState extends State<SyloraButton> {
                       color: widget.variant == SyloraButtonVariant.primary
                           ? Colors.white
                           : SyloraTokens.ink,
-                      weight: FontWeight.w700,
+                      weight: FontWeight.w600,
                     ),
                     child: IconTheme(
                       data: IconThemeData(

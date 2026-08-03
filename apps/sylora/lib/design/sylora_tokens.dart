@@ -89,13 +89,23 @@ abstract final class SyloraTokens {
     ),
   ];
 
+  /// Static Instrument Sans ships 400/500/600 only (CanvasKit-safe).
+  static FontWeight _safeWeight(FontWeight weight) {
+    if (weight.value >= FontWeight.w600.value) {
+      return FontWeight.w600;
+    }
+    if (weight.value >= FontWeight.w500.value) {
+      return FontWeight.w500;
+    }
+    return FontWeight.w400;
+  }
+
   static TextStyle display(double size, {Color color = ink, double height = 1.02}) =>
       TextStyle(
-        // Bundled in pubspec — do not reference web-only families like Syne.
         fontFamily: 'Instrument Sans',
         fontSize: size,
         height: height,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w600,
         letterSpacing: (size * 0.04).clamp(1.0, 8.0),
         color: color,
       );
@@ -104,7 +114,7 @@ abstract final class SyloraTokens {
     fontFamily: 'Instrument Sans',
     fontSize: size,
     height: 1.2,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: 0.2,
     color: color,
   );
@@ -117,7 +127,7 @@ abstract final class SyloraTokens {
     fontFamily: 'Instrument Sans',
     fontSize: size,
     height: 1.45,
-    fontWeight: weight,
+    fontWeight: _safeWeight(weight),
     color: color,
   );
 

@@ -72,7 +72,12 @@ flutter:
         - asset: assets/fonts/InstrumentSerif-Regular.ttf
     - family: Instrument Sans
       fonts:
-        - asset: assets/fonts/InstrumentSans-Variable.ttf
+        - asset: assets/fonts/InstrumentSans-400.ttf
+          weight: 400
+        - asset: assets/fonts/InstrumentSans-500.ttf
+          weight: 500
+        - asset: assets/fonts/InstrumentSans-600.ttf
+          weight: 600
 
   # To add assets to your application, add an assets section, like this:
   # assets:

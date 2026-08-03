@@ -68,7 +68,8 @@ final class _WelcomeScreenState extends State<WelcomeScreen>
                     'SYLORA',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      // Instrument Serif ships only Regular — never request heavier weights on CanvasKit.
+                      fontWeight: FontWeight.w400,
                       letterSpacing: 1.2,
                     ),
                   ),
