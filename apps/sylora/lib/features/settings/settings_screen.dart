@@ -75,6 +75,41 @@ final class SettingsScreen extends ConsumerWidget {
     final notificationsEnabled = ref.watch(pushServiceProvider);
     return LumenPage(
       title: l10n.navSettings,
+      subtitle: l10n.settingsHeroBody,
+      intensity: 0.9,
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.settings,
+      header: account.maybeWhen(
+        data: (snapshot) => SyloraUniverseHero(
+          eyebrow: l10n.settingsHeroEyebrow,
+          title: snapshot.profile.displayName,
+          body: snapshot.profile.handle == null
+              ? l10n.settingsHeroBody
+              : '@${snapshot.profile.handle} · ${l10n.settingsHeroBody}',
+          trailing: Row(
+            children: <Widget>[
+              SyloraAvatarOrb(
+                label: snapshot.profile.displayName,
+                imageUrl: snapshot.profile.avatarUrl,
+                size: 56,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SyloraPortalChip(
+                  label: l10n.settingsEditProfile,
+                  icon: Icons.edit_outlined,
+                  onTap: () => _editProfile(context, ref, snapshot.profile),
+                ),
+              ),
+            ],
+          ),
+        ),
+        orElse: () => SyloraUniverseHero(
+          eyebrow: l10n.settingsHeroEyebrow,
+          title: l10n.navSettings,
+          body: l10n.settingsHeroBody,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
@@ -86,32 +121,23 @@ final class SettingsScreen extends ConsumerWidget {
             ),
             data: (snapshot) => Column(
               children: <Widget>[
-                LumenSurface(
+                SyloraStaggeredReveal(
+                  index: 0,
+                  child: SyloraGlassTile(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       Text(
                         l10n.settingsProfile,
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        style: SyloraTokens.title(18),
                       ),
                       const SizedBox(height: 12),
                       Row(
                         children: <Widget>[
-                          CircleAvatar(
-                            radius: 28,
-                            backgroundImage: snapshot.profile.avatarUrl == null
-                                ? null
-                                : NetworkImage(snapshot.profile.avatarUrl!),
-                            child: snapshot.profile.avatarUrl == null
-                                ? Text(
-                                    snapshot
-                                        .profile
-                                        .displayName
-                                        .characters
-                                        .first
-                                        .toUpperCase(),
-                                  )
-                                : null,
+                          SyloraAvatarOrb(
+                            label: snapshot.profile.displayName,
+                            imageUrl: snapshot.profile.avatarUrl,
+                            size: 56,
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -120,12 +146,18 @@ final class SettingsScreen extends ConsumerWidget {
                               children: <Widget>[
                                 Text(
                                   snapshot.profile.displayName,
-                                  style: Theme.of(context).textTheme.titleLarge,
+                                  style: SyloraTokens.title(17),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
                                   snapshot.profile.handle == null
                                       ? l10n.settingsNoPublicHandle
                                       : '@${snapshot.profile.handle}',
+                                  style: SyloraTokens.body(
+                                    13,
+                                    color: SyloraTokens.inkMute,
+                                  ),
                                 ),
                               ],
                             ),
@@ -141,9 +173,12 @@ final class SettingsScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                LumenSurface(
+                SyloraStaggeredReveal(
+                  index: 1,
+                  child: SyloraGlassTile(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
@@ -213,18 +248,21 @@ final class SettingsScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          LumenSurface(
+          SyloraStaggeredReveal(
+            index: 2,
+            child: SyloraGlassTile(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
                   l10n.settingsDisplayAccessibility,
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: SyloraTokens.title(18),
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<Locale>(
@@ -305,15 +343,18 @@ final class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            ),
           ),
           const SizedBox(height: 16),
-          LumenSurface(
+          SyloraStaggeredReveal(
+            index: 3,
+            child: SyloraGlassTile(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 Text(
                   l10n.settingsSecurity,
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: SyloraTokens.title(18),
                 ),
                 const SizedBox(height: 12),
                 LumenSecondaryButton(
@@ -328,6 +369,7 @@ final class SettingsScreen extends ConsumerWidget {
                   onPressed: () => context.pushNamed('totp'),
                 ),
               ],
+            ),
             ),
           ),
           const SizedBox(height: 16),

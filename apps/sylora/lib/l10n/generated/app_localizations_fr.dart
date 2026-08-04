@@ -785,4 +785,132 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get commonCreate => 'Create';
+
+  @override
+  String get walletTitle => 'Wallet';
+
+  @override
+  String get walletSubtitle =>
+      'Balances, top-ups, payouts, and your immutable ledger.';
+
+  @override
+  String get walletHeroEyebrow => 'VALUE';
+
+  @override
+  String get walletHeroBody =>
+      'Spendable credits and creator earnings in one luminous vault.';
+
+  @override
+  String get walletSpendable => 'Spendable';
+
+  @override
+  String get walletCreatorEarnings => 'Creator earnings';
+
+  @override
+  String get walletTopUp => 'Top up';
+
+  @override
+  String get walletPayout => 'Payout';
+
+  @override
+  String get walletHistory => 'Transaction history';
+
+  @override
+  String get walletNoActivity => 'No wallet activity';
+
+  @override
+  String get walletNoActivityMessage =>
+      'When you top up or earn, ledger entries appear here.';
+
+  @override
+  String get giftsTitle => 'Gifts';
+
+  @override
+  String get giftsSubtitle => 'Catalog, inventory, and living gift moments.';
+
+  @override
+  String get giftsHeroEyebrow => 'GIFTING';
+
+  @override
+  String get giftsHeroBody =>
+      'Rare to ultra-premium — send, collect, and celebrate in motion.';
+
+  @override
+  String get giftsCatalog => 'Catalog';
+
+  @override
+  String get giftsInventory => 'Inventory';
+
+  @override
+  String get giftsEvents => 'Events';
+
+  @override
+  String get giftsPreferences => 'Gift preferences';
+
+  @override
+  String get giftsAuthoring => 'Gift authoring';
+
+  @override
+  String get giftsEmpty => 'No gifts available';
+
+  @override
+  String get giftsEmptyMessage =>
+      'Publish READY gifts from Gift Studio to fill the catalog.';
+
+  @override
+  String get aiTitle => 'AI';
+
+  @override
+  String get aiSubtitle =>
+      'Aura conversations, memory, moderation, and generation.';
+
+  @override
+  String get aiHeroEyebrow => 'AURA';
+
+  @override
+  String get aiHeroBody =>
+      'Provider-backed intelligence with consent-first privacy.';
+
+  @override
+  String get aiOnline => 'Aura online';
+
+  @override
+  String get aiConsentTitle => 'AI requires your consent';
+
+  @override
+  String get aiConsentBody =>
+      'Consent enables provider-backed AI requests. Memory stays off until you enable it.';
+
+  @override
+  String get aiGrantConsent => 'Grant AI consent';
+
+  @override
+  String get aiConversations => 'Conversations';
+
+  @override
+  String get aiMemory => 'Memory';
+
+  @override
+  String get creatorStudioTitle => 'Creator Studio';
+
+  @override
+  String get creatorStudioSubtitle =>
+      'Browser WHIP publishing with OBS as the companion path.';
+
+  @override
+  String get creatorStudioHeroEyebrow => 'STUDIO';
+
+  @override
+  String get creatorStudioHeroBody =>
+      'Preview, publish, overlays, and guests — one control surface.';
+
+  @override
+  String get creatorStudioOpenLive => 'Open Live';
+
+  @override
+  String get settingsHeroEyebrow => 'ACCOUNT';
+
+  @override
+  String get settingsHeroBody =>
+      'Profile, privacy, language, and security — tuned for every device.';
 }

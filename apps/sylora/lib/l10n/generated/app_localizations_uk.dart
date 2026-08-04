@@ -780,4 +780,131 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get commonCreate => 'Створити';
+
+  @override
+  String get walletTitle => 'Гаманець';
+
+  @override
+  String get walletSubtitle =>
+      'Баланси, поповнення, виплати та історія операцій.';
+
+  @override
+  String get walletHeroEyebrow => 'ВАРТІСТЬ';
+
+  @override
+  String get walletHeroBody =>
+      'Доступні кредити та заробіток творця в одному світловому сховищі.';
+
+  @override
+  String get walletSpendable => 'Доступно';
+
+  @override
+  String get walletCreatorEarnings => 'Заробіток творця';
+
+  @override
+  String get walletTopUp => 'Поповнити';
+
+  @override
+  String get walletPayout => 'Виплата';
+
+  @override
+  String get walletHistory => 'Історія операцій';
+
+  @override
+  String get walletNoActivity => 'Немає активності';
+
+  @override
+  String get walletNoActivityMessage =>
+      'Після поповнення або заробітку записи з’являться тут.';
+
+  @override
+  String get giftsTitle => 'Подарунки';
+
+  @override
+  String get giftsSubtitle => 'Каталог, інвентар і живі gift-моменти.';
+
+  @override
+  String get giftsHeroEyebrow => 'ПОДАРУНКИ';
+
+  @override
+  String get giftsHeroBody =>
+      'Від rare до ultra-premium — надсилай, збирай і святкуй у русі.';
+
+  @override
+  String get giftsCatalog => 'Каталог';
+
+  @override
+  String get giftsInventory => 'Інвентар';
+
+  @override
+  String get giftsEvents => 'Події';
+
+  @override
+  String get giftsPreferences => 'Налаштування подарунків';
+
+  @override
+  String get giftsAuthoring => 'Створення подарунків';
+
+  @override
+  String get giftsEmpty => 'Подарунків немає';
+
+  @override
+  String get giftsEmptyMessage =>
+      'Опублікуй READY-подарунки в Gift Studio, щоб заповнити каталог.';
+
+  @override
+  String get aiTitle => 'AI';
+
+  @override
+  String get aiSubtitle => 'Розмови Aura, пам’ять, модерація та генерація.';
+
+  @override
+  String get aiHeroEyebrow => 'AURA';
+
+  @override
+  String get aiHeroBody =>
+      'Інтелект від провайдера з приватністю на основі згоди.';
+
+  @override
+  String get aiOnline => 'Aura онлайн';
+
+  @override
+  String get aiConsentTitle => 'Потрібна згода на AI';
+
+  @override
+  String get aiConsentBody =>
+      'Згода вмикає AI-запити. Пам’ять лишається вимкненою, доки ти її не увімкнеш.';
+
+  @override
+  String get aiGrantConsent => 'Надати згоду на AI';
+
+  @override
+  String get aiConversations => 'Розмови';
+
+  @override
+  String get aiMemory => 'Пам’ять';
+
+  @override
+  String get creatorStudioTitle => 'Creator Studio';
+
+  @override
+  String get creatorStudioSubtitle =>
+      'Публікація з браузера через WHIP; OBS — як супутній шлях.';
+
+  @override
+  String get creatorStudioHeroEyebrow => 'СТУДІЯ';
+
+  @override
+  String get creatorStudioHeroBody =>
+      'Прев’ю, ефір, оверлеї та гості — одна панель керування.';
+
+  @override
+  String get creatorStudioOpenLive => 'Відкрити Live';
+
+  @override
+  String get settingsHeroEyebrow => 'АКАУНТ';
+
+  @override
+  String get settingsHeroBody =>
+      'Профіль, приватність, мова й безпека — для кожного пристрою.';
 }

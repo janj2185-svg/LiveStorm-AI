@@ -205,89 +205,148 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(walletProvider);
     return LumenPage(
-      title: 'Wallet',
-      subtitle:
-          'Balances and immutable ledger history from your SYLORA account.',
+      title: l10n.walletTitle,
+      subtitle: l10n.walletSubtitle,
+      intensity: 0.92,
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.gifts,
+      header: SyloraUniverseHero(
+        eyebrow: l10n.walletHeroEyebrow,
+        title: l10n.walletTitle,
+        body: l10n.walletHeroBody,
+        trailing: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            SyloraPortalChip(
+              label: l10n.walletTopUp,
+              icon: Icons.add_card_rounded,
+              onTap: () => _showPaymentDialog(payout: false),
+            ),
+            SyloraPortalChip(
+              label: l10n.walletPayout,
+              icon: Icons.account_balance_outlined,
+              onTap: () => _showPaymentDialog(payout: true),
+            ),
+          ],
+        ),
+      ),
       child: LumenAsyncView<WalletSnapshot>(
         value: value,
         onRetry: () => ref.invalidate(walletProvider),
-        data: (snapshot) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: <Widget>[
-                _BalanceCard(label: 'Spendable', balance: snapshot.balance),
-                _BalanceCard(
-                  label: 'Creator earnings',
-                  balance: snapshot.earnings,
+        data: (snapshot) {
+          var index = 0;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: <Widget>[
+                  SyloraStaggeredReveal(
+                    index: index++,
+                    child: _BalanceCard(
+                      label: l10n.walletSpendable,
+                      balance: snapshot.balance,
+                    ),
+                  ),
+                  SyloraStaggeredReveal(
+                    index: index++,
+                    child: _BalanceCard(
+                      label: l10n.walletCreatorEarnings,
+                      balance: snapshot.earnings,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: <Widget>[
+                  LumenPrimaryButton(
+                    label: l10n.walletTopUp,
+                    icon: Icons.add_card_rounded,
+                    onPressed: () => _showPaymentDialog(payout: false),
+                  ),
+                  LumenSecondaryButton(
+                    label: l10n.walletPayout,
+                    icon: Icons.account_balance_outlined,
+                    onPressed: () => _showPaymentDialog(payout: true),
+                  ),
+                ],
+              ),
+              if (_operationMessage != null) ...<Widget>[
+                const SizedBox(height: 12),
+                _StatusPanel(
+                  message: _operationMessage!,
+                  error: _operationError,
                 ),
               ],
-            ),
-            const SizedBox(height: 18),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                LumenPrimaryButton(
-                  label: 'Top up',
-                  icon: Icons.add_card_rounded,
-                  onPressed: () => _showPaymentDialog(payout: false),
-                ),
-                LumenSecondaryButton(
-                  label: 'Payout',
-                  icon: Icons.account_balance_outlined,
-                  onPressed: () => _showPaymentDialog(payout: true),
-                ),
-              ],
-            ),
-            if (_operationMessage != null) ...<Widget>[
+              const SizedBox(height: 28),
+              Text(l10n.walletHistory, style: SyloraTokens.title(20)),
               const SizedBox(height: 12),
-              _StatusPanel(message: _operationMessage!, error: _operationError),
-            ],
-            const SizedBox(height: 28),
-            Text(
-              'Transaction history',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 12),
-            if (snapshot.transactions.items.isEmpty)
-              LumenEmptyView(
-                title: 'No wallet activity',
-                message: 'The API returned no ledger transactions.',
-                actionLabel: 'Refresh',
-                onAction: () => ref.invalidate(walletProvider),
-                icon: Icons.receipt_long_outlined,
-              )
-            else
-              LumenSurface(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: <Widget>[
-                    for (final transaction in snapshot.transactions.items)
-                      ListTile(
-                        leading: const Icon(Icons.receipt_long_outlined),
-                        title: Text(transaction.type),
-                        subtitle: Text(
-                          DateFormat.yMMMd().add_jm().format(
-                            transaction.createdAt.toLocal(),
-                          ),
-                        ),
-                        trailing: LumenBadge(
-                          label: transaction.status,
-                          color: transaction.status == 'posted'
-                              ? LumenColors.verdigris
-                              : LumenColors.solar,
+              if (snapshot.transactions.items.isEmpty)
+                LumenEmptyView(
+                  title: l10n.walletNoActivity,
+                  message: l10n.walletNoActivityMessage,
+                  actionLabel: l10n.commonRefresh,
+                  onAction: () => ref.invalidate(walletProvider),
+                  icon: Icons.receipt_long_outlined,
+                )
+              else
+                for (final transaction in snapshot.transactions.items)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SyloraStaggeredReveal(
+                      index: index++,
+                      child: SyloraGlassTile(
+                        child: Row(
+                          children: <Widget>[
+                            const Icon(
+                              Icons.receipt_long_outlined,
+                              color: SyloraTokens.violet,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    transaction.type,
+                                    style: SyloraTokens.title(15),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    DateFormat.yMMMd().add_jm().format(
+                                      transaction.createdAt.toLocal(),
+                                    ),
+                                    style: SyloraTokens.body(
+                                      13,
+                                      color: SyloraTokens.inkMute,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            LumenBadge(
+                              label: transaction.status,
+                              color: transaction.status == 'posted'
+                                  ? LumenColors.verdigris
+                                  : LumenColors.solar,
+                            ),
+                          ],
                         ),
                       ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+                    ),
+                  ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -546,36 +605,60 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final catalog = ref.watch(giftCatalogProvider);
     final inventory = ref.watch(giftInventoryProvider);
     final events = ref.watch(giftEventsProvider);
     final rankings = ref.watch(giftRankingsProvider);
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Gifts'),
-          bottom: const TabBar(
-            tabs: <Tab>[
-              Tab(text: 'Catalog'),
-              Tab(text: 'Inventory'),
-              Tab(text: 'Events'),
+      child: SyloraLivingScaffold(
+        intensity: 0.92,
+        showOrbits: MediaQuery.sizeOf(context).width < 900,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: SyloraTokens.glassStrong,
+            elevation: 0,
+            title: Text(
+              l10n.giftsTitle,
+              style: SyloraTokens.title(20),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            actions: <Widget>[
+              IconButton(
+                tooltip: l10n.giftsPreferences,
+                onPressed: () => _showGiftPreferences(context, ref),
+                icon: const Icon(Icons.tune_rounded),
+              ),
+              IconButton(
+                tooltip: l10n.giftsAuthoring,
+                onPressed: () => context.pushNamed('gift-authoring'),
+                icon: const Icon(Icons.design_services_outlined),
+              ),
             ],
           ),
-          actions: <Widget>[
-            IconButton(
-              tooltip: 'Gift preferences',
-              onPressed: () => _showGiftPreferences(context, ref),
-              icon: const Icon(Icons.tune_rounded),
-            ),
-            IconButton(
-              tooltip: 'Gift authoring',
-              onPressed: () => context.pushNamed('gift-authoring'),
-              icon: const Icon(Icons.design_services_outlined),
-            ),
-          ],
-        ),
-        body: TabBarView(
+          body: Column(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: SyloraUniverseHero(
+                  eyebrow: l10n.giftsHeroEyebrow,
+                  title: l10n.giftsTitle,
+                  body: l10n.giftsHeroBody,
+                  compactBreakpoint: 720,
+                ),
+              ),
+              TabBar(
+                tabs: <Tab>[
+                  Tab(text: l10n.giftsCatalog),
+                  Tab(text: l10n.giftsInventory),
+                  Tab(text: l10n.giftsEvents),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
           children: <Widget>[
             LumenAsyncView<CursorPage<GiftModel>>(
               value: catalog,
@@ -588,10 +671,9 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
                     .toList(growable: false);
                 if (page.items.isEmpty) {
                   return LumenEmptyView(
-                    title: 'No gifts available',
-                    message:
-                        'The catalog API returned no eligible published gifts. Publish Official Gift Library items via Gift Studio after assets are READY.',
-                    actionLabel: 'Refresh catalog',
+                    title: l10n.giftsEmpty,
+                    message: l10n.giftsEmptyMessage,
+                    actionLabel: l10n.commonRefresh,
                     onAction: () => ref.invalidate(giftCatalogProvider),
                     icon: Icons.card_giftcard_rounded,
                   );
@@ -785,6 +867,10 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
               ],
             ),
           ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1159,19 +1245,30 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
   Widget build(BuildContext context) {
     final value = ref.watch(aiProvider);
     _syncAura(value);
+    final l10n = AppLocalizations.of(context);
     return LumenPage(
-      title: 'AI',
-      subtitle:
-          'Provider-backed conversations, memory, moderation, and generation.',
+      title: l10n.aiTitle,
+      subtitle: l10n.aiSubtitle,
+      intensity: 0.94,
       showAuraDock: true,
       auraEmotion: AuraEmotion.thinking,
-      auraLabel: 'Aura online',
+      auraLabel: l10n.aiOnline,
       showAuraPresence: true,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.ai,
+      header: SyloraUniverseHero(
+        eyebrow: l10n.aiHeroEyebrow,
+        title: l10n.aiTitle,
+        body: l10n.aiHeroBody,
+        trailing: SyloraPortalChip(
+          label: l10n.aiMemory,
+          icon: Icons.psychology_alt_outlined,
+          onTap: () => context.pushNamed('ai-memory'),
+        ),
+      ),
       actions: <Widget>[
         IconButton(
-          tooltip: 'AI memory',
+          tooltip: l10n.aiMemory,
           onPressed: () => context.pushNamed('ai-memory'),
           icon: const Icon(Icons.psychology_alt_outlined),
         ),
@@ -1181,36 +1278,34 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
         onRetry: () => ref.invalidate(aiProvider),
         data: (snapshot) {
           if (!snapshot.settings.consentGranted) {
-            return LumenSurface(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Icon(
-                    Icons.shield_outlined,
-                    size: 44,
-                    color: LumenColors.aether,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'AI requires your consent',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Consent enables provider-backed AI requests. Memory remains off unless you enable it separately.',
-                  ),
-                  const SizedBox(height: 20),
-                  LumenPrimaryButton(
-                    label: 'Grant AI consent',
-                    icon: Icons.verified_user_outlined,
-                    onPressed: () async {
-                      await ref.read(aiRepositoryProvider).updateSettings(
-                        <String, dynamic>{'consent_granted': true},
-                      );
-                      ref.invalidate(aiProvider);
-                    },
-                  ),
-                ],
+            return SyloraStaggeredReveal(
+              index: 0,
+              child: SyloraGlassTile(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Icon(
+                      Icons.shield_outlined,
+                      size: 44,
+                      color: SyloraTokens.violet,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(l10n.aiConsentTitle, style: SyloraTokens.title(22)),
+                    const SizedBox(height: 8),
+                    Text(l10n.aiConsentBody, softWrap: true),
+                    const SizedBox(height: 20),
+                    LumenPrimaryButton(
+                      label: l10n.aiGrantConsent,
+                      icon: Icons.verified_user_outlined,
+                      onPressed: () async {
+                        await ref.read(aiRepositoryProvider).updateSettings(
+                          <String, dynamic>{'consent_granted': true},
+                        );
+                        ref.invalidate(aiProvider);
+                      },
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -1224,25 +1319,34 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
               icon: Icons.smart_toy_outlined,
             );
           }
+          var index = 0;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              LumenSurface(
-                child: Row(
-                  children: <Widget>[
-                    const Icon(Icons.data_usage_rounded),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '${snapshot.usage['total_units'] ?? 0} units this month',
-                        style: Theme.of(context).textTheme.titleLarge,
+              SyloraStaggeredReveal(
+                index: index++,
+                child: SyloraGlassTile(
+                  child: Row(
+                    children: <Widget>[
+                      SyloraPulseGlow(
+                        child: const Icon(
+                          Icons.data_usage_rounded,
+                          color: SyloraTokens.violet,
+                        ),
                       ),
-                    ),
-                    LumenBadge(
-                      label:
-                          '${snapshot.providers.providerNames.length} provider(s)',
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          '${snapshot.usage['total_units'] ?? 0} units this month',
+                          style: SyloraTokens.title(17),
+                        ),
+                      ),
+                      LumenBadge(
+                        label:
+                            '${snapshot.providers.providerNames.length} provider(s)',
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -1250,8 +1354,8 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      'Conversations',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      l10n.aiConversations,
+                      style: SyloraTokens.title(20),
                     ),
                   ),
                   FilledButton.icon(
@@ -1272,37 +1376,59 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                   icon: Icons.auto_awesome_outlined,
                 )
               else
-                LumenSurface(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    children: <Widget>[
-                      for (final conversation in snapshot.conversations.items)
-                        ListTile(
-                          leading: const Icon(Icons.auto_awesome_outlined),
-                          title: Text(
-                            conversation.title ?? 'Untitled conversation',
-                          ),
-                          subtitle: Text(
-                            '${conversation.mode} • ${conversation.locale}',
-                          ),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () => context.pushNamed(
-                            'ai-conversation',
-                            pathParameters: <String, String>{
-                              'id': conversation.id,
-                            },
-                          ),
+                for (final conversation in snapshot.conversations.items)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SyloraStaggeredReveal(
+                      index: index++,
+                      child: SyloraGlassTile(
+                        onTap: () => context.pushNamed(
+                          'ai-conversation',
+                          pathParameters: <String, String>{
+                            'id': conversation.id,
+                          },
                         ),
-                    ],
+                        child: Row(
+                          children: <Widget>[
+                            const Icon(
+                              Icons.auto_awesome_outlined,
+                              color: SyloraTokens.violet,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    conversation.title ??
+                                        'Untitled conversation',
+                                    style: SyloraTokens.title(15),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${conversation.mode} • ${conversation.locale}',
+                                    style: SyloraTokens.body(
+                                      13,
+                                      color: SyloraTokens.inkMute,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
               const SizedBox(height: 20),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
                 children: <Widget>[
                   LumenSecondaryButton(
-                    label: 'Memory',
+                    label: l10n.aiMemory,
                     icon: Icons.psychology_alt_outlined,
                     onPressed: () => context.pushNamed('ai-memory'),
                   ),

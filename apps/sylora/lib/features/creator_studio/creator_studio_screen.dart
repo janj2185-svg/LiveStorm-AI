@@ -89,9 +89,32 @@ final class _CreatorStudioScreenState
       title: 'Creator Studio',
       subtitle:
           'Web camera publishing for SYLORA Live through MediaMTX WHIP, with OBS kept as the companion path.',
+      intensity: 0.94,
       showAuraPresence: _auraDockEnabled,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.creatorStudio,
+      header: SyloraUniverseHero(
+        eyebrow: 'STUDIO',
+        title: 'Creator Studio',
+        body:
+            'Preview, publish, overlays, and guests — one luminous control surface.',
+        trailing: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            SyloraPortalChip(
+              label: 'Open Live',
+              icon: Icons.sensors_outlined,
+              onTap: () => context.goNamed('live'),
+            ),
+            SyloraPortalChip(
+              label: 'Go Live',
+              icon: Icons.podcasts_rounded,
+              onTap: () => context.goNamed('live'),
+            ),
+          ],
+        ),
+      ),
       actions: <Widget>[
         IconButton(
           tooltip: 'Open Live',

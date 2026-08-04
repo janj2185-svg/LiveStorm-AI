@@ -1597,6 +1597,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create'**
   String get commonCreate;
+
+  /// No description provided for @walletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get walletTitle;
+
+  /// No description provided for @walletSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances, top-ups, payouts, and your immutable ledger.'**
+  String get walletSubtitle;
+
+  /// No description provided for @walletHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'VALUE'**
+  String get walletHeroEyebrow;
+
+  /// No description provided for @walletHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Spendable credits and creator earnings in one luminous vault.'**
+  String get walletHeroBody;
+
+  /// No description provided for @walletSpendable.
+  ///
+  /// In en, this message translates to:
+  /// **'Spendable'**
+  String get walletSpendable;
+
+  /// No description provided for @walletCreatorEarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator earnings'**
+  String get walletCreatorEarnings;
+
+  /// No description provided for @walletTopUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Top up'**
+  String get walletTopUp;
+
+  /// No description provided for @walletPayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout'**
+  String get walletPayout;
+
+  /// No description provided for @walletHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction history'**
+  String get walletHistory;
+
+  /// No description provided for @walletNoActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No wallet activity'**
+  String get walletNoActivity;
+
+  /// No description provided for @walletNoActivityMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'When you top up or earn, ledger entries appear here.'**
+  String get walletNoActivityMessage;
+
+  /// No description provided for @giftsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gifts'**
+  String get giftsTitle;
+
+  /// No description provided for @giftsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog, inventory, and living gift moments.'**
+  String get giftsSubtitle;
+
+  /// No description provided for @giftsHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'GIFTING'**
+  String get giftsHeroEyebrow;
+
+  /// No description provided for @giftsHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare to ultra-premium — send, collect, and celebrate in motion.'**
+  String get giftsHeroBody;
+
+  /// No description provided for @giftsCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
+  String get giftsCatalog;
+
+  /// No description provided for @giftsInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get giftsInventory;
+
+  /// No description provided for @giftsEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get giftsEvents;
+
+  /// No description provided for @giftsPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift preferences'**
+  String get giftsPreferences;
+
+  /// No description provided for @giftsAuthoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift authoring'**
+  String get giftsAuthoring;
+
+  /// No description provided for @giftsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No gifts available'**
+  String get giftsEmpty;
+
+  /// No description provided for @giftsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish READY gifts from Gift Studio to fill the catalog.'**
+  String get giftsEmptyMessage;
+
+  /// No description provided for @aiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get aiTitle;
+
+  /// No description provided for @aiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura conversations, memory, moderation, and generation.'**
+  String get aiSubtitle;
+
+  /// No description provided for @aiHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'AURA'**
+  String get aiHeroEyebrow;
+
+  /// No description provided for @aiHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider-backed intelligence with consent-first privacy.'**
+  String get aiHeroBody;
+
+  /// No description provided for @aiOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura online'**
+  String get aiOnline;
+
+  /// No description provided for @aiConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI requires your consent'**
+  String get aiConsentTitle;
+
+  /// No description provided for @aiConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Consent enables provider-backed AI requests. Memory stays off until you enable it.'**
+  String get aiConsentBody;
+
+  /// No description provided for @aiGrantConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant AI consent'**
+  String get aiGrantConsent;
+
+  /// No description provided for @aiConversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations'**
+  String get aiConversations;
+
+  /// No description provided for @aiMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get aiMemory;
+
+  /// No description provided for @creatorStudioTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator Studio'**
+  String get creatorStudioTitle;
+
+  /// No description provided for @creatorStudioSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser WHIP publishing with OBS as the companion path.'**
+  String get creatorStudioSubtitle;
+
+  /// No description provided for @creatorStudioHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'STUDIO'**
+  String get creatorStudioHeroEyebrow;
+
+  /// No description provided for @creatorStudioHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview, publish, overlays, and guests — one control surface.'**
+  String get creatorStudioHeroBody;
+
+  /// No description provided for @creatorStudioOpenLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Live'**
+  String get creatorStudioOpenLive;
+
+  /// No description provided for @settingsHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT'**
+  String get settingsHeroEyebrow;
+
+  /// No description provided for @settingsHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile, privacy, language, and security — tuned for every device.'**
+  String get settingsHeroBody;
 }
 
 class _AppLocalizationsDelegate
