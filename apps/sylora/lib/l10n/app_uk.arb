@@ -318,5 +318,223 @@
   "creatorStudioHeroBody": "Прев’ю, ефір, оверлеї та гості — одна панель керування.",
   "creatorStudioOpenLive": "Відкрити Live",
   "settingsHeroEyebrow": "АКАУНТ",
-  "settingsHeroBody": "Профіль, приватність, мова й безпека — для кожного пристрою."
+  "settingsHeroBody": "Профіль, приватність, мова й безпека — для кожного пристрою.",
+  "conferencesSubtitle": "Кімнати для бізнесу й освіти з готовністю медіа та підтримкою Aura.",
+  "conferencesCreateRoom": "Створити кімнату",
+  "conferencesCreateDialogTitle": "Створити конференц-кімнату",
+  "conferencesRoomTitleLabel": "Назва",
+  "conferencesRoomTitleHint": "Щотижневе планування або студія алгебри",
+  "conferencesPurposeLabel": "Призначення",
+  "conferencesPurposeBusiness": "Бізнес",
+  "conferencesPurposeEducation": "Освіта",
+  "conferencesPurposeSocial": "Спілкування",
+  "conferencesRoomScreenTitle": "Конференц-кімната",
+  "conferencesRoomScreenSubtitle": "Приєднуйтеся з прев’ю камери та публікуйте через налаштований медіасервіс.",
+  "conferencesTranslationActive": "AI-переклад активний",
+  "conferencesAiLabel": "AI",
+  "conferencesCaptions": "Субтитри",
+  "conferencesMediaReady": "Медіасервіс готовий до публікації WHIP.",
+  "conferencesMediaWaiting": "Очікуємо налаштований медіасервіс MediaMTX.",
+  "conferencesPreviewUnavailable": "Прев’ю камери недоступне на цій платформі. Використайте OBS або інший пристрій.",
+  "conferencesPreviewLive": "Прев’ю камери й мікрофона активне.",
+  "conferencesMicrophoneMuted": "Мікрофон вимкнено.",
+  "conferencesMicrophoneUnmuted": "Мікрофон увімкнено.",
+  "conferencesCameraDisabled": "Камеру вимкнено.",
+  "conferencesCameraEnabled": "Камеру увімкнено.",
+  "conferencesScreenShareActive": "Показ екрана транслюється.",
+  "conferencesScreenShareStopped": "Показ екрана зупинено.",
+  "conferencesCaptionsUnavailable": "Субтитри для коротких кліпів використовують MediaRecorder у вебверсії SYLORA. Відкрийте кімнату в браузері, щоб записати й транскрибувати.",
+  "conferencesCaptionsRecording": "Записуємо короткий аудіокліп… натисніть «Зупинити й транскрибувати», коли будете готові.",
+  "conferencesCaptionsTranscribing": "Транскрибуємо записаний кліп…",
+  "conferencesCaptionsNoSpeech": "У цьому кліпі не виявлено мовлення.",
+  "conferencesAuraResponded": "Aura відповіла.",
+  "conferencesActiveParticipants": "Активні: {count}",
+  "@conferencesActiveParticipants": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "conferencesOpen": "Відкрити",
+  "conferencesJoinCode": "Код приєднання: {code}",
+  "@conferencesJoinCode": {
+    "placeholders": {
+      "code": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "conferencesMediaPreview": "Прев’ю медіа",
+  "conferencesMediaSupported": "Ця збірка підтримує прев’ю камери й мікрофона та публікацію через WHIP, коли MediaMTX готовий.",
+  "conferencesMediaUnsupported": "Прев’ю камери недоступне в цій збірці. Для публікації використайте OBS або браузер на іншому пристрої.",
+  "conferencesMediaPlane": "Медіасервіс: {reason}",
+  "@conferencesMediaPlane": {
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "conferencesStartPreview": "Запустити прев’ю",
+  "conferencesPublishWhip": "Опублікувати WHIP",
+  "conferencesRefreshMedia": "Оновити медіа",
+  "conferencesAuraDescription": "Попросіть підсумок зустрічі, навчальні підказки, допомогу з порядком денним або наступними повідомленнями.",
+  "conferencesAskAura": "Запитати Aura",
+  "conferencesAskAuraHint": "Перетвори обговорення на наступні кроки…",
+  "conferencesEmptyTitle": "Конференц-кімнат ще немає",
+  "conferencesEmptyMessage": "Створіть бізнес- або освітню кімнату, щоб почати зосереджену відеосесію.",
+  "conferencesUnmute": "Увімкнути звук",
+  "conferencesMute": "Вимкнути звук",
+  "conferencesCameraOn": "Увімкнути камеру",
+  "conferencesCameraOff": "Вимкнути камеру",
+  "conferencesStopShare": "Зупинити показ",
+  "conferencesShareScreen": "Показати екран",
+  "conferencesTranslationOn": "Переклад увімкнено",
+  "conferencesAiTranslate": "AI-переклад",
+  "conferencesStopAndTranscribe": "Зупинити й транскрибувати",
+  "conferencesLiveGifts": "Подарунки наживо",
+  "conferencesLiveGiftsDescription": "Оберіть подарунок для ведучого, поки конференція активна.",
+  "conferencesGiftsLoading": "Завантаження подарунків конференції…",
+  "conferencesGiftsLoadError": "Не вдалося завантажити подарунки",
+  "conferencesGiftsEmpty": "Подарунків немає",
+  "conferencesGiftsEmptyMessage": "Конференція готова, але каталог подарунків порожній.",
+  "conferencesRefreshGifts": "Оновити подарунки",
+  "conferencesGiftCombo": "{name} · комбо ×{count}",
+  "@conferencesGiftCombo": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "example"
+      },
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "conferencesGiftSent": "{name} надіслано",
+  "@conferencesGiftSent": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "conferencesGiftSentToHost": "Подарунок {name} надіслано ведучому.",
+  "@conferencesGiftSentToHost": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "mediaSettingsSaved": "Налаштування медіа збережено для всіх платформ.",
+  "mediaSettingsWebNote": "Публікація WHIP доступна в браузері. На комп’ютері використовуйте OBS Companion і Virtual Camera.",
+  "mediaSettingsNativeNote": "На комп’ютері й мобільному використовуйте OBS Companion і Virtual Camera для професійної публікації.",
+  "mediaSettingsTitle": "Камера й аудіо",
+  "mediaSettingsSubtitle": "Професійний медіастек для ефірів, дзвінків і Creator Studio",
+  "mediaSettingsHeroEyebrow": "МЕДІАСТЕК",
+  "mediaSettingsHeroTitle": "Готово до ефіру",
+  "mediaSettingsCameraSection": "Камера",
+  "mediaSettingsCameraDevice": "Пристрій камери",
+  "mediaSettingsDefaultDevice": "Типовий",
+  "mediaSettingsFrontCamera": "Фронтальна камера",
+  "mediaSettingsRearCamera": "Основна камера",
+  "mediaSettingsVirtualDevice": "Віртуальний пристрій",
+  "mediaSettingsResolution": "Роздільна здатність",
+  "mediaSettingsMirrorPreview": "Дзеркальне прев’ю",
+  "mediaSettingsAudioSection": "Мікрофон і маршрутизація аудіо",
+  "mediaSettingsMicrophone": "Мікрофон",
+  "mediaSettingsHeadset": "Гарнітура",
+  "mediaSettingsUsbMicrophone": "USB-мікрофон",
+  "mediaSettingsAudioRoute": "Аудіомаршрут",
+  "mediaSettingsStreamMix": "Мікс ефіру",
+  "mediaSettingsMonitorMix": "Мікс моніторингу",
+  "mediaSettingsVoipPath": "Маршрут голосового дзвінка",
+  "mediaSettingsHeadphones": "Навушники",
+  "mediaSettingsNoiseSuppression": "Заглушення шуму",
+  "mediaSettingsEchoCancellation": "Приглушення відлуння",
+  "mediaSettingsObsSection": "OBS і віртуальна камера",
+  "mediaSettingsObsConnected": "OBS Companion підключено",
+  "mediaSettingsObsConnectedDescription": "Синхронізація сцен і запуск з OBS",
+  "mediaSettingsVirtualCamera": "Віртуальна камера SYLORA",
+  "mediaSettingsVirtualCameraDescription": "Передавати відео в Zoom, Meet або OBS",
+  "mediaSettingsStreamingSection": "Трансляція",
+  "mediaSettingsBitrate": "Бітрейт (кбіт/с)",
+  "mediaSettingsLatencyMode": "Режим затримки",
+  "mediaSettingsUltraLowLatency": "Наднизька",
+  "mediaSettingsLowLatency": "Низька",
+  "mediaSettingsNormalLatency": "Звичайна",
+  "mediaSettingsRecordingSection": "Запис",
+  "mediaSettingsLocalRecording": "Локальний запис",
+  "mediaSettingsCloudRecording": "Хмарний запис",
+  "mediaSettingsCloudRecordingDescription": "Завантаження до налаштованого сховища об’єктів",
+  "mediaSettingsSaveProfile": "Зберегти медіапрофіль",
+  "earningsTitle": "Заробіток автора",
+  "earningsSubtitle": "Подарунки наживо, чайові та виплати — єдиний реєстр екосистеми.",
+  "earningsHeroEyebrow": "ЗАРОБІТОК",
+  "earningsHeroTitle": "Ваш баланс автора",
+  "earningsHeroBody": "Чайові та подарунки враховуються лише з ефірів, гостьових ефірів, конференцій із кількома ведучими та голосових кімнат. Gift Shop призначений для купівлі інвентарю, а не надсилання.",
+  "earningsTotalAvailable": "Усього доступно",
+  "earningsMinorUnits": "{amount} мінімальних одиниць",
+  "@earningsMinorUnits": {
+    "placeholders": {
+      "amount": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "earningsAcceptLiveGifts": "Приймати подарунки наживо",
+  "earningsAcceptLiveGiftsDescription": "Якщо вимкнено, глядачі не зможуть надсилати подарунки під час ваших ефірів.",
+  "earningsRecentLedger": "Останні операції",
+  "earningsEmptyTitle": "Заробітку ще немає",
+  "earningsEmptyMessage": "Вийдіть в ефір, щоб глядачі могли надсилати подарунки.",
+  "earningsOpenLive": "Відкрити Live",
+  "communitiesTitle": "Спільноти",
+  "communitiesSubtitle": "Знайдіть людей зі спільними інтересами або створіть власний простір.",
+  "communitiesCreate": "Створити спільноту",
+  "communitiesHeroEyebrow": "СПІЛЬНОТИ",
+  "communitiesHeroTitle": "Знайдіть своїх людей",
+  "communitiesHeroBody": "Переглядайте публічні простори й спільноти, до яких належите, та переходьте до їхніх каналів.",
+  "communitiesSearchHint": "Пошук спільнот",
+  "communitiesSearch": "Шукати",
+  "communitiesClearSearch": "Очистити пошук",
+  "communitiesEmptyTitle": "Спільнот ще немає",
+  "communitiesNoMatchesTitle": "Спільнот не знайдено",
+  "communitiesEmptyMessage": "Створіть першу спільноту, щоб почати збирати людей.",
+  "communitiesNoMatchesMessage": "Спробуйте іншу назву, опис або slug.",
+  "communitiesNameLabel": "Назва",
+  "communitiesNameRequired": "Введіть назву спільноти.",
+  "communitiesSlugLabel": "Slug",
+  "communitiesSlugHelper": "Малі латинські літери, цифри й дефіси.",
+  "communitiesSlugInvalid": "Використайте щонайменше 3 безпечні для URL малі символи.",
+  "communitiesDescriptionLabel": "Опис (необов’язково)",
+  "communitiesVisibilityLabel": "Видимість",
+  "communitiesVisibilityPublic": "Публічна",
+  "communitiesVisibilityPrivate": "Приватна — запити потребують схвалення",
+  "communitiesVisibilityPrivateShort": "Приватна",
+  "communitiesVisibilityInviteOnly": "Лише за запрошенням",
+  "communitiesJoined": "Ви учасник",
+  "communitiesLeave": "Залишити спільноту",
+  "communitiesJoin": "Приєднатися до спільноти",
+  "communitiesMembershipPending": "Запит на вступ надіслано.",
+  "communitiesMembershipStatus": "Статус участі: {status}",
+  "@communitiesMembershipStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "communitiesChannels": "Канали",
+  "communitiesNoChannelsTitle": "Немає видимих каналів",
+  "communitiesNoChannelsMessage": "У цій спільноті немає видимих каналів."
 }

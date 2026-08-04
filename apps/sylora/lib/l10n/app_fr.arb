@@ -300,5 +300,223 @@
   "creatorStudioHeroBody": "Preview, publish, overlays, and guests — one control surface.",
   "creatorStudioOpenLive": "Open Live",
   "settingsHeroEyebrow": "ACCOUNT",
-  "settingsHeroBody": "Profile, privacy, language, and security — tuned for every device."
+  "settingsHeroBody": "Profile, privacy, language, and security — tuned for every device.",
+  "conferencesSubtitle": "Business and education rooms with media readiness and Aura support.",
+  "conferencesCreateRoom": "Create room",
+  "conferencesCreateDialogTitle": "Create conference room",
+  "conferencesRoomTitleLabel": "Title",
+  "conferencesRoomTitleHint": "Weekly planning or algebra studio",
+  "conferencesPurposeLabel": "Purpose",
+  "conferencesPurposeBusiness": "Business",
+  "conferencesPurposeEducation": "Education",
+  "conferencesPurposeSocial": "Social",
+  "conferencesRoomScreenTitle": "Conference room",
+  "conferencesRoomScreenSubtitle": "Join with camera preview and publish through the configured media plane.",
+  "conferencesTranslationActive": "AI translation active",
+  "conferencesAiLabel": "AI",
+  "conferencesCaptions": "Captions",
+  "conferencesMediaReady": "Media plane is ready for WHIP publishing.",
+  "conferencesMediaWaiting": "Awaiting the configured MediaMTX media plane.",
+  "conferencesPreviewUnavailable": "Camera preview is unavailable on this platform. Use OBS or a companion device.",
+  "conferencesPreviewLive": "Camera and microphone preview is live.",
+  "conferencesMicrophoneMuted": "Microphone muted.",
+  "conferencesMicrophoneUnmuted": "Microphone unmuted.",
+  "conferencesCameraDisabled": "Camera disabled.",
+  "conferencesCameraEnabled": "Camera enabled.",
+  "conferencesScreenShareActive": "Screen share is publishing.",
+  "conferencesScreenShareStopped": "Screen share stopped.",
+  "conferencesCaptionsUnavailable": "Short clip captions use MediaRecorder on SYLORA web. Open this room in a browser to record and transcribe.",
+  "conferencesCaptionsRecording": "Recording a short microphone clip… tap “Stop & transcribe” when ready.",
+  "conferencesCaptionsTranscribing": "Transcribing the recorded clip…",
+  "conferencesCaptionsNoSpeech": "No speech was detected in that clip.",
+  "conferencesAuraResponded": "Aura responded.",
+  "conferencesActiveParticipants": "{count} active",
+  "@conferencesActiveParticipants": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "conferencesOpen": "Open",
+  "conferencesJoinCode": "Join code {code}",
+  "@conferencesJoinCode": {
+    "placeholders": {
+      "code": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "conferencesMediaPreview": "Media preview",
+  "conferencesMediaSupported": "This build can request camera and microphone preview and publish over WHIP when MediaMTX is ready.",
+  "conferencesMediaUnsupported": "Camera preview is unavailable on this build. Use OBS or a companion browser device for publishing.",
+  "conferencesMediaPlane": "Media plane: {reason}",
+  "@conferencesMediaPlane": {
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "conferencesStartPreview": "Start preview",
+  "conferencesPublishWhip": "Publish WHIP",
+  "conferencesRefreshMedia": "Refresh media",
+  "conferencesAuraDescription": "Ask for meeting summaries, classroom prompts, agenda help, or follow-up wording.",
+  "conferencesAskAura": "Ask Aura",
+  "conferencesAskAuraHint": "Turn this discussion into next steps…",
+  "conferencesEmptyTitle": "No conference rooms yet",
+  "conferencesEmptyMessage": "Create a business or education room to start a focused video session.",
+  "conferencesUnmute": "Unmute",
+  "conferencesMute": "Mute",
+  "conferencesCameraOn": "Camera on",
+  "conferencesCameraOff": "Camera off",
+  "conferencesStopShare": "Stop share",
+  "conferencesShareScreen": "Share screen",
+  "conferencesTranslationOn": "Translation on",
+  "conferencesAiTranslate": "AI translate",
+  "conferencesStopAndTranscribe": "Stop & transcribe",
+  "conferencesLiveGifts": "Live gifts",
+  "conferencesLiveGiftsDescription": "Choose a gift for the host while this conference is active.",
+  "conferencesGiftsLoading": "Loading conference gifts…",
+  "conferencesGiftsLoadError": "Gifts could not load",
+  "conferencesGiftsEmpty": "No gifts available",
+  "conferencesGiftsEmptyMessage": "The conference is ready, but the gift catalog is empty.",
+  "conferencesRefreshGifts": "Refresh gifts",
+  "conferencesGiftCombo": "{name} · combo ×{count}",
+  "@conferencesGiftCombo": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "example"
+      },
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "conferencesGiftSent": "{name} sent",
+  "@conferencesGiftSent": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "conferencesGiftSentToHost": "Sent {name} to the host.",
+  "@conferencesGiftSentToHost": {
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "mediaSettingsSaved": "Media settings saved for all platforms.",
+  "mediaSettingsWebNote": "Browser WHIP publish is available on Web. Desktop uses OBS Companion and Virtual Camera.",
+  "mediaSettingsNativeNote": "On desktop and mobile, use OBS Companion and Virtual Camera for production publishing.",
+  "mediaSettingsTitle": "Camera & Audio",
+  "mediaSettingsSubtitle": "Production media stack for Live, Calls, and Creator Studio",
+  "mediaSettingsHeroEyebrow": "MEDIA STACK",
+  "mediaSettingsHeroTitle": "Ready for production",
+  "mediaSettingsCameraSection": "Camera",
+  "mediaSettingsCameraDevice": "Camera device",
+  "mediaSettingsDefaultDevice": "Default",
+  "mediaSettingsFrontCamera": "Front camera",
+  "mediaSettingsRearCamera": "Rear camera",
+  "mediaSettingsVirtualDevice": "Virtual device",
+  "mediaSettingsResolution": "Resolution",
+  "mediaSettingsMirrorPreview": "Mirror preview",
+  "mediaSettingsAudioSection": "Microphone & audio routing",
+  "mediaSettingsMicrophone": "Microphone",
+  "mediaSettingsHeadset": "Headset",
+  "mediaSettingsUsbMicrophone": "USB microphone",
+  "mediaSettingsAudioRoute": "Audio route",
+  "mediaSettingsStreamMix": "Stream mix",
+  "mediaSettingsMonitorMix": "Monitor mix",
+  "mediaSettingsVoipPath": "Voice call path",
+  "mediaSettingsHeadphones": "Headphones",
+  "mediaSettingsNoiseSuppression": "Noise suppression",
+  "mediaSettingsEchoCancellation": "Echo cancellation",
+  "mediaSettingsObsSection": "OBS & Virtual Camera",
+  "mediaSettingsObsConnected": "OBS Companion connected",
+  "mediaSettingsObsConnectedDescription": "Scene sync + start with OBS",
+  "mediaSettingsVirtualCamera": "SYLORA Virtual Camera",
+  "mediaSettingsVirtualCameraDescription": "Expose feed to Zoom, Meet, or OBS",
+  "mediaSettingsStreamingSection": "Streaming",
+  "mediaSettingsBitrate": "Bitrate (kbps)",
+  "mediaSettingsLatencyMode": "Latency mode",
+  "mediaSettingsUltraLowLatency": "Ultra low",
+  "mediaSettingsLowLatency": "Low",
+  "mediaSettingsNormalLatency": "Normal",
+  "mediaSettingsRecordingSection": "Recording",
+  "mediaSettingsLocalRecording": "Local recording",
+  "mediaSettingsCloudRecording": "Cloud recording",
+  "mediaSettingsCloudRecordingDescription": "Uploads to configured object storage",
+  "mediaSettingsSaveProfile": "Save media profile",
+  "earningsTitle": "Creator Earnings",
+  "earningsSubtitle": "Live gifts, tips, and payouts — one ecosystem ledger.",
+  "earningsHeroEyebrow": "EARNINGS",
+  "earningsHeroTitle": "Your creator balance",
+  "earningsHeroBody": "Tips and gifts count only from Live Streams, Guest Streams, Multi-host Conferences, and Voice Rooms. Gift Shop is for buying inventory — not sending.",
+  "earningsTotalAvailable": "Total available",
+  "earningsMinorUnits": "{amount} minor units",
+  "@earningsMinorUnits": {
+    "placeholders": {
+      "amount": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "earningsAcceptLiveGifts": "Accept live gifts",
+  "earningsAcceptLiveGiftsDescription": "When off, viewers cannot send gifts during your live sessions.",
+  "earningsRecentLedger": "Recent ledger",
+  "earningsEmptyTitle": "No earnings yet",
+  "earningsEmptyMessage": "Go live and let viewers send gifts from the live tray.",
+  "earningsOpenLive": "Open Live",
+  "communitiesTitle": "Communities",
+  "communitiesSubtitle": "Find people around shared interests or start a space of your own.",
+  "communitiesCreate": "Create community",
+  "communitiesHeroEyebrow": "COMMUNITIES",
+  "communitiesHeroTitle": "Find your people",
+  "communitiesHeroBody": "Browse public spaces and communities you belong to, then continue into their existing channels.",
+  "communitiesSearchHint": "Search communities",
+  "communitiesSearch": "Search",
+  "communitiesClearSearch": "Clear search",
+  "communitiesEmptyTitle": "No communities yet",
+  "communitiesNoMatchesTitle": "No matching communities",
+  "communitiesEmptyMessage": "Create the first community to begin gathering people.",
+  "communitiesNoMatchesMessage": "Try another name, description, or slug.",
+  "communitiesNameLabel": "Name",
+  "communitiesNameRequired": "Enter a community name.",
+  "communitiesSlugLabel": "Slug",
+  "communitiesSlugHelper": "Lowercase letters, numbers, and hyphens.",
+  "communitiesSlugInvalid": "Use at least 3 lowercase URL-safe characters.",
+  "communitiesDescriptionLabel": "Description (optional)",
+  "communitiesVisibilityLabel": "Visibility",
+  "communitiesVisibilityPublic": "Public",
+  "communitiesVisibilityPrivate": "Private — requests require approval",
+  "communitiesVisibilityPrivateShort": "Private",
+  "communitiesVisibilityInviteOnly": "Invite only",
+  "communitiesJoined": "Joined",
+  "communitiesLeave": "Leave community",
+  "communitiesJoin": "Join community",
+  "communitiesMembershipPending": "Membership request submitted.",
+  "communitiesMembershipStatus": "Community membership: {status}",
+  "@communitiesMembershipStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String",
+        "example": "example"
+      }
+    }
+  },
+  "communitiesChannels": "Channels",
+  "communitiesNoChannelsTitle": "No visible channels",
+  "communitiesNoChannelsMessage": "No channels are visible in this community."
 }

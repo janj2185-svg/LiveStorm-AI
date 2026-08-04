@@ -421,6 +421,10 @@ abstract interface class MarketplaceRepository {
   Future<SellerStore> updateStore(JsonObject patch);
   Future<CursorPage<SellerProduct>> sellerProducts({String? cursor});
   Future<SellerProduct> createProduct(JsonObject payload);
+  Future<SellerProduct> updateProduct(String productId, JsonObject patch);
+  Future<JsonObject> createProductVersion(String productId, JsonObject payload);
+  Future<JsonObject> addProductPrice(String productId, JsonObject payload);
+  Future<JsonObject> updateProductInventory(String productId, JsonObject patch);
   Future<SellerProduct> productAction(String productId, String action);
   Future<CursorPage<MarketplaceOrder>> sellerSales({String? cursor});
   Future<MarketplaceOrder> refundOrder(String orderId, String reason);
@@ -670,6 +674,60 @@ final class DioMarketplaceRepository implements MarketplaceRepository {
     return SellerProduct.fromJson(
       requireObject(response.data, 'seller product'),
     );
+  }
+
+  @override
+  Future<SellerProduct> updateProduct(
+    String productId,
+    JsonObject patch,
+  ) async {
+    final response = await _client.request(
+      'marketplace/seller/products/$productId',
+      method: 'PATCH',
+      data: patch,
+    );
+    return SellerProduct.fromJson(
+      requireObject(response.data, 'seller product'),
+    );
+  }
+
+  @override
+  Future<JsonObject> createProductVersion(
+    String productId,
+    JsonObject payload,
+  ) async {
+    final response = await _client.request(
+      'marketplace/seller/products/$productId/versions',
+      method: 'POST',
+      data: payload,
+    );
+    return requireObject(response.data, 'seller product version');
+  }
+
+  @override
+  Future<JsonObject> addProductPrice(
+    String productId,
+    JsonObject payload,
+  ) async {
+    final response = await _client.request(
+      'marketplace/seller/products/$productId/prices',
+      method: 'POST',
+      data: payload,
+    );
+    return requireObject(response.data, 'seller product price');
+  }
+
+  @override
+  Future<JsonObject> updateProductInventory(
+    String productId,
+    JsonObject patch,
+  ) async {
+    final response = await _client.request(
+      'marketplace/seller/products/$productId/inventory',
+      method: 'PATCH',
+      data: patch,
+    );
+    return requireObject(response.data, 'seller product inventory');
   }
 
   @override

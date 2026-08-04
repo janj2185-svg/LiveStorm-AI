@@ -7,6 +7,7 @@ import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../design/sylora.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import '../platform/repositories.dart';
 
@@ -47,29 +48,32 @@ final class CreatorEarningsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(earningsProvider);
-    final money = NumberFormat.compactCurrency(symbol: '');
+    final money = NumberFormat.compactCurrency(
+      symbol: '',
+      locale: l10n.localeName,
+    );
     return LumenPage(
-      title: 'Creator Earnings',
-      subtitle: 'Live gifts, tips, and payouts — one ecosystem ledger.',
+      title: l10n.earningsTitle,
+      subtitle: l10n.earningsSubtitle,
       intensity: 0.9,
       showAuraPresence: true,
       auraPresencePreset: SyloraAuraContextPreset.live,
       header: SyloraUniverseHero(
-        eyebrow: 'EARNINGS',
-        title: 'Your creator balance',
-        body:
-            'Tips and gifts count only from Live Streams, Guest Streams, Multi-host Conferences, and Voice Rooms. Gift Shop is for buying inventory — not sending.',
+        eyebrow: l10n.earningsHeroEyebrow,
+        title: l10n.earningsHeroTitle,
+        body: l10n.earningsHeroBody,
         trailing: Wrap(
           spacing: 8,
           children: <Widget>[
             SyloraPortalChip(
-              label: 'Wallet',
+              label: l10n.walletShortLabel,
               icon: Icons.account_balance_wallet_outlined,
               onTap: () => context.goNamed('wallet'),
             ),
             SyloraPortalChip(
-              label: 'Payout',
+              label: l10n.walletPayout,
               icon: Icons.payments_outlined,
               onTap: () => context.goNamed('wallet'),
             ),
@@ -90,7 +94,10 @@ final class CreatorEarningsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text('Total available', style: SyloraTokens.label(11)),
+                    Text(
+                      l10n.earningsTotalAvailable,
+                      style: SyloraTokens.label(11),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       '${money.format(major)} ${snapshot.earnings.assetCode}',
@@ -98,7 +105,7 @@ final class CreatorEarningsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${snapshot.earnings.spendableMinor} minor units',
+                      l10n.earningsMinorUnits(snapshot.earnings.spendableMinor),
                       style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
                     ),
                   ],
@@ -110,10 +117,8 @@ final class CreatorEarningsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Accept live gifts'),
-                  subtitle: const Text(
-                    'When off, viewers cannot send gifts during your live sessions.',
-                  ),
+                  title: Text(l10n.earningsAcceptLiveGifts),
+                  subtitle: Text(l10n.earningsAcceptLiveGiftsDescription),
                   value: snapshot.giftsEnabled,
                   onChanged: (enabled) async {
                     try {
@@ -132,55 +137,62 @@ final class CreatorEarningsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              Text('Recent ledger', style: SyloraTokens.title(16)),
+              Text(l10n.earningsRecentLedger, style: SyloraTokens.title(16)),
               const SizedBox(height: 8),
               if (snapshot.transactions.items.isEmpty)
                 LumenEmptyView(
-                  title: 'No earnings yet',
-                  message:
-                      'Go live and let viewers send gifts from the live tray.',
-                  actionLabel: 'Open Live',
+                  title: l10n.earningsEmptyTitle,
+                  message: l10n.earningsEmptyMessage,
+                  actionLabel: l10n.earningsOpenLive,
                   onAction: () => context.goNamed('live'),
                   icon: Icons.insights_outlined,
                 )
               else
-                ...snapshot.transactions.items.take(20).map(
-                  (tx) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: SyloraGlass(
-                      radius: SyloraTokens.radiusMd,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          const Icon(Icons.bolt_rounded, color: SyloraTokens.ion),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(tx.type, style: SyloraTokens.title(14)),
-                                Text(
-                                  '${tx.status} · ${DateFormat.yMMMd().add_jm().format(tx.createdAt.toLocal())}',
-                                  style: SyloraTokens.body(
-                                    12,
-                                    color: SyloraTokens.inkSoft,
-                                  ),
+                ...snapshot.transactions.items
+                    .take(20)
+                    .map(
+                      (tx) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: SyloraGlass(
+                          radius: SyloraTokens.radiusMd,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              const Icon(
+                                Icons.bolt_rounded,
+                                color: SyloraTokens.ion,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      tx.type,
+                                      style: SyloraTokens.title(14),
+                                    ),
+                                    Text(
+                                      '${tx.status} · ${DateFormat.yMMMd(l10n.localeName).add_jm().format(tx.createdAt.toLocal())}',
+                                      style: SyloraTokens.body(
+                                        12,
+                                        color: SyloraTokens.inkSoft,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              Text(
+                                tx.id.substring(0, 8),
+                                style: SyloraTokens.label(10),
+                              ),
+                            ],
                           ),
-                          Text(
-                            tx.id.substring(0, 8),
-                            style: SyloraTokens.label(10),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
             ],
           );
         },

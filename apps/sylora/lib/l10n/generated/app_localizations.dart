@@ -1831,6 +1831,906 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile, privacy, language, and security — tuned for every device.'**
   String get settingsHeroBody;
+
+  /// No description provided for @conferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Business and education rooms with media readiness and Aura support.'**
+  String get conferencesSubtitle;
+
+  /// No description provided for @conferencesCreateRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Create room'**
+  String get conferencesCreateRoom;
+
+  /// No description provided for @conferencesCreateDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create conference room'**
+  String get conferencesCreateDialogTitle;
+
+  /// No description provided for @conferencesRoomTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get conferencesRoomTitleLabel;
+
+  /// No description provided for @conferencesRoomTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly planning or algebra studio'**
+  String get conferencesRoomTitleHint;
+
+  /// No description provided for @conferencesPurposeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Purpose'**
+  String get conferencesPurposeLabel;
+
+  /// No description provided for @conferencesPurposeBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get conferencesPurposeBusiness;
+
+  /// No description provided for @conferencesPurposeEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Education'**
+  String get conferencesPurposeEducation;
+
+  /// No description provided for @conferencesPurposeSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get conferencesPurposeSocial;
+
+  /// No description provided for @conferencesRoomScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference room'**
+  String get conferencesRoomScreenTitle;
+
+  /// No description provided for @conferencesRoomScreenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with camera preview and publish through the configured media plane.'**
+  String get conferencesRoomScreenSubtitle;
+
+  /// No description provided for @conferencesTranslationActive.
+  ///
+  /// In en, this message translates to:
+  /// **'AI translation active'**
+  String get conferencesTranslationActive;
+
+  /// No description provided for @conferencesAiLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get conferencesAiLabel;
+
+  /// No description provided for @conferencesCaptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Captions'**
+  String get conferencesCaptions;
+
+  /// No description provided for @conferencesMediaReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Media plane is ready for WHIP publishing.'**
+  String get conferencesMediaReady;
+
+  /// No description provided for @conferencesMediaWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting the configured MediaMTX media plane.'**
+  String get conferencesMediaWaiting;
+
+  /// No description provided for @conferencesPreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera preview is unavailable on this platform. Use OBS or a companion device.'**
+  String get conferencesPreviewUnavailable;
+
+  /// No description provided for @conferencesPreviewLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera and microphone preview is live.'**
+  String get conferencesPreviewLive;
+
+  /// No description provided for @conferencesMicrophoneMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone muted.'**
+  String get conferencesMicrophoneMuted;
+
+  /// No description provided for @conferencesMicrophoneUnmuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone unmuted.'**
+  String get conferencesMicrophoneUnmuted;
+
+  /// No description provided for @conferencesCameraDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera disabled.'**
+  String get conferencesCameraDisabled;
+
+  /// No description provided for @conferencesCameraEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera enabled.'**
+  String get conferencesCameraEnabled;
+
+  /// No description provided for @conferencesScreenShareActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen share is publishing.'**
+  String get conferencesScreenShareActive;
+
+  /// No description provided for @conferencesScreenShareStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen share stopped.'**
+  String get conferencesScreenShareStopped;
+
+  /// No description provided for @conferencesCaptionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Short clip captions use MediaRecorder on SYLORA web. Open this room in a browser to record and transcribe.'**
+  String get conferencesCaptionsUnavailable;
+
+  /// No description provided for @conferencesCaptionsRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording a short microphone clip… tap “Stop & transcribe” when ready.'**
+  String get conferencesCaptionsRecording;
+
+  /// No description provided for @conferencesCaptionsTranscribing.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing the recorded clip…'**
+  String get conferencesCaptionsTranscribing;
+
+  /// No description provided for @conferencesCaptionsNoSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech was detected in that clip.'**
+  String get conferencesCaptionsNoSpeech;
+
+  /// No description provided for @conferencesAuraResponded.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura responded.'**
+  String get conferencesAuraResponded;
+
+  /// No description provided for @conferencesActiveParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String conferencesActiveParticipants(int count);
+
+  /// No description provided for @conferencesOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get conferencesOpen;
+
+  /// No description provided for @conferencesJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join code {code}'**
+  String conferencesJoinCode(String code);
+
+  /// No description provided for @conferencesMediaPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Media preview'**
+  String get conferencesMediaPreview;
+
+  /// No description provided for @conferencesMediaSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This build can request camera and microphone preview and publish over WHIP when MediaMTX is ready.'**
+  String get conferencesMediaSupported;
+
+  /// No description provided for @conferencesMediaUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera preview is unavailable on this build. Use OBS or a companion browser device for publishing.'**
+  String get conferencesMediaUnsupported;
+
+  /// No description provided for @conferencesMediaPlane.
+  ///
+  /// In en, this message translates to:
+  /// **'Media plane: {reason}'**
+  String conferencesMediaPlane(String reason);
+
+  /// No description provided for @conferencesStartPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Start preview'**
+  String get conferencesStartPreview;
+
+  /// No description provided for @conferencesPublishWhip.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish WHIP'**
+  String get conferencesPublishWhip;
+
+  /// No description provided for @conferencesRefreshMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh media'**
+  String get conferencesRefreshMedia;
+
+  /// No description provided for @conferencesAuraDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for meeting summaries, classroom prompts, agenda help, or follow-up wording.'**
+  String get conferencesAuraDescription;
+
+  /// No description provided for @conferencesAskAura.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Aura'**
+  String get conferencesAskAura;
+
+  /// No description provided for @conferencesAskAuraHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn this discussion into next steps…'**
+  String get conferencesAskAuraHint;
+
+  /// No description provided for @conferencesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No conference rooms yet'**
+  String get conferencesEmptyTitle;
+
+  /// No description provided for @conferencesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a business or education room to start a focused video session.'**
+  String get conferencesEmptyMessage;
+
+  /// No description provided for @conferencesUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get conferencesUnmute;
+
+  /// No description provided for @conferencesMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get conferencesMute;
+
+  /// No description provided for @conferencesCameraOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera on'**
+  String get conferencesCameraOn;
+
+  /// No description provided for @conferencesCameraOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera off'**
+  String get conferencesCameraOff;
+
+  /// No description provided for @conferencesStopShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop share'**
+  String get conferencesStopShare;
+
+  /// No description provided for @conferencesShareScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Share screen'**
+  String get conferencesShareScreen;
+
+  /// No description provided for @conferencesTranslationOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation on'**
+  String get conferencesTranslationOn;
+
+  /// No description provided for @conferencesAiTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'AI translate'**
+  String get conferencesAiTranslate;
+
+  /// No description provided for @conferencesStopAndTranscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop & transcribe'**
+  String get conferencesStopAndTranscribe;
+
+  /// No description provided for @conferencesLiveGifts.
+  ///
+  /// In en, this message translates to:
+  /// **'Live gifts'**
+  String get conferencesLiveGifts;
+
+  /// No description provided for @conferencesLiveGiftsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a gift for the host while this conference is active.'**
+  String get conferencesLiveGiftsDescription;
+
+  /// No description provided for @conferencesGiftsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading conference gifts…'**
+  String get conferencesGiftsLoading;
+
+  /// No description provided for @conferencesGiftsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Gifts could not load'**
+  String get conferencesGiftsLoadError;
+
+  /// No description provided for @conferencesGiftsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No gifts available'**
+  String get conferencesGiftsEmpty;
+
+  /// No description provided for @conferencesGiftsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The conference is ready, but the gift catalog is empty.'**
+  String get conferencesGiftsEmptyMessage;
+
+  /// No description provided for @conferencesRefreshGifts.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh gifts'**
+  String get conferencesRefreshGifts;
+
+  /// No description provided for @conferencesGiftCombo.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · combo ×{count}'**
+  String conferencesGiftCombo(String name, int count);
+
+  /// No description provided for @conferencesGiftSent.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} sent'**
+  String conferencesGiftSent(String name);
+
+  /// No description provided for @conferencesGiftSentToHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent {name} to the host.'**
+  String conferencesGiftSentToHost(String name);
+
+  /// No description provided for @mediaSettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Media settings saved for all platforms.'**
+  String get mediaSettingsSaved;
+
+  /// No description provided for @mediaSettingsWebNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser WHIP publish is available on Web. Desktop uses OBS Companion and Virtual Camera.'**
+  String get mediaSettingsWebNote;
+
+  /// No description provided for @mediaSettingsNativeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'On desktop and mobile, use OBS Companion and Virtual Camera for production publishing.'**
+  String get mediaSettingsNativeNote;
+
+  /// No description provided for @mediaSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera & Audio'**
+  String get mediaSettingsTitle;
+
+  /// No description provided for @mediaSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Production media stack for Live, Calls, and Creator Studio'**
+  String get mediaSettingsSubtitle;
+
+  /// No description provided for @mediaSettingsHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'MEDIA STACK'**
+  String get mediaSettingsHeroEyebrow;
+
+  /// No description provided for @mediaSettingsHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for production'**
+  String get mediaSettingsHeroTitle;
+
+  /// No description provided for @mediaSettingsCameraSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get mediaSettingsCameraSection;
+
+  /// No description provided for @mediaSettingsCameraDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera device'**
+  String get mediaSettingsCameraDevice;
+
+  /// No description provided for @mediaSettingsDefaultDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get mediaSettingsDefaultDevice;
+
+  /// No description provided for @mediaSettingsFrontCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Front camera'**
+  String get mediaSettingsFrontCamera;
+
+  /// No description provided for @mediaSettingsRearCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear camera'**
+  String get mediaSettingsRearCamera;
+
+  /// No description provided for @mediaSettingsVirtualDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtual device'**
+  String get mediaSettingsVirtualDevice;
+
+  /// No description provided for @mediaSettingsResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution'**
+  String get mediaSettingsResolution;
+
+  /// No description provided for @mediaSettingsMirrorPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror preview'**
+  String get mediaSettingsMirrorPreview;
+
+  /// No description provided for @mediaSettingsAudioSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone & audio routing'**
+  String get mediaSettingsAudioSection;
+
+  /// No description provided for @mediaSettingsMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone'**
+  String get mediaSettingsMicrophone;
+
+  /// No description provided for @mediaSettingsHeadset.
+  ///
+  /// In en, this message translates to:
+  /// **'Headset'**
+  String get mediaSettingsHeadset;
+
+  /// No description provided for @mediaSettingsUsbMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'USB microphone'**
+  String get mediaSettingsUsbMicrophone;
+
+  /// No description provided for @mediaSettingsAudioRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio route'**
+  String get mediaSettingsAudioRoute;
+
+  /// No description provided for @mediaSettingsStreamMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Stream mix'**
+  String get mediaSettingsStreamMix;
+
+  /// No description provided for @mediaSettingsMonitorMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor mix'**
+  String get mediaSettingsMonitorMix;
+
+  /// No description provided for @mediaSettingsVoipPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice call path'**
+  String get mediaSettingsVoipPath;
+
+  /// No description provided for @mediaSettingsHeadphones.
+  ///
+  /// In en, this message translates to:
+  /// **'Headphones'**
+  String get mediaSettingsHeadphones;
+
+  /// No description provided for @mediaSettingsNoiseSuppression.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise suppression'**
+  String get mediaSettingsNoiseSuppression;
+
+  /// No description provided for @mediaSettingsEchoCancellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo cancellation'**
+  String get mediaSettingsEchoCancellation;
+
+  /// No description provided for @mediaSettingsObsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'OBS & Virtual Camera'**
+  String get mediaSettingsObsSection;
+
+  /// No description provided for @mediaSettingsObsConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'OBS Companion connected'**
+  String get mediaSettingsObsConnected;
+
+  /// No description provided for @mediaSettingsObsConnectedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scene sync + start with OBS'**
+  String get mediaSettingsObsConnectedDescription;
+
+  /// No description provided for @mediaSettingsVirtualCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'SYLORA Virtual Camera'**
+  String get mediaSettingsVirtualCamera;
+
+  /// No description provided for @mediaSettingsVirtualCameraDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Expose feed to Zoom, Meet, or OBS'**
+  String get mediaSettingsVirtualCameraDescription;
+
+  /// No description provided for @mediaSettingsStreamingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaming'**
+  String get mediaSettingsStreamingSection;
+
+  /// No description provided for @mediaSettingsBitrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Bitrate (kbps)'**
+  String get mediaSettingsBitrate;
+
+  /// No description provided for @mediaSettingsLatencyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Latency mode'**
+  String get mediaSettingsLatencyMode;
+
+  /// No description provided for @mediaSettingsUltraLowLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Ultra low'**
+  String get mediaSettingsUltraLowLatency;
+
+  /// No description provided for @mediaSettingsLowLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get mediaSettingsLowLatency;
+
+  /// No description provided for @mediaSettingsNormalLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get mediaSettingsNormalLatency;
+
+  /// No description provided for @mediaSettingsRecordingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get mediaSettingsRecordingSection;
+
+  /// No description provided for @mediaSettingsLocalRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Local recording'**
+  String get mediaSettingsLocalRecording;
+
+  /// No description provided for @mediaSettingsCloudRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud recording'**
+  String get mediaSettingsCloudRecording;
+
+  /// No description provided for @mediaSettingsCloudRecordingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploads to configured object storage'**
+  String get mediaSettingsCloudRecordingDescription;
+
+  /// No description provided for @mediaSettingsSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save media profile'**
+  String get mediaSettingsSaveProfile;
+
+  /// No description provided for @earningsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator Earnings'**
+  String get earningsTitle;
+
+  /// No description provided for @earningsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live gifts, tips, and payouts — one ecosystem ledger.'**
+  String get earningsSubtitle;
+
+  /// No description provided for @earningsHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'EARNINGS'**
+  String get earningsHeroEyebrow;
+
+  /// No description provided for @earningsHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your creator balance'**
+  String get earningsHeroTitle;
+
+  /// No description provided for @earningsHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips and gifts count only from Live Streams, Guest Streams, Multi-host Conferences, and Voice Rooms. Gift Shop is for buying inventory — not sending.'**
+  String get earningsHeroBody;
+
+  /// No description provided for @earningsTotalAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Total available'**
+  String get earningsTotalAvailable;
+
+  /// No description provided for @earningsMinorUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} minor units'**
+  String earningsMinorUnits(int amount);
+
+  /// No description provided for @earningsAcceptLiveGifts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept live gifts'**
+  String get earningsAcceptLiveGifts;
+
+  /// No description provided for @earningsAcceptLiveGiftsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, viewers cannot send gifts during your live sessions.'**
+  String get earningsAcceptLiveGiftsDescription;
+
+  /// No description provided for @earningsRecentLedger.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent ledger'**
+  String get earningsRecentLedger;
+
+  /// No description provided for @earningsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No earnings yet'**
+  String get earningsEmptyTitle;
+
+  /// No description provided for @earningsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Go live and let viewers send gifts from the live tray.'**
+  String get earningsEmptyMessage;
+
+  /// No description provided for @earningsOpenLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Live'**
+  String get earningsOpenLive;
+
+  /// No description provided for @communitiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get communitiesTitle;
+
+  /// No description provided for @communitiesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find people around shared interests or start a space of your own.'**
+  String get communitiesSubtitle;
+
+  /// No description provided for @communitiesCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create community'**
+  String get communitiesCreate;
+
+  /// No description provided for @communitiesHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'COMMUNITIES'**
+  String get communitiesHeroEyebrow;
+
+  /// No description provided for @communitiesHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your people'**
+  String get communitiesHeroTitle;
+
+  /// No description provided for @communitiesHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse public spaces and communities you belong to, then continue into their existing channels.'**
+  String get communitiesHeroBody;
+
+  /// No description provided for @communitiesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search communities'**
+  String get communitiesSearchHint;
+
+  /// No description provided for @communitiesSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get communitiesSearch;
+
+  /// No description provided for @communitiesClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get communitiesClearSearch;
+
+  /// No description provided for @communitiesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No communities yet'**
+  String get communitiesEmptyTitle;
+
+  /// No description provided for @communitiesNoMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching communities'**
+  String get communitiesNoMatchesTitle;
+
+  /// No description provided for @communitiesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create the first community to begin gathering people.'**
+  String get communitiesEmptyMessage;
+
+  /// No description provided for @communitiesNoMatchesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name, description, or slug.'**
+  String get communitiesNoMatchesMessage;
+
+  /// No description provided for @communitiesNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get communitiesNameLabel;
+
+  /// No description provided for @communitiesNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a community name.'**
+  String get communitiesNameRequired;
+
+  /// No description provided for @communitiesSlugLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slug'**
+  String get communitiesSlugLabel;
+
+  /// No description provided for @communitiesSlugHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase letters, numbers, and hyphens.'**
+  String get communitiesSlugHelper;
+
+  /// No description provided for @communitiesSlugInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 3 lowercase URL-safe characters.'**
+  String get communitiesSlugInvalid;
+
+  /// No description provided for @communitiesDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get communitiesDescriptionLabel;
+
+  /// No description provided for @communitiesVisibilityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get communitiesVisibilityLabel;
+
+  /// No description provided for @communitiesVisibilityPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get communitiesVisibilityPublic;
+
+  /// No description provided for @communitiesVisibilityPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private — requests require approval'**
+  String get communitiesVisibilityPrivate;
+
+  /// No description provided for @communitiesVisibilityPrivateShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get communitiesVisibilityPrivateShort;
+
+  /// No description provided for @communitiesVisibilityInviteOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite only'**
+  String get communitiesVisibilityInviteOnly;
+
+  /// No description provided for @communitiesJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get communitiesJoined;
+
+  /// No description provided for @communitiesLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave community'**
+  String get communitiesLeave;
+
+  /// No description provided for @communitiesJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join community'**
+  String get communitiesJoin;
+
+  /// No description provided for @communitiesMembershipPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership request submitted.'**
+  String get communitiesMembershipPending;
+
+  /// No description provided for @communitiesMembershipStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Community membership: {status}'**
+  String communitiesMembershipStatus(String status);
+
+  /// No description provided for @communitiesChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get communitiesChannels;
+
+  /// No description provided for @communitiesNoChannelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No visible channels'**
+  String get communitiesNoChannelsTitle;
+
+  /// No description provided for @communitiesNoChannelsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No channels are visible in this community.'**
+  String get communitiesNoChannelsMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -8,6 +8,7 @@ import 'package:sylora/core/api.dart';
 import 'package:sylora/core/config.dart';
 import 'package:sylora/core/lumen_theme.dart';
 import 'package:sylora/core/models.dart';
+import 'package:sylora/core/push_service.dart';
 
 import 'test_transport.dart';
 
@@ -42,15 +43,12 @@ void main() {
       final android = AppConfig.local(
         origin: AppConfig.localAndroidEmulatorOrigin,
       );
-      expect(desktop.endpoint('auth/login').toString(), endsWith('/v1/auth/login'));
       expect(
-        android.apiBaseUri.host,
-        '10.0.2.2',
+        desktop.endpoint('auth/login').toString(),
+        endsWith('/v1/auth/login'),
       );
-      expect(
-        android.websocket('ws/messages').scheme,
-        'ws',
-      );
+      expect(android.apiBaseUri.host, '10.0.2.2');
+      expect(android.websocket('ws/messages').scheme, 'ws');
     });
   });
 
@@ -121,6 +119,54 @@ void main() {
       expect(problem.type, isNull);
       expect(problem.instance, isNull);
       expect(problem.requestId, 'header-request');
+    });
+  });
+
+  group('PushService', () {
+    test('keeps native push disabled when FCM is unconfigured', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final preferences = await SharedPreferences.getInstance();
+      final client = _RecordingPushClient();
+      final service = PushService(client: client, preferences: preferences);
+
+      expect(service.nativePushAvailable, isFalse);
+      await expectLater(
+        service.setEnabled(true),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            'Push requires FCM configuration',
+          ),
+        ),
+      );
+      expect(service.state, isFalse);
+      expect(client.registered, isEmpty);
+      service.dispose();
+    });
+
+    test('registers current and refreshed configured tokens', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final preferences = await SharedPreferences.getInstance();
+      final client = _RecordingPushClient();
+      final tokens = _ConfiguredPushTokens('initial-fcm-token-123456');
+      final service = PushService(
+        client: client,
+        tokenProvider: tokens,
+        preferences: preferences,
+      );
+
+      await service.setEnabled(true);
+      tokens.add('refreshed-fcm-token-123456');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(service.nativePushAvailable, isTrue);
+      expect(client.registered, <String>[
+        'initial-fcm-token-123456',
+        'refreshed-fcm-token-123456',
+      ]);
+      service.dispose();
+      await tokens.close();
     });
   });
 
@@ -401,6 +447,44 @@ double _contrast(Color a, Color b) {
       (darker.computeLuminance() + 0.05);
 }
 
+final class _RecordingPushClient implements PushRegistrationClient {
+  final List<String> registered = <String>[];
+
+  @override
+  Future<void> registerDevice({
+    required String platform,
+    required String token,
+  }) async {
+    registered.add(token);
+  }
+
+  @override
+  Future<void> unregisterDevice({
+    required String platform,
+    required String token,
+  }) async {}
+}
+
+final class _ConfiguredPushTokens implements PushTokenProvider {
+  _ConfiguredPushTokens(this._current);
+
+  final String _current;
+  final StreamController<String> _controller = StreamController<String>();
+
+  @override
+  bool get configured => true;
+
+  @override
+  Future<String?> currentToken() async => _current;
+
+  @override
+  Stream<String> get tokenChanges => _controller.stream;
+
+  void add(String token) => _controller.add(token);
+
+  Future<void> close() => _controller.close();
+}
+
 final class _MemoryTokenStore implements TokenStore {
   _MemoryTokenStore(AuthTokens initial)
     : _accessToken = initial.accessToken,
@@ -437,8 +521,7 @@ final class _FailingRefreshVault implements SecureRefreshVault {
   Future<String?> read() => Future<String?>.error(StateError('KeyringLocked'));
 
   @override
-  Future<void> delete() =>
-      Future<void>.error(StateError('KeyringLocked'));
+  Future<void> delete() => Future<void>.error(StateError('KeyringLocked'));
 }
 
 final class _MemoryRefreshVault implements SecureRefreshVault {

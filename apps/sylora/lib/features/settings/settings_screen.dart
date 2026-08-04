@@ -73,6 +73,9 @@ final class SettingsScreen extends ConsumerWidget {
     final visual = ref.watch(visualSettingsProvider);
     final locale = ref.watch(localeControllerProvider);
     final notificationsEnabled = ref.watch(pushServiceProvider);
+    final nativePushAvailable = ref
+        .read(pushServiceProvider.notifier)
+        .nativePushAvailable;
     return LumenPage(
       title: l10n.navSettings,
       subtitle: l10n.settingsHeroBody,
@@ -124,130 +127,137 @@ final class SettingsScreen extends ConsumerWidget {
                 SyloraStaggeredReveal(
                   index: 0,
                   child: SyloraGlassTile(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Text(
-                        l10n.settingsProfile,
-                        style: SyloraTokens.title(18),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: <Widget>[
-                          SyloraAvatarOrb(
-                            label: snapshot.profile.displayName,
-                            imageUrl: snapshot.profile.avatarUrl,
-                            size: 56,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  snapshot.profile.displayName,
-                                  style: SyloraTokens.title(17),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  snapshot.profile.handle == null
-                                      ? l10n.settingsNoPublicHandle
-                                      : '@${snapshot.profile.handle}',
-                                  style: SyloraTokens.body(
-                                    13,
-                                    color: SyloraTokens.inkMute,
-                                  ),
-                                ),
-                              ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Text(
+                          l10n.settingsProfile,
+                          style: SyloraTokens.title(18),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: <Widget>[
+                            SyloraAvatarOrb(
+                              label: snapshot.profile.displayName,
+                              imageUrl: snapshot.profile.avatarUrl,
+                              size: 56,
                             ),
-                          ),
-                          SyloraButton(
-                            label: l10n.settingsEditProfile,
-                            variant: SyloraButtonVariant.secondary,
-                            expanded: false,
-                            onPressed: () =>
-                                _editProfile(context, ref, snapshot.profile),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    snapshot.profile.displayName,
+                                    style: SyloraTokens.title(17),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    snapshot.profile.handle == null
+                                        ? l10n.settingsNoPublicHandle
+                                        : '@${snapshot.profile.handle}',
+                                    style: SyloraTokens.body(
+                                      13,
+                                      color: SyloraTokens.inkMute,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SyloraButton(
+                              label: l10n.settingsEditProfile,
+                              variant: SyloraButtonVariant.secondary,
+                              expanded: false,
+                              onPressed: () =>
+                                  _editProfile(context, ref, snapshot.profile),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 SyloraStaggeredReveal(
                   index: 1,
                   child: SyloraGlassTile(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        l10n.settingsAccountPrivacy,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.settingsProductEmails),
-                        value: snapshot.settings.productEmails,
-                        onChanged: (value) => _updateAccount(
-                          ref,
-                          <String, dynamic>{'product_emails': value},
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          l10n.settingsAccountPrivacy,
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                      ),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.settingsMarketingEmails),
-                        value: snapshot.settings.marketingEmails,
-                        onChanged: (value) => _updateAccount(
-                          ref,
-                          <String, dynamic>{'marketing_emails': value},
-                        ),
-                      ),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.settingsSecurityEmails),
-                        subtitle: Text(l10n.settingsSecurityEmailDescription),
-                        value: snapshot.settings.securityEmails,
-                        onChanged: (value) => _updateAccount(
-                          ref,
-                          <String, dynamic>{'security_emails': value},
-                        ),
-                      ),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.settingsNotifications),
-                        subtitle: Text(l10n.settingsNotificationsDescription),
-                        value: notificationsEnabled,
-                        onChanged: (value) =>
-                            unawaited(_setNotifications(context, ref, value)),
-                      ),
-                      DropdownButtonFormField<String>(
-                        initialValue: snapshot.settings.profileVisibility,
-                        decoration: InputDecoration(
-                          labelText: l10n.settingsProfileVisibility,
-                        ),
-                        items: <DropdownMenuItem<String>>[
-                          DropdownMenuItem(
-                            value: 'public',
-                            child: Text(l10n.settingsProfilePublic),
+                        const SizedBox(height: 8),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.settingsProductEmails),
+                          value: snapshot.settings.productEmails,
+                          onChanged: (value) => _updateAccount(
+                            ref,
+                            <String, dynamic>{'product_emails': value},
                           ),
-                          DropdownMenuItem(
-                            value: 'private',
-                            child: Text(l10n.settingsProfilePrivate),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.settingsMarketingEmails),
+                          value: snapshot.settings.marketingEmails,
+                          onChanged: (value) => _updateAccount(
+                            ref,
+                            <String, dynamic>{'marketing_emails': value},
                           ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            _updateAccount(ref, <String, dynamic>{
-                              'profile_visibility': value,
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.settingsSecurityEmails),
+                          subtitle: Text(l10n.settingsSecurityEmailDescription),
+                          value: snapshot.settings.securityEmails,
+                          onChanged: (value) => _updateAccount(
+                            ref,
+                            <String, dynamic>{'security_emails': value},
+                          ),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.settingsNotifications),
+                          subtitle: Text(
+                            nativePushAvailable
+                                ? l10n.settingsNotificationsDescription
+                                : 'Push requires FCM configuration. In-app notifications remain available.',
+                          ),
+                          value: notificationsEnabled,
+                          onChanged: nativePushAvailable
+                              ? (value) => unawaited(
+                                  _setNotifications(context, ref, value),
+                                )
+                              : null,
+                        ),
+                        DropdownButtonFormField<String>(
+                          initialValue: snapshot.settings.profileVisibility,
+                          decoration: InputDecoration(
+                            labelText: l10n.settingsProfileVisibility,
+                          ),
+                          items: <DropdownMenuItem<String>>[
+                            DropdownMenuItem(
+                              value: 'public',
+                              child: Text(l10n.settingsProfilePublic),
+                            ),
+                            DropdownMenuItem(
+                              value: 'private',
+                              child: Text(l10n.settingsProfilePrivate),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              _updateAccount(ref, <String, dynamic>{
+                                'profile_visibility': value,
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -257,119 +267,116 @@ final class SettingsScreen extends ConsumerWidget {
           SyloraStaggeredReveal(
             index: 2,
             child: SyloraGlassTile(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  l10n.settingsDisplayAccessibility,
-                  style: SyloraTokens.title(18),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<Locale>(
-                  initialValue: locale,
-                  decoration: InputDecoration(
-                    labelText: l10n.settingsLanguage,
-                    helperText: l10n.settingsLanguageDescription,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    l10n.settingsDisplayAccessibility,
+                    style: SyloraTokens.title(18),
                   ),
-                  items: <DropdownMenuItem<Locale>>[
-                    for (final option in SyloraLocales.options)
-                      DropdownMenuItem<Locale>(
-                        value: option.locale,
-                        child: Text(_localeLabel(l10n, option.locale)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<Locale>(
+                    initialValue: locale,
+                    decoration: InputDecoration(
+                      labelText: l10n.settingsLanguage,
+                      helperText: l10n.settingsLanguageDescription,
+                    ),
+                    items: <DropdownMenuItem<Locale>>[
+                      for (final option in SyloraLocales.options)
+                        DropdownMenuItem<Locale>(
+                          value: option.locale,
+                          child: Text(_localeLabel(l10n, option.locale)),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        ref
+                            .read(localeControllerProvider.notifier)
+                            .setLocale(value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<LumenThemeMode>(
+                    initialValue: visual.themeMode,
+                    decoration: InputDecoration(labelText: l10n.settingsTheme),
+                    items: <DropdownMenuItem<LumenThemeMode>>[
+                      DropdownMenuItem(
+                        value: LumenThemeMode.light,
+                        child: Text(l10n.settingsThemeLight),
                       ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      ref
-                          .read(localeControllerProvider.notifier)
-                          .setLocale(value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<LumenThemeMode>(
-                  initialValue: visual.themeMode,
-                  decoration: InputDecoration(labelText: l10n.settingsTheme),
-                  items: <DropdownMenuItem<LumenThemeMode>>[
-                    DropdownMenuItem(
-                      value: LumenThemeMode.light,
-                      child: Text(l10n.settingsThemeLight),
-                    ),
-                    DropdownMenuItem(
-                      value: LumenThemeMode.dark,
-                      child: Text(l10n.settingsThemeDark),
-                    ),
-                    DropdownMenuItem(
-                      value: LumenThemeMode.system,
-                      child: Text(l10n.settingsThemeSystem),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      ref
-                          .read(visualSettingsProvider.notifier)
-                          .update(visual.copyWith(themeMode: value));
-                    }
-                  },
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.settingsHighContrast),
-                  value: visual.highContrast,
-                  onChanged: (value) => ref
-                      .read(visualSettingsProvider.notifier)
-                      .update(visual.copyWith(highContrast: value)),
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.settingsReducedMotion),
-                  value: visual.reducedMotion,
-                  onChanged: (value) => ref
-                      .read(visualSettingsProvider.notifier)
-                      .update(visual.copyWith(reducedMotion: value)),
-                ),
-                Text(
-                  l10n.settingsTextScale(visual.textScale.toStringAsFixed(1)),
-                ),
-                Slider(
-                  value: visual.textScale,
-                  min: 0.8,
-                  max: 2,
-                  divisions: 6,
-                  label: '${visual.textScale.toStringAsFixed(1)}×',
-                  onChanged: (value) => ref
-                      .read(visualSettingsProvider.notifier)
-                      .update(visual.copyWith(textScale: value)),
-                ),
-              ],
-            ),
+                      DropdownMenuItem(
+                        value: LumenThemeMode.dark,
+                        child: Text(l10n.settingsThemeDark),
+                      ),
+                      DropdownMenuItem(
+                        value: LumenThemeMode.system,
+                        child: Text(l10n.settingsThemeSystem),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        ref
+                            .read(visualSettingsProvider.notifier)
+                            .update(visual.copyWith(themeMode: value));
+                      }
+                    },
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.settingsHighContrast),
+                    value: visual.highContrast,
+                    onChanged: (value) => ref
+                        .read(visualSettingsProvider.notifier)
+                        .update(visual.copyWith(highContrast: value)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.settingsReducedMotion),
+                    value: visual.reducedMotion,
+                    onChanged: (value) => ref
+                        .read(visualSettingsProvider.notifier)
+                        .update(visual.copyWith(reducedMotion: value)),
+                  ),
+                  Text(
+                    l10n.settingsTextScale(visual.textScale.toStringAsFixed(1)),
+                  ),
+                  Slider(
+                    value: visual.textScale,
+                    min: 0.8,
+                    max: 2,
+                    divisions: 6,
+                    label: '${visual.textScale.toStringAsFixed(1)}×',
+                    onChanged: (value) => ref
+                        .read(visualSettingsProvider.notifier)
+                        .update(visual.copyWith(textScale: value)),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
           SyloraStaggeredReveal(
             index: 3,
             child: SyloraGlassTile(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  l10n.settingsSecurity,
-                  style: SyloraTokens.title(18),
-                ),
-                const SizedBox(height: 12),
-                LumenSecondaryButton(
-                  label: l10n.settingsSessions,
-                  icon: Icons.devices_outlined,
-                  onPressed: () => context.pushNamed('sessions'),
-                ),
-                const SizedBox(height: 8),
-                LumenSecondaryButton(
-                  label: l10n.settingsAuthenticatorApp,
-                  icon: Icons.security_outlined,
-                  onPressed: () => context.pushNamed('totp'),
-                ),
-              ],
-            ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(l10n.settingsSecurity, style: SyloraTokens.title(18)),
+                  const SizedBox(height: 12),
+                  LumenSecondaryButton(
+                    label: l10n.settingsSessions,
+                    icon: Icons.devices_outlined,
+                    onPressed: () => context.pushNamed('sessions'),
+                  ),
+                  const SizedBox(height: 8),
+                  LumenSecondaryButton(
+                    label: l10n.settingsAuthenticatorApp,
+                    icon: Icons.security_outlined,
+                    onPressed: () => context.pushNamed('totp'),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),

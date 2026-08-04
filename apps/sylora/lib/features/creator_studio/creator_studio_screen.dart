@@ -10,6 +10,7 @@ import '../../core/models.dart';
 import '../../design/sylora.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
+import '../music/music_screens.dart';
 import '../platform/repositories.dart';
 import 'media_publisher.dart';
 
@@ -63,6 +64,7 @@ final class _CreatorStudioScreenState
   bool _recording = false;
   bool _recordingBusy = false;
   bool _guestsBusy = false;
+  bool _bgmBusy = false;
   bool _alertPlaceholderEnabled = true;
   bool _auraDockEnabled = true;
   String _guestRole = 'guest';
@@ -95,6 +97,8 @@ final class _CreatorStudioScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final sessions = ref.watch(creatorStudioSessionsProvider);
+    ref.watch(creatorBgmProvider);
+    ref.watch(musicPlayerProvider);
     _syncAuraForSessions(sessions);
     return LumenPage(
       title: l10n.creatorStudioTitle,
@@ -474,10 +478,10 @@ final class _CreatorStudioScreenState
                       'Media settings require OBS; run preflight to verify it.')
                 : 'Optional unless OBS is enabled in Media settings.',
           ),
-          const _PreflightItem(
+          _PreflightItem(
             label: 'Music BGM',
-            ready: null,
-            detail: 'Optional; no BGM source is configured in Creator Studio.',
+            ready: ref.read(creatorBgmProvider).selection == null ? null : true,
+            detail: _bgmChecklistDetail,
           ),
           _PreflightItem(
             label: 'MediaMTX / WHIP credentials ready',
@@ -558,9 +562,18 @@ final class _CreatorStudioScreenState
         SizedBox(width: 420, child: _buildOverlaysSection()),
         SizedBox(width: 420, child: _buildGuestsSection(session)),
         SizedBox(width: 420, child: _buildAudioSection()),
+        SizedBox(width: 420, child: _buildBgmSection()),
         SizedBox(width: 420, child: _buildRecordingSection(session)),
       ],
     );
+  }
+
+  String get _bgmChecklistDetail {
+    final selection = ref.read(creatorBgmProvider).selection;
+    if (selection == null) {
+      return 'Optional; choose a track or playlist in the BGM panel.';
+    }
+    return '${selection.track.title} from ${selection.sourceTitle} is selected.';
   }
 
   Widget _buildScenesSection(LiveSessionModel? session) {
@@ -825,6 +838,262 @@ final class _CreatorStudioScreenState
     );
   }
 
+  Widget _buildBgmSection() {
+    final selection = ref.read(creatorBgmProvider).selection;
+    final player = ref.read(musicPlayerProvider);
+    final isCurrent = selection != null && player.isCurrent(selection.track);
+    final previewBlocked =
+        _publisher.hasAudioTrack || _browserPublishing || _obsScenesAvailable;
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Music BGM',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              LumenBadge(
+                label: selection == null
+                    ? 'optional'
+                    : selection.fromPlaylist
+                    ? 'playlist'
+                    : 'track',
+                color: selection == null
+                    ? LumenColors.porcelainMuted
+                    : LumenColors.aether,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Select from the SYLORA music catalog. Playback here is a local preview; use OBS to mix the selected BGM into the broadcast.',
+          ),
+          const SizedBox(height: 12),
+          if (selection == null)
+            const Text('No BGM selected.')
+          else
+            Card(
+              margin: EdgeInsets.zero,
+              child: ListTile(
+                leading: const Icon(Icons.library_music_rounded),
+                title: Text(selection.track.title),
+                subtitle: Text(
+                  '${selection.track.artistName} · ${selection.sourceTitle}\n'
+                  '${selection.track.licenseLabel}',
+                ),
+                isThreeLine: true,
+                trailing: isCurrent
+                    ? Icon(
+                        player.playing
+                            ? Icons.graphic_eq_rounded
+                            : Icons.pause_circle_outline_rounded,
+                      )
+                    : null,
+              ),
+            ),
+          const SizedBox(height: 12),
+          if (previewBlocked)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Text(
+                'Local preview is paused while a microphone or publishing path is active to avoid feedback.',
+              ),
+            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              LumenPrimaryButton(
+                label: selection == null ? 'Choose BGM' : 'Change BGM',
+                icon: Icons.queue_music_rounded,
+                busy: _bgmBusy,
+                onPressed: _bgmBusy ? null : _chooseBgm,
+              ),
+              LumenSecondaryButton(
+                label: isCurrent && player.playing
+                    ? 'Pause preview'
+                    : 'Play preview',
+                icon: isCurrent && player.playing
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+                onPressed: selection != null && !previewBlocked && !_bgmBusy
+                    ? _toggleBgmPreview
+                    : null,
+                disabledReason: selection == null
+                    ? 'Choose BGM first.'
+                    : 'Preview is paused while live audio is active.',
+              ),
+              if (selection != null)
+                LumenSecondaryButton(
+                  label: 'Clear',
+                  icon: Icons.close_rounded,
+                  onPressed: _bgmBusy ? null : _clearBgm,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _chooseBgm() async {
+    setState(() => _bgmBusy = true);
+    try {
+      final home = await ref.read(musicRepositoryProvider).home();
+      if (!mounted) return;
+      final tracks = <MusicTrack>[];
+      final seenTrackIds = <String>{};
+      for (final track in <MusicTrack>[
+        ...home.creatorBgm,
+        ...home.royaltyFree,
+      ]) {
+        if (seenTrackIds.add(track.id)) tracks.add(track);
+      }
+      final playlists = <MusicPlaylist>[
+        ...home.personalPlaylists,
+        ...home.moodPlaylists,
+        ...home.aiPlaylists,
+      ];
+      final choice = await showModalBottomSheet<_BgmChoice>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (context) => SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * 0.72,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              children: <Widget>[
+                Text(
+                  'Choose Creator Studio BGM',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Tracks are selected directly. A playlist uses its first track as the local preview and keeps the playlist as the source.',
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Creator tracks',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (tracks.isEmpty)
+                  const ListTile(title: Text('No creator BGM tracks available'))
+                else
+                  for (final track in tracks)
+                    ListTile(
+                      leading: const Icon(Icons.music_note_rounded),
+                      title: Text(track.title),
+                      subtitle: Text(
+                        '${track.artistName} · ${track.licenseLabel}',
+                      ),
+                      onTap: () =>
+                          Navigator.pop(context, _BgmChoice(track: track)),
+                    ),
+                const Divider(height: 28),
+                Text(
+                  'Playlists',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (playlists.isEmpty)
+                  const ListTile(title: Text('No playlists available'))
+                else
+                  for (final playlist in playlists)
+                    ListTile(
+                      leading: const Icon(Icons.queue_music_rounded),
+                      title: Text(playlist.title),
+                      subtitle: Text('${playlist.trackCount} tracks'),
+                      onTap: () => Navigator.pop(
+                        context,
+                        _BgmChoice(playlist: playlist),
+                      ),
+                    ),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (choice == null || !mounted) return;
+      if (choice.track case final MusicTrack track) {
+        ref
+            .read(creatorBgmProvider)
+            .select(
+              CreatorBgmSelection(track: track, sourceTitle: 'Creator BGM'),
+            );
+        return;
+      }
+      final playlist = choice.playlist!;
+      final playlistTracks = await ref
+          .read(musicRepositoryProvider)
+          .playlistTracks(playlist.id);
+      if (playlistTracks.isEmpty) {
+        throw StateError('${playlist.title} has no tracks');
+      }
+      ref
+          .read(creatorBgmProvider)
+          .select(
+            CreatorBgmSelection(
+              track: playlistTracks.first,
+              sourceTitle: playlist.title,
+              playlistId: playlist.id,
+            ),
+          );
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _bgmBusy = false);
+      }
+    }
+  }
+
+  Future<void> _toggleBgmPreview() async {
+    final selection = ref.read(creatorBgmProvider).selection;
+    if (selection == null) return;
+    setState(() => _bgmBusy = true);
+    final player = ref.read(musicPlayerProvider);
+    try {
+      if (player.isCurrent(selection.track)) {
+        await player.toggle();
+      } else {
+        await player.play(selection.track);
+        final playbackError = player.error;
+        if (playbackError != null) {
+          throw StateError(playbackError);
+        }
+        await ref
+            .read(musicRepositoryProvider)
+            .play(selection.track.id, context: 'creator_studio_bgm');
+      }
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _bgmBusy = false);
+      }
+    }
+  }
+
+  Future<void> _clearBgm() async {
+    final selection = ref.read(creatorBgmProvider).selection;
+    final player = ref.read(musicPlayerProvider);
+    if (selection != null && player.isCurrent(selection.track)) {
+      await player.stop();
+    }
+    ref.read(creatorBgmProvider).clear();
+  }
+
+  Future<void> _pauseAppAudioForLiveInput() async {
+    final player = ref.read(musicPlayerProvider);
+    if (player.playing) {
+      await player.toggle();
+    }
+  }
+
   Widget _audioMeterRow(String label, double value) {
     return Row(
       children: <Widget>[
@@ -917,6 +1186,7 @@ final class _CreatorStudioScreenState
       final response = await ref
           .read(liveRepositoryProvider)
           .obsScenes(session.id);
+      await _pauseAppAudioForLiveInput();
       if (!mounted) {
         return;
       }
@@ -1272,6 +1542,7 @@ final class _CreatorStudioScreenState
             : 'Preflight found blockers. Review the checklist.';
       });
       if (obsResponse != null) {
+        await _pauseAppAudioForLiveInput();
         _applyObsScenes(obsResponse);
       }
       ref.invalidate(creatorStudioSessionsProvider);
@@ -1340,6 +1611,7 @@ final class _CreatorStudioScreenState
     setState(() => _busy = true);
     _aura.think('Aura is starting your preview.');
     try {
+      await _pauseAppAudioForLiveInput();
       await _publisher.startPreview(
         audioDeviceId: _audioDeviceId,
         videoDeviceId: _videoDeviceId,
@@ -1385,6 +1657,7 @@ final class _CreatorStudioScreenState
     setState(() => _busy = true);
     _aura.think('Aura is preparing the WHIP publishing path.');
     try {
+      await _pauseAppAudioForLiveInput();
       if (credentials['status'] != 'available') {
         setState(() {
           _credentials = credentials;
@@ -1539,4 +1812,12 @@ final class _StudioScene {
 
   final String name;
   final bool localDraft;
+}
+
+final class _BgmChoice {
+  const _BgmChoice({this.track, this.playlist})
+    : assert(track != null || playlist != null);
+
+  final MusicTrack? track;
+  final MusicPlaylist? playlist;
 }

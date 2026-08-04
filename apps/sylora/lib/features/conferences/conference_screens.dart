@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api.dart';
 import '../../core/models.dart';
 import '../../design/sylora.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import '../creator_studio/media_publisher.dart';
 import '../platform/repositories.dart';
@@ -150,17 +151,17 @@ final class ConferencesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final rooms = ref.watch(conferenceListProvider);
     return SyloraModuleScaffold(
-      title: 'Conferences',
-      subtitle:
-          'Business and education rooms with honest media readiness and Aura support.',
+      title: l10n.conferencesTitle,
+      subtitle: l10n.conferencesSubtitle,
       showAuraDock: true,
       actions: <Widget>[
         FilledButton.icon(
           onPressed: () => _showCreateDialog(context, ref),
           icon: const Icon(Icons.video_call_rounded),
-          label: const Text('Create room'),
+          label: Text(l10n.conferencesCreateRoom),
         ),
       ],
       child: rooms.when(
@@ -184,35 +185,44 @@ final class ConferencesScreen extends ConsumerWidget {
   }
 
   Future<void> _showCreateDialog(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final title = TextEditingController();
     var purpose = 'business';
     final created = await showDialog<ConferenceRoom>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Create conference room'),
+          title: Text(l10n.conferencesCreateDialogTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextField(
                 controller: title,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  hintText: 'Weekly planning or algebra studio',
+                decoration: InputDecoration(
+                  labelText: l10n.conferencesRoomTitleLabel,
+                  hintText: l10n.conferencesRoomTitleHint,
                 ),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: purpose,
-                decoration: const InputDecoration(labelText: 'Purpose'),
-                items: const <DropdownMenuItem<String>>[
-                  DropdownMenuItem(value: 'business', child: Text('Business')),
+                decoration: InputDecoration(
+                  labelText: l10n.conferencesPurposeLabel,
+                ),
+                items: <DropdownMenuItem<String>>[
+                  DropdownMenuItem(
+                    value: 'business',
+                    child: Text(l10n.conferencesPurposeBusiness),
+                  ),
                   DropdownMenuItem(
                     value: 'education',
-                    child: Text('Education'),
+                    child: Text(l10n.conferencesPurposeEducation),
                   ),
-                  DropdownMenuItem(value: 'social', child: Text('Social')),
+                  DropdownMenuItem(
+                    value: 'social',
+                    child: Text(l10n.conferencesPurposeSocial),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -225,7 +235,7 @@ final class ConferencesScreen extends ConsumerWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () async {
@@ -240,7 +250,7 @@ final class ConferencesScreen extends ConsumerWidget {
                   Navigator.pop(context, room);
                 }
               },
-              child: const Text('Create'),
+              child: Text(l10n.commonCreate),
             ),
           ],
         ),
@@ -301,11 +311,11 @@ final class _ConferenceRoomScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final roomValue = ref.watch(conferenceRoomProvider(widget.conferenceId));
     return SyloraModuleScaffold(
-      title: 'Conference room',
-      subtitle:
-          'Join with native or web camera preview and publish through the configured media plane.',
+      title: l10n.conferencesRoomScreenTitle,
+      subtitle: l10n.conferencesRoomScreenSubtitle,
       showAuraDock: true,
       auraEmotion: AuraEmotion.focused,
       child: roomValue.when(
@@ -347,7 +357,7 @@ final class _ConferenceRoomScreenState
                       () => _translationCaption =
                           (result['translated_text'] as String?) ??
                           (result['text'] as String?) ??
-                          'AI translation active',
+                          l10n.conferencesTranslationActive,
                     );
                   } on Object catch (error) {
                     setState(() => _translationCaption = error.toString());
@@ -363,7 +373,7 @@ final class _ConferenceRoomScreenState
                 radius: SyloraTokens.radiusMd,
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  'AI · $_translationCaption',
+                  '${l10n.conferencesAiLabel} · $_translationCaption',
                   style: SyloraTokens.body(13),
                 ),
               ),
@@ -374,7 +384,7 @@ final class _ConferenceRoomScreenState
                 radius: SyloraTokens.radiusMd,
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  'Captions · $_captionText',
+                  '${l10n.conferencesCaptions} · $_captionText',
                   style: SyloraTokens.body(13),
                 ),
               ),
@@ -408,6 +418,7 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _loadMedia() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final credentials = await ref
           .read(conferenceRepositoryProvider)
@@ -416,8 +427,8 @@ final class _ConferenceRoomScreenState
         setState(() {
           _credentials = credentials;
           _status = credentials['status'] == 'available'
-              ? 'Media plane is ready for WHIP publishing.'
-              : 'Awaiting configured MediaMTX media plane.';
+              ? l10n.conferencesMediaReady
+              : l10n.conferencesMediaWaiting;
         });
       }
     } on Object catch (error) {
@@ -446,17 +457,17 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _startPreview() async {
+    final l10n = AppLocalizations.of(context);
     if (!_media.supported) {
       setState(() {
-        _status =
-            'Camera preview is unavailable on this platform. Use OBS or a companion device.';
+        _status = l10n.conferencesPreviewUnavailable;
       });
       return;
     }
     setState(() => _busy = true);
     try {
       await _media.startPreview();
-      setState(() => _status = 'Camera and microphone preview is live.');
+      setState(() => _status = l10n.conferencesPreviewLive);
     } on Object catch (error) {
       setState(() => _status = error.toString());
     } finally {
@@ -486,13 +497,16 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _toggleMute() async {
+    final l10n = AppLocalizations.of(context);
     final muted = !_muted;
     try {
       await _media.setAudioEnabled(!muted);
       if (mounted) {
         setState(() {
           _muted = muted;
-          _status = muted ? 'Microphone muted.' : 'Microphone unmuted.';
+          _status = muted
+              ? l10n.conferencesMicrophoneMuted
+              : l10n.conferencesMicrophoneUnmuted;
         });
       }
     } on Object catch (error) {
@@ -503,13 +517,16 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _toggleCamera() async {
+    final l10n = AppLocalizations.of(context);
     final cameraOff = !_cameraOff;
     try {
       await _media.setVideoEnabled(!cameraOff);
       if (mounted) {
         setState(() {
           _cameraOff = cameraOff;
-          _status = cameraOff ? 'Camera disabled.' : 'Camera enabled.';
+          _status = cameraOff
+              ? l10n.conferencesCameraDisabled
+              : l10n.conferencesCameraEnabled;
         });
       }
     } on Object catch (error) {
@@ -520,6 +537,7 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _toggleScreenShare() async {
+    final l10n = AppLocalizations.of(context);
     final screenShare = !_screenShare;
     try {
       await _media.setScreenShareEnabled(screenShare);
@@ -527,8 +545,8 @@ final class _ConferenceRoomScreenState
         setState(() {
           _screenShare = _media.screenSharing;
           _status = _screenShare
-              ? 'Screen share is publishing.'
-              : 'Screen share stopped.';
+              ? l10n.conferencesScreenShareActive
+              : l10n.conferencesScreenShareStopped;
         });
       }
     } on Object catch (error) {
@@ -542,10 +560,10 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _toggleCaptions() async {
+    final l10n = AppLocalizations.of(context);
     if (!_media.captionCaptureSupported) {
       setState(() {
-        _captionText =
-            'Short clip captions use MediaRecorder on SYLORA web. Open this room in a browser to record and transcribe.';
+        _captionText = l10n.conferencesCaptionsUnavailable;
       });
       return;
     }
@@ -556,8 +574,7 @@ final class _ConferenceRoomScreenState
         if (mounted) {
           setState(() {
             _captionsRecording = true;
-            _captionText =
-                'Recording a short microphone clip… tap “Stop & transcribe” when ready.';
+            _captionText = l10n.conferencesCaptionsRecording;
           });
         }
         return;
@@ -566,7 +583,7 @@ final class _ConferenceRoomScreenState
       if (mounted) {
         setState(() {
           _captionsRecording = false;
-          _captionText = 'Transcribing the recorded clip…';
+          _captionText = l10n.conferencesCaptionsTranscribing;
         });
       }
       final result = await ref
@@ -580,7 +597,7 @@ final class _ConferenceRoomScreenState
         final text = optionalString(result, 'text')?.trim();
         setState(() {
           _captionText = text == null || text.isEmpty
-              ? 'No speech was detected in that clip.'
+              ? l10n.conferencesCaptionsNoSpeech
               : text;
         });
       }
@@ -599,6 +616,7 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _askAura() async {
+    final l10n = AppLocalizations.of(context);
     final message = _auraText.text.trim();
     if (message.isEmpty) {
       return;
@@ -615,7 +633,8 @@ final class _ConferenceRoomScreenState
       final answer = requireObject(response['message'], 'aura message');
       setState(() {
         _auraConversationId = optionalString(response, 'conversation_id');
-        _auraAnswer = optionalString(answer, 'content') ?? 'Aura responded.';
+        _auraAnswer =
+            optionalString(answer, 'content') ?? l10n.conferencesAuraResponded;
         _auraText.clear();
       });
     } on Object catch (error) {
@@ -634,26 +653,30 @@ final class _ConferenceTile extends StatelessWidget {
   final ConferenceRoom room;
 
   @override
-  Widget build(BuildContext context) => Card(
-    elevation: 0,
-    color: Colors.white.withValues(alpha: 0.08),
-    child: ListTile(
-      contentPadding: const EdgeInsets.all(16),
-      leading: Icon(_purposeIcon(room.purpose), size: 34),
-      title: Text(room.title),
-      subtitle: Text(
-        '${_label(room.purpose)} • ${room.status} • ${room.activeParticipantCount} active',
-      ),
-      trailing: FilledButton.tonalIcon(
-        onPressed: () => context.goNamed(
-          'conference-room',
-          pathParameters: <String, String>{'id': room.id},
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Card(
+      elevation: 0,
+      color: Colors.white.withValues(alpha: 0.08),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Icon(_purposeIcon(room.purpose), size: 34),
+        title: Text(room.title),
+        subtitle: Text(
+          '${_label(context, room.purpose)} • ${room.status} • '
+          '${l10n.conferencesActiveParticipants(room.activeParticipantCount)}',
         ),
-        icon: const Icon(Icons.login_rounded),
-        label: const Text('Open'),
+        trailing: FilledButton.tonalIcon(
+          onPressed: () => context.goNamed(
+            'conference-room',
+            pathParameters: <String, String>{'id': room.id},
+          ),
+          icon: const Icon(Icons.login_rounded),
+          label: Text(l10n.conferencesOpen),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 final class _RoomHeader extends StatelessWidget {
@@ -668,43 +691,50 @@ final class _RoomHeader extends StatelessWidget {
   final VoidCallback? onLeave;
 
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 12,
-    runSpacing: 12,
-    alignment: WrapAlignment.spaceBetween,
-    children: <Widget>[
-      SizedBox(
-        width: 460,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      alignment: WrapAlignment.spaceBetween,
+      children: <Widget>[
+        SizedBox(
+          width: 460,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                room.title,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 6),
+              SelectableText(l10n.conferencesJoinCode(room.joinCode)),
+              const SizedBox(height: 6),
+              Text(
+                '${_label(context, room.purpose)} • ${room.status} • '
+                '${l10n.conferencesActiveParticipants(room.activeParticipantCount)}',
+              ),
+            ],
+          ),
+        ),
+        Wrap(
+          spacing: 8,
           children: <Widget>[
-            Text(room.title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 6),
-            SelectableText('Join code ${room.joinCode}'),
-            const SizedBox(height: 6),
-            Text(
-              '${_label(room.purpose)} • ${room.status} • ${room.activeParticipantCount} active',
+            FilledButton.icon(
+              onPressed: room.joined ? null : onJoin,
+              icon: const Icon(Icons.video_call_rounded),
+              label: Text(l10n.conferencesJoin),
+            ),
+            OutlinedButton.icon(
+              onPressed: room.joined && !room.isHost ? onLeave : null,
+              icon: const Icon(Icons.logout_rounded),
+              label: Text(l10n.conferencesLeave),
             ),
           ],
         ),
-      ),
-      Wrap(
-        spacing: 8,
-        children: <Widget>[
-          FilledButton.icon(
-            onPressed: room.joined ? null : onJoin,
-            icon: const Icon(Icons.video_call_rounded),
-            label: const Text('Join'),
-          ),
-          OutlinedButton.icon(
-            onPressed: room.joined && !room.isHost ? onLeave : null,
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('Leave'),
-          ),
-        ],
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 final class _MediaPanel extends StatelessWidget {
@@ -728,6 +758,7 @@ final class _MediaPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final mediaStatus = optionalString(
       credentials ?? const <String, dynamic>{},
       'status',
@@ -735,21 +766,26 @@ final class _MediaPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Text('Media preview', style: Theme.of(context).textTheme.headlineSmall),
+        Text(
+          l10n.conferencesMediaPreview,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         const SizedBox(height: 10),
         media.preview(),
         const SizedBox(height: 12),
         Text(
           media.supported
-              ? 'This build can request camera/microphone preview and publish over WHIP when MediaMTX is ready.'
-              : 'Camera preview is unavailable on this build. Use OBS or a companion browser device for publishing.',
+              ? l10n.conferencesMediaSupported
+              : l10n.conferencesMediaUnsupported,
         ),
         if (credentials != null) ...<Widget>[
           const SizedBox(height: 8),
           SelectableText(
             mediaStatus == 'available'
                 ? 'WHIP: ${credentials!['whip_url']}'
-                : 'Media plane: ${credentials!['reason'] ?? 'awaiting_media_plane'}',
+                : l10n.conferencesMediaPlane(
+                    '${credentials!['reason'] ?? 'awaiting_media_plane'}',
+                  ),
           ),
         ],
         if (status != null) ...<Widget>[
@@ -764,17 +800,17 @@ final class _MediaPanel extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: busy ? null : onPreview,
               icon: const Icon(Icons.videocam_rounded),
-              label: const Text('Start preview'),
+              label: Text(l10n.conferencesStartPreview),
             ),
             FilledButton.icon(
               onPressed: busy || mediaStatus != 'available' ? null : onPublish,
               icon: const Icon(Icons.podcasts_rounded),
-              label: const Text('Publish WHIP'),
+              label: Text(l10n.conferencesPublishWhip),
             ),
             OutlinedButton.icon(
               onPressed: busy ? null : onRefreshCredentials,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Refresh media'),
+              label: Text(l10n.conferencesRefreshMedia),
             ),
           ],
         ),
@@ -797,39 +833,43 @@ final class _AuraAssistPanel extends StatelessWidget {
   final VoidCallback onAsk;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: <Widget>[
-      Text('Aura assist', style: Theme.of(context).textTheme.headlineSmall),
-      const SizedBox(height: 8),
-      const Text(
-        'Ask for meeting summaries, classroom prompts, agenda help, or follow-up wording.',
-      ),
-      const SizedBox(height: 12),
-      TextField(
-        controller: controller,
-        minLines: 2,
-        maxLines: 5,
-        decoration: const InputDecoration(
-          labelText: 'Ask Aura',
-          hintText: 'Turn this discussion into next steps...',
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          l10n.conferencesAuraAssist,
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
-      ),
-      const SizedBox(height: 10),
-      Align(
-        alignment: Alignment.centerRight,
-        child: FilledButton.icon(
-          onPressed: busy ? null : onAsk,
-          icon: const Icon(Icons.auto_awesome_rounded),
-          label: const Text('Ask Aura'),
-        ),
-      ),
-      if (answer != null) ...<Widget>[
+        const SizedBox(height: 8),
+        Text(l10n.conferencesAuraDescription),
         const SizedBox(height: 12),
-        SelectableText(answer!),
+        TextField(
+          controller: controller,
+          minLines: 2,
+          maxLines: 5,
+          decoration: InputDecoration(
+            labelText: l10n.conferencesAskAura,
+            hintText: l10n.conferencesAskAuraHint,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: busy ? null : onAsk,
+            icon: const Icon(Icons.auto_awesome_rounded),
+            label: Text(l10n.conferencesAskAura),
+          ),
+        ),
+        if (answer != null) ...<Widget>[
+          const SizedBox(height: 12),
+          SelectableText(answer!),
+        ],
       ],
-    ],
-  );
+    );
+  }
 }
 
 final class _EmptyPanel extends StatelessWidget {
@@ -838,32 +878,33 @@ final class _EmptyPanel extends StatelessWidget {
   final VoidCallback onCreate;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          const Icon(Icons.video_call_outlined, size: 54),
-          const SizedBox(height: 12),
-          Text(
-            'No conference rooms yet',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Create a business or education room to start a focused video session.',
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: onCreate,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Create room'),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.video_call_outlined, size: 54),
+            const SizedBox(height: 12),
+            Text(
+              l10n.conferencesEmptyTitle,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(l10n.conferencesEmptyMessage),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onCreate,
+              icon: const Icon(Icons.add_rounded),
+              label: Text(l10n.conferencesCreateRoom),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 final class _ErrorPanel extends StatelessWidget {
@@ -873,17 +914,20 @@ final class _ErrorPanel extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: <Widget>[
-      Text(message, textAlign: TextAlign.center),
-      const SizedBox(height: 12),
-      OutlinedButton.icon(
-        onPressed: onRetry,
-        icon: const Icon(Icons.refresh_rounded),
-        label: const Text('Retry'),
-      ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      children: <Widget>[
+        Text(message, textAlign: TextAlign.center),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: Text(l10n.commonRetry),
+        ),
+      ],
+    );
+  }
 }
 
 IconData _purposeIcon(String purpose) => switch (purpose) {
@@ -892,11 +936,14 @@ IconData _purposeIcon(String purpose) => switch (purpose) {
   _ => Icons.business_center_outlined,
 };
 
-String _label(String purpose) => switch (purpose) {
-  'education' => 'Education',
-  'social' => 'Social',
-  _ => 'Business',
-};
+String _label(BuildContext context, String purpose) {
+  final l10n = AppLocalizations.of(context);
+  return switch (purpose) {
+    'education' => l10n.conferencesPurposeEducation,
+    'social' => l10n.conferencesPurposeSocial,
+    _ => l10n.conferencesPurposeBusiness,
+  };
+}
 
 final class _CallControlBar extends StatelessWidget {
   const _CallControlBar({
@@ -925,6 +972,7 @@ final class _CallControlBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SyloraGlass(
       radius: SyloraTokens.radiusLg,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -935,7 +983,7 @@ final class _CallControlBar extends StatelessWidget {
         children: <Widget>[
           _CallChip(
             icon: muted ? Icons.mic_off_rounded : Icons.mic_rounded,
-            label: muted ? 'Unmute' : 'Mute',
+            label: muted ? l10n.conferencesUnmute : l10n.conferencesMute,
             active: muted,
             onTap: onMute,
           ),
@@ -943,19 +991,25 @@ final class _CallControlBar extends StatelessWidget {
             icon: cameraOff
                 ? Icons.videocam_off_rounded
                 : Icons.videocam_rounded,
-            label: cameraOff ? 'Camera on' : 'Camera off',
+            label: cameraOff
+                ? l10n.conferencesCameraOn
+                : l10n.conferencesCameraOff,
             active: cameraOff,
             onTap: onCamera,
           ),
           _CallChip(
             icon: Icons.present_to_all_rounded,
-            label: screenShare ? 'Stop share' : 'Share screen',
+            label: screenShare
+                ? l10n.conferencesStopShare
+                : l10n.conferencesShareScreen,
             active: screenShare,
             onTap: onScreenShare,
           ),
           _CallChip(
             icon: Icons.translate_rounded,
-            label: aiTranslation ? 'Translation on' : 'AI translate',
+            label: aiTranslation
+                ? l10n.conferencesTranslationOn
+                : l10n.conferencesAiTranslate,
             active: aiTranslation,
             onTap: onTranslation,
           ),
@@ -963,7 +1017,9 @@ final class _CallControlBar extends StatelessWidget {
             icon: captionsRecording
                 ? Icons.stop_circle_outlined
                 : Icons.closed_caption_rounded,
-            label: captionsRecording ? 'Stop & transcribe' : 'Captions',
+            label: captionsRecording
+                ? l10n.conferencesStopAndTranscribe
+                : l10n.conferencesCaptions,
             active: captionsRecording,
             onTap: onCaptions,
           ),
@@ -1035,6 +1091,7 @@ final class _ConferenceGiftTrayState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return FutureBuilder<CursorPage<GiftModel>>(
       future: _catalog,
       builder: (context, snapshot) {
@@ -1049,7 +1106,10 @@ final class _ConferenceGiftTrayState
                   const Icon(Icons.card_giftcard_rounded, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('Live gifts', style: SyloraTokens.title(15)),
+                    child: Text(
+                      l10n.conferencesLiveGifts,
+                      style: SyloraTokens.title(15),
+                    ),
                   ),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 180),
@@ -1077,34 +1137,33 @@ final class _ConferenceGiftTrayState
               ),
               const SizedBox(height: 4),
               Text(
-                'Choose a gift for the host while this conference is active.',
+                l10n.conferencesLiveGiftsDescription,
                 style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
               ),
               const SizedBox(height: 10),
               if (snapshot.connectionState != ConnectionState.done)
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    LinearProgressIndicator(),
-                    SizedBox(height: 8),
-                    Text('Loading conference gifts…'),
+                    const LinearProgressIndicator(),
+                    const SizedBox(height: 8),
+                    Text(l10n.conferencesGiftsLoading),
                   ],
                 )
               else if (snapshot.hasError)
                 _stateMessage(
                   icon: Icons.cloud_off_outlined,
-                  title: 'Gifts could not load',
+                  title: l10n.conferencesGiftsLoadError,
                   message: messageFor(snapshot.error!),
-                  actionLabel: 'Try again',
+                  actionLabel: l10n.commonTryAgain,
                   onAction: _reloadCatalog,
                 )
               else if (snapshot.data?.items.isEmpty ?? true)
                 _stateMessage(
                   icon: Icons.redeem_outlined,
-                  title: 'No gifts available',
-                  message:
-                      'The conference is ready, but the gift catalog is empty.',
-                  actionLabel: 'Refresh gifts',
+                  title: l10n.conferencesGiftsEmpty,
+                  message: l10n.conferencesGiftsEmptyMessage,
+                  actionLabel: l10n.conferencesRefreshGifts,
                   onAction: _reloadCatalog,
                 )
               else
@@ -1177,6 +1236,7 @@ final class _ConferenceGiftTrayState
   }
 
   Future<void> _send(GiftModel gift) async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _sendingId = gift.id);
     try {
       await ref
@@ -1202,8 +1262,8 @@ final class _ConferenceGiftTrayState
         _lastGiftId = gift.id;
         _lastSentAt = now;
         _feedback = _comboCount > 1
-            ? '${gift.name} · combo ×$_comboCount'
-            : '${gift.name} sent';
+            ? l10n.conferencesGiftCombo(gift.name, _comboCount)
+            : l10n.conferencesGiftSent(gift.name);
       });
       _feedbackTimer?.cancel();
       _feedbackTimer = Timer(const Duration(seconds: 3), () {
@@ -1211,9 +1271,9 @@ final class _ConferenceGiftTrayState
           setState(() => _feedback = null);
         }
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Sent ${gift.name} to the host.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.conferencesGiftSentToHost(gift.name))),
+      );
     } on Object catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(

@@ -907,4 +907,503 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsHeroBody =>
       'Профіль, приватність, мова й безпека — для кожного пристрою.';
+
+  @override
+  String get conferencesSubtitle =>
+      'Кімнати для бізнесу й освіти з готовністю медіа та підтримкою Aura.';
+
+  @override
+  String get conferencesCreateRoom => 'Створити кімнату';
+
+  @override
+  String get conferencesCreateDialogTitle => 'Створити конференц-кімнату';
+
+  @override
+  String get conferencesRoomTitleLabel => 'Назва';
+
+  @override
+  String get conferencesRoomTitleHint =>
+      'Щотижневе планування або студія алгебри';
+
+  @override
+  String get conferencesPurposeLabel => 'Призначення';
+
+  @override
+  String get conferencesPurposeBusiness => 'Бізнес';
+
+  @override
+  String get conferencesPurposeEducation => 'Освіта';
+
+  @override
+  String get conferencesPurposeSocial => 'Спілкування';
+
+  @override
+  String get conferencesRoomScreenTitle => 'Конференц-кімната';
+
+  @override
+  String get conferencesRoomScreenSubtitle =>
+      'Приєднуйтеся з прев’ю камери та публікуйте через налаштований медіасервіс.';
+
+  @override
+  String get conferencesTranslationActive => 'AI-переклад активний';
+
+  @override
+  String get conferencesAiLabel => 'AI';
+
+  @override
+  String get conferencesCaptions => 'Субтитри';
+
+  @override
+  String get conferencesMediaReady => 'Медіасервіс готовий до публікації WHIP.';
+
+  @override
+  String get conferencesMediaWaiting =>
+      'Очікуємо налаштований медіасервіс MediaMTX.';
+
+  @override
+  String get conferencesPreviewUnavailable =>
+      'Прев’ю камери недоступне на цій платформі. Використайте OBS або інший пристрій.';
+
+  @override
+  String get conferencesPreviewLive => 'Прев’ю камери й мікрофона активне.';
+
+  @override
+  String get conferencesMicrophoneMuted => 'Мікрофон вимкнено.';
+
+  @override
+  String get conferencesMicrophoneUnmuted => 'Мікрофон увімкнено.';
+
+  @override
+  String get conferencesCameraDisabled => 'Камеру вимкнено.';
+
+  @override
+  String get conferencesCameraEnabled => 'Камеру увімкнено.';
+
+  @override
+  String get conferencesScreenShareActive => 'Показ екрана транслюється.';
+
+  @override
+  String get conferencesScreenShareStopped => 'Показ екрана зупинено.';
+
+  @override
+  String get conferencesCaptionsUnavailable =>
+      'Субтитри для коротких кліпів використовують MediaRecorder у вебверсії SYLORA. Відкрийте кімнату в браузері, щоб записати й транскрибувати.';
+
+  @override
+  String get conferencesCaptionsRecording =>
+      'Записуємо короткий аудіокліп… натисніть «Зупинити й транскрибувати», коли будете готові.';
+
+  @override
+  String get conferencesCaptionsTranscribing => 'Транскрибуємо записаний кліп…';
+
+  @override
+  String get conferencesCaptionsNoSpeech =>
+      'У цьому кліпі не виявлено мовлення.';
+
+  @override
+  String get conferencesAuraResponded => 'Aura відповіла.';
+
+  @override
+  String conferencesActiveParticipants(int count) {
+    return 'Активні: $count';
+  }
+
+  @override
+  String get conferencesOpen => 'Відкрити';
+
+  @override
+  String conferencesJoinCode(String code) {
+    return 'Код приєднання: $code';
+  }
+
+  @override
+  String get conferencesMediaPreview => 'Прев’ю медіа';
+
+  @override
+  String get conferencesMediaSupported =>
+      'Ця збірка підтримує прев’ю камери й мікрофона та публікацію через WHIP, коли MediaMTX готовий.';
+
+  @override
+  String get conferencesMediaUnsupported =>
+      'Прев’ю камери недоступне в цій збірці. Для публікації використайте OBS або браузер на іншому пристрої.';
+
+  @override
+  String conferencesMediaPlane(String reason) {
+    return 'Медіасервіс: $reason';
+  }
+
+  @override
+  String get conferencesStartPreview => 'Запустити прев’ю';
+
+  @override
+  String get conferencesPublishWhip => 'Опублікувати WHIP';
+
+  @override
+  String get conferencesRefreshMedia => 'Оновити медіа';
+
+  @override
+  String get conferencesAuraDescription =>
+      'Попросіть підсумок зустрічі, навчальні підказки, допомогу з порядком денним або наступними повідомленнями.';
+
+  @override
+  String get conferencesAskAura => 'Запитати Aura';
+
+  @override
+  String get conferencesAskAuraHint =>
+      'Перетвори обговорення на наступні кроки…';
+
+  @override
+  String get conferencesEmptyTitle => 'Конференц-кімнат ще немає';
+
+  @override
+  String get conferencesEmptyMessage =>
+      'Створіть бізнес- або освітню кімнату, щоб почати зосереджену відеосесію.';
+
+  @override
+  String get conferencesUnmute => 'Увімкнути звук';
+
+  @override
+  String get conferencesMute => 'Вимкнути звук';
+
+  @override
+  String get conferencesCameraOn => 'Увімкнути камеру';
+
+  @override
+  String get conferencesCameraOff => 'Вимкнути камеру';
+
+  @override
+  String get conferencesStopShare => 'Зупинити показ';
+
+  @override
+  String get conferencesShareScreen => 'Показати екран';
+
+  @override
+  String get conferencesTranslationOn => 'Переклад увімкнено';
+
+  @override
+  String get conferencesAiTranslate => 'AI-переклад';
+
+  @override
+  String get conferencesStopAndTranscribe => 'Зупинити й транскрибувати';
+
+  @override
+  String get conferencesLiveGifts => 'Подарунки наживо';
+
+  @override
+  String get conferencesLiveGiftsDescription =>
+      'Оберіть подарунок для ведучого, поки конференція активна.';
+
+  @override
+  String get conferencesGiftsLoading => 'Завантаження подарунків конференції…';
+
+  @override
+  String get conferencesGiftsLoadError => 'Не вдалося завантажити подарунки';
+
+  @override
+  String get conferencesGiftsEmpty => 'Подарунків немає';
+
+  @override
+  String get conferencesGiftsEmptyMessage =>
+      'Конференція готова, але каталог подарунків порожній.';
+
+  @override
+  String get conferencesRefreshGifts => 'Оновити подарунки';
+
+  @override
+  String conferencesGiftCombo(String name, int count) {
+    return '$name · комбо ×$count';
+  }
+
+  @override
+  String conferencesGiftSent(String name) {
+    return '$name надіслано';
+  }
+
+  @override
+  String conferencesGiftSentToHost(String name) {
+    return 'Подарунок $name надіслано ведучому.';
+  }
+
+  @override
+  String get mediaSettingsSaved =>
+      'Налаштування медіа збережено для всіх платформ.';
+
+  @override
+  String get mediaSettingsWebNote =>
+      'Публікація WHIP доступна в браузері. На комп’ютері використовуйте OBS Companion і Virtual Camera.';
+
+  @override
+  String get mediaSettingsNativeNote =>
+      'На комп’ютері й мобільному використовуйте OBS Companion і Virtual Camera для професійної публікації.';
+
+  @override
+  String get mediaSettingsTitle => 'Камера й аудіо';
+
+  @override
+  String get mediaSettingsSubtitle =>
+      'Професійний медіастек для ефірів, дзвінків і Creator Studio';
+
+  @override
+  String get mediaSettingsHeroEyebrow => 'МЕДІАСТЕК';
+
+  @override
+  String get mediaSettingsHeroTitle => 'Готово до ефіру';
+
+  @override
+  String get mediaSettingsCameraSection => 'Камера';
+
+  @override
+  String get mediaSettingsCameraDevice => 'Пристрій камери';
+
+  @override
+  String get mediaSettingsDefaultDevice => 'Типовий';
+
+  @override
+  String get mediaSettingsFrontCamera => 'Фронтальна камера';
+
+  @override
+  String get mediaSettingsRearCamera => 'Основна камера';
+
+  @override
+  String get mediaSettingsVirtualDevice => 'Віртуальний пристрій';
+
+  @override
+  String get mediaSettingsResolution => 'Роздільна здатність';
+
+  @override
+  String get mediaSettingsMirrorPreview => 'Дзеркальне прев’ю';
+
+  @override
+  String get mediaSettingsAudioSection => 'Мікрофон і маршрутизація аудіо';
+
+  @override
+  String get mediaSettingsMicrophone => 'Мікрофон';
+
+  @override
+  String get mediaSettingsHeadset => 'Гарнітура';
+
+  @override
+  String get mediaSettingsUsbMicrophone => 'USB-мікрофон';
+
+  @override
+  String get mediaSettingsAudioRoute => 'Аудіомаршрут';
+
+  @override
+  String get mediaSettingsStreamMix => 'Мікс ефіру';
+
+  @override
+  String get mediaSettingsMonitorMix => 'Мікс моніторингу';
+
+  @override
+  String get mediaSettingsVoipPath => 'Маршрут голосового дзвінка';
+
+  @override
+  String get mediaSettingsHeadphones => 'Навушники';
+
+  @override
+  String get mediaSettingsNoiseSuppression => 'Заглушення шуму';
+
+  @override
+  String get mediaSettingsEchoCancellation => 'Приглушення відлуння';
+
+  @override
+  String get mediaSettingsObsSection => 'OBS і віртуальна камера';
+
+  @override
+  String get mediaSettingsObsConnected => 'OBS Companion підключено';
+
+  @override
+  String get mediaSettingsObsConnectedDescription =>
+      'Синхронізація сцен і запуск з OBS';
+
+  @override
+  String get mediaSettingsVirtualCamera => 'Віртуальна камера SYLORA';
+
+  @override
+  String get mediaSettingsVirtualCameraDescription =>
+      'Передавати відео в Zoom, Meet або OBS';
+
+  @override
+  String get mediaSettingsStreamingSection => 'Трансляція';
+
+  @override
+  String get mediaSettingsBitrate => 'Бітрейт (кбіт/с)';
+
+  @override
+  String get mediaSettingsLatencyMode => 'Режим затримки';
+
+  @override
+  String get mediaSettingsUltraLowLatency => 'Наднизька';
+
+  @override
+  String get mediaSettingsLowLatency => 'Низька';
+
+  @override
+  String get mediaSettingsNormalLatency => 'Звичайна';
+
+  @override
+  String get mediaSettingsRecordingSection => 'Запис';
+
+  @override
+  String get mediaSettingsLocalRecording => 'Локальний запис';
+
+  @override
+  String get mediaSettingsCloudRecording => 'Хмарний запис';
+
+  @override
+  String get mediaSettingsCloudRecordingDescription =>
+      'Завантаження до налаштованого сховища об’єктів';
+
+  @override
+  String get mediaSettingsSaveProfile => 'Зберегти медіапрофіль';
+
+  @override
+  String get earningsTitle => 'Заробіток автора';
+
+  @override
+  String get earningsSubtitle =>
+      'Подарунки наживо, чайові та виплати — єдиний реєстр екосистеми.';
+
+  @override
+  String get earningsHeroEyebrow => 'ЗАРОБІТОК';
+
+  @override
+  String get earningsHeroTitle => 'Ваш баланс автора';
+
+  @override
+  String get earningsHeroBody =>
+      'Чайові та подарунки враховуються лише з ефірів, гостьових ефірів, конференцій із кількома ведучими та голосових кімнат. Gift Shop призначений для купівлі інвентарю, а не надсилання.';
+
+  @override
+  String get earningsTotalAvailable => 'Усього доступно';
+
+  @override
+  String earningsMinorUnits(int amount) {
+    return '$amount мінімальних одиниць';
+  }
+
+  @override
+  String get earningsAcceptLiveGifts => 'Приймати подарунки наживо';
+
+  @override
+  String get earningsAcceptLiveGiftsDescription =>
+      'Якщо вимкнено, глядачі не зможуть надсилати подарунки під час ваших ефірів.';
+
+  @override
+  String get earningsRecentLedger => 'Останні операції';
+
+  @override
+  String get earningsEmptyTitle => 'Заробітку ще немає';
+
+  @override
+  String get earningsEmptyMessage =>
+      'Вийдіть в ефір, щоб глядачі могли надсилати подарунки.';
+
+  @override
+  String get earningsOpenLive => 'Відкрити Live';
+
+  @override
+  String get communitiesTitle => 'Спільноти';
+
+  @override
+  String get communitiesSubtitle =>
+      'Знайдіть людей зі спільними інтересами або створіть власний простір.';
+
+  @override
+  String get communitiesCreate => 'Створити спільноту';
+
+  @override
+  String get communitiesHeroEyebrow => 'СПІЛЬНОТИ';
+
+  @override
+  String get communitiesHeroTitle => 'Знайдіть своїх людей';
+
+  @override
+  String get communitiesHeroBody =>
+      'Переглядайте публічні простори й спільноти, до яких належите, та переходьте до їхніх каналів.';
+
+  @override
+  String get communitiesSearchHint => 'Пошук спільнот';
+
+  @override
+  String get communitiesSearch => 'Шукати';
+
+  @override
+  String get communitiesClearSearch => 'Очистити пошук';
+
+  @override
+  String get communitiesEmptyTitle => 'Спільнот ще немає';
+
+  @override
+  String get communitiesNoMatchesTitle => 'Спільнот не знайдено';
+
+  @override
+  String get communitiesEmptyMessage =>
+      'Створіть першу спільноту, щоб почати збирати людей.';
+
+  @override
+  String get communitiesNoMatchesMessage =>
+      'Спробуйте іншу назву, опис або slug.';
+
+  @override
+  String get communitiesNameLabel => 'Назва';
+
+  @override
+  String get communitiesNameRequired => 'Введіть назву спільноти.';
+
+  @override
+  String get communitiesSlugLabel => 'Slug';
+
+  @override
+  String get communitiesSlugHelper => 'Малі латинські літери, цифри й дефіси.';
+
+  @override
+  String get communitiesSlugInvalid =>
+      'Використайте щонайменше 3 безпечні для URL малі символи.';
+
+  @override
+  String get communitiesDescriptionLabel => 'Опис (необов’язково)';
+
+  @override
+  String get communitiesVisibilityLabel => 'Видимість';
+
+  @override
+  String get communitiesVisibilityPublic => 'Публічна';
+
+  @override
+  String get communitiesVisibilityPrivate =>
+      'Приватна — запити потребують схвалення';
+
+  @override
+  String get communitiesVisibilityPrivateShort => 'Приватна';
+
+  @override
+  String get communitiesVisibilityInviteOnly => 'Лише за запрошенням';
+
+  @override
+  String get communitiesJoined => 'Ви учасник';
+
+  @override
+  String get communitiesLeave => 'Залишити спільноту';
+
+  @override
+  String get communitiesJoin => 'Приєднатися до спільноти';
+
+  @override
+  String get communitiesMembershipPending => 'Запит на вступ надіслано.';
+
+  @override
+  String communitiesMembershipStatus(String status) {
+    return 'Статус участі: $status';
+  }
+
+  @override
+  String get communitiesChannels => 'Канали';
+
+  @override
+  String get communitiesNoChannelsTitle => 'Немає видимих каналів';
+
+  @override
+  String get communitiesNoChannelsMessage =>
+      'У цій спільноті немає видимих каналів.';
 }

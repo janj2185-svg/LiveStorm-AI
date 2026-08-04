@@ -115,7 +115,10 @@ final class MarketplaceScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 14),
               SizedBox(
-                height: (MediaQuery.sizeOf(context).height * 0.72).clamp(480.0, 920.0),
+                height: (MediaQuery.sizeOf(context).height * 0.72).clamp(
+                  480.0,
+                  920.0,
+                ),
                 child: TabBarView(
                   children: <Widget>[
                     _CatalogView(initialPage: snapshot.catalog),
@@ -1116,15 +1119,28 @@ final class _MarketplaceSellerScreenState
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   const TabBar(
+                    isScrollable: true,
                     tabs: <Tab>[
-                      Tab(text: 'Store & products'),
-                      Tab(text: 'Sales'),
-                      Tab(text: 'Bookings'),
+                      Tab(
+                        icon: Icon(Icons.storefront_outlined),
+                        text: 'Store & products',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.point_of_sale_outlined),
+                        text: 'Sales',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.event_available_outlined),
+                        text: 'Bookings',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
                   SizedBox(
-                    height: (MediaQuery.sizeOf(context).height * 0.72).clamp(480.0, 920.0),
+                    height: (MediaQuery.sizeOf(context).height * 0.72).clamp(
+                      480.0,
+                      920.0,
+                    ),
                     child: TabBarView(
                       children: <Widget>[
                         _SellerProducts(
@@ -1173,48 +1189,67 @@ final class _StoreOnboardingState extends ConsumerState<_StoreOnboarding> {
   }
 
   @override
-  Widget build(BuildContext context) => LumenSurface(
-    child: Form(
-      key: _form,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Text(
-            'Create seller store',
-            style: Theme.of(context).textTheme.headlineMedium,
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 720),
+      child: LumenSurface(
+        child: Form(
+          key: _form,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const Icon(Icons.storefront_outlined, size: 48),
+              const SizedBox(height: 12),
+              Text(
+                'Open your marketplace store',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Choose a public store identity now. After setup, you can create product drafts, configure prices and inventory, then publish when ready.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              TextFormField(
+                controller: _slug,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Store slug',
+                  helperText:
+                      'Public URL: lowercase letters, numbers, and hyphens.',
+                ),
+                validator: _slugValidator,
+              ),
+              TextFormField(
+                controller: _name,
+                decoration: const InputDecoration(labelText: 'Store name'),
+                validator: _requiredTwo,
+              ),
+              TextFormField(
+                controller: _description,
+                maxLength: 1000,
+                minLines: 2,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                ),
+              ),
+              if (_error != null)
+                Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              const SizedBox(height: 12),
+              LumenPrimaryButton(
+                label: 'Create store',
+                busy: _busy,
+                onPressed: _submit,
+                icon: Icons.arrow_forward_rounded,
+              ),
+            ],
           ),
-          const Text(
-            'Marketplace commerce must already be enabled on the creator account.',
-          ),
-          TextFormField(
-            controller: _slug,
-            decoration: const InputDecoration(labelText: 'Store slug'),
-            validator: _slugValidator,
-          ),
-          TextFormField(
-            controller: _name,
-            decoration: const InputDecoration(labelText: 'Store name'),
-            validator: _requiredTwo,
-          ),
-          TextFormField(
-            controller: _description,
-            maxLength: 1000,
-            decoration: const InputDecoration(
-              labelText: 'Description (optional)',
-            ),
-          ),
-          if (_error != null)
-            Text(
-              _error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          const SizedBox(height: 12),
-          LumenPrimaryButton(
-            label: 'Create store',
-            busy: _busy,
-            onPressed: _submit,
-          ),
-        ],
+        ),
       ),
     ),
   );
@@ -1255,79 +1290,716 @@ final class _SellerProducts extends ConsumerWidget {
   final VoidCallback onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ListView(
-    padding: const EdgeInsets.all(20),
-    children: <Widget>[
-      LumenSurface(
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
+  Widget build(BuildContext context, WidgetRef ref) => LayoutBuilder(
+    builder: (context, constraints) {
+      final desktop = constraints.maxWidth >= 820;
+      final cardWidth = desktop
+          ? (constraints.maxWidth - 52) / 2
+          : constraints.maxWidth - 40;
+      return ListView(
+        padding: const EdgeInsets.all(20),
+        children: <Widget>[
+          LumenSurface(
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 14,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: <Widget>[
+                SizedBox(
+                  width: desktop ? constraints.maxWidth - 260 : cardWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: <Widget>[
+                          Text(
+                            store.name,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          LumenBadge(
+                            label: store.active ? 'active' : 'inactive',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text('/${store.slug} • ${store.platformFeeBps} bps fee'),
+                      if (store.description?.trim().isNotEmpty ?? false) ...[
+                        const SizedBox(height: 6),
+                        Text(store.description!),
+                      ],
+                    ],
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _editStore(context, ref),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit store'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    store.name,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    'Products',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  Text('/${store.slug} • ${store.platformFeeBps} bps fee'),
-                  if (store.description != null) Text(store.description!),
+                  Text(
+                    '${products.length} ${products.length == 1 ? 'listing' : 'listings'}',
+                  ),
                 ],
               ),
+              FilledButton.icon(
+                onPressed: () => _createProduct(context, ref),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('New product'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (products.isEmpty)
+            LumenEmptyView(
+              title: 'Your store has no products yet',
+              message:
+                  'Create a draft, review its content and pricing, then publish it when it is ready for buyers.',
+              actionLabel: 'Create your first product',
+              onAction: () => _createProduct(context, ref),
+              icon: Icons.inventory_2_outlined,
+            )
+          else
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: <Widget>[
+                for (final product in products)
+                  SizedBox(
+                    width: cardWidth,
+                    child: _productCard(context, ref, product),
+                  ),
+              ],
             ),
-            LumenBadge(label: store.active ? 'active' : 'inactive'),
-          ],
-        ),
-      ),
-      const SizedBox(height: 12),
-      Align(
-        alignment: Alignment.centerRight,
-        child: FilledButton.icon(
-          onPressed: () => _createProduct(context, ref),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('New product'),
-        ),
-      ),
-      if (products.isEmpty)
-        const Padding(
-          padding: EdgeInsets.all(20),
-          child: Text('The seller products API returned no products.'),
-        )
-      else
-        for (final product in products)
-          Card(
-            child: ListTile(
-              title: Text(product.slug),
-              subtitle: Text('${product.kind} • ${product.category}'),
-              leading: LumenBadge(label: product.state),
-              trailing: PopupMenuButton<String>(
-                onSelected: (action) async {
-                  try {
-                    await ref
-                        .read(marketplaceRepositoryProvider)
-                        .productAction(product.id, action);
-                    onChanged();
-                  } on Object catch (error) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(messageFor(error))),
-                      );
-                    }
-                  }
-                },
+        ],
+      );
+    },
+  );
+
+  Widget _productCard(
+    BuildContext context,
+    WidgetRef ref,
+    SellerProduct product,
+  ) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  product.slug,
+                  style: Theme.of(context).textTheme.titleLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              LumenBadge(label: product.state),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text('${product.kind} • ${product.category}'),
+          Text(
+            'Created ${DateFormat.yMMMd().format(product.createdAt.toLocal())}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.end,
+            children: <Widget>[
+              OutlinedButton.icon(
+                onPressed: () => _editProduct(context, ref, product),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit listing'),
+              ),
+              PopupMenuButton<String>(
+                tooltip: 'More product actions',
+                onSelected: (action) =>
+                    _handleProductAction(context, ref, product, action),
                 itemBuilder: (context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem(
+                    value: 'new-version',
+                    child: ListTile(
+                      leading: Icon(Icons.note_add_outlined),
+                      title: Text('New content version'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'price',
+                    child: ListTile(
+                      leading: Icon(Icons.sell_outlined),
+                      title: Text('Update price'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'inventory',
+                    child: ListTile(
+                      leading: Icon(Icons.inventory_outlined),
+                      title: Text('Update inventory'),
+                    ),
+                  ),
                   if (product.state != 'published')
                     const PopupMenuItem(
                       value: 'publish',
-                      child: Text('Publish'),
+                      child: ListTile(
+                        leading: Icon(Icons.public_rounded),
+                        title: Text('Publish'),
+                      ),
                     ),
-                  if (product.state != 'retired')
-                    const PopupMenuItem(value: 'retire', child: Text('Retire')),
+                  if (product.state == 'published')
+                    const PopupMenuItem(
+                      value: 'retire',
+                      child: ListTile(
+                        leading: Icon(Icons.archive_outlined),
+                        title: Text('Retire'),
+                      ),
+                    ),
+                ],
+                child: const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(Icons.more_horiz_rounded),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _editStore(BuildContext context, WidgetRef ref) async {
+    final form = GlobalKey<FormState>();
+    final name = TextEditingController(text: store.name);
+    final description = TextEditingController(text: store.description);
+    var active = store.active;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit store'),
+          content: SizedBox(
+            width: 520,
+            child: Form(
+              key: form,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextFormField(
+                    controller: name,
+                    decoration: const InputDecoration(labelText: 'Store name'),
+                    validator: _requiredTwo,
+                  ),
+                  TextFormField(
+                    controller: description,
+                    maxLength: 1000,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Description (optional)',
+                    ),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Store visible in marketplace'),
+                    subtitle: const Text(
+                      'Turning this off hides every published product.',
+                    ),
+                    value: active,
+                    onChanged: (value) => setDialogState(() => active = value),
+                  ),
                 ],
               ),
             ),
           ),
-    ],
-  );
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!form.currentState!.validate()) {
+                  return;
+                }
+                try {
+                  await ref
+                      .read(marketplaceRepositoryProvider)
+                      .updateStore(<String, dynamic>{
+                        'name': name.text.trim(),
+                        'description': _blankToNull(description.text),
+                        'active': active,
+                      });
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext, true);
+                  }
+                } on Object catch (error) {
+                  if (dialogContext.mounted) {
+                    _showError(dialogContext, error);
+                  }
+                }
+              },
+              child: const Text('Save changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+    name.dispose();
+    description.dispose();
+    if (saved ?? false) {
+      onChanged();
+    }
+  }
+
+  Future<void> _editProduct(
+    BuildContext context,
+    WidgetRef ref,
+    SellerProduct product,
+  ) async {
+    final form = GlobalKey<FormState>();
+    final slug = TextEditingController(text: product.slug);
+    final category = TextEditingController(text: product.category);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit product listing'),
+        content: SizedBox(
+          width: 520,
+          child: Form(
+            key: form,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextFormField(
+                  controller: slug,
+                  decoration: const InputDecoration(labelText: 'Slug'),
+                  validator: _slugValidator,
+                ),
+                TextFormField(
+                  controller: category,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  validator: _requiredTwo,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Use the product actions menu to create a new content version, update pricing, or change inventory.',
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (!form.currentState!.validate()) {
+                return;
+              }
+              try {
+                await ref
+                    .read(marketplaceRepositoryProvider)
+                    .updateProduct(product.id, <String, dynamic>{
+                      'slug': slug.text.trim(),
+                      'category': category.text.trim().toLowerCase(),
+                    });
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext, true);
+                }
+              } on Object catch (error) {
+                if (dialogContext.mounted) {
+                  _showError(dialogContext, error);
+                }
+              }
+            },
+            child: const Text('Save changes'),
+          ),
+        ],
+      ),
+    );
+    slug.dispose();
+    category.dispose();
+    if (saved ?? false) {
+      onChanged();
+    }
+  }
+
+  Future<void> _handleProductAction(
+    BuildContext context,
+    WidgetRef ref,
+    SellerProduct product,
+    String action,
+  ) async {
+    switch (action) {
+      case 'new-version':
+        await _newProductVersion(context, ref, product);
+        return;
+      case 'price':
+        await _updatePrice(context, ref, product);
+        return;
+      case 'inventory':
+        await _updateInventory(context, ref, product);
+        return;
+      case 'publish':
+      case 'retire':
+        final verb = action == 'publish' ? 'Publish' : 'Retire';
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text('$verb ${product.slug}?'),
+            content: Text(
+              action == 'publish'
+                  ? 'This makes the latest complete version available to marketplace buyers.'
+                  : 'This removes the product from the catalog. Existing purchases remain available.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(verb),
+              ),
+            ],
+          ),
+        );
+        if (!(confirmed ?? false)) {
+          return;
+        }
+        try {
+          await ref
+              .read(marketplaceRepositoryProvider)
+              .productAction(product.id, action);
+          onChanged();
+        } on Object catch (error) {
+          if (context.mounted) {
+            _showError(context, error);
+          }
+        }
+    }
+  }
+
+  Future<void> _newProductVersion(
+    BuildContext context,
+    WidgetRef ref,
+    SellerProduct product,
+  ) async {
+    final form = GlobalKey<FormState>();
+    final title = TextEditingController();
+    final description = TextEditingController();
+    final terms = TextEditingController();
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Create content version'),
+        content: SizedBox(
+          width: 560,
+          child: Form(
+            key: form,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Text(
+                    'A new version returns this listing to draft so you can review it before publishing.',
+                  ),
+                  TextFormField(
+                    controller: title,
+                    maxLength: 200,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                    validator: _requiredTwo,
+                  ),
+                  TextFormField(
+                    controller: description,
+                    maxLength: 20000,
+                    minLines: 3,
+                    maxLines: 7,
+                    decoration: const InputDecoration(labelText: 'Description'),
+                    validator: _requiredTwo,
+                  ),
+                  TextFormField(
+                    controller: terms,
+                    maxLength: 2000,
+                    minLines: 2,
+                    maxLines: 5,
+                    decoration: const InputDecoration(
+                      labelText: 'Fulfillment terms',
+                    ),
+                    validator: _requiredTwo,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (!form.currentState!.validate()) {
+                return;
+              }
+              try {
+                await ref
+                    .read(marketplaceRepositoryProvider)
+                    .createProductVersion(product.id, <String, dynamic>{
+                      'title': title.text.trim(),
+                      'description': description.text.trim(),
+                      'fulfillment_terms': terms.text.trim(),
+                    });
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext, true);
+                }
+              } on Object catch (error) {
+                if (dialogContext.mounted) {
+                  _showError(dialogContext, error);
+                }
+              }
+            },
+            child: const Text('Create draft version'),
+          ),
+        ],
+      ),
+    );
+    title.dispose();
+    description.dispose();
+    terms.dispose();
+    if (saved ?? false) {
+      onChanged();
+    }
+  }
+
+  Future<void> _updatePrice(
+    BuildContext context,
+    WidgetRef ref,
+    SellerProduct product,
+  ) async {
+    final form = GlobalKey<FormState>();
+    final amount = TextEditingController();
+    final externalReference = TextEditingController();
+    var settlement = 'credits';
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Update product price'),
+          content: SizedBox(
+            width: 520,
+            child: Form(
+              key: form,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Text(
+                    'The new price replaces the active price for this settlement method.',
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: settlement,
+                    decoration: const InputDecoration(labelText: 'Settlement'),
+                    items: const <DropdownMenuItem<String>>[
+                      DropdownMenuItem(
+                        value: 'credits',
+                        child: Text('Credits'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'external',
+                        child: Text('External provider'),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        setDialogState(() => settlement = value ?? settlement),
+                  ),
+                  TextFormField(
+                    controller: amount,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount in minor units',
+                    ),
+                    validator: _positiveInt,
+                  ),
+                  if (settlement == 'external')
+                    TextFormField(
+                      controller: externalReference,
+                      decoration: const InputDecoration(
+                        labelText: 'Payment provider price reference',
+                      ),
+                      validator: _requiredTwo,
+                    ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!form.currentState!.validate()) {
+                  return;
+                }
+                try {
+                  await ref
+                      .read(marketplaceRepositoryProvider)
+                      .addProductPrice(product.id, <String, dynamic>{
+                        'settlement_method': settlement,
+                        'amount_minor': int.parse(amount.text),
+                        'currency': settlement == 'credits'
+                            ? 'SYLORA_CREDIT'
+                            : 'USD',
+                        'external_reference': settlement == 'external'
+                            ? externalReference.text.trim()
+                            : null,
+                        'available_from': null,
+                        'available_until': null,
+                      });
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext, true);
+                  }
+                } on Object catch (error) {
+                  if (dialogContext.mounted) {
+                    _showError(dialogContext, error);
+                  }
+                }
+              },
+              child: const Text('Update price'),
+            ),
+          ],
+        ),
+      ),
+    );
+    amount.dispose();
+    externalReference.dispose();
+    if (saved ?? false) {
+      onChanged();
+    }
+  }
+
+  Future<void> _updateInventory(
+    BuildContext context,
+    WidgetRef ref,
+    SellerProduct product,
+  ) async {
+    final form = GlobalKey<FormState>();
+    final quantity = TextEditingController();
+    var unlimited = true;
+    var active = true;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Update product inventory'),
+          content: SizedBox(
+            width: 520,
+            child: Form(
+              key: form,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Unlimited availability'),
+                    value: unlimited,
+                    onChanged: (value) =>
+                        setDialogState(() => unlimited = value),
+                  ),
+                  if (!unlimited)
+                    TextFormField(
+                      controller: quantity,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Quantity available',
+                      ),
+                      validator: _nonNegativeInt,
+                    ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Available for purchase'),
+                    value: active,
+                    onChanged: (value) => setDialogState(() => active = value),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!form.currentState!.validate()) {
+                  return;
+                }
+                try {
+                  await ref
+                      .read(marketplaceRepositoryProvider)
+                      .updateProductInventory(product.id, <String, dynamic>{
+                        'quantity_available': unlimited
+                            ? null
+                            : int.parse(quantity.text),
+                        'active': active,
+                      });
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext, true);
+                  }
+                } on Object catch (error) {
+                  if (dialogContext.mounted) {
+                    _showError(dialogContext, error);
+                  }
+                }
+              },
+              child: const Text('Update inventory'),
+            ),
+          ],
+        ),
+      ),
+    );
+    quantity.dispose();
+    if (saved ?? false) {
+      onChanged();
+    }
+  }
+
+  void _showError(BuildContext context, Object error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+    }
+  }
 
   Future<void> _createProduct(BuildContext context, WidgetRef ref) async {
     final form = GlobalKey<FormState>();
@@ -1355,7 +2027,12 @@ final class _SellerProducts extends ConsumerWidget {
                   children: <Widget>[
                     TextFormField(
                       controller: slug,
-                      decoration: const InputDecoration(labelText: 'Slug'),
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Slug',
+                        helperText:
+                            'Public URL: lowercase letters, numbers, and hyphens.',
+                      ),
                       validator: _slugValidator,
                     ),
                     TextFormField(
@@ -1370,6 +2047,9 @@ final class _SellerProducts extends ConsumerWidget {
                     ),
                     TextFormField(
                       controller: description,
+                      minLines: 3,
+                      maxLines: 6,
+                      maxLength: 20000,
                       decoration: const InputDecoration(
                         labelText: 'Description',
                       ),
@@ -1377,8 +2057,13 @@ final class _SellerProducts extends ConsumerWidget {
                     ),
                     TextFormField(
                       controller: terms,
+                      minLines: 2,
+                      maxLines: 4,
+                      maxLength: 2000,
                       decoration: const InputDecoration(
                         labelText: 'Fulfillment terms',
+                        helperText:
+                            'Tell buyers how and when this product is delivered.',
                       ),
                       validator: _requiredTwo,
                     ),
@@ -1398,6 +2083,13 @@ final class _SellerProducts extends ConsumerWidget {
                       onChanged: (value) =>
                           setDialogState(() => kind = value ?? kind),
                     ),
+                    if (kind == 'digital')
+                      const Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: Text(
+                          'Digital products need a verified asset before they can be published.',
+                        ),
+                      ),
                     DropdownButtonFormField<String>(
                       initialValue: settlement,
                       decoration: const InputDecoration(
@@ -1520,42 +2212,113 @@ final class _SellerSales extends ConsumerWidget {
   final VoidCallback onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => sales.isEmpty
-      ? LumenEmptyView(
-          title: 'No seller sales',
-          message: 'The seller sales API returned no orders.',
-          actionLabel: 'Reload',
-          onAction: onChanged,
-          icon: Icons.point_of_sale_outlined,
-        )
-      : ListView(
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (sales.isEmpty) {
+      return LumenEmptyView(
+        title: 'No customer orders yet',
+        message:
+            'Published products and completed checkouts will appear here with fulfillment and refund actions.',
+        actionLabel: 'Refresh orders',
+        onAction: onChanged,
+        icon: Icons.point_of_sale_outlined,
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 820;
+        final cardWidth = desktop
+            ? (constraints.maxWidth - 52) / 2
+            : constraints.maxWidth - 40;
+        return ListView(
           padding: const EdgeInsets.all(20),
           children: <Widget>[
-            for (final order in sales)
-              Card(
-                child: ListTile(
-                  title: Text(
-                    '${order.totalMinor} ${order.currency} • ${order.buyerDisplayName}',
+            Text(
+              'Customer orders',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 4),
+            Text('${sales.length} ${sales.length == 1 ? 'order' : 'orders'}'),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: <Widget>[
+                for (final order in sales)
+                  SizedBox(
+                    width: cardWidth,
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Text(
+                                    '${order.totalMinor} ${order.currency}',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge,
+                                  ),
+                                ),
+                                LumenBadge(label: order.state),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(order.buyerDisplayName),
+                            Text(
+                              '${order.lines.length} ${order.lines.length == 1 ? 'item' : 'items'} • '
+                              '${DateFormat.yMMMd().format(order.createdAt.toLocal())}',
+                            ),
+                            const SizedBox(height: 14),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.end,
+                              children: <Widget>[
+                                OutlinedButton.icon(
+                                  onPressed: () => context.pushNamed(
+                                    'marketplace-order',
+                                    pathParameters: <String, String>{
+                                      'id': order.id,
+                                    },
+                                  ),
+                                  icon: const Icon(
+                                    Icons.receipt_long_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text('View order'),
+                                ),
+                                LumenSecondaryButton(
+                                  label: 'Refund',
+                                  onPressed:
+                                      const <String>{
+                                        'paid',
+                                        'fulfilling',
+                                        'completed',
+                                      }.contains(order.state)
+                                      ? () => _refund(context, ref, order)
+                                      : null,
+                                  disabledReason:
+                                      'Only paid or fulfilled orders can refund.',
+                                  icon: Icons.undo_rounded,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  subtitle: Text('${order.lines.length} line items'),
-                  leading: LumenBadge(label: order.state),
-                  trailing: LumenSecondaryButton(
-                    label: 'Refund',
-                    onPressed:
-                        const <String>{
-                          'paid',
-                          'fulfilling',
-                          'completed',
-                        }.contains(order.state)
-                        ? () => _refund(context, ref, order)
-                        : null,
-                    disabledReason: 'Only paid or fulfilled orders can refund.',
-                    icon: Icons.undo_rounded,
-                  ),
-                ),
-              ),
+              ],
+            ),
           ],
         );
+      },
+    );
+  }
 
   Future<void> _refund(
     BuildContext context,
@@ -1724,15 +2487,38 @@ final class _MarketplaceBookingScreenState
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 10,
+                    runSpacing: 10,
                     children: <Widget>[
-                      FilledButton.tonal(
-                        onPressed: () => _status('accepted'),
-                        child: const Text('Accept'),
-                      ),
-                      FilledButton.tonal(
-                        onPressed: () => _status('completed'),
-                        child: const Text('Complete'),
-                      ),
+                      if (booking.status == 'requested') ...<Widget>[
+                        FilledButton.tonal(
+                          onPressed: () => _status('accepted'),
+                          child: const Text('Accept'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () => _status('declined'),
+                          child: const Text('Decline'),
+                        ),
+                      ],
+                      if (booking.status == 'accepted')
+                        FilledButton.tonalIcon(
+                          onPressed: _schedule,
+                          icon: const Icon(Icons.event_outlined),
+                          label: const Text('Schedule'),
+                        ),
+                      if (booking.status == 'scheduled')
+                        FilledButton.tonal(
+                          onPressed: () => _status('completed'),
+                          child: const Text('Complete'),
+                        ),
+                      if (const <String>{
+                        'requested',
+                        'accepted',
+                        'scheduled',
+                      }.contains(booking.status))
+                        OutlinedButton(
+                          onPressed: () => _status('cancelled'),
+                          child: const Text('Cancel booking'),
+                        ),
                       OutlinedButton(
                         onPressed: _message,
                         child: const Text('Send message'),
@@ -1760,6 +2546,82 @@ final class _MarketplaceBookingScreenState
         widget.bookingId,
         <String, dynamic>{'status': status},
       );
+      _reload();
+    } on Object catch (error) {
+      _show(error);
+    }
+  }
+
+  Future<void> _schedule() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 2),
+      initialDate: now.add(const Duration(days: 1)),
+      helpText: 'Choose service date',
+    );
+    if (date == null || !mounted) {
+      return;
+    }
+    final time = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 10, minute: 0),
+      helpText: 'Choose start time',
+    );
+    if (time == null || !mounted) {
+      return;
+    }
+    final duration = TextEditingController(text: '60');
+    final minutes = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Service duration'),
+        content: TextFormField(
+          controller: duration,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Minutes'),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = int.tryParse(duration.text);
+              if (value != null && value > 0) {
+                Navigator.pop(dialogContext, value);
+              }
+            },
+            child: const Text('Schedule'),
+          ),
+        ],
+      ),
+    );
+    duration.dispose();
+    if (minutes == null) {
+      return;
+    }
+    final start = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    try {
+      await ref
+          .read(marketplaceRepositoryProvider)
+          .updateBooking(widget.bookingId, <String, dynamic>{
+            'status': 'scheduled',
+            'scheduled_start_at': start.toUtc().toIso8601String(),
+            'scheduled_end_at': start
+                .add(Duration(minutes: minutes))
+                .toUtc()
+                .toIso8601String(),
+          });
       _reload();
     } on Object catch (error) {
       _show(error);

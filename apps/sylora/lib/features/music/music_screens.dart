@@ -24,18 +24,18 @@ final class MusicTrack {
   });
 
   factory MusicTrack.fromJson(JsonObject json) => MusicTrack(
-        id: requireString(json, 'id'),
-        slug: requireString(json, 'slug'),
-        title: requireString(json, 'title'),
-        artistName: requireString(json, 'artist_name'),
-        kind: requireString(json, 'kind'),
-        mood: json['mood'] as String?,
-        durationSeconds: requireInt(json, 'duration_seconds'),
-        audioUrl: requireString(json, 'audio_url'),
-        coverUrl: json['cover_url'] as String?,
-        licenseLabel: requireString(json, 'license_label'),
-        isCreatorBgm: json['is_creator_bgm'] == true,
-      );
+    id: requireString(json, 'id'),
+    slug: requireString(json, 'slug'),
+    title: requireString(json, 'title'),
+    artistName: requireString(json, 'artist_name'),
+    kind: requireString(json, 'kind'),
+    mood: json['mood'] as String?,
+    durationSeconds: requireInt(json, 'duration_seconds'),
+    audioUrl: requireString(json, 'audio_url'),
+    coverUrl: json['cover_url'] as String?,
+    licenseLabel: requireString(json, 'license_label'),
+    isCreatorBgm: json['is_creator_bgm'] == true,
+  );
 
   final String id;
   final String slug;
@@ -64,15 +64,15 @@ final class MusicPlaylist {
   });
 
   factory MusicPlaylist.fromJson(JsonObject json) => MusicPlaylist(
-        id: requireString(json, 'id'),
-        title: requireString(json, 'title'),
-        description: json['description'] as String?,
-        kind: requireString(json, 'kind'),
-        mood: json['mood'] as String?,
-        coverUrl: json['cover_url'] as String?,
-        isPublic: json['is_public'] == true,
-        trackCount: requireInt(json, 'track_count'),
-      );
+    id: requireString(json, 'id'),
+    title: requireString(json, 'title'),
+    description: json['description'] as String?,
+    kind: requireString(json, 'kind'),
+    mood: json['mood'] as String?,
+    coverUrl: json['cover_url'] as String?,
+    isPublic: json['is_public'] == true,
+    trackCount: requireInt(json, 'track_count'),
+  );
 
   final String id;
   final String title;
@@ -169,6 +169,16 @@ final class MusicRepository {
     );
     return MusicPlaylist.fromJson(requireObject(response.data, 'playlist'));
   }
+
+  Future<List<MusicTrack>> playlistTracks(String playlistId) async {
+    final response = await _client.request(
+      'music/playlists/$playlistId/tracks',
+    );
+    final data = requireObject(response.data, 'playlist tracks');
+    return requireList(data, 'items')
+        .map((item) => MusicTrack.fromJson(requireObject(item, 'track')))
+        .toList(growable: false);
+  }
 }
 
 final musicRepositoryProvider = Provider<MusicRepository>((ref) {
@@ -177,6 +187,42 @@ final musicRepositoryProvider = Provider<MusicRepository>((ref) {
 
 final musicHomeProvider = FutureProvider.autoDispose<MusicHome>((ref) {
   return ref.watch(musicRepositoryProvider).home();
+});
+
+@immutable
+final class CreatorBgmSelection {
+  const CreatorBgmSelection({
+    required this.track,
+    required this.sourceTitle,
+    this.playlistId,
+  });
+
+  final MusicTrack track;
+  final String sourceTitle;
+  final String? playlistId;
+
+  bool get fromPlaylist => playlistId != null;
+}
+
+final class CreatorBgmController extends ChangeNotifier {
+  CreatorBgmSelection? _selection;
+
+  CreatorBgmSelection? get selection => _selection;
+
+  void select(CreatorBgmSelection selection) {
+    _selection = selection;
+    notifyListeners();
+  }
+
+  void clear() {
+    if (_selection == null) return;
+    _selection = null;
+    notifyListeners();
+  }
+}
+
+final creatorBgmProvider = ChangeNotifierProvider<CreatorBgmController>((ref) {
+  return CreatorBgmController();
 });
 
 final class MusicPlayerController extends ChangeNotifier {
@@ -192,6 +238,7 @@ final class MusicPlayerController extends ChangeNotifier {
   MusicTrack? get track => _track;
   String? get error => _error;
   bool get playing => _player.playing;
+  bool isCurrent(MusicTrack track) => _track?.id == track.id;
   Duration get position => _player.position;
   Duration? get duration => _player.duration;
 
@@ -229,7 +276,9 @@ final class MusicPlayerController extends ChangeNotifier {
   }
 }
 
-final musicPlayerProvider = ChangeNotifierProvider<MusicPlayerController>((ref) {
+final musicPlayerProvider = ChangeNotifierProvider<MusicPlayerController>((
+  ref,
+) {
   final controller = MusicPlayerController();
   ref.onDispose(controller.dispose);
   return controller;
@@ -264,12 +313,14 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
     final player = ref.read(musicPlayerProvider);
     await player.play(track);
     try {
-      await ref.read(musicRepositoryProvider).play(track.id, context: contextLabel);
+      await ref
+          .read(musicRepositoryProvider)
+          .play(track.id, context: contextLabel);
     } on Object catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(messageFor(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
       }
     }
   }
@@ -336,7 +387,9 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                         ref.invalidate(musicHomeProvider);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Created ${playlist.title}')),
+                            SnackBar(
+                              content: Text('Created ${playlist.title}'),
+                            ),
                           );
                         }
                       },
@@ -350,7 +403,8 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                     _TrackList(
                       tracks: data.creatorBgm,
                       emptyTitle: 'No creator BGM',
-                      emptyMessage: 'Royalty-free background music for streams.',
+                      emptyMessage:
+                          'Royalty-free background music for streams.',
                       onPlay: (t) => _play(t, contextLabel: 'creator_bgm'),
                       badge: 'BGM',
                     ),
@@ -427,7 +481,10 @@ final class _MusicHomeTab extends StatelessWidget {
                       Text(playlist.title, style: SyloraTokens.title(15)),
                       Text(
                         '${playlist.trackCount} tracks',
-                        style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
+                        style: SyloraTokens.body(
+                          12,
+                          color: SyloraTokens.inkSoft,
+                        ),
                       ),
                     ],
                   ),
@@ -589,13 +646,13 @@ final class _TrackList extends StatelessWidget {
               backgroundColor: SyloraTokens.petal.withValues(alpha: 0.25),
               child: const Icon(Icons.music_note_rounded),
             ),
-            title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            title: Text(
+              track.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             subtitle: Text(
-              [
-                track.artistName,
-                track.licenseLabel,
-                if (badge != null) badge!,
-              ].join(' · '),
+              [track.artistName, track.licenseLabel, ?badge].join(' · '),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -759,7 +816,8 @@ final class _MiniPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final track = player.track!;
-    final duration = player.duration ?? Duration(seconds: track.durationSeconds);
+    final duration =
+        player.duration ?? Duration(seconds: track.durationSeconds);
     final progress = duration.inMilliseconds == 0
         ? 0.0
         : (player.position.inMilliseconds / duration.inMilliseconds).clamp(
@@ -779,10 +837,16 @@ final class _MiniPlayer extends StatelessWidget {
               leading: IconButton.filledTonal(
                 onPressed: player.toggle,
                 icon: Icon(
-                  player.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  player.playing
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
                 ),
               ),
-              title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              title: Text(
+                track.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
               subtitle: Text(
                 player.error ??
                     '${track.artistName} · ${player.playing ? 'playing' : 'paused'}',

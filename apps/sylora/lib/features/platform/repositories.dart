@@ -44,6 +44,95 @@ final class NamedResource {
   final JsonObject raw;
 }
 
+@immutable
+final class AppNotification {
+  const AppNotification({
+    required this.id,
+    required this.type,
+    required this.metadata,
+    required this.createdAt,
+    this.actorUserId,
+    this.targetType,
+    this.targetId,
+    this.readAt,
+    this.mutedAt,
+  });
+
+  factory AppNotification.fromJson(JsonObject json) => AppNotification(
+    id: requireString(json, 'id'),
+    type: requireString(json, 'notification_type'),
+    actorUserId: optionalString(json, 'actor_user_id'),
+    targetType: optionalString(json, 'target_type'),
+    targetId: optionalString(json, 'target_id'),
+    metadata: requireObject(json['event_metadata'], 'notification metadata'),
+    createdAt: requireDateTime(json, 'created_at'),
+    readAt: optionalDateTime(json, 'read_at'),
+    mutedAt: optionalDateTime(json, 'muted_at'),
+  );
+
+  final String id;
+  final String type;
+  final String? actorUserId;
+  final String? targetType;
+  final String? targetId;
+  final JsonObject metadata;
+  final DateTime createdAt;
+  final DateTime? readAt;
+  final DateTime? mutedAt;
+
+  bool get isRead => readAt != null;
+}
+
+@immutable
+final class NotificationDestination {
+  const NotificationDestination(
+    this.routeName, [
+    this.pathParameters = const {},
+  ]);
+
+  final String routeName;
+  final Map<String, String> pathParameters;
+}
+
+NotificationDestination? notificationDestination(AppNotification notification) {
+  final targetId = notification.targetId;
+  final handle = notification.metadata['handle'];
+  final slug = notification.metadata['slug'];
+  return switch (notification.targetType) {
+    'post' when targetId != null => NotificationDestination(
+      'post',
+      <String, String>{'id': targetId},
+    ),
+    'conversation' when targetId != null => NotificationDestination(
+      'conversation',
+      <String, String>{'id': targetId},
+    ),
+    'live' || 'live_session' when targetId != null => NotificationDestination(
+      'live-session',
+      <String, String>{'id': targetId},
+    ),
+    'content' when targetId != null => NotificationDestination(
+      'creator-content',
+      <String, String>{'id': targetId},
+    ),
+    'user' when handle is String => NotificationDestination(
+      'public-profile',
+      <String, String>{'handle': handle},
+    ),
+    'user' ||
+    'friendship' ||
+    'follow_request' => const NotificationDestination('friends'),
+    'community' when slug is String => NotificationDestination(
+      'community',
+      <String, String>{'slug': slug},
+    ),
+    'community' => const NotificationDestination('communities'),
+    _ when notification.type == 'message_request' =>
+      const NotificationDestination('messages'),
+    _ => null,
+  };
+}
+
 abstract interface class AccountRepository {
   Future<ProfileModel> profile();
   Future<ProfileModel> updateProfile(JsonObject patch);
@@ -147,7 +236,7 @@ abstract interface class SocialRepository {
   Future<String> joinCommunity(String slug);
   Future<void> leaveCommunity(String slug);
   Future<List<NamedResource>> channels(String slug);
-  Future<CursorPage<NamedResource>> notifications({String? cursor});
+  Future<CursorPage<AppNotification>> notifications({String? cursor});
   Future<void> readNotification(String id);
   Future<void> readAllNotifications();
   Future<void> muteNotificationType(String type, bool muted);
@@ -505,18 +594,14 @@ final class DioSocialRepository implements SocialRepository {
   }
 
   @override
-  Future<CursorPage<NamedResource>> notifications({String? cursor}) async {
+  Future<CursorPage<AppNotification>> notifications({String? cursor}) async {
     final response = await _client.request(
       'social/notifications',
       queryParameters: <String, dynamic>{'cursor': cursor},
     );
-    return CursorPage<NamedResource>.fromJson(
+    return CursorPage<AppNotification>.fromJson(
       requireObject(response.data, 'notifications'),
-      (json) => NamedResource.fromJson(
-        json,
-        labelKey: 'notification_type',
-        descriptionKey: null,
-      ),
+      AppNotification.fromJson,
     );
   }
 

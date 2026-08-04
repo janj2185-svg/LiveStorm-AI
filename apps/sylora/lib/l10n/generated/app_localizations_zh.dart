@@ -894,4 +894,503 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settingsHeroBody =>
       'Profile, privacy, language, and security — tuned for every device.';
+
+  @override
+  String get conferencesSubtitle =>
+      'Business and education rooms with media readiness and Aura support.';
+
+  @override
+  String get conferencesCreateRoom => 'Create room';
+
+  @override
+  String get conferencesCreateDialogTitle => 'Create conference room';
+
+  @override
+  String get conferencesRoomTitleLabel => 'Title';
+
+  @override
+  String get conferencesRoomTitleHint => 'Weekly planning or algebra studio';
+
+  @override
+  String get conferencesPurposeLabel => 'Purpose';
+
+  @override
+  String get conferencesPurposeBusiness => 'Business';
+
+  @override
+  String get conferencesPurposeEducation => 'Education';
+
+  @override
+  String get conferencesPurposeSocial => 'Social';
+
+  @override
+  String get conferencesRoomScreenTitle => 'Conference room';
+
+  @override
+  String get conferencesRoomScreenSubtitle =>
+      'Join with camera preview and publish through the configured media plane.';
+
+  @override
+  String get conferencesTranslationActive => 'AI translation active';
+
+  @override
+  String get conferencesAiLabel => 'AI';
+
+  @override
+  String get conferencesCaptions => 'Captions';
+
+  @override
+  String get conferencesMediaReady =>
+      'Media plane is ready for WHIP publishing.';
+
+  @override
+  String get conferencesMediaWaiting =>
+      'Awaiting the configured MediaMTX media plane.';
+
+  @override
+  String get conferencesPreviewUnavailable =>
+      'Camera preview is unavailable on this platform. Use OBS or a companion device.';
+
+  @override
+  String get conferencesPreviewLive => 'Camera and microphone preview is live.';
+
+  @override
+  String get conferencesMicrophoneMuted => 'Microphone muted.';
+
+  @override
+  String get conferencesMicrophoneUnmuted => 'Microphone unmuted.';
+
+  @override
+  String get conferencesCameraDisabled => 'Camera disabled.';
+
+  @override
+  String get conferencesCameraEnabled => 'Camera enabled.';
+
+  @override
+  String get conferencesScreenShareActive => 'Screen share is publishing.';
+
+  @override
+  String get conferencesScreenShareStopped => 'Screen share stopped.';
+
+  @override
+  String get conferencesCaptionsUnavailable =>
+      'Short clip captions use MediaRecorder on SYLORA web. Open this room in a browser to record and transcribe.';
+
+  @override
+  String get conferencesCaptionsRecording =>
+      'Recording a short microphone clip… tap “Stop & transcribe” when ready.';
+
+  @override
+  String get conferencesCaptionsTranscribing =>
+      'Transcribing the recorded clip…';
+
+  @override
+  String get conferencesCaptionsNoSpeech =>
+      'No speech was detected in that clip.';
+
+  @override
+  String get conferencesAuraResponded => 'Aura responded.';
+
+  @override
+  String conferencesActiveParticipants(int count) {
+    return '$count active';
+  }
+
+  @override
+  String get conferencesOpen => 'Open';
+
+  @override
+  String conferencesJoinCode(String code) {
+    return 'Join code $code';
+  }
+
+  @override
+  String get conferencesMediaPreview => 'Media preview';
+
+  @override
+  String get conferencesMediaSupported =>
+      'This build can request camera and microphone preview and publish over WHIP when MediaMTX is ready.';
+
+  @override
+  String get conferencesMediaUnsupported =>
+      'Camera preview is unavailable on this build. Use OBS or a companion browser device for publishing.';
+
+  @override
+  String conferencesMediaPlane(String reason) {
+    return 'Media plane: $reason';
+  }
+
+  @override
+  String get conferencesStartPreview => 'Start preview';
+
+  @override
+  String get conferencesPublishWhip => 'Publish WHIP';
+
+  @override
+  String get conferencesRefreshMedia => 'Refresh media';
+
+  @override
+  String get conferencesAuraDescription =>
+      'Ask for meeting summaries, classroom prompts, agenda help, or follow-up wording.';
+
+  @override
+  String get conferencesAskAura => 'Ask Aura';
+
+  @override
+  String get conferencesAskAuraHint => 'Turn this discussion into next steps…';
+
+  @override
+  String get conferencesEmptyTitle => 'No conference rooms yet';
+
+  @override
+  String get conferencesEmptyMessage =>
+      'Create a business or education room to start a focused video session.';
+
+  @override
+  String get conferencesUnmute => 'Unmute';
+
+  @override
+  String get conferencesMute => 'Mute';
+
+  @override
+  String get conferencesCameraOn => 'Camera on';
+
+  @override
+  String get conferencesCameraOff => 'Camera off';
+
+  @override
+  String get conferencesStopShare => 'Stop share';
+
+  @override
+  String get conferencesShareScreen => 'Share screen';
+
+  @override
+  String get conferencesTranslationOn => 'Translation on';
+
+  @override
+  String get conferencesAiTranslate => 'AI translate';
+
+  @override
+  String get conferencesStopAndTranscribe => 'Stop & transcribe';
+
+  @override
+  String get conferencesLiveGifts => 'Live gifts';
+
+  @override
+  String get conferencesLiveGiftsDescription =>
+      'Choose a gift for the host while this conference is active.';
+
+  @override
+  String get conferencesGiftsLoading => 'Loading conference gifts…';
+
+  @override
+  String get conferencesGiftsLoadError => 'Gifts could not load';
+
+  @override
+  String get conferencesGiftsEmpty => 'No gifts available';
+
+  @override
+  String get conferencesGiftsEmptyMessage =>
+      'The conference is ready, but the gift catalog is empty.';
+
+  @override
+  String get conferencesRefreshGifts => 'Refresh gifts';
+
+  @override
+  String conferencesGiftCombo(String name, int count) {
+    return '$name · combo ×$count';
+  }
+
+  @override
+  String conferencesGiftSent(String name) {
+    return '$name sent';
+  }
+
+  @override
+  String conferencesGiftSentToHost(String name) {
+    return 'Sent $name to the host.';
+  }
+
+  @override
+  String get mediaSettingsSaved => 'Media settings saved for all platforms.';
+
+  @override
+  String get mediaSettingsWebNote =>
+      'Browser WHIP publish is available on Web. Desktop uses OBS Companion and Virtual Camera.';
+
+  @override
+  String get mediaSettingsNativeNote =>
+      'On desktop and mobile, use OBS Companion and Virtual Camera for production publishing.';
+
+  @override
+  String get mediaSettingsTitle => 'Camera & Audio';
+
+  @override
+  String get mediaSettingsSubtitle =>
+      'Production media stack for Live, Calls, and Creator Studio';
+
+  @override
+  String get mediaSettingsHeroEyebrow => 'MEDIA STACK';
+
+  @override
+  String get mediaSettingsHeroTitle => 'Ready for production';
+
+  @override
+  String get mediaSettingsCameraSection => 'Camera';
+
+  @override
+  String get mediaSettingsCameraDevice => 'Camera device';
+
+  @override
+  String get mediaSettingsDefaultDevice => 'Default';
+
+  @override
+  String get mediaSettingsFrontCamera => 'Front camera';
+
+  @override
+  String get mediaSettingsRearCamera => 'Rear camera';
+
+  @override
+  String get mediaSettingsVirtualDevice => 'Virtual device';
+
+  @override
+  String get mediaSettingsResolution => 'Resolution';
+
+  @override
+  String get mediaSettingsMirrorPreview => 'Mirror preview';
+
+  @override
+  String get mediaSettingsAudioSection => 'Microphone & audio routing';
+
+  @override
+  String get mediaSettingsMicrophone => 'Microphone';
+
+  @override
+  String get mediaSettingsHeadset => 'Headset';
+
+  @override
+  String get mediaSettingsUsbMicrophone => 'USB microphone';
+
+  @override
+  String get mediaSettingsAudioRoute => 'Audio route';
+
+  @override
+  String get mediaSettingsStreamMix => 'Stream mix';
+
+  @override
+  String get mediaSettingsMonitorMix => 'Monitor mix';
+
+  @override
+  String get mediaSettingsVoipPath => 'Voice call path';
+
+  @override
+  String get mediaSettingsHeadphones => 'Headphones';
+
+  @override
+  String get mediaSettingsNoiseSuppression => 'Noise suppression';
+
+  @override
+  String get mediaSettingsEchoCancellation => 'Echo cancellation';
+
+  @override
+  String get mediaSettingsObsSection => 'OBS & Virtual Camera';
+
+  @override
+  String get mediaSettingsObsConnected => 'OBS Companion connected';
+
+  @override
+  String get mediaSettingsObsConnectedDescription =>
+      'Scene sync + start with OBS';
+
+  @override
+  String get mediaSettingsVirtualCamera => 'SYLORA Virtual Camera';
+
+  @override
+  String get mediaSettingsVirtualCameraDescription =>
+      'Expose feed to Zoom, Meet, or OBS';
+
+  @override
+  String get mediaSettingsStreamingSection => 'Streaming';
+
+  @override
+  String get mediaSettingsBitrate => 'Bitrate (kbps)';
+
+  @override
+  String get mediaSettingsLatencyMode => 'Latency mode';
+
+  @override
+  String get mediaSettingsUltraLowLatency => 'Ultra low';
+
+  @override
+  String get mediaSettingsLowLatency => 'Low';
+
+  @override
+  String get mediaSettingsNormalLatency => 'Normal';
+
+  @override
+  String get mediaSettingsRecordingSection => 'Recording';
+
+  @override
+  String get mediaSettingsLocalRecording => 'Local recording';
+
+  @override
+  String get mediaSettingsCloudRecording => 'Cloud recording';
+
+  @override
+  String get mediaSettingsCloudRecordingDescription =>
+      'Uploads to configured object storage';
+
+  @override
+  String get mediaSettingsSaveProfile => 'Save media profile';
+
+  @override
+  String get earningsTitle => 'Creator Earnings';
+
+  @override
+  String get earningsSubtitle =>
+      'Live gifts, tips, and payouts — one ecosystem ledger.';
+
+  @override
+  String get earningsHeroEyebrow => 'EARNINGS';
+
+  @override
+  String get earningsHeroTitle => 'Your creator balance';
+
+  @override
+  String get earningsHeroBody =>
+      'Tips and gifts count only from Live Streams, Guest Streams, Multi-host Conferences, and Voice Rooms. Gift Shop is for buying inventory — not sending.';
+
+  @override
+  String get earningsTotalAvailable => 'Total available';
+
+  @override
+  String earningsMinorUnits(int amount) {
+    return '$amount minor units';
+  }
+
+  @override
+  String get earningsAcceptLiveGifts => 'Accept live gifts';
+
+  @override
+  String get earningsAcceptLiveGiftsDescription =>
+      'When off, viewers cannot send gifts during your live sessions.';
+
+  @override
+  String get earningsRecentLedger => 'Recent ledger';
+
+  @override
+  String get earningsEmptyTitle => 'No earnings yet';
+
+  @override
+  String get earningsEmptyMessage =>
+      'Go live and let viewers send gifts from the live tray.';
+
+  @override
+  String get earningsOpenLive => 'Open Live';
+
+  @override
+  String get communitiesTitle => 'Communities';
+
+  @override
+  String get communitiesSubtitle =>
+      'Find people around shared interests or start a space of your own.';
+
+  @override
+  String get communitiesCreate => 'Create community';
+
+  @override
+  String get communitiesHeroEyebrow => 'COMMUNITIES';
+
+  @override
+  String get communitiesHeroTitle => 'Find your people';
+
+  @override
+  String get communitiesHeroBody =>
+      'Browse public spaces and communities you belong to, then continue into their existing channels.';
+
+  @override
+  String get communitiesSearchHint => 'Search communities';
+
+  @override
+  String get communitiesSearch => 'Search';
+
+  @override
+  String get communitiesClearSearch => 'Clear search';
+
+  @override
+  String get communitiesEmptyTitle => 'No communities yet';
+
+  @override
+  String get communitiesNoMatchesTitle => 'No matching communities';
+
+  @override
+  String get communitiesEmptyMessage =>
+      'Create the first community to begin gathering people.';
+
+  @override
+  String get communitiesNoMatchesMessage =>
+      'Try another name, description, or slug.';
+
+  @override
+  String get communitiesNameLabel => 'Name';
+
+  @override
+  String get communitiesNameRequired => 'Enter a community name.';
+
+  @override
+  String get communitiesSlugLabel => 'Slug';
+
+  @override
+  String get communitiesSlugHelper =>
+      'Lowercase letters, numbers, and hyphens.';
+
+  @override
+  String get communitiesSlugInvalid =>
+      'Use at least 3 lowercase URL-safe characters.';
+
+  @override
+  String get communitiesDescriptionLabel => 'Description (optional)';
+
+  @override
+  String get communitiesVisibilityLabel => 'Visibility';
+
+  @override
+  String get communitiesVisibilityPublic => 'Public';
+
+  @override
+  String get communitiesVisibilityPrivate =>
+      'Private — requests require approval';
+
+  @override
+  String get communitiesVisibilityPrivateShort => 'Private';
+
+  @override
+  String get communitiesVisibilityInviteOnly => 'Invite only';
+
+  @override
+  String get communitiesJoined => 'Joined';
+
+  @override
+  String get communitiesLeave => 'Leave community';
+
+  @override
+  String get communitiesJoin => 'Join community';
+
+  @override
+  String get communitiesMembershipPending => 'Membership request submitted.';
+
+  @override
+  String communitiesMembershipStatus(String status) {
+    return 'Community membership: $status';
+  }
+
+  @override
+  String get communitiesChannels => 'Channels';
+
+  @override
+  String get communitiesNoChannelsTitle => 'No visible channels';
+
+  @override
+  String get communitiesNoChannelsMessage =>
+      'No channels are visible in this community.';
 }
