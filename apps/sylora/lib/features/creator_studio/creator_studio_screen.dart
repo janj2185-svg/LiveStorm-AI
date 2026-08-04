@@ -821,6 +821,20 @@ final class _CreatorStudioScreenState
                         ),
                       ),
                     ],
+                    if (guest.status == 'pending' || guest.status == 'accepted')
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: LumenSecondaryButton(
+                            label: 'Revoke guest',
+                            icon: Icons.person_off_outlined,
+                            onPressed: _guestsBusy || session == null
+                                ? null
+                                : () => _revokeGuest(session, guest),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -1450,6 +1464,32 @@ final class _CreatorStudioScreenState
           _guestsLoadedForSession = session.id;
           _guests = guests;
           _guestsStatus = 'Guest list refreshed.';
+        });
+      }
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _guestsBusy = false);
+      }
+    }
+  }
+
+  Future<void> _revokeGuest(
+    LiveSessionModel session,
+    LiveGuestInviteModel guest,
+  ) async {
+    setState(() => _guestsBusy = true);
+    try {
+      await ref
+          .read(liveRepositoryProvider)
+          .revokeGuestInvite(session.id, guest.id);
+      final guests = await ref.read(liveRepositoryProvider).guests(session.id);
+      if (mounted) {
+        setState(() {
+          _guests = guests;
+          _guestsStatus =
+              'Guest ${guest.inviteeUserId} revoked. Contribution path removed.';
         });
       }
     } on Object catch (error) {

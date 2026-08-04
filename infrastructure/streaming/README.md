@@ -37,6 +37,13 @@ Publisher and viewer credentials are global local-development credentials.
 Production should issue path-scoped short-lived credentials through
 MediaMTX's HTTP or JWT authentication boundary instead of sharing them.
 
+SYLORA conferences and live guests use a **contribution gallery** model:
+each publisher gets an isolated WHIP path, and peers subscribe with WHEP to
+those paths. This is intentionally not an SFU composite program feed.
+Deployments that enforce the API-minted JWTs should validate `path` + `type`
+claims (`*_whip_publish` / `*_whep_subscribe`) at the MediaMTX authHTTP or
+JWT edge before accepting WHIP/WHEP sessions.
+
 Start only the media plane and its local object storage:
 
 ```bash

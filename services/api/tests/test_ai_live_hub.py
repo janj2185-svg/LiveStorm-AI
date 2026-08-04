@@ -771,6 +771,43 @@ async def test_live_guest_invite_decline_flow(api_factory: Any) -> None:
 
 
 @pytest.mark.asyncio
+async def test_live_guest_invite_host_revoke_flow(api_factory: Any) -> None:
+    async with api_factory() as api:
+        creator_auth, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=creator_auth,
+            json={"title": "Guest revoke"},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+
+        await register_and_verify(
+            api,
+            email="live-revoke-guest@example.com",
+            display_name="Live Revoke Guest",
+        )
+        guest = await api.user("live-revoke-guest@example.com")
+        invited = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/invite",
+            headers=creator_auth,
+            json={"invitee_user_id": str(guest.id), "role": "guest"},
+        )
+        assert invited.status_code == 201, invited.text
+        invite_id = invited.json()["id"]
+
+        revoked = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/{invite_id}/revoke",
+            headers=creator_auth,
+        )
+        assert revoked.status_code == 200, revoked.text
+        body = revoked.json()
+        assert body["status"] == "revoked"
+        assert body["media_status"] == "not_requested"
+        assert body["guest_ingest_path"] is None
+
+
+@pytest.mark.asyncio
 async def test_injected_adapter_reconnect_error_and_recovery(
     api_factory: Any,
 ) -> None:

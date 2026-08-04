@@ -433,11 +433,18 @@ class LiveMediaCapabilityResponse(StrictSchema):
 
 class LivePublishCredentialsResponse(LiveMediaCapabilityResponse):
     whip_url: str | None
+    whep_url: str | None = None
     playback_url: str | None
     bearer_token: str | None
+    subscribe_bearer_token: str | None = None
     token_expires_at: datetime | None
     token_expires_in_seconds: int
     ice_servers: list[LiveIceServerResponse] = Field(default_factory=list)
+    media_layout: Literal["contribution_gallery"] = "contribution_gallery"
+    media_layout_note: str = (
+        "Guest publishes are isolated contribution paths. Hosts and peers subscribe via WHEP; "
+        "this is not an SFU composite program feed."
+    )
 
 
 class LiveGuestInviteAcceptResponse(LiveGuestInviteResponse):

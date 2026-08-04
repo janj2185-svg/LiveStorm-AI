@@ -57,6 +57,19 @@ class PublishCredentials:
     token_expires_at: object | None
     token_expires_in_seconds: int
     ice_servers: tuple[IceServer, ...]
+    whep_url: str | None = None
+    subscribe_bearer_token: str | None = None
+
+
+@dataclass(frozen=True)
+class SubscribeCredentials:
+    capability: MediaCapability
+    whep_url: str | None
+    playback_url: str | None
+    bearer_token: str | None
+    token_expires_at: object | None
+    token_expires_in_seconds: int
+    ice_servers: tuple[IceServer, ...]
 
 
 def media_capability(
@@ -126,12 +139,75 @@ def publish_credentials(
     return PublishCredentials(
         capability=capability,
         whip_url=_media_url(settings.mediamtx_whip_base_url, effective_path, "whip"),
+        whep_url=media_whep_url(settings, effective_path),
         playback_url=media_playback_url(settings, effective_path),
         bearer_token=_publish_token(
             settings,
             live_session,
             expires_at,
             ingest_path=effective_path,
+            subject_user_id=subject_user_id,
+            token_type=token_type,
+        ),
+        subscribe_bearer_token=_publish_token(
+            settings,
+            live_session,
+            expires_at,
+            ingest_path=effective_path,
+            subject_user_id=subject_user_id,
+            token_type=token_type.replace("publish", "subscribe")
+            if "publish" in token_type
+            else f"{token_type}_subscribe",
+        ),
+        token_expires_at=expires_at,
+        token_expires_in_seconds=PUBLISH_TOKEN_SECONDS,
+        ice_servers=ice_servers(settings),
+    )
+
+
+def subscribe_credentials(
+    settings: Settings,
+    live_session: LiveSession,
+    *,
+    ingest_path: str,
+    ingest_provisioned: bool | None = None,
+    subject_user_id: uuid.UUID | None = None,
+    token_type: str = "live_whep_subscribe",
+) -> SubscribeCredentials:
+    """Return MediaMTX WHEP subscribe credentials for one contribution path."""
+    capability = media_capability(
+        settings,
+        live_session,
+        ingest_provisioned=ingest_provisioned,
+    )
+    whep = media_whep_url(settings, ingest_path)
+    if capability.status != "available" or not whep:
+        return SubscribeCredentials(
+            capability=capability
+            if capability.status != "available"
+            else MediaCapability(
+                status="unavailable",
+                reason="mediamtx_whep_unconfigured",
+                whip_available=capability.whip_available,
+                playback_available=capability.playback_available,
+            ),
+            whep_url=None,
+            playback_url=media_playback_url(settings, ingest_path),
+            bearer_token=None,
+            token_expires_at=None,
+            token_expires_in_seconds=0,
+            ice_servers=ice_servers(settings),
+        )
+    expires_at = utcnow() + timedelta(seconds=PUBLISH_TOKEN_SECONDS)
+    return SubscribeCredentials(
+        capability=capability,
+        whep_url=whep,
+        playback_url=media_playback_url(settings, ingest_path),
+        bearer_token=_publish_token(
+            settings,
+            live_session,
+            expires_at,
+            ingest_path=ingest_path,
             subject_user_id=subject_user_id,
             token_type=token_type,
         ),
@@ -157,6 +233,11 @@ def ice_servers(settings: Settings) -> tuple[IceServer, ...]:
 
 def media_playback_url(settings: Settings, ingest_path: str) -> str | None:
     return _media_url(settings.mediamtx_playback_base_url, ingest_path)
+
+
+def media_whep_url(settings: Settings, ingest_path: str) -> str | None:
+    """WHEP read URL on the same WebRTC HTTP server as WHIP when configured."""
+    return _media_url(settings.mediamtx_whip_base_url, ingest_path, "whep")
 
 
 def _media_url(base_url: str | None, ingest_path: str, suffix: str | None = None) -> str | None:

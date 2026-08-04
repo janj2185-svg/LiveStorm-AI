@@ -73,6 +73,11 @@ class LiveConferenceParticipant(Base):
     __table_args__ = (
         UniqueConstraint("conference_id", "user_id", name="uq_live_conference_participant_user"),
         Index("ix_live_conference_participants_user_active", "user_id", "left_at"),
+        Index(
+            "ix_live_conference_participants_contribution_path",
+            "contribution_ingest_path",
+            unique=True,
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -83,6 +88,9 @@ class LiveConferenceParticipant(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
+    # Isolated WHIP contribution path so concurrent publishers do not override each other.
+    contribution_ingest_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contribution_provisioned: Mapped[bool] = mapped_column(default=False)
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     participant_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)

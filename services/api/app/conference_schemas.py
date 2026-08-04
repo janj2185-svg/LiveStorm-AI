@@ -60,13 +60,47 @@ class ConferenceMediaCredentialsResponse(StrictSchema):
     reason: str | None
     whip_available: bool
     playback_available: bool
+    whep_available: bool = False
+    role: Literal["host", "participant"] = "participant"
     ingest_path: str
     whip_url: str | None
+    whep_url: str | None = None
     playback_url: str | None
     bearer_token: str | None
+    subscribe_bearer_token: str | None = None
     token_expires_at: datetime | None
     token_expires_in_seconds: int
     ice_servers: list[ConferenceIceServerResponse] = Field(default_factory=list)
+    media_layout: Literal["contribution_gallery"] = "contribution_gallery"
+    media_layout_note: str = (
+        "Each participant publishes an isolated WHIP contribution. Peers subscribe via WHEP "
+        "to build a gallery. This is not an SFU composite program feed."
+    )
+
+
+class ConferenceJoinByCodeRequest(StrictSchema):
+    join_code: str = Field(min_length=4, max_length=24)
+
+    @field_validator("join_code")
+    @classmethod
+    def normalize_join_code(cls, value: str) -> str:
+        code = value.strip().upper().replace(" ", "")
+        if not code:
+            raise ValueError("join code is required")
+        return code
+
+
+class ConferenceParticipantResponse(StrictSchema):
+    user_id: uuid.UUID
+    role: Literal["host", "participant"]
+    contribution_ingest_path: str | None
+    contribution_provisioned: bool = False
+    playback_url: str | None = None
+    whep_url: str | None = None
+    subscribe_bearer_token: str | None = None
+    token_expires_at: datetime | None = None
+    is_self: bool = False
+    joined_at: datetime | None = None
 
 
 class ConferenceAuraAskRequest(StrictSchema):

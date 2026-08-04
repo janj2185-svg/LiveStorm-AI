@@ -1638,6 +1638,10 @@ abstract interface class LiveRepository {
     String sessionId,
     String inviteId,
   );
+  Future<LiveGuestInviteModel> revokeGuestInvite(
+    String sessionId,
+    String inviteId,
+  );
   Future<JsonObject> replayPlayback(String replayId);
   Future<JsonObject> obsScenes(String sessionId);
   Future<JsonObject> selectObsScene(String sessionId, String sceneName);
@@ -1851,6 +1855,20 @@ final class DioLiveRepository implements LiveRepository {
   ) async {
     final response = await _client.request(
       'live/sessions/$sessionId/guests/$inviteId/decline',
+      method: 'POST',
+    );
+    return LiveGuestInviteModel.fromJson(
+      requireObject(response.data, 'live guest invite'),
+    );
+  }
+
+  @override
+  Future<LiveGuestInviteModel> revokeGuestInvite(
+    String sessionId,
+    String inviteId,
+  ) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/guests/$inviteId/revoke',
       method: 'POST',
     );
     return LiveGuestInviteModel.fromJson(

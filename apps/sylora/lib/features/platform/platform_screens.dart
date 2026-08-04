@@ -2419,9 +2419,11 @@ final class _AiConversationScreenState
               captureSupported: _media.captionCaptureSupported,
               recording: _recording,
               busy: _voiceBusy || _sending,
+              speaking: _speakingMessageId != null,
               status: _voiceStatus,
               presenceError: _presenceError,
               onRecord: () => unawaited(_toggleRecording()),
+              onStopSpeaking: () => unawaited(_stopSpeaking()),
               onRefresh: () => unawaited(_loadVoicePresence()),
             ),
             const SizedBox(height: 12),
@@ -2637,6 +2639,7 @@ final class _AiConversationScreenState
       final sent = await _sendContent(transcript, clearComposer: false);
       if (sent) {
         _setVoiceStatus('Voice message sent: “$transcript”');
+        await _maybeAutoSpeakLatestReply();
       } else {
         _setVoiceStatus(
           'The clip was transcribed, but the message could not be sent.',
@@ -2655,6 +2658,50 @@ final class _AiConversationScreenState
       if (mounted) {
         setState(() => _voiceBusy = false);
       }
+    }
+  }
+
+  Future<void> _maybeAutoSpeakLatestReply() async {
+    final ttsReady =
+        _presence?['voice_output_ready'] == true ||
+        _presence?['voice_ready'] == true;
+    if (!ttsReady) {
+      _setVoiceStatus(
+        'Voice message sent. Spoken replies are unavailable — use Speak reply when ready.',
+      );
+      return;
+    }
+    try {
+      ref.invalidate(aiMessagesProvider(widget.conversationId));
+      final page = await ref.read(
+        aiMessagesProvider(widget.conversationId).future,
+      );
+      AiMessageModel? latestAssistant;
+      for (final message in page.items.reversed) {
+        if (message.role == 'assistant' && message.content.trim().isNotEmpty) {
+          latestAssistant = message;
+          break;
+        }
+      }
+      if (latestAssistant == null) {
+        return;
+      }
+      _setVoiceStatus('Auto-speaking Aura’s reply to your voice turn…');
+      await _speakReply(latestAssistant);
+    } on Object catch (error) {
+      _setVoiceStatus(
+        'Voice turn sent. Auto-speak skipped: ${messageFor(error)}',
+      );
+    }
+  }
+
+  Future<void> _stopSpeaking() async {
+    await _voicePlayer.stop();
+    if (mounted) {
+      setState(() {
+        _speakingMessageId = null;
+        _voiceStatus = 'Spoken reply stopped.';
+      });
     }
   }
 
@@ -2776,9 +2823,11 @@ final class _AuraVoiceControls extends StatelessWidget {
     required this.captureSupported,
     required this.recording,
     required this.busy,
+    required this.speaking,
     required this.status,
     required this.presenceError,
     required this.onRecord,
+    required this.onStopSpeaking,
     required this.onRefresh,
   });
 
@@ -2788,9 +2837,11 @@ final class _AuraVoiceControls extends StatelessWidget {
   final bool captureSupported;
   final bool recording;
   final bool busy;
+  final bool speaking;
   final String? status;
   final Object? presenceError;
   final VoidCallback onRecord;
+  final VoidCallback onStopSpeaking;
   final VoidCallback onRefresh;
 
   @override
@@ -2866,6 +2917,11 @@ final class _AuraVoiceControls extends StatelessWidget {
                         : 'Record for Aura',
                   ),
                 ),
+              ),
+              IconButton(
+                tooltip: 'Stop spoken reply',
+                onPressed: speaking ? onStopSpeaking : null,
+                icon: const Icon(Icons.stop_rounded),
               ),
               IconButton(
                 tooltip: 'Refresh voice readiness',

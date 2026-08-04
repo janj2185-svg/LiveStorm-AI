@@ -142,6 +142,7 @@ from app.live_service import (
     reconnect_session,
     record_human_moderation_decision,
     replay_event,
+    revoke_guest_invite,
     rotate_stream_key,
     session_destinations,
     start_game,
@@ -914,6 +915,38 @@ async def decline_session_guest(
         )
     invite = await guest_invite_for_invitee(db, record, invite_id, auth.user.id)
     invite = await decline_guest_invite(db, record, invite)
+    await publish_latest(request, session_id)
+    return guest_invite_response(settings, invite)
+
+
+@router.post(
+    "/sessions/{session_id}/guests/{invite_id}/revoke",
+    response_model=LiveGuestInviteResponse,
+)
+async def revoke_session_guest(
+    session_id: uuid.UUID,
+    invite_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LiveGuestInviteResponse:
+    await live_rate_limit(request, auth.user.id)
+    record = await owned_live_session(db, session_id, auth.user.id)
+    invite = await db.scalar(
+        select(LiveGuestInvite).where(
+            LiveGuestInvite.id == invite_id,
+            LiveGuestInvite.session_id == record.id,
+        )
+    )
+    if invite is None:
+        raise APIError(
+            404,
+            "live_guest_invite_not_found",
+            "Live guest invite not found",
+            "The live guest invite does not exist.",
+        )
+    invite = await revoke_guest_invite(db, registry(request), record, invite)
     await publish_latest(request, session_id)
     return guest_invite_response(settings, invite)
 

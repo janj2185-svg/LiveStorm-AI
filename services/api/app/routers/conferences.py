@@ -28,18 +28,35 @@ from app.conference_schemas import (
     ConferenceAuraAskResponse,
     ConferenceCreate,
     ConferenceIceServerResponse,
+    ConferenceJoinByCodeRequest,
     ConferenceJoinResponse,
     ConferenceMediaCredentialsResponse,
+    ConferenceParticipantResponse,
     ConferenceResponse,
 )
 from app.config import Settings
 from app.dependencies import AuthContext, current_auth, get_session, get_settings
 from app.errors import APIError
-from app.live_media import publish_credentials
+from app.live_adapters import AdapterRegistry
+from app.live_media import (
+    media_playback_url,
+    media_whep_url,
+    publish_credentials,
+    subscribe_credentials,
+)
+from app.live_service import provision_ingest_path
 from app.security import utcnow
 
 router = APIRouter(prefix="/conferences", tags=["Video Conferences"])
 Authenticated = Annotated[AuthContext, Depends(current_auth)]
+
+
+def _registry(request: Request) -> AdapterRegistry:
+    return request.app.state.live_adapter_registry
+
+
+def _participant_contribution_path(record: LiveConference, user_id: uuid.UUID) -> str:
+    return f"{record.ingest_path.rstrip('/')}/participants/{user_id}"
 
 
 async def _active_participant_count(db: AsyncSession, conference_id: uuid.UUID) -> int:
@@ -130,19 +147,29 @@ def _join_code() -> str:
 @router.post("", response_model=ConferenceResponse, status_code=status.HTTP_201_CREATED)
 async def create_conference(
     payload: ConferenceCreate,
+    request: Request,
     auth: Authenticated,
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> ConferenceResponse:
+    registry = _registry(request)
     for _ in range(8):
+        ingest_path = _conference_ingest_path(auth.user.id)
+        provisioned = False
+        if _media_plane_configured(settings):
+            provisioned = await provision_ingest_path(
+                registry,
+                ingest_path,
+                secrets.token_urlsafe(32),
+            )
         record = LiveConference(
             host_id=auth.user.id,
             title=payload.title,
             purpose=payload.purpose,
             status=ConferenceStatus.scheduled,
             join_code=_join_code(),
-            ingest_path=_conference_ingest_path(auth.user.id),
-            ingest_provisioned=_media_plane_configured(settings),
+            ingest_path=ingest_path,
+            ingest_provisioned=provisioned,
         )
         db.add(record)
         try:
@@ -201,11 +228,74 @@ async def get_conference(
     return await _conference_response(db, record, auth.user.id)
 
 
+async def _ensure_participant_contribution(
+    db: AsyncSession,
+    registry: AdapterRegistry,
+    settings: Settings,
+    record: LiveConference,
+    user_id: uuid.UUID,
+) -> LiveConferenceParticipant:
+    participant = await db.scalar(
+        select(LiveConferenceParticipant).where(
+            LiveConferenceParticipant.conference_id == record.id,
+            LiveConferenceParticipant.user_id == user_id,
+        )
+    )
+    if participant is None:
+        participant = LiveConferenceParticipant(
+            conference_id=record.id,
+            user_id=user_id,
+            contribution_ingest_path=_participant_contribution_path(record, user_id),
+        )
+        db.add(participant)
+        await db.flush()
+    else:
+        participant.left_at = None
+    if not participant.contribution_ingest_path:
+        participant.contribution_ingest_path = _participant_contribution_path(record, user_id)
+    if _media_plane_configured(settings) and not participant.contribution_provisioned:
+        participant.contribution_provisioned = await provision_ingest_path(
+            registry,
+            participant.contribution_ingest_path,
+            secrets.token_urlsafe(32),
+        )
+    return participant
+
+
+@router.post("/join-by-code", response_model=ConferenceJoinResponse)
+async def join_conference_by_code(
+    payload: ConferenceJoinByCodeRequest,
+    request: Request,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> ConferenceJoinResponse:
+    record = await db.scalar(
+        select(LiveConference).where(LiveConference.join_code == payload.join_code)
+    )
+    if record is None or record.status == ConferenceStatus.ended:
+        raise APIError(
+            404,
+            "conference_not_found",
+            "Conference not found",
+            "No active conference matches that join code.",
+        )
+    return await _join_conference_record(
+        db,
+        _registry(request),
+        settings,
+        record,
+        auth.user.id,
+    )
+
+
 @router.post("/{conference_id}/join", response_model=ConferenceJoinResponse)
 async def join_conference(
     conference_id: uuid.UUID,
+    request: Request,
     auth: Authenticated,
     db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
 ) -> ConferenceJoinResponse:
     record = await db.get(LiveConference, conference_id)
     if record is None or record.status == ConferenceStatus.ended:
@@ -215,19 +305,36 @@ async def join_conference(
             "Conference not found",
             "The conference room is unavailable.",
         )
+    return await _join_conference_record(
+        db,
+        _registry(request),
+        settings,
+        record,
+        auth.user.id,
+    )
+
+
+async def _join_conference_record(
+    db: AsyncSession,
+    registry: AdapterRegistry,
+    settings: Settings,
+    record: LiveConference,
+    user_id: uuid.UUID,
+) -> ConferenceJoinResponse:
     if record.status == ConferenceStatus.scheduled:
         record.status = ConferenceStatus.live
-    participant = await _active_participant(db, record.id, auth.user.id)
-    if participant is None:
-        participant = LiveConferenceParticipant(
-            conference_id=record.id,
-            user_id=auth.user.id,
+    if record.host_id != user_id:
+        await _ensure_participant_contribution(db, registry, settings, record, user_id)
+    elif _media_plane_configured(settings) and not record.ingest_provisioned:
+        record.ingest_provisioned = await provision_ingest_path(
+            registry,
+            record.ingest_path,
+            secrets.token_urlsafe(32),
         )
-        db.add(participant)
     await db.commit()
     await db.refresh(record)
     return ConferenceJoinResponse(
-        conference=await _conference_response(db, record, auth.user.id),
+        conference=await _conference_response(db, record, user_id),
         joined=True,
     )
 
@@ -250,32 +357,162 @@ async def leave_conference(
     )
 
 
+@router.get(
+    "/{conference_id}/participants",
+    response_model=list[ConferenceParticipantResponse],
+)
+async def list_conference_participants(
+    conference_id: uuid.UUID,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> list[ConferenceParticipantResponse]:
+    record = await _owned_or_joined_conference(db, conference_id, auth.user.id)
+    participants = (
+        await db.scalars(
+            select(LiveConferenceParticipant).where(
+                LiveConferenceParticipant.conference_id == record.id,
+                LiveConferenceParticipant.left_at.is_(None),
+            )
+        )
+    ).all()
+    items: list[ConferenceParticipantResponse] = [
+        ConferenceParticipantResponse(
+            user_id=record.host_id,
+            role="host",
+            contribution_ingest_path=record.ingest_path,
+            contribution_provisioned=record.ingest_provisioned,
+            playback_url=media_playback_url(settings, record.ingest_path),
+            whep_url=media_whep_url(settings, record.ingest_path),
+            **_participant_subscribe_fields(
+                settings,
+                record,
+                ingest_path=record.ingest_path,
+                provisioned=record.ingest_provisioned,
+                subject_user_id=auth.user.id,
+            ),
+            is_self=record.host_id == auth.user.id,
+            joined_at=record.created_at,
+        )
+    ]
+    for participant in participants:
+        if participant.user_id == record.host_id:
+            continue
+        path = participant.contribution_ingest_path
+        items.append(
+            ConferenceParticipantResponse(
+                user_id=participant.user_id,
+                role="participant",
+                contribution_ingest_path=path,
+                contribution_provisioned=participant.contribution_provisioned,
+                playback_url=media_playback_url(settings, path) if path else None,
+                whep_url=media_whep_url(settings, path) if path else None,
+                **(
+                    _participant_subscribe_fields(
+                        settings,
+                        record,
+                        ingest_path=path,
+                        provisioned=participant.contribution_provisioned,
+                        subject_user_id=auth.user.id,
+                    )
+                    if path
+                    else {}
+                ),
+                is_self=participant.user_id == auth.user.id,
+                joined_at=participant.joined_at,
+            )
+        )
+    return items
+
+
+def _participant_subscribe_fields(
+    settings: Settings,
+    record: LiveConference,
+    *,
+    ingest_path: str,
+    provisioned: bool,
+    subject_user_id: uuid.UUID,
+) -> dict[str, object]:
+    credentials = subscribe_credentials(
+        settings,
+        record,
+        ingest_path=ingest_path,
+        ingest_provisioned=provisioned,
+        subject_user_id=subject_user_id,
+        token_type="conference_whep_subscribe",
+    )
+    if credentials.capability.status != "available" or not credentials.bearer_token:
+        return {
+            "subscribe_bearer_token": None,
+            "token_expires_at": None,
+        }
+    return {
+        "subscribe_bearer_token": credentials.bearer_token,
+        "token_expires_at": credentials.token_expires_at,
+    }
+
+
 @router.get("/{conference_id}/media-credentials", response_model=ConferenceMediaCredentialsResponse)
 async def get_media_credentials(
     conference_id: uuid.UUID,
+    request: Request,
     auth: Authenticated,
     db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> ConferenceMediaCredentialsResponse:
     record = await _owned_or_joined_conference(db, conference_id, auth.user.id)
+    registry = _registry(request)
+    is_host = record.host_id == auth.user.id
+    if is_host:
+        if _media_plane_configured(settings) and not record.ingest_provisioned:
+            record.ingest_provisioned = await provision_ingest_path(
+                registry,
+                record.ingest_path,
+                secrets.token_urlsafe(32),
+            )
+            await db.commit()
+            await db.refresh(record)
+        contribution_path = record.ingest_path
+        provisioned = record.ingest_provisioned
+        role: str = "host"
+    else:
+        participant = await _ensure_participant_contribution(
+            db,
+            registry,
+            settings,
+            record,
+            auth.user.id,
+        )
+        await db.commit()
+        contribution_path = participant.contribution_ingest_path or record.ingest_path
+        provisioned = participant.contribution_provisioned
+        role = "participant"
+
     credentials = publish_credentials(
         settings,
         record,
+        ingest_path=contribution_path,
+        ingest_provisioned=provisioned,
         subject_user_id=auth.user.id,
         token_type="conference_whip_publish",
     )
     capability = credentials.capability
     available = capability.status == "available"
+    whep_available = bool(credentials.whep_url) and available
     return ConferenceMediaCredentialsResponse(
         conference_id=record.id,
         status="available" if available else "awaiting_media_plane",
         reason=None if available else capability.reason or "awaiting_media_plane",
         whip_available=capability.whip_available,
         playback_available=capability.playback_available,
-        ingest_path=record.ingest_path,
+        whep_available=whep_available,
+        role=role,  # type: ignore[arg-type]
+        ingest_path=contribution_path,
         whip_url=credentials.whip_url,
+        whep_url=credentials.whep_url,
         playback_url=credentials.playback_url,
         bearer_token=credentials.bearer_token,
+        subscribe_bearer_token=credentials.subscribe_bearer_token,
         token_expires_at=credentials.token_expires_at,
         token_expires_in_seconds=credentials.token_expires_in_seconds,
         ice_servers=[

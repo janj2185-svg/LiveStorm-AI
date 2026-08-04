@@ -664,8 +664,10 @@ def publish_credentials_response(
         obs_available=capability.obs_available,
         ingest_path=effective_ingest_path,
         whip_url=credentials.whip_url,
+        whep_url=credentials.whep_url,
         playback_url=credentials.playback_url,
         bearer_token=credentials.bearer_token,
+        subscribe_bearer_token=credentials.subscribe_bearer_token,
         token_expires_at=credentials.token_expires_at,
         token_expires_in_seconds=credentials.token_expires_in_seconds,
         ice_servers=[
@@ -880,6 +882,38 @@ async def decline_guest_invite(
         db,
         live_session,
         "guest.declined",
+        "guest_invite",
+        invite.id,
+        {"invitee_user_id": str(invite.invitee_user_id), "role": invite.role.value},
+    )
+    await db.commit()
+    await db.refresh(invite)
+    return invite
+
+
+async def revoke_guest_invite(
+    db: AsyncSession,
+    registry: AdapterRegistry,
+    live_session: LiveSession,
+    invite: LiveGuestInvite,
+) -> LiveGuestInvite:
+    if invite.status not in {LiveGuestInviteStatus.pending, LiveGuestInviteStatus.accepted}:
+        raise APIError(
+            409,
+            "live_guest_invite_state_conflict",
+            "Live guest invite state conflict",
+            "Only pending or accepted live guest invites can be revoked.",
+        )
+    guest_path = invite.guest_ingest_path
+    invite.status = LiveGuestInviteStatus.revoked
+    invite.media_status = LiveGuestMediaStatus.not_requested
+    if guest_path:
+        await delete_ingest_path(registry, guest_path)
+    invite.guest_ingest_path = None
+    _append_live_event(
+        db,
+        live_session,
+        "guest.revoked",
         "guest_invite",
         invite.id,
         {"invitee_user_id": str(invite.invitee_user_id), "role": invite.role.value},
@@ -1131,6 +1165,24 @@ async def _provision_ingest(registry: AdapterRegistry, ingest_path: str, stream_
             media_context(),
             {"ingest_path": ingest_path, "ingest_key": stream_key},
         )
+    except AdapterError:
+        return False
+    return True
+
+
+async def provision_ingest_path(
+    registry: AdapterRegistry, ingest_path: str, stream_key: str | None = None
+) -> bool:
+    """Public helper for conference/guest path provisioning."""
+    return await _provision_ingest(registry, ingest_path, stream_key or secrets.token_urlsafe(32))
+
+
+async def delete_ingest_path(registry: AdapterRegistry, ingest_path: str) -> bool:
+    adapter = registry.resolve(IntegrationPlatform.rtmp_webrtc)
+    if not adapter.descriptor().available:
+        return False
+    try:
+        await adapter.end_broadcast(media_context(), ingest_path)
     except AdapterError:
         return False
     return True
