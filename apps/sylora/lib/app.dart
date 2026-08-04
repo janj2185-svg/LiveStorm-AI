@@ -65,6 +65,12 @@ const _marketplaceDestination = ShellDestination(
   selectedIcon: Icons.storefront_rounded,
   path: '/marketplace',
 );
+const _learningDestination = ShellDestination(
+  label: 'Learn',
+  icon: Icons.school_outlined,
+  selectedIcon: Icons.school_rounded,
+  path: '/learning',
+);
 const _creatorDestination = ShellDestination(
   label: 'Creator',
   icon: Icons.edit_note_outlined,
@@ -123,6 +129,7 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
     _aiDestination,
     _friendsDestination,
     _marketplaceDestination,
+    _learningDestination,
     if (roleSet.contains('creator') || roleSet.contains('admin'))
       _creatorDestination,
     if (roleSet.contains('business') || roleSet.contains('admin'))

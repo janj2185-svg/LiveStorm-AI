@@ -97,7 +97,7 @@ final class CreatorScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
-                  height: 720,
+                  height: (MediaQuery.sizeOf(context).height * 0.72).clamp(480.0, 920.0),
                   child: TabBarView(
                     children: <Widget>[
                       _CreatorDashboard(snapshot: snapshot),

@@ -41,6 +41,17 @@ final class LearningScreen extends ConsumerWidget {
         'Published courses, real enrollment progress, quizzes, and certificates.',
     showAuraPresence: true,
     auraPresencePreset: SyloraAuraContextPreset.learning,
+    header: SyloraUniverseHero(
+      eyebrow: 'EDUCATION',
+      title: 'Learn with Aura',
+      body:
+          'Courses, live classes, and certificates — Aura tutors beside every lesson when you need her.',
+      trailing: SyloraPortalChip(
+        label: 'Ask Aura Tutor',
+        icon: Icons.auto_awesome_rounded,
+        onTap: () => context.goNamed('ai'),
+      ),
+    ),
     child: LumenAsyncView<_LearningSnapshot>(
       value: ref.watch(_learningProvider),
       onRetry: () => ref.invalidate(_learningProvider),
@@ -59,7 +70,7 @@ final class LearningScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 14),
             SizedBox(
-              height: 720,
+              height: (MediaQuery.sizeOf(context).height * 0.72).clamp(480.0, 920.0),
               child: TabBarView(
                 children: <Widget>[
                   _CourseCatalog(initialPage: snapshot.courses),

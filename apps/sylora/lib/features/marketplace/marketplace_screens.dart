@@ -84,9 +84,14 @@ final class MarketplaceScreen extends ConsumerWidget {
                 onTap: () => context.pushNamed('marketplace-seller'),
               ),
             SyloraPortalChip(
-              label: 'Gifts',
-              icon: Icons.card_giftcard_rounded,
+              label: 'Gift Shop',
+              icon: Icons.storefront_outlined,
               onTap: () => context.goNamed('gifts'),
+            ),
+            SyloraPortalChip(
+              label: 'Aura',
+              icon: Icons.auto_awesome_rounded,
+              onTap: () => context.goNamed('ai'),
             ),
           ],
         ),
@@ -102,7 +107,7 @@ final class MarketplaceScreen extends ConsumerWidget {
               const TabBar(
                 isScrollable: true,
                 tabs: <Tab>[
-                  Tab(text: 'Catalog'),
+                  Tab(text: 'All'),
                   Tab(text: 'Cart'),
                   Tab(text: 'Orders'),
                   Tab(text: 'Library'),
@@ -110,7 +115,7 @@ final class MarketplaceScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 14),
               SizedBox(
-                height: 720,
+                height: (MediaQuery.sizeOf(context).height * 0.72).clamp(480.0, 920.0),
                 child: TabBarView(
                   children: <Widget>[
                     _CatalogView(initialPage: snapshot.catalog),
@@ -1119,7 +1124,7 @@ final class _MarketplaceSellerScreenState
                   ),
                   const SizedBox(height: 14),
                   SizedBox(
-                    height: 720,
+                    height: (MediaQuery.sizeOf(context).height * 0.72).clamp(480.0, 920.0),
                     child: TabBarView(
                       children: <Widget>[
                         _SellerProducts(

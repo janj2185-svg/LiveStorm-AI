@@ -24,6 +24,17 @@ final class BusinessScreen extends ConsumerWidget {
         'Select a tenant before opening CRM, operations, documents, or finance.',
     showAuraPresence: true,
     auraPresencePreset: SyloraAuraContextPreset.business,
+    header: SyloraUniverseHero(
+      eyebrow: 'BUSINESS',
+      title: 'Workspace hub',
+      body:
+          'CRM, operations, documents, and finance — with Aura as your business co-pilot.',
+      trailing: SyloraPortalChip(
+        label: 'Aura Business',
+        icon: Icons.auto_awesome_rounded,
+        onTap: () => context.goNamed('ai'),
+      ),
+    ),
     actions: <Widget>[
       IconButton(
         tooltip: 'Create workspace',
