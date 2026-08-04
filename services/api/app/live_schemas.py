@@ -383,6 +383,7 @@ class LiveGuestInviteResponse(ORMStrictSchema):
     role: LiveGuestRole
     media_status: LiveGuestMediaStatus
     guest_ingest_path: str | None
+    playback_url: str | None = None
     created_at: datetime
     updated_at: datetime
 

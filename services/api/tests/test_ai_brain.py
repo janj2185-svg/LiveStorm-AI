@@ -155,6 +155,9 @@ class TestObjectStorage:
             sha256=hashlib.sha256(content).hexdigest(),
         )
 
+    async def presign_get(self, *, object_key: str) -> str:
+        return f"https://storage.test/{object_key}?signed=1"
+
 
 async def authenticated(api: Any) -> tuple[dict[str, str], uuid.UUID]:
     await register_and_verify(api)
@@ -633,11 +636,25 @@ async def test_translation_moderation_and_generation_dispatch(api_factory: Any) 
         assert job_response.status_code == 202, job_response.text
         job_id = uuid.UUID(job_response.json()["id"])
         assert dispatched == [job_id]
+        pending_output = await api.client.get(
+            f"/v1/ai/jobs/{job_id}/outputs/0",
+            headers=headers,
+        )
+        assert pending_output.status_code == 409
+        assert pending_output.json()["code"] == "ai_job_output_not_ready"
         async with api.app.state.session_factory() as session:
             job = await process_generation_job(session, registry, storage, job_id)
             assert job.status == AIJobStatus.succeeded
             assert job.output_refs[0]["object_key"].startswith("ai/")
             assert "http" not in str(job.output_refs)
+        output = await api.client.get(
+            f"/v1/ai/jobs/{job_id}/outputs/0",
+            headers=headers,
+        )
+        assert output.status_code == 200, output.text
+        assert output.json()["playback_url"].startswith("https://storage.test/ai/")
+        assert output.json()["content_type"] == "image/png"
+        assert output.json()["expires_in_seconds"] == 900
         assert storage.keys
 
     failing_provider = TestProvider(generation_failure=True)

@@ -168,6 +168,27 @@ void main() {
       service.dispose();
       await tokens.close();
     });
+
+    test('stays disabled when the API rejects device registration', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final preferences = await SharedPreferences.getInstance();
+      final client = _RecordingPushClient(
+        registrationError: StateError('push_provider_unavailable'),
+      );
+      final tokens = _ConfiguredPushTokens('initial-fcm-token-123456');
+      final service = PushService(
+        client: client,
+        tokenProvider: tokens,
+        preferences: preferences,
+      );
+
+      await expectLater(service.setEnabled(true), throwsA(isA<StateError>()));
+
+      expect(service.state, isFalse);
+      expect(preferences.getBool('push.notificationsEnabled'), isNull);
+      service.dispose();
+      await tokens.close();
+    });
   });
 
   test(
@@ -448,6 +469,9 @@ double _contrast(Color a, Color b) {
 }
 
 final class _RecordingPushClient implements PushRegistrationClient {
+  _RecordingPushClient({this.registrationError});
+
+  final Object? registrationError;
   final List<String> registered = <String>[];
 
   @override
@@ -455,6 +479,9 @@ final class _RecordingPushClient implements PushRegistrationClient {
     required String platform,
     required String token,
   }) async {
+    if (registrationError != null) {
+      throw registrationError!;
+    }
     registered.add(token);
   }
 

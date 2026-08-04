@@ -589,6 +589,7 @@ async def test_live_guest_invite_accept_without_media_plane(api_factory: Any) ->
         assert invite["status"] == "pending"
         assert invite["role"] == "cohost"
         assert invite["media_status"] == "not_requested"
+        assert invite["playback_url"] is None
 
         listing = await api.client.get(
             f"/v1/live/sessions/{session_id}/guests",
@@ -606,6 +607,7 @@ async def test_live_guest_invite_accept_without_media_plane(api_factory: Any) ->
         assert accepted_body["status"] == "accepted"
         assert accepted_body["media_status"] == "awaiting_media_plane"
         assert accepted_body["publish_credentials"] is None
+        assert accepted_body["playback_url"] is None
         assert accepted_body["guest_ingest_path"].endswith(f"/guests/{invite['id']}")
 
         post_accept_list = await api.client.get(
@@ -638,6 +640,15 @@ async def test_live_guest_accept_issues_guest_publish_credentials(
         )
         assert created.status_code == 201, created.text
         session_id = created.json()["id"]
+        assert media.actions == [
+            (
+                "create",
+                {
+                    "ingest_path": created.json()["ingest_path"],
+                    "ingest_key": created.json()["stream_key_once"],
+                },
+            )
+        ]
 
         await register_and_verify(
             api,
@@ -679,6 +690,11 @@ async def test_live_guest_accept_issues_guest_publish_credentials(
         assert body["status"] == "accepted"
         assert body["media_status"] == "ready"
         assert body["guest_ingest_path"] == guest_path
+        assert body["playback_url"] == f"https://watch.test.sylora.local/{guest_path}"
+        assert len(media.actions) == 2
+        assert media.actions[-1][0] == "create"
+        assert media.actions[-1][1]["ingest_path"] == guest_path
+        assert media.actions[-1][1]["ingest_key"]
         credentials = body["publish_credentials"]
         assert credentials["status"] == "available"
         assert credentials["ingest_path"] == guest_path
@@ -702,7 +718,20 @@ async def test_live_guest_accept_issues_guest_publish_credentials(
         )
         assert reissued.status_code == 200, reissued.text
         assert reissued.json()["media_status"] == "ready"
+        assert reissued.json()["playback_url"] == (f"https://watch.test.sylora.local/{guest_path}")
         assert reissued.json()["publish_credentials"]["ingest_path"] == guest_path
+        assert len(media.actions) == 3
+        assert media.actions[-1][0] == "create"
+        assert media.actions[-1][1]["ingest_path"] == guest_path
+
+        host_listing = await api.client.get(
+            f"/v1/live/sessions/{session_id}/guests",
+            headers=creator_auth,
+        )
+        assert host_listing.status_code == 200, host_listing.text
+        listed_guest = host_listing.json()[0]
+        assert listed_guest["media_status"] == "ready"
+        assert listed_guest["playback_url"] == (f"https://watch.test.sylora.local/{guest_path}")
 
 
 @pytest.mark.asyncio

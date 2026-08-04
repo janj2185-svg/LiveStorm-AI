@@ -31,6 +31,7 @@ async def test_aura_presence(api: APIHarness) -> None:
     }
     assert "personality" in body
     assert body["voice_ready"] == body["voice_output_ready"]
+    assert body["voice_input_ready"] == body["transcription_ready"]
     assert isinstance(body["transcription_ready"], bool)
     assert isinstance(body["avatar_ready"], bool)
     assert body["avatar_job_status"] is None

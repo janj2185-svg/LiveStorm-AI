@@ -63,6 +63,7 @@ final class CreatorMediaController {
   html.MediaRecorder? _recorder;
   final List<html.Blob> _recordedChunks = <html.Blob>[];
   html.MediaRecorder? _captionRecorder;
+  html.MediaStream? _captionStream;
   final List<html.Blob> _captionChunks = <html.Blob>[];
   bool _audioEnabled = true;
   bool _videoEnabled = true;
@@ -293,39 +294,55 @@ final class CreatorMediaController {
   }
 
   Future<void> startCaptionCapture() async {
-    final stream = _stream;
-    if (stream == null) {
-      throw StateError(
-        'Start the camera and microphone preview before recording captions.',
-      );
-    }
-    if (stream.getAudioTracks().isEmpty) {
-      throw StateError('The preview does not contain a microphone track.');
-    }
     if (_captionRecorder?.state == 'recording') {
       return;
     }
-    final audioStream = html.MediaStream(stream.getAudioTracks());
+    final stream = _stream;
+    late final html.MediaStream audioStream;
+    if (stream != null && stream.getAudioTracks().isNotEmpty) {
+      audioStream = html.MediaStream(stream.getAudioTracks());
+    } else {
+      final mediaDevices = html.window.navigator.mediaDevices;
+      if (mediaDevices == null) {
+        throw UnsupportedError('Browser microphone capture is unavailable.');
+      }
+      audioStream = await mediaDevices.getUserMedia(<String, Object>{
+        'audio': true,
+        'video': false,
+      });
+      if (audioStream.getAudioTracks().isEmpty) {
+        for (final track in audioStream.getTracks()) {
+          track.stop();
+        }
+        throw StateError('No microphone track was available.');
+      }
+      _captionStream = audioStream;
+    }
     final preferredType =
         html.MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : html.MediaRecorder.isTypeSupported('audio/mp4')
         ? 'audio/mp4'
         : null;
-    final recorder = preferredType == null
-        ? html.MediaRecorder(audioStream)
-        : html.MediaRecorder(audioStream, <String, Object>{
-            'mimeType': preferredType,
-          });
-    _captionChunks.clear();
-    recorder.addEventListener('dataavailable', (html.Event event) {
-      final data = (event as dynamic).data as html.Blob?;
-      if (data != null && data.size > 0) {
-        _captionChunks.add(data);
-      }
-    });
-    recorder.start();
-    _captionRecorder = recorder;
+    try {
+      final recorder = preferredType == null
+          ? html.MediaRecorder(audioStream)
+          : html.MediaRecorder(audioStream, <String, Object>{
+              'mimeType': preferredType,
+            });
+      _captionChunks.clear();
+      recorder.addEventListener('dataavailable', (html.Event event) {
+        final data = (event as dynamic).data as html.Blob?;
+        if (data != null && data.size > 0) {
+          _captionChunks.add(data);
+        }
+      });
+      recorder.start();
+      _captionRecorder = recorder;
+    } on Object {
+      _disposeCaptionStream();
+      rethrow;
+    }
   }
 
   Future<CapturedMediaChunk> stopCaptionCapture() async {
@@ -340,33 +357,41 @@ final class CreatorMediaController {
       }
     });
     recorder.stop();
-    await stopped.future.timeout(const Duration(seconds: 2));
-    final rawType = recorder.mimeType;
-    final contentType = rawType == null || rawType.isEmpty
-        ? 'audio/webm'
-        : rawType.split(';').first;
-    final blob = html.Blob(_captionChunks, contentType);
-    final reader = html.FileReader()..readAsArrayBuffer(blob);
-    await reader.onLoadEnd.first;
-    if (reader.error != null) {
-      throw StateError('The browser could not read the recorded caption clip.');
+    try {
+      await stopped.future.timeout(const Duration(seconds: 2));
+      final rawType = recorder.mimeType;
+      final contentType = rawType == null || rawType.isEmpty
+          ? 'audio/webm'
+          : rawType.split(';').first;
+      final blob = html.Blob(_captionChunks, contentType);
+      final reader = html.FileReader()..readAsArrayBuffer(blob);
+      await reader.onLoadEnd.first;
+      if (reader.error != null) {
+        throw StateError(
+          'The browser could not read the recorded caption clip.',
+        );
+      }
+      final result = reader.result;
+      if (result is! Uint8List) {
+        throw StateError(
+          'The browser could not read the recorded caption clip.',
+        );
+      }
+      final bytes = result;
+      if (bytes.isEmpty) {
+        throw StateError('The recorded caption clip was empty.');
+      }
+      final extension = contentType == 'audio/mp4' ? 'm4a' : 'webm';
+      return CapturedMediaChunk(
+        bytes: bytes,
+        filename: 'caption_${DateTime.now().millisecondsSinceEpoch}.$extension',
+        contentType: contentType,
+      );
+    } finally {
+      _captionChunks.clear();
+      _captionRecorder = null;
+      _disposeCaptionStream();
     }
-    final result = reader.result;
-    if (result is! Uint8List) {
-      throw StateError('The browser could not read the recorded caption clip.');
-    }
-    final bytes = result;
-    _captionChunks.clear();
-    _captionRecorder = null;
-    if (bytes.isEmpty) {
-      throw StateError('The recorded caption clip was empty.');
-    }
-    final extension = contentType == 'audio/mp4' ? 'm4a' : 'webm';
-    return CapturedMediaChunk(
-      bytes: bytes,
-      filename: 'caption_${DateTime.now().millisecondsSinceEpoch}.$extension',
-      contentType: contentType,
-    );
   }
 
   Future<void> stop() async {
@@ -381,6 +406,7 @@ final class CreatorMediaController {
     }
     _captionRecorder = null;
     _captionChunks.clear();
+    _disposeCaptionStream();
     _peer?.close();
     _peer = null;
     await _disposeScreenStream();
@@ -392,6 +418,16 @@ final class CreatorMediaController {
       }
     }
     _video.srcObject = null;
+  }
+
+  void _disposeCaptionStream() {
+    final stream = _captionStream;
+    _captionStream = null;
+    if (stream != null) {
+      for (final track in stream.getTracks()) {
+        track.stop();
+      }
+    }
   }
 
   void dispose() {

@@ -40,6 +40,7 @@ from app.ai_schemas import (
     AIConversationPatch,
     AIConversationResponse,
     AIJobCreate,
+    AIJobOutputPlayback,
     AIJobPage,
     AIJobResponse,
     AIMemoryCreate,
@@ -305,6 +306,7 @@ async def get_aura_presence(
         mood_label=mood,
         personality="Warm · Curious · Precise · Alive",
         voice_ready=voice_output_ready,
+        voice_input_ready=transcription_ready,
         voice_output_ready=voice_output_ready,
         transcription_ready=transcription_ready,
         avatar_ready=avatar_ready,
@@ -1068,6 +1070,53 @@ async def get_job(
     if job is None:
         raise APIError(404, "ai_job_not_found", "AI job not found", "The job does not exist.")
     return job
+
+
+@router.get(
+    "/jobs/{job_id}/outputs/{output_index}",
+    response_model=AIJobOutputPlayback,
+)
+async def get_job_output(
+    job_id: uuid.UUID,
+    output_index: int,
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> AIJobOutputPlayback:
+    job = await db.scalar(select(AIJob).where(AIJob.id == job_id, AIJob.user_id == auth.user.id))
+    if job is None:
+        raise APIError(404, "ai_job_not_found", "AI job not found", "The job does not exist.")
+    if job.status.value != "succeeded":
+        raise APIError(
+            409,
+            "ai_job_output_not_ready",
+            "AI job output is not ready",
+            "Playback is available only after generation succeeds.",
+        )
+    if output_index < 0 or output_index >= len(job.output_refs):
+        raise APIError(
+            404,
+            "ai_job_output_not_found",
+            "AI job output not found",
+            "The requested generated output does not exist.",
+        )
+    output = job.output_refs[output_index]
+    object_key = output.get("object_key")
+    content_type = output.get("content_type")
+    if not isinstance(object_key, str) or not isinstance(content_type, str):
+        raise APIError(
+            409,
+            "ai_job_output_invalid",
+            "AI job output is unavailable",
+            "The generated output reference is incomplete.",
+        )
+    storage = request.app.state.object_storage
+    return AIJobOutputPlayback(
+        playback_url=await storage.presign_get(object_key=object_key),
+        content_type=content_type,
+        expires_in_seconds=settings.s3_presign_seconds,
+    )
 
 
 @router.post("/jobs/{job_id}/cancel", response_model=AIJobResponse)

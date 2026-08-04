@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api.dart';
@@ -2113,7 +2114,9 @@ final class _AuraPresencePanel extends StatelessWidget {
     final mood = '${data?['mood_label'] ?? 'Checking Aura presence…'}';
     final voiceOutputReady =
         data?['voice_output_ready'] == true || data?['voice_ready'] == true;
-    final transcriptionReady = data?['transcription_ready'] == true;
+    final transcriptionReady =
+        data?['voice_input_ready'] == true ||
+        data?['transcription_ready'] == true;
     final avatarReady = data?['avatar_ready'] == true && avatarCapable;
     final avatarStatus = data?['avatar_job_status'] as String?;
     final color = _emotionColor(emotion);
@@ -2342,20 +2345,31 @@ final class _AiConversationScreenState
     extends ConsumerState<AiConversationScreen> {
   final _message = TextEditingController();
   final _messageFocus = FocusNode();
+  final _media = CreatorMediaController();
+  final _voicePlayer = AudioPlayer();
   late final SyloraAuraPresenceController _aura;
+  JsonObject? _presence;
+  Object? _presenceError;
   bool _sending = false;
+  bool _recording = false;
+  bool _voiceBusy = false;
+  String? _voiceStatus;
+  String? _speakingMessageId;
 
   @override
   void initState() {
     super.initState();
     _aura = SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.ai);
     _messageFocus.addListener(_syncAuraForFocus);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadVoicePresence());
   }
 
   @override
   void dispose() {
     _messageFocus.removeListener(_syncAuraForFocus);
     _aura.dispose();
+    _media.dispose();
+    _voicePlayer.dispose();
     _message.dispose();
     _messageFocus.dispose();
     super.dispose();
@@ -2367,6 +2381,14 @@ final class _AiConversationScreenState
     final conversation = ref.watch(
       aiConversationProvider(widget.conversationId),
     );
+    final ai = ref.watch(aiProvider);
+    final consentGranted = ai.asData?.value.settings.consentGranted == true;
+    final transcriptionReady =
+        _presence?['voice_input_ready'] == true ||
+        _presence?['transcription_ready'] == true;
+    final voiceOutputReady =
+        _presence?['voice_output_ready'] == true ||
+        _presence?['voice_ready'] == true;
     final purpose = conversation.asData?.value.purpose ?? 'general';
     final conversationHeight = (MediaQuery.sizeOf(context).height - 260).clamp(
       420.0,
@@ -2390,6 +2412,19 @@ final class _AiConversationScreenState
         height: conversationHeight,
         child: Column(
           children: <Widget>[
+            _AuraVoiceControls(
+              consentGranted: consentGranted,
+              transcriptionReady: transcriptionReady,
+              voiceOutputReady: voiceOutputReady,
+              captureSupported: _media.captionCaptureSupported,
+              recording: _recording,
+              busy: _voiceBusy || _sending,
+              status: _voiceStatus,
+              presenceError: _presenceError,
+              onRecord: () => unawaited(_toggleRecording()),
+              onRefresh: () => unawaited(_loadVoicePresence()),
+            ),
+            const SizedBox(height: 12),
             Expanded(
               child: LumenAsyncView<CursorPage<AiMessageModel>>(
                 value: messages,
@@ -2417,6 +2452,10 @@ final class _AiConversationScreenState
                           return _AiMessageBubble(
                             conversationId: widget.conversationId,
                             message: page.items[messageIndex],
+                            speaking:
+                                _speakingMessageId ==
+                                page.items[messageIndex].id,
+                            onSpeak: _speakReply,
                             onChanged: () => ref.invalidate(
                               aiMessagesProvider(widget.conversationId),
                             ),
@@ -2477,13 +2516,26 @@ final class _AiConversationScreenState
     if (content.isEmpty) {
       return;
     }
+    await _sendContent(content, clearComposer: true);
+  }
+
+  Future<bool> _sendContent(
+    String content, {
+    required bool clearComposer,
+  }) async {
+    if (_sending) {
+      return false;
+    }
     setState(() => _sending = true);
     _aura.think('Хвилинку — збираю думку…');
     try {
       await ref.read(aiRepositoryProvider).send(widget.conversationId, content);
-      _message.clear();
+      if (clearComposer) {
+        _message.clear();
+      }
       ref.invalidate(aiMessagesProvider(widget.conversationId));
       _aura.speak('Ось що вийшло — якщо треба, уточни.');
+      return true;
     } on Object catch (error) {
       _aura.focus('Ой, щось пішло не так. Спробуй ще раз.');
       if (mounted) {
@@ -2491,12 +2543,217 @@ final class _AiConversationScreenState
           context,
         ).showSnackBar(SnackBar(content: Text(messageFor(error))));
       }
+      return false;
     } finally {
       if (mounted) {
         setState(() => _sending = false);
         _syncAuraForFocus();
       }
     }
+  }
+
+  Future<void> _loadVoicePresence() async {
+    try {
+      final presence = await ref.read(aiRepositoryProvider).auraPresence();
+      if (mounted) {
+        setState(() {
+          _presence = presence;
+          _presenceError = null;
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _presence = null;
+          _presenceError = error;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleRecording() async {
+    final consentGranted =
+        ref.read(aiProvider).asData?.value.settings.consentGranted == true;
+    if (!consentGranted) {
+      _setVoiceStatus(
+        'Grant AI consent before sending microphone audio to Aura.',
+      );
+      return;
+    }
+    if (_presence?['voice_input_ready'] != true &&
+        _presence?['transcription_ready'] != true) {
+      _setVoiceStatus(
+        _presenceError == null
+            ? 'Speech-to-text is unavailable. You can still type to Aura.'
+            : 'Voice readiness could not be verified. Refresh and try again.',
+      );
+      return;
+    }
+    if (!_media.captionCaptureSupported) {
+      _setVoiceStatus(
+        'Record for Aura currently requires SYLORA in a web browser. You can still type your message.',
+      );
+      return;
+    }
+    if (_voiceBusy || _sending) {
+      return;
+    }
+    setState(() => _voiceBusy = true);
+    try {
+      if (!_recording) {
+        await _media.startCaptionCapture();
+        if (!mounted) return;
+        setState(() {
+          _recording = true;
+          _voiceStatus =
+              'Recording a short clip… tap Stop & send when you finish.';
+        });
+        _aura.listen('Слухаю тебе…');
+        return;
+      }
+
+      final clip = await _media.stopCaptionCapture();
+      if (!mounted) return;
+      setState(() {
+        _recording = false;
+        _voiceStatus = 'Transcribing your clip…';
+      });
+      _aura.think('Розпізнаю твої слова…');
+      final result = await ref
+          .read(aiRepositoryProvider)
+          .transcribeAudio(
+            clip.bytes,
+            filename: clip.filename,
+            contentType: clip.contentType,
+          );
+      final transcript = optionalString(result, 'text')?.trim();
+      if (transcript == null || transcript.isEmpty) {
+        _setVoiceStatus(
+          'No speech was detected. Nothing was sent; try a short clear clip.',
+        );
+        return;
+      }
+      _setVoiceStatus('Heard: “$transcript” Sending to Aura…');
+      final sent = await _sendContent(transcript, clearComposer: false);
+      if (sent) {
+        _setVoiceStatus('Voice message sent: “$transcript”');
+      } else {
+        _setVoiceStatus(
+          'The clip was transcribed, but the message could not be sent.',
+        );
+      }
+    } on Object catch (error) {
+      await _media.stop();
+      if (mounted) {
+        setState(() {
+          _recording = false;
+          _voiceStatus =
+              'Aura did not receive audio: ${messageFor(error)} You can still type your message.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _voiceBusy = false);
+      }
+    }
+  }
+
+  Future<void> _speakReply(AiMessageModel message) async {
+    final consentGranted =
+        ref.read(aiProvider).asData?.value.settings.consentGranted == true;
+    if (!consentGranted) {
+      _showVoiceMessage('Grant AI consent before requesting a spoken reply.');
+      return;
+    }
+    if (_presence?['voice_output_ready'] != true &&
+        _presence?['voice_ready'] != true) {
+      _showVoiceMessage(
+        _presenceError == null
+            ? 'Aura voice generation is unavailable. The text reply remains available.'
+            : 'Voice readiness could not be verified. Refresh and try again.',
+      );
+      return;
+    }
+    if (_speakingMessageId != null) {
+      return;
+    }
+    setState(() {
+      _speakingMessageId = message.id;
+      _voiceStatus = 'Generating Aura’s spoken reply…';
+    });
+    _aura.think('Готую голосову відповідь…');
+    try {
+      final repository = ref.read(aiRepositoryProvider);
+      var job = await repository.createJob(<String, dynamic>{
+        'capability': 'voice',
+        'text': message.content,
+        'voice': 'alloy',
+        'output_format': 'mp3',
+      });
+      final jobId = requireString(job, 'id');
+      for (var attempt = 0; attempt < 30; attempt++) {
+        final status = requireString(job, 'status');
+        if (status == 'succeeded') {
+          break;
+        }
+        if (status == 'failed' || status == 'cancelled') {
+          final failure = optionalString(job, 'failure_code');
+          throw StateError(
+            failure == null
+                ? 'Voice generation ended with status $status.'
+                : 'Voice generation failed ($failure).',
+          );
+        }
+        if (attempt == 29) {
+          throw StateError(
+            'Voice generation is still processing. Try Speak reply again shortly.',
+          );
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        job = await repository.job(jobId);
+      }
+      final output = await repository.jobOutput(jobId);
+      final playbackUrl = requireString(output, 'playback_url');
+      final uri = Uri.tryParse(playbackUrl);
+      if (uri == null ||
+          !uri.hasAuthority ||
+          (uri.scheme != 'https' && uri.scheme != 'http')) {
+        throw StateError(
+          'The voice provider returned an invalid playback URL.',
+        );
+      }
+      await _voicePlayer.stop();
+      await _voicePlayer.setUrl(playbackUrl);
+      if (mounted) {
+        setState(() => _voiceStatus = 'Aura is speaking this reply.');
+      }
+      _aura.speak('Озвучую відповідь…');
+      await _voicePlayer.play();
+      _setVoiceStatus('Spoken reply finished.');
+    } on Object catch (error) {
+      _setVoiceStatus(
+        'Aura could not speak this reply: ${messageFor(error)} The text reply is unchanged.',
+      );
+      _aura.focus('Голос зараз недоступний — текст відповіді тут.');
+    } finally {
+      if (mounted) {
+        setState(() => _speakingMessageId = null);
+        _syncAuraForFocus();
+      }
+    }
+  }
+
+  void _setVoiceStatus(String status) {
+    if (mounted) {
+      setState(() => _voiceStatus = status);
+    }
+  }
+
+  void _showVoiceMessage(String message) {
+    _setVoiceStatus(message);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _syncAuraForFocus() {
@@ -2508,6 +2765,118 @@ final class _AiConversationScreenState
     } else {
       _aura.greet('Я поруч — пиши, коли будеш готовий.');
     }
+  }
+}
+
+final class _AuraVoiceControls extends StatelessWidget {
+  const _AuraVoiceControls({
+    required this.consentGranted,
+    required this.transcriptionReady,
+    required this.voiceOutputReady,
+    required this.captureSupported,
+    required this.recording,
+    required this.busy,
+    required this.status,
+    required this.presenceError,
+    required this.onRecord,
+    required this.onRefresh,
+  });
+
+  final bool consentGranted;
+  final bool transcriptionReady;
+  final bool voiceOutputReady;
+  final bool captureSupported;
+  final bool recording;
+  final bool busy;
+  final String? status;
+  final Object? presenceError;
+  final VoidCallback onRecord;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final inputReady = consentGranted && transcriptionReady && captureSupported;
+    final readinessMessage = !consentGranted
+        ? 'Voice stays off until AI consent is granted.'
+        : presenceError != null
+        ? 'Voice readiness unavailable: ${messageFor(presenceError!)}'
+        : !transcriptionReady
+        ? 'Speech-to-text is not configured. Type a message instead.'
+        : !captureSupported
+        ? 'Microphone clips are available on SYLORA web. Type a message on this device.'
+        : 'Record a short clip; it is transcribed, then sent as a text message.';
+    return LumenSurface(
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      radius: 20,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              const Icon(
+                Icons.graphic_eq_rounded,
+                color: LumenColors.verdigris,
+              ),
+              Text('Aura voice', style: SyloraTokens.title(15)),
+              LumenBadge(
+                label: inputReady ? 'Listening ready' : 'Input unavailable',
+                color: inputReady
+                    ? LumenColors.verdigris
+                    : LumenColors.porcelainMuted,
+              ),
+              LumenBadge(
+                label: voiceOutputReady && consentGranted
+                    ? 'Replies ready'
+                    : 'Replies unavailable',
+                color: voiceOutputReady && consentGranted
+                    ? LumenColors.bloom
+                    : LumenColors.porcelainMuted,
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Text(
+            status ?? readinessMessage,
+            style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: inputReady && !busy ? onRecord : null,
+                  icon: busy
+                      ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          recording
+                              ? Icons.stop_circle_outlined
+                              : Icons.mic_none_rounded,
+                        ),
+                  label: Text(
+                    busy
+                        ? (recording ? 'Finishing…' : 'Starting…')
+                        : recording
+                        ? 'Stop & send'
+                        : 'Record for Aura',
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Refresh voice readiness',
+                onPressed: busy ? null : onRefresh,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -2603,11 +2972,15 @@ final class _AiMessageBubble extends ConsumerWidget {
   const _AiMessageBubble({
     required this.conversationId,
     required this.message,
+    required this.speaking,
+    required this.onSpeak,
     required this.onChanged,
   });
 
   final String conversationId;
   final AiMessageModel message;
+  final bool speaking;
+  final Future<void> Function(AiMessageModel message) onSpeak;
   final VoidCallback onChanged;
 
   @override
@@ -2660,6 +3033,23 @@ final class _AiMessageBubble extends ConsumerWidget {
                       ),
                     ),
                   SelectableText(message.content),
+                  if (message.role == 'assistant') ...<Widget>[
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: speaking
+                          ? null
+                          : () => unawaited(onSpeak(message)),
+                      icon: speaking
+                          ? const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.volume_up_outlined),
+                      label: Text(
+                        speaking ? 'Preparing voice…' : 'Speak reply',
+                      ),
+                    ),
+                  ],
                   if (message.citations.isNotEmpty) ...<Widget>[
                     const SizedBox(height: 10),
                     Text(
@@ -3513,6 +3903,7 @@ final class _LiveGuestInviteCardState
   late final CreatorMediaController _publisher;
   late String _inviteStatus;
   late String _mediaStatus;
+  String? _playbackUrl;
   JsonObject? _credentials;
   String? _message;
   bool _busy = false;
@@ -3525,6 +3916,7 @@ final class _LiveGuestInviteCardState
     _publisher = CreatorMediaController();
     _inviteStatus = widget.invite.status;
     _mediaStatus = widget.invite.mediaStatus;
+    _playbackUrl = widget.invite.playbackUrl;
   }
 
   @override
@@ -3637,8 +4029,8 @@ final class _LiveGuestInviteCardState
                 Expanded(
                   child: Text(
                     credentialsReady
-                        ? 'Guest media ready · $_mediaStatus'
-                        : 'Guest media: $_mediaStatus',
+                        ? 'Contribution ready · $_mediaStatus'
+                        : 'Contribution status: $_mediaStatus',
                     style: SyloraTokens.title(15),
                   ),
                 ),
@@ -3657,6 +4049,30 @@ final class _LiveGuestInviteCardState
                   : 'No usable guest credentials are loaded. Retry only issues them when the media provider is configured.',
               style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
             ),
+            if (_playbackUrl case final playbackUrl?) ...<Widget>[
+              const SizedBox(height: 10),
+              Text(
+                'Playback is for this separate contribution feed only; it is not the composited host program.',
+                style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  LumenSecondaryButton(
+                    label: 'Open contribution playback',
+                    icon: Icons.open_in_new_rounded,
+                    onPressed: () => _openPlayback(playbackUrl),
+                  ),
+                  LumenSecondaryButton(
+                    label: 'Copy playback URL',
+                    icon: Icons.copy_rounded,
+                    onPressed: () => _copyPlayback(playbackUrl),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
             if (_publisher.supported) ...<Widget>[
               AnimatedSwitcher(
@@ -3830,14 +4246,48 @@ final class _LiveGuestInviteCardState
 
   void _applyGuestResult(JsonObject result) {
     final credentials = result['publish_credentials'];
+    final typedCredentials = credentials == null
+        ? null
+        : requireObject(credentials, 'guest publish credentials');
     if (mounted) {
       setState(() {
         _inviteStatus = '${result['status'] ?? _inviteStatus}';
         _mediaStatus = '${result['media_status'] ?? _mediaStatus}';
-        _credentials = credentials == null
-            ? null
-            : requireObject(credentials, 'guest publish credentials');
+        _credentials = typedCredentials;
+        _playbackUrl =
+            optionalString(result, 'playback_url') ??
+            (typedCredentials == null
+                ? _playbackUrl
+                : optionalString(typedCredentials, 'playback_url'));
       });
+    }
+  }
+
+  Future<void> _openPlayback(String playbackUrl) async {
+    try {
+      final opened = await launchUrl(
+        Uri.parse(playbackUrl),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened) {
+        throw StateError('No application could open the playback URL.');
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _message =
+              'Could not open contribution playback: ${messageFor(error)}',
+        );
+      }
+    }
+  }
+
+  Future<void> _copyPlayback(String playbackUrl) async {
+    await Clipboard.setData(ClipboardData(text: playbackUrl));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Contribution playback URL copied.')),
+      );
     }
   }
 

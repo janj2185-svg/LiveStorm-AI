@@ -59,7 +59,12 @@ class PublishCredentials:
     ice_servers: tuple[IceServer, ...]
 
 
-def media_capability(settings: Settings, live_session: LiveSession) -> MediaCapability:
+def media_capability(
+    settings: Settings,
+    live_session: LiveSession,
+    *,
+    ingest_provisioned: bool | None = None,
+) -> MediaCapability:
     """Report whether browser WHIP publishing can be offered for this session."""
     if not settings.mediamtx_control_url:
         return MediaCapability(
@@ -75,7 +80,7 @@ def media_capability(settings: Settings, live_session: LiveSession) -> MediaCapa
             whip_available=False,
             playback_available=bool(settings.mediamtx_playback_base_url),
         )
-    if not live_session.ingest_provisioned:
+    if not (live_session.ingest_provisioned if ingest_provisioned is None else ingest_provisioned):
         return MediaCapability(
             status="unavailable",
             reason="stream_path_not_provisioned",
@@ -95,11 +100,16 @@ def publish_credentials(
     live_session: LiveSession,
     *,
     ingest_path: str | None = None,
+    ingest_provisioned: bool | None = None,
     subject_user_id: uuid.UUID | None = None,
     token_type: str = "live_whip_publish",
 ) -> PublishCredentials:
     """Return MediaMTX WHIP publish credentials, fail-closed when unavailable."""
-    capability = media_capability(settings, live_session)
+    capability = media_capability(
+        settings,
+        live_session,
+        ingest_provisioned=ingest_provisioned,
+    )
     if capability.status != "available":
         return PublishCredentials(
             capability=capability,
@@ -116,7 +126,7 @@ def publish_credentials(
     return PublishCredentials(
         capability=capability,
         whip_url=_media_url(settings.mediamtx_whip_base_url, effective_path, "whip"),
-        playback_url=_media_url(settings.mediamtx_playback_base_url, effective_path),
+        playback_url=media_playback_url(settings, effective_path),
         bearer_token=_publish_token(
             settings,
             live_session,
@@ -143,6 +153,10 @@ def ice_servers(settings: Settings) -> tuple[IceServer, ...]:
             else None,
         ),
     )
+
+
+def media_playback_url(settings: Settings, ingest_path: str) -> str | None:
+    return _media_url(settings.mediamtx_playback_base_url, ingest_path)
 
 
 def _media_url(base_url: str | None, ingest_path: str, suffix: str | None = None) -> str | None:

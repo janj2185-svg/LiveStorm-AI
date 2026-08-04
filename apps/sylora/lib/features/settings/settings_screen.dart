@@ -44,6 +44,7 @@ final sessionsProvider = FutureProvider.autoDispose<List<SessionModel>>(
 final pushServiceProvider = StateNotifierProvider<PushService, bool>(
   (ref) => PushService(
     client: ApiPushRegistrationClient(ref.watch(apiClientProvider)),
+    tokenProvider: ref.watch(pushTokenProviderProvider),
   ),
 );
 
@@ -220,11 +221,18 @@ final class SettingsScreen extends ConsumerWidget {
                         ),
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.settingsNotifications),
+                          title: Text(
+                            nativePushAvailable
+                                ? '${l10n.settingsNotifications} · Configured'
+                                : '${l10n.settingsNotifications} · Not configured',
+                          ),
                           subtitle: Text(
                             nativePushAvailable
-                                ? l10n.settingsNotificationsDescription
-                                : 'Push requires FCM configuration. In-app notifications remain available.',
+                                ? 'Push delivery is configured for this app build. '
+                                      '${l10n.settingsNotificationsDescription}'
+                                : 'Push is unavailable in this app build because '
+                                      'no FCM token provider is packaged. In-app '
+                                      'notifications remain available.',
                           ),
                           value: notificationsEnabled,
                           onChanged: nativePushAvailable

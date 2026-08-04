@@ -459,6 +459,12 @@ class AIJobResponse(ORMStrictSchema):
     cancelled_at: datetime | None
 
 
+class AIJobOutputPlayback(StrictSchema):
+    playback_url: str
+    content_type: str = Field(pattern=r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")
+    expires_in_seconds: int = Field(gt=0)
+
+
 class AIJobPage(CursorPage):
     items: list[AIJobResponse]
 
@@ -517,6 +523,7 @@ class AuraPresenceResponse(StrictSchema):
     mood_label: str
     personality: str
     voice_ready: bool
+    voice_input_ready: bool
     voice_output_ready: bool
     transcription_ready: bool
     avatar_ready: bool

@@ -28,6 +28,7 @@ from app.dependencies import (
 )
 from app.errors import APIError
 from app.live_adapters import AdapterError, AdapterRegistry
+from app.live_media import media_playback_url
 from app.live_models import (
     AILivePersona,
     AILiveRule,
@@ -125,6 +126,7 @@ from app.live_service import (
     execute_live_action,
     generate_live_ai_turn,
     guest_invite_for_invitee,
+    guest_publish_credentials_response,
     health_connection,
     invite_guest_to_session,
     list_guest_invites,
@@ -223,6 +225,21 @@ def integration_response(record: IntegrationConnection) -> IntegrationConnection
         created_at=record.created_at,
         updated_at=record.updated_at,
     )
+
+
+def guest_invite_response(
+    settings: Settings,
+    invite: LiveGuestInvite,
+) -> LiveGuestInviteResponse:
+    payload = LiveGuestInviteResponse.model_validate(invite).model_dump()
+    payload["playback_url"] = (
+        media_playback_url(settings, invite.guest_ingest_path)
+        if settings.mediamtx_control_url
+        and invite.media_status == LiveGuestMediaStatus.ready
+        and invite.guest_ingest_path
+        else None
+    )
+    return LiveGuestInviteResponse(**payload)
 
 
 async def session_response(db: AsyncSession, record: LiveSession) -> LiveSessionResponse:
@@ -724,6 +741,7 @@ async def publish_credentials_endpoint(
 async def list_my_guest_invites(
     auth: Authenticated,
     db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
 ) -> list[LiveGuestInvitationResponse]:
     rows = (
         await db.execute(
@@ -736,7 +754,7 @@ async def list_my_guest_invites(
     ).all()
     return [
         LiveGuestInvitationResponse(
-            **LiveGuestInviteResponse.model_validate(invite).model_dump(),
+            **guest_invite_response(settings, invite).model_dump(),
             session_title=live_session.title,
             session_state=live_session.state,
             host_user_id=live_session.owner_user_id,
@@ -782,17 +800,15 @@ async def guest_publish_credentials(
             "Live guest invite is not accepted",
             "Accept the live guest invite before requesting publish credentials.",
         )
-    credentials = publish_credentials_response(
+    credentials = await guest_publish_credentials_response(
+        registry(request),
         settings,
         live_session,
-        ingest_path=invite.guest_ingest_path,
-        subject_user_id=auth.user.id,
-        token_type="live_guest_whip_publish",
+        invite,
     )
-    issued_credentials = credentials if credentials.status == "available" else None
     next_media_status = (
         LiveGuestMediaStatus.ready
-        if issued_credentials is not None
+        if credentials is not None
         else LiveGuestMediaStatus.awaiting_media_plane
     )
     if invite.media_status != next_media_status:
@@ -800,8 +816,8 @@ async def guest_publish_credentials(
         await db.commit()
         await db.refresh(invite)
     return LiveGuestInviteAcceptResponse(
-        **LiveGuestInviteResponse.model_validate(invite).model_dump(),
-        publish_credentials=issued_credentials,
+        **guest_invite_response(settings, invite).model_dump(),
+        publish_credentials=credentials,
     )
 
 
@@ -813,12 +829,10 @@ async def list_session_guests(
     session_id: uuid.UUID,
     auth: ManageAuth,
     db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
 ) -> list[LiveGuestInviteResponse]:
     record = await owned_live_session(db, session_id, auth.user.id)
-    return [
-        LiveGuestInviteResponse.model_validate(item)
-        for item in await list_guest_invites(db, record)
-    ]
+    return [guest_invite_response(settings, item) for item in await list_guest_invites(db, record)]
 
 
 @router.post(
@@ -832,12 +846,13 @@ async def invite_session_guest(
     request: Request,
     auth: ManageAuth,
     db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
 ) -> LiveGuestInviteResponse:
     await live_rate_limit(request, auth.user.id)
     record = await owned_live_session(db, session_id, auth.user.id)
     invite = await invite_guest_to_session(db, record, payload)
     await publish_latest(request, session_id)
-    return LiveGuestInviteResponse.model_validate(invite)
+    return guest_invite_response(settings, invite)
 
 
 @router.post(
@@ -862,10 +877,16 @@ async def accept_session_guest(
             "The live session does not exist.",
         )
     invite = await guest_invite_for_invitee(db, record, invite_id, auth.user.id)
-    invite, credentials = await accept_guest_invite(db, settings, record, invite)
+    invite, credentials = await accept_guest_invite(
+        db,
+        registry(request),
+        settings,
+        record,
+        invite,
+    )
     await publish_latest(request, session_id)
     return LiveGuestInviteAcceptResponse(
-        **LiveGuestInviteResponse.model_validate(invite).model_dump(),
+        **guest_invite_response(settings, invite).model_dump(),
         publish_credentials=credentials,
     )
 
@@ -880,6 +901,7 @@ async def decline_session_guest(
     request: Request,
     auth: Authenticated,
     db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
 ) -> LiveGuestInviteResponse:
     await live_rate_limit(request, auth.user.id)
     record = await db.get(LiveSession, session_id)
@@ -893,7 +915,7 @@ async def decline_session_guest(
     invite = await guest_invite_for_invitee(db, record, invite_id, auth.user.id)
     invite = await decline_guest_invite(db, record, invite)
     await publish_latest(request, session_id)
-    return LiveGuestInviteResponse.model_validate(invite)
+    return guest_invite_response(settings, invite)
 
 
 @router.get(

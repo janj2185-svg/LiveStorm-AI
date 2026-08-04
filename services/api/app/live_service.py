@@ -641,6 +641,7 @@ def publish_credentials_response(
     live_session: LiveSession,
     *,
     ingest_path: str | None = None,
+    ingest_provisioned: bool | None = None,
     subject_user_id: uuid.UUID | None = None,
     token_type: str = "live_whip_publish",
 ) -> LivePublishCredentialsResponse:
@@ -648,6 +649,7 @@ def publish_credentials_response(
         settings,
         live_session,
         ingest_path=ingest_path,
+        ingest_provisioned=ingest_provisioned,
         subject_user_id=subject_user_id,
         token_type=token_type,
     )
@@ -789,8 +791,35 @@ async def guest_invite_for_invitee(
     return invite
 
 
+async def guest_publish_credentials_response(
+    registry: AdapterRegistry,
+    settings: Settings,
+    live_session: LiveSession,
+    invite: LiveGuestInvite,
+) -> LivePublishCredentialsResponse | None:
+    if invite.guest_ingest_path is None:
+        return None
+    ingest_provisioned = await _provision_ingest(
+        registry,
+        invite.guest_ingest_path,
+        secrets.token_urlsafe(32),
+    )
+    if not ingest_provisioned:
+        return None
+    credentials = publish_credentials_response(
+        settings,
+        live_session,
+        ingest_path=invite.guest_ingest_path,
+        ingest_provisioned=True,
+        subject_user_id=invite.invitee_user_id,
+        token_type="live_guest_whip_publish",
+    )
+    return credentials if credentials.status == "available" else None
+
+
 async def accept_guest_invite(
     db: AsyncSession,
+    registry: AdapterRegistry,
     settings: Settings,
     live_session: LiveSession,
     invite: LiveGuestInvite,
@@ -803,21 +832,19 @@ async def accept_guest_invite(
             "Only pending live guest invites can be accepted.",
         )
     guest_ingest_path = f"{live_session.ingest_path.rstrip('/')}/guests/{invite.id}"
-    credentials = publish_credentials_response(
-        settings,
-        live_session,
-        ingest_path=guest_ingest_path,
-        subject_user_id=invite.invitee_user_id,
-        token_type="live_guest_whip_publish",
-    )
     invite.status = LiveGuestInviteStatus.accepted
     invite.guest_ingest_path = guest_ingest_path
-    issued_credentials: LivePublishCredentialsResponse | None = None
-    if credentials.status == "available":
-        invite.media_status = LiveGuestMediaStatus.ready
-        issued_credentials = credentials
-    else:
-        invite.media_status = LiveGuestMediaStatus.awaiting_media_plane
+    issued_credentials = await guest_publish_credentials_response(
+        registry,
+        settings,
+        live_session,
+        invite,
+    )
+    invite.media_status = (
+        LiveGuestMediaStatus.ready
+        if issued_credentials is not None
+        else LiveGuestMediaStatus.awaiting_media_plane
+    )
     _append_live_event(
         db,
         live_session,

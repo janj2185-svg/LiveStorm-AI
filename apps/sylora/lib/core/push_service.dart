@@ -12,6 +12,16 @@ abstract interface class PushTokenProvider {
   Stream<String> get tokenChanges;
 }
 
+/// Default token source for builds that do not package a native push SDK.
+///
+/// A Firebase-enabled packaging entry point can override this provider with a
+/// [PushTokenProvider] backed by `firebase_messaging`. Keeping the no-op value
+/// here prevents partially configured Firebase projects from breaking normal
+/// client builds.
+final pushTokenProviderProvider = Provider<PushTokenProvider>(
+  (ref) => const NoopPushTokenProvider(),
+);
+
 final class NoopPushTokenProvider implements PushTokenProvider {
   const NoopPushTokenProvider();
 
@@ -111,15 +121,18 @@ final class PushService extends StateNotifier<bool> {
     if (enabled && !nativePushAvailable) {
       throw StateError('Push requires FCM configuration');
     }
-    state = enabled;
-    await preferences.setBool(_enabledKey, enabled);
     if (enabled) {
       final token = await tokenProvider.currentToken();
-      if (token != null && token.trim().isNotEmpty) {
-        await registerToken(token);
+      if (token == null || token.trim().isEmpty) {
+        throw StateError('Push token is unavailable');
       }
+      await _registerToken(token);
+      await preferences.setBool(_enabledKey, true);
+      state = true;
       return;
     }
+    state = false;
+    await preferences.setBool(_enabledKey, false);
     final lastToken = preferences.getString(_lastTokenKey);
     final lastPlatform = preferences.getString(_lastPlatformKey);
     if (lastToken != null && lastPlatform != null) {
@@ -135,6 +148,11 @@ final class PushService extends StateNotifier<bool> {
     if (normalizedToken.isEmpty) {
       return;
     }
+    await _registerToken(normalizedToken, platform: platform);
+  }
+
+  Future<void> _registerToken(String token, {String? platform}) async {
+    final normalizedToken = token.trim();
     final normalizedPlatform = platform ?? currentPushPlatform();
     await client.registerDevice(
       platform: normalizedPlatform,

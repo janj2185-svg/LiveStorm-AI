@@ -1829,13 +1829,20 @@ class MediaMTXAdapter(BasePlatformAdapter):
         # on paths ("cannot be used together"). Path auth is enforced by the
         # configured internal publish user; SYLORA still stores stream_key_hash.
         _ = stream_key_hash
-        await self._request(
-            "POST",
-            f"/v3/config/paths/add/{quote(path_name, safe='')}",
-            json_body={
-                "source": "publisher",
-            },
+        encoded_path = quote(path_name, safe="")
+        existing = await self._request(
+            "GET",
+            f"/v3/config/paths/get/{encoded_path}",
+            allow_not_found=True,
         )
+        if not existing:
+            await self._request(
+                "POST",
+                f"/v3/config/paths/add/{encoded_path}",
+                json_body={
+                    "source": "publisher",
+                },
+            )
         return AdapterActionResult(provider_reference=path_name)
 
     async def rotate_path(self, path_name: str, stream_key_hash: str) -> AdapterActionResult:

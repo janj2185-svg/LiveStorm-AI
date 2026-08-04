@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api.dart';
 import '../../core/lumen_theme.dart';
@@ -777,16 +779,49 @@ final class _CreatorStudioScreenState
             for (final guest in _guests)
               Card(
                 margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: const Icon(Icons.group_outlined),
-                  title: Text(guest.inviteeUserId),
-                  subtitle: Text(
-                    'Role: ${guest.role} | Media: ${guest.mediaStatus}',
-                  ),
-                  trailing: LumenBadge(
-                    label: guest.status,
-                    color: _guestStatusColor(guest.status),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    ListTile(
+                      leading: const Icon(Icons.group_outlined),
+                      title: Text(guest.inviteeUserId),
+                      subtitle: Text(
+                        'Role: ${guest.role} · Contribution: ${guest.mediaStatus}',
+                      ),
+                      trailing: LumenBadge(
+                        label: guest.status,
+                        color: _guestStatusColor(guest.status),
+                      ),
+                    ),
+                    if (guest.playbackUrl case final playbackUrl?) ...<Widget>[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: Text(
+                          'Separate contribution playback is available. It is not auto-composited.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: <Widget>[
+                            LumenSecondaryButton(
+                              label: 'Open playback',
+                              icon: Icons.open_in_new_rounded,
+                              onPressed: () => _openGuestPlayback(playbackUrl),
+                            ),
+                            LumenSecondaryButton(
+                              label: 'Copy playback',
+                              icon: Icons.copy_rounded,
+                              onPressed: () => _copyGuestPlayback(playbackUrl),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
         ],
@@ -1452,6 +1487,31 @@ final class _CreatorStudioScreenState
       if (mounted) {
         setState(() => _guestsBusy = false);
       }
+    }
+  }
+
+  Future<void> _openGuestPlayback(String playbackUrl) async {
+    try {
+      final opened = await launchUrl(
+        Uri.parse(playbackUrl),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened) {
+        throw StateError('No application could open the playback URL.');
+      }
+    } on Object catch (error) {
+      _showError(error);
+    }
+  }
+
+  Future<void> _copyGuestPlayback(String playbackUrl) async {
+    await Clipboard.setData(ClipboardData(text: playbackUrl));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Guest contribution playback URL copied.'),
+        ),
+      );
     }
   }
 

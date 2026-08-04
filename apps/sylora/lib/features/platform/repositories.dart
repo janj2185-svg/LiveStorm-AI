@@ -1331,6 +1331,8 @@ abstract interface class AiRepository {
   });
   Future<CursorPage<NamedResource>> jobs({String? cursor});
   Future<JsonObject> createJob(JsonObject typedRequest);
+  Future<JsonObject> job(String id);
+  Future<JsonObject> jobOutput(String id, {int outputIndex = 0});
   Future<JsonObject> auraPresence();
 }
 
@@ -1581,6 +1583,25 @@ final class DioAiRepository implements AiRepository {
       data: typedRequest,
     );
     return requireObject(response.data, 'AI job');
+  }
+
+  @override
+  Future<JsonObject> job(String id) async {
+    final response = await _client.request('ai/jobs/$id');
+    return requireObject(response.data, 'AI job');
+  }
+
+  @override
+  Future<JsonObject> jobOutput(String id, {int outputIndex = 0}) async {
+    if (outputIndex < 0) {
+      throw ArgumentError.value(
+        outputIndex,
+        'outputIndex',
+        'Output index cannot be negative',
+      );
+    }
+    final response = await _client.request('ai/jobs/$id/outputs/$outputIndex');
+    return requireObject(response.data, 'AI job output');
   }
 
   @override

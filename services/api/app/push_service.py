@@ -42,6 +42,8 @@ class PushDispatchSummary:
 
 
 class PushDispatcher(Protocol):
+    configured: bool
+
     async def dispatch(
         self,
         db: AsyncSession,
@@ -54,6 +56,8 @@ class PushDispatcher(Protocol):
 
 
 class UnconfiguredPushProvider:
+    configured = False
+
     async def dispatch(
         self,
         db: AsyncSession,
@@ -74,6 +78,8 @@ class UnconfiguredPushProvider:
 
 
 class FcmHttpV1Provider:
+    configured = True
+
     def __init__(
         self,
         *,
@@ -200,6 +206,11 @@ def configured_push_dispatcher(settings: Settings) -> PushDispatcher:
         logger.info("push_skipped", extra={"reason": "invalid_fcm_service_account"})
         return UnconfiguredPushProvider()
     return FcmHttpV1Provider(project_id=settings.fcm_project_id, service_account=service_account)
+
+
+def push_dispatcher_is_configured(dispatcher: PushDispatcher) -> bool:
+    """Return whether the runtime dispatcher can accept device registrations."""
+    return bool(getattr(dispatcher, "configured", False))
 
 
 def _load_service_account(value: SecretStr) -> Mapping[str, Any] | None:

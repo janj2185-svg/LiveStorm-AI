@@ -71,6 +71,37 @@ void main() {
     });
     expect(conversation.purpose, 'learning_tutor');
   });
+
+  test('AI repository polls jobs and requests a bounded output URL', () async {
+    final requests = <RequestOptions>[];
+    final repository = DioAiRepository(
+      _client((options) {
+        requests.add(options);
+        if (options.uri.path.endsWith('/outputs/0')) {
+          return jsonResponse(<String, dynamic>{
+            'playback_url': 'https://storage.example.test/aura.mp3',
+            'content_type': 'audio/mpeg',
+            'expires_in_seconds': 900,
+          }, 200);
+        }
+        return jsonResponse(<String, dynamic>{
+          'id': 'voice-job',
+          'status': 'succeeded',
+          'output_refs': <Map<String, dynamic>>[
+            <String, dynamic>{'content_type': 'audio/mpeg'},
+          ],
+        }, 200);
+      }),
+    );
+
+    final job = await repository.job('voice-job');
+    final output = await repository.jobOutput('voice-job');
+
+    expect(requests[0].uri.path, '/v1/ai/jobs/voice-job');
+    expect(requests[1].uri.path, '/v1/ai/jobs/voice-job/outputs/0');
+    expect(job['status'], 'succeeded');
+    expect(output['playback_url'], 'https://storage.example.test/aura.mp3');
+  });
 }
 
 ApiClient _client(TransportHandler handler) {

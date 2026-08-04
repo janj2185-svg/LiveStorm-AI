@@ -247,6 +247,10 @@ void main() {
       expect(requests[1].uri.path, '/v1/live/sessions/session-id/guests');
       expect(guests.single.status, 'accepted');
       expect(guests.single.mediaStatus, 'ready');
+      expect(
+        guests.single.playbackUrl,
+        'https://watch.example.test/live/session/guests/invite-id',
+      );
     },
   );
 
@@ -283,6 +287,9 @@ Map<String, dynamic> _guestInviteJson({
   'media_status': mediaStatus,
   'guest_ingest_path': mediaStatus == 'ready'
       ? 'live/session/guests/invite-id'
+      : null,
+  'playback_url': mediaStatus == 'ready'
+      ? 'https://watch.example.test/live/session/guests/invite-id'
       : null,
   'created_at': '2026-08-03T19:17:00Z',
   'updated_at': '2026-08-03T19:17:00Z',

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,7 @@ from app.push_schemas import (
     DevicePushTokenResponse,
     DevicePushTokenUnregister,
 )
+from app.push_service import push_dispatcher_is_configured
 from app.schemas import MessageResponse
 from app.security import utcnow
 
@@ -47,9 +48,17 @@ async def list_devices(
 )
 async def register_device(
     payload: DevicePushTokenRegister,
+    request: Request,
     auth: AuthContext = Depends(current_auth),
     db: AsyncSession = Depends(get_session),
 ) -> DevicePushToken:
+    if not push_dispatcher_is_configured(request.app.state.push_dispatcher):
+        raise APIError(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "push_provider_unavailable",
+            "Push provider unavailable",
+            "Device registration is unavailable because push delivery is not configured.",
+        )
     record = await db.scalar(
         select(DevicePushToken).where(
             DevicePushToken.platform == payload.platform,

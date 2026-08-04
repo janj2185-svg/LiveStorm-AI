@@ -321,5 +321,22 @@ final class FakeAiRepository implements AiRepository {
   }) async => <String, dynamic>{'text': 'Captioned test audio.'};
 
   @override
+  Future<JsonObject> job(String id) async => <String, dynamic>{
+    'id': id,
+    'status': 'succeeded',
+    'output_refs': <JsonObject>[
+      <String, dynamic>{'content_type': 'audio/mpeg'},
+    ],
+  };
+
+  @override
+  Future<JsonObject> jobOutput(String id, {int outputIndex = 0}) async =>
+      <String, dynamic>{
+        'playback_url': 'https://example.test/aura-reply.mp3',
+        'content_type': 'audio/mpeg',
+        'expires_in_seconds': 900,
+      };
+
+  @override
   Future<JsonObject> auraPresence() async => <String, dynamic>{};
 }
