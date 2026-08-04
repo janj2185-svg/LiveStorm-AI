@@ -7,6 +7,7 @@ import '../../core/api.dart';
 import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import '../creator_studio/media_publisher.dart';
+import '../platform/repositories.dart';
 
 @immutable
 final class ConferenceRoom {
@@ -273,6 +274,11 @@ final class _ConferenceRoomScreenState
   String? _auraConversationId;
   String? _auraAnswer;
   bool _busy = false;
+  bool _muted = false;
+  bool _cameraOff = false;
+  bool _screenShare = false;
+  bool _aiTranslation = false;
+  String? _translationCaption;
 
   @override
   void initState() {
@@ -312,6 +318,49 @@ final class _ConferenceRoomScreenState
               onJoin: _busy ? null : () => _joinOrLeave(join: true),
               onLeave: _busy ? null : () => _joinOrLeave(join: false),
             ),
+            const SizedBox(height: 12),
+            _CallControlBar(
+              muted: _muted,
+              cameraOff: _cameraOff,
+              screenShare: _screenShare,
+              aiTranslation: _aiTranslation,
+              onMute: () => setState(() => _muted = !_muted),
+              onCamera: () => setState(() => _cameraOff = !_cameraOff),
+              onScreenShare: () => setState(() => _screenShare = !_screenShare),
+              onTranslation: () async {
+                setState(() => _aiTranslation = !_aiTranslation);
+                if (_aiTranslation) {
+                  try {
+                    final result = await ref.read(aiRepositoryProvider).translate(
+                          'Welcome to this SYLORA call.',
+                          'en',
+                          'uk',
+                        );
+                    setState(
+                      () => _translationCaption =
+                          (result['translated_text'] as String?) ??
+                          (result['text'] as String?) ??
+                          'AI translation active',
+                    );
+                  } on Object catch (error) {
+                    setState(() => _translationCaption = error.toString());
+                  }
+                } else {
+                  setState(() => _translationCaption = null);
+                }
+              },
+            ),
+            if (_translationCaption != null) ...<Widget>[
+              const SizedBox(height: 8),
+              SyloraGlass(
+                radius: SyloraTokens.radiusMd,
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  'AI · $_translationCaption',
+                  style: SyloraTokens.body(13),
+                ),
+              ),
+            ],
             const SizedBox(height: 18),
             _MediaPanel(
               media: _media,
@@ -321,6 +370,11 @@ final class _ConferenceRoomScreenState
               onPreview: _startPreview,
               onPublish: _publish,
               onRefreshCredentials: _loadMedia,
+            ),
+            const SizedBox(height: 18),
+            _ConferenceGiftTray(
+              conferenceId: widget.conferenceId,
+              hostUserId: room.hostId,
             ),
             const SizedBox(height: 18),
             _AuraAssistPanel(
@@ -712,3 +766,160 @@ String _label(String purpose) => switch (purpose) {
   'social' => 'Social',
   _ => 'Business',
 };
+
+final class _CallControlBar extends StatelessWidget {
+  const _CallControlBar({
+    required this.muted,
+    required this.cameraOff,
+    required this.screenShare,
+    required this.aiTranslation,
+    required this.onMute,
+    required this.onCamera,
+    required this.onScreenShare,
+    required this.onTranslation,
+  });
+
+  final bool muted;
+  final bool cameraOff;
+  final bool screenShare;
+  final bool aiTranslation;
+  final VoidCallback onMute;
+  final VoidCallback onCamera;
+  final VoidCallback onScreenShare;
+  final VoidCallback onTranslation;
+
+  @override
+  Widget build(BuildContext context) {
+    return SyloraGlass(
+      radius: SyloraTokens.radiusLg,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        alignment: WrapAlignment.center,
+        children: <Widget>[
+          _CallChip(
+            icon: muted ? Icons.mic_off_rounded : Icons.mic_rounded,
+            label: muted ? 'Unmute' : 'Mute',
+            active: muted,
+            onTap: onMute,
+          ),
+          _CallChip(
+            icon: cameraOff ? Icons.videocam_off_rounded : Icons.videocam_rounded,
+            label: cameraOff ? 'Camera on' : 'Camera off',
+            active: cameraOff,
+            onTap: onCamera,
+          ),
+          _CallChip(
+            icon: Icons.present_to_all_rounded,
+            label: screenShare ? 'Stop share' : 'Share screen',
+            active: screenShare,
+            onTap: onScreenShare,
+          ),
+          _CallChip(
+            icon: Icons.translate_rounded,
+            label: aiTranslation ? 'Translation on' : 'AI translate',
+            active: aiTranslation,
+            onTap: onTranslation,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _CallChip extends StatelessWidget {
+  const _CallChip({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      avatar: Icon(icon, size: 18),
+      label: Text(label),
+      selected: active,
+      onSelected: (_) => onTap(),
+    );
+  }
+}
+
+final class _ConferenceGiftTray extends ConsumerWidget {
+  const _ConferenceGiftTray({
+    required this.conferenceId,
+    required this.hostUserId,
+  });
+
+  final String conferenceId;
+  final String hostUserId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder(
+      future: ref.read(giftRepositoryProvider).catalog(),
+      builder: (context, snapshot) {
+        return SyloraGlass(
+          radius: SyloraTokens.radiusLg,
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Live gifts', style: SyloraTokens.title(15)),
+              const SizedBox(height: 4),
+              Text(
+                'Send only during this conference / voice room.',
+                style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
+              ),
+              const SizedBox(height: 10),
+              if (snapshot.connectionState != ConnectionState.done)
+                const LinearProgressIndicator()
+              else if (snapshot.hasError)
+                Text(messageFor(snapshot.error!))
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    for (final gift in (snapshot.data?.items ?? const []).take(6))
+                      FilledButton.tonalIcon(
+                        onPressed: () async {
+                          try {
+                            await ref.read(giftRepositoryProvider).send(
+                                  recipientUserId: hostUserId,
+                                  giftDefinitionId: gift.id,
+                                  conferenceId: conferenceId,
+                                  message: 'Conference gift',
+                                );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Sent ${gift.name}')),
+                              );
+                            }
+                          } on Object catch (error) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(messageFor(error))),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.card_giftcard_rounded),
+                        label: Text(gift.name),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}

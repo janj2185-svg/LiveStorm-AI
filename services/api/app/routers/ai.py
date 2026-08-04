@@ -42,6 +42,7 @@ from app.ai_schemas import (
     AIUsagePage,
     AIUsageResponse,
     AIUsageSummary,
+    AuraPresenceResponse,
     ModerationRequest,
     ModerationResponse,
     ProviderStatusItem,
@@ -164,6 +165,82 @@ async def get_ai_settings(
     await db.commit()
     await db.refresh(record)
     return AISettingsResponse.model_validate(record)
+
+
+@router.get("/aura/presence", response_model=AuraPresenceResponse)
+async def get_aura_presence(
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> AuraPresenceResponse:
+    """Alive Aura state — emotion, memory depth, voice readiness, recommendations."""
+    settings = await settings_for(db, auth.user.id)
+    memory_count = int(
+        await db.scalar(
+            select(func.count()).select_from(AIMemory).where(AIMemory.user_id == auth.user.id)
+        )
+        or 0
+    )
+    latest = await db.scalar(
+        select(AIMessage)
+        .join(AIConversation, AIConversation.id == AIMessage.conversation_id)
+        .where(AIConversation.user_id == auth.user.id)
+        .order_by(AIMessage.created_at.desc())
+        .limit(1)
+    )
+    emotion: str = "greeting" if latest is None else "focused"
+    mood = "Ready to help"
+    if latest is not None:
+        content = (getattr(latest, "content", None) or "").lower()
+        if latest.role.value == "assistant":
+            emotion = "speaking"
+            mood = "Speaking with you"
+        elif any(word in content for word in ("why", "how", "explain", "чому", "як")):
+            emotion = "thoughtful"
+            mood = "Thinking with you"
+        elif any(word in content for word in ("thanks", "дякую", "love", "great")):
+            emotion = "delighted"
+            mood = "Glad that landed"
+        elif any(word in content for word in ("help", "stuck", "problem", "допоможи")):
+            emotion = "supportive"
+            mood = "Here with you"
+        else:
+            emotion = "listening"
+            mood = "Listening closely"
+
+    registry = _registry(request)
+    voice_ready = False
+    try:
+        voice_ready = any(
+            AICapability.voice in provider.capabilities for provider in registry.providers()
+        )
+    except Exception:  # noqa: BLE001
+        voice_ready = False
+
+    recommendations = [
+        "Open Live Studio with Aura as co-host",
+        "Ask Aura to plan your next stream",
+        "Generate a creator BGM playlist in Music",
+    ]
+    if memory_count == 0 and settings.consent_granted:
+        recommendations.insert(0, "Tell Aura what you create — she will remember")
+    if not settings.consent_granted:
+        recommendations = ["Grant Aura consent to unlock memory and voice"]
+
+    summary = (
+        "Aura is online with your SYLORA context."
+        if settings.consent_granted
+        else "Aura is waiting for consent before deepening memory."
+    )
+    return AuraPresenceResponse(
+        emotion=emotion,  # type: ignore[arg-type]
+        mood_label=mood,
+        personality="Warm · Curious · Precise · Alive",
+        voice_ready=voice_ready,
+        memory_count=memory_count,
+        context_summary=summary,
+        recommendations=recommendations,
+    )
 
 
 @router.patch("/settings", response_model=AISettingsResponse)

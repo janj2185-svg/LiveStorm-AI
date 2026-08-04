@@ -2702,12 +2702,13 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
             purpose: purpose,
           );
       await ref.read(conferenceRepositoryProvider).join(room.id);
-      if (context.mounted) {
-        context.pushNamed(
-          'conference-room',
-          pathParameters: <String, String>{'id': room.id},
-        );
+      if (!context.mounted) {
+        return;
       }
+      await context.pushNamed(
+        'conference-room',
+        pathParameters: <String, String>{'id': room.id},
+      );
     } on Object catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

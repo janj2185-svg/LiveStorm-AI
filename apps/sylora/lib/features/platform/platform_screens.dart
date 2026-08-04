@@ -1275,11 +1275,22 @@ final class AiScreen extends ConsumerStatefulWidget {
 
 final class _AiScreenState extends ConsumerState<AiScreen> {
   late final SyloraAuraPresenceController _aura;
+  JsonObject? _presence;
 
   @override
   void initState() {
     super.initState();
     _aura = SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.ai);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPresence());
+  }
+
+  Future<void> _loadPresence() async {
+    try {
+      final presence = await ref.read(aiRepositoryProvider).auraPresence();
+      if (mounted) setState(() => _presence = presence);
+    } on Object {
+      // Presence is enhancement — chat still works without it.
+    }
   }
 
   @override
@@ -1293,25 +1304,42 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
     final value = ref.watch(aiProvider);
     _syncAura(value);
     final l10n = AppLocalizations.of(context);
+    final mood = _presence?['mood_label'] as String? ?? l10n.aiOnline;
+    final personality =
+        _presence?['personality'] as String? ?? 'Warm · Curious · Precise · Alive';
     return LumenPage(
       title: l10n.aiTitle,
       subtitle: l10n.aiSubtitle,
       intensity: 0.94,
       showAuraDock: true,
       auraEmotion: AuraEmotion.thinking,
-      auraLabel: l10n.aiOnline,
+      auraLabel: mood,
       showAuraPresence: true,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.ai,
       header: SyloraUniverseHero(
         eyebrow: l10n.aiHeroEyebrow,
-        title: l10n.aiTitle,
-        body: l10n.aiHeroBody,
+        title: 'Aura',
+        body: '${l10n.aiHeroBody}\n$personality',
         trailing: SyloraPortalChip(
           label: l10n.aiMemory,
           icon: Icons.psychology_alt_outlined,
           onTap: () => context.pushNamed('ai-memory'),
         ),
+        metrics: <Widget>[
+          if (_presence != null)
+            SyloraMetricPill(
+              label: 'Memory',
+              value: '${_presence!['memory_count']}',
+              icon: Icons.memory_rounded,
+            ),
+          if (_presence != null)
+            SyloraMetricPill(
+              label: 'Voice',
+              value: _presence!['voice_ready'] == true ? 'Ready' : 'Setup',
+              icon: Icons.record_voice_over_rounded,
+            ),
+        ],
       ),
       actions: <Widget>[
         IconButton(

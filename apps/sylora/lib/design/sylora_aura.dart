@@ -14,6 +14,9 @@ enum AuraEmotion {
   speaking,
   amused,
   focused,
+  delighted,
+  thoughtful,
+  supportive,
 }
 
 /// SYLORA Aura — animated companion used across the platform.

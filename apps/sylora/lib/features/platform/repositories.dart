@@ -1163,6 +1163,7 @@ abstract interface class AiRepository {
   Future<JsonObject> moderate(String text);
   Future<CursorPage<NamedResource>> jobs({String? cursor});
   Future<JsonObject> createJob(JsonObject typedRequest);
+  Future<JsonObject> auraPresence();
 }
 
 final class DioAiRepository implements AiRepository {
@@ -1372,6 +1373,12 @@ final class DioAiRepository implements AiRepository {
       data: typedRequest,
     );
     return requireObject(response.data, 'AI job');
+  }
+
+  @override
+  Future<JsonObject> auraPresence() async {
+    final response = await _client.request('ai/aura/presence');
+    return requireObject(response.data, 'Aura presence');
   }
 }
 

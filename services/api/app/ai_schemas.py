@@ -470,6 +470,27 @@ class ProviderStatusResponse(StrictSchema):
     providers: list[ProviderStatusItem]
 
 
+class AuraPresenceResponse(StrictSchema):
+    emotion: Literal[
+        "idle",
+        "greeting",
+        "listening",
+        "thinking",
+        "speaking",
+        "amused",
+        "focused",
+        "delighted",
+        "thoughtful",
+        "supportive",
+    ]
+    mood_label: str
+    personality: str
+    voice_ready: bool
+    memory_count: int
+    context_summary: str
+    recommendations: list[str] = Field(default_factory=list)
+
+
 class PricingEntry(StrictSchema):
     prompt_micros_per_million: int = Field(default=0, ge=0)
     completion_micros_per_million: int = Field(default=0, ge=0)
