@@ -521,20 +521,18 @@ final class AuthState {
 final class AuthController extends StateNotifier<AuthState> {
   AuthController(
     this._repository, {
-    Future<void> Function()? syncPushRegistration,
-    Future<void> Function()? clearPushRegistration,
+    this.syncPushRegistration,
+    this.clearPushRegistration,
     bool autoRestore = true,
-  }) : _syncPushRegistration = syncPushRegistration,
-       _clearPushRegistration = clearPushRegistration,
-       super(const AuthState.checking()) {
+  }) : super(const AuthState.checking()) {
     if (autoRestore) {
       unawaited(restore());
     }
   }
 
   final AuthRepository _repository;
-  final Future<void> Function()? _syncPushRegistration;
-  final Future<void> Function()? _clearPushRegistration;
+  final Future<void> Function()? syncPushRegistration;
+  final Future<void> Function()? clearPushRegistration;
 
   Future<void> restore() async {
     state = const AuthState.checking();
@@ -545,7 +543,7 @@ final class AuthController extends StateNotifier<AuthState> {
           : AuthState(status: AuthStatus.authenticated, user: user);
       if (user != null) {
         await _runPushCallback(
-          _syncPushRegistration,
+          syncPushRegistration,
           operation: 'startup registration',
         );
       }
@@ -724,7 +722,7 @@ final class AuthController extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _runPushCallback(
-      _clearPushRegistration,
+      clearPushRegistration,
       operation: 'logout unregistration',
     );
     await _repository.logout();
@@ -733,7 +731,7 @@ final class AuthController extends StateNotifier<AuthState> {
 
   Future<void> logoutAll() async {
     await _runPushCallback(
-      _clearPushRegistration,
+      clearPushRegistration,
       operation: 'logout-all unregistration',
     );
     await _repository.logoutAll();
