@@ -204,20 +204,11 @@ final class MediaContributionSubscriber {
   }
 
   Future<void> _waitForIceGathering(html.RtcPeerConnection peer) async {
-    if (peer.iceGatheringState == 'complete') {
-      return;
-    }
-    final done = Completer<void>();
-    late StreamSubscription<html.Event> subscription;
-    subscription = peer.onIceGatheringStateChange.listen((_) {
-      if (peer.iceGatheringState == 'complete' && !done.isCompleted) {
-        done.complete();
+    for (var attempt = 0; attempt < 30; attempt += 1) {
+      if (peer.iceGatheringState == 'complete') {
+        return;
       }
-    });
-    try {
-      await done.future.timeout(const Duration(seconds: 3), onTimeout: () {});
-    } finally {
-      await subscription.cancel();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
     }
   }
 }
