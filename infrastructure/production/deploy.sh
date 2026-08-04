@@ -59,17 +59,41 @@ docker compose --env-file "$ENV_FILE" build
 docker compose --env-file "$ENV_FILE" up -d
 
 echo "==> Waiting for HTTPS readiness"
+ready=0
 for i in $(seq 1 90); do
   if curl -fsS "https://${DOMAIN}/health/ready" >/dev/null 2>&1; then
-    echo "READY https://${DOMAIN}"
-    curl -fsS "https://${DOMAIN}/health/live" || true
-    echo
-    echo "Verify from a phone on mobile data before announcing."
-    exit 0
+    ready=1
+    break
   fi
   sleep 5
 done
 
-echo "Timed out waiting for https://${DOMAIN}/health/ready" >&2
-docker compose --env-file "$ENV_FILE" ps >&2 || true
-exit 1
+if [[ "$ready" -ne 1 ]]; then
+  echo "Timed out waiting for https://${DOMAIN}/health/ready" >&2
+  docker compose --env-file "$ENV_FILE" ps >&2 || true
+  exit 1
+fi
+
+echo "READY https://${DOMAIN}"
+curl -fsS "https://${DOMAIN}/health/live" || true
+echo
+
+# Owner Configuration deploy gate — blocks announce when required secrets missing.
+if [[ "${VALIDATE_OWNER_CONFIG:-1}" =~ ^(1|true|yes)$ ]]; then
+  echo "==> Validating Owner Configuration credentials for ${APP_ENVIRONMENT}"
+  API_CONTAINER="$(docker compose --env-file "$ENV_FILE" ps -q api | head -n1)"
+  if [[ -z "$API_CONTAINER" ]]; then
+    echo "API container not found for Owner Configuration gate" >&2
+    exit 1
+  fi
+  if ! docker exec "$API_CONTAINER" python -m app.cli validate-owner-config \
+    --environment "$APP_ENVIRONMENT"; then
+    echo "Owner Configuration deploy gate FAILED — open Admin → Owner services" >&2
+    echo "Set VALIDATE_OWNER_CONFIG=0 only for first bootstrap before secrets exist." >&2
+    exit 1
+  fi
+  echo "Owner Configuration deploy gate: READY"
+fi
+
+echo "Verify from a phone on mobile data before announcing."
+exit 0

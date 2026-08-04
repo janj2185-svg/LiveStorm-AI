@@ -21,9 +21,15 @@ from app.owner_config_catalog import (
     get_provider_spec,
 )
 from app.owner_config_models import OwnerServiceCredential, OwnerServiceStatus
+from app.owner_config_profiles import (
+    RECOMMENDED_PROVIDERS,
+    REQUIRED_PROVIDERS,
+    normalize_profile,
+)
 from app.owner_config_schemas import (
     OwnerCatalogResponse,
     OwnerConnectionTestResult,
+    OwnerDeployReadiness,
     OwnerEnvExportResponse,
     OwnerEnvFile,
     OwnerFieldDescriptor,
@@ -36,6 +42,10 @@ from app.owner_config_validators import (
     validate_field_shapes,
 )
 from app.security import decrypt_secret, encrypt_secret, utcnow
+
+
+def resolve_environment(settings: Settings, environment: str | None = None) -> str:
+    return normalize_profile(environment, settings.environment)
 
 
 def _domain_from_settings(settings: Settings) -> str:
@@ -149,6 +159,7 @@ def build_provider_summary(
                 public_value=None if field.secret else public.get(field.key, field.default),
             )
         )
+    env_value = record.environment if record else "production"
     return OwnerProviderSummary(
         key=spec.key,
         name=spec.name,
@@ -157,11 +168,16 @@ def build_provider_summary(
         status=status.value,  # type: ignore[arg-type]
         enabled=bool(record.enabled) if record else False,
         feature_flag_key=spec.feature_flag_key,
+        environment=env_value,  # type: ignore[arg-type]
         related_features=list(spec.related_features),
         supports_live_test=spec.supports_live_test,
         version=record.version if record else None,
         last_tested_at=record.last_tested_at if record else None,
+        last_success_at=record.last_success_at if record else None,
         last_error=record.last_error if record else None,
+        consecutive_failures=int(record.consecutive_failures or 0) if record else 0,
+        rotation_in_progress=bool(record.rotation_in_progress) if record else False,
+        key_expires_at=record.key_expires_at if record else None,
         setup_instructions=list(spec.setup_instructions),
         callback_urls=_format_urls(spec.callback_urls, domain),
         webhook_urls=_format_urls(spec.webhook_urls, domain),
@@ -172,23 +188,82 @@ def build_provider_summary(
 
 
 async def list_catalog(
-    db: AsyncSession, settings: Settings
+    db: AsyncSession,
+    settings: Settings,
+    *,
+    environment: str | None = None,
 ) -> OwnerCatalogResponse:
+    profile = resolve_environment(settings, environment)
     domain = _domain_from_settings(settings)
     records = (
-        await db.scalars(select(OwnerServiceCredential).order_by(OwnerServiceCredential.provider_key))
+        await db.scalars(
+            select(OwnerServiceCredential)
+            .where(OwnerServiceCredential.environment == profile)
+            .order_by(OwnerServiceCredential.provider_key)
+        )
     ).all()
     by_key = {item.provider_key: item for item in records}
     providers = [
         build_provider_summary(spec, by_key.get(spec.key), domain=domain)
         for spec in OWNER_PROVIDERS
     ]
+    readiness = await deploy_readiness(db, settings, environment=profile)
     return OwnerCatalogResponse(
         domain=domain,
+        environment=profile,  # type: ignore[arg-type]
         providers=providers,
         connected_count=sum(1 for item in providers if item.status == "connected"),
         missing_count=sum(1 for item in providers if item.status == "missing"),
         invalid_count=sum(1 for item in providers if item.status == "invalid"),
+        expired_count=sum(1 for item in providers if item.status == "expired"),
+        required_providers=list(REQUIRED_PROVIDERS.get(profile, ())),
+        recommended_providers=list(RECOMMENDED_PROVIDERS.get(profile, ())),
+        deploy_ready=readiness.ready,
+    )
+
+
+async def deploy_readiness(
+    db: AsyncSession,
+    settings: Settings,
+    *,
+    environment: str | None = None,
+) -> OwnerDeployReadiness:
+    profile = resolve_environment(settings, environment)
+    required = list(REQUIRED_PROVIDERS.get(profile, ()))
+    recommended = list(RECOMMENDED_PROVIDERS.get(profile, ()))
+    records = (
+        await db.scalars(
+            select(OwnerServiceCredential).where(
+                OwnerServiceCredential.environment == profile
+            )
+        )
+    ).all()
+    by_key = {item.provider_key: item for item in records}
+    statuses = {
+        key: (by_key[key].status.value if key in by_key else "missing")
+        for key in {*[spec.key for spec in OWNER_PROVIDERS], *required, *recommended}
+    }
+    # Staging may satisfy SMTP requirement via test-stand auto-verify.
+    blocking: list[str] = []
+    for key in required:
+        status = statuses.get(key, "missing")
+        if key == "smtp" and profile == "staging" and settings.test_stand_auto_verify_email:
+            continue
+        if status != "connected":
+            blocking.append(f"{key} is {status} (required for {profile})")
+    warnings = [
+        f"{key} is {statuses.get(key, 'missing')} (recommended for {profile})"
+        for key in recommended
+        if statuses.get(key, "missing") != "connected"
+    ]
+    return OwnerDeployReadiness(
+        environment=profile,  # type: ignore[arg-type]
+        ready=not blocking,
+        blocking=blocking,
+        warnings=warnings,
+        required=required,
+        recommended=recommended,
+        provider_statuses=statuses,
     )
 
 
@@ -282,7 +357,14 @@ def apply_values_to_runtime(spec: OwnerProviderSpec, values: dict[str, str], *, 
 
 async def load_all_into_runtime(db: AsyncSession, settings: Settings) -> None:
     owner_config_store.clear()
-    records = (await db.scalars(select(OwnerServiceCredential))).all()
+    profile = resolve_environment(settings, None)
+    records = (
+        await db.scalars(
+            select(OwnerServiceCredential).where(
+                OwnerServiceCredential.environment == profile
+            )
+        )
+    ).all()
     for record in records:
         spec = get_provider_spec(record.provider_key)
         if spec is None:
@@ -290,7 +372,6 @@ async def load_all_into_runtime(db: AsyncSession, settings: Settings) -> None:
         secrets = decrypt_record_secrets(record, settings)
         public = {str(k): str(v) for k, v in (record.public_config or {}).items()}
         values = {**public, **secrets}
-        # fill defaults
         for field in spec.fields:
             if field.key not in values and field.default is not None:
                 values[field.key] = field.default
@@ -317,14 +398,21 @@ async def upsert_provider(
     actor_id: uuid.UUID,
     test_connection: bool = True,
     enable_on_success: bool = True,
+    rotate: bool = True,
+    key_expires_at: Any | None = None,
+    environment: str | None = None,
 ) -> tuple[OwnerProviderSummary, OwnerConnectionTestResult | None]:
     spec = get_provider_spec(provider_key)
     if spec is None:
         raise OwnerValidationError(f"Unknown provider: {provider_key}")
+    profile = resolve_environment(settings, environment)
 
     record = await db.scalar(
         select(OwnerServiceCredential)
-        .where(OwnerServiceCredential.provider_key == spec.key)
+        .where(
+            OwnerServiceCredential.provider_key == spec.key,
+            OwnerServiceCredential.environment == profile,
+        )
         .with_for_update()
     )
     existing_secrets = decrypt_record_secrets(record, settings)
@@ -336,7 +424,6 @@ async def upsert_provider(
         )
 
     values = _merge_values(spec, incoming, existing_secrets, existing_public)
-    # Ensure required non-secret / secret present after merge
     for field in spec.fields:
         if not field.required:
             continue
@@ -346,6 +433,16 @@ async def upsert_provider(
             raise OwnerValidationError(f"{field.label} is required")
 
     validate_field_shapes(spec, values)
+
+    # Detect secret rotation (new secret values provided while old ones exist)
+    rotating = False
+    if rotate and record and record.encrypted_secrets:
+        public, new_secrets = _split_public_secret(spec, values)
+        for key, new_value in new_secrets.items():
+            if key in existing_secrets and existing_secrets[key] != new_value:
+                rotating = True
+                break
+        _ = public
 
     test_result: OwnerConnectionTestResult | None = None
     status = OwnerServiceStatus.invalid
@@ -362,12 +459,17 @@ async def upsert_provider(
             enabled = enable_on_success
         except OwnerValidationError as exc:
             status = OwnerServiceStatus.invalid
+            from app.owner_config_health import classify_failure
+
+            status = classify_failure(str(exc))
             last_error = str(exc)
             message = str(exc)
             details = exc.details
             enabled = False
         except Exception as exc:  # noqa: BLE001
-            status = OwnerServiceStatus.invalid
+            from app.owner_config_health import classify_failure
+
+            status = classify_failure(str(exc))
             last_error = str(exc)[:1000]
             message = f"Connection test failed: {exc}"
             enabled = False
@@ -390,13 +492,17 @@ async def upsert_provider(
     if record is None:
         record = OwnerServiceCredential(
             provider_key=spec.key,
+            environment=profile,
             category=spec.category,
             public_config=public,
             encrypted_secrets=encrypted,
             status=status,
             enabled=enabled,
             last_tested_at=now if test_connection else None,
+            last_success_at=now if status == OwnerServiceStatus.connected else None,
             last_error=last_error,
+            consecutive_failures=0 if status == OwnerServiceStatus.connected else 1,
+            key_expires_at=key_expires_at,
             feature_flag_key=spec.feature_flag_key,
             version=1,
             created_by_id=actor_id,
@@ -404,25 +510,53 @@ async def upsert_provider(
         )
         db.add(record)
     else:
+        if rotating and status == OwnerServiceStatus.connected:
+            # Zero-downtime: keep previous secrets until success confirmed
+            record.previous_encrypted_secrets = None
+            record.rotation_in_progress = False
+        elif rotating and status != OwnerServiceStatus.connected:
+            # Keep old secrets active; store attempted secrets as previous? Actually:
+            # leave encrypted_secrets as old, don't overwrite with bad new key.
+            # Save attempted key only if test passed. If failed, keep old.
+            encrypted = record.encrypted_secrets
+            secrets = existing_secrets
+            public = {**existing_public, **public}
+            message = f"Rotation rejected — previous key kept active. {message}"
+            status = OwnerServiceStatus.connected if record.encrypted_secrets else status
+            enabled = bool(record.enabled) if record.encrypted_secrets else enabled
+        elif rotating:
+            record.previous_encrypted_secrets = record.encrypted_secrets
+            record.rotation_in_progress = True
         record.public_config = public
         record.encrypted_secrets = encrypted
         record.status = status
         record.enabled = enabled
         record.last_tested_at = now if test_connection else record.last_tested_at
+        if status == OwnerServiceStatus.connected:
+            record.last_success_at = now
+            record.consecutive_failures = 0
+        else:
+            record.consecutive_failures = int(record.consecutive_failures or 0) + 1
         record.last_error = last_error
+        if key_expires_at is not None:
+            record.key_expires_at = key_expires_at
         record.feature_flag_key = spec.feature_flag_key
         record.version += 1
         record.updated_by_id = actor_id
         record.category = spec.category
+        record.environment = profile
 
     await _ensure_feature_flag(
-        db, key=spec.feature_flag_key, enabled=enabled and status == OwnerServiceStatus.connected, actor_id=actor_id
+        db,
+        key=spec.feature_flag_key,
+        enabled=enabled and status == OwnerServiceStatus.connected,
+        actor_id=actor_id,
     )
-    if spec.key == "openai":
+    if spec.key == "openai" and status == OwnerServiceStatus.connected:
         await _sync_openai_provider(
             db,
             settings,
-            values,
+            values if status == OwnerServiceStatus.connected else {**existing_secrets, **existing_public},
             enabled=enabled and status == OwnerServiceStatus.connected,
             actor_id=actor_id,
         )
@@ -435,20 +569,26 @@ async def upsert_provider(
         actor_user_id=actor_id,
         metadata={
             "provider_key": spec.key,
+            "environment": profile,
             "status": status.value,
             "enabled": enabled,
             "version": record.version,
             "tested": test_connection,
+            "rotated": rotating,
         },
     )
     await db.commit()
     await db.refresh(record)
 
-    apply_values_to_runtime(spec, values, enabled=enabled, status=status.value)
-    # Refresh AI registry when OpenAI synced
+    runtime_values = values if status == OwnerServiceStatus.connected else {**existing_public, **existing_secrets}
+    apply_values_to_runtime(
+        spec,
+        runtime_values,
+        enabled=enabled and status == OwnerServiceStatus.connected,
+        status=status.value,
+    )
     if spec.key == "openai" and hasattr(request.app.state, "ai_provider_registry"):
         await request.app.state.ai_provider_registry.refresh_from_database(db, settings)
-    # Hot-apply settings overlay on app state + rebuild dependent adapters
     if hasattr(request.app.state, "settings"):
         overlaid = effective_settings(
             getattr(request.app.state, "base_settings", None) or settings
@@ -476,6 +616,7 @@ async def upsert_provider(
         details={k: v for k, v in details.items() if k != "ok"} if isinstance(details, dict) else {},
         enabled=enabled,
         tested_at=now,
+        environment=profile,  # type: ignore[arg-type]
     )
     return summary, test_result
 
@@ -488,58 +629,38 @@ async def run_connection_test(
     provider_key: str,
     actor_id: uuid.UUID,
     enable_on_success: bool = True,
+    environment: str | None = None,
 ) -> OwnerConnectionTestResult:
+    from app.owner_config_health import classify_failure, probe_provider
+
     spec = get_provider_spec(provider_key)
     if spec is None:
         raise OwnerValidationError(f"Unknown provider: {provider_key}")
+    profile = resolve_environment(settings, environment)
     record = await db.scalar(
-        select(OwnerServiceCredential).where(OwnerServiceCredential.provider_key == spec.key)
+        select(OwnerServiceCredential).where(
+            OwnerServiceCredential.provider_key == spec.key,
+            OwnerServiceCredential.environment == profile,
+        )
     )
     if record is None or (not record.encrypted_secrets and not record.public_config):
         raise OwnerValidationError("Save credentials before testing this provider")
-    secrets = decrypt_record_secrets(record, settings)
-    public = {str(k): str(v) for k, v in (record.public_config or {}).items()}
-    values = {**public, **secrets}
-    for field in spec.fields:
-        if field.key not in values and field.default is not None:
-            values[field.key] = field.default
 
-    now = utcnow()
-    try:
-        if not spec.supports_live_test:
-            details = {"ok": True, "message": "Format-only provider"}
-        else:
-            details = await test_provider_connection(spec.key, values)
-        status = OwnerServiceStatus.connected
-        message = str(details.get("message") or "Connected")
-        enabled = enable_on_success
-        last_error = None
-    except OwnerValidationError as exc:
-        status = OwnerServiceStatus.invalid
-        message = str(exc)
-        details = exc.details
-        enabled = False
-        last_error = str(exc)[:1000]
-    except Exception as exc:  # noqa: BLE001
-        status = OwnerServiceStatus.invalid
-        message = f"Connection test failed: {exc}"
-        details = {}
-        enabled = False
-        last_error = str(exc)[:1000]
-
-    record.status = status
+    check = await probe_provider(db, settings, record)
+    enabled = bool(enable_on_success and check.ok)
     record.enabled = enabled
-    record.last_tested_at = now
-    record.last_error = last_error
-    record.version += 1
     record.updated_by_id = actor_id
+    record.version += 1
     await _ensure_feature_flag(
         db,
         key=spec.feature_flag_key,
-        enabled=enabled and status == OwnerServiceStatus.connected,
+        enabled=enabled,
         actor_id=actor_id,
     )
-    if spec.key == "openai" and status == OwnerServiceStatus.connected:
+    secrets = decrypt_record_secrets(record, settings)
+    public = {str(k): str(v) for k, v in (record.public_config or {}).items()}
+    values = {**public, **secrets}
+    if check.ok and spec.key == "openai":
         await _sync_openai_provider(db, settings, values, enabled=enabled, actor_id=actor_id)
 
     add_audit_event(
@@ -548,10 +669,15 @@ async def run_connection_test(
         settings,
         "owner.config_tested",
         actor_user_id=actor_id,
-        metadata={"provider_key": spec.key, "status": status.value, "enabled": enabled},
+        metadata={
+            "provider_key": spec.key,
+            "environment": profile,
+            "status": record.status.value,
+            "enabled": enabled,
+        },
     )
     await db.commit()
-    apply_values_to_runtime(spec, values, enabled=enabled, status=status.value)
+    apply_values_to_runtime(spec, values, enabled=enabled, status=record.status.value)
     if spec.key == "openai" and hasattr(request.app.state, "ai_provider_registry"):
         await request.app.state.ai_provider_registry.refresh_from_database(db, settings)
     if hasattr(request.app.state, "settings"):
@@ -572,29 +698,66 @@ async def run_connection_test(
 
             request.app.state.push_dispatcher = configured_push_dispatcher(overlaid)
 
+    _ = classify_failure  # imported for side-doc consistency with health module
     return OwnerConnectionTestResult(
         provider_key=spec.key,
-        status=status.value,  # type: ignore[arg-type]
-        ok=status == OwnerServiceStatus.connected,
-        message=message,
-        details={k: v for k, v in details.items() if k != "ok"} if isinstance(details, dict) else {},
+        status=record.status.value,  # type: ignore[arg-type]
+        ok=bool(check.ok),
+        message=check.message,
+        details=check.details if isinstance(check.details, dict) else {},
         enabled=enabled,
-        tested_at=now,
+        tested_at=check.created_at or utcnow(),
+        environment=profile,  # type: ignore[arg-type]
     )
 
 
-async def export_env_files(db: AsyncSession, settings: Settings) -> OwnerEnvExportResponse:
-    records = (await db.scalars(select(OwnerServiceCredential))).all()
+async def reconnect_provider(
+    db: AsyncSession,
+    settings: Settings,
+    request: Request,
+    *,
+    provider_key: str,
+    actor_id: uuid.UUID,
+    environment: str | None = None,
+) -> OwnerConnectionTestResult:
+    """One-click reconnect: re-test stored credentials and re-enable features."""
+    return await run_connection_test(
+        db,
+        settings,
+        request,
+        provider_key=provider_key,
+        actor_id=actor_id,
+        enable_on_success=True,
+        environment=environment,
+    )
+
+
+async def export_env_files(
+    db: AsyncSession,
+    settings: Settings,
+    *,
+    environment: str | None = None,
+) -> OwnerEnvExportResponse:
+    profile = resolve_environment(settings, environment)
+    records = (
+        await db.scalars(
+            select(OwnerServiceCredential).where(
+                OwnerServiceCredential.environment == profile
+            )
+        )
+    ).all()
     by_key = {item.provider_key: item for item in records}
     lines_prod: list[str] = [
         "# SYLORA owner-generated production env fragment",
         "# Generated by Owner Configuration — DO NOT COMMIT",
         f"# domain={_domain_from_settings(settings)}",
+        f"# environment={profile}",
         "",
     ]
     lines_api: list[str] = [
         "# SYLORA API owner-generated env fragment",
         "# Generated by Owner Configuration — DO NOT COMMIT",
+        f"# environment={profile}",
         "",
     ]
     for spec in OWNER_PROVIDERS:
@@ -616,7 +779,6 @@ async def export_env_files(db: AsyncSession, settings: Settings) -> OwnerEnvExpo
             value = values.get(field.key, field.default or "")
             lines_prod.append(f"{field.env_var}={value}")
             lines_api.append(f"{field.env_var}={value}")
-        # convenience flags
         if spec.key == "stripe" and values:
             lines_prod.append("PAYMENT_PROVIDER=stripe")
             lines_api.append("PAYMENT_PROVIDER=stripe")

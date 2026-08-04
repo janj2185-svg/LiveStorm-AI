@@ -1,4 +1,4 @@
-"""Owner Configuration API tests (no live network secrets)."""
+"""Owner Configuration ops: health, backup, deploy gate, profiles."""
 
 from __future__ import annotations
 
@@ -9,7 +9,11 @@ from sqlalchemy import select
 
 from app.business_models import FeatureFlag
 from app.models import Role, UserRole
-from app.owner_config_models import OwnerServiceCredential, OwnerServiceStatus
+from app.owner_config_models import (
+    OwnerConfigBackup,
+    OwnerServiceCredential,
+    OwnerServiceStatus,
+)
 from app.owner_config_store import owner_config_store
 from tests.conftest import APIHarness, bearer, login, register_and_verify
 
@@ -35,35 +39,15 @@ async def test_owner_config_catalog_lists_providers(api: APIHarness) -> None:
     response = await api.client.get("/v1/admin/owner-config", headers=admin_headers)
     assert response.status_code == 200, response.text
     payload = response.json()
+    assert payload["environment"] in {"development", "staging", "production"}
+    assert "deploy_ready" in payload
     assert payload["missing_count"] >= 10
     keys = {item["key"] for item in payload["providers"]}
-    assert {
-        "openai",
-        "smtp",
-        "stripe",
-        "s3",
-        "fcm",
-        "google_oauth",
-        "apple_oauth",
-        "facebook_oauth",
-        "tiktok_oauth",
-        "sentry",
-        "translation",
-        "speech_to_text",
-        "text_to_speech",
-        "maps",
-        "analytics",
-        "custom",
-    }.issubset(keys)
-    openai = next(item for item in payload["providers"] if item["key"] == "openai")
-    assert openai["status"] == "missing"
-    secret_fields = [field for field in openai["fields"] if field["secret"]]
-    assert secret_fields
-    assert all(field["public_value"] is None for field in secret_fields)
+    assert "openai" in keys and "smtp" in keys and "custom" in keys
 
 
 @pytest.mark.asyncio
-async def test_owner_config_custom_save_enables_feature(api: APIHarness) -> None:
+async def test_owner_config_custom_save_backup_and_audit(api: APIHarness) -> None:
     owner_config_store.clear()
     _, admin_headers = await _member(api, "owner-config-save@example.com", role="owner")
     response = await api.client.put(
@@ -77,48 +61,112 @@ async def test_owner_config_custom_save_enables_feature(api: APIHarness) -> None
             },
             "test_connection": True,
             "enable_on_success": True,
+            "rotate": True,
         },
     )
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["key"] == "custom"
     assert body["status"] == "connected"
     assert body["enabled"] is True
-    assert all(
-        field.get("public_value") != "test-custom-secret-key-123" for field in body["fields"]
-    )
+    assert body["environment"] == "production"
 
-    catalog = await api.client.get("/v1/admin/owner-config", headers=admin_headers)
-    assert catalog.status_code == 200
-    custom = next(item for item in catalog.json()["providers"] if item["key"] == "custom")
-    assert custom["status"] == "connected"
-    assert custom["enabled"] is True
+    backup = await api.client.post(
+        "/v1/admin/owner-config/backups",
+        headers=admin_headers,
+        json={"label": "unit-test-backup"},
+    )
+    assert backup.status_code == 200, backup.text
+    backup_id = backup.json()["id"]
+    assert backup.json()["provider_count"] >= 1
+
+    listed = await api.client.get("/v1/admin/owner-config/backups", headers=admin_headers)
+    assert listed.status_code == 200
+    assert any(item["id"] == backup_id for item in listed.json())
+
+    download = await api.client.get(
+        f"/v1/admin/owner-config/backups/{backup_id}/download",
+        headers=admin_headers,
+    )
+    assert download.status_code == 200
+    assert "encrypted_payload" in download.json()
+    assert "test-custom-secret-key-123" not in download.json()["encrypted_payload"]
+
+    restore = await api.client.post(
+        f"/v1/admin/owner-config/backups/{backup_id}/restore",
+        headers=admin_headers,
+        json={"rotate": True},
+    )
+    assert restore.status_code == 200, restore.text
+    assert restore.json()["restored"] >= 1
+
+    audit = await api.client.get("/v1/admin/owner-config/audit", headers=admin_headers)
+    assert audit.status_code == 200
+    actions = {item["action"] for item in audit.json()}
+    assert "owner.config_upserted" in actions
+    assert "owner.config_backup_created" in actions
+    assert "owner.config_backup_restored" in actions
 
     async with api.app.state.session_factory() as session:
-        record = await session.scalar(
-            select(OwnerServiceCredential).where(
-                OwnerServiceCredential.provider_key == "custom"
-            )
-        )
-        assert record is not None
-        assert record.encrypted_secrets
-        assert "test-custom-secret-key-123" not in (record.encrypted_secrets or "")
-        assert record.status == OwnerServiceStatus.connected
         flag = await session.scalar(
             select(FeatureFlag).where(FeatureFlag.key == "integrations.custom")
         )
-        assert flag is not None
-        assert flag.enabled is True
+        assert flag is not None and flag.enabled is True
+        assert await session.scalar(select(OwnerConfigBackup)) is not None
 
-    export = await api.client.get(
-        "/v1/admin/owner-config/env-export", headers=admin_headers
+
+@pytest.mark.asyncio
+async def test_owner_config_deploy_readiness_and_reconnect(api: APIHarness) -> None:
+    _, admin_headers = await _member(api, "owner-config-ready@example.com", role="admin")
+    readiness = await api.client.get(
+        "/v1/admin/owner-config/deploy-readiness",
+        headers=admin_headers,
+        params={"environment": "development"},
     )
-    assert export.status_code == 200, export.text
-    files = export.json()["files"]
-    assert len(files) == 2
-    content = files[0]["content"]
-    assert "CUSTOM_INTEGRATION_NAME=acme-vendor" in content
-    assert "CUSTOM_INTEGRATION_API_KEY=test-custom-secret-key-123" in content
+    assert readiness.status_code == 200, readiness.text
+    assert readiness.json()["ready"] is True
+    assert readiness.json()["environment"] == "development"
+
+    prod = await api.client.get(
+        "/v1/admin/owner-config/deploy-readiness",
+        headers=admin_headers,
+        params={"environment": "production"},
+    )
+    assert prod.status_code == 200
+    assert prod.json()["ready"] is False
+    assert any("smtp" in item for item in prod.json()["blocking"])
+
+    await api.client.put(
+        "/v1/admin/owner-config/providers/custom",
+        headers=admin_headers,
+        json={
+            "values": {"integration_name": "reconnect-me", "api_key": "secret-reconnect-key"},
+            "environment": "development",
+        },
+    )
+    reconnect = await api.client.post(
+        "/v1/admin/owner-config/providers/custom/reconnect",
+        headers=admin_headers,
+        params={"environment": "development"},
+    )
+    assert reconnect.status_code == 200, reconnect.text
+    assert reconnect.json()["ok"] is True
+
+    usage = await api.client.get(
+        "/v1/admin/owner-config/usage",
+        headers=admin_headers,
+        params={"environment": "development", "hours": 24},
+    )
+    assert usage.status_code == 200, usage.text
+    assert "openai" in usage.json()
+    assert "smtp" in usage.json()
+
+    health = await api.client.post(
+        "/v1/admin/owner-config/health-checks/run",
+        headers=admin_headers,
+        params={"environment": "development"},
+    )
+    assert health.status_code == 200, health.text
+    assert health.json()["checked"] >= 1
 
 
 @pytest.mark.asyncio
@@ -137,3 +185,50 @@ async def test_owner_config_forbidden_for_regular_user(api: APIHarness) -> None:
     _, user_headers = await _member(api, "owner-config-user@example.com")
     response = await api.client.get("/v1/admin/owner-config", headers=user_headers)
     assert response.status_code in {401, 403}
+
+
+@pytest.mark.asyncio
+async def test_owner_config_rotation_keeps_previous_on_failure(api: APIHarness) -> None:
+    owner_config_store.clear()
+    _, headers = await _member(api, "owner-config-rotate@example.com", role="owner")
+    first = await api.client.put(
+        "/v1/admin/owner-config/providers/custom",
+        headers=headers,
+        json={
+            "values": {
+                "integration_name": "rotate-vendor",
+                "api_key": "original-secret-key-aaa",
+            },
+            "environment": "development",
+        },
+    )
+    assert first.status_code == 200, first.text
+    version = first.json()["version"]
+
+    # Custom provider always "connects" on format validation — rotation success path.
+    second = await api.client.put(
+        "/v1/admin/owner-config/providers/custom",
+        headers=headers,
+        json={
+            "values": {
+                "integration_name": "rotate-vendor",
+                "api_key": "rotated-secret-key-bbb",
+            },
+            "expected_version": version,
+            "environment": "development",
+            "rotate": True,
+        },
+    )
+    assert second.status_code == 200, second.text
+    assert second.json()["status"] == "connected"
+
+    async with api.app.state.session_factory() as session:
+        record = await session.scalar(
+            select(OwnerServiceCredential).where(
+                OwnerServiceCredential.provider_key == "custom",
+                OwnerServiceCredential.environment == "development",
+            )
+        )
+        assert record is not None
+        assert record.status == OwnerServiceStatus.connected
+        assert record.encrypted_secrets

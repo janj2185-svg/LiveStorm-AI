@@ -245,19 +245,34 @@ abstract interface class AdminRepository {
   Future<AdminDashboard> security();
   Future<JsonObject> moderationSummary();
   Future<CursorPage<AdminResource>> moderationReports({String? cursor});
-  Future<JsonObject> ownerConfigCatalogRaw();
+  Future<JsonObject> ownerConfigCatalogRaw({String? environment});
   Future<JsonObject> upsertOwnerProviderRaw(
     String providerKey, {
     required JsonObject values,
     int? expectedVersion,
     bool testConnection = true,
     bool enableOnSuccess = true,
+    bool rotate = true,
+    String? environment,
   });
   Future<JsonObject> testOwnerProviderRaw(
     String providerKey, {
     bool enableOnSuccess = true,
+    String? environment,
   });
-  Future<JsonObject> ownerConfigEnvExportRaw();
+  Future<JsonObject> reconnectOwnerProviderRaw(
+    String providerKey, {
+    String? environment,
+  });
+  Future<JsonObject> ownerConfigEnvExportRaw({String? environment});
+  Future<JsonObject> ownerConfigUsageRaw({String? environment, int hours = 24});
+  Future<JsonObject> ownerConfigDeployReadinessRaw({String? environment});
+  Future<JsonObject> runOwnerHealthChecksRaw({String? environment});
+  Future<List<JsonObject>> ownerConfigAlertsRaw({String? environment});
+  Future<List<JsonObject>> ownerConfigAuditRaw();
+  Future<JsonObject> createOwnerBackupRaw({String? label, String? environment});
+  Future<List<JsonObject>> ownerConfigBackupsRaw({String? environment});
+  Future<JsonObject> restoreOwnerBackupRaw(String backupId, {bool rotate = true});
 }
 
 final class DioAdminRepository implements AdminRepository {
@@ -473,8 +488,11 @@ final class DioAdminRepository implements AdminRepository {
   }
 
   @override
-  Future<JsonObject> ownerConfigCatalogRaw() async {
-    final response = await _client.request('admin/owner-config');
+  Future<JsonObject> ownerConfigCatalogRaw({String? environment}) async {
+    final response = await _client.request(
+      'admin/owner-config',
+      queryParameters: <String, dynamic>{'environment': environment},
+    );
     return requireObject(response.data, 'owner config catalog');
   }
 
@@ -485,6 +503,8 @@ final class DioAdminRepository implements AdminRepository {
     int? expectedVersion,
     bool testConnection = true,
     bool enableOnSuccess = true,
+    bool rotate = true,
+    String? environment,
   }) async {
     final response = await _client.request(
       'admin/owner-config/providers/$providerKey',
@@ -494,6 +514,8 @@ final class DioAdminRepository implements AdminRepository {
         'expected_version': expectedVersion,
         'test_connection': testConnection,
         'enable_on_success': enableOnSuccess,
+        'rotate': rotate,
+        if (environment != null) 'environment': environment,
       },
     );
     return requireObject(response.data, 'owner provider');
@@ -503,21 +525,144 @@ final class DioAdminRepository implements AdminRepository {
   Future<JsonObject> testOwnerProviderRaw(
     String providerKey, {
     bool enableOnSuccess = true,
+    String? environment,
   }) async {
     final response = await _client.request(
       'admin/owner-config/providers/$providerKey/test',
       method: 'POST',
       queryParameters: <String, dynamic>{
         'enable_on_success': enableOnSuccess,
+        'environment': environment,
       },
     );
     return requireObject(response.data, 'owner provider test');
   }
 
   @override
-  Future<JsonObject> ownerConfigEnvExportRaw() async {
-    final response = await _client.request('admin/owner-config/env-export');
+  Future<JsonObject> reconnectOwnerProviderRaw(
+    String providerKey, {
+    String? environment,
+  }) async {
+    final response = await _client.request(
+      'admin/owner-config/providers/$providerKey/reconnect',
+      method: 'POST',
+      queryParameters: <String, dynamic>{'environment': environment},
+    );
+    return requireObject(response.data, 'owner provider reconnect');
+  }
+
+  @override
+  Future<JsonObject> ownerConfigEnvExportRaw({String? environment}) async {
+    final response = await _client.request(
+      'admin/owner-config/env-export',
+      queryParameters: <String, dynamic>{'environment': environment},
+    );
     return requireObject(response.data, 'owner env export');
+  }
+
+  @override
+  Future<JsonObject> ownerConfigUsageRaw({
+    String? environment,
+    int hours = 24,
+  }) async {
+    final response = await _client.request(
+      'admin/owner-config/usage',
+      queryParameters: <String, dynamic>{
+        'environment': environment,
+        'hours': hours,
+      },
+    );
+    return requireObject(response.data, 'owner usage');
+  }
+
+  @override
+  Future<JsonObject> ownerConfigDeployReadinessRaw({String? environment}) async {
+    final response = await _client.request(
+      'admin/owner-config/deploy-readiness',
+      queryParameters: <String, dynamic>{'environment': environment},
+    );
+    return requireObject(response.data, 'deploy readiness');
+  }
+
+  @override
+  Future<JsonObject> runOwnerHealthChecksRaw({String? environment}) async {
+    final response = await _client.request(
+      'admin/owner-config/health-checks/run',
+      method: 'POST',
+      queryParameters: <String, dynamic>{'environment': environment},
+    );
+    return requireObject(response.data, 'owner health run');
+  }
+
+  @override
+  Future<List<JsonObject>> ownerConfigAlertsRaw({String? environment}) async {
+    final response = await _client.request(
+      'admin/owner-config/alerts',
+      queryParameters: <String, dynamic>{'environment': environment},
+    );
+    final data = response.data;
+    if (data is! List) {
+      throw const FormatException('owner alerts must be a JSON array.');
+    }
+    return data
+        .map((value) => requireObject(value, 'owner alert'))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<JsonObject>> ownerConfigAuditRaw() async {
+    final response = await _client.request('admin/owner-config/audit');
+    final data = response.data;
+    if (data is! List) {
+      throw const FormatException('owner audit must be a JSON array.');
+    }
+    return data
+        .map((value) => requireObject(value, 'owner audit event'))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<JsonObject> createOwnerBackupRaw({
+    String? label,
+    String? environment,
+  }) async {
+    final response = await _client.request(
+      'admin/owner-config/backups',
+      method: 'POST',
+      data: <String, dynamic>{
+        if (label != null) 'label': label,
+        if (environment != null) 'environment': environment,
+      },
+    );
+    return requireObject(response.data, 'owner backup');
+  }
+
+  @override
+  Future<List<JsonObject>> ownerConfigBackupsRaw({String? environment}) async {
+    final response = await _client.request(
+      'admin/owner-config/backups',
+      queryParameters: <String, dynamic>{'environment': environment},
+    );
+    final data = response.data;
+    if (data is! List) {
+      throw const FormatException('owner backups must be a JSON array.');
+    }
+    return data
+        .map((value) => requireObject(value, 'owner backup'))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<JsonObject> restoreOwnerBackupRaw(
+    String backupId, {
+    bool rotate = true,
+  }) async {
+    final response = await _client.request(
+      'admin/owner-config/backups/$backupId/restore',
+      method: 'POST',
+      data: <String, dynamic>{'rotate': rotate},
+    );
+    return requireObject(response.data, 'owner backup restore');
   }
 }
 

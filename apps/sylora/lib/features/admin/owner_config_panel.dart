@@ -122,14 +122,20 @@ final class OwnerProviderSummary {
 final class OwnerCatalog {
   const OwnerCatalog({
     required this.domain,
+    required this.environment,
     required this.providers,
     required this.connectedCount,
     required this.missingCount,
     required this.invalidCount,
+    required this.expiredCount,
+    required this.deployReady,
+    required this.requiredProviders,
+    required this.recommendedProviders,
   });
 
   factory OwnerCatalog.fromJson(JsonObject json) => OwnerCatalog(
     domain: requireString(json, 'domain'),
+    environment: optionalString(json, 'environment') ?? 'production',
     providers: requireList(json, 'providers')
         .map(
           (value) => OwnerProviderSummary.fromJson(
@@ -140,13 +146,26 @@ final class OwnerCatalog {
     connectedCount: requireInt(json, 'connected_count'),
     missingCount: requireInt(json, 'missing_count'),
     invalidCount: requireInt(json, 'invalid_count'),
+    expiredCount: json['expired_count'] is int
+        ? json['expired_count'] as int
+        : 0,
+    deployReady: json['deploy_ready'] is bool
+        ? json['deploy_ready'] as bool
+        : false,
+    requiredProviders: _strings(json, 'required_providers'),
+    recommendedProviders: _strings(json, 'recommended_providers'),
   );
 
   final String domain;
+  final String environment;
   final List<OwnerProviderSummary> providers;
   final int connectedCount;
   final int missingCount;
   final int invalidCount;
+  final int expiredCount;
+  final bool deployReady;
+  final List<String> requiredProviders;
+  final List<String> recommendedProviders;
 }
 
 @immutable
@@ -204,11 +223,18 @@ List<String> _strings(JsonObject json, String key) {
   return value.whereType<String>().toList(growable: false);
 }
 
+final _ownerEnvironmentProvider = StateProvider.autoDispose<String>(
+  (ref) => 'production',
+);
+
 final _ownerCatalogProvider = FutureProvider.autoDispose<OwnerCatalog>((
   ref,
 ) async {
   final repository = ref.watch(adminRepositoryProvider);
-  final json = await repository.ownerConfigCatalogRaw();
+  final environment = ref.watch(_ownerEnvironmentProvider);
+  final json = await repository.ownerConfigCatalogRaw(
+    environment: environment,
+  );
   return OwnerCatalog.fromJson(json);
 });
 
@@ -218,11 +244,16 @@ final class OwnerConfigPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(_ownerCatalogProvider);
+    final environment = ref.watch(_ownerEnvironmentProvider);
     return LumenAsyncView<OwnerCatalog>(
       value: async,
       onRetry: () => ref.invalidate(_ownerCatalogProvider),
       data: (catalog) => _OwnerCatalogView(
         catalog: catalog,
+        environment: environment,
+        onEnvironmentChanged: (value) {
+          ref.read(_ownerEnvironmentProvider.notifier).state = value;
+        },
         onChanged: () => ref.invalidate(_ownerCatalogProvider),
       ),
     );
@@ -230,9 +261,16 @@ final class OwnerConfigPanel extends ConsumerWidget {
 }
 
 final class _OwnerCatalogView extends StatelessWidget {
-  const _OwnerCatalogView({required this.catalog, required this.onChanged});
+  const _OwnerCatalogView({
+    required this.catalog,
+    required this.environment,
+    required this.onEnvironmentChanged,
+    required this.onChanged,
+  });
 
   final OwnerCatalog catalog;
+  final String environment;
+  final ValueChanged<String> onEnvironmentChanged;
   final VoidCallback onChanged;
 
   @override
@@ -240,29 +278,81 @@ final class _OwnerCatalogView extends StatelessWidget {
     final theme = Theme.of(context);
     return ListView(
       children: <Widget>[
-        Text(
-          'Owner services',
-          style: theme.textTheme.titleLarge,
-        ),
+        Text('Owner services', style: theme.textTheme.titleLarge),
         const SizedBox(height: 6),
         Text(
-          'Paste credentials after deployment. Secrets are encrypted with '
-          'DATA_ENCRYPTION_KEY, never returned to the client, and never '
-          'hardcoded in source. Domain: ${catalog.domain}',
+          'Encrypted credentials, health probes every 3 minutes, usage stats, '
+          'backup/restore, and deploy readiness. Secrets never reach the client. '
+          'Domain: ${catalog.domain}',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: <Widget>[
+            SegmentedButton<String>(
+              segments: const <ButtonSegment<String>>[
+                ButtonSegment(value: 'development', label: Text('Dev')),
+                ButtonSegment(value: 'staging', label: Text('Staging')),
+                ButtonSegment(value: 'production', label: Text('Prod')),
+              ],
+              selected: <String>{environment},
+              onSelectionChanged: (values) {
+                if (values.isNotEmpty) {
+                  onEnvironmentChanged(values.first);
+                }
+              },
+            ),
+            Chip(
+              label: Text(
+                catalog.deployReady ? 'Deploy READY' : 'Deploy BLOCKED',
+              ),
+              backgroundColor: catalog.deployReady
+                  ? theme.colorScheme.primaryContainer
+                  : theme.colorScheme.errorContainer,
+            ),
             Chip(label: Text('Connected ${catalog.connectedCount}')),
             Chip(label: Text('Invalid ${catalog.invalidCount}')),
+            Chip(label: Text('Expired ${catalog.expiredCount}')),
             Chip(label: Text('Missing ${catalog.missingCount}')),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            FilledButton.tonalIcon(
+              onPressed: () => _runHealth(context),
+              icon: const Icon(Icons.monitor_heart_outlined),
+              label: const Text('Run health checks'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _showUsage(context),
+              icon: const Icon(Icons.bar_chart_rounded),
+              label: const Text('Usage stats'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _createBackup(context),
+              icon: const Icon(Icons.backup_outlined),
+              label: const Text('Backup'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _showAlerts(context),
+              icon: const Icon(Icons.notifications_active_outlined),
+              label: const Text('Alerts'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _showAudit(context),
+              icon: const Icon(Icons.history_rounded),
+              label: const Text('Audit log'),
+            ),
             TextButton.icon(
               onPressed: () => _exportEnv(context),
               icon: const Icon(Icons.download_rounded),
-              label: const Text('Generate .env files'),
+              label: const Text('Generate .env'),
             ),
           ],
         ),
@@ -270,22 +360,138 @@ final class _OwnerCatalogView extends StatelessWidget {
         for (final provider in catalog.providers)
           _OwnerProviderTile(
             provider: provider,
+            environment: environment,
             onChanged: onChanged,
           ),
       ],
     );
   }
 
+  Future<void> _snack(BuildContext context, String message) async {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _runHealth(BuildContext context) async {
+    final repository = ProviderScope.containerOf(context).read(adminRepositoryProvider);
+    try {
+      final result = await repository.runOwnerHealthChecksRaw(environment: environment);
+      await _snack(context, 'Health: checked ${result['checked']} · failed ${result['failed']}');
+      onChanged();
+    } catch (error) {
+      await _snack(context, '$error');
+    }
+  }
+
+  Future<void> _showUsage(BuildContext context) async {
+    final repository = ProviderScope.containerOf(context).read(adminRepositoryProvider);
+    try {
+      final usage = await repository.ownerConfigUsageRaw(environment: environment);
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Provider usage (24h)'),
+          content: SingleChildScrollView(child: Text(usage.toString())),
+          actions: <Widget>[
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+          ],
+        ),
+      );
+    } catch (error) {
+      await _snack(context, '$error');
+    }
+  }
+
+  Future<void> _createBackup(BuildContext context) async {
+    final repository = ProviderScope.containerOf(context).read(adminRepositoryProvider);
+    try {
+      final backup = await repository.createOwnerBackupRaw(
+        environment: environment,
+        label: 'owner-panel-$environment',
+      );
+      await _snack(context, 'Backup ${backup['id']} · ${backup['provider_count']} providers');
+    } catch (error) {
+      await _snack(context, '$error');
+    }
+  }
+
+  Future<void> _showAlerts(BuildContext context) async {
+    final repository = ProviderScope.containerOf(context).read(adminRepositoryProvider);
+    try {
+      final alerts = await repository.ownerConfigAlertsRaw(environment: environment);
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Owner alerts'),
+          content: SizedBox(
+            width: 420,
+            child: alerts.isEmpty
+                ? const Text('No open alerts.')
+                : ListView(
+                    shrinkWrap: true,
+                    children: <Widget>[
+                      for (final alert in alerts)
+                        ListTile(
+                          title: Text('${alert['title']}'),
+                          subtitle: Text('${alert['message']}'),
+                          dense: true,
+                        ),
+                    ],
+                  ),
+          ),
+          actions: <Widget>[
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+          ],
+        ),
+      );
+    } catch (error) {
+      await _snack(context, '$error');
+    }
+  }
+
+  Future<void> _showAudit(BuildContext context) async {
+    final repository = ProviderScope.containerOf(context).read(adminRepositoryProvider);
+    try {
+      final events = await repository.ownerConfigAuditRaw();
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Configuration audit'),
+          content: SizedBox(
+            width: 480,
+            child: ListView(
+              shrinkWrap: true,
+              children: <Widget>[
+                for (final event in events.take(30))
+                  ListTile(
+                    title: Text('${event['action']}'),
+                    subtitle: Text('actor=${event['actor_user_id']} · ${event['created_at']}'),
+                    dense: true,
+                  ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+          ],
+        ),
+      );
+    } catch (error) {
+      await _snack(context, '$error');
+    }
+  }
+
   Future<void> _exportEnv(BuildContext context) async {
-    final container = ProviderScope.containerOf(context);
-    final repository = container.read(adminRepositoryProvider);
+    final repository = ProviderScope.containerOf(context).read(adminRepositoryProvider);
     try {
       final export = OwnerEnvExport.fromJson(
-        await repository.ownerConfigEnvExportRaw(),
+        await repository.ownerConfigEnvExportRaw(environment: environment),
       );
-      if (!context.mounted) {
-        return;
-      }
       final buffer = StringBuffer();
       for (final file in export.files) {
         buffer.writeln('===== ${file.filename} =====');
@@ -294,19 +500,9 @@ final class _OwnerCatalogView extends StatelessWidget {
         buffer.writeln();
       }
       await Clipboard.setData(ClipboardData(text: buffer.toString()));
-      if (!context.mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(export.note)),
-      );
+      await _snack(context, export.note);
     } catch (error) {
-      if (!context.mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$error')),
-      );
+      await _snack(context, '$error');
     }
   }
 }
@@ -314,10 +510,12 @@ final class _OwnerCatalogView extends StatelessWidget {
 final class _OwnerProviderTile extends ConsumerStatefulWidget {
   const _OwnerProviderTile({
     required this.provider,
+    required this.environment,
     required this.onChanged,
   });
 
   final OwnerProviderSummary provider;
+  final String environment;
   final VoidCallback onChanged;
 
   @override
@@ -375,6 +573,7 @@ final class _OwnerProviderTileState extends ConsumerState<_OwnerProviderTile> {
     return switch (widget.provider.status) {
       'connected' => scheme.primary,
       'invalid' => scheme.error,
+      'expired' => scheme.error,
       _ => scheme.outline,
     };
   }
@@ -407,6 +606,8 @@ final class _OwnerProviderTileState extends ConsumerState<_OwnerProviderTile> {
           expectedVersion: widget.provider.version,
           testConnection: test,
           enableOnSuccess: true,
+          rotate: true,
+          environment: widget.environment,
         ),
       );
       setState(() {
@@ -431,10 +632,39 @@ final class _OwnerProviderTileState extends ConsumerState<_OwnerProviderTile> {
     try {
       final repository = ref.read(adminRepositoryProvider);
       final result = OwnerTestResult.fromJson(
-        await repository.testOwnerProviderRaw(widget.provider.key),
+        await repository.testOwnerProviderRaw(
+          widget.provider.key,
+          environment: widget.environment,
+        ),
       );
       setState(() {
         _message = result.message;
+        _busy = false;
+      });
+      widget.onChanged();
+    } catch (error) {
+      setState(() {
+        _message = '$error';
+        _busy = false;
+      });
+    }
+  }
+
+  Future<void> _reconnect() async {
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      final repository = ref.read(adminRepositoryProvider);
+      final result = OwnerTestResult.fromJson(
+        await repository.reconnectOwnerProviderRaw(
+          widget.provider.key,
+          environment: widget.environment,
+        ),
+      );
+      setState(() {
+        _message = 'Reconnect: ${result.message}';
         _busy = false;
       });
       widget.onChanged();
@@ -554,10 +784,12 @@ final class _OwnerProviderTileState extends ConsumerState<_OwnerProviderTile> {
                         onPressed: _busy ? null : _testOnly,
                         child: const Text('Test Connection'),
                       ),
+                    OutlinedButton(
+                      onPressed: _busy ? null : _reconnect,
+                      child: const Text('Reconnect'),
+                    ),
                     TextButton(
-                      onPressed: _busy
-                          ? null
-                          : () => _save(test: false),
+                      onPressed: _busy ? null : () => _save(test: false),
                       child: const Text('Save without test'),
                     ),
                   ],

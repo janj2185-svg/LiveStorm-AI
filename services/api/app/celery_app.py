@@ -72,6 +72,11 @@ celery_app.conf.update(
             "schedule": 300.0,
             "options": {"expires": 240},
         },
+        "owner-config-health": {
+            "task": "sylora.owner_config.health",
+            "schedule": 180.0,
+            "options": {"expires": 150},
+        },
     },
 )
 
@@ -294,3 +299,27 @@ async def _expire_creator_subscriptions() -> dict[str, int]:
 @celery_app.task(name="sylora.creator.expire_subscriptions")
 def expire_creator_subscriptions() -> dict[str, int]:
     return asyncio.run(_expire_creator_subscriptions())
+
+
+async def _owner_config_health() -> dict[str, object]:
+    from app.owner_config_health import run_health_checks
+
+    engine = create_engine(settings)
+    try:
+        async with create_session_factory(engine)() as session:
+            return await run_health_checks(session, settings)
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(
+    name="sylora.owner_config.health",
+    autoretry_for=(ConnectionError, TimeoutError),
+    retry_backoff=True,
+    retry_backoff_max=300,
+    retry_jitter=True,
+    max_retries=3,
+)
+def owner_config_health() -> dict[str, object]:
+    """Probe owner-managed providers every few minutes; alert on failure/expiry."""
+    return asyncio.run(_owner_config_health())
