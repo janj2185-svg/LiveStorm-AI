@@ -50,9 +50,10 @@
     state.mobile = window.matchMedia('(max-width: 820px)').matches
       || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || '');
     const cores = navigator.hardwareConcurrency || 4;
-    if (state.reduced) return state.mobile ? 220 : 420;
-    if (state.mobile) return cores <= 4 ? 520 : 780;
-    return cores <= 4 ? 1100 : 1600;
+    // Keep the living shell light — high particle counts delayed "Почати".
+    if (state.reduced) return state.mobile ? 90 : 160;
+    if (state.mobile) return cores <= 4 ? 160 : 240;
+    return cores <= 4 ? 320 : 480;
   }
 
   function buildParticles(count) {
@@ -435,17 +436,17 @@
   function prefetchFlutterAssets() {
     if (state.preloadScheduled) return;
     state.preloadScheduled = true;
-    // Prefetch only — do NOT runApp under the living landing (that froze phones).
-    [
-      'flutter_bootstrap.js',
-      'main.dart.js',
-      'canvaskit/canvaskit.js',
-      'canvaskit/canvaskit.wasm',
-    ].forEach((href) => {
+    // Preload app JS only — CanvasKit comes from gstatic CDN after bootstrap.
+    // Do NOT runApp under the living landing (that froze phones).
+    const assets = [
+      { href: 'main.dart.js', rel: 'preload', as: 'script' },
+      { href: 'flutter_bootstrap.js', rel: 'preload', as: 'script' },
+    ];
+    assets.forEach(({ href, rel, as }) => {
       if (document.querySelector(`link[data-sylora-prefetch="${href}"]`)) return;
       const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.as = href.endsWith('.wasm') ? 'fetch' : 'script';
+      link.rel = rel;
+      link.as = as;
       link.href = href;
       link.setAttribute('data-sylora-prefetch', href);
       document.head.appendChild(link);
@@ -515,20 +516,19 @@
       location.hash = target;
     }
 
-    // Drop stale service workers that can pin old broken builds.
+    // Start Flutter immediately; SW cleanup must not block first paint.
+    const flutterReady = loadFlutter();
     try {
       if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((r) => { r.unregister().catch(() => {}); });
+        }).catch(() => {});
       }
     } catch (_) { /* ignore */ }
 
     try {
       setEnterStatus('Запуск SYLORA…');
-      await loadFlutter();
-      setEnterStatus('Майже готово…');
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise((r) => setTimeout(r, 120));
+      await flutterReady;
       // Re-assert auth route in case session-restore redirects raced.
       if (!/^#\/auth/.test(location.hash || '')) {
         location.hash = target;

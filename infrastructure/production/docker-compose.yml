@@ -121,7 +121,7 @@ services:
         set -euo pipefail
         flutter config --enable-web
         flutter pub get
-        flutter build web --release --dart-define=SYLORA_API_BASE_URL=https://${DOMAIN}
+        flutter build web --release --web-resources-cdn --no-wasm-dry-run --dart-define=SYLORA_API_BASE_URL=https://${DOMAIN}
         rm -rf /out/*
         cp -a build/web/. /out/
         echo "web build complete"
