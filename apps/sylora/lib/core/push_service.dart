@@ -140,6 +140,43 @@ final class PushService extends StateNotifier<bool> {
     }
   }
 
+  /// Re-registers the current token after an authenticated startup restore.
+  Future<void> syncEnabledRegistration() async {
+    await _initialization;
+    if (!state || !nativePushAvailable) {
+      return;
+    }
+    final token = await tokenProvider.currentToken();
+    if (token == null || token.trim().isEmpty) {
+      return;
+    }
+    await _registerToken(token);
+  }
+
+  /// Removes the local user's last registration before authentication is lost.
+  Future<void> clearRegistrationOnLogout() async {
+    final preferences = _preferences ?? await _initialization;
+    state = false;
+    await preferences.setBool(_enabledKey, false);
+    final lastToken = preferences.getString(_lastTokenKey);
+    final lastPlatform =
+        preferences.getString(_lastPlatformKey) ?? currentPushPlatform();
+    if (lastToken != null && lastToken.trim().isNotEmpty) {
+      try {
+        await client.unregisterDevice(
+          platform: lastPlatform,
+          token: lastToken.trim(),
+        );
+      } on Object catch (error) {
+        debugPrint('Push logout unregistration failed: $error');
+      }
+    }
+    await Future.wait(<Future<bool>>[
+      preferences.remove(_lastTokenKey),
+      preferences.remove(_lastPlatformKey),
+    ]);
+  }
+
   Future<void> registerToken(String token, {String? platform}) async {
     if (!state) {
       return;

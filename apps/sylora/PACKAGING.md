@@ -44,7 +44,10 @@ maintained Firebase-enabled packaging variant must:
 5. Implement `PushTokenProvider` using `FirebaseMessaging.getToken()` and
    `FirebaseMessaging.onTokenRefresh`.
 6. Override `pushTokenProviderProvider` in the root `ProviderScope`.
-7. Configure the API's FCM HTTP v1 dispatcher with deployment-managed secrets
+7. Keep the authenticated startup path wired to
+   `PushService.syncEnabledRegistration()` so enabled devices re-register after
+   session restoration.
+8. Configure the API's FCM HTTP v1 dispatcher with deployment-managed secrets
    and verify that `POST /v1/push/devices` returns `201`.
 
 A Dart define can select that adapter in the Firebase-enabled variant, for

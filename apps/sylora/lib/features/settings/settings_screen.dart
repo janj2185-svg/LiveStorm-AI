@@ -9,7 +9,6 @@ import '../../core/locale_controller.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
-import '../../core/push_service.dart';
 import '../../design/sylora.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
@@ -39,13 +38,6 @@ final accountProvider = FutureProvider.autoDispose<AccountSnapshot>((
 
 final sessionsProvider = FutureProvider.autoDispose<List<SessionModel>>(
   (ref) => ref.watch(authRepositoryProvider).sessions(),
-);
-
-final pushServiceProvider = StateNotifierProvider<PushService, bool>(
-  (ref) => PushService(
-    client: ApiPushRegistrationClient(ref.watch(apiClientProvider)),
-    tokenProvider: ref.watch(pushTokenProviderProvider),
-  ),
 );
 
 String _localeLabel(AppLocalizations l10n, Locale locale) =>
@@ -588,8 +580,7 @@ final class SessionsScreen extends ConsumerWidget {
         actions: <Widget>[
           TextButton(
             onPressed: () async {
-              await ref.read(authRepositoryProvider).logoutAll();
-              ref.read(authControllerProvider.notifier).expire();
+              await ref.read(authControllerProvider.notifier).logoutAll();
             },
             child: const Text('Sign out all'),
           ),

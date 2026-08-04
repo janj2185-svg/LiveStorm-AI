@@ -34,12 +34,58 @@ void main() {
     expect(controller.state.status, AuthStatus.unauthenticated);
     expect(controller.state.error, 'Credentials were rejected.');
   });
+
+  test('auth controller syncs push after restoring a session', () async {
+    var syncCalls = 0;
+    final repository = _FakeAuthRepository(
+      restoredUser: _FakeAuthRepository.user,
+    );
+    final controller = AuthController(
+      repository,
+      autoRestore: false,
+      syncPushRegistration: () async {
+        syncCalls += 1;
+      },
+    );
+
+    await controller.restore();
+
+    expect(controller.state.status, AuthStatus.authenticated);
+    expect(syncCalls, 1);
+  });
+
+  test(
+    'logout methods clear push best-effort before ending sessions',
+    () async {
+      var clearCalls = 0;
+      final repository = _FakeAuthRepository();
+      final controller = AuthController(
+        repository,
+        autoRestore: false,
+        clearPushRegistration: () async {
+          clearCalls += 1;
+          throw StateError('offline');
+        },
+      );
+
+      await controller.logout();
+      await controller.logoutAll();
+
+      expect(clearCalls, 2);
+      expect(repository.logoutCalls, 1);
+      expect(repository.logoutAllCalls, 1);
+      expect(controller.state.status, AuthStatus.unauthenticated);
+    },
+  );
 }
 
 final class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({this.loginFails = false});
+  _FakeAuthRepository({this.loginFails = false, this.restoredUser});
 
   final bool loginFails;
+  final UserAccount? restoredUser;
+  int logoutCalls = 0;
+  int logoutAllCalls = 0;
 
   static const user = UserAccount(
     id: 'user-id',
@@ -59,7 +105,7 @@ final class _FakeAuthRepository implements AuthRepository {
   );
 
   @override
-  Future<UserAccount?> restore() async => null;
+  Future<UserAccount?> restore() async => restoredUser;
 
   @override
   Future<LoginResult> login({
@@ -123,10 +169,14 @@ final class _FakeAuthRepository implements AuthRepository {
   Future<void> disableTotp({required String code, String? password}) async {}
 
   @override
-  Future<void> logout() async {}
+  Future<void> logout() async {
+    logoutCalls += 1;
+  }
 
   @override
-  Future<void> logoutAll() async {}
+  Future<void> logoutAll() async {
+    logoutAllCalls += 1;
+  }
 
   @override
   Future<RegisterResult> register({

@@ -4,6 +4,11 @@ import logging
 import uuid
 from typing import Any, cast
 
+import httpx
+import pytest
+from sqlalchemy import select
+
+from app.push_models import DevicePushToken
 from app.push_service import (
     FcmHttpV1Provider,
     PushMessage,
@@ -87,6 +92,91 @@ async def test_register_list_and_unregister_push_device(api_factory: Any) -> Non
         devices = await api.client.get("/v1/push/devices", headers=headers)
         assert devices.status_code == 200, devices.text
         assert devices.json()[0]["revoked"] is True
+
+
+@pytest.mark.parametrize(
+    ("status_code", "error_payload"),
+    [
+        (404, {"error": {"status": "NOT_FOUND"}}),
+        (
+            400,
+            {
+                "error": {
+                    "status": "INVALID_ARGUMENT",
+                    "details": [
+                        {
+                            "@type": "type.googleapis.com/google.firebase.fcm.v1.FcmError",
+                            "errorCode": "INVALID_ARGUMENT",
+                        }
+                    ],
+                }
+            },
+        ),
+        (
+            400,
+            {
+                "error": {
+                    "status": "INVALID_ARGUMENT",
+                    "details": [
+                        {
+                            "@type": "type.googleapis.com/google.firebase.fcm.v1.FcmError",
+                            "errorCode": "UNREGISTERED",
+                        }
+                    ],
+                }
+            },
+        ),
+    ],
+)
+async def test_fcm_invalid_token_response_revokes_device(
+    api_factory: Any,
+    status_code: int,
+    error_payload: dict[str, Any],
+) -> None:
+    async def fcm_response(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code, json=error_payload, request=request)
+
+    fcm_client = httpx.AsyncClient(transport=httpx.MockTransport(fcm_response))
+    dispatcher = FcmHttpV1Provider(
+        project_id="test-project",
+        service_account={"client_email": "push@example.test", "private_key": "unused"},
+        client=fcm_client,
+    )
+    dispatcher._access_token = "test-access-token"
+    dispatcher._access_token_expires_at = float("inf")
+
+    try:
+        async with api_factory(push_dispatcher=dispatcher) as api:
+            await register_and_verify(api)
+            tokens = await login(api)
+            registered = await api.client.post(
+                "/v1/push/devices",
+                headers=bearer(tokens["access_token"]),
+                json={"platform": "web", "token": "invalid-fcm-token-123456"},
+            )
+            assert registered.status_code == 201, registered.text
+            user = await api.user("member@example.com")
+
+            async with api.app.state.session_factory() as session:
+                summary = await dispatcher.dispatch(
+                    session,
+                    user_ids={user.id},
+                    message=PushMessage(title="Test", body="Invalid token"),
+                )
+
+            assert summary.attempted == 1
+            assert summary.sent == 0
+            assert summary.failed == 1
+            async with api.app.state.session_factory() as session:
+                device = await session.scalar(
+                    select(DevicePushToken).where(
+                        DevicePushToken.token == "invalid-fcm-token-123456"
+                    )
+                )
+                assert device is not None
+                assert device.revoked_at is not None
+    finally:
+        await fcm_client.aclose()
 
 
 async def test_unconfigured_push_provider_skips_with_structured_log(caplog: Any) -> None:

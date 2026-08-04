@@ -189,6 +189,61 @@ void main() {
       service.dispose();
       await tokens.close();
     });
+
+    test('syncs an enabled registration after startup', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'push.notificationsEnabled': true,
+        'push.lastToken': 'previous-fcm-token-123456',
+        'push.lastPlatform': 'android',
+      });
+      final preferences = await SharedPreferences.getInstance();
+      final client = _RecordingPushClient();
+      final tokens = _ConfiguredPushTokens('current-fcm-token-123456');
+      final service = PushService(
+        client: client,
+        tokenProvider: tokens,
+        preferences: preferences,
+      );
+
+      await service.syncEnabledRegistration();
+
+      expect(service.state, isTrue);
+      expect(client.registered, <String>['current-fcm-token-123456']);
+      expect(
+        preferences.getString('push.lastToken'),
+        'current-fcm-token-123456',
+      );
+      service.dispose();
+      await tokens.close();
+    });
+
+    test('logout clears registration even when unregistration fails', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'push.notificationsEnabled': true,
+        'push.lastToken': 'logout-fcm-token-123456',
+        'push.lastPlatform': 'android',
+      });
+      final preferences = await SharedPreferences.getInstance();
+      final client = _RecordingPushClient(
+        unregistrationError: StateError('offline'),
+      );
+      final tokens = _ConfiguredPushTokens('logout-fcm-token-123456');
+      final service = PushService(
+        client: client,
+        tokenProvider: tokens,
+        preferences: preferences,
+      );
+
+      await service.clearRegistrationOnLogout();
+
+      expect(service.state, isFalse);
+      expect(preferences.getBool('push.notificationsEnabled'), isFalse);
+      expect(preferences.getString('push.lastToken'), isNull);
+      expect(preferences.getString('push.lastPlatform'), isNull);
+      expect(client.unregistered, <String>['logout-fcm-token-123456']);
+      service.dispose();
+      await tokens.close();
+    });
   });
 
   test(
@@ -469,10 +524,12 @@ double _contrast(Color a, Color b) {
 }
 
 final class _RecordingPushClient implements PushRegistrationClient {
-  _RecordingPushClient({this.registrationError});
+  _RecordingPushClient({this.registrationError, this.unregistrationError});
 
   final Object? registrationError;
+  final Object? unregistrationError;
   final List<String> registered = <String>[];
+  final List<String> unregistered = <String>[];
 
   @override
   Future<void> registerDevice({
@@ -489,7 +546,12 @@ final class _RecordingPushClient implements PushRegistrationClient {
   Future<void> unregisterDevice({
     required String platform,
     required String token,
-  }) async {}
+  }) async {
+    unregistered.add(token);
+    if (unregistrationError != null) {
+      throw unregistrationError!;
+    }
+  }
 }
 
 final class _ConfiguredPushTokens implements PushTokenProvider {

@@ -19,11 +19,13 @@ from app.audit import add_system_audit_event
 from app.config import Settings
 from app.observability import increment_counter
 from app.push_models import DevicePushToken
+from app.security import utcnow
 
 logger = logging.getLogger("sylora.push")
 
 FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+INVALID_FCM_TOKEN_STATUSES = frozenset({"UNREGISTERED", "INVALID_ARGUMENT"})
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,10 @@ class UnconfiguredPushProvider:
         return PushDispatchSummary(skipped=len(unique_user_ids))
 
 
+class InvalidPushTokenError(Exception):
+    """FCM rejected a device registration token permanently."""
+
+
 class FcmHttpV1Provider:
     configured = True
 
@@ -127,6 +133,27 @@ class FcmHttpV1Provider:
             try:
                 await self._send_to_token(access_token, token.token, message)
                 sent += 1
+            except InvalidPushTokenError as exc:
+                failed += 1
+                token.revoked_at = utcnow()
+                try:
+                    await db.commit()
+                except Exception:  # noqa: BLE001 - continue dispatching other devices
+                    await db.rollback()
+                    logger.exception(
+                        "push_token_revocation_failed",
+                        extra={"provider": "fcm_http_v1", "device_id": str(token.id)},
+                    )
+                logger.warning(
+                    "push_delivery_failed",
+                    extra={
+                        "provider": "fcm_http_v1",
+                        "device_id": str(token.id),
+                        "platform": token.platform.value,
+                        "error": str(exc),
+                        "token_revoked": True,
+                    },
+                )
             except Exception as exc:  # noqa: BLE001 - best-effort notification boundary
                 failed += 1
                 logger.warning(
@@ -183,13 +210,44 @@ class FcmHttpV1Provider:
                 },
             },
         )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            error_statuses = _fcm_error_statuses(response)
+            if response.status_code == 404 or error_statuses & INVALID_FCM_TOKEN_STATUSES:
+                status = next(iter(error_statuses & INVALID_FCM_TOKEN_STATUSES), "HTTP_404")
+                raise InvalidPushTokenError(f"FCM rejected device token: {status}") from exc
+            raise
 
     async def _post(self, url: str, **kwargs: Any) -> httpx.Response:
         if self._client is not None:
             return await self._client.post(url, **kwargs)
         async with httpx.AsyncClient(timeout=10) as client:
             return await client.post(url, **kwargs)
+
+
+def _fcm_error_statuses(response: httpx.Response) -> set[str]:
+    try:
+        payload = response.json()
+    except (ValueError, TypeError):
+        return set()
+    if not isinstance(payload, dict):
+        return set()
+    error = payload.get("error")
+    if not isinstance(error, dict):
+        return set()
+    statuses = {
+        value for value in (error.get("status"), error.get("errorCode")) if isinstance(value, str)
+    }
+    details = error.get("details")
+    if isinstance(details, list):
+        for detail in details:
+            if not isinstance(detail, dict):
+                continue
+            value = detail.get("errorCode")
+            if isinstance(value, str):
+                statuses.add(value)
+    return statuses
 
 
 def configured_push_dispatcher(settings: Settings) -> PushDispatcher:

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api.dart';
 import '../../core/config.dart';
 import '../../core/models.dart';
+import '../../core/push_service.dart';
 
 @immutable
 final class AuthMethods {
@@ -350,11 +351,9 @@ final class DioAuthRepository implements AuthRepository {
 
   @override
   Future<DeliveryHint> requestEmailVerification(String email) =>
-      _publicPostResult(
-        'auth/email-verification/request',
-        <String, dynamic>{'email': email},
-        DeliveryHint.fromJson,
-      );
+      _publicPostResult('auth/email-verification/request', <String, dynamic>{
+        'email': email,
+      }, DeliveryHint.fromJson);
 
   @override
   Future<void> consumeEmailVerification(String token) => _publicPost(
@@ -520,14 +519,22 @@ final class AuthState {
 }
 
 final class AuthController extends StateNotifier<AuthState> {
-  AuthController(this._repository, {bool autoRestore = true})
-    : super(const AuthState.checking()) {
+  AuthController(
+    this._repository, {
+    Future<void> Function()? syncPushRegistration,
+    Future<void> Function()? clearPushRegistration,
+    bool autoRestore = true,
+  }) : _syncPushRegistration = syncPushRegistration,
+       _clearPushRegistration = clearPushRegistration,
+       super(const AuthState.checking()) {
     if (autoRestore) {
       unawaited(restore());
     }
   }
 
   final AuthRepository _repository;
+  final Future<void> Function()? _syncPushRegistration;
+  final Future<void> Function()? _clearPushRegistration;
 
   Future<void> restore() async {
     state = const AuthState.checking();
@@ -536,6 +543,12 @@ final class AuthController extends StateNotifier<AuthState> {
       state = user == null
           ? const AuthState.unauthenticated()
           : AuthState(status: AuthStatus.authenticated, user: user);
+      if (user != null) {
+        await _runPushCallback(
+          _syncPushRegistration,
+          operation: 'startup registration',
+        );
+      }
     } on Object {
       state = const AuthState.unauthenticated();
     }
@@ -710,8 +723,35 @@ final class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    await _runPushCallback(
+      _clearPushRegistration,
+      operation: 'logout unregistration',
+    );
     await _repository.logout();
     state = const AuthState.unauthenticated();
+  }
+
+  Future<void> logoutAll() async {
+    await _runPushCallback(
+      _clearPushRegistration,
+      operation: 'logout-all unregistration',
+    );
+    await _repository.logoutAll();
+    state = const AuthState.unauthenticated();
+  }
+
+  Future<void> _runPushCallback(
+    Future<void> Function()? callback, {
+    required String operation,
+  }) async {
+    if (callback == null) {
+      return;
+    }
+    try {
+      await callback();
+    } on Object catch (error) {
+      debugPrint('Push $operation failed: $error');
+    }
   }
 
   void expire() {
@@ -801,9 +841,22 @@ final authRepositoryProvider = Provider<AuthRepository>(
   ),
 );
 
+final pushServiceProvider = StateNotifierProvider<PushService, bool>(
+  (ref) => PushService(
+    client: ApiPushRegistrationClient(ref.watch(apiClientProvider)),
+    tokenProvider: ref.watch(pushTokenProviderProvider),
+  ),
+);
+
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   (ref) {
-    final controller = AuthController(ref.watch(authRepositoryProvider));
+    final controller = AuthController(
+      ref.watch(authRepositoryProvider),
+      syncPushRegistration: () =>
+          ref.read(pushServiceProvider.notifier).syncEnabledRegistration(),
+      clearPushRegistration: () =>
+          ref.read(pushServiceProvider.notifier).clearRegistrationOnLogout(),
+    );
     ref.watch(apiClientProvider).onSessionExpired = controller.expire;
     return controller;
   },
