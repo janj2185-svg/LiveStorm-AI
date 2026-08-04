@@ -7,6 +7,7 @@ import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../design/sylora.dart';
 import '../auth/auth.dart';
+import '../platform/platform_screens.dart';
 import 'learning_repository.dart';
 
 @immutable
@@ -49,7 +50,12 @@ final class LearningScreen extends ConsumerWidget {
       trailing: SyloraPortalChip(
         label: 'Ask Aura Tutor',
         icon: Icons.auto_awesome_rounded,
-        onTap: () => context.goNamed('ai'),
+        onTap: () => openAuraConversation(
+          context,
+          ref,
+          purpose: 'learning_tutor',
+          title: 'Learning Tutor',
+        ),
       ),
     ),
     child: LumenAsyncView<_LearningSnapshot>(
@@ -70,7 +76,10 @@ final class LearningScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 14),
             SizedBox(
-              height: (MediaQuery.sizeOf(context).height * 0.72).clamp(480.0, 920.0),
+              height: (MediaQuery.sizeOf(context).height * 0.72).clamp(
+                480.0,
+                920.0,
+              ),
               child: TabBarView(
                 children: <Widget>[
                   _CourseCatalog(initialPage: snapshot.courses),

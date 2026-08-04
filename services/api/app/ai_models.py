@@ -45,6 +45,12 @@ class AIConversationMode(enum.StrEnum):
     manual = "manual"
 
 
+class AIConversationPurpose(enum.StrEnum):
+    general = "general"
+    business_copilot = "business_copilot"
+    learning_tutor = "learning_tutor"
+
+
 class AIMessageRole(enum.StrEnum):
     user = "user"
     assistant = "assistant"
@@ -169,6 +175,11 @@ class AIConversation(Base):
     mode: Mapped[AIConversationMode] = mapped_column(
         Enum(AIConversationMode, native_enum=False, length=16),
         default=AIConversationMode.copilot,
+        index=True,
+    )
+    purpose: Mapped[AIConversationPurpose] = mapped_column(
+        Enum(AIConversationPurpose, native_enum=False, length=32),
+        default=AIConversationPurpose.general,
         index=True,
     )
     locale: Mapped[str] = mapped_column(String(16), default="en")

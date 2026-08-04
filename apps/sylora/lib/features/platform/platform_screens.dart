@@ -111,6 +111,37 @@ final aiMessagesProvider = FutureProvider.autoDispose
       (ref, id) => ref.watch(aiRepositoryProvider).messages(id),
     );
 
+final aiConversationProvider = FutureProvider.autoDispose
+    .family<AiConversationModel, String>(
+      (ref, id) => ref.watch(aiRepositoryProvider).conversation(id),
+    );
+
+Future<void> openAuraConversation(
+  BuildContext context,
+  WidgetRef ref, {
+  required String purpose,
+  required String title,
+}) async {
+  try {
+    final conversation = await ref
+        .read(aiRepositoryProvider)
+        .createConversation(title: title, purpose: purpose);
+    ref.invalidate(aiProvider);
+    if (context.mounted) {
+      await context.pushNamed(
+        'ai-conversation',
+        pathParameters: <String, String>{'id': conversation.id},
+      );
+    }
+  } on Object catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+    }
+  }
+}
+
 final aiMemoryProvider = FutureProvider.autoDispose<List<NamedResource>>(
   (ref) => ref.watch(aiRepositoryProvider).memory(),
 );
@@ -256,7 +287,9 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
                   SyloraStaggeredReveal(
                     index: index++,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
+                      borderRadius: BorderRadius.circular(
+                        SyloraTokens.radiusLg,
+                      ),
                       onTap: () => context.goNamed('earnings'),
                       child: _BalanceCard(
                         label: l10n.walletCreatorEarnings,
@@ -569,33 +602,100 @@ final class _GiftRankingStrip extends StatelessWidget {
   }
 }
 
-final class _LiveGiftTray extends ConsumerWidget {
+final class _LiveGiftTray extends ConsumerStatefulWidget {
   const _LiveGiftTray({required this.sessionId, required this.hostUserId});
 
   final String sessionId;
   final String? hostUserId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LiveGiftTray> createState() => _LiveGiftTrayState();
+}
+
+final class _LiveGiftTrayState extends ConsumerState<_LiveGiftTray> {
+  String? _sendingId;
+  String? _feedback;
+  String? _lastGiftId;
+  DateTime? _lastSentAt;
+  int _comboCount = 0;
+  Timer? _feedbackTimer;
+
+  @override
+  void dispose() {
+    _feedbackTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final inventory = ref.watch(giftInventoryProvider);
     final catalog = ref.watch(giftCatalogProvider);
     return LumenSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('Send a gift', style: SyloraTokens.title(16)),
+          Row(
+            children: <Widget>[
+              Icon(
+                Icons.auto_awesome_rounded,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Send a gift', style: SyloraTokens.title(16)),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: _feedback == null
+                    ? const SizedBox.shrink()
+                    : LumenBadge(
+                        key: ValueKey<String>(_feedback!),
+                        label: _feedback!,
+                        color: LumenColors.verdigris,
+                      ),
+              ),
+            ],
+          ),
           const SizedBox(height: 6),
           Text(
-            'Gifts fly only during live communication.',
+            'Choose an owned gift or send one from the catalog to this live host.',
             style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
           ),
           const SizedBox(height: 12),
-          if (hostUserId == null)
-            const Text('Host identity unavailable for this session.')
+          if (widget.hostUserId == null)
+            _notice(
+              icon: Icons.person_off_outlined,
+              title: 'Live host unavailable',
+              message:
+                  'The session did not include a host identity, so sending stays disabled.',
+              actionLabel: 'Refresh session',
+              onAction: () =>
+                  ref.invalidate(liveSessionProvider(widget.sessionId)),
+            )
           else
             inventory.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (error, _) => Text(messageFor(error)),
+              loading: () => const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  LinearProgressIndicator(),
+                  SizedBox(height: 8),
+                  Text('Loading your gift inventory…'),
+                ],
+              ),
+              error: (error, _) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _notice(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'Inventory unavailable',
+                    message: messageFor(error),
+                    actionLabel: 'Retry inventory',
+                    onAction: () => ref.invalidate(giftInventoryProvider),
+                  ),
+                  const SizedBox(height: 10),
+                  _catalogBody(catalog, inventoryUnavailable: true),
+                ],
+              ),
               data: (page) {
                 final items = page.items;
                 if (items.isNotEmpty) {
@@ -605,44 +705,32 @@ final class _LiveGiftTray extends ConsumerWidget {
                     children: <Widget>[
                       for (final item in items.take(8))
                         FilledButton.tonalIcon(
-                          onPressed: () => _send(
-                            context,
-                            ref,
-                            hostUserId: hostUserId!,
-                            inventoryItemId: item.id,
+                          onPressed: _sendingId == null
+                              ? () => _send(
+                                  giftId: item.giftDefinitionId,
+                                  giftName: _giftName(
+                                    catalog,
+                                    item.giftDefinitionId,
+                                  ),
+                                  inventoryItemId: item.id,
+                                )
+                              : null,
+                          icon: _sendingId == item.id
+                              ? const SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.card_giftcard_rounded),
+                          label: Text(
+                            '${_giftName(catalog, item.giftDefinitionId)} ×${item.quantity}',
                           ),
-                          icon: const Icon(Icons.card_giftcard_rounded),
-                          label: Text('Inv ×${item.quantity}'),
                         ),
                     ],
                   );
                 }
-                return catalog.when(
-                  loading: () => const LinearProgressIndicator(),
-                  error: (error, _) => Text(messageFor(error)),
-                  data: (gifts) {
-                    if (gifts.items.isEmpty) {
-                      return const Text('Gift catalog is empty.');
-                    }
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: <Widget>[
-                        for (final gift in gifts.items.take(8))
-                          FilledButton.tonalIcon(
-                            onPressed: () => _send(
-                              context,
-                              ref,
-                              hostUserId: hostUserId!,
-                              giftDefinitionId: gift.id,
-                            ),
-                            icon: const Icon(Icons.auto_awesome),
-                            label: Text(gift.name),
-                          ),
-                      ],
-                    );
-                  },
-                );
+                return _catalogBody(catalog);
               },
             ),
         ],
@@ -650,33 +738,169 @@ final class _LiveGiftTray extends ConsumerWidget {
     );
   }
 
-  Future<void> _send(
-    BuildContext context,
-    WidgetRef ref, {
-    required String hostUserId,
+  Widget _catalogBody(
+    AsyncValue<CursorPage<GiftModel>> catalog, {
+    bool inventoryUnavailable = false,
+  }) {
+    return catalog.when(
+      loading: () => const LinearProgressIndicator(),
+      error: (error, _) => _notice(
+        icon: Icons.cloud_off_outlined,
+        title: 'Gifts could not load',
+        message: messageFor(error),
+        actionLabel: 'Try again',
+        onAction: () => ref.invalidate(giftCatalogProvider),
+      ),
+      data: (gifts) {
+        if (gifts.items.isEmpty) {
+          return _notice(
+            icon: Icons.redeem_outlined,
+            title: 'No gifts available yet',
+            message:
+                'The live session is ready, but the gift catalog is currently empty.',
+            actionLabel: 'Refresh gifts',
+            onAction: () => ref.invalidate(giftCatalogProvider),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            if (inventoryUnavailable)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Catalog gifts remain available.',
+                  style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
+                ),
+              ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final gift in gifts.items.take(8))
+                  FilledButton.tonalIcon(
+                    onPressed: _sendingId == null
+                        ? () => _send(
+                            giftId: gift.id,
+                            giftName: gift.name,
+                            giftDefinitionId: gift.id,
+                          )
+                        : null,
+                    icon: _sendingId == gift.id
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome_rounded),
+                    label: Text(gift.name),
+                  ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _giftName(
+    AsyncValue<CursorPage<GiftModel>> catalog,
+    String giftDefinitionId,
+  ) {
+    final items = catalog.asData?.value.items ?? const <GiftModel>[];
+    for (final gift in items) {
+      if (gift.id == giftDefinitionId) {
+        return gift.name;
+      }
+    }
+    return 'Owned gift';
+  }
+
+  Widget _notice({
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Icon(icon, color: SyloraTokens.inkSoft),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(title, style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 2),
+              Text(message),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: onAction,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(actionLabel),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _send({
+    required String giftId,
+    required String giftName,
     String? inventoryItemId,
     String? giftDefinitionId,
   }) async {
+    setState(() => _sendingId = inventoryItemId ?? giftDefinitionId);
     try {
-      await ref.read(giftRepositoryProvider).send(
-            recipientUserId: hostUserId,
+      await ref
+          .read(giftRepositoryProvider)
+          .send(
+            recipientUserId: widget.hostUserId!,
             inventoryItemId: inventoryItemId,
             giftDefinitionId: giftDefinitionId,
-            liveSessionId: sessionId,
+            liveSessionId: widget.sessionId,
             message: 'Sent during live',
           );
       ref.invalidate(giftInventoryProvider);
-      ref.invalidate(liveGiftRankingsProvider(sessionId));
-      if (context.mounted) {
+      ref.invalidate(liveGiftRankingsProvider(widget.sessionId));
+      if (mounted) {
+        final now = DateTime.now();
+        final continuesCombo =
+            _lastGiftId == giftId &&
+            _lastSentAt != null &&
+            now.difference(_lastSentAt!) <= const Duration(seconds: 15);
+        setState(() {
+          _comboCount = continuesCombo
+              ? (_comboCount >= 10 ? 10 : _comboCount + 1)
+              : 1;
+          _lastGiftId = giftId;
+          _lastSentAt = now;
+          _feedback = _comboCount > 1
+              ? '$giftName · combo ×$_comboCount'
+              : '$giftName sent';
+        });
+        _feedbackTimer?.cancel();
+        _feedbackTimer = Timer(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() => _feedback = null);
+          }
+        });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gift sent to the live host.')),
+          SnackBar(content: Text('Sent $giftName to the live host.')),
         );
       }
     } on Object catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(messageFor(error))),
-        );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _sendingId = null);
       }
     }
   }
@@ -798,211 +1022,229 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
               ),
               Expanded(
                 child: TabBarView(
-          children: <Widget>[
-            LumenAsyncView<CursorPage<GiftModel>>(
-              value: catalog,
-              onRetry: () => ref.invalidate(giftCatalogProvider),
-              data: (page) {
-                final items = page.items
-                    .where(
-                      (gift) => _tierFilter == null || gift.tier == _tierFilter,
-                    )
-                    .toList(growable: false);
-                if (page.items.isEmpty) {
-                  return LumenEmptyView(
-                    title: l10n.giftsEmpty,
-                    message: l10n.giftsEmptyMessage,
-                    actionLabel: l10n.commonRefresh,
-                    onAction: () => ref.invalidate(giftCatalogProvider),
-                    icon: Icons.card_giftcard_rounded,
-                  );
-                }
-                return Column(
                   children: <Widget>[
-                    SizedBox(
-                      height: 52,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              label: const Text('All'),
-                              selected: _tierFilter == null,
-                              onSelected: (_) =>
-                                  setState(() => _tierFilter = null),
-                            ),
-                          ),
-                          ..._officialTiers.map(
-                            (tier) => Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(tier),
-                                selected: _tierFilter == tier,
-                                onSelected: (_) =>
-                                    setState(() => _tierFilter = tier),
+                    LumenAsyncView<CursorPage<GiftModel>>(
+                      value: catalog,
+                      onRetry: () => ref.invalidate(giftCatalogProvider),
+                      data: (page) {
+                        final items = page.items
+                            .where(
+                              (gift) =>
+                                  _tierFilter == null ||
+                                  gift.tier == _tierFilter,
+                            )
+                            .toList(growable: false);
+                        if (page.items.isEmpty) {
+                          return LumenEmptyView(
+                            title: l10n.giftsEmpty,
+                            message: l10n.giftsEmptyMessage,
+                            actionLabel: l10n.commonRefresh,
+                            onAction: () => ref.invalidate(giftCatalogProvider),
+                            icon: Icons.card_giftcard_rounded,
+                          );
+                        }
+                        return Column(
+                          children: <Widget>[
+                            SizedBox(
+                              height: 52,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  12,
+                                  20,
+                                  0,
+                                ),
+                                children: <Widget>[
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: FilterChip(
+                                      label: const Text('All'),
+                                      selected: _tierFilter == null,
+                                      onSelected: (_) =>
+                                          setState(() => _tierFilter = null),
+                                    ),
+                                  ),
+                                  ..._officialTiers.map(
+                                    (tier) => Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: FilterChip(
+                                        label: Text(tier),
+                                        selected: _tierFilter == tier,
+                                        onSelected: (_) =>
+                                            setState(() => _tierFilter = tier),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _GiftRankingStrip(
-                      value: rankings,
-                      title: 'Today’s gift leaders',
-                    ),
-                    Expanded(
-                      child: items.isEmpty
-                          ? LumenEmptyView(
-                              title: 'No gifts in this tier',
-                              message:
-                                  'Try another rarity filter (rare → ultra_premium / Divine).',
-                              actionLabel: 'Clear filter',
-                              onAction: () =>
-                                  setState(() => _tierFilter = null),
-                              icon: Icons.filter_alt_off_rounded,
-                            )
-                          : GridView.builder(
-                              padding: const EdgeInsets.all(20),
-                              gridDelegate:
-                                  const SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent: 360,
-                                    mainAxisExtent: 230,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
-                                  ),
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                final gift = items[index];
-                                return InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () => context.pushNamed(
-                                    'gift-detail',
-                                    pathParameters: <String, String>{
-                                      'slug': gift.slug,
-                                    },
-                                  ),
-                                  child: LumenSurface(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Icon(
-                                          Icons.card_giftcard_rounded,
-                                          size: 36,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          gift.name,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.headlineSmall,
-                                        ),
-                                        Text(
-                                          gift.description,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const Spacer(),
-                                        Row(
-                                          children: <Widget>[
-                                            LumenBadge(
-                                              label: gift.tier,
-                                              color: LumenColors.bloom,
+                            _GiftRankingStrip(
+                              value: rankings,
+                              title: 'Today’s gift leaders',
+                            ),
+                            Expanded(
+                              child: items.isEmpty
+                                  ? LumenEmptyView(
+                                      title: 'No gifts in this tier',
+                                      message:
+                                          'Try another rarity filter (rare → ultra_premium / Divine).',
+                                      actionLabel: 'Clear filter',
+                                      onAction: () =>
+                                          setState(() => _tierFilter = null),
+                                      icon: Icons.filter_alt_off_rounded,
+                                    )
+                                  : GridView.builder(
+                                      padding: const EdgeInsets.all(20),
+                                      gridDelegate:
+                                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                                            maxCrossAxisExtent: 360,
+                                            mainAxisExtent: 230,
+                                            crossAxisSpacing: 16,
+                                            mainAxisSpacing: 16,
+                                          ),
+                                      itemCount: items.length,
+                                      itemBuilder: (context, index) {
+                                        final gift = items[index];
+                                        return InkWell(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          onTap: () => context.pushNamed(
+                                            'gift-detail',
+                                            pathParameters: <String, String>{
+                                              'slug': gift.slug,
+                                            },
+                                          ),
+                                          child: LumenSurface(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Icon(
+                                                  Icons.card_giftcard_rounded,
+                                                  size: 36,
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.secondary,
+                                                ),
+                                                const SizedBox(height: 12),
+                                                Text(
+                                                  gift.name,
+                                                  style: Theme.of(
+                                                    context,
+                                                  ).textTheme.headlineSmall,
+                                                ),
+                                                Text(
+                                                  gift.description,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                const Spacer(),
+                                                Row(
+                                                  children: <Widget>[
+                                                    LumenBadge(
+                                                      label: gift.tier,
+                                                      color: LumenColors.bloom,
+                                                    ),
+                                                    const Spacer(),
+                                                    Text(
+                                                      '${gift.priceMinor} LUMEN',
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
                                             ),
-                                            const Spacer(),
-                                            Text('${gift.priceMinor} LUMEN'),
-                                          ],
-                                        ),
-                                      ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    LumenAsyncView<CursorPage<InventoryItemModel>>(
+                      value: inventory,
+                      onRetry: () => ref.invalidate(giftInventoryProvider),
+                      data: (page) => page.items.isEmpty
+                          ? LumenEmptyView(
+                              title: 'Your inventory is empty',
+                              message:
+                                  'No gift inventory items were returned. Browse the catalog to purchase one.',
+                              actionLabel: 'Refresh inventory',
+                              onAction: () =>
+                                  ref.invalidate(giftInventoryProvider),
+                              icon: Icons.inventory_2_outlined,
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(20),
+                              itemCount: page.items.length,
+                              itemBuilder: (context, index) {
+                                final item = page.items[index];
+                                return Card(
+                                  child: ListTile(
+                                    leading: const Icon(
+                                      Icons.card_giftcard_rounded,
+                                    ),
+                                    title: Text(
+                                      'Gift ${item.giftDefinitionId.substring(0, 8)}',
+                                    ),
+                                    subtitle: Text(
+                                      '${item.quantity} available • ${item.unitPriceMinor} LUMEN each\nReady to send during Live / Conference / Voice Rooms',
+                                    ),
+                                    isThreeLine: true,
+                                    trailing: const Chip(
+                                      label: Text('In inventory'),
                                     ),
                                   ),
                                 );
                               },
                             ),
                     ),
-                  ],
-                );
-              },
-            ),
-            LumenAsyncView<CursorPage<InventoryItemModel>>(
-              value: inventory,
-              onRetry: () => ref.invalidate(giftInventoryProvider),
-              data: (page) => page.items.isEmpty
-                  ? LumenEmptyView(
-                      title: 'Your inventory is empty',
-                      message:
-                          'No gift inventory items were returned. Browse the catalog to purchase one.',
-                      actionLabel: 'Refresh inventory',
-                      onAction: () => ref.invalidate(giftInventoryProvider),
-                      icon: Icons.inventory_2_outlined,
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: page.items.length,
-                      itemBuilder: (context, index) {
-                        final item = page.items[index];
-                        return Card(
-                          child: ListTile(
-                            leading: const Icon(Icons.card_giftcard_rounded),
-                            title: Text(
-                              'Gift ${item.giftDefinitionId.substring(0, 8)}',
-                            ),
-                            subtitle: Text(
-                              '${item.quantity} available • ${item.unitPriceMinor} LUMEN each\nReady to send during Live / Conference / Voice Rooms',
-                            ),
-                            isThreeLine: true,
-                            trailing: const Chip(label: Text('In inventory')),
+                    Column(
+                      children: <Widget>[
+                        if (!realtimeSupported)
+                          MaterialBanner(
+                            content: Text(realtimeUnsupportedReason!),
+                            actions: const <Widget>[SizedBox.shrink()],
                           ),
-                        );
-                      },
-                    ),
-            ),
-            Column(
-              children: <Widget>[
-                if (!realtimeSupported)
-                  MaterialBanner(
-                    content: Text(realtimeUnsupportedReason!),
-                    actions: const <Widget>[SizedBox.shrink()],
-                  ),
-                Expanded(
-                  child: LumenAsyncView<CursorPage<GiftEventModel>>(
-                    value: events,
-                    onRetry: () => ref.invalidate(giftEventsProvider),
-                    data: (page) => page.items.isEmpty
-                        ? LumenEmptyView(
-                            title: 'No delivered gift events',
-                            message:
-                                'The event history API returned no events. SYLORA never synthesizes gift deliveries.',
-                            actionLabel: 'Refresh events',
-                            onAction: () => ref.invalidate(giftEventsProvider),
-                            icon: Icons.bolt_outlined,
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(20),
-                            itemCount: page.items.length,
-                            itemBuilder: (context, index) {
-                              final event = page.items[index];
-                              return ListTile(
-                                leading: const Icon(Icons.bolt_rounded),
-                                title: Text(event.event),
-                                subtitle: Text(
-                                  DateFormat.yMMMd().add_jm().format(
-                                    event.occurredAt.toLocal(),
+                        Expanded(
+                          child: LumenAsyncView<CursorPage<GiftEventModel>>(
+                            value: events,
+                            onRetry: () => ref.invalidate(giftEventsProvider),
+                            data: (page) => page.items.isEmpty
+                                ? LumenEmptyView(
+                                    title: 'No delivered gift events',
+                                    message:
+                                        'The event history API returned no events. SYLORA never synthesizes gift deliveries.',
+                                    actionLabel: 'Refresh events',
+                                    onAction: () =>
+                                        ref.invalidate(giftEventsProvider),
+                                    icon: Icons.bolt_outlined,
+                                  )
+                                : ListView.builder(
+                                    padding: const EdgeInsets.all(20),
+                                    itemCount: page.items.length,
+                                    itemBuilder: (context, index) {
+                                      final event = page.items[index];
+                                      return ListTile(
+                                        leading: const Icon(Icons.bolt_rounded),
+                                        title: Text(event.event),
+                                        subtitle: Text(
+                                          DateFormat.yMMMd().add_jm().format(
+                                            event.occurredAt.toLocal(),
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
-                                ),
-                              );
-                            },
                           ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1011,7 +1253,6 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
       ),
     );
   }
-
 
   static Future<void> _showGiftPreferences(
     BuildContext context,
@@ -1320,7 +1561,8 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
     final l10n = AppLocalizations.of(context);
     final mood = _presence?['mood_label'] as String? ?? l10n.aiOnline;
     final personality =
-        _presence?['personality'] as String? ?? 'Warm · Curious · Precise · Alive';
+        _presence?['personality'] as String? ??
+        'Warm · Curious · Precise · Alive';
     return LumenPage(
       title: l10n.aiTitle,
       subtitle: l10n.aiSubtitle,
@@ -1496,7 +1738,8 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
-                                    '${conversation.mode} • ${conversation.locale}',
+                                    '${_aiPurposeLabel(conversation.purpose)} • '
+                                    '${conversation.locale}',
                                     style: SyloraTokens.body(
                                       13,
                                       color: SyloraTokens.inkMute,
@@ -1739,13 +1982,22 @@ final class _AiConversationScreenState
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(aiMessagesProvider(widget.conversationId));
+    final conversation = ref.watch(
+      aiConversationProvider(widget.conversationId),
+    );
+    final purpose = conversation.asData?.value.purpose ?? 'general';
     final conversationHeight = (MediaQuery.sizeOf(context).height - 260).clamp(
       420.0,
       820.0,
     );
     return LumenPage(
-      title: 'Aura',
-      subtitle: 'Пиши природно — я відповім як живий співрозмовник.',
+      title: _aiPurposeTitle(purpose),
+      subtitle: _aiPurposeSubtitle(purpose),
+      header: SyloraUniverseHero(
+        eyebrow: _aiPurposeLabel(purpose).toUpperCase(),
+        title: _aiPurposeTitle(purpose),
+        body: _aiPurposeSubtitle(purpose),
+      ),
       showAuraDock: true,
       auraEmotion: _sending ? AuraEmotion.thinking : AuraEmotion.listening,
       auraLabel: _sending ? 'Думаю…' : 'Слухаю',
@@ -1876,6 +2128,26 @@ final class _AiConversationScreenState
     }
   }
 }
+
+String _aiPurposeLabel(String purpose) => switch (purpose) {
+  'business_copilot' => 'Business Copilot',
+  'learning_tutor' => 'Learning Tutor',
+  _ => 'Copilot',
+};
+
+String _aiPurposeTitle(String purpose) => switch (purpose) {
+  'business_copilot' => 'Aura Business',
+  'learning_tutor' => 'Aura Tutor',
+  _ => 'Aura',
+};
+
+String _aiPurposeSubtitle(String purpose) => switch (purpose) {
+  'business_copilot' =>
+    'A decision-focused copilot for planning, operations, and workspace questions.',
+  'learning_tutor' =>
+    'A patient tutor for explanations, examples, and step-by-step learning.',
+  _ => 'Пиши природно — я відповім як живий співрозмовник.',
+};
 
 final class _AuraTypingBubble extends StatefulWidget {
   const _AuraTypingBubble();

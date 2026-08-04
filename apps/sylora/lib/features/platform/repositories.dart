@@ -136,6 +136,13 @@ abstract interface class SocialRepository {
   Future<void> block(String handle, bool value);
   Future<void> mute(String handle, bool value);
   Future<SocialSearchBundle> search(String query);
+  Future<List<NamedResource>> communities({String? query});
+  Future<NamedResource> createCommunity({
+    required String slug,
+    required String name,
+    String? description,
+    String visibility = 'public',
+  });
   Future<NamedResource> community(String slug);
   Future<String> joinCommunity(String slug);
   Future<void> leaveCommunity(String slug);
@@ -419,6 +426,46 @@ final class DioSocialRepository implements SocialRepository {
             ),
           )
           .toList(growable: false),
+    );
+  }
+
+  @override
+  Future<List<NamedResource>> communities({String? query}) async {
+    final response = await _client.request(
+      'social/communities',
+      queryParameters: <String, dynamic>{'q': query, 'limit': 100},
+    );
+    final page = requireObject(response.data, 'communities');
+    return requireList(page, 'items')
+        .map(
+          (value) => NamedResource.fromJson(
+            requireObject(value, 'community'),
+            statusKey: 'viewer_membership_status',
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<NamedResource> createCommunity({
+    required String slug,
+    required String name,
+    String? description,
+    String visibility = 'public',
+  }) async {
+    final response = await _client.request(
+      'social/communities',
+      method: 'POST',
+      data: <String, dynamic>{
+        'slug': slug,
+        'name': name,
+        'description': description,
+        'visibility': visibility,
+      },
+    );
+    return NamedResource.fromJson(
+      requireObject(response.data, 'community'),
+      statusKey: 'viewer_membership_status',
     );
   }
 
@@ -1138,7 +1185,11 @@ abstract interface class AiRepository {
   Future<AiSettingsModel> updateSettings(JsonObject patch);
   Future<AiProviderStatus> providerStatus();
   Future<CursorPage<AiConversationModel>> conversations({String? cursor});
-  Future<AiConversationModel> createConversation({String? title});
+  Future<AiConversationModel> conversation(String id);
+  Future<AiConversationModel> createConversation({
+    String? title,
+    String purpose = 'general',
+  });
   Future<CursorPage<AiMessageModel>> messages(
     String conversationId, {
     String? cursor,
@@ -1161,6 +1212,12 @@ abstract interface class AiRepository {
     String targetLanguage,
   );
   Future<JsonObject> moderate(String text);
+  Future<JsonObject> transcribeAudio(
+    Uint8List audio, {
+    required String filename,
+    required String contentType,
+    String? language,
+  });
   Future<CursorPage<NamedResource>> jobs({String? cursor});
   Future<JsonObject> createJob(JsonObject typedRequest);
   Future<JsonObject> auraPresence();
@@ -1214,11 +1271,26 @@ final class DioAiRepository implements AiRepository {
   }
 
   @override
-  Future<AiConversationModel> createConversation({String? title}) async {
+  Future<AiConversationModel> conversation(String id) async {
+    final response = await _client.request('ai/conversations/$id');
+    return AiConversationModel.fromJson(
+      requireObject(response.data, 'AI conversation'),
+    );
+  }
+
+  @override
+  Future<AiConversationModel> createConversation({
+    String? title,
+    String purpose = 'general',
+  }) async {
     final response = await _client.request(
       'ai/conversations',
       method: 'POST',
-      data: <String, dynamic>{'title': title, 'mode': 'copilot'},
+      data: <String, dynamic>{
+        'title': title,
+        'mode': 'copilot',
+        'purpose': purpose,
+      },
     );
     return AiConversationModel.fromJson(
       requireObject(response.data, 'AI conversation'),
@@ -1346,6 +1418,31 @@ final class DioAiRepository implements AiRepository {
       data: <String, dynamic>{'text': text},
     );
     return requireObject(response.data, 'moderation result');
+  }
+
+  @override
+  Future<JsonObject> transcribeAudio(
+    Uint8List audio, {
+    required String filename,
+    required String contentType,
+    String? language,
+  }) async {
+    if (audio.isEmpty) {
+      throw ArgumentError.value(audio, 'audio', 'Audio clip cannot be empty');
+    }
+    final response = await _client.request(
+      'ai/transcriptions',
+      method: 'POST',
+      data: FormData.fromMap(<String, dynamic>{
+        'audio': MultipartFile.fromBytes(
+          audio,
+          filename: filename,
+          contentType: DioMediaType.parse(contentType),
+        ),
+        'language': ?language,
+      }),
+    );
+    return requireObject(response.data, 'transcription');
   }
 
   @override

@@ -209,8 +209,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return NoTransitionPage<void>(
             key: state.pageKey,
             child: AuthScreen(
-              initialCreateAccount:
-                  state.uri.queryParameters['create'] == '1',
+              initialCreateAccount: state.uri.queryParameters['create'] == '1',
             ),
           );
         },
@@ -297,6 +296,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'friends',
             pageBuilder: (context, state) =>
                 _page(state, const FriendsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/communities',
+            name: 'communities',
+            pageBuilder: (context, state) =>
+                _page(state, const CommunitiesScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/messages',

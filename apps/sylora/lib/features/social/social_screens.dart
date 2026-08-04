@@ -169,9 +169,7 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           icon: const Icon(Icons.edit_outlined),
         ),
       ],
-      header: _HomeUniverseHero(
-        onCompose: () => _showComposer(context, ref),
-      ),
+      header: _HomeUniverseHero(onCompose: () => _showComposer(context, ref)),
       child: LumenAsyncView<CursorPage<PostModel>>(
         value: feed,
         onRetry: () => ref.invalidate(feedProvider),
@@ -457,7 +455,10 @@ final class _HomeUniverseHero extends StatelessWidget {
                   ),
                   child: Row(
                     children: <Widget>[
-                      const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+                      const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -549,11 +550,18 @@ final class _HomePortalChipState extends State<_HomePortalChip> {
                       : Colors.white.withValues(alpha: 0.8),
                 ),
                 boxShadow: _hover
-                    ? SyloraTokens.glow(SyloraTokens.ion, blur: 18, opacity: 0.2)
+                    ? SyloraTokens.glow(
+                        SyloraTokens.ion,
+                        blur: 18,
+                        opacity: 0.2,
+                      )
                     : null,
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -663,7 +671,10 @@ final class PostCard extends ConsumerWidget {
                       DateFormat.yMMMd().add_jm().format(
                         post.createdAt.toLocal(),
                       ),
-                      style: SyloraTokens.body(12.5, color: SyloraTokens.inkMute),
+                      style: SyloraTokens.body(
+                        12.5,
+                        color: SyloraTokens.inkMute,
+                      ),
                     ),
                   ],
                 ),
@@ -883,7 +894,11 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
                     border: InputBorder.none,
                     isDense: true,
                   ),
-                  style: SyloraTokens.body(15, color: SyloraTokens.ink, weight: FontWeight.w500),
+                  style: SyloraTokens.body(
+                    15,
+                    color: SyloraTokens.ink,
+                    weight: FontWeight.w500,
+                  ),
                 ),
               ),
               IconButton(
@@ -956,10 +971,7 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     if (data.users.isNotEmpty) ...<Widget>[
-                      Text(
-                        l10n.searchPeople,
-                        style: SyloraTokens.title(20),
-                      ),
+                      Text(l10n.searchPeople, style: SyloraTokens.title(20)),
                       const SizedBox(height: 12),
                       for (final user in data.users)
                         Padding(
@@ -2044,6 +2056,346 @@ String _tabLabel(BuildContext context, _FriendsTab tab) {
   };
 }
 
+final class CommunitiesScreen extends ConsumerStatefulWidget {
+  const CommunitiesScreen({super.key});
+
+  @override
+  ConsumerState<CommunitiesScreen> createState() => _CommunitiesScreenState();
+}
+
+final class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
+  final _search = TextEditingController();
+  late Future<List<NamedResource>> _future = _load();
+
+  Future<List<NamedResource>> _load() {
+    final query = _search.text.trim();
+    return ref
+        .read(socialRepositoryProvider)
+        .communities(query: query.length >= 2 ? query : null);
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => LumenPage(
+    title: 'Communities',
+    subtitle:
+        'Find people around shared interests or start a space of your own.',
+    intensity: 0.92,
+    showAuraPresence: true,
+    auraPresencePreset: SyloraAuraContextPreset.feed,
+    actions: <Widget>[
+      IconButton(
+        tooltip: 'Create community',
+        onPressed: _createCommunity,
+        icon: const Icon(Icons.group_add_outlined),
+      ),
+    ],
+    header: SyloraUniverseHero(
+      eyebrow: 'COMMUNITIES',
+      title: 'Find your people',
+      body:
+          'Browse public spaces and communities you belong to, then continue into their existing channels.',
+      trailing: SyloraPortalChip(
+        label: 'Create community',
+        icon: Icons.add_rounded,
+        onTap: _createCommunity,
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        LumenSurface(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          child: Row(
+            children: <Widget>[
+              const Icon(Icons.search_rounded),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _search,
+                  textInputAction: TextInputAction.search,
+                  decoration: const InputDecoration(
+                    hintText: 'Search communities',
+                    border: InputBorder.none,
+                  ),
+                  onSubmitted: (_) => _searchCommunities(),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Search',
+                onPressed: _searchCommunities,
+                icon: const Icon(Icons.arrow_forward_rounded),
+              ),
+              if (_search.text.isNotEmpty)
+                IconButton(
+                  tooltip: 'Clear search',
+                  onPressed: _clearSearch,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        FutureBuilder<List<NamedResource>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return LumenErrorView(error: snapshot.error!, onRetry: _refresh);
+            }
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final communities = snapshot.data!;
+            if (communities.isEmpty) {
+              return LumenEmptyView(
+                title: _search.text.trim().isEmpty
+                    ? 'No communities yet'
+                    : 'No matching communities',
+                message: _search.text.trim().isEmpty
+                    ? 'Create the first community to begin gathering people.'
+                    : 'Try another name, description, or slug.',
+                actionLabel: _search.text.trim().isEmpty
+                    ? 'Create community'
+                    : 'Clear search',
+                onAction: _search.text.trim().isEmpty
+                    ? _createCommunity
+                    : _clearSearch,
+                icon: Icons.groups_2_outlined,
+              );
+            }
+            return Column(
+              children: <Widget>[
+                for (var index = 0; index < communities.length; index++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: SyloraStaggeredReveal(
+                      index: index,
+                      child: _CommunityBrowseCard(
+                        community: communities[index],
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    ),
+  );
+
+  void _searchCommunities() {
+    final query = _search.text.trim();
+    if (query.isNotEmpty && query.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter at least two characters.')),
+      );
+      return;
+    }
+    _refresh();
+  }
+
+  void _clearSearch() {
+    _search.clear();
+    _refresh();
+  }
+
+  void _refresh() => setState(() => _future = _load());
+
+  Future<void> _createCommunity() async {
+    final form = GlobalKey<FormState>();
+    final name = TextEditingController();
+    final slug = TextEditingController();
+    final description = TextEditingController();
+    var visibility = 'public';
+    final created = await showDialog<NamedResource>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Create community'),
+          content: SizedBox(
+            width: 520,
+            child: Form(
+              key: form,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextFormField(
+                      controller: name,
+                      maxLength: 100,
+                      decoration: const InputDecoration(labelText: 'Name'),
+                      validator: (value) => value?.trim().isEmpty ?? true
+                          ? 'Enter a community name.'
+                          : null,
+                    ),
+                    TextFormField(
+                      controller: slug,
+                      maxLength: 64,
+                      decoration: const InputDecoration(
+                        labelText: 'Slug',
+                        helperText: 'Lowercase letters, numbers, and hyphens.',
+                      ),
+                      validator: (value) =>
+                          RegExp(
+                                r'^[a-z0-9]+(?:-[a-z0-9]+)*$',
+                              ).hasMatch(value?.trim() ?? '') &&
+                              (value?.trim().length ?? 0) >= 3
+                          ? null
+                          : 'Use at least 3 lowercase URL-safe characters.',
+                    ),
+                    TextFormField(
+                      controller: description,
+                      maxLength: 4000,
+                      minLines: 2,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        labelText: 'Description (optional)',
+                      ),
+                    ),
+                    DropdownButtonFormField<String>(
+                      initialValue: visibility,
+                      decoration: const InputDecoration(
+                        labelText: 'Visibility',
+                      ),
+                      items: const <DropdownMenuItem<String>>[
+                        DropdownMenuItem(
+                          value: 'public',
+                          child: Text('Public'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'private',
+                          child: Text('Private — requests require approval'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'invite_only',
+                          child: Text('Invite only'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() => visibility = value);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!form.currentState!.validate()) {
+                  return;
+                }
+                try {
+                  final community = await ref
+                      .read(socialRepositoryProvider)
+                      .createCommunity(
+                        slug: slug.text.trim(),
+                        name: name.text.trim(),
+                        description: description.text.trim().isEmpty
+                            ? null
+                            : description.text.trim(),
+                        visibility: visibility,
+                      );
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext, community);
+                  }
+                } on Object catch (error) {
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(
+                      dialogContext,
+                    ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+                  }
+                }
+              },
+              child: const Text('Create'),
+            ),
+          ],
+        ),
+      ),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    name.dispose();
+    slug.dispose();
+    description.dispose();
+    if (created != null && mounted) {
+      _refresh();
+      await context.pushNamed(
+        'community',
+        pathParameters: <String, String>{
+          'slug': requireString(created.raw, 'slug'),
+        },
+      );
+    }
+  }
+}
+
+final class _CommunityBrowseCard extends StatelessWidget {
+  const _CommunityBrowseCard({required this.community});
+
+  final NamedResource community;
+
+  @override
+  Widget build(BuildContext context) {
+    final visibility = requireString(community.raw, 'visibility');
+    final slug = requireString(community.raw, 'slug');
+    return SyloraGlassTile(
+      onTap: () => context.pushNamed(
+        'community',
+        pathParameters: <String, String>{'slug': slug},
+      ),
+      child: Row(
+        children: <Widget>[
+          const SyloraPulseGlow(
+            child: Icon(
+              Icons.groups_2_rounded,
+              color: SyloraTokens.violet,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(community.label, style: SyloraTokens.title(17)),
+                const SizedBox(height: 3),
+                Text(
+                  community.description?.trim().isNotEmpty == true
+                      ? community.description!
+                      : '/$slug',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          LumenBadge(
+            label: community.status == 'active'
+                ? 'Joined'
+                : visibility.replaceAll('_', ' '),
+          ),
+          const SizedBox(width: 6),
+          const Icon(Icons.chevron_right_rounded),
+        ],
+      ),
+    );
+  }
+}
+
 final class CommunityScreen extends ConsumerWidget {
   const CommunityScreen({required this.slug, super.key});
 
@@ -2210,9 +2562,9 @@ final class PublicProfileScreen extends ConsumerWidget {
                         } else {
                           final status = await repository.follow(handle);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(status)),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(status)));
                           }
                         }
                         ref.invalidate(publicProfileProvider(handle));
@@ -2586,7 +2938,9 @@ final class _ConversationRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final isRequest = conversation.state == 'request';
-    final stamp = DateFormat.MMMd().add_Hm().format(conversation.updatedAt.toLocal());
+    final stamp = DateFormat.MMMd().add_Hm().format(
+      conversation.updatedAt.toLocal(),
+    );
     return SyloraGlassTile(
       onTap: () => context.pushNamed(
         'conversation',
@@ -2697,10 +3051,9 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     required String title,
   }) async {
     try {
-      final room = await ref.read(conferenceRepositoryProvider).create(
-            title: title,
-            purpose: purpose,
-          );
+      final room = await ref
+          .read(conferenceRepositoryProvider)
+          .create(title: title, purpose: purpose);
       await ref.read(conferenceRepositoryProvider).join(room.id);
       if (!context.mounted) {
         return;
@@ -2711,9 +3064,9 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       );
     } on Object catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(messageFor(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
       }
     }
   }
@@ -2739,7 +3092,8 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           actions: <Widget>[
             IconButton(
               tooltip: 'Voice call',
-              onPressed: () => _startCall(context, purpose: 'social', title: 'Voice call'),
+              onPressed: () =>
+                  _startCall(context, purpose: 'social', title: 'Voice call'),
               icon: const Icon(Icons.call_rounded),
             ),
             IconButton(
@@ -2750,8 +3104,11 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
             ),
             IconButton(
               tooltip: 'Conference',
-              onPressed: () =>
-                  _startCall(context, purpose: 'social', title: 'Group conference'),
+              onPressed: () => _startCall(
+                context,
+                purpose: 'social',
+                title: 'Group conference',
+              ),
               icon: const Icon(Icons.groups_rounded),
             ),
           ],

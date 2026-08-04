@@ -1053,6 +1053,55 @@ async def create_community(
     return await community_response(db, community, auth.user.id)
 
 
+@router.get("/communities", response_model=CommunitySearchResponse)
+async def list_communities(
+    q: str | None = Query(default=None, min_length=2, max_length=100),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=100),
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> CommunitySearchResponse:
+    statement = select(Community).where(
+        Community.deleted_at.is_(None),
+        or_(
+            Community.visibility == CommunityVisibility.public,
+            exists(
+                select(CommunityMembership.id).where(
+                    CommunityMembership.community_id == Community.id,
+                    CommunityMembership.user_id == auth.user.id,
+                    CommunityMembership.status == MembershipStatus.active,
+                )
+            ),
+        ),
+    )
+    if q is not None:
+        pattern = f"%{normalized_search_query(q)}%"
+        statement = statement.where(
+            or_(
+                Community.slug.ilike(pattern),
+                Community.name.ilike(pattern),
+                Community.description.ilike(pattern),
+            )
+        )
+    communities = list(
+        (
+            await db.scalars(
+                statement.order_by(Community.name.asc(), Community.id.asc())
+                .offset((page - 1) * limit)
+                .limit(limit + 1)
+            )
+        ).all()
+    )
+    return CommunitySearchResponse(
+        items=[
+            await community_response(db, community, auth.user.id)
+            for community in communities[:limit]
+        ],
+        page=page,
+        has_more=len(communities) > limit,
+    )
+
+
 @router.get("/communities/{slug}", response_model=CommunityResponse)
 async def get_community(
     slug: str,

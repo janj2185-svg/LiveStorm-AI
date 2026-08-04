@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:sylora/core/api.dart';
 import 'package:sylora/core/models.dart';
 import 'package:sylora/features/auth/auth.dart';
@@ -222,11 +224,24 @@ final class FakeAiRepository implements AiRepository {
   };
 
   @override
-  Future<AiConversationModel> createConversation({String? title}) async =>
-      const AiConversationModel(
-        id: 'conversation-id',
+  Future<AiConversationModel> createConversation({
+    String? title,
+    String purpose = 'general',
+  }) async => AiConversationModel(
+    id: 'conversation-id',
+    title: title,
+    mode: 'copilot',
+    purpose: purpose,
+    locale: 'en',
+  );
+
+  @override
+  Future<AiConversationModel> conversation(String id) async =>
+      AiConversationModel(
+        id: id,
         title: null,
         mode: 'copilot',
+        purpose: 'general',
         locale: 'en',
       );
 
@@ -296,4 +311,15 @@ final class FakeAiRepository implements AiRepository {
     String sourceLanguage,
     String targetLanguage,
   ) async => <String, dynamic>{};
+
+  @override
+  Future<JsonObject> transcribeAudio(
+    Uint8List audio, {
+    required String filename,
+    required String contentType,
+    String? language,
+  }) async => <String, dynamic>{'text': 'Captioned test audio.'};
+
+  @override
+  Future<JsonObject> auraPresence() async => <String, dynamic>{};
 }

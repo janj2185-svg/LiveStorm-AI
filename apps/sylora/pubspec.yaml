@@ -50,6 +50,7 @@ dependencies:
   url_launcher: ^6.3.2
   just_audio: ^0.10.4
   cupertino_icons: ^1.0.9
+  flutter_webrtc: ^1.6.0
 
 dev_dependencies:
   flutter_test:

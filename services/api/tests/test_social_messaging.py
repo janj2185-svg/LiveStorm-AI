@@ -318,6 +318,32 @@ async def test_community_private_join_roles_and_last_owner(api) -> None:
         },
     )
     assert created.status_code == 201, created.text
+    public = await api.client.post(
+        "/v1/social/communities",
+        headers=owner_headers,
+        json={
+            "slug": "public-builders",
+            "name": "Public Builders",
+            "description": "Build in public together",
+            "visibility": "public",
+        },
+    )
+    assert public.status_code == 201, public.text
+    owner_browse = await api.client.get(
+        "/v1/social/communities", headers=owner_headers, params={"limit": 1}
+    )
+    assert owner_browse.status_code == 200, owner_browse.text
+    assert owner_browse.json()["has_more"] is True
+    member_browse = await api.client.get("/v1/social/communities", headers=member_headers)
+    assert member_browse.status_code == 200, member_browse.text
+    assert [item["slug"] for item in member_browse.json()["items"]] == ["public-builders"]
+    searched = await api.client.get(
+        "/v1/social/communities",
+        headers=member_headers,
+        params={"q": "builders"},
+    )
+    assert searched.status_code == 200, searched.text
+    assert searched.json()["items"][0]["name"] == "Public Builders"
     hidden = await api.client.get("/v1/social/communities/private-space", headers=member_headers)
     assert hidden.status_code == 404
     requested = await api.client.post(

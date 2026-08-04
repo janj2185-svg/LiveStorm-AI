@@ -8,6 +8,7 @@ import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../design/sylora.dart';
 import '../auth/auth.dart';
+import '../platform/platform_screens.dart';
 import 'business_repository.dart';
 
 final _workspacesProvider = FutureProvider.autoDispose<List<Workspace>>(
@@ -32,7 +33,12 @@ final class BusinessScreen extends ConsumerWidget {
       trailing: SyloraPortalChip(
         label: 'Aura Business',
         icon: Icons.auto_awesome_rounded,
-        onTap: () => context.goNamed('ai'),
+        onTap: () => openAuraConversation(
+          context,
+          ref,
+          purpose: 'business_copilot',
+          title: 'Business Copilot',
+        ),
       ),
     ),
     actions: <Widget>[

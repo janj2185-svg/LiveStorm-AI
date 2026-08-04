@@ -1,9 +1,11 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api.dart';
+import '../../core/models.dart';
 import '../../design/sylora.dart';
 import '../auth/auth.dart';
 import '../creator_studio/media_publisher.dart';
@@ -279,6 +281,9 @@ final class _ConferenceRoomScreenState
   bool _screenShare = false;
   bool _aiTranslation = false;
   String? _translationCaption;
+  bool _captionsRecording = false;
+  bool _captionsBusy = false;
+  String? _captionText;
 
   @override
   void initState() {
@@ -300,7 +305,7 @@ final class _ConferenceRoomScreenState
     return SyloraModuleScaffold(
       title: 'Conference room',
       subtitle:
-          'Join with camera preview when web media is available; use OBS or a companion device elsewhere.',
+          'Join with native or web camera preview and publish through the configured media plane.',
       showAuraDock: true,
       auraEmotion: AuraEmotion.focused,
       child: roomValue.when(
@@ -324,18 +329,20 @@ final class _ConferenceRoomScreenState
               cameraOff: _cameraOff,
               screenShare: _screenShare,
               aiTranslation: _aiTranslation,
-              onMute: () => setState(() => _muted = !_muted),
-              onCamera: () => setState(() => _cameraOff = !_cameraOff),
-              onScreenShare: () => setState(() => _screenShare = !_screenShare),
+              captionsRecording: _captionsRecording,
+              onMute: _toggleMute,
+              onCamera: _toggleCamera,
+              onScreenShare: _media.screenShareSupported
+                  ? _toggleScreenShare
+                  : null,
+              onCaptions: _captionsBusy ? null : _toggleCaptions,
               onTranslation: () async {
                 setState(() => _aiTranslation = !_aiTranslation);
                 if (_aiTranslation) {
                   try {
-                    final result = await ref.read(aiRepositoryProvider).translate(
-                          'Welcome to this SYLORA call.',
-                          'en',
-                          'uk',
-                        );
+                    final result = await ref
+                        .read(aiRepositoryProvider)
+                        .translate('Welcome to this SYLORA call.', 'en', 'uk');
                     setState(
                       () => _translationCaption =
                           (result['translated_text'] as String?) ??
@@ -357,6 +364,17 @@ final class _ConferenceRoomScreenState
                 padding: const EdgeInsets.all(12),
                 child: Text(
                   'AI · $_translationCaption',
+                  style: SyloraTokens.body(13),
+                ),
+              ),
+            ],
+            if (_captionText != null) ...<Widget>[
+              const SizedBox(height: 8),
+              SyloraGlass(
+                radius: SyloraTokens.radiusMd,
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  'Captions · $_captionText',
                   style: SyloraTokens.body(13),
                 ),
               ),
@@ -431,7 +449,7 @@ final class _ConferenceRoomScreenState
     if (!_media.supported) {
       setState(() {
         _status =
-            'Camera preview is available on SYLORA web. Use OBS or a companion device here.';
+            'Camera preview is unavailable on this platform. Use OBS or a companion device.';
       });
       return;
     }
@@ -463,6 +481,119 @@ final class _ConferenceRoomScreenState
     } finally {
       if (mounted) {
         setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _toggleMute() async {
+    final muted = !_muted;
+    try {
+      await _media.setAudioEnabled(!muted);
+      if (mounted) {
+        setState(() {
+          _muted = muted;
+          _status = muted ? 'Microphone muted.' : 'Microphone unmuted.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _status = messageFor(error));
+      }
+    }
+  }
+
+  Future<void> _toggleCamera() async {
+    final cameraOff = !_cameraOff;
+    try {
+      await _media.setVideoEnabled(!cameraOff);
+      if (mounted) {
+        setState(() {
+          _cameraOff = cameraOff;
+          _status = cameraOff ? 'Camera disabled.' : 'Camera enabled.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _status = messageFor(error));
+      }
+    }
+  }
+
+  Future<void> _toggleScreenShare() async {
+    final screenShare = !_screenShare;
+    try {
+      await _media.setScreenShareEnabled(screenShare);
+      if (mounted) {
+        setState(() {
+          _screenShare = _media.screenSharing;
+          _status = _screenShare
+              ? 'Screen share is publishing.'
+              : 'Screen share stopped.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _screenShare = _media.screenSharing;
+          _status = messageFor(error);
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleCaptions() async {
+    if (!_media.captionCaptureSupported) {
+      setState(() {
+        _captionText =
+            'Short clip captions use MediaRecorder on SYLORA web. Open this room in a browser to record and transcribe.';
+      });
+      return;
+    }
+    setState(() => _captionsBusy = true);
+    try {
+      if (!_captionsRecording) {
+        await _media.startCaptionCapture();
+        if (mounted) {
+          setState(() {
+            _captionsRecording = true;
+            _captionText =
+                'Recording a short microphone clip… tap “Stop & transcribe” when ready.';
+          });
+        }
+        return;
+      }
+      final clip = await _media.stopCaptionCapture();
+      if (mounted) {
+        setState(() {
+          _captionsRecording = false;
+          _captionText = 'Transcribing the recorded clip…';
+        });
+      }
+      final result = await ref
+          .read(aiRepositoryProvider)
+          .transcribeAudio(
+            clip.bytes,
+            filename: clip.filename,
+            contentType: clip.contentType,
+          );
+      if (mounted) {
+        final text = optionalString(result, 'text')?.trim();
+        setState(() {
+          _captionText = text == null || text.isEmpty
+              ? 'No speech was detected in that clip.'
+              : text;
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _captionsRecording = false;
+          _captionText = messageFor(error);
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _captionsBusy = false);
       }
     }
   }
@@ -609,8 +740,8 @@ final class _MediaPanel extends StatelessWidget {
         media.preview(),
         const SizedBox(height: 12),
         Text(
-          kIsWeb
-              ? 'Web can request camera/microphone preview and publish over WHIP when MediaMTX is ready.'
+          media.supported
+              ? 'This build can request camera/microphone preview and publish over WHIP when MediaMTX is ready.'
               : 'Camera preview is unavailable on this build. Use OBS or a companion browser device for publishing.',
         ),
         if (credentials != null) ...<Widget>[
@@ -773,9 +904,11 @@ final class _CallControlBar extends StatelessWidget {
     required this.cameraOff,
     required this.screenShare,
     required this.aiTranslation,
+    required this.captionsRecording,
     required this.onMute,
     required this.onCamera,
     required this.onScreenShare,
+    required this.onCaptions,
     required this.onTranslation,
   });
 
@@ -783,9 +916,11 @@ final class _CallControlBar extends StatelessWidget {
   final bool cameraOff;
   final bool screenShare;
   final bool aiTranslation;
+  final bool captionsRecording;
   final VoidCallback onMute;
   final VoidCallback onCamera;
-  final VoidCallback onScreenShare;
+  final VoidCallback? onScreenShare;
+  final VoidCallback? onCaptions;
   final VoidCallback onTranslation;
 
   @override
@@ -805,7 +940,9 @@ final class _CallControlBar extends StatelessWidget {
             onTap: onMute,
           ),
           _CallChip(
-            icon: cameraOff ? Icons.videocam_off_rounded : Icons.videocam_rounded,
+            icon: cameraOff
+                ? Icons.videocam_off_rounded
+                : Icons.videocam_rounded,
             label: cameraOff ? 'Camera on' : 'Camera off',
             active: cameraOff,
             onTap: onCamera,
@@ -821,6 +958,14 @@ final class _CallControlBar extends StatelessWidget {
             label: aiTranslation ? 'Translation on' : 'AI translate',
             active: aiTranslation,
             onTap: onTranslation,
+          ),
+          _CallChip(
+            icon: captionsRecording
+                ? Icons.stop_circle_outlined
+                : Icons.closed_caption_rounded,
+            label: captionsRecording ? 'Stop & transcribe' : 'Captions',
+            active: captionsRecording,
+            onTap: onCaptions,
           ),
         ],
       ),
@@ -839,7 +984,7 @@ final class _CallChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool active;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -847,12 +992,12 @@ final class _CallChip extends StatelessWidget {
       avatar: Icon(icon, size: 18),
       label: Text(label),
       selected: active,
-      onSelected: (_) => onTap(),
+      onSelected: onTap == null ? null : (_) => onTap!(),
     );
   }
 }
 
-final class _ConferenceGiftTray extends ConsumerWidget {
+final class _ConferenceGiftTray extends ConsumerStatefulWidget {
   const _ConferenceGiftTray({
     required this.conferenceId,
     required this.hostUserId,
@@ -862,9 +1007,36 @@ final class _ConferenceGiftTray extends ConsumerWidget {
   final String hostUserId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder(
-      future: ref.read(giftRepositoryProvider).catalog(),
+  ConsumerState<_ConferenceGiftTray> createState() =>
+      _ConferenceGiftTrayState();
+}
+
+final class _ConferenceGiftTrayState
+    extends ConsumerState<_ConferenceGiftTray> {
+  late Future<CursorPage<GiftModel>> _catalog;
+  String? _sendingId;
+  String? _feedback;
+  String? _lastGiftId;
+  DateTime? _lastSentAt;
+  int _comboCount = 0;
+  Timer? _feedbackTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _catalog = ref.read(giftRepositoryProvider).catalog();
+  }
+
+  @override
+  void dispose() {
+    _feedbackTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<CursorPage<GiftModel>>(
+      future: _catalog,
       builder: (context, snapshot) {
         return SyloraGlass(
           radius: SyloraTokens.radiusLg,
@@ -872,46 +1044,89 @@ final class _ConferenceGiftTray extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Live gifts', style: SyloraTokens.title(15)),
+              Row(
+                children: <Widget>[
+                  const Icon(Icons.card_giftcard_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Live gifts', style: SyloraTokens.title(15)),
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: _feedback == null
+                        ? const SizedBox.shrink()
+                        : Container(
+                            key: ValueKey<String>(_feedback!),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.secondary.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              _feedback!,
+                              style: SyloraTokens.body(12),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 4),
               Text(
-                'Send only during this conference / voice room.',
+                'Choose a gift for the host while this conference is active.',
                 style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
               ),
               const SizedBox(height: 10),
               if (snapshot.connectionState != ConnectionState.done)
-                const LinearProgressIndicator()
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    LinearProgressIndicator(),
+                    SizedBox(height: 8),
+                    Text('Loading conference gifts…'),
+                  ],
+                )
               else if (snapshot.hasError)
-                Text(messageFor(snapshot.error!))
+                _stateMessage(
+                  icon: Icons.cloud_off_outlined,
+                  title: 'Gifts could not load',
+                  message: messageFor(snapshot.error!),
+                  actionLabel: 'Try again',
+                  onAction: _reloadCatalog,
+                )
+              else if (snapshot.data?.items.isEmpty ?? true)
+                _stateMessage(
+                  icon: Icons.redeem_outlined,
+                  title: 'No gifts available',
+                  message:
+                      'The conference is ready, but the gift catalog is empty.',
+                  actionLabel: 'Refresh gifts',
+                  onAction: _reloadCatalog,
+                )
               else
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: <Widget>[
-                    for (final gift in (snapshot.data?.items ?? const []).take(6))
+                    for (final gift in (snapshot.data?.items ?? const []).take(
+                      6,
+                    ))
                       FilledButton.tonalIcon(
-                        onPressed: () async {
-                          try {
-                            await ref.read(giftRepositoryProvider).send(
-                                  recipientUserId: hostUserId,
-                                  giftDefinitionId: gift.id,
-                                  conferenceId: conferenceId,
-                                  message: 'Conference gift',
-                                );
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Sent ${gift.name}')),
-                              );
-                            }
-                          } on Object catch (error) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(messageFor(error))),
-                              );
-                            }
-                          }
-                        },
-                        icon: const Icon(Icons.card_giftcard_rounded),
+                        onPressed: _sendingId == null
+                            ? () => _send(gift)
+                            : null,
+                        icon: _sendingId == gift.id
+                            ? const SizedBox.square(
+                                dimension: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.card_giftcard_rounded),
                         label: Text(gift.name),
                       ),
                   ],
@@ -921,5 +1136,94 @@ final class _ConferenceGiftTray extends ConsumerWidget {
         );
       },
     );
+  }
+
+  Widget _stateMessage({
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Icon(icon, color: SyloraTokens.inkSoft),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(title, style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 2),
+              Text(message),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: onAction,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(actionLabel),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _reloadCatalog() {
+    setState(() {
+      _catalog = ref.read(giftRepositoryProvider).catalog();
+    });
+  }
+
+  Future<void> _send(GiftModel gift) async {
+    setState(() => _sendingId = gift.id);
+    try {
+      await ref
+          .read(giftRepositoryProvider)
+          .send(
+            recipientUserId: widget.hostUserId,
+            giftDefinitionId: gift.id,
+            conferenceId: widget.conferenceId,
+            message: 'Conference gift',
+          );
+      if (!mounted) {
+        return;
+      }
+      final now = DateTime.now();
+      final continuesCombo =
+          _lastGiftId == gift.id &&
+          _lastSentAt != null &&
+          now.difference(_lastSentAt!) <= const Duration(seconds: 15);
+      setState(() {
+        _comboCount = continuesCombo
+            ? (_comboCount >= 10 ? 10 : _comboCount + 1)
+            : 1;
+        _lastGiftId = gift.id;
+        _lastSentAt = now;
+        _feedback = _comboCount > 1
+            ? '${gift.name} · combo ×$_comboCount'
+            : '${gift.name} sent';
+      });
+      _feedbackTimer?.cancel();
+      _feedbackTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() => _feedback = null);
+        }
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Sent ${gift.name} to the host.')));
+    } on Object catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _sendingId = null);
+      }
+    }
   }
 }

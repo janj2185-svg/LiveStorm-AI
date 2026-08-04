@@ -10,6 +10,7 @@ import '../settings/settings_screen.dart';
 import '../social/social_screens.dart';
 
 enum MoreEntryKind {
+  communities,
   learning,
   wallet,
   earnings,
@@ -42,6 +43,11 @@ final class MoreEntry {
 }
 
 const _entries = <MoreEntry>[
+  MoreEntry(
+    kind: MoreEntryKind.communities,
+    routeName: 'communities',
+    icon: Icons.groups_2_outlined,
+  ),
   MoreEntry(
     kind: MoreEntryKind.learning,
     routeName: 'learning',
@@ -154,7 +160,10 @@ final class MoreScreen extends ConsumerWidget {
       showAuraPresence: true,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       header: account.when(
-        loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
+        loading: () => const SizedBox(
+          height: 120,
+          child: Center(child: CircularProgressIndicator()),
+        ),
         error: (_, _) => SyloraUniverseHero(
           eyebrow: l10n.moreHeroEyebrow,
           title: l10n.navProfile,
@@ -387,6 +396,7 @@ final class _MoreModuleTileState extends State<_MoreModuleTile> {
 }
 
 String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
+  MoreEntryKind.communities => 'Communities',
   MoreEntryKind.learning => l10n.moreLearning,
   MoreEntryKind.wallet => l10n.walletShortLabel,
   MoreEntryKind.earnings => 'Earnings',

@@ -119,6 +119,24 @@ class ModerationProviderResponse:
 
 
 @dataclass(frozen=True)
+class TranscriptionProviderRequest:
+    audio: bytes
+    filename: str
+    content_type: str
+    language: str | None = None
+    prompt: str | None = None
+
+
+@dataclass(frozen=True)
+class TranscriptionProviderResponse:
+    text: str
+    model: str
+    usage: ProviderUsage = field(default_factory=ProviderUsage)
+    language: str | None = None
+    duration_seconds: float | None = None
+
+
+@dataclass(frozen=True)
 class GeneratedAsset:
     content: bytes
     content_type: str
@@ -188,6 +206,13 @@ class MusicProvider(AIProvider, Protocol):
 @runtime_checkable
 class SpeechProvider(AIProvider, Protocol):
     async def generate_speech(self, request: Mapping[str, Any]) -> GenerationProviderResponse: ...
+
+
+@runtime_checkable
+class TranscriptionProvider(AIProvider, Protocol):
+    async def transcribe(
+        self, request: TranscriptionProviderRequest
+    ) -> TranscriptionProviderResponse: ...
 
 
 @runtime_checkable
@@ -381,6 +406,58 @@ class OpenAICompatibleProvider:
                 raise ProviderCallError("provider_network_error", retryable=True) from exc
             if not expect_json:
                 return bytes(body), int((time.monotonic() - started) * 1000)
+            try:
+                return json.loads(body), int((time.monotonic() - started) * 1000)
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise ProviderResponseError("provider_invalid_json") from exc
+        raise ProviderCallError("provider_temporarily_unavailable", retryable=True)
+
+    async def _multipart_request(
+        self,
+        path: str,
+        *,
+        fields: Mapping[str, str],
+        filename: str,
+        content_type: str,
+        content: bytes,
+    ) -> tuple[Any, int]:
+        started = time.monotonic()
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Accept": "application/json",
+        }
+        for attempt in range(self._max_retries + 1):
+            try:
+                async with (
+                    httpx.AsyncClient(
+                        timeout=self._timeout,
+                        follow_redirects=False,
+                    ) as client,
+                    client.stream(
+                        "POST",
+                        f"{self.base_url}{path}",
+                        headers=headers,
+                        data=dict(fields),
+                        files={"file": (filename, content, content_type)},
+                    ) as response,
+                ):
+                    body = bytearray()
+                    async for chunk in response.aiter_bytes():
+                        body.extend(chunk)
+                        if len(body) > MAX_PROVIDER_RESPONSE_BYTES:
+                            raise ProviderResponseError("provider_response_too_large")
+                    if response.status_code == 429 or response.status_code >= 500:
+                        if attempt < self._max_retries:
+                            await asyncio.sleep(min(2**attempt, 8) + random.uniform(0, 0.25))
+                            continue
+                        raise ProviderCallError("provider_temporarily_unavailable", retryable=True)
+                    if response.status_code < 200 or response.status_code >= 300:
+                        raise ProviderCallError("provider_request_rejected")
+            except (httpx.TimeoutException, httpx.NetworkError) as exc:
+                if attempt < self._max_retries:
+                    await asyncio.sleep(min(2**attempt, 8) + random.uniform(0, 0.25))
+                    continue
+                raise ProviderCallError("provider_network_error", retryable=True) from exc
             try:
                 return json.loads(body), int((time.monotonic() - started) * 1000)
             except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -629,6 +706,42 @@ class OpenAICompatibleProvider:
             assets=[GeneratedAsset(content=data, content_type=content_type)],
         )
 
+    async def transcribe(
+        self, request: TranscriptionProviderRequest
+    ) -> TranscriptionProviderResponse:
+        model = self.model_for(AICapability.voice)
+        fields = {"model": model, "response_format": "json"}
+        if request.language:
+            fields["language"] = request.language
+        if request.prompt:
+            fields["prompt"] = request.prompt
+        data, _ = await self._multipart_request(
+            "/audio/transcriptions",
+            fields=fields,
+            filename=request.filename,
+            content_type=request.content_type,
+            content=request.audio,
+        )
+        try:
+            text = data["text"]
+            if not isinstance(text, str):
+                raise TypeError
+            language = data.get("language")
+            if language is not None and not isinstance(language, str):
+                raise TypeError
+            raw_duration = data.get("duration")
+            duration = float(raw_duration) if raw_duration is not None else None
+            usage = self._usage(AICapability.voice, model, data.get("usage"), units=1)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ProviderResponseError("provider_invalid_transcription_response") from exc
+        return TranscriptionProviderResponse(
+            text=text,
+            model=model,
+            usage=usage,
+            language=language,
+            duration_seconds=duration,
+        )
+
     async def embed(self, texts: Sequence[str]) -> EmbeddingProviderResponse:
         model = self.model_for(AICapability.embeddings)
         data, _ = await self._request(
@@ -648,3 +761,106 @@ class OpenAICompatibleProvider:
             model=model,
             usage=self._usage(AICapability.embeddings, model, data.get("usage")),
         )
+
+
+class DeepgramTranscriptionProvider:
+    """Dedicated STT adapter sourced from the existing encrypted owner configuration."""
+
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        model: str,
+        base_url: str = "https://api.deepgram.com/v1",
+        timeout_seconds: float = 45,
+    ) -> None:
+        self.name = "owner-stt-deepgram"
+        self.capabilities = frozenset({AICapability.voice})
+        self._api_key = api_key
+        self._model = model
+        self._base_url = base_url.rstrip("/")
+        self._timeout = httpx.Timeout(timeout_seconds, connect=min(timeout_seconds, 10))
+
+    def model_for(self, capability: AICapability) -> str:
+        if capability != AICapability.voice:
+            raise ProviderUnavailableError(capability)
+        return self._model
+
+    async def transcribe(
+        self, request: TranscriptionProviderRequest
+    ) -> TranscriptionProviderResponse:
+        params: dict[str, str] = {"model": self._model, "smart_format": "true"}
+        if request.language:
+            params["language"] = request.language
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=False) as client:
+                response = await client.post(
+                    f"{self._base_url}/listen",
+                    params=params,
+                    headers={
+                        "Authorization": f"Token {self._api_key}",
+                        "Content-Type": request.content_type,
+                        "Accept": "application/json",
+                    },
+                    content=request.audio,
+                )
+        except (httpx.TimeoutException, httpx.NetworkError) as exc:
+            raise ProviderCallError("provider_network_error", retryable=True) from exc
+        if response.status_code == 429 or response.status_code >= 500:
+            raise ProviderCallError("provider_temporarily_unavailable", retryable=True)
+        if response.status_code < 200 or response.status_code >= 300:
+            raise ProviderCallError("provider_request_rejected")
+        if len(response.content) > MAX_PROVIDER_RESPONSE_BYTES:
+            raise ProviderResponseError("provider_response_too_large")
+        try:
+            data = response.json()
+            alternative = data["results"]["channels"][0]["alternatives"][0]
+            text = alternative["transcript"]
+            if not isinstance(text, str):
+                raise TypeError
+            metadata = data.get("metadata") or {}
+            language = alternative.get("languages", [None])[0]
+            duration = metadata.get("duration")
+        except (KeyError, IndexError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ProviderResponseError("provider_invalid_transcription_response") from exc
+        return TranscriptionProviderResponse(
+            text=text,
+            model=self._model,
+            language=str(language) if language else request.language,
+            duration_seconds=float(duration) if duration is not None else None,
+        )
+
+
+def owner_configured_transcription_provider() -> TranscriptionProvider | None:
+    """Resolve the already-existing owner STT config without mutating its catalog or schema."""
+    from app.owner_config_store import owner_config_store
+
+    if not owner_config_store.is_enabled("speech_to_text"):
+        return None
+    api_key = owner_config_store.get("STT_API_KEY")
+    if not api_key:
+        return None
+    provider = (owner_config_store.get("STT_PROVIDER") or "openai").strip().lower()
+    model = owner_config_store.get("STT_MODEL") or "whisper-1"
+    base_url = owner_config_store.get("STT_BASE_URL")
+    if provider == "deepgram":
+        if not base_url or "api.openai.com" in base_url:
+            base_url = "https://api.deepgram.com/v1"
+        if model == "whisper-1":
+            model = "nova-3"
+        return DeepgramTranscriptionProvider(
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+        )
+    if provider not in {"openai", "openai-compatible"}:
+        return None
+    return OpenAICompatibleProvider(
+        name="owner-stt-openai",
+        base_url=base_url or "https://api.openai.com/v1",
+        api_key=api_key,
+        capabilities=frozenset({AICapability.voice}),
+        model_mapping={AICapability.voice: model},
+        pricing_config={},
+        production=False,
+    )

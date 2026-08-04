@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.ai_models import (
     AICapability,
     AIConversationMode,
+    AIConversationPurpose,
     AIEmbeddingState,
     AIJobStatus,
     AIMemoryKind,
@@ -129,6 +130,7 @@ class AISettingsPatch(StrictSchema):
 class AIConversationCreate(StrictSchema):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     mode: AIConversationMode = AIConversationMode.copilot
+    purpose: AIConversationPurpose = AIConversationPurpose.general
     locale: str | None = None
 
     _plain_title = field_validator("title")(
@@ -140,6 +142,7 @@ class AIConversationCreate(StrictSchema):
 class AIConversationPatch(StrictSchema):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     mode: AIConversationMode | None = None
+    purpose: AIConversationPurpose | None = None
     locale: str | None = None
 
     _plain_title = field_validator("title")(
@@ -149,7 +152,7 @@ class AIConversationPatch(StrictSchema):
 
     @model_validator(mode="after")
     def mode_and_locale_cannot_be_null(self) -> AIConversationPatch:
-        for field_name in self.model_fields_set & {"mode", "locale"}:
+        for field_name in self.model_fields_set & {"mode", "purpose", "locale"}:
             if getattr(self, field_name) is None:
                 raise ValueError(f"{field_name} cannot be null")
         return self
@@ -159,6 +162,7 @@ class AIConversationResponse(ORMStrictSchema):
     id: uuid.UUID
     title: str | None
     mode: AIConversationMode
+    purpose: AIConversationPurpose
     locale: str
     created_at: datetime
     updated_at: datetime
@@ -322,6 +326,33 @@ class TranslationResponse(StrictSchema):
     text: str
     source_language: str
     target_language: str
+    provider: str
+    model: str
+    prompt_units: int
+    completion_units: int
+    cost_micros: int
+
+
+class TranscriptionBase64Request(StrictSchema):
+    audio_base64: str = Field(min_length=1, max_length=14_000_000)
+    filename: str = Field(default="caption.webm", pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+    content_type: str = Field(
+        default="audio/webm",
+        pattern=r"^(?:audio|video)/[A-Za-z0-9.+-]+$",
+    )
+    language: str | None = None
+    prompt: str | None = Field(default=None, min_length=1, max_length=1000)
+
+    _language = field_validator("language")(lambda value: valid_locale(value) if value else value)
+    _prompt = field_validator("prompt")(
+        lambda value: validate_plain_text(value) if value else value
+    )
+
+
+class TranscriptionResponse(StrictSchema):
+    text: str
+    language: str | None
+    duration_seconds: float | None
     provider: str
     model: str
     prompt_units: int

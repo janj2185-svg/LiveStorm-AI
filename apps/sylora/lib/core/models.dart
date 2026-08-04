@@ -640,6 +640,7 @@ final class AiConversationModel {
     required this.id,
     required this.title,
     required this.mode,
+    required this.purpose,
     required this.locale,
   });
 
@@ -647,12 +648,14 @@ final class AiConversationModel {
     id: requireString(json, 'id'),
     title: optionalString(json, 'title'),
     mode: requireString(json, 'mode'),
+    purpose: requireString(json, 'purpose'),
     locale: requireString(json, 'locale'),
   );
 
   final String id;
   final String? title;
   final String mode;
+  final String purpose;
   final String locale;
 }
 

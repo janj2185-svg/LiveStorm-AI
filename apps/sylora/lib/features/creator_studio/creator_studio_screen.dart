@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api.dart';
 import '../../core/lumen_theme.dart';
@@ -44,13 +45,20 @@ final class _CreatorStudioScreenState
   String? _videoDeviceId;
   JsonObject? _capability;
   JsonObject? _credentials;
+  JsonObject? _serverPreflight;
   String? _status;
+  String? _mediaPreferencesError;
+  String? _obsCheckError;
   String _selectedSceneName = 'Main';
   String? _sceneStatus;
   String? _recordingMode;
   bool _busy = false;
+  bool _preflightBusy = false;
   bool _scenesBusy = false;
   bool _obsScenesAvailable = false;
+  bool _obsCompanionExpected = false;
+  bool _mediaPreferencesLoaded = false;
+  bool _hasSavedMediaProfile = false;
   bool _browserPublishing = false;
   bool _recording = false;
   bool _recordingBusy = false;
@@ -68,6 +76,7 @@ final class _CreatorStudioScreenState
     _aura = SyloraAuraPresenceController.forPreset(
       SyloraAuraContextPreset.creatorStudio,
     );
+    _loadMediaPreferences();
     if (_publisher.supported) {
       _loadDevices();
     }
@@ -149,7 +158,7 @@ final class _CreatorStudioScreenState
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Browser camera publishing is not available on this platform. Use OBS companion with the session ingest path and reveal-once stream key.',
+                    'Camera publishing is not available on this platform. Use OBS companion with the session ingest path and reveal-once stream key.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -187,10 +196,13 @@ final class _CreatorStudioScreenState
                     _sessionId = value;
                     _capability = null;
                     _credentials = null;
+                    _serverPreflight = null;
                     _guests = const <LiveGuestInviteModel>[];
                     _guestsStatus = null;
                     _obsScenesAvailable = false;
+                    _obsCheckError = null;
                     _sceneStatus = null;
+                    _browserPublishing = false;
                   }),
                 ),
               if (session != null) ...<Widget>[
@@ -250,20 +262,23 @@ final class _CreatorStudioScreenState
                     icon: Icons.refresh_rounded,
                     onPressed: _publisher.supported ? _loadDevices : null,
                     disabledReason:
-                        'Device enumeration is available only on web.',
+                        'Device enumeration is unavailable on this platform.',
                   ),
                   LumenPrimaryButton(
                     label: 'Start preview',
                     icon: Icons.videocam_rounded,
                     busy: _busy,
                     onPressed: _publisher.supported ? _startPreview : null,
-                    disabledReason: 'Camera preview is available only on web.',
+                    disabledReason:
+                        'Camera preview is unavailable on this platform.',
                   ),
                 ],
               ),
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        _buildPreflightChecklist(session),
         const SizedBox(height: 16),
         LumenSurface(
           child: Column(
@@ -272,7 +287,7 @@ final class _CreatorStudioScreenState
               Text('Publish', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 8),
               const Text(
-                'Start with browser uses WebRTC WHIP against MediaMTX. Connect OBS keeps the external encoder path and does not claim TikTok/Kick/Facebook publishing.',
+                'Start with this device uses WebRTC WHIP against MediaMTX. Connect OBS keeps the external encoder path and does not claim TikTok/Kick/Facebook publishing.',
               ),
               const SizedBox(height: 16),
               Wrap(
@@ -288,15 +303,24 @@ final class _CreatorStudioScreenState
                     disabledReason: 'Select a live session first.',
                   ),
                   LumenPrimaryButton(
-                    label: 'Start with browser (WHIP)',
+                    label: 'Start with this device (WHIP)',
                     icon: Icons.podcasts_rounded,
                     busy: _busy,
-                    onPressed: session != null && _publisher.supported
-                        ? () => _publish(session)
+                    onPressed:
+                        session != null &&
+                            _publisher.supported &&
+                            _devicePublishReady
+                        ? _publish
                         : null,
-                    disabledReason: _publisher.supported
+                    disabledReason: session == null
                         ? 'Select a live session first.'
-                        : 'Browser WHIP publishing is available only on web.',
+                        : !_publisher.supported
+                        ? 'WHIP publishing is unavailable on this platform.'
+                        : !_devicePreviewReady
+                        ? 'Start a camera and microphone preview first.'
+                        : !_corePreflightReady
+                        ? 'Run preflight and resolve every required check first.'
+                        : 'The selected media path is not ready.',
                   ),
                   LumenSecondaryButton(
                     label: 'Connect OBS',
@@ -333,6 +357,196 @@ final class _CreatorStudioScreenState
         ),
       ],
     );
+  }
+
+  bool get _devicePreviewReady =>
+      _publisher.hasVideoTrack && _publisher.hasAudioTrack;
+
+  bool get _credentialsReady {
+    final credentials = _credentials;
+    if (credentials == null || credentials['status'] != 'available') {
+      return false;
+    }
+    final whipUrl = credentials['whip_url'];
+    final token = credentials['bearer_token'];
+    return whipUrl is String &&
+        whipUrl.trim().isNotEmpty &&
+        token is String &&
+        token.trim().isNotEmpty;
+  }
+
+  bool get _serverPreflightReady => _serverPreflight?['ready'] == true;
+
+  bool get _obsRequirementReady =>
+      !_obsCompanionExpected || _obsScenesAvailable;
+
+  bool get _corePreflightReady =>
+      _mediaPreferencesLoaded &&
+      _mediaPreferencesError == null &&
+      _serverPreflightReady &&
+      _credentialsReady &&
+      _obsRequirementReady;
+
+  bool get _devicePublishReady => _corePreflightReady && _devicePreviewReady;
+
+  bool get _goLiveReady =>
+      _corePreflightReady && (_browserPublishing || _obsScenesAvailable);
+
+  Widget _buildPreflightChecklist(LiveSessionModel? session) {
+    final obsIsActivePath = _obsScenesAvailable;
+    final sessionCanStart =
+        session != null && {'draft', 'preflight'}.contains(session.state);
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Go-live preflight',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              LumenBadge(
+                label: _goLiveReady ? 'ready' : 'blocked',
+                color: _goLiveReady ? LumenColors.verdigris : LumenColors.solar,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Checks reflect active media tracks and live API responses. Nothing is assumed ready.',
+          ),
+          const SizedBox(height: 12),
+          _PreflightItem(
+            label: 'Camera preview ready',
+            ready: _publisher.hasVideoTrack
+                ? true
+                : obsIsActivePath
+                ? null
+                : false,
+            detail: _publisher.hasVideoTrack
+                ? 'An active video track is attached.'
+                : obsIsActivePath
+                ? 'Optional while the verified OBS path is active.'
+                : 'Start preview and grant camera access.',
+          ),
+          _PreflightItem(
+            label: 'Microphone ready',
+            ready: _publisher.hasAudioTrack
+                ? true
+                : obsIsActivePath
+                ? null
+                : false,
+            detail: _publisher.hasAudioTrack
+                ? 'An active microphone track is attached.'
+                : obsIsActivePath
+                ? 'Optional while OBS supplies the program mix.'
+                : 'Start preview and grant microphone access.',
+          ),
+          _PreflightItem(
+            label: 'Media settings loaded',
+            ready: _mediaPreferencesError != null
+                ? false
+                : _mediaPreferencesLoaded
+                ? true
+                : null,
+            detail:
+                _mediaPreferencesError ??
+                (_mediaPreferencesLoaded
+                    ? _hasSavedMediaProfile
+                          ? 'Saved SharedPreferences media profile loaded.'
+                          : 'Media defaults loaded; no saved profile exists yet.'
+                    : 'Loading SharedPreferences media profile…'),
+          ),
+          _PreflightItem(
+            label: 'OBS companion connected',
+            ready: _obsScenesAvailable
+                ? true
+                : _obsCompanionExpected
+                ? false
+                : null,
+            detail: _obsScenesAvailable
+                ? 'OBS responded through the session integration.'
+                : _obsCompanionExpected
+                ? (_obsCheckError ??
+                      'Media settings require OBS; run preflight to verify it.')
+                : 'Optional unless OBS is enabled in Media settings.',
+          ),
+          const _PreflightItem(
+            label: 'Music BGM',
+            ready: null,
+            detail: 'Optional; no BGM source is configured in Creator Studio.',
+          ),
+          _PreflightItem(
+            label: 'MediaMTX / WHIP credentials ready',
+            ready: _serverPreflightReady && _credentialsReady,
+            detail: _mediaPlaneDetail,
+          ),
+          _PreflightItem(
+            label: 'Publishing path connected',
+            ready: _browserPublishing || _obsScenesAvailable,
+            detail: _browserPublishing
+                ? 'This device is publishing to WHIP.'
+                : _obsScenesAvailable
+                ? 'OBS is the verified publishing path.'
+                : 'Publish from this device or verify OBS before going live.',
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              LumenSecondaryButton(
+                label: 'Run preflight',
+                icon: Icons.fact_check_outlined,
+                onPressed: sessionCanStart && !_preflightBusy
+                    ? () => _runGoLivePreflight(session)
+                    : null,
+                disabledReason: session == null
+                    ? 'Select a live session first.'
+                    : !sessionCanStart
+                    ? 'Preflight is available only before a session is live.'
+                    : 'Preflight is already running.',
+              ),
+              LumenPrimaryButton(
+                label: session?.state == 'live' ? 'Live now' : 'Go live',
+                icon: Icons.sensors_rounded,
+                busy: _busy,
+                onPressed: sessionCanStart && _goLiveReady && !_preflightBusy
+                    ? () => _goLive(session)
+                    : null,
+                disabledReason: sessionCanStart
+                    ? 'Complete preflight and connect a publishing path first.'
+                    : 'Select a draft or preflighted session.',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String get _mediaPlaneDetail {
+    if (!_serverPreflightReady) {
+      final checks = _serverPreflight?['checks'];
+      if (checks is List) {
+        for (final value in checks) {
+          if (value is Map && value['ok'] != true) {
+            final detail = value['detail'];
+            if (detail is String && detail.trim().isNotEmpty) {
+              return detail;
+            }
+          }
+        }
+      }
+      return 'Run preflight to verify the deployment-managed media plane.';
+    }
+    if (!_credentialsReady) {
+      return 'Media ingest passed, but usable WHIP credentials are missing.';
+    }
+    return 'Media ingest is healthy and usable WHIP credentials were issued.';
   }
 
   Widget _buildWaveBSections(LiveSessionModel? session) {
@@ -633,8 +847,8 @@ final class _CreatorStudioScreenState
     final mode = _obsScenesAvailable
         ? 'OBS companion record control'
         : _browserPublishing
-        ? 'Browser MediaRecorder fallback'
-        : 'Connect OBS or start browser WHIP publishing first.';
+        ? 'Local MediaRecorder fallback'
+        : 'Connect OBS or start device WHIP publishing first.';
     return LumenSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -651,7 +865,7 @@ final class _CreatorStudioScreenState
             busy: _recordingBusy,
             onPressed: canRecord ? () => _toggleRecording(session) : null,
             disabledReason:
-                'Select a session for OBS or start browser publishing for MediaRecorder.',
+                'Select a session for OBS or start device publishing for MediaRecorder.',
           ),
         ],
       ),
@@ -835,7 +1049,7 @@ final class _CreatorStudioScreenState
     }
     if (!_browserPublishing) {
       throw StateError(
-        'Start browser publishing before MediaRecorder fallback.',
+        'Start device publishing before MediaRecorder fallback.',
       );
     }
     final message = await _publisher.startBrowserRecording();
@@ -993,6 +1207,122 @@ final class _CreatorStudioScreenState
     }
   }
 
+  Future<void> _loadMediaPreferences() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _obsCompanionExpected = preferences.getBool('media.obs') ?? false;
+        _hasSavedMediaProfile =
+            preferences.containsKey('media.camera') ||
+            preferences.containsKey('media.mic') ||
+            preferences.containsKey('media.audio_route') ||
+            preferences.containsKey('media.obs');
+        _mediaPreferencesLoaded = true;
+        _mediaPreferencesError = null;
+      });
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _mediaPreferencesLoaded = false;
+          _mediaPreferencesError =
+              'Media settings could not be loaded: ${messageFor(error)}';
+        });
+      }
+    }
+  }
+
+  Future<void> _runGoLivePreflight(LiveSessionModel session) async {
+    setState(() {
+      _preflightBusy = true;
+      _serverPreflight = null;
+      _credentials = null;
+      _obsCheckError = null;
+      _status = 'Checking media plane, credentials, and integrations…';
+    });
+    _aura.think('Aura is running the go-live preflight.');
+    try {
+      await _loadMediaPreferences();
+      final repository = ref.read(liveRepositoryProvider);
+      final values = await Future.wait<JsonObject>(<Future<JsonObject>>[
+        repository.preflight(session.id),
+        repository.mediaCapability(session.id),
+        repository.publishCredentials(session.id),
+      ]);
+      JsonObject? obsResponse;
+      String? obsError;
+      try {
+        obsResponse = await repository.obsScenes(session.id);
+      } on Object catch (error) {
+        obsError = messageFor(error);
+      }
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _serverPreflight = values[0];
+        _capability = values[1];
+        _credentials = values[2];
+        _obsCheckError = obsError;
+        _obsScenesAvailable = obsResponse != null;
+        _status = _serverPreflightReady && _credentialsReady
+            ? 'Preflight passed. Connect a publishing path before going live.'
+            : 'Preflight found blockers. Review the checklist.';
+      });
+      if (obsResponse != null) {
+        _applyObsScenes(obsResponse);
+      }
+      ref.invalidate(creatorStudioSessionsProvider);
+      _aura.focus(
+        _serverPreflightReady && _credentialsReady
+            ? 'The media plane is ready. Connect your publishing path.'
+            : 'Resolve the preflight blockers before going live.',
+      );
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _serverPreflight = null;
+          _credentials = null;
+          _obsScenesAvailable = false;
+        });
+      }
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _preflightBusy = false);
+      }
+    }
+  }
+
+  Future<void> _goLive(LiveSessionModel session) async {
+    if (!_goLiveReady) {
+      setState(() {
+        _status =
+            'Go-live is blocked until preflight passes and a publishing path is connected.';
+      });
+      return;
+    }
+    setState(() => _busy = true);
+    _aura.think('Aura is starting the live session.');
+    try {
+      final started = await ref.read(liveRepositoryProvider).start(session.id);
+      if (!mounted) {
+        return;
+      }
+      setState(() => _status = '${started.title} is ${started.state}.');
+      ref.invalidate(creatorStudioSessionsProvider);
+      _aura.speak('Your session is live.');
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
   Future<void> _loadDevices() async {
     _aura.think('Aura is scanning camera and microphone options.');
     try {
@@ -1015,7 +1345,7 @@ final class _CreatorStudioScreenState
         videoDeviceId: _videoDeviceId,
       );
       if (mounted) {
-        setState(() => _status = 'Camera preview is running.');
+        setState(() => _status = 'Camera and microphone preview is running.');
         _aura.speak('Preview is live in the studio.');
       }
       await _loadDevices();
@@ -1043,13 +1373,18 @@ final class _CreatorStudioScreenState
     }
   }
 
-  Future<void> _publish(LiveSessionModel session) async {
+  Future<void> _publish() async {
+    final credentials = _credentials;
+    if (!_devicePublishReady || credentials == null) {
+      setState(() {
+        _status =
+            'Publishing is blocked until preview and go-live preflight are ready.';
+      });
+      return;
+    }
     setState(() => _busy = true);
     _aura.think('Aura is preparing the WHIP publishing path.');
     try {
-      final credentials = await ref
-          .read(liveRepositoryProvider)
-          .publishCredentials(session.id);
       if (credentials['status'] != 'available') {
         setState(() {
           _credentials = credentials;
@@ -1066,9 +1401,15 @@ final class _CreatorStudioScreenState
           _status = message;
           _browserPublishing = true;
         });
-        _aura.speak('Browser publishing is connected.');
+        _aura.speak('WHIP publishing is connected.');
       }
     } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _credentials = null;
+          _browserPublishing = false;
+        });
+      }
       _showError(error);
     } finally {
       if (mounted) {
@@ -1144,6 +1485,52 @@ final class _CreatorStudioScreenState
         _aura.update(emotion: next.emotion, tip: next.tip);
       }
     });
+  }
+}
+
+final class _PreflightItem extends StatelessWidget {
+  const _PreflightItem({
+    required this.label,
+    required this.ready,
+    required this.detail,
+  });
+
+  final String label;
+  final bool? ready;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (ready) {
+      true => LumenColors.verdigris,
+      false => LumenColors.rose,
+      null => LumenColors.porcelainMuted,
+    };
+    final icon = switch (ready) {
+      true => Icons.check_circle_rounded,
+      false => Icons.cancel_rounded,
+      null => Icons.remove_circle_outline_rounded,
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(label, style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 2),
+                Text(detail, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -15,14 +15,38 @@ final class CreatorMediaDevice {
   final String kind;
 }
 
+final class CapturedMediaChunk {
+  const CapturedMediaChunk({
+    required this.bytes,
+    required this.filename,
+    required this.contentType,
+  });
+
+  final Uint8List bytes;
+  final String filename;
+  final String contentType;
+}
+
 final class CreatorMediaController {
   final ValueNotifier<double> _audioLevel = ValueNotifier<double>(0);
 
   bool get supported => false;
 
+  bool get screenShareSupported => false;
+
+  bool get captionCaptureSupported => false;
+
   ValueListenable<double> get audioLevel => _audioLevel;
 
   bool get hasAudioTrack => false;
+
+  bool get hasVideoTrack => false;
+
+  bool get audioEnabled => false;
+
+  bool get videoEnabled => false;
+
+  bool get screenSharing => false;
 
   Future<List<CreatorMediaDevice>> devices() async =>
       const <CreatorMediaDevice>[];
@@ -36,6 +60,20 @@ final class CreatorMediaController {
     throw UnsupportedError(
       'Browser camera publishing is available only on SYLORA web. Use OBS companion on this device.',
     );
+  }
+
+  Future<void> setAudioEnabled(bool enabled) async {
+    throw UnsupportedError(
+      'Microphone capture is unavailable on this platform.',
+    );
+  }
+
+  Future<void> setVideoEnabled(bool enabled) async {
+    throw UnsupportedError('Camera capture is unavailable on this platform.');
+  }
+
+  Future<void> setScreenShareEnabled(bool enabled) async {
+    throw UnsupportedError('Screen capture is unavailable on this platform.');
   }
 
   Future<String> publishWhip(JsonObject credentials) async {
@@ -53,6 +91,18 @@ final class CreatorMediaController {
   Future<String> stopBrowserRecording() async {
     throw UnsupportedError(
       'Browser recording is available only on SYLORA web. Use OBS companion recording on this device.',
+    );
+  }
+
+  Future<void> startCaptionCapture() async {
+    throw UnsupportedError(
+      'Short caption recording currently uses browser MediaRecorder. Open this conference on SYLORA web.',
+    );
+  }
+
+  Future<CapturedMediaChunk> stopCaptionCapture() async {
+    throw UnsupportedError(
+      'Short caption recording currently uses browser MediaRecorder. Open this conference on SYLORA web.',
     );
   }
 

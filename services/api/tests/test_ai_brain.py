@@ -30,6 +30,8 @@ from app.ai_providers import (
     ProviderRegistry,
     ProviderToolProposal,
     ProviderUsage,
+    TranscriptionProviderRequest,
+    TranscriptionProviderResponse,
     TranslationProviderResponse,
 )
 from app.ai_service import process_generation_job
@@ -62,6 +64,8 @@ class TestProvider:
         self.tool_proposals = tool_proposals
         self.unknown_citation = unknown_citation
         self.generation_failure = generation_failure
+        self.last_chat_request: ChatProviderRequest | None = None
+        self.last_transcription_request: TranscriptionProviderRequest | None = None
 
     def model_for(self, capability: AICapability) -> str:
         if capability not in self.capabilities:
@@ -69,6 +73,7 @@ class TestProvider:
         return f"test-{capability.value}-model"
 
     async def chat(self, request: ChatProviderRequest) -> ChatProviderResponse:
+        self.last_chat_request = request
         citations = []
         if self.unknown_citation:
             citations = [ProviderCitation("private_admin_data", "unknown")]
@@ -107,6 +112,18 @@ class TestProvider:
             categories={"harassment": 0.81},
             model=self.model_for(AICapability.moderation),
             usage=ProviderUsage(prompt_units=3, cost_micros=1),
+        )
+
+    async def transcribe(
+        self, request: TranscriptionProviderRequest
+    ) -> TranscriptionProviderResponse:
+        self.last_transcription_request = request
+        return TranscriptionProviderResponse(
+            text="Captioned test audio.",
+            language=request.language or "en",
+            duration_seconds=1.25,
+            model=self.model_for(AICapability.voice),
+            usage=ProviderUsage(prompt_units=2, completion_units=4, cost_micros=5),
         )
 
     async def generate_image(self, request: Mapping[str, Any]) -> GenerationProviderResponse:
@@ -199,11 +216,132 @@ async def test_unconfigured_provider_is_503_without_message_success(api) -> None
         },
     )
     assert generation.status_code == 503
+    transcription = await api.client.post(
+        "/v1/ai/transcriptions",
+        headers=headers,
+        json={
+            "audio_base64": "UklGRg==",
+            "filename": "caption.wav",
+            "content_type": "audio/wav",
+        },
+    )
+    assert transcription.status_code == 503
+    assert transcription.json()["code"] == "ai_provider_unavailable"
     async with api.app.state.session_factory() as session:
         count = await session.scalar(select(func.count()).select_from(AIMessage))
         assert count == 0
         job_count = await session.scalar(select(func.count()).select_from(AIJob))
         assert job_count == 0
+
+
+async def test_transcription_accepts_multipart_and_base64_with_voice_provider(
+    api_factory: Any,
+) -> None:
+    provider = TestProvider(capabilities=frozenset({AICapability.voice}))
+    async with api_factory(ai_provider_registry=ProviderRegistry([provider])) as api:
+        headers, _ = await authenticated(api)
+        await enable_ai(api, headers)
+
+        multipart = await api.client.post(
+            "/v1/ai/transcriptions",
+            headers=headers,
+            files={"audio": ("caption.webm", b"webm-audio-bytes", "audio/webm")},
+            data={"language": "en"},
+        )
+        assert multipart.status_code == 200, multipart.text
+        assert multipart.json() == {
+            "text": "Captioned test audio.",
+            "language": "en",
+            "duration_seconds": 1.25,
+            "provider": "test-provider",
+            "model": "test-voice-model",
+            "prompt_units": 2,
+            "completion_units": 4,
+            "cost_micros": 5,
+        }
+        assert provider.last_transcription_request is not None
+        assert provider.last_transcription_request.audio == b"webm-audio-bytes"
+        assert provider.last_transcription_request.filename == "caption.webm"
+
+        encoded = await api.client.post(
+            "/v1/ai/transcriptions",
+            headers=headers,
+            json={
+                "audio_base64": "UklGRmJhc2U2NC1hdWRpbw==",
+                "filename": "caption.wav",
+                "content_type": "audio/wav",
+                "language": "uk",
+            },
+        )
+        assert encoded.status_code == 200, encoded.text
+        assert encoded.json()["text"] == "Captioned test audio."
+        assert encoded.json()["language"] == "uk"
+        assert provider.last_transcription_request is not None
+        assert provider.last_transcription_request.audio == b"RIFFbase64-audio"
+
+
+async def test_conversation_purpose_scopes_the_existing_chat_stack(
+    api_factory: Any,
+) -> None:
+    provider = TestProvider()
+    async with api_factory(ai_provider_registry=ProviderRegistry([provider])) as api:
+        headers, _ = await authenticated(api)
+        await enable_ai(api, headers)
+        created = await api.client.post(
+            "/v1/ai/conversations",
+            headers=headers,
+            json={
+                "title": "Business Copilot",
+                "mode": "copilot",
+                "purpose": "business_copilot",
+            },
+        )
+        assert created.status_code == 201, created.text
+        assert created.json()["purpose"] == "business_copilot"
+
+        sent = await api.client.post(
+            f"/v1/ai/conversations/{created.json()['id']}/send",
+            headers=headers,
+            json={"content": "Help me assess an operating plan."},
+        )
+        assert sent.status_code == 201, sent.text
+        assert provider.last_chat_request is not None
+        system_messages = [
+            item["content"]
+            for item in provider.last_chat_request.messages
+            if item["role"] == "system"
+        ]
+        assert any("Business Copilot mode" in content for content in system_messages)
+
+        learning = await api.client.post(
+            "/v1/ai/conversations",
+            headers=headers,
+            json={
+                "title": "Learning Tutor",
+                "purpose": "learning_tutor",
+            },
+        )
+        assert learning.status_code == 201, learning.text
+        sent = await api.client.post(
+            f"/v1/ai/conversations/{learning.json()['id']}/send",
+            headers=headers,
+            json={"content": "Explain this concept with an example."},
+        )
+        assert sent.status_code == 201, sent.text
+        assert provider.last_chat_request is not None
+        system_messages = [
+            item["content"]
+            for item in provider.last_chat_request.messages
+            if item["role"] == "system"
+        ]
+        assert any("Learning Tutor mode" in content for content in system_messages)
+
+        invalid = await api.client.post(
+            "/v1/ai/conversations",
+            headers=headers,
+            json={"purpose": "imaginary_expert"},
+        )
+        assert invalid.status_code == 422
 
 
 async def test_injected_chat_citations_usage_stream_quota_and_event_replay(

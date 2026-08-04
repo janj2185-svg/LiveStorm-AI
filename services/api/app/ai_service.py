@@ -19,6 +19,7 @@ from app.ai_models import (
     AICitation,
     AIConversation,
     AIConversationMode,
+    AIConversationPurpose,
     AIEmbeddingState,
     AIEvent,
     AIExportRequest,
@@ -55,7 +56,11 @@ from app.ai_providers import (
     ProviderResponseError,
     ProviderToolProposal,
     ProviderUnavailableError,
+    TranscriptionProvider,
+    TranscriptionProviderRequest,
+    TranscriptionProviderResponse,
     TranslationProviderResponse,
+    owner_configured_transcription_provider,
 )
 from app.ai_safety import (
     assess_user_message,
@@ -116,6 +121,22 @@ Boundaries:
 - No fake medical/legal/financial guarantees.
 - Protect privacy; do not ask for passwords or secrets.
 """
+
+PURPOSE_SYSTEM_PROMPTS: dict[AIConversationPurpose, str] = {
+    AIConversationPurpose.business_copilot: (
+        "You are in Business Copilot mode. Help the user reason about planning, operations, "
+        "CRM, documents, tasks, and finance with concise, decision-oriented guidance. "
+        "Clearly label assumptions and risks. Do not claim access to workspace records or "
+        "actions unless they are present in supplied grounding context or available tools, "
+        "and never present legal or financial guidance as a guarantee."
+    ),
+    AIConversationPurpose.learning_tutor: (
+        "You are in Learning Tutor mode. Teach with questions, explanations, examples, and "
+        "step-by-step hints suited to the learner's request. Encourage understanding instead "
+        "of pretending coursework is complete. Do not claim access to courses, lessons, "
+        "progress, or quiz answers unless they are present in supplied grounding context."
+    ),
+}
 
 
 ToolInput = (
@@ -344,12 +365,16 @@ async def owned_conversation(
 
 
 async def _latest_prompt(
-    db: AsyncSession, locale: str, capability: AICapability
+    db: AsyncSession,
+    locale: str,
+    capability: AICapability,
+    *,
+    template_key: str = "assistant.system",
 ) -> PromptTemplate | None:
     statement = (
         select(PromptTemplate)
         .where(
-            PromptTemplate.template_key == "assistant.system",
+            PromptTemplate.template_key == template_key,
             PromptTemplate.capability == capability,
             PromptTemplate.state == PromptTemplateState.published,
             PromptTemplate.locale.in_((locale, "en")),
@@ -783,14 +808,26 @@ async def send_chat_message(
     history = await _chat_history(db, conversation.id)
     safety = assess_user_message(payload.content)
     prompt_template = await _latest_prompt(db, conversation.locale, AICapability.chat)
-    system_content = (
-        prompt_template.content if prompt_template is not None else AURA_SYSTEM_PROMPT
-    )
+    system_content = prompt_template.content if prompt_template is not None else AURA_SYSTEM_PROMPT
+    purpose_content: str | None = None
+    if conversation.purpose != AIConversationPurpose.general:
+        purpose_template = await _latest_prompt(
+            db,
+            conversation.locale,
+            AICapability.chat,
+            template_key=f"assistant.system.{conversation.purpose.value}",
+        )
+        purpose_content = (
+            purpose_template.content
+            if purpose_template is not None
+            else PURPOSE_SYSTEM_PROMPTS[conversation.purpose]
+        )
     safety_messages = [
         {"role": "system", "content": reminder} for reminder in safety.system_reminders
     ]
     history = [
         {"role": "system", "content": system_content},
+        *([{"role": "system", "content": purpose_content}] if purpose_content else []),
         *safety_messages,
         *history,
         {"role": "user", "content": payload.content},
@@ -1422,6 +1459,76 @@ async def invoke_translation(
             provider=provider.name,
             model=result.model,
             capability=AICapability.translation,
+            prompt_units=result.usage.prompt_units,
+            completion_units=result.usage.completion_units,
+            cost_micros=result.usage.cost_micros,
+            latency_ms=int((utcnow() - started).total_seconds() * 1000),
+            status="succeeded",
+        )
+    )
+    await db.commit()
+    return provider.name, result
+
+
+async def invoke_transcription(
+    db: AsyncSession,
+    registry: ProviderRegistry,
+    user_id: uuid.UUID,
+    request: TranscriptionProviderRequest,
+) -> tuple[str, TranscriptionProviderResponse]:
+    user_settings = await settings_for(db, user_id)
+    require_consent(user_settings, AICapability.voice)
+    await enforce_quota(
+        db,
+        user_id,
+        user_settings,
+        projected_input_units=max(1, len(request.audio) // 1000),
+    )
+    configured_provider = owner_configured_transcription_provider()
+    provider: AIProvider = (
+        configured_provider
+        if configured_provider is not None
+        else provider_or_503(registry, AICapability.voice)
+    )
+    if not isinstance(provider, TranscriptionProvider):
+        raise APIError(
+            503,
+            "ai_provider_unavailable",
+            "AI provider unavailable",
+            "No configured voice provider implements speech-to-text transcription.",
+        )
+    started = utcnow()
+    try:
+        result = await provider.transcribe(request)
+        if not isinstance(result, TranscriptionProviderResponse):
+            raise ProviderResponseError("provider_invalid_transcription_response")
+        _validate_provider_usage(result.usage)
+        try:
+            text = validate_plain_text(result.text)
+        except (TypeError, ValueError) as exc:
+            raise ProviderResponseError("provider_invalid_transcription_response") from exc
+        if len(text) > 64_000:
+            raise ProviderResponseError("provider_invalid_transcription_response")
+        if result.duration_seconds is not None and (
+            not isinstance(result.duration_seconds, (int, float)) or result.duration_seconds < 0
+        ):
+            raise ProviderResponseError("provider_invalid_transcription_response")
+    except ProviderCallError as exc:
+        latency = int((utcnow() - started).total_seconds() * 1000)
+        await _record_failed_usage(db, user_id, provider, AICapability.voice, exc.code, latency)
+        raise APIError(
+            503 if exc.retryable else 502,
+            exc.code,
+            "Transcription provider failed",
+            "The configured speech-to-text provider could not transcribe the clip.",
+        ) from exc
+    db.add(
+        AIUsageRecord(
+            user_id=user_id,
+            pseudonymous_subject_hash=pseudonymous_subject_hash(user_id),
+            provider=provider.name,
+            model=result.model,
+            capability=AICapability.voice,
             prompt_units=result.usage.prompt_units,
             completion_units=result.usage.completion_units,
             cost_micros=result.usage.cost_micros,

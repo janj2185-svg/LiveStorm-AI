@@ -31,6 +31,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>SYLORA uses your camera for Creator Studio and conference video.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SYLORA uses your microphone for Creator Studio and conference audio.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

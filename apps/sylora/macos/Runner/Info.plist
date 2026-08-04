@@ -24,6 +24,10 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SYLORA uses your camera for Creator Studio and conference video.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SYLORA uses your microphone for Creator Studio and conference audio.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

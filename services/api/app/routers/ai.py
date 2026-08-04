@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import json
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Query, Request, status
 from fastapi.responses import StreamingResponse
+from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.datastructures import UploadFile
 
 from app.ai_models import (
     AICapability,
@@ -21,6 +26,7 @@ from app.ai_models import (
     AIToolProposal,
     AIUsageRecord,
 )
+from app.ai_providers import TranscriptionProviderRequest
 from app.ai_schemas import (
     AIConversationCreate,
     AIConversationPage,
@@ -48,6 +54,8 @@ from app.ai_schemas import (
     ProviderStatusItem,
     ProviderStatusResponse,
     ToolActionResponse,
+    TranscriptionBase64Request,
+    TranscriptionResponse,
     TranslationRequest,
     TranslationResponse,
 )
@@ -61,6 +69,7 @@ from app.ai_service import (
     event_response,
     execute_proposal,
     invoke_moderation,
+    invoke_transcription,
     invoke_translation,
     memory_response,
     message_response,
@@ -83,6 +92,25 @@ from app.security import utcnow
 from app.social_service import apply_cursor, decode_cursor, encode_cursor
 
 router = APIRouter(prefix="/ai", tags=["AI Brain"])
+MAX_TRANSCRIPTION_AUDIO_BYTES = 8 * 1024 * 1024
+TRANSCRIPTION_CONTENT_TYPES = frozenset(
+    {
+        "audio/aac",
+        "audio/flac",
+        "audio/m4a",
+        "audio/mp4",
+        "audio/mpeg",
+        "audio/mp3",
+        "audio/ogg",
+        "audio/wav",
+        "audio/webm",
+        "audio/x-m4a",
+        "audio/x-wav",
+        "video/mp4",
+        "video/webm",
+    }
+)
+TRANSCRIPTION_FILENAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
 def _registry(request: Request) -> Any:
@@ -323,6 +351,7 @@ async def create_conversation(
         user_id=auth.user.id,
         title=payload.title,
         mode=payload.mode,
+        purpose=payload.purpose,
         locale=payload.locale or user_settings.preferred_locale,
     )
     db.add(conversation)
@@ -783,6 +812,118 @@ async def translate(
         text=result.text,
         source_language=result.source_language,
         target_language=result.target_language,
+        provider=provider_name,
+        model=result.model,
+        prompt_units=result.usage.prompt_units,
+        completion_units=result.usage.completion_units,
+        cost_micros=result.usage.cost_micros,
+    )
+
+
+@router.post("/transcriptions", response_model=TranscriptionResponse)
+async def transcribe(
+    request: Request,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> TranscriptionResponse:
+    await _generation_rate_limit(request, auth.user.id)
+    request_content_type = request.headers.get("content-type", "").lower()
+    try:
+        if request_content_type.startswith("multipart/form-data"):
+            form = await request.form()
+            upload = form.get("audio") or form.get("file")
+            if not isinstance(upload, UploadFile):
+                raise ValueError("multipart field 'audio' is required")
+            audio = await upload.read(MAX_TRANSCRIPTION_AUDIO_BYTES + 1)
+            filename = upload.filename or "caption.webm"
+            content_type = (upload.content_type or "application/octet-stream").split(";", 1)[0]
+            language_value = form.get("language")
+            prompt_value = form.get("prompt")
+            language = str(language_value) if language_value not in {None, ""} else None
+            prompt = str(prompt_value) if prompt_value not in {None, ""} else None
+            await upload.close()
+            validated = TranscriptionBase64Request(
+                audio_base64="AA==",
+                filename=filename,
+                content_type=content_type,
+                language=language,
+                prompt=prompt,
+            )
+        elif request_content_type.startswith("application/json") or "+json" in request_content_type:
+            validated = TranscriptionBase64Request.model_validate(await request.json())
+            encoded = validated.audio_base64
+            if encoded.startswith("data:") and "," in encoded:
+                metadata, encoded = encoded.split(",", 1)
+                declared_type = metadata[5:].split(";", 1)[0]
+                if declared_type:
+                    validated = validated.model_copy(update={"content_type": declared_type})
+            audio = base64.b64decode(encoded, validate=True)
+        else:
+            raise APIError(
+                415,
+                "ai_transcription_content_type_unsupported",
+                "Unsupported transcription content type",
+                "Send multipart/form-data audio or an application/json base64 payload.",
+            )
+    except APIError:
+        raise
+    except (
+        UnicodeDecodeError,
+        ValueError,
+        ValidationError,
+        binascii.Error,
+        json.JSONDecodeError,
+    ) as exc:
+        raise APIError(
+            422,
+            "ai_transcription_invalid",
+            "Invalid transcription request",
+            "Provide a valid bounded audio clip, filename, content type, and optional language.",
+        ) from exc
+    if not audio:
+        raise APIError(
+            422,
+            "ai_transcription_empty",
+            "Empty transcription audio",
+            "The audio clip must not be empty.",
+        )
+    if len(audio) > MAX_TRANSCRIPTION_AUDIO_BYTES:
+        raise APIError(
+            413,
+            "ai_transcription_too_large",
+            "Transcription audio too large",
+            "The decoded audio clip exceeds 8 MiB.",
+        )
+    if validated.content_type not in TRANSCRIPTION_CONTENT_TYPES:
+        raise APIError(
+            415,
+            "ai_transcription_audio_unsupported",
+            "Unsupported audio format",
+            "Use AAC, FLAC, M4A, MP3, MP4, OGG, WAV, or WebM audio.",
+        )
+    if not TRANSCRIPTION_FILENAME_PATTERN.fullmatch(validated.filename):
+        raise APIError(
+            422,
+            "ai_transcription_invalid",
+            "Invalid transcription request",
+            "The clip filename must be a simple file name without a path.",
+        )
+    provider_name, result = await invoke_transcription(
+        db,
+        _registry(request),
+        auth.user.id,
+        TranscriptionProviderRequest(
+            audio=audio,
+            filename=validated.filename,
+            content_type=validated.content_type,
+            language=validated.language,
+            prompt=validated.prompt,
+        ),
+    )
+    return TranscriptionResponse(
+        text=result.text,
+        language=result.language,
+        duration_seconds=result.duration_seconds,
         provider=provider_name,
         model=result.model,
         prompt_units=result.usage.prompt_units,

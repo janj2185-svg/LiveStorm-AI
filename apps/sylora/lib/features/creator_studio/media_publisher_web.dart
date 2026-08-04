@@ -23,6 +23,18 @@ final class CreatorMediaDevice {
   final String kind;
 }
 
+final class CapturedMediaChunk {
+  const CapturedMediaChunk({
+    required this.bytes,
+    required this.filename,
+    required this.contentType,
+  });
+
+  final Uint8List bytes;
+  final String filename;
+  final String contentType;
+}
+
 final class CreatorMediaController {
   CreatorMediaController()
     : _viewType = 'creator-preview-${DateTime.now().microsecondsSinceEpoch}' {
@@ -41,19 +53,44 @@ final class CreatorMediaController {
   late final html.VideoElement _video;
   final String _viewType;
   html.MediaStream? _stream;
+  html.MediaStream? _screenStream;
   html.RtcPeerConnection? _peer;
+  StreamSubscription<html.Event>? _screenEndedSubscription;
   js.JsObject? _audioContext;
   List<Object?> _audioNodes = const <Object?>[];
   Timer? _meterTimer;
   final ValueNotifier<double> _audioLevel = ValueNotifier<double>(0);
   html.MediaRecorder? _recorder;
   final List<html.Blob> _recordedChunks = <html.Blob>[];
+  html.MediaRecorder? _captionRecorder;
+  final List<html.Blob> _captionChunks = <html.Blob>[];
+  bool _audioEnabled = true;
+  bool _videoEnabled = true;
+  bool _screenSharing = false;
 
   bool get supported => html.window.navigator.mediaDevices != null;
+
+  bool get screenShareSupported {
+    final mediaDevices = html.window.navigator.mediaDevices;
+    return mediaDevices != null &&
+        js.JsObject.fromBrowserObject(
+          mediaDevices,
+        ).hasProperty('getDisplayMedia');
+  }
+
+  bool get captionCaptureSupported => supported;
 
   ValueListenable<double> get audioLevel => _audioLevel;
 
   bool get hasAudioTrack => _stream?.getAudioTracks().isNotEmpty ?? false;
+
+  bool get hasVideoTrack => _stream?.getVideoTracks().isNotEmpty ?? false;
+
+  bool get audioEnabled => _audioEnabled;
+
+  bool get videoEnabled => _videoEnabled;
+
+  bool get screenSharing => _screenSharing;
 
   Future<List<CreatorMediaDevice>> devices() async {
     final mediaDevices = html.window.navigator.mediaDevices;
@@ -101,9 +138,43 @@ final class CreatorMediaController {
       'video': _deviceConstraint(videoDeviceId),
     };
     _stream = await mediaDevices.getUserMedia(constraints);
+    for (final track in _stream!.getAudioTracks()) {
+      track.enabled = _audioEnabled;
+    }
+    for (final track in _stream!.getVideoTracks()) {
+      track.enabled = _videoEnabled;
+    }
     _video.srcObject = _stream;
     await _video.play();
     _startAudioMeter(_stream!);
+  }
+
+  Future<void> setAudioEnabled(bool enabled) async {
+    _audioEnabled = enabled;
+    for (final track in _stream?.getAudioTracks() ?? const []) {
+      track.enabled = enabled;
+    }
+    if (!enabled) {
+      _audioLevel.value = 0;
+    }
+  }
+
+  Future<void> setVideoEnabled(bool enabled) async {
+    _videoEnabled = enabled;
+    for (final track in _stream?.getVideoTracks() ?? const []) {
+      track.enabled = enabled;
+    }
+  }
+
+  Future<void> setScreenShareEnabled(bool enabled) async {
+    if (enabled == _screenSharing) {
+      return;
+    }
+    if (enabled) {
+      await _startScreenShare();
+    } else {
+      await _stopScreenShare();
+    }
   }
 
   Future<String> publishWhip(JsonObject credentials) async {
@@ -113,16 +184,29 @@ final class CreatorMediaController {
     }
     final whipUrl = optionalString(credentials, 'whip_url');
     final token = optionalString(credentials, 'bearer_token');
-    if (whipUrl == null || token == null) {
+    if (whipUrl == null ||
+        whipUrl.trim().isEmpty ||
+        token == null ||
+        token.trim().isEmpty) {
       throw StateError('WHIP credentials are unavailable for this session.');
+    }
+    final uri = Uri.tryParse(whipUrl);
+    if (uri == null ||
+        !uri.hasAuthority ||
+        (uri.scheme != 'https' && uri.scheme != 'http')) {
+      throw StateError('WHIP ingest URL is invalid.');
     }
 
     _peer?.close();
     _peer = html.RtcPeerConnection(<String, Object>{
       'iceServers': _iceServers(credentials),
     });
-    for (final track in stream.getTracks()) {
+    for (final track in stream.getAudioTracks()) {
       _peer!.addTrack(track, stream);
+    }
+    final videoStream = _screenStream ?? stream;
+    for (final track in videoStream.getVideoTracks()) {
+      _peer!.addTrack(track, videoStream);
     }
 
     final offer =
@@ -137,7 +221,7 @@ final class CreatorMediaController {
     final local = _peer!.localDescription;
     final sdp = local == null ? offer['sdp'] : local.sdp;
     final response = await html.HttpRequest.request(
-      whipUrl,
+      uri.toString(),
       method: 'POST',
       sendData: sdp,
       requestHeaders: <String, String>{
@@ -208,6 +292,83 @@ final class CreatorMediaController {
     return 'Browser recording stopped. Preview file: $url';
   }
 
+  Future<void> startCaptionCapture() async {
+    final stream = _stream;
+    if (stream == null) {
+      throw StateError(
+        'Start the camera and microphone preview before recording captions.',
+      );
+    }
+    if (stream.getAudioTracks().isEmpty) {
+      throw StateError('The preview does not contain a microphone track.');
+    }
+    if (_captionRecorder?.state == 'recording') {
+      return;
+    }
+    final audioStream = html.MediaStream(stream.getAudioTracks());
+    final preferredType =
+        html.MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : html.MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : null;
+    final recorder = preferredType == null
+        ? html.MediaRecorder(audioStream)
+        : html.MediaRecorder(audioStream, <String, Object>{
+            'mimeType': preferredType,
+          });
+    _captionChunks.clear();
+    recorder.addEventListener('dataavailable', (html.Event event) {
+      final data = (event as dynamic).data as html.Blob?;
+      if (data != null && data.size > 0) {
+        _captionChunks.add(data);
+      }
+    });
+    recorder.start();
+    _captionRecorder = recorder;
+  }
+
+  Future<CapturedMediaChunk> stopCaptionCapture() async {
+    final recorder = _captionRecorder;
+    if (recorder == null || recorder.state != 'recording') {
+      throw StateError('No caption clip is currently recording.');
+    }
+    final stopped = Completer<void>();
+    recorder.addEventListener('stop', (html.Event _) {
+      if (!stopped.isCompleted) {
+        stopped.complete();
+      }
+    });
+    recorder.stop();
+    await stopped.future.timeout(const Duration(seconds: 2));
+    final rawType = recorder.mimeType;
+    final contentType = rawType == null || rawType.isEmpty
+        ? 'audio/webm'
+        : rawType.split(';').first;
+    final blob = html.Blob(_captionChunks, contentType);
+    final reader = html.FileReader()..readAsArrayBuffer(blob);
+    await reader.onLoadEnd.first;
+    if (reader.error != null) {
+      throw StateError('The browser could not read the recorded caption clip.');
+    }
+    final result = reader.result;
+    if (result is! Uint8List) {
+      throw StateError('The browser could not read the recorded caption clip.');
+    }
+    final bytes = result;
+    _captionChunks.clear();
+    _captionRecorder = null;
+    if (bytes.isEmpty) {
+      throw StateError('The recorded caption clip was empty.');
+    }
+    final extension = contentType == 'audio/mp4' ? 'm4a' : 'webm';
+    return CapturedMediaChunk(
+      bytes: bytes,
+      filename: 'caption_${DateTime.now().millisecondsSinceEpoch}.$extension',
+      contentType: contentType,
+    );
+  }
+
   Future<void> stop() async {
     _stopAudioMeter();
     if (_recorder?.state == 'recording') {
@@ -215,8 +376,14 @@ final class CreatorMediaController {
     }
     _recorder = null;
     _recordedChunks.clear();
+    if (_captionRecorder?.state == 'recording') {
+      _captionRecorder?.stop();
+    }
+    _captionRecorder = null;
+    _captionChunks.clear();
     _peer?.close();
     _peer = null;
+    await _disposeScreenStream();
     final stream = _stream;
     _stream = null;
     if (stream != null) {
@@ -230,6 +397,97 @@ final class CreatorMediaController {
   void dispose() {
     unawaited(stop());
     _audioLevel.dispose();
+  }
+
+  Future<void> _startScreenShare() async {
+    final mediaDevices = html.window.navigator.mediaDevices;
+    if (mediaDevices == null || !screenShareSupported) {
+      throw UnsupportedError('Browser screen capture is unavailable.');
+    }
+    if (_stream == null) {
+      throw StateError('Start preview before sharing your screen.');
+    }
+    final mediaDevicesJs = js.JsObject.fromBrowserObject(mediaDevices);
+    final promise = mediaDevicesJs.callMethod('getDisplayMedia', <Object>[
+      js.JsObject.jsify(<String, Object>{'audio': false, 'video': true}),
+    ]);
+    final value = await _jsPromiseValue(promise);
+    if (value is! html.MediaStream) {
+      throw StateError('Screen capture did not return a media stream.');
+    }
+    final screenStream = value;
+    final videoTracks = screenStream.getVideoTracks();
+    if (videoTracks.isEmpty) {
+      for (final track in screenStream.getTracks()) {
+        track.stop();
+      }
+      throw StateError('Screen capture did not provide a video track.');
+    }
+    final screenTrack = videoTracks.first;
+    try {
+      await _replaceOutgoingVideo(screenTrack);
+      _screenStream = screenStream;
+      _screenSharing = true;
+      _video.srcObject = screenStream;
+      await _video.play();
+      _screenEndedSubscription = screenTrack.onEnded.listen((_) {
+        if (_screenSharing) {
+          unawaited(_stopScreenShare());
+        }
+      });
+    } on Object {
+      for (final track in screenStream.getTracks()) {
+        track.stop();
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _stopScreenShare() async {
+    final cameraTracks = _stream?.getVideoTracks() ?? const [];
+    await _replaceOutgoingVideo(
+      cameraTracks.isEmpty ? null : cameraTracks.first,
+    );
+    _screenSharing = false;
+    _video.srcObject = _stream;
+    if (_stream != null) {
+      await _video.play();
+    }
+    await _disposeScreenStream();
+  }
+
+  Future<void> _disposeScreenStream() async {
+    await _screenEndedSubscription?.cancel();
+    _screenEndedSubscription = null;
+    final screenStream = _screenStream;
+    _screenStream = null;
+    _screenSharing = false;
+    if (screenStream != null) {
+      for (final track in screenStream.getTracks()) {
+        track.stop();
+      }
+    }
+  }
+
+  Future<void> _replaceOutgoingVideo(html.MediaStreamTrack? track) async {
+    final peer = _peer;
+    if (peer == null) {
+      return;
+    }
+    final senders = peer.getSenders();
+    html.RtcRtpSender? videoSender;
+    for (final sender in senders) {
+      if (sender.track?.kind == 'video') {
+        videoSender = sender;
+        break;
+      }
+    }
+    if (videoSender == null) {
+      return;
+    }
+    final senderJs = js.JsObject.fromBrowserObject(videoSender);
+    final promise = senderJs.callMethod('replaceTrack', <Object?>[track]);
+    await _jsPromiseValue(promise);
   }
 
   void _startAudioMeter(html.MediaStream stream) {
@@ -326,4 +584,31 @@ Future<void> _waitForIceGathering(html.RtcPeerConnection peer) async {
     return;
   }
   await Future<void>.delayed(const Duration(seconds: 1));
+}
+
+Future<Object?> _jsPromiseValue(Object? promise) {
+  if (promise == null) {
+    return Future<Object?>.error(
+      StateError('The browser media operation did not return a Promise.'),
+    );
+  }
+  final completer = Completer<Object?>();
+  final promiseJs = promise is js.JsObject
+      ? promise
+      : js.JsObject.fromBrowserObject(promise);
+  promiseJs.callMethod('then', <Object>[
+    (Object? value) {
+      if (!completer.isCompleted) {
+        completer.complete(value);
+      }
+    },
+    (Object? error) {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          StateError(error?.toString() ?? 'Browser media operation failed.'),
+        );
+      }
+    },
+  ]);
+  return completer.future;
 }
