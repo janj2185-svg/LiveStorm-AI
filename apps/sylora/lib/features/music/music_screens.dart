@@ -351,82 +351,88 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
             ],
           ),
         ),
-        body: Column(
-          children: <Widget>[
-            Expanded(
-              child: LumenAsyncView<MusicHome>(
-                value: home,
-                onRetry: () => ref.invalidate(musicHomeProvider),
-                data: (data) => TabBarView(
-                  controller: _tabs,
-                  children: <Widget>[
-                    _MusicHomeTab(
-                      data: data,
-                      onPlay: _play,
-                      onFavorite: (track) async {
-                        await ref
-                            .read(musicRepositoryProvider)
-                            .toggleFavorite(track.id);
-                        ref.invalidate(musicHomeProvider);
-                      },
-                    ),
-                    _PlaylistGrid(
-                      playlists: <MusicPlaylist>[
-                        ...data.personalPlaylists,
-                        ...data.moodPlaylists,
-                        ...data.aiPlaylists,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: LumenAsyncView<MusicHome>(
+                    value: home,
+                    onRetry: () => ref.invalidate(musicHomeProvider),
+                    data: (data) => TabBarView(
+                      controller: _tabs,
+                      children: <Widget>[
+                        _MusicHomeTab(
+                          data: data,
+                          onPlay: _play,
+                          onFavorite: (track) async {
+                            await ref
+                                .read(musicRepositoryProvider)
+                                .toggleFavorite(track.id);
+                            ref.invalidate(musicHomeProvider);
+                          },
+                        ),
+                        _PlaylistGrid(
+                          playlists: <MusicPlaylist>[
+                            ...data.personalPlaylists,
+                            ...data.moodPlaylists,
+                            ...data.aiPlaylists,
+                          ],
+                          emptyTitle: 'No playlists yet',
+                          emptyMessage:
+                              'Create a personal playlist or ask Aura.',
+                          onCreate: () async {
+                            final playlist = await ref
+                                .read(musicRepositoryProvider)
+                                .createPlaylist(
+                                  'My Playlist ${DateTime.now().day}',
+                                );
+                            ref.invalidate(musicHomeProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Created ${playlist.title}'),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                        _TrackList(
+                          tracks: data.favorites,
+                          emptyTitle: 'No favorites',
+                          emptyMessage: 'Heart tracks to build your favorites.',
+                          onPlay: _play,
+                        ),
+                        _TrackList(
+                          tracks: data.creatorBgm,
+                          emptyTitle: 'No creator BGM',
+                          emptyMessage:
+                              'Royalty-free background music for streams.',
+                          onPlay: (t) => _play(t, contextLabel: 'creator_bgm'),
+                          badge: 'BGM',
+                        ),
+                        _AuraMusicTab(
+                          controller: _aiPrompt,
+                          playlists: data.aiPlaylists,
+                          onGenerate: () async {
+                            final prompt = _aiPrompt.text.trim();
+                            if (prompt.isEmpty) return;
+                            await ref
+                                .read(musicRepositoryProvider)
+                                .createAiPlaylist(prompt);
+                            _aiPrompt.clear();
+                            ref.invalidate(musicHomeProvider);
+                          },
+                        ),
                       ],
-                      emptyTitle: 'No playlists yet',
-                      emptyMessage: 'Create a personal playlist or ask Aura.',
-                      onCreate: () async {
-                        final playlist = await ref
-                            .read(musicRepositoryProvider)
-                            .createPlaylist(
-                              'My Playlist ${DateTime.now().day}',
-                            );
-                        ref.invalidate(musicHomeProvider);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Created ${playlist.title}'),
-                            ),
-                          );
-                        }
-                      },
                     ),
-                    _TrackList(
-                      tracks: data.favorites,
-                      emptyTitle: 'No favorites',
-                      emptyMessage: 'Heart tracks to build your favorites.',
-                      onPlay: _play,
-                    ),
-                    _TrackList(
-                      tracks: data.creatorBgm,
-                      emptyTitle: 'No creator BGM',
-                      emptyMessage:
-                          'Royalty-free background music for streams.',
-                      onPlay: (t) => _play(t, contextLabel: 'creator_bgm'),
-                      badge: 'BGM',
-                    ),
-                    _AuraMusicTab(
-                      controller: _aiPrompt,
-                      playlists: data.aiPlaylists,
-                      onGenerate: () async {
-                        final prompt = _aiPrompt.text.trim();
-                        if (prompt.isEmpty) return;
-                        await ref
-                            .read(musicRepositoryProvider)
-                            .createAiPlaylist(prompt);
-                        _aiPrompt.clear();
-                        ref.invalidate(musicHomeProvider);
-                      },
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                if (player.track != null) _MiniPlayer(player: player),
+              ],
             ),
-            if (player.track != null) _MiniPlayer(player: player),
-          ],
+          ),
         ),
       ),
     );

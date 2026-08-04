@@ -1217,6 +1217,28 @@ async def public_quiz(db: AsyncSession, quiz: Quiz) -> QuizPublicResponse:
     )
 
 
+@router.get(
+    "/learning/enrollments/{enrollment_id}/quizzes",
+    response_model=list[QuizPublicResponse],
+)
+async def enrollment_quizzes(
+    enrollment_id: uuid.UUID,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> list[QuizPublicResponse]:
+    enrollment = await require_enrollment(db, auth.user.id, enrollment_id)
+    quizzes = list(
+        (
+            await db.scalars(
+                select(Quiz)
+                .where(Quiz.course_version_id == enrollment.course_version_id)
+                .order_by(Quiz.position, Quiz.id)
+            )
+        ).all()
+    )
+    return [await public_quiz(db, quiz) for quiz in quizzes]
+
+
 @router.get("/learning/quizzes/{quiz_id}", response_model=QuizPublicResponse)
 async def get_quiz(
     quiz_id: uuid.UUID,

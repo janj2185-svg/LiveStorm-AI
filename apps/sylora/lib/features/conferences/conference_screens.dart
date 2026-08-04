@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api.dart';
+import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../design/sylora.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -153,10 +154,11 @@ final class ConferencesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final rooms = ref.watch(conferenceListProvider);
-    return SyloraModuleScaffold(
+    return LumenPage(
       title: l10n.conferencesTitle,
       subtitle: l10n.conferencesSubtitle,
       showAuraDock: true,
+      maxContentWidth: 1120,
       actions: <Widget>[
         FilledButton.icon(
           onPressed: () => _showCreateDialog(context, ref),
@@ -174,10 +176,23 @@ final class ConferencesScreen extends ConsumerWidget {
           if (items.isEmpty) {
             return _EmptyPanel(onCreate: () => _showCreateDialog(context, ref));
           }
-          return Column(
-            children: <Widget>[
-              for (final room in items) _ConferenceTile(room: room),
-            ],
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 760 ? 2 : 1;
+              final cardWidth =
+                  (constraints.maxWidth - (columns - 1) * 12) / columns;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: <Widget>[
+                  for (final room in items)
+                    SizedBox(
+                      width: cardWidth,
+                      child: _ConferenceTile(room: room),
+                    ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -655,6 +670,7 @@ final class _ConferenceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final compact = MediaQuery.sizeOf(context).width < 620;
     return Card(
       elevation: 0,
       color: Colors.white.withValues(alpha: 0.08),
@@ -666,14 +682,23 @@ final class _ConferenceTile extends StatelessWidget {
           '${_label(context, room.purpose)} • ${room.status} • '
           '${l10n.conferencesActiveParticipants(room.activeParticipantCount)}',
         ),
-        trailing: FilledButton.tonalIcon(
-          onPressed: () => context.goNamed(
-            'conference-room',
-            pathParameters: <String, String>{'id': room.id},
-          ),
-          icon: const Icon(Icons.login_rounded),
-          label: Text(l10n.conferencesOpen),
-        ),
+        trailing: compact
+            ? IconButton.filledTonal(
+                tooltip: l10n.conferencesOpen,
+                onPressed: () => context.goNamed(
+                  'conference-room',
+                  pathParameters: <String, String>{'id': room.id},
+                ),
+                icon: const Icon(Icons.login_rounded),
+              )
+            : FilledButton.tonalIcon(
+                onPressed: () => context.goNamed(
+                  'conference-room',
+                  pathParameters: <String, String>{'id': room.id},
+                ),
+                icon: const Icon(Icons.login_rounded),
+                label: Text(l10n.conferencesOpen),
+              ),
       ),
     );
   }

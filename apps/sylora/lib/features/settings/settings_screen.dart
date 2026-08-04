@@ -380,6 +380,59 @@ final class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+          SyloraStaggeredReveal(
+            index: 4,
+            child: SyloraGlassTile(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      const Icon(Icons.health_and_safety_outlined),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Safety center',
+                          style: SyloraTokens.title(18),
+                        ),
+                      ),
+                      const LumenBadge(label: 'Protected'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Report harmful posts from the post menu, or report an '
+                    'account from its profile. Reports go to the moderation '
+                    'queue and the reported person does not see your identity.',
+                  ),
+                  const SizedBox(height: 12),
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.flag_outlined),
+                    title: Text('Reporting is available'),
+                    subtitle: Text(
+                      'Choose a reason and add optional context for reviewers.',
+                    ),
+                  ),
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.gavel_outlined),
+                    title: Text('Appeals are coming later'),
+                    subtitle: Text(
+                      'Appeal submissions are not stored by the current API, '
+                      'so SYLORA does not show a form or claim an appeal was filed.',
+                    ),
+                  ),
+                  Text(
+                    'If someone is in immediate danger, contact local emergency '
+                    'services. In-app reports are not an emergency channel.',
+                    style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           LumenPrimaryButton(
             label: l10n.settingsSignOut,
             icon: Icons.logout_rounded,

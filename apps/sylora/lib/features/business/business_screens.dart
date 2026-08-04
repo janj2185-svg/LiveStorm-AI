@@ -163,6 +163,19 @@ final class _BusinessWorkspaceScreenState
     subtitle: 'Tenant overview, permissions, and operational areas.',
     showAuraPresence: true,
     auraPresencePreset: SyloraAuraContextPreset.business,
+    maxContentWidth: 1120,
+    actions: <Widget>[
+      IconButton(
+        tooltip: 'Aura Business',
+        onPressed: () => openAuraConversation(
+          context,
+          ref,
+          purpose: 'business_copilot',
+          title: 'Business Copilot',
+        ),
+        icon: const Icon(Icons.auto_awesome_rounded),
+      ),
+    ],
     child: FutureBuilder<WorkspaceContext>(
       future: _future,
       builder: (context, snapshot) {
@@ -219,6 +232,11 @@ final class _BusinessWorkspaceScreenState
               ),
             ),
             const SizedBox(height: 16),
+            _WorkspaceModuleNavigation(
+              workspaceId: widget.workspaceId,
+              currentArea: 'workspace',
+            ),
+            const SizedBox(height: 16),
             for (final (area, label, icon) in areas)
               Card(
                 child: ListTile(
@@ -270,6 +288,18 @@ final class BusinessAreaScreen extends ConsumerStatefulWidget {
 
 final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
   late Future<_BusinessAreaData> _future = _load();
+  bool _integrationBusy = false;
+  String? _integrationMessage;
+
+  @override
+  void didUpdateWidget(covariant BusinessAreaScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workspaceId != widget.workspaceId ||
+        oldWidget.area != widget.area) {
+      _integrationMessage = null;
+      _future = _load();
+    }
+  }
 
   Future<_BusinessAreaData> _load() async {
     final repository = ref.read(businessRepositoryProvider);
@@ -311,6 +341,25 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
             'Contacts': contacts.nextCursor,
             'Deals': deals.nextCursor,
           },
+        );
+      case 'contacts':
+        final page = await repository.contacts(widget.workspaceId);
+        return _BusinessAreaData(
+          sections: <String, List<BusinessResource>>{'Contacts': page.items},
+          nextCursors: <String, String?>{'Contacts': page.nextCursor},
+        );
+      case 'deals':
+        final values = await Future.wait<Object>(<Future<Object>>[
+          repository.pipelineStages(widget.workspaceId),
+          repository.deals(widget.workspaceId),
+        ]);
+        final deals = values[1] as CursorPage<BusinessResource>;
+        return _BusinessAreaData(
+          sections: <String, List<BusinessResource>>{
+            'Pipeline stages': values[0] as List<BusinessResource>,
+            'Deals': deals.items,
+          },
+          nextCursors: <String, String?>{'Deals': deals.nextCursor},
         );
       case 'tasks':
         final page = await repository.tasks(widget.workspaceId);
@@ -368,6 +417,19 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
     subtitle: 'Persisted workspace records and actions for this area.',
     showAuraPresence: true,
     auraPresencePreset: SyloraAuraContextPreset.business,
+    maxContentWidth: 1120,
+    actions: <Widget>[
+      IconButton(
+        tooltip: 'Aura Business',
+        onPressed: () => openAuraConversation(
+          context,
+          ref,
+          purpose: 'business_copilot',
+          title: 'Business Copilot',
+        ),
+        icon: const Icon(Icons.auto_awesome_rounded),
+      ),
+    ],
     child: FutureBuilder<_BusinessAreaData>(
       future: _future,
       builder: (context, snapshot) {
@@ -381,6 +443,11 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            _WorkspaceModuleNavigation(
+              workspaceId: widget.workspaceId,
+              currentArea: widget.area,
+            ),
+            const SizedBox(height: 18),
             for (final section in data.sections.entries) ...<Widget>[
               _BusinessSection(
                 workspaceId: widget.workspaceId,
@@ -388,7 +455,26 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
                 title: section.key,
                 items: section.value,
                 nextCursor: data.nextCursors[section.key],
+                pipelineStages:
+                    data.sections['Pipeline stages'] ??
+                    const <BusinessResource>[],
                 onChanged: _refresh,
+              ),
+              const SizedBox(height: 18),
+            ],
+            if (widget.area == 'finance') ...<Widget>[
+              _ProviderBoundaryCard(
+                icon: Icons.account_balance_outlined,
+                title: 'Accounting export',
+                message:
+                    _integrationMessage ??
+                    'Exports are queued only through a real accounting provider. '
+                        'If this deployment is not configured, nothing is exported.',
+                actionLabel: _integrationBusy
+                    ? 'Checking provider…'
+                    : 'Export finance records',
+                busy: _integrationBusy,
+                onAction: _integrationBusy ? null : _exportAccounting,
               ),
               const SizedBox(height: 18),
             ],
@@ -400,6 +486,147 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
   );
 
   void _refresh() => setState(() => _future = _load());
+
+  Future<void> _exportAccounting() async {
+    setState(() {
+      _integrationBusy = true;
+      _integrationMessage = null;
+    });
+    try {
+      final result = await ref
+          .read(businessRepositoryProvider)
+          .exportToAccounting(widget.workspaceId);
+      if (mounted) {
+        setState(() {
+          _integrationMessage =
+              'Accounting export ${result['status']} as operation '
+              '${result['provider_operation_id']}.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _integrationMessage =
+              error is ApiProblem &&
+                  error.code == 'accounting_provider_unavailable'
+              ? 'Accounting export unavailable: ${error.detail} No export was queued.'
+              : messageFor(error);
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _integrationBusy = false);
+      }
+    }
+  }
+}
+
+final class _WorkspaceModuleNavigation extends StatelessWidget {
+  const _WorkspaceModuleNavigation({
+    required this.workspaceId,
+    required this.currentArea,
+  });
+
+  final String workspaceId;
+  final String currentArea;
+
+  @override
+  Widget build(BuildContext context) {
+    const modules = <(String, String, IconData)>[
+      ('crm', 'CRM overview', Icons.handshake_outlined),
+      ('contacts', 'Contacts', Icons.contacts_outlined),
+      ('deals', 'Deals', Icons.trending_up_rounded),
+      ('tasks', 'Tasks', Icons.task_alt_outlined),
+      ('calendar', 'Calendar', Icons.calendar_month_outlined),
+      ('documents', 'Documents', Icons.folder_outlined),
+      ('finance', 'Finance', Icons.account_balance_outlined),
+    ];
+    return LumenSurface(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Workspace modules',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              for (final (area, label, icon) in modules)
+                FilterChip(
+                  avatar: Icon(icon, size: 18),
+                  label: Text(label),
+                  selected: currentArea == area,
+                  onSelected: (_) {
+                    if (currentArea != area) {
+                      context.goNamed(
+                        'business-area',
+                        pathParameters: <String, String>{
+                          'workspaceId': workspaceId,
+                          'area': area,
+                        },
+                      );
+                    }
+                  },
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _ProviderBoundaryCard extends StatelessWidget {
+  const _ProviderBoundaryCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.busy,
+    required this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final bool busy;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) => LumenSurface(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Icon(icon),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ),
+            const LumenBadge(label: 'Provider-backed'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(message),
+        const SizedBox(height: 14),
+        LumenPrimaryButton(
+          label: actionLabel,
+          busy: busy,
+          onPressed: onAction,
+          icon: Icons.open_in_new_rounded,
+        ),
+      ],
+    ),
+  );
 }
 
 final class _BusinessSection extends ConsumerStatefulWidget {
@@ -409,6 +636,7 @@ final class _BusinessSection extends ConsumerStatefulWidget {
     required this.title,
     required this.items,
     required this.nextCursor,
+    required this.pipelineStages,
     required this.onChanged,
   });
 
@@ -417,6 +645,7 @@ final class _BusinessSection extends ConsumerStatefulWidget {
   final String title;
   final List<BusinessResource> items;
   final String? nextCursor;
+  final List<BusinessResource> pipelineStages;
   final VoidCallback onChanged;
 
   @override
@@ -424,9 +653,19 @@ final class _BusinessSection extends ConsumerStatefulWidget {
 }
 
 final class _BusinessSectionState extends ConsumerState<_BusinessSection> {
-  late final List<BusinessResource> _items = widget.items.toList();
+  late List<BusinessResource> _items = widget.items.toList();
   late String? _cursor = widget.nextCursor;
   bool _busy = false;
+
+  @override
+  void didUpdateWidget(covariant _BusinessSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.items != widget.items ||
+        oldWidget.nextCursor != widget.nextCursor) {
+      _items = widget.items.toList();
+      _cursor = widget.nextCursor;
+    }
+  }
 
   @override
   Widget build(BuildContext context) => LumenSurface(
@@ -444,13 +683,57 @@ final class _BusinessSectionState extends ConsumerState<_BusinessSection> {
             if (_canCreate(widget.title))
               IconButton(
                 tooltip: 'Create ${widget.title.toLowerCase()}',
-                onPressed: _busy ? null : _create,
+                onPressed:
+                    _busy ||
+                        (widget.title == 'Deals' &&
+                            widget.pipelineStages.isEmpty)
+                    ? null
+                    : _create,
                 icon: const Icon(Icons.add_rounded),
               ),
           ],
         ),
         if (_items.isEmpty)
-          Text('The ${widget.title.toLowerCase()} API returned no records.')
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            child: Column(
+              children: <Widget>[
+                Icon(
+                  _emptyIcon(widget.title),
+                  size: 42,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _emptyTitle(widget.title),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 6),
+                Text(_emptyMessage(widget.title), textAlign: TextAlign.center),
+                if (_canCreate(widget.title)) ...<Widget>[
+                  const SizedBox(height: 14),
+                  LumenPrimaryButton(
+                    label:
+                        widget.title == 'Deals' && widget.pipelineStages.isEmpty
+                        ? 'Pipeline stage required'
+                        : _createLabel(widget.title),
+                    onPressed:
+                        _busy ||
+                            (widget.title == 'Deals' &&
+                                widget.pipelineStages.isEmpty)
+                        ? null
+                        : _create,
+                    disabledReason:
+                        widget.title == 'Deals' && widget.pipelineStages.isEmpty
+                        ? 'Create a pipeline stage before adding a deal.'
+                        : null,
+                    icon: Icons.add_rounded,
+                  ),
+                ],
+              ],
+            ),
+          )
         else
           for (final item in _items)
             Card(
@@ -575,6 +858,8 @@ final class _BusinessSectionState extends ConsumerState<_BusinessSection> {
             BusinessFormField('name', 'Name', validator: _required),
             BusinessFormField('domain', 'Domain', required: false),
             BusinessFormField('phone', 'Phone', required: false),
+            BusinessFormField('job_title', 'Job title', required: false),
+            BusinessFormField('source', 'Source', required: false),
           ],
         );
         if (values != null) {
@@ -612,13 +897,13 @@ final class _BusinessSectionState extends ConsumerState<_BusinessSection> {
                 'email': _empty(values['email']),
                 'phone': _empty(values['phone']),
                 'company_id': null,
-                'job_title': null,
+                'job_title': _empty(values['job_title']),
                 'tags': <String>[],
                 'custom_fields': <String, dynamic>{},
                 'owner_user_id': null,
                 'assignee_user_id': null,
                 'consent_status': 'unknown',
-                'source': null,
+                'source': _empty(values['source']),
               });
         }
       case 'Pipeline stages':
@@ -656,20 +941,24 @@ final class _BusinessSectionState extends ConsumerState<_BusinessSection> {
         values = await showBusinessForm(
           context,
           'Create deal',
-          const <BusinessFormField>[
-            BusinessFormField('name', 'Name', validator: _required),
+          <BusinessFormField>[
+            const BusinessFormField('name', 'Name', validator: _required),
             BusinessFormField(
               'stage_id',
-              'Pipeline stage ID',
+              'Pipeline stage',
+              options: <String, String>{
+                for (final stage in widget.pipelineStages)
+                  stage.id: stage.label,
+              },
               validator: _required,
             ),
-            BusinessFormField(
+            const BusinessFormField(
               'value_minor',
               'Value in minor units',
               initial: '0',
               numeric: true,
             ),
-            BusinessFormField(
+            const BusinessFormField(
               'currency',
               'Currency',
               initial: 'USD',
@@ -980,15 +1269,21 @@ final class _BusinessSectionState extends ConsumerState<_BusinessSection> {
   }
 
   Future<void> _transitionDeal(BusinessResource deal) async {
-    final values =
-        await showBusinessForm(context, 'Move deal', const <BusinessFormField>[
-          BusinessFormField(
-            'stage_id',
-            'Pipeline stage ID',
-            validator: _required,
-          ),
-          BusinessFormField('note', 'Note', required: false),
-        ]);
+    final values = await showBusinessForm(
+      context,
+      'Move deal',
+      <BusinessFormField>[
+        BusinessFormField(
+          'stage_id',
+          'Pipeline stage',
+          options: <String, String>{
+            for (final stage in widget.pipelineStages) stage.id: stage.label,
+          },
+          validator: _required,
+        ),
+        const BusinessFormField('note', 'Note', required: false),
+      ],
+    );
     if (values == null) {
       return;
     }
@@ -1093,22 +1388,25 @@ final class _FinanceReportView extends StatelessWidget {
           'Expenses': report.expenses,
           'Invoices': report.invoices,
         }.entries)
-          ExpansionTile(
-            title: Text('${section.key} (${section.value.length})'),
-            children: <Widget>[
-              if (section.value.isEmpty)
-                const ListTile(title: Text('No report rows.'))
-              else
-                for (final row in section.value)
-                  ListTile(
-                    title: Text(
-                      row.entries
-                          .take(4)
-                          .map((entry) => '${entry.key}: ${entry.value}')
-                          .join(' • '),
+          Material(
+            type: MaterialType.transparency,
+            child: ExpansionTile(
+              title: Text('${section.key} (${section.value.length})'),
+              children: <Widget>[
+                if (section.value.isEmpty)
+                  const ListTile(title: Text('No report rows.'))
+                else
+                  for (final row in section.value)
+                    ListTile(
+                      title: Text(
+                        row.entries
+                            .take(4)
+                            .map((entry) => '${entry.key}: ${entry.value}')
+                            .join(' • '),
+                      ),
                     ),
-                  ),
-            ],
+              ],
+            ),
           ),
       ],
     ),
@@ -1134,6 +1432,8 @@ final class _BusinessDocumentScreenState
     extends ConsumerState<BusinessDocumentScreen> {
   late Future<JsonObject> _future = _load();
   String? _message;
+  String? _signatureMessage;
+  bool _signatureBusy = false;
 
   Future<JsonObject> _load() => ref
       .read(businessRepositoryProvider)
@@ -1145,6 +1445,19 @@ final class _BusinessDocumentScreenState
     subtitle: 'Document versions, upload capability, and approvals.',
     showAuraPresence: true,
     auraPresencePreset: SyloraAuraContextPreset.business,
+    maxContentWidth: 1120,
+    actions: <Widget>[
+      IconButton(
+        tooltip: 'Aura Business',
+        onPressed: () => openAuraConversation(
+          context,
+          ref,
+          purpose: 'business_copilot',
+          title: 'Business Copilot',
+        ),
+        icon: const Icon(Icons.auto_awesome_rounded),
+      ),
+    ],
     child: FutureBuilder<JsonObject>(
       future: _future,
       builder: (context, snapshot) {
@@ -1163,6 +1476,7 @@ final class _BusinessDocumentScreenState
                   .map((value) => requireObject(value, 'document approval'))
                   .toList(growable: false)
             : const <JsonObject>[];
+        final currentVersionId = document['current_version_id'] as String?;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -1203,6 +1517,26 @@ final class _BusinessDocumentScreenState
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 16),
+            _ProviderBoundaryCard(
+              icon: Icons.draw_outlined,
+              title: 'E-signatures',
+              message:
+                  _signatureMessage ??
+                  (currentVersionId == null
+                      ? 'Verify a document version before requesting signatures. '
+                            'No provider request can be made yet.'
+                      : 'Signature requests use only a configured real provider. '
+                            'An unconfigured deployment returns unavailable and '
+                            'does not create a simulated request.'),
+              actionLabel: _signatureBusy
+                  ? 'Checking provider…'
+                  : 'Request e-signatures',
+              busy: _signatureBusy,
+              onAction: _signatureBusy || currentVersionId == null
+                  ? null
+                  : _requestSignature,
             ),
             if (_message != null) ...<Widget>[
               const SizedBox(height: 12),
@@ -1265,6 +1599,62 @@ final class _BusinessDocumentScreenState
   );
 
   void _refresh() => setState(() => _future = _load());
+
+  Future<void> _requestSignature() async {
+    final values = await showBusinessForm(
+      context,
+      'Request e-signatures',
+      const <BusinessFormField>[
+        BusinessFormField(
+          'signer_emails',
+          'Signer emails (comma separated)',
+          validator: _emailList,
+        ),
+      ],
+    );
+    if (values == null) {
+      return;
+    }
+    final signerEmails = values['signer_emails']!
+        .split(',')
+        .map((email) => email.trim())
+        .where((email) => email.isNotEmpty)
+        .toList(growable: false);
+    setState(() {
+      _signatureBusy = true;
+      _signatureMessage = null;
+    });
+    try {
+      final result = await ref
+          .read(businessRepositoryProvider)
+          .requestESignature(
+            widget.workspaceId,
+            widget.documentId,
+            signerEmails,
+          );
+      if (mounted) {
+        setState(() {
+          _signatureMessage =
+              'E-signature request ${result['status']} as operation '
+              '${result['provider_operation_id']}.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _signatureMessage =
+              error is ApiProblem &&
+                  error.code == 'esignature_provider_unavailable'
+              ? 'E-signature unavailable: ${error.detail} No signature request was queued.'
+              : messageFor(error);
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _signatureBusy = false);
+      }
+    }
+  }
 
   Future<void> _upload() async {
     final values = await showBusinessForm(
@@ -1453,6 +1843,7 @@ final class BusinessFormField {
     this.required = true,
     this.numeric = false,
     this.validator,
+    this.options = const <String, String>{},
   });
 
   final String key;
@@ -1461,6 +1852,7 @@ final class BusinessFormField {
   final bool required;
   final bool numeric;
   final FormFieldValidator<String>? validator;
+  final Map<String, String> options;
 }
 
 Future<Map<String, String>?> showBusinessForm(
@@ -1486,24 +1878,46 @@ Future<Map<String, String>?> showBusinessForm(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 for (final field in fields) ...<Widget>[
-                  TextFormField(
-                    controller: controllers[field.key],
-                    keyboardType: field.numeric ? TextInputType.number : null,
-                    decoration: InputDecoration(labelText: field.label),
-                    validator:
-                        field.validator ??
-                        (value) {
-                          if (field.required &&
-                              (value?.trim().isEmpty ?? true)) {
-                            return 'Enter ${field.label.toLowerCase()}.';
-                          }
-                          if (field.numeric &&
-                              int.tryParse(value?.trim() ?? '') == null) {
-                            return 'Enter an integer.';
-                          }
-                          return null;
-                        },
-                  ),
+                  if (field.options.isNotEmpty)
+                    DropdownButtonFormField<String>(
+                      initialValue: field.initial.isEmpty
+                          ? null
+                          : field.initial,
+                      decoration: InputDecoration(labelText: field.label),
+                      items: <DropdownMenuItem<String>>[
+                        for (final option in field.options.entries)
+                          DropdownMenuItem<String>(
+                            value: option.key,
+                            child: Text(option.value),
+                          ),
+                      ],
+                      onChanged: (value) =>
+                          controllers[field.key]!.text = value ?? '',
+                      validator:
+                          field.validator ??
+                          (value) => field.required && value == null
+                              ? 'Select ${field.label.toLowerCase()}.'
+                              : null,
+                    )
+                  else
+                    TextFormField(
+                      controller: controllers[field.key],
+                      keyboardType: field.numeric ? TextInputType.number : null,
+                      decoration: InputDecoration(labelText: field.label),
+                      validator:
+                          field.validator ??
+                          (value) {
+                            if (field.required &&
+                                (value?.trim().isEmpty ?? true)) {
+                              return 'Enter ${field.label.toLowerCase()}.';
+                            }
+                            if (field.numeric &&
+                                int.tryParse(value?.trim() ?? '') == null) {
+                              return 'Enter an integer.';
+                            }
+                            return null;
+                          },
+                    ),
                   const SizedBox(height: 10),
                 ],
               ],
@@ -1530,6 +1944,7 @@ Future<Map<String, String>?> showBusinessForm(
       ],
     ),
   );
+  await Future<void>.delayed(const Duration(milliseconds: 200));
   for (final controller in controllers.values) {
     controller.dispose();
   }
@@ -1555,11 +1970,48 @@ bool _canCreate(String title) => const <String>{
 String _areaTitle(String area) => switch (area) {
   'people' => 'Members, invitations & teams',
   'crm' => 'CRM',
+  'contacts' => 'Contacts',
+  'deals' => 'Deals',
   'tasks' => 'Tasks',
   'calendar' => 'Calendar',
   'documents' => 'Documents',
   'finance' => 'Finance',
   _ => 'Workspace',
+};
+
+String _emptyTitle(String title) => switch (title) {
+  'Contacts' => 'No contacts yet',
+  'Deals' => 'No deals in this pipeline',
+  'Tasks' => 'No tasks to work through',
+  'Pipeline stages' => 'No pipeline stages',
+  _ => 'No ${title.toLowerCase()} yet',
+};
+
+String _emptyMessage(String title) => switch (title) {
+  'Contacts' =>
+    'Create a contact to keep customer details and CRM context together.',
+  'Deals' =>
+    'Add a deal to track value and progress through your pipeline stages.',
+  'Tasks' => 'Create a task to give the workspace a clear next action.',
+  'Pipeline stages' =>
+    'Create the first stage before adding deals to this pipeline.',
+  _ => 'This workspace has no ${title.toLowerCase()} records yet.',
+};
+
+String _createLabel(String title) => switch (title) {
+  'Contacts' => 'Create first contact',
+  'Deals' => 'Create first deal',
+  'Tasks' => 'Create first task',
+  'Pipeline stages' => 'Create pipeline stage',
+  _ => 'Create ${title.toLowerCase()}',
+};
+
+IconData _emptyIcon(String title) => switch (title) {
+  'Contacts' => Icons.contacts_outlined,
+  'Deals' => Icons.trending_up_rounded,
+  'Tasks' => Icons.task_alt_outlined,
+  'Pipeline stages' => Icons.account_tree_outlined,
+  _ => Icons.inbox_outlined,
 };
 
 String? _empty(String? value) {
@@ -1577,6 +2029,18 @@ String? _email(String? value) =>
 
 String? _optionalEmail(String? value) =>
     value?.trim().isEmpty ?? true ? null : _email(value);
+
+String? _emailList(String? value) {
+  final emails = (value ?? '')
+      .split(',')
+      .map((email) => email.trim())
+      .where((email) => email.isNotEmpty)
+      .toList(growable: false);
+  if (emails.isEmpty || emails.any((email) => _email(email) != null)) {
+    return 'Enter one or more valid emails separated by commas.';
+  }
+  return null;
+}
 
 String? _slugValidator(String? value) =>
     RegExp(r'^[a-z0-9]+(?:-[a-z0-9]+)*$').hasMatch(value?.trim() ?? '')

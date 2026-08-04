@@ -80,10 +80,21 @@ void main() {
       ),
     );
 
-    await tester.binding.setSurfaceSize(const Size(600, 800));
+    await tester.binding.setSurfaceSize(const Size(599, 800));
     await tester.pumpWidget(shell());
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
+
+    await tester.binding.setSurfaceSize(const Size(700, 800));
+    await tester.pumpWidget(shell());
+    await tester.pump();
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(
+      tester.widget<NavigationRail>(find.byType(NavigationRail)).scrollable,
+      isTrue,
+    );
+    expect(find.text('Context'), findsNothing);
 
     await tester.binding.setSurfaceSize(const Size(1300, 800));
     await tester.pumpWidget(shell());

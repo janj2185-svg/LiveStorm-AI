@@ -245,6 +245,11 @@ abstract interface class BusinessRepository {
     String approvalId,
     JsonObject payload,
   );
+  Future<JsonObject> requestESignature(
+    String workspaceId,
+    String documentId,
+    List<String> signerEmails,
+  );
   Future<List<BusinessResource>> budgets(String workspaceId);
   Future<BusinessResource> createBudget(String workspaceId, JsonObject payload);
   Future<List<BusinessResource>> expenses(String workspaceId);
@@ -259,6 +264,7 @@ abstract interface class BusinessRepository {
     JsonObject payload,
   );
   Future<BusinessResource> sendInvoice(String workspaceId, String invoiceId);
+  Future<JsonObject> exportToAccounting(String workspaceId);
   Future<FinanceReport> financeReport(String workspaceId);
 }
 
@@ -573,6 +579,24 @@ final class DioBusinessRepository implements BusinessRepository {
   );
 
   @override
+  Future<JsonObject> requestESignature(
+    String workspaceId,
+    String documentId,
+    List<String> signerEmails,
+  ) async {
+    final response = await _client.request(
+      'business/documents/$documentId/esignature',
+      method: 'POST',
+      queryParameters: <String, dynamic>{'workspace_id': workspaceId},
+      data: <String, dynamic>{'signer_emails': signerEmails},
+    );
+    final json = requireObject(response.data, 'e-signature request');
+    requireString(json, 'status');
+    requireString(json, 'provider_operation_id');
+    return json;
+  }
+
+  @override
   Future<List<BusinessResource>> budgets(String workspaceId) =>
       _tenantList('business/finance/budgets', workspaceId);
 
@@ -637,6 +661,19 @@ final class DioBusinessRepository implements BusinessRepository {
         const <String, dynamic>{},
         labelKeys: const ['number'],
       );
+
+  @override
+  Future<JsonObject> exportToAccounting(String workspaceId) async {
+    final response = await _client.request(
+      'business/finance/accounting/export',
+      method: 'POST',
+      queryParameters: <String, dynamic>{'workspace_id': workspaceId},
+    );
+    final json = requireObject(response.data, 'accounting export');
+    requireString(json, 'status');
+    requireString(json, 'provider_operation_id');
+    return json;
+  }
 
   @override
   Future<FinanceReport> financeReport(String workspaceId) async {

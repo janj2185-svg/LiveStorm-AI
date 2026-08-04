@@ -119,7 +119,8 @@ void main() {
         child: _material(const LearningScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('No published courses'), findsOneWidget);
     expect(

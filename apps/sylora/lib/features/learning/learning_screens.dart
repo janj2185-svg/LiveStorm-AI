@@ -421,7 +421,12 @@ final class _LearningCourseScreenState
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             if (curriculum.modules.isEmpty)
-              const Text('The curriculum API returned no modules.')
+              const _LearningEmptyState(
+                title: 'Curriculum is being prepared',
+                message:
+                    'This course is published, but its lesson outline is not available yet. Check back before enrolling.',
+                icon: Icons.menu_book_outlined,
+              )
             else
               for (final module in curriculum.modules)
                 ExpansionTile(
@@ -504,23 +509,28 @@ final class LearningEnrollmentScreen extends ConsumerStatefulWidget {
 
 final class _LearningEnrollmentScreenState
     extends ConsumerState<LearningEnrollmentScreen> {
-  late Future<(Course, Curriculum, CursorPage<LessonProgress>)> _future =
-      _load();
+  late Future<
+    (Course, Curriculum, CursorPage<LessonProgress>, List<PublicQuiz>)
+  >
+  _future = _load();
   Certificate? _certificate;
   String? _message;
   bool _busy = false;
 
-  Future<(Course, Curriculum, CursorPage<LessonProgress>)> _load() async {
+  Future<(Course, Curriculum, CursorPage<LessonProgress>, List<PublicQuiz>)>
+  _load() async {
     final repository = ref.read(learningRepositoryProvider);
     final values = await Future.wait<Object>(<Future<Object>>[
       repository.course(widget.courseId),
       repository.curriculum(widget.courseId),
-      repository.progress(widget.enrollmentId),
+      _loadAllProgress(repository, widget.enrollmentId),
+      repository.quizzes(widget.enrollmentId),
     ]);
     return (
       values[0] as Course,
       values[1] as Curriculum,
       values[2] as CursorPage<LessonProgress>,
+      values[3] as List<PublicQuiz>,
     );
   }
 
@@ -530,7 +540,7 @@ final class _LearningEnrollmentScreenState
     subtitle: 'Lesson progress, quizzes, and certificate issuance.',
     showAuraPresence: true,
     auraPresencePreset: SyloraAuraContextPreset.learning,
-    child: FutureBuilder<(Course, Curriculum, CursorPage<LessonProgress>)>(
+    child: FutureBuilder<(Course, Curriculum, CursorPage<LessonProgress>, List<PublicQuiz>)>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -539,7 +549,22 @@ final class _LearningEnrollmentScreenState
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final (course, curriculum, progress) = snapshot.data!;
+        final (course, curriculum, progress, quizzes) = snapshot.data!;
+        final requiredLessons = curriculum.lessons
+            .where((lesson) => lesson.required)
+            .toList(growable: false);
+        final completedLessons = requiredLessons
+            .where(
+              (lesson) =>
+                  _progressFor(progress.items, lesson.id)?.state == 'completed',
+            )
+            .length;
+        final completion = requiredLessons.isEmpty
+            ? 0.0
+            : completedLessons / requiredLessons.length;
+        final lessonRequirementsMet =
+            requiredLessons.isEmpty ||
+            completedLessons == requiredLessons.length;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -548,47 +573,93 @@ final class _LearningEnrollmentScreenState
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 14),
-            for (final module in curriculum.modules)
-              LumenSurface(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      module.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    for (final lesson in curriculum.lessons.where(
-                      (item) => item.moduleId == module.id,
-                    ))
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          _progressFor(progress.items, lesson.id)?.state ==
-                                  'completed'
-                              ? Icons.check_circle_rounded
-                              : Icons.play_circle_outline_rounded,
+            LumenSurface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Course progress',
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        title: Text(lesson.title),
-                        subtitle: Text(
-                          _progressFor(progress.items, lesson.id)?.state ??
-                              'not started',
-                        ),
-                        onTap: () async {
-                          await context.pushNamed(
-                            'learning-lesson',
-                            pathParameters: <String, String>{
-                              'enrollmentId': widget.enrollmentId,
-                              'lessonId': lesson.id,
-                            },
-                          );
-                          _refresh();
-                        },
                       ),
-                  ],
-                ),
+                      LumenBadge(
+                        label:
+                            '${(completion * 100).round()}% · $completedLessons/${requiredLessons.length}',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  LinearProgressIndicator(
+                    value: completion,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    completedLessons == requiredLessons.length &&
+                            requiredLessons.isNotEmpty
+                        ? 'All required lessons are complete. Finish any required quizzes to unlock the certificate.'
+                        : 'Complete each required lesson to advance toward certification.',
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: 14),
+            if (curriculum.modules.isEmpty)
+              const _LearningEmptyState(
+                title: 'No lessons available',
+                message:
+                    'The course outline is empty. You can return later after the author publishes lessons.',
+                icon: Icons.menu_book_outlined,
+              )
+            else
+              for (final module in curriculum.modules)
+                LumenSurface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        module.title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      for (final lesson in curriculum.lessons.where(
+                        (item) => item.moduleId == module.id,
+                      ))
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            _progressFor(progress.items, lesson.id)?.state ==
+                                    'completed'
+                                ? Icons.check_circle_rounded
+                                : Icons.play_circle_outline_rounded,
+                          ),
+                          title: Text(lesson.title),
+                          subtitle: Text(
+                            _progressFor(progress.items, lesson.id)?.state ??
+                                'Not started',
+                          ),
+                          trailing: lesson.required
+                              ? const LumenBadge(label: 'Required')
+                              : null,
+                          onTap: () async {
+                            await context.pushNamed(
+                              'learning-lesson',
+                              pathParameters: <String, String>{
+                                'enrollmentId': widget.enrollmentId,
+                                'lessonId': lesson.id,
+                              },
+                            );
+                            _refresh();
+                          },
+                        ),
+                    ],
+                  ),
+                ),
             const SizedBox(height: 16),
-            _QuizLookup(enrollmentId: widget.enrollmentId),
+            _QuizList(enrollmentId: widget.enrollmentId, quizzes: quizzes),
             const SizedBox(height: 16),
             LumenSurface(
               child: Column(
@@ -599,19 +670,42 @@ final class _LearningEnrollmentScreenState
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const Text(
-                    'Issuance succeeds only after the backend confirms all completion requirements.',
+                    'Issuance succeeds only after the backend confirms all lesson and quiz requirements.',
                   ),
                   const SizedBox(height: 12),
                   LumenPrimaryButton(
                     label: 'Issue certificate',
                     busy: _busy,
-                    onPressed: _issueCertificate,
+                    onPressed: lessonRequirementsMet ? _issueCertificate : null,
+                    disabledReason:
+                        'Complete all required lessons before requesting a certificate.',
                     icon: Icons.workspace_premium_outlined,
                   ),
                   if (_certificate != null) ...<Widget>[
-                    const SizedBox(height: 10),
-                    SelectableText(
-                      'Verification code: ${_certificate!.verificationCode}',
+                    const SizedBox(height: 14),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const LumenBadge(label: 'Certificate issued'),
+                            const SizedBox(height: 8),
+                            Text(
+                              _certificate!.courseTitle,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            Text(_certificate!.recipientDisplayName),
+                            Text(
+                              'Issued ${DateFormat.yMMMd().format(_certificate!.issuedAt.toLocal())}',
+                            ),
+                            const SizedBox(height: 8),
+                            SelectableText(
+                              'Verification code: ${_certificate!.verificationCode}',
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     LumenSecondaryButton(
@@ -682,23 +776,11 @@ final class _LearningEnrollmentScreenState
   }
 }
 
-final class _QuizLookup extends StatefulWidget {
-  const _QuizLookup({required this.enrollmentId});
+final class _QuizList extends StatelessWidget {
+  const _QuizList({required this.enrollmentId, required this.quizzes});
 
   final String enrollmentId;
-
-  @override
-  State<_QuizLookup> createState() => _QuizLookupState();
-}
-
-final class _QuizLookupState extends State<_QuizLookup> {
-  final _quizId = TextEditingController();
-
-  @override
-  void dispose() {
-    _quizId.dispose();
-    super.dispose();
-  }
+  final List<PublicQuiz> quizzes;
 
   @override
   Widget build(BuildContext context) => LumenSurface(
@@ -706,31 +788,32 @@ final class _QuizLookupState extends State<_QuizLookup> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Text('Course quiz', style: Theme.of(context).textTheme.headlineSmall),
-        const Text(
-          'The curriculum response does not expose quiz IDs. Use the quiz ID '
-          'provided by the course author.',
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _quizId,
-          decoration: const InputDecoration(labelText: 'Quiz ID'),
-        ),
-        const SizedBox(height: 10),
-        LumenPrimaryButton(
-          label: 'Open quiz',
-          onPressed: () {
-            if (_quizId.text.trim().isNotEmpty) {
-              context.pushNamed(
+        const SizedBox(height: 8),
+        if (quizzes.isEmpty)
+          const _LearningEmptyState(
+            title: 'No quizzes in this course',
+            message:
+                'There are no knowledge checks attached to this published course.',
+            icon: Icons.quiz_outlined,
+          )
+        else
+          for (final quiz in quizzes)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.quiz_outlined),
+              title: Text(quiz.title),
+              subtitle: Text(
+                '${quiz.questions.length} questions · ${quiz.attemptLimit} attempts',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.pushNamed(
                 'learning-quiz',
                 pathParameters: <String, String>{
-                  'quizId': _quizId.text.trim(),
-                  'enrollmentId': widget.enrollmentId,
+                  'quizId': quiz.id,
+                  'enrollmentId': enrollmentId,
                 },
-              );
-            }
-          },
-          icon: Icons.quiz_outlined,
-        ),
+              ),
+            ),
       ],
     ),
   );
@@ -753,12 +836,21 @@ final class LearningLessonScreen extends ConsumerStatefulWidget {
 
 final class _LearningLessonScreenState
     extends ConsumerState<LearningLessonScreen> {
-  late Future<Lesson> _future = ref
-      .read(learningRepositoryProvider)
-      .lesson(widget.enrollmentId, widget.lessonId);
   LessonProgress? _progress;
+  late Future<Lesson> _future = _load();
   bool _busy = false;
   String? _message;
+
+  Future<Lesson> _load() async {
+    final repository = ref.read(learningRepositoryProvider);
+    final values = await Future.wait<Object>(<Future<Object>>[
+      repository.lesson(widget.enrollmentId, widget.lessonId),
+      _loadAllProgress(repository, widget.enrollmentId),
+    ]);
+    final page = values[1] as CursorPage<LessonProgress>;
+    _progress = _progressFor(page.items, widget.lessonId);
+    return values[0] as Lesson;
+  }
 
   @override
   Widget build(BuildContext context) => LumenPage(
@@ -772,11 +864,7 @@ final class _LearningLessonScreenState
         if (snapshot.hasError) {
           return LumenErrorView(
             error: snapshot.error!,
-            onRetry: () => setState(
-              () => _future = ref
-                  .read(learningRepositoryProvider)
-                  .lesson(widget.enrollmentId, widget.lessonId),
-            ),
+            onRetry: () => setState(() => _future = _load()),
           );
         }
         if (!snapshot.hasData) {
@@ -795,14 +883,54 @@ final class _LearningLessonScreenState
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   Text('${lesson.kind} • ${lesson.requiredSeconds}s required'),
-                  if (lesson.body != null) ...<Widget>[
+                  if (lesson.body?.trim().isNotEmpty == true) ...<Widget>[
                     const Divider(height: 28),
                     SelectableText(lesson.body!),
+                  ] else ...<Widget>[
+                    const SizedBox(height: 16),
+                    const _LearningEmptyState(
+                      title: 'Lesson content is not available',
+                      message:
+                          'The lesson exists in this course, but its learning material has not been published.',
+                      icon: Icons.article_outlined,
+                    ),
                   ],
                 ],
               ),
             ),
             const SizedBox(height: 14),
+            if (_progress != null) ...<Widget>[
+              LumenSurface(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        const Expanded(child: Text('Participation progress')),
+                        LumenBadge(label: _progress!.state),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    LinearProgressIndicator(
+                      value: lesson.requiredSeconds <= 0
+                          ? (_progress!.state == 'completed' ? 1.0 : 0.0)
+                          : (_progress!.heartbeatSeconds /
+                                    lesson.requiredSeconds)
+                                .clamp(0.0, 1.0)
+                                .toDouble(),
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_progress!.heartbeatSeconds}s recorded · '
+                      '${_progress!.lastPositionSeconds}s position',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -815,7 +943,7 @@ final class _LearningLessonScreenState
                 OutlinedButton.icon(
                   onPressed: _busy ? null : _heartbeat,
                   icon: const Icon(Icons.monitor_heart_outlined),
-                  label: const Text('Record 30-second heartbeat'),
+                  label: const Text('Record progress'),
                 ),
                 FilledButton.tonalIcon(
                   onPressed: _busy ? null : _complete,
@@ -824,14 +952,9 @@ final class _LearningLessonScreenState
                 ),
               ],
             ),
-            if (_progress != null || _message != null) ...<Widget>[
+            if (_message != null) ...<Widget>[
               const SizedBox(height: 14),
-              LumenSurface(
-                child: Text(
-                  _message ??
-                      '${_progress!.state} • ${_progress!.heartbeatSeconds}s recorded',
-                ),
-              ),
+              LumenSurface(child: Text(_message!)),
             ],
           ],
         );
@@ -936,7 +1059,14 @@ final class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
             Text(quiz.title, style: Theme.of(context).textTheme.headlineLarge),
             Text('Attempt limit: ${quiz.attemptLimit}'),
             const SizedBox(height: 12),
-            if (_attempt == null)
+            if (quiz.questions.isEmpty)
+              const _LearningEmptyState(
+                title: 'Quiz is not ready',
+                message:
+                    'This quiz has no published questions. No attempt has been started.',
+                icon: Icons.quiz_outlined,
+              )
+            else if (_attempt == null)
               LumenPrimaryButton(
                 label: 'Start quiz attempt',
                 busy: _busy,
@@ -1174,6 +1304,20 @@ final class _CertificateVerificationViewState
   }
 }
 
+Future<CursorPage<LessonProgress>> _loadAllProgress(
+  LearningRepository repository,
+  String enrollmentId,
+) async {
+  final items = <LessonProgress>[];
+  String? cursor;
+  do {
+    final page = await repository.progress(enrollmentId, cursor: cursor);
+    items.addAll(page.items);
+    cursor = page.nextCursor;
+  } while (cursor != null);
+  return CursorPage<LessonProgress>(items: items, nextCursor: null);
+}
+
 LessonProgress? _progressFor(List<LessonProgress> values, String lessonId) {
   for (final value in values) {
     if (value.lessonId == lessonId) {
@@ -1181,6 +1325,41 @@ LessonProgress? _progressFor(List<LessonProgress> values, String lessonId) {
     }
   }
   return null;
+}
+
+final class _LearningEmptyState extends StatelessWidget {
+  const _LearningEmptyState({
+    required this.title,
+    required this.message,
+    required this.icon,
+  });
+
+  final String title;
+  final String message;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 20),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, size: 42, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 12),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
+    ),
+  );
 }
 
 String _coursePrice(Course course) => switch (course.settlementMethod) {

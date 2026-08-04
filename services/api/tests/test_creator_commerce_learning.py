@@ -908,6 +908,14 @@ async def test_learning_progress_quiz_certificate_and_immutability(api: APIHarne
     )
     assert enrollment.status_code == 201, enrollment.text
     enrollment_id = enrollment.json()["id"]
+    enrolled_quizzes = await api.client.get(
+        f"/v1/learning/enrollments/{enrollment_id}/quizzes",
+        headers=learner_headers,
+    )
+    assert enrolled_quizzes.status_code == 200, enrolled_quizzes.text
+    assert enrolled_quizzes.json()[0]["id"] == quiz_id
+    assert enrolled_quizzes.json()[0]["title"] == "Final quiz"
+    assert "is_correct" not in enrolled_quizzes.text
     enrolled_lesson = await api.client.get(
         f"/v1/learning/enrollments/{enrollment_id}/lessons/{first_id}",
         headers=learner_headers,

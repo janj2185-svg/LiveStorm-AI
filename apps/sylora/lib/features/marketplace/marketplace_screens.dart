@@ -1093,6 +1093,7 @@ final class _MarketplaceSellerScreenState
     subtitle: 'Store setup, seller products, sales, and service bookings.',
     showAuraPresence: true,
     auraPresencePreset: SyloraAuraContextPreset.marketplace,
+    maxContentWidth: 1180,
     child:
         FutureBuilder<
           (

@@ -454,6 +454,7 @@ abstract interface class LearningRepository {
     required int positionSeconds,
   });
   Future<LessonProgress> completeLesson(String enrollmentId, String lessonId);
+  Future<List<PublicQuiz>> quizzes(String enrollmentId);
   Future<PublicQuiz> quiz(String quizId, String enrollmentId);
   Future<QuizAttempt> startQuiz(String quizId, String enrollmentId);
   Future<void> answerQuiz(
@@ -593,6 +594,23 @@ final class DioLearningRepository implements LearningRepository {
     return LessonProgress.fromJson(
       requireObject(response.data, 'lesson progress'),
     );
+  }
+
+  @override
+  Future<List<PublicQuiz>> quizzes(String enrollmentId) async {
+    final response = await _client.request(
+      'learning/enrollments/$enrollmentId/quizzes',
+    );
+    final data = response.data;
+    if (data is! List<dynamic>) {
+      throw const FormatException('enrollment quizzes must be a JSON array.');
+    }
+    return data
+        .map(
+          (Object? value) =>
+              PublicQuiz.fromJson(requireObject(value, 'enrollment quiz')),
+        )
+        .toList(growable: false);
   }
 
   @override

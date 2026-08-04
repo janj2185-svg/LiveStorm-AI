@@ -224,6 +224,12 @@ abstract interface class SocialRepository {
   Future<List<FriendSummaryModel>> mutuals(String handle);
   Future<void> block(String handle, bool value);
   Future<void> mute(String handle, bool value);
+  Future<String> report({
+    required String targetType,
+    required String targetId,
+    required String reason,
+    String? evidence,
+  });
   Future<SocialSearchBundle> search(String query);
   Future<List<NamedResource>> communities({String? query});
   Future<NamedResource> createCommunity({
@@ -473,6 +479,26 @@ final class DioSocialRepository implements SocialRepository {
       'social/mutes/$handle',
       method: value ? 'POST' : 'DELETE',
     );
+  }
+
+  @override
+  Future<String> report({
+    required String targetType,
+    required String targetId,
+    required String reason,
+    String? evidence,
+  }) async {
+    final response = await _client.request(
+      'social/reports',
+      method: 'POST',
+      data: <String, dynamic>{
+        'target_type': targetType,
+        'target_id': targetId,
+        'reason': reason,
+        'evidence': evidence,
+      },
+    );
+    return requireString(requireObject(response.data, 'content report'), 'id');
   }
 
   @override

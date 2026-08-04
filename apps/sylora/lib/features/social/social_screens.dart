@@ -94,6 +94,137 @@ final commentsProvider = FutureProvider.autoDispose
       (ref, id) => ref.watch(socialRepositoryProvider).comments(id),
     );
 
+const List<(String, String)> _reportReasons = <(String, String)>[
+  ('spam', 'Spam'),
+  ('harassment', 'Harassment or bullying'),
+  ('hate', 'Hateful content'),
+  ('violence', 'Violence or threats'),
+  ('sexual_content', 'Sexual content'),
+  ('misinformation', 'Misinformation'),
+  ('impersonation', 'Impersonation'),
+  ('other', 'Something else'),
+];
+
+Future<void> _showReportDialog(
+  BuildContext context,
+  WidgetRef ref, {
+  required String targetType,
+  required String targetId,
+  required String targetLabel,
+}) async {
+  final evidence = TextEditingController();
+  var reason = _reportReasons.first.$1;
+  var busy = false;
+  String? error;
+  final reportId = await showDialog<String>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        icon: const Icon(Icons.shield_outlined),
+        title: Text('Report $targetLabel'),
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const Text(
+                'Reports are reviewed by the safety team. The person you '
+                'report will not be told who submitted it.',
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: reason,
+                decoration: const InputDecoration(labelText: 'Reason'),
+                items: <DropdownMenuItem<String>>[
+                  for (final option in _reportReasons)
+                    DropdownMenuItem<String>(
+                      value: option.$1,
+                      child: Text(option.$2),
+                    ),
+                ],
+                onChanged: busy
+                    ? null
+                    : (value) {
+                        if (value != null) {
+                          reason = value;
+                        }
+                      },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: evidence,
+                enabled: !busy,
+                minLines: 3,
+                maxLines: 6,
+                maxLength: 5000,
+                decoration: const InputDecoration(
+                  labelText: 'What happened? (optional)',
+                  hintText: 'Share details that will help the reviewer.',
+                  alignLabelWithHint: true,
+                ),
+              ),
+              if (error != null)
+                Text(
+                  error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: busy ? null : () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            onPressed: busy
+                ? null
+                : () async {
+                    setDialogState(() {
+                      busy = true;
+                      error = null;
+                    });
+                    try {
+                      final id = await ref
+                          .read(socialRepositoryProvider)
+                          .report(
+                            targetType: targetType,
+                            targetId: targetId,
+                            reason: reason,
+                            evidence: evidence.text.trim().isEmpty
+                                ? null
+                                : evidence.text.trim(),
+                          );
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext, id);
+                      }
+                    } on Object catch (caught) {
+                      if (dialogContext.mounted) {
+                        setDialogState(() {
+                          busy = false;
+                          error = messageFor(caught);
+                        });
+                      }
+                    }
+                  },
+            icon: const Icon(Icons.flag_outlined),
+            label: Text(busy ? 'Sending…' : 'Submit report'),
+          ),
+        ],
+      ),
+    ),
+  );
+  evidence.dispose();
+  if (reportId != null && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Report submitted. The safety team will review it.'),
+      ),
+    );
+  }
+}
+
 @immutable
 final class CommunitySnapshot {
   const CommunitySnapshot({required this.community, required this.channels});
@@ -681,6 +812,18 @@ final class PostCard extends ConsumerWidget {
               ),
             ),
             LumenBadge(label: post.rawLifecycle),
+            if (ref.watch(authControllerProvider).user?.id != post.authorId)
+              IconButton(
+                tooltip: 'Report post',
+                onPressed: () => _showReportDialog(
+                  context,
+                  ref,
+                  targetType: 'post',
+                  targetId: post.id,
+                  targetLabel: 'post',
+                ),
+                icon: const Icon(Icons.more_horiz_rounded),
+              ),
           ],
         ),
         const SizedBox(height: 16),
@@ -2089,6 +2232,7 @@ final class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       intensity: 0.92,
       showAuraPresence: true,
       auraPresencePreset: SyloraAuraContextPreset.feed,
+      maxContentWidth: 1120,
       actions: <Widget>[
         IconButton(
           tooltip: l10n.communitiesCreate,
@@ -2171,19 +2315,28 @@ final class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                   icon: Icons.groups_2_outlined,
                 );
               }
-              return Column(
-                children: <Widget>[
-                  for (var index = 0; index < communities.length; index++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: SyloraStaggeredReveal(
-                        index: index,
-                        child: _CommunityBrowseCard(
-                          community: communities[index],
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.maxWidth >= 760 ? 2 : 1;
+                  final cardWidth =
+                      (constraints.maxWidth - (columns - 1) * 12) / columns;
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: <Widget>[
+                      for (var index = 0; index < communities.length; index++)
+                        SizedBox(
+                          width: cardWidth,
+                          child: SyloraStaggeredReveal(
+                            index: index,
+                            child: _CommunityBrowseCard(
+                              community: communities[index],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                ],
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -2644,6 +2797,19 @@ final class PublicProfileScreen extends ConsumerWidget {
                   },
                   child: Text(l10n.profileBlock),
                 ),
+                if (ref.watch(authControllerProvider).user?.id !=
+                    profile.userId)
+                  TextButton.icon(
+                    onPressed: () => _showReportDialog(
+                      context,
+                      ref,
+                      targetType: 'user',
+                      targetId: profile.userId,
+                      targetLabel: '@$handle',
+                    ),
+                    icon: const Icon(Icons.flag_outlined),
+                    label: const Text('Report'),
+                  ),
               ],
             ),
           ],
