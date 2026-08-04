@@ -273,43 +273,26 @@ final class LumenResponsiveShell extends StatelessWidget {
       if (SyloraBreakpoints.isPhone(width)) {
         final mobileDestinations = compactDestinations ?? destinations;
         final mobileIndex = compactSelectedIndex ?? selectedIndex;
+        // A4 Shorts: floating island dock, icons first (label only when selected).
         return Scaffold(
           backgroundColor: Colors.transparent,
           body: body,
-          bottomNavigationBar: NavigationBarTheme(
-            data: NavigationBarThemeData(
-              labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                final selected = states.contains(WidgetState.selected);
-                return SyloraTokens.body(
-                  11.5,
-                  color: selected ? SyloraTokens.violet : SyloraTokens.inkMute,
-                  weight: FontWeight.w600,
-                );
-              }),
-              height: 68,
-            ),
-            child: NavigationBar(
-              backgroundColor: SyloraTokens.glassStrong,
-              elevation: 0,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          extendBody: true,
+          bottomNavigationBar: SafeArea(
+            minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+            child: _SyloraIslandDock(
+              destinations: mobileDestinations,
               selectedIndex:
                   mobileIndex.clamp(0, mobileDestinations.length - 1),
               onDestinationSelected:
                   onCompactDestinationSelected ?? onDestinationSelected,
-              destinations: <NavigationDestination>[
-                for (final destination in mobileDestinations)
-                  NavigationDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.selectedIcon),
-                    label: destination.label,
-                  ),
-              ],
             ),
           ),
         );
       }
       final expanded = SyloraBreakpoints.isWide(width);
       final tablet = SyloraBreakpoints.isTablet(width);
+      // A4 Cinema: thin icon rail; labels only on wide desktop.
       return Scaffold(
         backgroundColor: Colors.transparent,
         body: Row(
@@ -317,21 +300,31 @@ final class LumenResponsiveShell extends StatelessWidget {
           children: <Widget>[
             DecoratedBox(
               decoration: BoxDecoration(
-                color: SyloraTokens.glassStrong,
+                color: SyloraTokens.glassStrong.withValues(alpha: 0.92),
                 border: Border(
                   right: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.62),
+                    color: Colors.white.withValues(alpha: 0.55),
                   ),
                 ),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    color: SyloraTokens.ion.withValues(alpha: 0.06),
+                    blurRadius: 28,
+                    offset: const Offset(4, 0),
+                  ),
+                ],
               ),
               child: NavigationRail(
                 backgroundColor: Colors.transparent,
                 extended: expanded,
-                minWidth: tablet ? 76 : 72,
-                selectedIndex: selectedIndex,
+                minWidth: tablet ? 72 : 68,
+                selectedIndex: selectedIndex.clamp(0, destinations.length - 1),
                 onDestinationSelected: onDestinationSelected,
+                labelType: expanded
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.selected,
                 leading: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   child: expanded
                       ? const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -377,6 +370,81 @@ final class LumenResponsiveShell extends StatelessWidget {
       );
     },
   );
+}
+
+/// A4 phone dock — frosted island, soft pulse on selection, no label clutter.
+final class _SyloraIslandDock extends StatelessWidget {
+  const _SyloraIslandDock({
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onDestinationSelected,
+  });
+
+  final List<ShellDestination> destinations;
+  final int selectedIndex;
+  final ValueChanged<int> onDestinationSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: SyloraTokens.glassStrong.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: SyloraTokens.ink.withValues(alpha: 0.08),
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: SyloraTokens.ion.withValues(alpha: 0.12),
+            blurRadius: 36,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            indicatorColor: SyloraTokens.ion.withValues(alpha: 0.16),
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              final selected = states.contains(WidgetState.selected);
+                return SyloraTokens.body(
+                10.5,
+                color: selected ? SyloraTokens.ion : Colors.transparent,
+                weight: FontWeight.w600,
+              );
+            }),
+            height: 64,
+          ),
+          child: NavigationBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            overlayColor: WidgetStatePropertyAll(
+              SyloraTokens.ion.withValues(alpha: 0.08),
+            ),
+            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            selectedIndex: selectedIndex,
+            onDestinationSelected: onDestinationSelected,
+            destinations: <NavigationDestination>[
+              for (final destination in destinations)
+                NavigationDestination(
+                  icon: Icon(destination.icon, size: 24),
+                  selectedIcon: Icon(
+                    destination.selectedIcon,
+                    size: 26,
+                    color: SyloraTokens.ion,
+                  ),
+                  label: destination.label,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 final class LumenPage extends StatelessWidget {

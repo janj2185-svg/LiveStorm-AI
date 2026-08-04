@@ -32,6 +32,12 @@ const _homeDestination = ShellDestination(
   selectedIcon: Icons.home_rounded,
   path: '/home',
 );
+const _liveDestination = ShellDestination(
+  label: 'Live',
+  icon: Icons.sensors_outlined,
+  selectedIcon: Icons.sensors_rounded,
+  path: '/live',
+);
 const _searchDestination = ShellDestination(
   label: 'Search',
   icon: Icons.search_outlined,
@@ -75,28 +81,30 @@ const _adminDestination = ShellDestination(
   path: '/admin',
 );
 const _moreDestination = ShellDestination(
-  label: 'More',
-  icon: Icons.apps_outlined,
-  selectedIcon: Icons.apps_rounded,
+  label: 'Me',
+  icon: Icons.person_outline_rounded,
+  selectedIcon: Icons.person_rounded,
   path: '/more',
 );
 
+/// A4 Adaptive — phone Shorts dock (icon-first, no label clutter).
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
+  _liveDestination,
   _searchDestination,
-  _friendsDestination,
   _messagesDestination,
-  _marketplaceDestination,
   _moreDestination,
 ];
 
+/// A4 Adaptive — desktop/tablet Cinema rail (same IA + role tools).
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   final roleSet = roles.toSet();
   return <ShellDestination>[
     _homeDestination,
+    _liveDestination,
     _searchDestination,
-    _friendsDestination,
     _messagesDestination,
+    _friendsDestination,
     _marketplaceDestination,
     if (roleSet.contains('creator') || roleSet.contains('admin'))
       _creatorDestination,
@@ -648,6 +656,7 @@ List<ShellDestination> _localizedDestinations(
 String _localizedDestinationLabel(AppLocalizations l10n, String path) =>
     switch (path) {
       '/home' => l10n.navHome,
+      '/live' => l10n.navLive,
       '/search' => l10n.navSearch,
       '/friends' => l10n.navFriends,
       '/messages' => l10n.navMessages,
@@ -655,7 +664,7 @@ String _localizedDestinationLabel(AppLocalizations l10n, String path) =>
       '/creator' => l10n.navCreator,
       '/business' => l10n.navWorkspace,
       '/admin' => l10n.navAdmin,
-      '/more' => l10n.navMore,
+      '/more' => l10n.navProfile,
       _ => l10n.navMore,
     };
 

@@ -1462,16 +1462,16 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
     final next = value.isLoading
         ? (
             emotion: AuraEmotion.thinking,
-            tip: 'Aura is checking AI provider status.',
+            tip: 'Хвилинку — перевіряю, чи все готове…',
           )
         : value.hasError
         ? (
             emotion: AuraEmotion.focused,
-            tip: 'Aura needs the AI status check to recover.',
+            tip: 'Звʼязок з AI хитається. Спробуй оновити.',
           )
         : (
             emotion: AuraEmotion.greeting,
-            tip: 'Aura is ready for your next prompt.',
+            tip: 'Я Aura — пиши як людині, я поруч.',
           );
     if (_aura.emotion == next.emotion && _aura.tip == next.tip) {
       return;
@@ -1652,14 +1652,14 @@ final class _AiConversationScreenState
     final messages = ref.watch(aiMessagesProvider(widget.conversationId));
     final conversationHeight = (MediaQuery.sizeOf(context).height - 260).clamp(
       420.0,
-      760.0,
+      820.0,
     );
     return LumenPage(
-      title: 'AI conversation',
-      subtitle: 'Ask Aura through the configured provider pipeline.',
+      title: 'Aura',
+      subtitle: 'Пиши природно — я відповім як живий співрозмовник.',
       showAuraDock: true,
       auraEmotion: _sending ? AuraEmotion.thinking : AuraEmotion.listening,
-      auraLabel: _sending ? 'Thinking' : 'Listening',
+      auraLabel: _sending ? 'Думаю…' : 'Слухаю',
       showAuraPresence: true,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.ai,
@@ -1672,33 +1672,42 @@ final class _AiConversationScreenState
                 value: messages,
                 onRetry: () =>
                     ref.invalidate(aiMessagesProvider(widget.conversationId)),
-                data: (page) => page.items.isEmpty
+                data: (page) => page.items.isEmpty && !_sending
                     ? LumenEmptyView(
-                        title: 'Start the conversation',
+                        title: 'Привіт, я Aura',
                         message:
-                            'No messages were returned. Your first request will be sent to the configured provider.',
-                        actionLabel: 'Focus message field',
+                            'Можеш писати як другу: коротко чи розгорнуто. '
+                            'Я підхоплю думку й відповім по суті.',
+                        actionLabel: 'Почати розмову',
                         onAction: _messageFocus.requestFocus,
-                        icon: Icons.auto_awesome_outlined,
+                        icon: Icons.waving_hand_rounded,
                       )
                     : ListView.builder(
                         reverse: true,
-                        padding: const EdgeInsets.only(bottom: 12),
-                        itemCount: page.items.length,
-                        itemBuilder: (context, index) => _AiMessageCard(
-                          conversationId: widget.conversationId,
-                          message: page.items[index],
-                          onChanged: () => ref.invalidate(
-                            aiMessagesProvider(widget.conversationId),
-                          ),
-                        ),
+                        padding: const EdgeInsets.only(bottom: 12, top: 8),
+                        itemCount: page.items.length + (_sending ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (_sending && index == 0) {
+                            return const _AuraTypingBubble();
+                          }
+                          final messageIndex = _sending ? index - 1 : index;
+                          return _AiMessageBubble(
+                            conversationId: widget.conversationId,
+                            message: page.items[messageIndex],
+                            onChanged: () => ref.invalidate(
+                              aiMessagesProvider(widget.conversationId),
+                            ),
+                          );
+                        },
                       ),
               ),
             ),
             const SizedBox(height: 12),
             LumenSurface(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+              radius: 24,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: <Widget>[
                   Expanded(
                     child: TextField(
@@ -1706,21 +1715,30 @@ final class _AiConversationScreenState
                       focusNode: _messageFocus,
                       minLines: 1,
                       maxLines: 6,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) {
+                        if (!_sending) {
+                          unawaited(_send());
+                        }
+                      },
                       decoration: const InputDecoration(
-                        labelText: 'Ask SYLORA',
+                        hintText: 'Напиши Aura…',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   IconButton.filled(
-                    tooltip: 'Send to AI provider',
-                    onPressed: _sending ? null : _send,
+                    tooltip: 'Надіслати',
+                    onPressed: _sending ? null : () => unawaited(_send()),
                     icon: _sending
                         ? const SizedBox.square(
                             dimension: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.send_rounded),
+                        : const Icon(Icons.arrow_upward_rounded),
                   ),
                 ],
               ),
@@ -1737,14 +1755,14 @@ final class _AiConversationScreenState
       return;
     }
     setState(() => _sending = true);
-    _aura.think('Aura is thinking through your request.');
+    _aura.think('Хвилинку — збираю думку…');
     try {
       await ref.read(aiRepositoryProvider).send(widget.conversationId, content);
       _message.clear();
       ref.invalidate(aiMessagesProvider(widget.conversationId));
-      _aura.speak('Aura sent a provider-backed reply.');
+      _aura.speak('Ось що вийшло — якщо треба, уточни.');
     } on Object catch (error) {
-      _aura.focus('Aura hit a provider blocker.');
+      _aura.focus('Ой, щось пішло не так. Спробуй ще раз.');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -1763,15 +1781,83 @@ final class _AiConversationScreenState
       return;
     }
     if (_messageFocus.hasFocus) {
-      _aura.listen('Aura is listening to your prompt.');
+      _aura.listen('Слухаю тебе…');
     } else {
-      _aura.greet('Aura is ready for your next prompt.');
+      _aura.greet('Я поруч — пиши, коли будеш готовий.');
     }
   }
 }
 
-final class _AiMessageCard extends ConsumerWidget {
-  const _AiMessageCard({
+final class _AuraTypingBubble extends StatefulWidget {
+  const _AuraTypingBubble();
+
+  @override
+  State<_AuraTypingBubble> createState() => _AuraTypingBubbleState();
+}
+
+final class _AuraTypingBubbleState extends State<_AuraTypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: FadeTransition(
+          opacity: Tween<double>(begin: 0.55, end: 1).animate(_pulse),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: SyloraTokens.glassStrong,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+                bottomLeft: Radius.circular(6),
+              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  SyloraAura(
+                    size: 28,
+                    emotion: AuraEmotion.thinking,
+                    animate: true,
+                    showLabel: false,
+                  ),
+                  SizedBox(width: 10),
+                  Text('Aura друкує…'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _AiMessageBubble extends ConsumerWidget {
+  const _AiMessageBubble({
     required this.conversationId,
     required this.message,
     required this.onChanged,
@@ -1782,74 +1868,114 @@ final class _AiMessageCard extends ConsumerWidget {
   final VoidCallback onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => LumenSurface(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            LumenBadge(
-              label: message.role,
-              color: message.role == 'assistant'
-                  ? LumenColors.aether
-                  : LumenColors.pulse,
-            ),
-            const Spacer(),
-            Text(message.status),
-          ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAssistant = message.role == 'assistant' || message.role == 'system';
+    final bubbleColor = isAssistant
+        ? SyloraTokens.glassStrong
+        : SyloraTokens.ion.withValues(alpha: 0.16);
+    return Align(
+      alignment: isAssistant ? Alignment.centerLeft : Alignment.centerRight,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.82,
         ),
-        const SizedBox(height: 12),
-        SelectableText(message.content),
-        if (message.citations.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 12),
-          Text('Citations', style: Theme.of(context).textTheme.titleLarge),
-          for (final citation in message.citations)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.link_rounded),
-              title: Text('${citation.sourceType}: ${citation.sourceId}'),
-              subtitle: citation.excerpt == null
-                  ? null
-                  : Text(citation.excerpt!),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: bubbleColor,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(18),
+                topRight: const Radius.circular(18),
+                bottomLeft: Radius.circular(isAssistant ? 6 : 18),
+                bottomRight: Radius.circular(isAssistant ? 18 : 6),
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: isAssistant ? 0.65 : 0.4),
+              ),
             ),
-        ],
-        for (final proposal in message.proposals) ...<Widget>[
-          const Divider(),
-          Text(
-            'Tool proposal: ${proposal.toolName}',
-            style: Theme.of(context).textTheme.titleLarge,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  if (isAssistant)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          SyloraAura(
+                            size: 22,
+                            emotion: AuraEmotion.speaking,
+                            animate: false,
+                            showLabel: false,
+                          ),
+                          SizedBox(width: 6),
+                          Text('Aura'),
+                        ],
+                      ),
+                    ),
+                  SelectableText(message.content),
+                  if (message.citations.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 10),
+                    Text(
+                      'Джерела',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    for (final citation in message.citations)
+                      ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.link_rounded),
+                        title: Text(
+                          '${citation.sourceType}: ${citation.sourceId}',
+                        ),
+                        subtitle: citation.excerpt == null
+                            ? null
+                            : Text(citation.excerpt!),
+                      ),
+                  ],
+                  for (final proposal in message.proposals) ...<Widget>[
+                    const Divider(),
+                    Text(
+                      'Tool proposal: ${proposal.toolName}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text('Risk: ${proposal.risk} • State: ${proposal.state}'),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: <Widget>[
+                        OutlinedButton(
+                          onPressed: proposal.state == 'proposed'
+                              ? () => _action(ref, proposal.id, 'reject')
+                              : null,
+                          child: const Text('Reject'),
+                        ),
+                        FilledButton(
+                          onPressed: proposal.state == 'proposed'
+                              ? () => _action(ref, proposal.id, 'approve')
+                              : null,
+                          child: const Text('Approve'),
+                        ),
+                        FilledButton.tonal(
+                          onPressed: proposal.state == 'approved'
+                              ? () => _action(ref, proposal.id, 'execute')
+                              : null,
+                          child: const Text('Execute'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
-          Text('Risk: ${proposal.risk} • State: ${proposal.state}'),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: <Widget>[
-              OutlinedButton(
-                onPressed: proposal.state == 'proposed'
-                    ? () => _action(ref, proposal.id, 'reject')
-                    : null,
-                child: const Text('Reject'),
-              ),
-              FilledButton(
-                onPressed: proposal.state == 'proposed'
-                    ? () => _action(ref, proposal.id, 'approve')
-                    : null,
-                child: const Text('Approve'),
-              ),
-              FilledButton.tonal(
-                onPressed: proposal.state == 'approved'
-                    ? () => _action(ref, proposal.id, 'execute')
-                    : null,
-                child: const Text('Execute'),
-              ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 12),
-      ],
-    ),
-  );
+        ),
+      ),
+    );
+  }
 
   Future<void> _action(WidgetRef ref, String proposalId, String action) async {
     await ref

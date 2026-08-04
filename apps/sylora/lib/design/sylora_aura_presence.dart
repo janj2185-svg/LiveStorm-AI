@@ -31,58 +31,58 @@ final Map<SyloraAuraContextPreset, SyloraAuraPresetState> _presetStates =
     <SyloraAuraContextPreset, SyloraAuraPresetState>{
       SyloraAuraContextPreset.feed: const SyloraAuraPresetState(
         emotion: AuraEmotion.greeting,
-        tip: 'Aura is watching the community pulse.',
+        tip: 'Привіт — я поруч, поки ти гортаєш стрічку.',
       ),
       SyloraAuraContextPreset.friends: const SyloraAuraPresetState(
         emotion: AuraEmotion.amused,
-        tip: 'Aura is helping you find meaningful connections.',
+        tip: 'Давай знайдемо людей, з якими тобі буде тепло.',
       ),
       SyloraAuraContextPreset.conferences: const SyloraAuraPresetState(
         emotion: AuraEmotion.listening,
-        tip: 'Aura is ready to assist your meeting.',
+        tip: 'Я слухаю зустріч і можу підказати по ходу.',
       ),
       SyloraAuraContextPreset.live: const SyloraAuraPresetState(
         emotion: AuraEmotion.focused,
-        tip: 'Aura is monitoring the live room.',
+        tip: 'Тримаю ефір у фокусі — скажи, якщо треба допомога.',
       ),
       SyloraAuraContextPreset.ai: const SyloraAuraPresetState(
         emotion: AuraEmotion.greeting,
-        tip: 'Aura is ready for your next prompt.',
+        tip: 'Я Aura. Пиши як людині — я відповім по-людськи.',
       ),
       SyloraAuraContextPreset.gifts: const SyloraAuraPresetState(
         emotion: AuraEmotion.amused,
-        tip: 'Aura can help gift moments feel alive.',
+        tip: 'Підкажу подарунок, який справді вразить.',
       ),
       SyloraAuraContextPreset.creatorStudio: const SyloraAuraPresetState(
         emotion: AuraEmotion.greeting,
-        tip: 'Aura is checking your creator setup.',
+        tip: 'Готова допомогти зі студією — крок за кроком.',
       ),
       SyloraAuraContextPreset.marketplace: const SyloraAuraPresetState(
         emotion: AuraEmotion.amused,
-        tip: 'Aura is tracking catalog signals.',
+        tip: 'Шукаємо те, що тобі справді підійде.',
       ),
       SyloraAuraContextPreset.business: const SyloraAuraPresetState(
         emotion: AuraEmotion.focused,
-        tip: 'Aura is keeping workspace context ready.',
+        tip: 'Тримаю контекст бізнесу, щоб ти не губився.',
       ),
       SyloraAuraContextPreset.learning: const SyloraAuraPresetState(
         emotion: AuraEmotion.listening,
-        tip: 'Aura is following your learning path.',
+        tip: 'Вчуся разом із тобою — питайте що завгодно.',
       ),
       SyloraAuraContextPreset.creator: const SyloraAuraPresetState(
         emotion: AuraEmotion.greeting,
-        tip: 'Aura is watching your creator flow.',
+        tip: 'Твій творчий ритм — я підлаштуюсь.',
       ),
       SyloraAuraContextPreset.settings: const SyloraAuraPresetState(
         emotion: AuraEmotion.focused,
-        tip: 'Aura is keeping your preferences tidy.',
+        tip: 'Налаштуємо все зручно, без зайвого шуму.',
       ),
     };
 
 final class SyloraAuraPresenceController extends ChangeNotifier {
   SyloraAuraPresenceController({
     AuraEmotion emotion = AuraEmotion.greeting,
-    String tip = 'Aura is ready.',
+    String tip = 'Я Aura — готова допомогти.',
     SyloraAuraContextPreset preset = SyloraAuraContextPreset.ai,
   }) : this._(emotion: emotion, tip: tip, preset: preset);
 

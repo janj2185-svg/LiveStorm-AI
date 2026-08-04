@@ -9,6 +9,7 @@ abstract final class SyloraMotion {
   static const curveExit = Cubic(0.4, 0, 1, 1);
   static const curveShared = SyloraTokens.curveSnap;
 
+  /// Soft tab/page travel — noticeable but never sticky.
   static Page<void> worldPage({
     required LocalKey key,
     required Widget child,
@@ -20,8 +21,8 @@ abstract final class SyloraMotion {
     return CustomTransitionPage<void>(
       key: key,
       child: child,
-      transitionDuration: const Duration(milliseconds: 420),
-      reverseTransitionDuration: const Duration(milliseconds: 280),
+      transitionDuration: const Duration(milliseconds: 360),
+      reverseTransitionDuration: const Duration(milliseconds: 240),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final enter = CurvedAnimation(parent: animation, curve: curveEnter);
         final exit = CurvedAnimation(
@@ -32,13 +33,13 @@ abstract final class SyloraMotion {
           opacity: Tween<double>(begin: 0, end: 1).animate(enter),
           child: SlideTransition(
             position: Tween<Offset>(
-              begin: const Offset(0.028, 0.02),
+              begin: const Offset(0.018, 0.012),
               end: Offset.zero,
             ).animate(enter),
             child: ScaleTransition(
-              scale: Tween<double>(begin: 0.985, end: 1).animate(enter),
+              scale: Tween<double>(begin: 0.988, end: 1).animate(enter),
               child: FadeTransition(
-                opacity: Tween<double>(begin: 1, end: 0.92).animate(exit),
+                opacity: Tween<double>(begin: 1, end: 0.94).animate(exit),
                 child: child,
               ),
             ),

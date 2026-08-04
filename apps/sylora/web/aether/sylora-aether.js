@@ -360,7 +360,7 @@
     state.pointer.y += (state.pointer.ty - state.pointer.y) * 0.08;
     state.pointer.active *= 0.96;
     if (!state.reduced) {
-      state.formAmount = Math.min(1, state.formAmount + 0.012);
+      state.formAmount = Math.min(1, state.formAmount + 0.022);
     } else {
       state.formAmount = 1;
     }
