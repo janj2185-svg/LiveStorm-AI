@@ -299,6 +299,15 @@ final class FakeAiRepository implements AiRepository {
       );
 
   @override
+  Stream<AiChatStreamEvent> sendStream(
+    String conversationId,
+    String content,
+  ) async* {
+    yield AiChatStreamEvent.delta('response');
+    yield AiChatStreamEvent.completed(await send(conversationId, content));
+  }
+
+  @override
   Future<JsonObject> toolAction(
     String conversationId,
     String proposalId,

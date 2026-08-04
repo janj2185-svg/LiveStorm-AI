@@ -2351,6 +2351,7 @@ final class _AiConversationScreenState
   JsonObject? _presence;
   Object? _presenceError;
   bool _sending = false;
+  String? _streamingText;
   bool _recording = false;
   bool _voiceBusy = false;
   String? _voiceStatus;
@@ -2445,12 +2446,35 @@ final class _AiConversationScreenState
                     : ListView.builder(
                         reverse: true,
                         padding: const EdgeInsets.only(bottom: 12, top: 8),
-                        itemCount: page.items.length + (_sending ? 1 : 0),
+                        itemCount:
+                            page.items.length +
+                            (_sending || _streamingText != null ? 1 : 0),
                         itemBuilder: (context, index) {
-                          if (_sending && index == 0) {
+                          if ((_sending || _streamingText != null) &&
+                              index == 0) {
+                            if (_streamingText case final String streamed
+                                when streamed.isNotEmpty) {
+                              return _AiMessageBubble(
+                                conversationId: widget.conversationId,
+                                message: AiMessageModel(
+                                  id: 'streaming',
+                                  role: 'assistant',
+                                  content: streamed,
+                                  status: 'streaming',
+                                  citations: const <AiCitationModel>[],
+                                  proposals: const <AiToolProposalModel>[],
+                                ),
+                                speaking: false,
+                                onSpeak: (_) async {},
+                                onChanged: () {},
+                              );
+                            }
                             return const _AuraTypingBubble();
                           }
-                          final messageIndex = _sending ? index - 1 : index;
+                          final messageIndex =
+                              (_sending || _streamingText != null)
+                              ? index - 1
+                              : index;
                           return _AiMessageBubble(
                             conversationId: widget.conversationId,
                             message: page.items[messageIndex],
@@ -2528,15 +2552,43 @@ final class _AiConversationScreenState
     if (_sending) {
       return false;
     }
-    setState(() => _sending = true);
+    setState(() {
+      _sending = true;
+      _streamingText = null;
+    });
     _aura.think('Хвилинку — збираю думку…');
     try {
-      await ref.read(aiRepositoryProvider).send(widget.conversationId, content);
       if (clearComposer) {
         _message.clear();
       }
-      ref.invalidate(aiMessagesProvider(widget.conversationId));
-      _aura.speak('Ось що вийшло — якщо треба, уточни.');
+      var completed = false;
+      await for (final event in ref
+          .read(aiRepositoryProvider)
+          .sendStream(widget.conversationId, content)) {
+        if (!mounted) {
+          return false;
+        }
+        if (event.isDelta) {
+          final piece = event.text ?? '';
+          if (piece.isEmpty) {
+            continue;
+          }
+          setState(() {
+            _streamingText = '${_streamingText ?? ''}$piece';
+          });
+          _aura.speak('Пишу відповідь…');
+        } else if (event.isCompleted) {
+          completed = true;
+          setState(() => _streamingText = null);
+          ref.invalidate(aiMessagesProvider(widget.conversationId));
+          _aura.speak('Ось що вийшло — якщо треба, уточни.');
+        } else if (event.isError) {
+          throw event.error ?? StateError('AI stream failed');
+        }
+      }
+      if (!completed) {
+        ref.invalidate(aiMessagesProvider(widget.conversationId));
+      }
       return true;
     } on Object catch (error) {
       _aura.focus('Ой, щось пішло не так. Спробуй ще раз.');
@@ -2548,7 +2600,10 @@ final class _AiConversationScreenState
       return false;
     } finally {
       if (mounted) {
-        setState(() => _sending = false);
+        setState(() {
+          _sending = false;
+          _streamingText = null;
+        });
         _syncAuraForFocus();
       }
     }

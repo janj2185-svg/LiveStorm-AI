@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import hashlib
 import uuid
 from collections.abc import AsyncIterator, Mapping, Sequence
@@ -345,6 +347,71 @@ async def test_conversation_purpose_scopes_the_existing_chat_stack(
             json={"purpose": "imaginary_expert"},
         )
         assert invalid.status_code == 422
+
+
+
+
+class SlowStreamProvider(TestProvider):
+    def __init__(self) -> None:
+        super().__init__()
+        self.first_delta_released = asyncio.Event()
+        self.allow_final = asyncio.Event()
+
+    async def stream_chat(self, request: ChatProviderRequest) -> AsyncIterator[ChatStreamEvent]:
+        result = await self.chat(request)
+        yield ChatStreamEvent(text_delta="A grounded ")
+        self.first_delta_released.set()
+        await self.allow_final.wait()
+        yield ChatStreamEvent(text_delta="assistant response.")
+        yield ChatStreamEvent(final=result)
+
+
+@pytest.mark.asyncio
+async def test_chat_stream_on_delta_fires_before_final(api_factory: Any) -> None:
+    """Prove deltas are emitted while the provider is still generating."""
+    from types import SimpleNamespace
+    from uuid import UUID
+
+    from app.ai_schemas import AISendMessageRequest
+    from app.ai_service import send_chat_message
+
+    provider = SlowStreamProvider()
+    registry = ProviderRegistry([provider])
+    async with api_factory(ai_provider_registry=registry) as api:
+        headers, user_id = await authenticated(api)
+        await enable_ai(api, headers)
+        conversation_id = await conversation(api, headers)
+        seen: list[str] = []
+
+        async def on_delta(text: str) -> None:
+            seen.append(text)
+            if text == "A grounded ":
+                assert not provider.allow_final.is_set()
+                provider.allow_final.set()
+
+        async with api.app.state.session_factory() as db:
+            fake_request = SimpleNamespace(
+                app=api.app,
+                client=SimpleNamespace(host="testclient"),
+                headers={},
+                url=SimpleNamespace(path="/v1/ai/conversations/stream"),
+                state=SimpleNamespace(),
+            )
+            response, deltas = await send_chat_message(
+                db,
+                registry,
+                api.app.state.settings,
+                fake_request,  # type: ignore[arg-type]
+                user_id=UUID(str(user_id)),
+                conversation_id=UUID(conversation_id),
+                payload=AISendMessageRequest(content="Stream please"),
+                stream=True,
+                on_delta=on_delta,
+            )
+        assert seen[0] == "A grounded "
+        assert "".join(deltas) == "A grounded assistant response."
+        assert response.content == "A grounded assistant response."
+        assert provider.allow_final.is_set()
 
 
 async def test_injected_chat_citations_usage_stream_quota_and_event_replay(

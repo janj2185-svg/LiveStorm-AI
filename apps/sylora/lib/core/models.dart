@@ -739,6 +739,35 @@ final class AiMessageModel {
 }
 
 @immutable
+final class AiChatStreamEvent {
+  const AiChatStreamEvent._({
+    required this.kind,
+    this.text,
+    this.message,
+    this.error,
+  });
+
+  factory AiChatStreamEvent.delta(String text) =>
+      AiChatStreamEvent._(kind: 'delta', text: text);
+
+  factory AiChatStreamEvent.completed(AiMessageModel message) =>
+      AiChatStreamEvent._(kind: 'completed', message: message);
+
+  factory AiChatStreamEvent.error(Object error) =>
+      AiChatStreamEvent._(kind: 'error', error: error);
+
+  final String kind;
+  final String? text;
+  final AiMessageModel? message;
+  final Object? error;
+
+  bool get isDelta => kind == 'delta';
+  bool get isCompleted => kind == 'completed';
+  bool get isError => kind == 'error';
+}
+
+
+@immutable
 final class LiveDestinationModel {
   const LiveDestinationModel({
     required this.id,

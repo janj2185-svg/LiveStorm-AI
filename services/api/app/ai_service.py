@@ -773,6 +773,7 @@ async def send_chat_message(
     conversation_id: uuid.UUID,
     payload: AISendMessageRequest,
     stream: bool = False,
+    on_delta: Callable[[str], Awaitable[None]] | None = None,
 ) -> tuple[AIMessageResponse, list[str]]:
     conversation = await owned_conversation(db, conversation_id, user_id)
     user_settings = await settings_for(db, user_id)
@@ -857,6 +858,8 @@ async def send_chat_message(
                     raise ProviderResponseError("provider_invalid_chat_stream")
                 if event.text_delta:
                     deltas.append(event.text_delta)
+                    if on_delta is not None:
+                        await on_delta(event.text_delta)
                 if event.final is not None:
                     response = event.final
             if response is None:
@@ -886,9 +889,17 @@ async def send_chat_message(
         if len(guarded_content) > 64_000:
             raise ValueError
         if guarded_content != content:
+            if (
+                on_delta is not None
+                and guarded_content.startswith(content)
+                and len(guarded_content) > len(content)
+            ):
+                suffix = guarded_content[len(content) :]
+                deltas.append(suffix)
+                await on_delta(suffix)
+            elif deltas:
+                deltas = [guarded_content]
             content = guarded_content
-            if deltas:
-                deltas = [content]
         validated_proposals = await _validate_provider_proposals(db, response.tool_proposals)
         resolved_citations = _validate_citations(response.citations, sources)
     except (ValueError, ProviderResponseError) as exc:

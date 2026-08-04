@@ -1306,6 +1306,7 @@ abstract interface class AiRepository {
     String? cursor,
   });
   Future<AiMessageModel> send(String conversationId, String content);
+  Stream<AiChatStreamEvent> sendStream(String conversationId, String content);
   Future<List<AiToolProposalModel>> proposals(String conversationId);
   Future<JsonObject> toolAction(
     String conversationId,
@@ -1433,6 +1434,97 @@ final class DioAiRepository implements AiRepository {
       data: <String, dynamic>{'content': content, 'content_refs': <Object>[]},
     );
     return AiMessageModel.fromJson(requireObject(response.data, 'AI message'));
+  }
+
+  @override
+  Stream<AiChatStreamEvent> sendStream(
+    String conversationId,
+    String content,
+  ) async* {
+    // Prefer the SSE endpoint. On web adapters may buffer until completion;
+    // native Dio streams deliver deltas as they arrive from a live backend.
+    try {
+      final response = await _client.request(
+        'ai/conversations/$conversationId/stream',
+        method: 'POST',
+        data: <String, dynamic>{
+          'content': content,
+          'content_refs': <Object>[],
+        },
+        responseType: ResponseType.stream,
+      );
+      final body = response.data;
+      if (body is! ResponseBody) {
+        throw StateError('AI stream did not return a byte stream.');
+      }
+      final pending = StringBuffer();
+      await for (final chunk in body.stream) {
+        pending.write(utf8.decode(chunk, allowMalformed: true));
+        final parsed = _consumeSse(pending);
+        for (final event in parsed) {
+          yield event;
+        }
+      }
+      for (final event in _consumeSse(pending, flush: true)) {
+        yield event;
+      }
+    } on Object catch (error) {
+      // Fail open to non-stream send so chat remains usable.
+      try {
+        final message = await send(conversationId, content);
+        yield AiChatStreamEvent.completed(message);
+      } on Object {
+        yield AiChatStreamEvent.error(error);
+      }
+    }
+  }
+
+  List<AiChatStreamEvent> _consumeSse(
+    StringBuffer pending, {
+    bool flush = false,
+  }) {
+    final raw = pending.toString();
+    final chunks = raw.split('\n\n');
+    if (!flush) {
+      pending
+        ..clear()
+        ..write(chunks.isEmpty ? '' : chunks.removeLast());
+    } else {
+      pending.clear();
+    }
+    final events = <AiChatStreamEvent>[];
+    for (final chunk in chunks) {
+      final trimmed = chunk.trim();
+      if (trimmed.isEmpty || trimmed.startsWith(':')) {
+        continue;
+      }
+      String? eventName;
+      final dataLines = <String>[];
+      for (final line in trimmed.split('\n')) {
+        if (line.startsWith('event:')) {
+          eventName = line.substring(6).trim();
+        } else if (line.startsWith('data:')) {
+          dataLines.add(line.substring(5).trimLeft());
+        }
+      }
+      final data = dataLines.join('\n');
+      if (eventName == 'delta') {
+        final decoded = jsonDecode(data);
+        if (decoded is Map && decoded['text'] is String) {
+          events.add(AiChatStreamEvent.delta(decoded['text'] as String));
+        }
+      } else if (eventName == 'completed') {
+        final decoded = jsonDecode(data);
+        events.add(
+          AiChatStreamEvent.completed(
+            AiMessageModel.fromJson(requireObject(decoded, 'AI message')),
+          ),
+        );
+      } else if (eventName == 'error') {
+        events.add(AiChatStreamEvent.error(StateError(data)));
+      }
+    }
+    return events;
   }
 
   @override

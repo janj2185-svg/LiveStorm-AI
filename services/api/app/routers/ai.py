@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+import contextlib
 import json
 import re
 import uuid
@@ -567,29 +568,84 @@ async def stream_message(
     settings: Settings = Depends(get_settings),
 ) -> StreamingResponse:
     await _chat_rate_limit(request, auth.user.id)
-    response, deltas = await send_chat_message(
-        db,
-        _registry(request),
-        settings,
-        request,
-        user_id=auth.user.id,
-        conversation_id=conversation_id,
-        payload=payload,
-        stream=True,
-    )
-    increment_counter("ai_chat_turns")
-    await _publish_committed_event(
-        request,
-        db,
-        auth.user.id,
-        event_type="message.completed",
-        aggregate_id=response.id,
-    )
 
     async def events() -> Any:
-        for delta in deltas:
-            yield f"event: delta\ndata: {json.dumps({'text': delta})}\n\n"
-        yield ("event: completed\ndata: " + response.model_dump_json() + "\n\n")
+        queue: asyncio.Queue[tuple[str, Any] | None] = asyncio.Queue(maxsize=128)
+
+        async def on_delta(text: str) -> None:
+            await queue.put(("delta", text))
+
+        async def produce() -> None:
+            try:
+                response, _ = await send_chat_message(
+                    db,
+                    _registry(request),
+                    settings,
+                    request,
+                    user_id=auth.user.id,
+                    conversation_id=conversation_id,
+                    payload=payload,
+                    stream=True,
+                    on_delta=on_delta,
+                )
+                increment_counter("ai_chat_turns")
+                await _publish_committed_event(
+                    request,
+                    db,
+                    auth.user.id,
+                    event_type="message.completed",
+                    aggregate_id=response.id,
+                )
+                await queue.put(("completed", response))
+            except APIError as exc:
+                await queue.put(
+                    (
+                        "error",
+                        {
+                            "code": exc.code,
+                            "title": exc.title,
+                            "detail": exc.detail,
+                            "status": exc.status_code,
+                        },
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001 - stream boundary must not hang clients
+                await queue.put(
+                    (
+                        "error",
+                        {
+                            "code": "ai_stream_failed",
+                            "title": "AI stream failed",
+                            "detail": str(exc) or "The AI stream failed unexpectedly.",
+                            "status": 500,
+                        },
+                    )
+                )
+            finally:
+                await queue.put(None)
+
+        producer = asyncio.create_task(produce())
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                kind, payload_data = item
+                if kind == "delta":
+                    yield f"event: delta\ndata: {json.dumps({'text': payload_data})}\n\n"
+                elif kind == "completed":
+                    yield (
+                        "event: completed\ndata: "
+                        + payload_data.model_dump_json()
+                        + "\n\n"
+                    )
+                elif kind == "error":
+                    yield f"event: error\ndata: {json.dumps(payload_data)}\n\n"
+        finally:
+            if not producer.done():
+                producer.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await producer
 
     return StreamingResponse(
         events(),
