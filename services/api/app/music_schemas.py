@@ -23,6 +23,11 @@ class MusicTrackResponse(BaseModel):
     audio_url: str
     cover_url: str | None
     license_label: str
+    allows_listening: bool
+    allows_live_bgm: bool
+    allows_vod: bool
+    territory_code: str | None
+    license_code: str | None
     is_creator_bgm: bool
 
 
@@ -54,6 +59,11 @@ class MusicPlaylistCreate(BaseModel):
     kind: MusicPlaylistKind = MusicPlaylistKind.personal
     mood: MusicMood | None = None
     is_public: bool = False
+
+
+class MusicPlaylistUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=2000)
 
 
 class MusicPlaylistAddTrack(BaseModel):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import uuid
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.errors import APIError
@@ -24,6 +24,7 @@ from app.music_schemas import (
     MusicHomeResponse,
     MusicPlaylistCreate,
     MusicPlaylistResponse,
+    MusicPlaylistUpdate,
     MusicTrackResponse,
 )
 
@@ -38,6 +39,11 @@ _SEED_TRACKS: list[dict[str, object]] = [
         "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
         "is_creator_bgm": True,
         "license_label": "Royalty-free demo",
+        "allows_listening": True,
+        "allows_live_bgm": True,
+        "allows_vod": True,
+        "territory_code": "WW",
+        "license_code": "royalty_free_demo",
     },
     {
         "slug": "pulse-energy-01",
@@ -49,6 +55,11 @@ _SEED_TRACKS: list[dict[str, object]] = [
         "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
         "is_creator_bgm": True,
         "license_label": "Royalty-free demo",
+        "allows_listening": True,
+        "allows_live_bgm": True,
+        "allows_vod": True,
+        "territory_code": "WW",
+        "license_code": "royalty_free_demo",
     },
     {
         "slug": "glass-calm-01",
@@ -60,6 +71,11 @@ _SEED_TRACKS: list[dict[str, object]] = [
         "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
         "is_creator_bgm": True,
         "license_label": "Royalty-free demo",
+        "allows_listening": True,
+        "allows_live_bgm": True,
+        "allows_vod": True,
+        "territory_code": "WW",
+        "license_code": "royalty_free_demo",
     },
     {
         "slug": "night-orbit-01",
@@ -71,6 +87,11 @@ _SEED_TRACKS: list[dict[str, object]] = [
         "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
         "is_creator_bgm": False,
         "license_label": "Royalty-free demo",
+        "allows_listening": True,
+        "allows_live_bgm": True,
+        "allows_vod": True,
+        "territory_code": "WW",
+        "license_code": "royalty_free_demo",
     },
     {
         "slug": "creative-spark-01",
@@ -82,6 +103,11 @@ _SEED_TRACKS: list[dict[str, object]] = [
         "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
         "is_creator_bgm": True,
         "license_label": "Royalty-free demo",
+        "allows_listening": True,
+        "allows_live_bgm": True,
+        "allows_vod": True,
+        "territory_code": "WW",
+        "license_code": "royalty_free_demo",
     },
     {
         "slug": "live-stage-01",
@@ -93,6 +119,11 @@ _SEED_TRACKS: list[dict[str, object]] = [
         "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
         "is_creator_bgm": True,
         "license_label": "Royalty-free · Creator BGM",
+        "allows_listening": True,
+        "allows_live_bgm": True,
+        "allows_vod": True,
+        "territory_code": "WW",
+        "license_code": "royalty_free_demo",
     },
 ]
 
@@ -121,18 +152,14 @@ async def ensure_seed_catalog(db: AsyncSession) -> None:
     await db.flush()
     tracks = (await db.scalars(select(MusicTrack))).all()
     playlists = (
-        await db.scalars(
-            select(MusicPlaylist).where(MusicPlaylist.kind == MusicPlaylistKind.mood)
-        )
+        await db.scalars(select(MusicPlaylist).where(MusicPlaylist.kind == MusicPlaylistKind.mood))
     ).all()
     by_mood = {t.mood: t for t in tracks if t.mood is not None}
     for playlist in playlists:
         track = by_mood.get(playlist.mood)
         if track is None:
             continue
-        db.add(
-            MusicPlaylistItem(playlist_id=playlist.id, track_id=track.id, position=0)
-        )
+        db.add(MusicPlaylistItem(playlist_id=playlist.id, track_id=track.id, position=0))
     await db.flush()
 
 
@@ -246,6 +273,7 @@ async def list_tracks(
     kind: MusicTrackKind | None = None,
     mood: MusicMood | None = None,
     creator_bgm: bool | None = None,
+    q: str | None = None,
     limit: int = 50,
 ) -> list[MusicTrack]:
     await ensure_seed_catalog(db)
@@ -256,6 +284,14 @@ async def list_tracks(
         stmt = stmt.where(MusicTrack.mood == mood)
     if creator_bgm is not None:
         stmt = stmt.where(MusicTrack.is_creator_bgm.is_(creator_bgm))
+    if q is not None and (search := q.strip()):
+        pattern = f"%{search}%"
+        stmt = stmt.where(
+            or_(
+                MusicTrack.title.ilike(pattern),
+                MusicTrack.artist_name.ilike(pattern),
+            )
+        )
     return list(await db.scalars(stmt))
 
 
@@ -273,6 +309,36 @@ async def create_playlist(
     db.add(playlist)
     await db.flush()
     return playlist
+
+
+async def update_playlist(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    playlist_id: uuid.UUID,
+    payload: MusicPlaylistUpdate,
+) -> MusicPlaylist:
+    playlist = await _owned_playlist(db, user_id, playlist_id)
+    if "title" in payload.model_fields_set:
+        title = (payload.title or "").strip()
+        if not title:
+            raise APIError(
+                422,
+                "invalid_playlist_title",
+                "Invalid playlist title",
+                "Playlist title cannot be blank.",
+            )
+        playlist.title = title
+    if "description" in payload.model_fields_set:
+        playlist.description = payload.description
+    await db.flush()
+    return playlist
+
+
+async def delete_playlist(db: AsyncSession, user_id: uuid.UUID, playlist_id: uuid.UUID) -> None:
+    playlist = await _owned_playlist(db, user_id, playlist_id)
+    await db.execute(delete(MusicPlaylistItem).where(MusicPlaylistItem.playlist_id == playlist_id))
+    await db.delete(playlist)
+    await db.flush()
 
 
 async def add_track_to_playlist(
@@ -300,12 +366,34 @@ async def add_track_to_playlist(
         )
         or -1
     )
-    item = MusicPlaylistItem(
-        playlist_id=playlist_id, track_id=track_id, position=position + 1
-    )
+    item = MusicPlaylistItem(playlist_id=playlist_id, track_id=track_id, position=position + 1)
     db.add(item)
     await db.flush()
     return item
+
+
+async def remove_track_from_playlist(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    playlist_id: uuid.UUID,
+    track_id: uuid.UUID,
+) -> None:
+    await _owned_playlist(db, user_id, playlist_id)
+    item = await db.scalar(
+        select(MusicPlaylistItem).where(
+            MusicPlaylistItem.playlist_id == playlist_id,
+            MusicPlaylistItem.track_id == track_id,
+        )
+    )
+    if item is None:
+        raise APIError(
+            404,
+            "playlist_track_not_found",
+            "Playlist track not found",
+            "The track is not in this playlist.",
+        )
+    await db.delete(item)
+    await db.flush()
 
 
 async def playlist_tracks(db: AsyncSession, playlist_id: uuid.UUID) -> list[MusicTrack]:
@@ -322,6 +410,15 @@ async def playlist_tracks(db: AsyncSession, playlist_id: uuid.UUID) -> list[Musi
         if track is not None:
             tracks.append(track)
     return tracks
+
+
+async def _owned_playlist(
+    db: AsyncSession, user_id: uuid.UUID, playlist_id: uuid.UUID
+) -> MusicPlaylist:
+    playlist = await db.get(MusicPlaylist, playlist_id)
+    if playlist is None or playlist.owner_user_id != user_id:
+        raise APIError(404, "playlist_not_found", "Playlist not found", "Playlist not found.")
+    return playlist
 
 
 async def toggle_favorite(db: AsyncSession, user_id: uuid.UUID, track_id: uuid.UUID) -> bool:
@@ -385,11 +482,7 @@ async def create_ai_playlist(
     if not tracks:
         tracks = await list_tracks(db, limit=8)
     for index, track in enumerate(tracks):
-        db.add(
-            MusicPlaylistItem(
-                playlist_id=playlist.id, track_id=track.id, position=index
-            )
-        )
+        db.add(MusicPlaylistItem(playlist_id=playlist.id, track_id=track.id, position=index))
     # Keep slug helper available for future AI-generated track inserts.
     _ = _slugify(title)
     await db.flush()

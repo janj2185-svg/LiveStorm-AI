@@ -135,6 +135,17 @@ final class MusicRepository {
     return MusicHome.fromJson(requireObject(response.data, 'music home'));
   }
 
+  Future<List<MusicTrack>> tracks({String? q}) async {
+    final response = await _client.request(
+      'music/tracks',
+      queryParameters: <String, dynamic>{'q': q},
+    );
+    final data = requireObject(response.data, 'music tracks');
+    return requireList(data, 'items')
+        .map((item) => MusicTrack.fromJson(requireObject(item, 'track')))
+        .toList(growable: false);
+  }
+
   Future<void> play(String trackId, {String context = 'player'}) async {
     await _client.request(
       'music/play',
@@ -295,6 +306,10 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs;
   final _aiPrompt = TextEditingController();
+  final _catalogSearch = TextEditingController();
+  List<MusicTrack>? _searchResults;
+  String? _searchError;
+  bool _searching = false;
 
   @override
   void initState() {
@@ -306,7 +321,35 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
   void dispose() {
     _tabs.dispose();
     _aiPrompt.dispose();
+    _catalogSearch.dispose();
     super.dispose();
+  }
+
+  Future<void> _searchCatalog() async {
+    final query = _catalogSearch.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = null;
+        _searchError = null;
+      });
+      return;
+    }
+    setState(() {
+      _searching = true;
+      _searchError = null;
+    });
+    try {
+      final results = await ref.read(musicRepositoryProvider).tracks(q: query);
+      if (!mounted) return;
+      setState(() => _searchResults = results);
+    } on Object catch (error) {
+      if (!mounted) return;
+      setState(() => _searchError = messageFor(error));
+    } finally {
+      if (mounted) {
+        setState(() => _searching = false);
+      }
+    }
   }
 
   Future<void> _play(MusicTrack track, {String contextLabel = 'player'}) async {
@@ -366,6 +409,11 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                         _MusicHomeTab(
                           data: data,
                           onPlay: _play,
+                          searchController: _catalogSearch,
+                          searchResults: _searchResults,
+                          searchError: _searchError,
+                          searching: _searching,
+                          onSearch: _searchCatalog,
                           onFavorite: (track) async {
                             await ref
                                 .read(musicRepositoryProvider)
@@ -444,11 +492,21 @@ final class _MusicHomeTab extends StatelessWidget {
     required this.data,
     required this.onPlay,
     required this.onFavorite,
+    required this.searchController,
+    required this.searching,
+    required this.onSearch,
+    this.searchResults,
+    this.searchError,
   });
 
   final MusicHome data;
   final Future<void> Function(MusicTrack track) onPlay;
   final Future<void> Function(MusicTrack track) onFavorite;
+  final TextEditingController searchController;
+  final List<MusicTrack>? searchResults;
+  final String? searchError;
+  final bool searching;
+  final Future<void> Function() onSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -463,6 +521,49 @@ final class _MusicHomeTab extends StatelessWidget {
           compactBreakpoint: 720,
         ),
         const SizedBox(height: 18),
+        TextField(
+          controller: searchController,
+          textInputAction: TextInputAction.search,
+          onSubmitted: (_) => onSearch(),
+          decoration: InputDecoration(
+            hintText: 'Search tracks or artists',
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: searching
+                ? const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : IconButton(
+                    tooltip: 'Search catalog',
+                    onPressed: onSearch,
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                  ),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        if (searchError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              searchError!,
+              style: SyloraTokens.body(12, color: SyloraTokens.petal),
+            ),
+          ),
+        if (searchResults != null) ...<Widget>[
+          const SizedBox(height: 10),
+          _SectionTitle('Search results'),
+          _TrackList(
+            tracks: searchResults!,
+            emptyTitle: 'No tracks found',
+            emptyMessage: 'Try another title or artist.',
+            onPlay: onPlay,
+            onFavorite: onFavorite,
+            shrinkWrap: true,
+          ),
+        ],
         _SectionTitle('Recently played'),
         _HorizontalTracks(tracks: data.recentlyPlayed, onPlay: onPlay),
         _SectionTitle('Mood playlists'),

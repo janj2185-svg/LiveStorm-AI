@@ -20,6 +20,7 @@ from app.music_schemas import (
     MusicPlaylistCreate,
     MusicPlaylistPage,
     MusicPlaylistResponse,
+    MusicPlaylistUpdate,
     MusicTrackPage,
     MusicTrackResponse,
 )
@@ -27,13 +28,16 @@ from app.music_service import (
     add_track_to_playlist,
     create_ai_playlist,
     create_playlist,
+    delete_playlist,
     list_tracks,
     music_home,
     playlist_response,
     playlist_tracks,
     record_play,
+    remove_track_from_playlist,
     toggle_favorite,
     track_response,
+    update_playlist,
 )
 
 router = APIRouter(prefix="/music", tags=["Music"])
@@ -57,11 +61,10 @@ async def get_tracks(
     kind: MusicTrackKind | None = None,
     mood: MusicMood | None = None,
     creator_bgm: bool | None = None,
+    q: str | None = Query(default=None, max_length=200),
     limit: int = Query(default=50, ge=1, le=100),
 ) -> MusicTrackPage:
-    tracks = await list_tracks(
-        db, kind=kind, mood=mood, creator_bgm=creator_bgm, limit=limit
-    )
+    tracks = await list_tracks(db, kind=kind, mood=mood, creator_bgm=creator_bgm, q=q, limit=limit)
     await db.commit()
     return MusicTrackPage(items=[track_response(t) for t in tracks])
 
@@ -106,6 +109,29 @@ async def post_playlist(
     return response
 
 
+@router.patch("/playlists/{playlist_id}", response_model=MusicPlaylistResponse)
+async def patch_playlist(
+    playlist_id: uuid.UUID,
+    payload: MusicPlaylistUpdate,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+) -> MusicPlaylistResponse:
+    playlist = await update_playlist(db, auth.user.id, playlist_id, payload)
+    response = await playlist_response(db, playlist)
+    await db.commit()
+    return response
+
+
+@router.delete("/playlists/{playlist_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_music_playlist(
+    playlist_id: uuid.UUID,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+) -> None:
+    await delete_playlist(db, auth.user.id, playlist_id)
+    await db.commit()
+
+
 @router.get("/playlists/{playlist_id}/tracks", response_model=MusicTrackPage)
 async def get_playlist_tracks(
     playlist_id: uuid.UUID,
@@ -139,6 +165,20 @@ async def post_playlist_track(
         raise APIError(404, "track_not_found", "Track not found", "Track not found.")
     await db.commit()
     return track_response(match)
+
+
+@router.delete(
+    "/playlists/{playlist_id}/tracks/{track_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_playlist_track(
+    playlist_id: uuid.UUID,
+    track_id: uuid.UUID,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+) -> None:
+    await remove_track_from_playlist(db, auth.user.id, playlist_id, track_id)
+    await db.commit()
 
 
 @router.post("/favorites/{track_id}")

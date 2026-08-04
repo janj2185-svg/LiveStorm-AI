@@ -75,6 +75,11 @@ class MusicTrack(Base):
     audio_url: Mapped[str] = mapped_column(String(2048))
     cover_url: Mapped[str | None] = mapped_column(String(2048))
     license_label: Mapped[str] = mapped_column(String(64), default="Royalty-free")
+    allows_listening: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    allows_live_bgm: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    allows_vod: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    territory_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    license_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     is_creator_bgm: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     meta: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(
@@ -131,9 +136,7 @@ class MusicPlaylistItem(Base):
 
 class MusicFavorite(Base):
     __tablename__ = "music_favorites"
-    __table_args__ = (
-        UniqueConstraint("user_id", "track_id", name="uq_music_favorite_user_track"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "track_id", name="uq_music_favorite_user_track"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
