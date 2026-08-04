@@ -245,6 +245,19 @@ abstract interface class AdminRepository {
   Future<AdminDashboard> security();
   Future<JsonObject> moderationSummary();
   Future<CursorPage<AdminResource>> moderationReports({String? cursor});
+  Future<JsonObject> ownerConfigCatalogRaw();
+  Future<JsonObject> upsertOwnerProviderRaw(
+    String providerKey, {
+    required JsonObject values,
+    int? expectedVersion,
+    bool testConnection = true,
+    bool enableOnSuccess = true,
+  });
+  Future<JsonObject> testOwnerProviderRaw(
+    String providerKey, {
+    bool enableOnSuccess = true,
+  });
+  Future<JsonObject> ownerConfigEnvExportRaw();
 }
 
 final class DioAdminRepository implements AdminRepository {
@@ -457,6 +470,54 @@ final class DioAdminRepository implements AdminRepository {
         statusKeys: const <String>['status'],
       ),
     );
+  }
+
+  @override
+  Future<JsonObject> ownerConfigCatalogRaw() async {
+    final response = await _client.request('admin/owner-config');
+    return requireObject(response.data, 'owner config catalog');
+  }
+
+  @override
+  Future<JsonObject> upsertOwnerProviderRaw(
+    String providerKey, {
+    required JsonObject values,
+    int? expectedVersion,
+    bool testConnection = true,
+    bool enableOnSuccess = true,
+  }) async {
+    final response = await _client.request(
+      'admin/owner-config/providers/$providerKey',
+      method: 'PUT',
+      data: <String, dynamic>{
+        'values': values,
+        'expected_version': expectedVersion,
+        'test_connection': testConnection,
+        'enable_on_success': enableOnSuccess,
+      },
+    );
+    return requireObject(response.data, 'owner provider');
+  }
+
+  @override
+  Future<JsonObject> testOwnerProviderRaw(
+    String providerKey, {
+    bool enableOnSuccess = true,
+  }) async {
+    final response = await _client.request(
+      'admin/owner-config/providers/$providerKey/test',
+      method: 'POST',
+      queryParameters: <String, dynamic>{
+        'enable_on_success': enableOnSuccess,
+      },
+    );
+    return requireObject(response.data, 'owner provider test');
+  }
+
+  @override
+  Future<JsonObject> ownerConfigEnvExportRaw() async {
+    final response = await _client.request('admin/owner-config/env-export');
+    return requireObject(response.data, 'owner env export');
   }
 }
 

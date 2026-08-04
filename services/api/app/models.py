@@ -351,6 +351,7 @@ from app import gift_models as _gift_models  # noqa: E402, F401
 from app import ledger_models as _ledger_models  # noqa: E402, F401
 from app import live_models as _live_models  # noqa: E402, F401
 from app import music_models as _music_models  # noqa: E402, F401
+from app import owner_config_models as _owner_config_models  # noqa: E402, F401
 from app import platform_models as _platform_models  # noqa: E402, F401
 from app import push_models as _push_models  # noqa: E402, F401
 from app import social_models as _social_models  # noqa: E402, F401

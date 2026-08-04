@@ -50,10 +50,12 @@ from app.platform_service import (
     UnconfiguredContentProcessor,
 )
 from app.push_service import PushDispatcher, configured_push_dispatcher
+from app.owner_config_service import effective_settings, load_all_into_runtime
 from app.routers import (
     admin,
     admin_ai,
     admin_operations,
+    admin_owner_config,
     ai,
     auth,
     business,
@@ -148,6 +150,17 @@ def create_app(
             await seed_rbac(session)
             await seed_platform_accounts(session)
             await seed_ai_tool_definitions(session)
+            await load_all_into_runtime(session, resolved_settings)
+            application.state.settings = effective_settings(resolved_settings)
+            application.state.payment_provider = (
+                payment_provider or configured_payment_provider(application.state.settings)
+            )
+            application.state.object_storage = object_storage or S3ObjectStorage(
+                application.state.settings
+            )
+            application.state.push_dispatcher = push_dispatcher or configured_push_dispatcher(
+                application.state.settings
+            )
             if ai_provider_registry is None:
                 await resolved_ai_registry.refresh_from_database(session, resolved_settings)
             if resolved_settings.is_public_test_stand or os.environ.get(
@@ -233,11 +246,16 @@ def create_app(
                 "description": "Courses, progress, quizzes, and verifiable certificates",
             },
             {"name": "Administration", "description": "Server-enforced RBAC"},
+            {
+                "name": "Owner Configuration",
+                "description": "Encrypted third-party credentials and connection tests",
+            },
             {"name": "Operations", "description": "Health and telemetry"},
         ],
         lifespan=lifespan,
     )
     app.state.settings = resolved_settings
+    app.state.base_settings = resolved_settings
     app.state.engine = resolved_engine
     app.state.session_factory = session_factory
     app.state.redis = resolved_redis
@@ -294,6 +312,7 @@ def create_app(
     app.include_router(users.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin_operations.router, prefix=resolved_settings.api_prefix)
+    app.include_router(admin_owner_config.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin_ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)

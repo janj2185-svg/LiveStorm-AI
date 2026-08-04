@@ -39,6 +39,7 @@ PERMISSION_DESCRIPTIONS = {
     "business:documents": "Access authorized workspace document capabilities",
     "admin:users": "Administer platform users and sessions",
     "admin:settings": "Administer versioned platform settings",
+    "owner:config": "Manage encrypted third-party owner configuration and secrets",
     "admin:audit": "Read platform and business audit events",
     "admin:analytics": "Read actual platform analytics",
     "admin:feature-flags": "Administer and evaluate platform feature flags",

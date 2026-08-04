@@ -8,6 +8,7 @@ import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../auth/auth.dart';
 import 'admin_repository.dart';
+import 'owner_config_panel.dart';
 
 @immutable
 final class _AdminSnapshot {
@@ -72,7 +73,7 @@ final class AdminScreen extends ConsumerWidget {
       value: ref.watch(_adminProvider),
       onRetry: () => ref.invalidate(_adminProvider),
       data: (snapshot) => DefaultTabController(
-        length: 7,
+        length: 8,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -83,6 +84,7 @@ final class AdminScreen extends ConsumerWidget {
                 Tab(text: 'Moderation'),
                 Tab(text: 'Users'),
                 Tab(text: 'Feature flags'),
+                Tab(text: 'Owner services'),
                 Tab(text: 'Settings'),
                 Tab(text: 'Audit'),
                 Tab(text: 'Health & security'),
@@ -106,6 +108,7 @@ final class AdminScreen extends ConsumerWidget {
                     flags: snapshot.flags,
                     onChanged: () => ref.invalidate(_adminProvider),
                   ),
+                  const OwnerConfigPanel(),
                   _PlatformSettingsView(
                     settings: snapshot.settings,
                     onChanged: () => ref.invalidate(_adminProvider),

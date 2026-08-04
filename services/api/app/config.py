@@ -335,10 +335,14 @@ class Settings(BaseSettings):
         file_values = dotenv_values(dotenv_path) if dotenv_path else {}
 
         def first_configured(*keys: str) -> str | None:
+            from app.owner_config_store import owner_config_store
+
             for key in keys:
                 value = os.getenv(key)
                 if value is None:
                     value = file_values.get(key)
+                if value is None:
+                    value = owner_config_store.get(key)
                 if value is not None and str(value).strip():
                     return str(value).strip()
             return None

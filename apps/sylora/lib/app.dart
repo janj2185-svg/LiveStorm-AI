@@ -130,11 +130,16 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
     _friendsDestination,
     _marketplaceDestination,
     _learningDestination,
-    if (roleSet.contains('creator') || roleSet.contains('admin'))
+    if (roleSet.contains('creator') ||
+        roleSet.contains('admin') ||
+        roleSet.contains('owner'))
       _creatorDestination,
-    if (roleSet.contains('business') || roleSet.contains('admin'))
+    if (roleSet.contains('business') ||
+        roleSet.contains('admin') ||
+        roleSet.contains('owner'))
       _businessDestination,
-    if (roleSet.contains('admin')) _adminDestination,
+    if (roleSet.contains('admin') || roleSet.contains('owner'))
+      _adminDestination,
     _moreDestination,
   ];
 }
@@ -142,19 +147,25 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
 bool canAccessRoleRoute(Iterable<String> roles, String path) {
   final roleSet = roles.toSet();
   if (path == '/marketplace/seller') {
-    return roleSet.contains('creator') || roleSet.contains('admin');
+    return roleSet.contains('creator') ||
+        roleSet.contains('admin') ||
+        roleSet.contains('owner');
   }
   if (path == '/creator' ||
       path.startsWith('/creator/') ||
       path == '/creator-studio' ||
       path.startsWith('/creator-studio/')) {
-    return roleSet.contains('creator') || roleSet.contains('admin');
+    return roleSet.contains('creator') ||
+        roleSet.contains('admin') ||
+        roleSet.contains('owner');
   }
   if (path == '/business' || path.startsWith('/business/')) {
-    return roleSet.contains('business') || roleSet.contains('admin');
+    return roleSet.contains('business') ||
+        roleSet.contains('admin') ||
+        roleSet.contains('owner');
   }
   if (path == '/admin' || path.startsWith('/admin/')) {
-    return roleSet.contains('admin');
+    return roleSet.contains('admin') || roleSet.contains('owner');
   }
   return true;
 }
