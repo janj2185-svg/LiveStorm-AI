@@ -1642,6 +1642,13 @@ abstract interface class LiveRepository {
     String sessionId,
     String inviteId,
   );
+  Future<JsonObject> guestSubscribeCredentials(String sessionId, String inviteId);
+  Future<LiveSessionModel> updateSessionBgm(
+    String sessionId, {
+    String? trackId,
+    String? playlistId,
+    bool clear = false,
+  });
   Future<JsonObject> replayPlayback(String replayId);
   Future<JsonObject> obsScenes(String sessionId);
   Future<JsonObject> selectObsScene(String sessionId, String sceneName);
@@ -1873,6 +1880,40 @@ final class DioLiveRepository implements LiveRepository {
     );
     return LiveGuestInviteModel.fromJson(
       requireObject(response.data, 'live guest invite'),
+    );
+  }
+
+  @override
+  Future<JsonObject> guestSubscribeCredentials(
+    String sessionId,
+    String inviteId,
+  ) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/guests/$inviteId/subscribe-credentials',
+      method: 'POST',
+    );
+    return requireObject(response.data, 'guest subscribe credentials');
+  }
+
+  @override
+  Future<LiveSessionModel> updateSessionBgm(
+    String sessionId, {
+    String? trackId,
+    String? playlistId,
+    bool clear = false,
+  }) async {
+    final response = await _client.request(
+      'live/sessions/$sessionId/bgm',
+      method: 'PUT',
+      data: clear
+          ? <String, Object?>{}
+          : <String, Object?>{
+              'track_id': ?trackId,
+              'playlist_id': ?playlistId,
+            },
+    );
+    return LiveSessionModel.fromJson(
+      requireObject(response.data, 'live session'),
     );
   }
 

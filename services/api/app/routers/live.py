@@ -28,7 +28,7 @@ from app.dependencies import (
 )
 from app.errors import APIError
 from app.live_adapters import AdapterError, AdapterRegistry
-from app.live_media import media_playback_url
+from app.live_media import media_playback_url, media_whep_url, subscribe_credentials
 from app.live_models import (
     AILivePersona,
     AILiveRule,
@@ -74,11 +74,14 @@ from app.live_schemas import (
     LiveGuestInviteAcceptResponse,
     LiveGuestInviteCreate,
     LiveGuestInviteResponse,
+    LiveGuestSubscribeCredentialsResponse,
+    LiveIceServerResponse,
     LiveMediaCapabilityResponse,
     LivePublishCredentialsResponse,
     LiveReplayPlaybackResponse,
     LiveReplayRegister,
     LiveReplayResponse,
+    LiveSessionBgmUpdate,
     LiveSessionCreate,
     LiveSessionCreated,
     LiveSessionPatch,
@@ -233,13 +236,15 @@ def guest_invite_response(
     invite: LiveGuestInvite,
 ) -> LiveGuestInviteResponse:
     payload = LiveGuestInviteResponse.model_validate(invite).model_dump()
-    payload["playback_url"] = (
-        media_playback_url(settings, invite.guest_ingest_path)
-        if settings.mediamtx_control_url
+    ready = (
+        bool(settings.mediamtx_control_url)
         and invite.media_status == LiveGuestMediaStatus.ready
-        and invite.guest_ingest_path
-        else None
+        and bool(invite.guest_ingest_path)
     )
+    payload["playback_url"] = (
+        media_playback_url(settings, invite.guest_ingest_path) if ready else None
+    )
+    payload["whep_url"] = media_whep_url(settings, invite.guest_ingest_path) if ready else None
     return LiveGuestInviteResponse(**payload)
 
 
@@ -263,6 +268,8 @@ async def session_response(db: AsyncSession, record: LiveSession) -> LiveSession
         moderation_policy=record.moderation_policy,
         ai_mode=record.ai_mode,
         last_error_code=record.last_error_code,
+        bgm_track_id=record.bgm_track_id,
+        bgm_playlist_id=record.bgm_playlist_id,
         created_at=record.created_at,
         updated_at=record.updated_at,
         destinations=[LiveDestinationResponse.model_validate(item) for item in destinations],
@@ -949,6 +956,134 @@ async def revoke_session_guest(
     invite = await revoke_guest_invite(db, registry(request), record, invite)
     await publish_latest(request, session_id)
     return guest_invite_response(settings, invite)
+
+
+@router.post(
+    "/sessions/{session_id}/guests/{invite_id}/subscribe-credentials",
+    response_model=LiveGuestSubscribeCredentialsResponse,
+)
+async def guest_subscribe_credentials(
+    session_id: uuid.UUID,
+    invite_id: uuid.UUID,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LiveGuestSubscribeCredentialsResponse:
+    """Host-only WHEP subscribe credentials for one guest contribution path."""
+    await live_rate_limit(request, auth.user.id)
+    record = await owned_live_session(db, session_id, auth.user.id)
+    invite = await db.scalar(
+        select(LiveGuestInvite).where(
+            LiveGuestInvite.id == invite_id,
+            LiveGuestInvite.session_id == record.id,
+        )
+    )
+    if invite is None:
+        raise APIError(
+            404,
+            "live_guest_invite_not_found",
+            "Live guest invite not found",
+            "The live guest invite does not exist.",
+        )
+    if (
+        invite.status != LiveGuestInviteStatus.accepted
+        or invite.guest_ingest_path is None
+        or invite.media_status != LiveGuestMediaStatus.ready
+    ):
+        return LiveGuestSubscribeCredentialsResponse(
+            invite_id=invite.id,
+            session_id=record.id,
+            status="awaiting_media_plane",
+            reason="guest_contribution_not_ready",
+            guest_ingest_path=invite.guest_ingest_path,
+            whep_url=None,
+            playback_url=None,
+            subscribe_bearer_token=None,
+            token_expires_at=None,
+            token_expires_in_seconds=0,
+            ice_servers=[],
+        )
+    credentials = subscribe_credentials(
+        settings,
+        record,
+        ingest_path=invite.guest_ingest_path,
+        ingest_provisioned=True,
+        subject_user_id=auth.user.id,
+        token_type="live_guest_whep_subscribe",
+    )
+    available = credentials.capability.status == "available" and bool(credentials.whep_url)
+    return LiveGuestSubscribeCredentialsResponse(
+        invite_id=invite.id,
+        session_id=record.id,
+        status="available" if available else "awaiting_media_plane",
+        reason=None if available else credentials.capability.reason or "awaiting_media_plane",
+        guest_ingest_path=invite.guest_ingest_path,
+        whep_url=credentials.whep_url,
+        playback_url=credentials.playback_url,
+        subscribe_bearer_token=credentials.bearer_token if available else None,
+        token_expires_at=credentials.token_expires_at if available else None,
+        token_expires_in_seconds=credentials.token_expires_in_seconds if available else 0,
+        ice_servers=[
+            LiveIceServerResponse(
+                urls=list(server.urls),
+                username=server.username,
+                credential=server.credential,
+            )
+            for server in credentials.ice_servers
+        ],
+    )
+
+
+@router.put("/sessions/{session_id}/bgm", response_model=LiveSessionResponse)
+async def put_session_bgm(
+    session_id: uuid.UUID,
+    payload: LiveSessionBgmUpdate,
+    request: Request,
+    auth: ManageAuth,
+    db: AsyncSession = Depends(get_session),
+) -> LiveSessionResponse:
+    """Persist Creator Studio BGM selection metadata (does not mix audio into WHIP)."""
+    await live_rate_limit(request, auth.user.id)
+    record = await owned_live_session(db, session_id, auth.user.id)
+    from app.music_models import MusicPlaylist, MusicTrack
+
+    if payload.track_id is None and payload.playlist_id is None:
+        record.bgm_track_id = None
+        record.bgm_playlist_id = None
+    elif payload.track_id is not None:
+        track = await db.get(MusicTrack, payload.track_id)
+        if track is None:
+            raise APIError(404, "music_track_not_found", "Track not found", "Track not found.")
+        if not track.allows_live_bgm:
+            raise APIError(
+                403,
+                "music_live_bgm_forbidden",
+                "Live BGM not allowed",
+                "This track is not licensed for live BGM use.",
+            )
+        record.bgm_track_id = track.id
+        record.bgm_playlist_id = None
+    else:
+        assert payload.playlist_id is not None
+        playlist = await db.get(MusicPlaylist, payload.playlist_id)
+        if playlist is None:
+            raise APIError(
+                404, "music_playlist_not_found", "Playlist not found", "Playlist not found."
+            )
+        if playlist.owner_user_id not in {None, auth.user.id} and not playlist.is_public:
+            raise APIError(
+                403,
+                "music_playlist_forbidden",
+                "Forbidden",
+                "Playlist is not accessible.",
+            )
+        record.bgm_playlist_id = playlist.id
+        record.bgm_track_id = None
+    await db.commit()
+    await db.refresh(record)
+    await publish_latest(request, session_id)
+    return await session_response(db, record)
 
 
 @router.get(

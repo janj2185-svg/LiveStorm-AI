@@ -15,6 +15,7 @@ import '../auth/auth.dart';
 import '../music/music_screens.dart';
 import '../platform/repositories.dart';
 import 'media_publisher.dart';
+import 'media_subscriber.dart';
 
 final creatorStudioSessionsProvider =
     FutureProvider.autoDispose<List<LiveSessionModel>>(
@@ -73,6 +74,8 @@ final class _CreatorStudioScreenState
   String? _guestsStatus;
   String? _guestsLoadedForSession;
   List<LiveGuestInviteModel> _guests = const <LiveGuestInviteModel>[];
+  final Map<String, MediaContributionSubscriber> _guestSubscribers =
+      <String, MediaContributionSubscriber>{};
 
   @override
   void initState() {
@@ -92,6 +95,9 @@ final class _CreatorStudioScreenState
     _lowerThirdText.dispose();
     _guestInviteText.dispose();
     _publisher.dispose();
+    for (final subscriber in _guestSubscribers.values) {
+      subscriber.dispose();
+    }
     _aura.dispose();
     super.dispose();
   }
@@ -793,11 +799,17 @@ final class _CreatorStudioScreenState
                         color: _guestStatusColor(guest.status),
                       ),
                     ),
-                    if (guest.playbackUrl case final playbackUrl?) ...<Widget>[
+                    if (_guestSubscribers[guest.id] case final subscriber?) ...<Widget>[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: subscriber.preview(),
+                      ),
+                    ],
+                    if (guest.status == 'accepted') ...<Widget>[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                         child: Text(
-                          'Separate contribution playback is available. It is not auto-composited.',
+                          'Separate contribution path — subscribe with WHEP in-studio. Not auto-composited into the host program.',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
@@ -808,15 +820,26 @@ final class _CreatorStudioScreenState
                           runSpacing: 8,
                           children: <Widget>[
                             LumenSecondaryButton(
-                              label: 'Open playback',
-                              icon: Icons.open_in_new_rounded,
-                              onPressed: () => _openGuestPlayback(playbackUrl),
+                              label: _guestSubscribers.containsKey(guest.id)
+                                  ? 'Refresh WHEP'
+                                  : 'Subscribe WHEP',
+                              icon: Icons.cast_connected_rounded,
+                              onPressed: _guestsBusy || session == null
+                                  ? null
+                                  : () => _subscribeGuestWhep(session, guest),
                             ),
-                            LumenSecondaryButton(
-                              label: 'Copy playback',
-                              icon: Icons.copy_rounded,
-                              onPressed: () => _copyGuestPlayback(playbackUrl),
-                            ),
+                            if (guest.playbackUrl case final playbackUrl?) ...<Widget>[
+                              LumenSecondaryButton(
+                                label: 'Open playback',
+                                icon: Icons.open_in_new_rounded,
+                                onPressed: () => _openGuestPlayback(playbackUrl),
+                              ),
+                              LumenSecondaryButton(
+                                label: 'Copy playback',
+                                icon: Icons.copy_rounded,
+                                onPressed: () => _copyGuestPlayback(playbackUrl),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -922,7 +945,7 @@ final class _CreatorStudioScreenState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Select from the SYLORA music catalog. Playback here is a local preview; use OBS to mix the selected BGM into the broadcast.',
+            'Select from the SYLORA music catalog. Selection is saved on the live session for production metadata. Local preview does not mix into WHIP — use OBS for the broadcast mix.',
           ),
           const SizedBox(height: 12),
           if (selection == null)
@@ -1076,6 +1099,7 @@ final class _CreatorStudioScreenState
             .select(
               CreatorBgmSelection(track: track, sourceTitle: 'Creator BGM'),
             );
+        await _persistBgmSelection(trackId: track.id);
         return;
       }
       final playlist = choice.playlist!;
@@ -1094,6 +1118,7 @@ final class _CreatorStudioScreenState
               playlistId: playlist.id,
             ),
           );
+      await _persistBgmSelection(playlistId: playlist.id);
     } on Object catch (error) {
       _showError(error);
     } finally {
@@ -1130,6 +1155,74 @@ final class _CreatorStudioScreenState
     }
   }
 
+  Future<void> _persistBgmSelection({String? trackId, String? playlistId}) async {
+    final sessionId = _sessionId;
+    if (sessionId == null) {
+      setState(() {
+        _status =
+            'BGM selected locally. Choose a live session to persist production metadata.';
+      });
+      return;
+    }
+    try {
+      await ref
+          .read(liveRepositoryProvider)
+          .updateSessionBgm(
+            sessionId,
+            trackId: trackId,
+            playlistId: playlistId,
+          );
+      if (mounted) {
+        setState(() {
+          _status =
+              'BGM selection saved on the session. Mix audio in OBS — WHIP is unchanged.';
+        });
+      }
+    } on Object catch (error) {
+      _showError(error);
+    }
+  }
+
+  Future<void> _subscribeGuestWhep(
+    LiveSessionModel session,
+    LiveGuestInviteModel guest,
+  ) async {
+    setState(() => _guestsBusy = true);
+    try {
+      final credentials = await ref
+          .read(liveRepositoryProvider)
+          .guestSubscribeCredentials(session.id, guest.id);
+      if (credentials['status'] != 'available') {
+        throw StateError(
+          credentials['reason']?.toString() ??
+              'Guest WHEP is awaiting the media plane.',
+        );
+      }
+      final subscriber = _guestSubscribers.putIfAbsent(
+        guest.id,
+        MediaContributionSubscriber.new,
+      );
+      if (!subscriber.supported) {
+        throw StateError(
+          'WHEP gallery requires web or native WebRTC builds.',
+        );
+      }
+      await subscriber.subscribeWhep(credentials);
+      if (mounted) {
+        setState(() {
+          _guestsStatus =
+              'Subscribed to ${guest.inviteeUserId} contribution (not composited).';
+        });
+      }
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _guestsBusy = false);
+      }
+    }
+  }
+
   Future<void> _clearBgm() async {
     final selection = ref.read(creatorBgmProvider).selection;
     final player = ref.read(musicPlayerProvider);
@@ -1137,6 +1230,16 @@ final class _CreatorStudioScreenState
       await player.stop();
     }
     ref.read(creatorBgmProvider).clear();
+    final sessionId = _sessionId;
+    if (sessionId != null) {
+      try {
+        await ref
+            .read(liveRepositoryProvider)
+            .updateSessionBgm(sessionId, clear: true);
+      } on Object catch (error) {
+        _showError(error);
+      }
+    }
   }
 
   Future<void> _pauseAppAudioForLiveInput() async {

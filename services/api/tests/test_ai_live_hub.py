@@ -807,6 +807,82 @@ async def test_live_guest_invite_host_revoke_flow(api_factory: Any) -> None:
         assert body["guest_ingest_path"] is None
 
 
+
+@pytest.mark.asyncio
+async def test_live_guest_subscribe_credentials_fail_closed(api_factory: Any) -> None:
+    async with api_factory() as api:
+        creator_auth, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=creator_auth,
+            json={"title": "Guest subscribe"},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+        await register_and_verify(
+            api,
+            email="live-subscribe-guest@example.com",
+            display_name="Live Subscribe Guest",
+        )
+        guest = await api.user("live-subscribe-guest@example.com")
+        guest_tokens = await login(api, email="live-subscribe-guest@example.com")
+        invited = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/invite",
+            headers=creator_auth,
+            json={"invitee_user_id": str(guest.id), "role": "guest"},
+        )
+        assert invited.status_code == 201, invited.text
+        invite_id = invited.json()["id"]
+        accepted = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/{invite_id}/accept",
+            headers=bearer(guest_tokens["access_token"]),
+        )
+        assert accepted.status_code == 200, accepted.text
+        credentials = await api.client.post(
+            f"/v1/live/sessions/{session_id}/guests/{invite_id}/subscribe-credentials",
+            headers=creator_auth,
+        )
+        assert credentials.status_code == 200, credentials.text
+        body = credentials.json()
+        assert body["status"] == "awaiting_media_plane"
+        assert body["subscribe_bearer_token"] is None
+        assert body["media_layout"] == "contribution_gallery"
+
+
+@pytest.mark.asyncio
+async def test_live_session_bgm_persist_and_clear(api_factory: Any) -> None:
+    async with api_factory() as api:
+        creator_auth, _ = await creator_headers(api)
+        created = await api.client.post(
+            "/v1/live/sessions",
+            headers=creator_auth,
+            json={"title": "BGM session"},
+        )
+        assert created.status_code == 201, created.text
+        session_id = created.json()["id"]
+        tracks = await api.client.get("/v1/music/tracks", headers=creator_auth)
+        assert tracks.status_code == 200, tracks.text
+        items = tracks.json()["items"]
+        assert items, "expected seeded music catalog"
+        track_id = items[0]["id"]
+        saved = await api.client.put(
+            f"/v1/live/sessions/{session_id}/bgm",
+            headers=creator_auth,
+            json={"track_id": track_id},
+        )
+        assert saved.status_code == 200, saved.text
+        assert saved.json()["bgm_track_id"] == track_id
+        assert saved.json()["bgm_playlist_id"] is None
+        cleared = await api.client.put(
+            f"/v1/live/sessions/{session_id}/bgm",
+            headers=creator_auth,
+            json={},
+        )
+        assert cleared.status_code == 200, cleared.text
+        assert cleared.json()["bgm_track_id"] is None
+        assert cleared.json()["bgm_playlist_id"] is None
+
+
 @pytest.mark.asyncio
 async def test_injected_adapter_reconnect_error_and_recovery(
     api_factory: Any,

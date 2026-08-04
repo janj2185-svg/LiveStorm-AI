@@ -55,6 +55,8 @@ final class CreatorMediaController {
   html.MediaStream? _stream;
   html.MediaStream? _screenStream;
   html.RtcPeerConnection? _peer;
+  String? _resourceUrl;
+  String? _bearerToken;
   StreamSubscription<html.Event>? _screenEndedSubscription;
   js.JsObject? _audioContext;
   List<Object?> _audioNodes = const <Object?>[];
@@ -198,6 +200,7 @@ final class CreatorMediaController {
       throw StateError('WHIP ingest URL is invalid.');
     }
 
+    await _teardownWhipResource();
     _peer?.close();
     _peer = html.RtcPeerConnection(<String, Object>{
       'iceServers': _iceServers(credentials),
@@ -241,6 +244,11 @@ final class CreatorMediaController {
     if (answer == null || answer.trim().isEmpty) {
       throw StateError('MediaMTX WHIP did not return an SDP answer.');
     }
+    final location = response.getResponseHeader('Location');
+    if (location != null && location.isNotEmpty) {
+      _resourceUrl = uri.resolve(location).toString();
+    }
+    _bearerToken = token;
     await _peer!.setRemoteDescription(<String, String>{
       'type': 'answer',
       'sdp': answer,
@@ -394,7 +402,29 @@ final class CreatorMediaController {
     }
   }
 
+  Future<void> _teardownWhipResource() async {
+    final resource = _resourceUrl;
+    final token = _bearerToken;
+    _resourceUrl = null;
+    _bearerToken = null;
+    if (resource == null) {
+      return;
+    }
+    try {
+      await html.HttpRequest.request(
+        resource,
+        method: 'DELETE',
+        requestHeaders: <String, String>{
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+      );
+    } on Object {
+      // Best-effort WHIP resource teardown.
+    }
+  }
+
   Future<void> stop() async {
+    await _teardownWhipResource();
     _stopAudioMeter();
     if (_recorder?.state == 'recording') {
       _recorder?.stop();

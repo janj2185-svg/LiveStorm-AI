@@ -16,6 +16,7 @@ final class MediaContributionSubscriber {
   Future<void>? _rendererReady;
   RTCPeerConnection? _peer;
   String? _resourceUrl;
+  String? _bearerToken;
   final ValueNotifier<String> _connectionState = ValueNotifier<String>('idle');
   bool _disposed = false;
 
@@ -111,6 +112,7 @@ final class MediaContributionSubscriber {
     if (location != null && location.isNotEmpty) {
       _resourceUrl = Uri.parse(whepUrl).resolve(location).toString();
     }
+    _bearerToken = token;
     final answer = response.data;
     if (answer == null || answer.trim().isEmpty) {
       _connectionState.value = 'failed';
@@ -128,10 +130,20 @@ final class MediaContributionSubscriber {
     _resourceUrl = null;
     if (resource != null) {
       try {
-        await _client.delete<void>(resource);
+        await _client.delete<void>(
+          resource,
+          options: Options(
+            headers: <String, dynamic>{
+              if (_bearerToken != null && _bearerToken!.isNotEmpty)
+                'Authorization': 'Bearer $_bearerToken',
+            },
+            validateStatus: (_) => true,
+          ),
+        );
       } on Object {
         // Best-effort teardown.
       }
+      _bearerToken = null;
     }
     await _peer?.close();
     _peer = null;

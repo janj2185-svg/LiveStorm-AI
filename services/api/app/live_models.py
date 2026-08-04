@@ -308,6 +308,16 @@ class LiveSession(Base):
         Enum(LiveAIMode, native_enum=False, length=16), default=LiveAIMode.off
     )
     last_error_code: Mapped[str | None] = mapped_column(String(96))
+    bgm_track_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("music_tracks.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    bgm_playlist_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("music_playlists.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )

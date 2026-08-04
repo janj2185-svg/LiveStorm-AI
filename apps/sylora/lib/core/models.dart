@@ -811,6 +811,8 @@ final class LiveSessionModel {
     required this.ingestProvisioned,
     this.ownerUserId,
     this.streamKeyOnce,
+    this.bgmTrackId,
+    this.bgmPlaylistId,
     this.destinations = const <LiveDestinationModel>[],
     this.replay,
   });
@@ -823,6 +825,8 @@ final class LiveSessionModel {
     ingestProvisioned: requireBool(json, 'ingest_provisioned'),
     ownerUserId: optionalString(json, 'owner_user_id'),
     streamKeyOnce: optionalString(json, 'stream_key_once'),
+    bgmTrackId: optionalString(json, 'bgm_track_id'),
+    bgmPlaylistId: optionalString(json, 'bgm_playlist_id'),
     destinations: requireList(json, 'destinations')
         .map(
           (value) => LiveDestinationModel.fromJson(
@@ -844,6 +848,8 @@ final class LiveSessionModel {
   final bool ingestProvisioned;
   final String? ownerUserId;
   final String? streamKeyOnce;
+  final String? bgmTrackId;
+  final String? bgmPlaylistId;
   final List<LiveDestinationModel> destinations;
   final LiveReplayModel? replay;
 }
@@ -860,6 +866,7 @@ final class LiveGuestInviteModel {
     required this.createdAt,
     this.guestIngestPath,
     this.playbackUrl,
+    this.whepUrl,
     this.sessionTitle,
     this.sessionState,
     this.hostUserId,
@@ -875,6 +882,7 @@ final class LiveGuestInviteModel {
         mediaStatus: requireString(json, 'media_status'),
         guestIngestPath: optionalString(json, 'guest_ingest_path'),
         playbackUrl: optionalString(json, 'playback_url'),
+        whepUrl: optionalString(json, 'whep_url'),
         sessionTitle: optionalString(json, 'session_title'),
         sessionState: optionalString(json, 'session_state'),
         hostUserId: optionalString(json, 'host_user_id'),
@@ -889,6 +897,7 @@ final class LiveGuestInviteModel {
   final String mediaStatus;
   final String? guestIngestPath;
   final String? playbackUrl;
+  final String? whepUrl;
   final String? sessionTitle;
   final String? sessionState;
   final String? hostUserId;

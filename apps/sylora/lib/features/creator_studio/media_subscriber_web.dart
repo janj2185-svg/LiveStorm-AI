@@ -28,6 +28,7 @@ final class MediaContributionSubscriber {
   final String _viewType;
   html.RtcPeerConnection? _peer;
   String? _resourceUrl;
+  String? _bearerToken;
   final ValueNotifier<String> _connectionState = ValueNotifier<String>('idle');
 
   bool get supported => html.window.navigator.mediaDevices != null;
@@ -107,6 +108,7 @@ final class MediaContributionSubscriber {
     if (location != null && location.isNotEmpty) {
       _resourceUrl = uri.resolve(location).toString();
     }
+    _bearerToken = token;
     final answer = response.responseText;
     if (answer == null || answer.trim().isEmpty) {
       _connectionState.value = 'failed';
@@ -125,10 +127,18 @@ final class MediaContributionSubscriber {
     _resourceUrl = null;
     if (resource != null) {
       try {
-        await html.HttpRequest.request(resource, method: 'DELETE');
+        await html.HttpRequest.request(
+          resource,
+          method: 'DELETE',
+          requestHeaders: <String, String>{
+            if (_bearerToken != null && _bearerToken!.isNotEmpty)
+              'Authorization': 'Bearer $_bearerToken',
+          },
+        );
       } on Object {
         // Best-effort WHIP/WHEP resource teardown.
       }
+      _bearerToken = null;
     }
     _peer?.close();
     _peer = null;

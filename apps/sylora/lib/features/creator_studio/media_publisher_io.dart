@@ -44,6 +44,8 @@ final class CreatorMediaController {
   MediaStream? _screenStream;
   RTCPeerConnection? _peer;
   RTCRtpSender? _videoSender;
+  String? _resourceUrl;
+  String? _bearerToken;
   Timer? _audioMeterTimer;
   bool _meterSamplePending = false;
   bool _audioEnabled = true;
@@ -248,6 +250,11 @@ final class CreatorMediaController {
       if (answer == null || answer.trim().isEmpty) {
         throw StateError('MediaMTX WHIP did not return an SDP answer.');
       }
+      final location = response.headers.value('location');
+      if (location != null && location.isNotEmpty) {
+        _resourceUrl = uri.resolve(location).toString();
+      }
+      _bearerToken = token;
       await peer.setRemoteDescription(RTCSessionDescription(answer, 'answer'));
       _startAudioMeter();
       return 'Native WHIP publish connected.';
@@ -402,7 +409,32 @@ final class CreatorMediaController {
     _audioLevel.value = 0;
   }
 
+  Future<void> _teardownWhipResource() async {
+    final resource = _resourceUrl;
+    final token = _bearerToken;
+    _resourceUrl = null;
+    _bearerToken = null;
+    if (resource == null) {
+      return;
+    }
+    try {
+      await _whipClient.delete<void>(
+        resource,
+        options: Options(
+          headers: <String, String>{
+            if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          },
+          validateStatus: (_) => true,
+        ),
+      );
+    } on Object {
+      // Best-effort WHIP resource teardown.
+    }
+  }
+
   Future<void> _closePeer() async {
+    await _teardownWhipResource();
+
     final peer = _peer;
     _peer = null;
     _videoSender = null;

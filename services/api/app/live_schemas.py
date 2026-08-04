@@ -343,6 +343,8 @@ class LiveSessionResponse(ORMStrictSchema):
     moderation_policy: dict[str, Any]
     ai_mode: LiveAIMode
     last_error_code: str | None
+    bgm_track_id: uuid.UUID | None = None
+    bgm_playlist_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
     destinations: list[LiveDestinationResponse] = Field(default_factory=list)
@@ -384,8 +386,39 @@ class LiveGuestInviteResponse(ORMStrictSchema):
     media_status: LiveGuestMediaStatus
     guest_ingest_path: str | None
     playback_url: str | None = None
+    whep_url: str | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class LiveGuestSubscribeCredentialsResponse(StrictSchema):
+    invite_id: uuid.UUID
+    session_id: uuid.UUID
+    status: Literal["available", "awaiting_media_plane"]
+    reason: str | None = None
+    guest_ingest_path: str | None = None
+    whep_url: str | None = None
+    playback_url: str | None = None
+    subscribe_bearer_token: str | None = None
+    token_expires_at: datetime | None = None
+    token_expires_in_seconds: int = 0
+    ice_servers: list[LiveIceServerResponse] = Field(default_factory=list)
+    media_layout: Literal["contribution_gallery"] = "contribution_gallery"
+    media_layout_note: str = (
+        "Guest publishes are isolated contribution paths. Hosts subscribe via WHEP; "
+        "this is not an SFU composite program feed."
+    )
+
+
+class LiveSessionBgmUpdate(StrictSchema):
+    track_id: uuid.UUID | None = None
+    playlist_id: uuid.UUID | None = None
+
+    @model_validator(mode="after")
+    def at_most_one_source(self) -> LiveSessionBgmUpdate:
+        if self.track_id is not None and self.playlist_id is not None:
+            raise ValueError("Provide either track_id or playlist_id, not both")
+        return self
 
 
 class LiveGuestInvitationResponse(LiveGuestInviteResponse):
