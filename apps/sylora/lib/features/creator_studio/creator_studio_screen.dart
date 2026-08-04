@@ -81,6 +81,7 @@ final class _CreatorStudioScreenState
   void initState() {
     super.initState();
     _publisher = CreatorMediaController();
+    _publisher.connectionState.addListener(_handlePublisherConnectionState);
     _aura = SyloraAuraPresenceController.forPreset(
       SyloraAuraContextPreset.creatorStudio,
     );
@@ -94,12 +95,25 @@ final class _CreatorStudioScreenState
   void dispose() {
     _lowerThirdText.dispose();
     _guestInviteText.dispose();
+    _publisher.connectionState.removeListener(_handlePublisherConnectionState);
     _publisher.dispose();
     for (final subscriber in _guestSubscribers.values) {
       subscriber.dispose();
     }
     _aura.dispose();
     super.dispose();
+  }
+
+  void _handlePublisherConnectionState() {
+    if (!mounted) {
+      return;
+    }
+    final connectionState = _publisher.connectionState.value;
+    if (connectionState == 'connected' && !_browserPublishing) {
+      setState(() => _browserPublishing = true);
+    } else if (connectionState != 'connected' && _browserPublishing) {
+      setState(() => _browserPublishing = false);
+    }
   }
 
   @override
@@ -153,6 +167,7 @@ final class _CreatorStudioScreenState
   }
 
   Widget _buildStudio(List<LiveSessionModel> sessions) {
+    final l10n = AppLocalizations.of(context);
     final session = _selectedSession(sessions);
     _ensureGuestsLoaded(session);
     final audioDevices = _devices
@@ -336,6 +351,21 @@ final class _CreatorStudioScreenState
                         : !_corePreflightReady
                         ? 'Run preflight and resolve every required check first.'
                         : 'The selected media path is not ready.',
+                  ),
+                  ValueListenableBuilder<String>(
+                    valueListenable: _publisher.connectionState,
+                    builder: (context, connectionState, _) {
+                      if (connectionState != 'failed' || session == null) {
+                        return const SizedBox.shrink();
+                      }
+                      return LumenSecondaryButton(
+                        label: l10n.commonReconnectMedia,
+                        icon: Icons.sync_problem_rounded,
+                        onPressed: _busy
+                            ? null
+                            : () => _reconnectPublisher(session),
+                      );
+                    },
                   ),
                   LumenSecondaryButton(
                     label: 'Connect OBS',
@@ -712,6 +742,7 @@ final class _CreatorStudioScreenState
   }
 
   Widget _buildGuestsSection(LiveSessionModel? session) {
+    final l10n = AppLocalizations.of(context);
     return LumenSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -799,7 +830,8 @@ final class _CreatorStudioScreenState
                         color: _guestStatusColor(guest.status),
                       ),
                     ),
-                    if (_guestSubscribers[guest.id] case final subscriber?) ...<Widget>[
+                    if (_guestSubscribers[guest.id]
+                        case final subscriber?) ...<Widget>[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                         child: subscriber.preview(),
@@ -819,25 +851,47 @@ final class _CreatorStudioScreenState
                           spacing: 8,
                           runSpacing: 8,
                           children: <Widget>[
-                            LumenSecondaryButton(
-                              label: _guestSubscribers.containsKey(guest.id)
-                                  ? 'Refresh WHEP'
-                                  : 'Subscribe WHEP',
-                              icon: Icons.cast_connected_rounded,
-                              onPressed: _guestsBusy || session == null
-                                  ? null
-                                  : () => _subscribeGuestWhep(session, guest),
-                            ),
-                            if (guest.playbackUrl case final playbackUrl?) ...<Widget>[
+                            if (_guestSubscribers[guest.id]
+                                case final subscriber?)
+                              ValueListenableBuilder<String>(
+                                valueListenable: subscriber.connectionState,
+                                builder: (context, connectionState, _) =>
+                                    LumenSecondaryButton(
+                                      label: connectionState == 'failed'
+                                          ? l10n.commonReconnectMedia
+                                          : 'Refresh WHEP',
+                                      icon: connectionState == 'failed'
+                                          ? Icons.sync_problem_rounded
+                                          : Icons.cast_connected_rounded,
+                                      onPressed: _guestsBusy || session == null
+                                          ? null
+                                          : () => _subscribeGuestWhep(
+                                              session,
+                                              guest,
+                                            ),
+                                    ),
+                              )
+                            else
+                              LumenSecondaryButton(
+                                label: 'Subscribe WHEP',
+                                icon: Icons.cast_connected_rounded,
+                                onPressed: _guestsBusy || session == null
+                                    ? null
+                                    : () => _subscribeGuestWhep(session, guest),
+                              ),
+                            if (guest.playbackUrl
+                                case final playbackUrl?) ...<Widget>[
                               LumenSecondaryButton(
                                 label: 'Open playback',
                                 icon: Icons.open_in_new_rounded,
-                                onPressed: () => _openGuestPlayback(playbackUrl),
+                                onPressed: () =>
+                                    _openGuestPlayback(playbackUrl),
                               ),
                               LumenSecondaryButton(
                                 label: 'Copy playback',
                                 icon: Icons.copy_rounded,
-                                onPressed: () => _copyGuestPlayback(playbackUrl),
+                                onPressed: () =>
+                                    _copyGuestPlayback(playbackUrl),
                               ),
                             ],
                           ],
@@ -1155,7 +1209,10 @@ final class _CreatorStudioScreenState
     }
   }
 
-  Future<void> _persistBgmSelection({String? trackId, String? playlistId}) async {
+  Future<void> _persistBgmSelection({
+    String? trackId,
+    String? playlistId,
+  }) async {
     final sessionId = _sessionId;
     if (sessionId == null) {
       setState(() {
@@ -1203,10 +1260,9 @@ final class _CreatorStudioScreenState
         MediaContributionSubscriber.new,
       );
       if (!subscriber.supported) {
-        throw StateError(
-          'WHEP gallery requires web or native WebRTC builds.',
-        );
+        throw StateError('WHEP gallery requires web or native WebRTC builds.');
       }
+      await subscriber.stop();
       await subscriber.subscribeWhep(credentials);
       if (mounted) {
         setState(() {
@@ -1902,6 +1958,45 @@ final class _CreatorStudioScreenState
           _credentials = null;
           _browserPublishing = false;
         });
+      }
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _reconnectPublisher(LiveSessionModel session) async {
+    setState(() => _busy = true);
+    _aura.think('Aura is reconnecting the WHIP publishing path.');
+    try {
+      final credentials = await ref
+          .read(liveRepositoryProvider)
+          .publishCredentials(session.id);
+      if (credentials['status'] != 'available') {
+        throw StateError(
+          credentials['reason']?.toString() ?? 'WHIP media is unavailable.',
+        );
+      }
+      await _pauseAppAudioForLiveInput();
+      await _publisher.stop();
+      await _publisher.startPreview(
+        audioDeviceId: _audioDeviceId,
+        videoDeviceId: _videoDeviceId,
+      );
+      final message = await _publisher.publishWhip(credentials);
+      if (mounted) {
+        setState(() {
+          _credentials = credentials;
+          _status = message;
+          _browserPublishing = true;
+        });
+        _aura.speak('WHIP publishing is reconnected.');
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _browserPublishing = false);
       }
       _showError(error);
     } finally {

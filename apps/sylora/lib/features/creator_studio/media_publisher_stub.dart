@@ -29,6 +29,7 @@ final class CapturedMediaChunk {
 
 final class CreatorMediaController {
   final ValueNotifier<double> _audioLevel = ValueNotifier<double>(0);
+  final ValueNotifier<String> _connectionState = ValueNotifier<String>('idle');
 
   bool get supported => false;
 
@@ -37,6 +38,8 @@ final class CreatorMediaController {
   bool get captionCaptureSupported => false;
 
   ValueListenable<double> get audioLevel => _audioLevel;
+
+  ValueListenable<String> get connectionState => _connectionState;
 
   bool get hasAudioTrack => false;
 
@@ -77,6 +80,7 @@ final class CreatorMediaController {
   }
 
   Future<String> publishWhip(JsonObject credentials) async {
+    _connectionState.value = 'failed';
     throw UnsupportedError(
       'WHIP publishing is available only on SYLORA web. Use OBS companion on this device.',
     );
@@ -106,10 +110,13 @@ final class CreatorMediaController {
     );
   }
 
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    _connectionState.value = 'idle';
+  }
 
   void dispose() {
     _audioLevel.dispose();
+    _connectionState.dispose();
   }
 }
 

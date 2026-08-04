@@ -29,7 +29,9 @@ final class MediaContributionSubscriber {
   html.RtcPeerConnection? _peer;
   String? _resourceUrl;
   String? _bearerToken;
+  StreamSubscription<html.Event>? _connectionSubscription;
   final ValueNotifier<String> _connectionState = ValueNotifier<String>('idle');
+  bool _disposed = false;
 
   bool get supported => html.window.navigator.mediaDevices != null;
 
@@ -54,7 +56,9 @@ final class MediaContributionSubscriber {
         whepUrl.trim().isEmpty ||
         token == null ||
         token.trim().isEmpty) {
-      throw StateError('WHEP credentials are unavailable for this contribution.');
+      throw StateError(
+        'WHEP credentials are unavailable for this contribution.',
+      );
     }
     final uri = Uri.tryParse(whepUrl);
     if (uri == null ||
@@ -65,64 +69,90 @@ final class MediaContributionSubscriber {
 
     await stop();
     _connectionState.value = 'connecting';
-    _peer = html.RtcPeerConnection(<String, Object>{
-      'iceServers': _iceServers(credentials),
-    });
-    _peer!.onTrack.listen((html.RtcTrackEvent event) {
-      final streams = event.streams;
-      if (streams != null && streams.isNotEmpty) {
-        _video.srcObject = streams.first;
-        unawaited(_video.play());
-      }
-    });
+    try {
+      final peer = html.RtcPeerConnection(<String, Object>{
+        'iceServers': _iceServers(credentials),
+      });
+      _peer = peer;
+      _connectionSubscription = peer.onConnectionStateChange.listen((_) {
+        if (_peer != peer || _disposed) {
+          return;
+        }
+        switch (peer.connectionState) {
+          case 'connected':
+            _connectionState.value = 'connected';
+          case 'disconnected':
+          case 'failed':
+          case 'closed':
+            _connectionState.value = 'failed';
+        }
+      });
+      peer.onTrack.listen((html.RtcTrackEvent event) {
+        final streams = event.streams;
+        if (streams != null && streams.isNotEmpty) {
+          _video.srcObject = streams.first;
+          unawaited(_video.play());
+        }
+      });
 
-    final offer =
-        await _peer!.createOffer(<String, Object>{
-              'offerToReceiveAudio': true,
-              'offerToReceiveVideo': true,
-            })
-            as Map<dynamic, dynamic>;
-    await _peer!.setLocalDescription(offer);
-    await _waitForIceGathering(_peer!);
+      final offer =
+          await peer.createOffer(<String, Object>{
+                'offerToReceiveAudio': true,
+                'offerToReceiveVideo': true,
+              })
+              as Map<dynamic, dynamic>;
+      await peer.setLocalDescription(offer);
+      await _waitForIceGathering(peer);
 
-    final local = _peer!.localDescription;
-    final sdp = local == null ? offer['sdp'] : local.sdp;
-    final response = await html.HttpRequest.request(
-      uri.toString(),
-      method: 'POST',
-      sendData: sdp,
-      requestHeaders: <String, String>{
-        'Content-Type': 'application/sdp',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.status == null ||
-        response.status! < 200 ||
-        response.status! >= 300) {
-      _connectionState.value = 'failed';
-      throw StateError(
-        'MediaMTX WHEP rejected subscribe with HTTP ${response.status}.',
+      final local = peer.localDescription;
+      final sdp = local == null ? offer['sdp'] : local.sdp;
+      final response = await html.HttpRequest.request(
+        uri.toString(),
+        method: 'POST',
+        sendData: sdp,
+        requestHeaders: <String, String>{
+          'Content-Type': 'application/sdp',
+          'Authorization': 'Bearer $token',
+        },
       );
+      if (response.status == null ||
+          response.status! < 200 ||
+          response.status! >= 300) {
+        throw StateError(
+          'MediaMTX WHEP rejected subscribe with HTTP ${response.status}.',
+        );
+      }
+      final location = response.getResponseHeader('Location');
+      if (location != null && location.isNotEmpty) {
+        _resourceUrl = uri.resolve(location).toString();
+      }
+      _bearerToken = token;
+      final answer = response.responseText;
+      if (answer == null || answer.trim().isEmpty) {
+        throw StateError('MediaMTX WHEP did not return an SDP answer.');
+      }
+      await peer.setRemoteDescription(<String, String>{
+        'type': 'answer',
+        'sdp': answer,
+      });
+      _connectionState.value = 'connected';
+      return 'WHEP contribution subscribed.';
+    } on Object {
+      await _connectionSubscription?.cancel();
+      _connectionSubscription = null;
+      final peer = _peer;
+      _peer = null;
+      peer?.close();
+      if (!_disposed) {
+        _connectionState.value = 'failed';
+      }
+      rethrow;
     }
-    final location = response.getResponseHeader('Location');
-    if (location != null && location.isNotEmpty) {
-      _resourceUrl = uri.resolve(location).toString();
-    }
-    _bearerToken = token;
-    final answer = response.responseText;
-    if (answer == null || answer.trim().isEmpty) {
-      _connectionState.value = 'failed';
-      throw StateError('MediaMTX WHEP did not return an SDP answer.');
-    }
-    await _peer!.setRemoteDescription(<String, String>{
-      'type': 'answer',
-      'sdp': answer,
-    });
-    _connectionState.value = 'connected';
-    return 'WHEP contribution subscribed.';
   }
 
   Future<void> stop() async {
+    await _connectionSubscription?.cancel();
+    _connectionSubscription = null;
     final resource = _resourceUrl;
     _resourceUrl = null;
     if (resource != null) {
@@ -143,10 +173,13 @@ final class MediaContributionSubscriber {
     _peer?.close();
     _peer = null;
     _video.srcObject = null;
-    _connectionState.value = 'idle';
+    if (!_disposed) {
+      _connectionState.value = 'idle';
+    }
   }
 
   void dispose() {
+    _disposed = true;
     unawaited(stop());
     _connectionState.dispose();
   }
@@ -163,7 +196,8 @@ final class MediaContributionSubscriber {
           return <String, Object?>{
             'urls': urls is List ? urls : <Object?>[urls],
             if (server['username'] != null) 'username': server['username'],
-            if (server['credential'] != null) 'credential': server['credential'],
+            if (server['credential'] != null)
+              'credential': server['credential'],
           };
         })
         .toList(growable: false);

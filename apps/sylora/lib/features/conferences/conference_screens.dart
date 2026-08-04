@@ -228,7 +228,10 @@ final class ConferencesScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showJoinByCodeDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showJoinByCodeDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final code = TextEditingController();
     final joined = await showDialog<ConferenceRoom>(
@@ -497,6 +500,7 @@ final class _ConferenceRoomScreenState
               busy: _busy,
               onPreview: _startPreview,
               onPublish: _publish,
+              onReconnect: _reconnectMedia,
               onRefreshCredentials: _loadMedia,
             ),
             if (_participants.isNotEmpty) ...<Widget>[
@@ -506,6 +510,7 @@ final class _ConferenceRoomScreenState
                 subscribers: _remoteTiles,
                 onRefresh: _loadParticipants,
                 onSubscribe: _subscribeParticipant,
+                onReconnect: _reconnectParticipant,
               ),
             ],
             const SizedBox(height: 18),
@@ -564,12 +569,12 @@ final class _ConferenceRoomScreenState
   }
 
   Future<void> _subscribeParticipant(JsonObject participant) async {
+    final l10n = AppLocalizations.of(context);
     final userId = optionalString(participant, 'user_id');
     final whepUrl = optionalString(participant, 'whep_url');
     if (userId == null || whepUrl == null || whepUrl.isEmpty) {
       setState(() {
-        _status =
-            'Contribution WHEP is unavailable until the media plane is configured.';
+        _status = l10n.conferencesContributionWhepUnavailable;
       });
       return;
     }
@@ -580,7 +585,7 @@ final class _ConferenceRoomScreenState
     );
     if (!subscriber.supported) {
       setState(() {
-        _status = 'WHEP gallery is available on web and native WebRTC builds.';
+        _status = l10n.conferencesWhepGalleryUnavailable;
       });
       return;
     }
@@ -599,8 +604,55 @@ final class _ConferenceRoomScreenState
         'ice_servers': credentials?['ice_servers'],
       });
       if (mounted) {
-        setState(() => _status = 'Subscribed to contribution $userId');
+        setState(
+          () => _status = l10n.conferencesContributionSubscribed(userId),
+        );
       }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _status = messageFor(error));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _reconnectParticipant(JsonObject participant) async {
+    final userId = optionalString(participant, 'user_id');
+    if (userId == null) {
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final repository = ref.read(conferenceRepositoryProvider);
+      final participants = await repository.listParticipants(
+        widget.conferenceId,
+      );
+      final credentials = await repository.mediaCredentials(
+        widget.conferenceId,
+      );
+      JsonObject? refreshed;
+      for (final candidate in participants) {
+        if (optionalString(candidate, 'user_id') == userId) {
+          refreshed = candidate;
+          break;
+        }
+      }
+      if (refreshed == null) {
+        throw StateError('Contribution is no longer available.');
+      }
+      if (!mounted) {
+        return;
+      }
+      await _remoteTiles[userId]?.stop();
+      setState(() {
+        _participants = participants;
+        _credentials = credentials;
+        _busy = false;
+      });
+      await _subscribeParticipant(refreshed);
     } on Object catch (error) {
       if (mounted) {
         setState(() => _status = messageFor(error));
@@ -665,6 +717,37 @@ final class _ConferenceRoomScreenState
       setState(() => _status = result);
     } on Object catch (error) {
       setState(() => _status = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _reconnectMedia() async {
+    setState(() => _busy = true);
+    try {
+      final credentials = await ref
+          .read(conferenceRepositoryProvider)
+          .mediaCredentials(widget.conferenceId);
+      if (credentials['status'] != 'available') {
+        throw StateError(
+          credentials['reason']?.toString() ?? 'WHIP media is unavailable.',
+        );
+      }
+      await _media.stop();
+      await _media.startPreview();
+      final result = await _media.publishWhip(credentials);
+      if (mounted) {
+        setState(() {
+          _credentials = credentials;
+          _status = result;
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _status = messageFor(error));
+      }
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -931,6 +1014,7 @@ final class _MediaPanel extends StatelessWidget {
     required this.busy,
     required this.onPreview,
     required this.onPublish,
+    required this.onReconnect,
     required this.onRefreshCredentials,
   });
 
@@ -940,6 +1024,7 @@ final class _MediaPanel extends StatelessWidget {
   final bool busy;
   final VoidCallback onPreview;
   final VoidCallback onPublish;
+  final VoidCallback onReconnect;
   final VoidCallback onRefreshCredentials;
 
   @override
@@ -993,6 +1078,19 @@ final class _MediaPanel extends StatelessWidget {
               icon: const Icon(Icons.podcasts_rounded),
               label: Text(l10n.conferencesPublishWhip),
             ),
+            ValueListenableBuilder<String>(
+              valueListenable: media.connectionState,
+              builder: (context, connectionState, _) {
+                if (connectionState != 'failed') {
+                  return const SizedBox.shrink();
+                }
+                return OutlinedButton.icon(
+                  onPressed: busy ? null : onReconnect,
+                  icon: const Icon(Icons.sync_problem_rounded),
+                  label: Text(l10n.commonReconnectMedia),
+                );
+              },
+            ),
             OutlinedButton.icon(
               onPressed: busy ? null : onRefreshCredentials,
               icon: const Icon(Icons.refresh_rounded),
@@ -1005,22 +1103,24 @@ final class _MediaPanel extends StatelessWidget {
   }
 }
 
-
 final class _ContributionGallery extends StatelessWidget {
   const _ContributionGallery({
     required this.participants,
     required this.subscribers,
     required this.onRefresh,
     required this.onSubscribe,
+    required this.onReconnect,
   });
 
   final List<JsonObject> participants;
   final Map<String, MediaContributionSubscriber> subscribers;
   final Future<void> Function() onRefresh;
   final Future<void> Function(JsonObject participant) onSubscribe;
+  final Future<void> Function(JsonObject participant) onReconnect;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -1028,20 +1128,20 @@ final class _ContributionGallery extends StatelessWidget {
           children: <Widget>[
             Expanded(
               child: Text(
-                'Contribution gallery',
+                l10n.conferencesContributionGallery,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
             IconButton(
               onPressed: () => onRefresh(),
               icon: const Icon(Icons.refresh_rounded),
-              tooltip: 'Refresh participants',
+              tooltip: l10n.conferencesRefreshParticipants,
             ),
           ],
         ),
         const SizedBox(height: 6),
         Text(
-          'Each publisher uses an isolated WHIP path. Peers subscribe with WHEP — not an SFU composite feed.',
+          l10n.conferencesContributionGalleryDescription,
           style: SyloraTokens.body(13),
         ),
         const SizedBox(height: 12),
@@ -1065,26 +1165,49 @@ final class _ContributionGallery extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
-                      if (subscribers[participant['user_id'] as String?] != null)
+                      if (subscribers[participant['user_id'] as String?] !=
+                          null)
                         subscribers[participant['user_id'] as String]!.preview()
                       else
                         const AspectRatio(
                           aspectRatio: 16 / 9,
                           child: ColoredBox(
                             color: Colors.black26,
-                            child: Center(
-                              child: Icon(Icons.person_outline),
-                            ),
+                            child: Center(child: Icon(Icons.person_outline)),
                           ),
                         ),
                       const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: participant['is_self'] == true
-                            ? null
-                            : () => onSubscribe(participant),
-                        icon: const Icon(Icons.cast_connected_rounded),
-                        label: const Text('Subscribe WHEP'),
-                      ),
+                      if (subscribers[participant['user_id'] as String?]
+                          case final subscriber?)
+                        ValueListenableBuilder<String>(
+                          valueListenable: subscriber.connectionState,
+                          builder: (context, connectionState, _) =>
+                              OutlinedButton.icon(
+                                onPressed: participant['is_self'] == true
+                                    ? null
+                                    : () => connectionState == 'failed'
+                                          ? onReconnect(participant)
+                                          : onSubscribe(participant),
+                                icon: Icon(
+                                  connectionState == 'failed'
+                                      ? Icons.sync_problem_rounded
+                                      : Icons.cast_connected_rounded,
+                                ),
+                                label: Text(
+                                  connectionState == 'failed'
+                                      ? l10n.commonReconnectMedia
+                                      : l10n.conferencesSubscribeWhep,
+                                ),
+                              ),
+                        )
+                      else
+                        OutlinedButton.icon(
+                          onPressed: participant['is_self'] == true
+                              ? null
+                              : () => onSubscribe(participant),
+                          icon: const Icon(Icons.cast_connected_rounded),
+                          label: Text(l10n.conferencesSubscribeWhep),
+                        ),
                     ],
                   ),
                 ),

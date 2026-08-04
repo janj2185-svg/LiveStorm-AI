@@ -2066,6 +2066,54 @@ abstract class AppLocalizations {
   /// **'Refresh media'**
   String get conferencesRefreshMedia;
 
+  /// No description provided for @commonReconnectMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect media'**
+  String get commonReconnectMedia;
+
+  /// No description provided for @conferencesContributionGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Contribution gallery'**
+  String get conferencesContributionGallery;
+
+  /// No description provided for @conferencesContributionGalleryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Each publisher uses an isolated WHIP path. Peers subscribe with WHEP — not an SFU composite feed.'**
+  String get conferencesContributionGalleryDescription;
+
+  /// No description provided for @conferencesRefreshParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh participants'**
+  String get conferencesRefreshParticipants;
+
+  /// No description provided for @conferencesSubscribeWhep.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe WHEP'**
+  String get conferencesSubscribeWhep;
+
+  /// No description provided for @conferencesContributionWhepUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Contribution WHEP is unavailable until the media plane is configured.'**
+  String get conferencesContributionWhepUnavailable;
+
+  /// No description provided for @conferencesWhepGalleryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'WHEP gallery is available on web and native WebRTC builds.'**
+  String get conferencesWhepGalleryUnavailable;
+
+  /// No description provided for @conferencesContributionSubscribed.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed to contribution {userId}'**
+  String conferencesContributionSubscribed(String userId);
+
   /// No description provided for @conferencesAuraDescription.
   ///
   /// In en, this message translates to:

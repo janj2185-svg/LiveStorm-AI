@@ -39,6 +39,7 @@ final class CreatorMediaController {
   final RTCVideoRenderer _renderer = RTCVideoRenderer();
   Future<void>? _rendererReady;
   final ValueNotifier<double> _audioLevel = ValueNotifier<double>(0);
+  final ValueNotifier<String> _connectionState = ValueNotifier<String>('idle');
 
   MediaStream? _cameraStream;
   MediaStream? _screenStream;
@@ -69,6 +70,8 @@ final class CreatorMediaController {
   bool get captionCaptureSupported => false;
 
   ValueListenable<double> get audioLevel => _audioLevel;
+
+  ValueListenable<String> get connectionState => _connectionState;
 
   bool get hasAudioTrack => _cameraStream?.getAudioTracks().isNotEmpty ?? false;
 
@@ -179,32 +182,49 @@ final class CreatorMediaController {
 
   Future<String> publishWhip(JsonObject credentials) async {
     _checkNotDisposed();
-    final stream = _cameraStream;
-    if (stream == null) {
-      throw StateError('Start preview before publishing.');
-    }
-    final whipUrl = optionalString(credentials, 'whip_url');
-    final token = optionalString(credentials, 'bearer_token');
-    if (whipUrl == null ||
-        whipUrl.trim().isEmpty ||
-        token == null ||
-        token.trim().isEmpty) {
-      throw StateError('WHIP credentials are unavailable for this session.');
-    }
-    final uri = Uri.tryParse(whipUrl);
-    if (uri == null ||
-        !uri.hasAuthority ||
-        (uri.scheme != 'https' && uri.scheme != 'http')) {
-      throw StateError('WHIP ingest URL is invalid.');
-    }
-
-    await _closePeer();
-    final peer = await createPeerConnection(<String, dynamic>{
-      'sdpSemantics': 'unified-plan',
-      'iceServers': _iceServers(credentials),
-    });
-    _peer = peer;
+    _connectionState.value = 'connecting';
     try {
+      final stream = _cameraStream;
+      if (stream == null) {
+        throw StateError('Start preview before publishing.');
+      }
+      final whipUrl = optionalString(credentials, 'whip_url');
+      final token = optionalString(credentials, 'bearer_token');
+      if (whipUrl == null ||
+          whipUrl.trim().isEmpty ||
+          token == null ||
+          token.trim().isEmpty) {
+        throw StateError('WHIP credentials are unavailable for this session.');
+      }
+      final uri = Uri.tryParse(whipUrl);
+      if (uri == null ||
+          !uri.hasAuthority ||
+          (uri.scheme != 'https' && uri.scheme != 'http')) {
+        throw StateError('WHIP ingest URL is invalid.');
+      }
+
+      await _closePeer();
+      final peer = await createPeerConnection(<String, dynamic>{
+        'sdpSemantics': 'unified-plan',
+        'iceServers': _iceServers(credentials),
+      });
+      _peer = peer;
+      peer.onConnectionState = (state) {
+        if (_peer != peer || _disposed) {
+          return;
+        }
+        switch (state) {
+          case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+            _connectionState.value = 'connected';
+          case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
+          case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
+          case RTCPeerConnectionState.RTCPeerConnectionStateClosed:
+            _connectionState.value = 'failed';
+          case RTCPeerConnectionState.RTCPeerConnectionStateNew:
+          case RTCPeerConnectionState.RTCPeerConnectionStateConnecting:
+            break;
+        }
+      };
       for (final track in stream.getAudioTracks()) {
         await peer.addTrack(track, stream);
       }
@@ -257,9 +277,13 @@ final class CreatorMediaController {
       _bearerToken = token;
       await peer.setRemoteDescription(RTCSessionDescription(answer, 'answer'));
       _startAudioMeter();
+      _connectionState.value = 'connected';
       return 'Native WHIP publish connected.';
     } on Object {
       await _closePeer();
+      if (!_disposed) {
+        _connectionState.value = 'failed';
+      }
       rethrow;
     }
   }
@@ -303,6 +327,9 @@ final class CreatorMediaController {
     if (!_disposed && _rendererReady != null) {
       await _rendererReady;
       _renderer.srcObject = null;
+    }
+    if (!_disposed) {
+      _connectionState.value = 'idle';
     }
   }
 
@@ -422,7 +449,8 @@ final class CreatorMediaController {
         resource,
         options: Options(
           headers: <String, String>{
-            if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+            if (token != null && token.isNotEmpty)
+              'Authorization': 'Bearer $token',
           },
           validateStatus: (_) => true,
         ),
@@ -439,6 +467,7 @@ final class CreatorMediaController {
     _peer = null;
     _videoSender = null;
     if (peer != null) {
+      peer.onConnectionState = null;
       await peer.close();
       await peer.dispose();
     }
@@ -451,6 +480,7 @@ final class CreatorMediaController {
       await _renderer.dispose();
     }
     _audioLevel.dispose();
+    _connectionState.dispose();
   }
 
   Future<void> _ensureRenderer() => _rendererReady ??= _renderer.initialize();

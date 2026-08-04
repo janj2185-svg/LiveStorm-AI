@@ -1042,6 +1042,35 @@ class AppLocalizationsUk extends AppLocalizations {
   String get conferencesRefreshMedia => 'Оновити медіа';
 
   @override
+  String get commonReconnectMedia => 'Перепідключити медіа';
+
+  @override
+  String get conferencesContributionGallery => 'Галерея учасників';
+
+  @override
+  String get conferencesContributionGalleryDescription =>
+      'Кожен учасник публікує через окремий шлях WHIP. Інші підписуються через WHEP — це не зведений потік SFU.';
+
+  @override
+  String get conferencesRefreshParticipants => 'Оновити учасників';
+
+  @override
+  String get conferencesSubscribeWhep => 'Підписатися через WHEP';
+
+  @override
+  String get conferencesContributionWhepUnavailable =>
+      'WHEP-потік учасника недоступний, доки не налаштовано медіасервіс.';
+
+  @override
+  String get conferencesWhepGalleryUnavailable =>
+      'Галерея WHEP доступна у вебверсії та нативних збірках із WebRTC.';
+
+  @override
+  String conferencesContributionSubscribed(String userId) {
+    return 'Підписано на потік учасника $userId';
+  }
+
+  @override
   String get conferencesAuraDescription =>
       'Попросіть підсумок зустрічі, навчальні підказки, допомогу з порядком денним або наступними повідомленнями.';
 

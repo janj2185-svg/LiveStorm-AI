@@ -57,11 +57,13 @@ final class CreatorMediaController {
   html.RtcPeerConnection? _peer;
   String? _resourceUrl;
   String? _bearerToken;
+  StreamSubscription<html.Event>? _connectionSubscription;
   StreamSubscription<html.Event>? _screenEndedSubscription;
   js.JsObject? _audioContext;
   List<Object?> _audioNodes = const <Object?>[];
   Timer? _meterTimer;
   final ValueNotifier<double> _audioLevel = ValueNotifier<double>(0);
+  final ValueNotifier<String> _connectionState = ValueNotifier<String>('idle');
   html.MediaRecorder? _recorder;
   final List<html.Blob> _recordedChunks = <html.Blob>[];
   html.MediaRecorder? _captionRecorder;
@@ -70,6 +72,7 @@ final class CreatorMediaController {
   bool _audioEnabled = true;
   bool _videoEnabled = true;
   bool _screenSharing = false;
+  bool _disposed = false;
 
   bool get supported => html.window.navigator.mediaDevices != null;
 
@@ -84,6 +87,8 @@ final class CreatorMediaController {
   bool get captionCaptureSupported => supported;
 
   ValueListenable<double> get audioLevel => _audioLevel;
+
+  ValueListenable<String> get connectionState => _connectionState;
 
   bool get hasAudioTrack => _stream?.getAudioTracks().isNotEmpty ?? false;
 
@@ -181,79 +186,109 @@ final class CreatorMediaController {
   }
 
   Future<String> publishWhip(JsonObject credentials) async {
-    final stream = _stream;
-    if (stream == null) {
-      throw StateError('Start preview before publishing.');
-    }
-    final whipUrl = optionalString(credentials, 'whip_url');
-    final token = optionalString(credentials, 'bearer_token');
-    if (whipUrl == null ||
-        whipUrl.trim().isEmpty ||
-        token == null ||
-        token.trim().isEmpty) {
-      throw StateError('WHIP credentials are unavailable for this session.');
-    }
-    final uri = Uri.tryParse(whipUrl);
-    if (uri == null ||
-        !uri.hasAuthority ||
-        (uri.scheme != 'https' && uri.scheme != 'http')) {
-      throw StateError('WHIP ingest URL is invalid.');
-    }
+    _connectionState.value = 'connecting';
+    try {
+      final stream = _stream;
+      if (stream == null) {
+        throw StateError('Start preview before publishing.');
+      }
+      final whipUrl = optionalString(credentials, 'whip_url');
+      final token = optionalString(credentials, 'bearer_token');
+      if (whipUrl == null ||
+          whipUrl.trim().isEmpty ||
+          token == null ||
+          token.trim().isEmpty) {
+        throw StateError('WHIP credentials are unavailable for this session.');
+      }
+      final uri = Uri.tryParse(whipUrl);
+      if (uri == null ||
+          !uri.hasAuthority ||
+          (uri.scheme != 'https' && uri.scheme != 'http')) {
+        throw StateError('WHIP ingest URL is invalid.');
+      }
 
-    await _teardownWhipResource();
-    _peer?.close();
-    _peer = html.RtcPeerConnection(<String, Object>{
-      'iceServers': _iceServers(credentials),
-    });
-    for (final track in stream.getAudioTracks()) {
-      _peer!.addTrack(track, stream);
-    }
-    final videoStream = _screenStream ?? stream;
-    for (final track in videoStream.getVideoTracks()) {
-      _peer!.addTrack(track, videoStream);
-    }
+      await _teardownWhipResource();
+      await _connectionSubscription?.cancel();
+      _peer?.close();
+      final peer = html.RtcPeerConnection(<String, Object>{
+        'iceServers': _iceServers(credentials),
+      });
+      _peer = peer;
+      _connectionSubscription = peer.onConnectionStateChange.listen((_) {
+        if (_peer != peer || _disposed) {
+          return;
+        }
+        switch (peer.connectionState) {
+          case 'connected':
+            _connectionState.value = 'connected';
+          case 'disconnected':
+          case 'failed':
+          case 'closed':
+            _connectionState.value = 'failed';
+        }
+      });
+      for (final track in stream.getAudioTracks()) {
+        peer.addTrack(track, stream);
+      }
+      final videoStream = _screenStream ?? stream;
+      for (final track in videoStream.getVideoTracks()) {
+        peer.addTrack(track, videoStream);
+      }
 
-    final offer =
-        await _peer!.createOffer(<String, Object>{
-              'offerToReceiveAudio': false,
-              'offerToReceiveVideo': false,
-            })
-            as Map<dynamic, dynamic>;
-    await _peer!.setLocalDescription(offer);
-    await _waitForIceGathering(_peer!);
+      final offer =
+          await peer.createOffer(<String, Object>{
+                'offerToReceiveAudio': false,
+                'offerToReceiveVideo': false,
+              })
+              as Map<dynamic, dynamic>;
+      await peer.setLocalDescription(offer);
+      await _waitForIceGathering(peer);
 
-    final local = _peer!.localDescription;
-    final sdp = local == null ? offer['sdp'] : local.sdp;
-    final response = await html.HttpRequest.request(
-      uri.toString(),
-      method: 'POST',
-      sendData: sdp,
-      requestHeaders: <String, String>{
-        'Content-Type': 'application/sdp',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.status == null ||
-        response.status! < 200 ||
-        response.status! >= 300) {
-      throw StateError(
-        'MediaMTX WHIP rejected publish with HTTP ${response.status}.',
+      final local = peer.localDescription;
+      final sdp = local == null ? offer['sdp'] : local.sdp;
+      final response = await html.HttpRequest.request(
+        uri.toString(),
+        method: 'POST',
+        sendData: sdp,
+        requestHeaders: <String, String>{
+          'Content-Type': 'application/sdp',
+          'Authorization': 'Bearer $token',
+        },
       );
+      if (response.status == null ||
+          response.status! < 200 ||
+          response.status! >= 300) {
+        throw StateError(
+          'MediaMTX WHIP rejected publish with HTTP ${response.status}.',
+        );
+      }
+      final answer = response.responseText;
+      if (answer == null || answer.trim().isEmpty) {
+        throw StateError('MediaMTX WHIP did not return an SDP answer.');
+      }
+      final location = response.getResponseHeader('Location');
+      if (location != null && location.isNotEmpty) {
+        _resourceUrl = uri.resolve(location).toString();
+      }
+      _bearerToken = token;
+      await peer.setRemoteDescription(<String, String>{
+        'type': 'answer',
+        'sdp': answer,
+      });
+      _connectionState.value = 'connected';
+      return 'Browser WHIP publish connected.';
+    } on Object {
+      await _connectionSubscription?.cancel();
+      _connectionSubscription = null;
+      final peer = _peer;
+      _peer = null;
+      peer?.close();
+      await _teardownWhipResource();
+      if (!_disposed) {
+        _connectionState.value = 'failed';
+      }
+      rethrow;
     }
-    final answer = response.responseText;
-    if (answer == null || answer.trim().isEmpty) {
-      throw StateError('MediaMTX WHIP did not return an SDP answer.');
-    }
-    final location = response.getResponseHeader('Location');
-    if (location != null && location.isNotEmpty) {
-      _resourceUrl = uri.resolve(location).toString();
-    }
-    _bearerToken = token;
-    await _peer!.setRemoteDescription(<String, String>{
-      'type': 'answer',
-      'sdp': answer,
-    });
-    return 'Browser WHIP publish connected.';
   }
 
   Future<String> startBrowserRecording() async {
@@ -415,7 +450,8 @@ final class CreatorMediaController {
         resource,
         method: 'DELETE',
         requestHeaders: <String, String>{
-          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
         },
       );
     } on Object {
@@ -425,6 +461,8 @@ final class CreatorMediaController {
 
   Future<void> stop() async {
     await _teardownWhipResource();
+    await _connectionSubscription?.cancel();
+    _connectionSubscription = null;
     _stopAudioMeter();
     if (_recorder?.state == 'recording') {
       _recorder?.stop();
@@ -448,6 +486,9 @@ final class CreatorMediaController {
       }
     }
     _video.srcObject = null;
+    if (!_disposed) {
+      _connectionState.value = 'idle';
+    }
   }
 
   void _disposeCaptionStream() {
@@ -461,8 +502,10 @@ final class CreatorMediaController {
   }
 
   void dispose() {
+    _disposed = true;
     unawaited(stop());
     _audioLevel.dispose();
+    _connectionState.dispose();
   }
 
   Future<void> _startScreenShare() async {

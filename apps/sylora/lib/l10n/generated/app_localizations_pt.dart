@@ -1047,6 +1047,35 @@ class AppLocalizationsPt extends AppLocalizations {
   String get conferencesRefreshMedia => 'Refresh media';
 
   @override
+  String get commonReconnectMedia => 'Reconnect media';
+
+  @override
+  String get conferencesContributionGallery => 'Contribution gallery';
+
+  @override
+  String get conferencesContributionGalleryDescription =>
+      'Each publisher uses an isolated WHIP path. Peers subscribe with WHEP — not an SFU composite feed.';
+
+  @override
+  String get conferencesRefreshParticipants => 'Refresh participants';
+
+  @override
+  String get conferencesSubscribeWhep => 'Subscribe WHEP';
+
+  @override
+  String get conferencesContributionWhepUnavailable =>
+      'Contribution WHEP is unavailable until the media plane is configured.';
+
+  @override
+  String get conferencesWhepGalleryUnavailable =>
+      'WHEP gallery is available on web and native WebRTC builds.';
+
+  @override
+  String conferencesContributionSubscribed(String userId) {
+    return 'Subscribed to contribution $userId';
+  }
+
+  @override
   String get conferencesAuraDescription =>
       'Ask for meeting summaries, classroom prompts, agenda help, or follow-up wording.';
 
