@@ -19,6 +19,7 @@ def test_auth_methods_exclude_github_and_unconfigured_providers(
     monkeypatch.delenv("OAUTH_GOOGLE_CLIENT_ID", raising=False)
     monkeypatch.delenv("OAUTH_GOOGLE_CLIENT_SECRET", raising=False)
     monkeypatch.delenv("OAUTH_TIKTOK_CLIENT_ID", raising=False)
+    monkeypatch.delenv("OAUTH_FACEBOOK_CLIENT_ID", raising=False)
     monkeypatch.delenv("OAUTH_GITHUB_CLIENT_ID", raising=False)
     monkeypatch.delenv("SMS_PROVIDER", raising=False)
     settings = Settings(
@@ -40,6 +41,32 @@ def test_auth_methods_exclude_github_and_unconfigured_providers(
     assert methods["google"] is False
     assert methods["apple"] is False
     assert "github" not in methods
+
+
+def test_auth_methods_enable_facebook_tiktok_on_public_test_stand(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OAUTH_FACEBOOK_CLIENT_ID", raising=False)
+    monkeypatch.delenv("OAUTH_TIKTOK_CLIENT_ID", raising=False)
+    settings = Settings(
+        _env_file=None,
+        environment="test",
+        database_url="sqlite+aiosqlite:///consumer-auth-stand.db",
+        redis_url="memory://",
+        jwt_secret="unit-test-jwt-key-with-more-than-thirty-two-characters",
+        data_encryption_key="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        web_base_url="https://getsylora.com",
+        test_stand_mode=True,
+        test_stand_auto_verify_email=True,
+    )
+    methods = settings.auth_methods()
+    assert methods["facebook"] is True
+    assert methods["tiktok"] is True
+    assert methods["google"] is False
+    assert methods["apple"] is False
+    assert settings.oauth_provider("facebook") is None
+    assert settings.oauth_provider("tiktok") is None
+    assert settings.is_public_test_stand is True
 
 
 def test_oauth_placeholder_credentials_rejected(

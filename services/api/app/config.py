@@ -23,6 +23,11 @@ class OAuthProviderSettings(BaseModel):
 # GitHub is intentionally excluded from production authentication.
 PUBLIC_OAUTH_PROVIDERS = ("tiktok", "facebook", "google", "apple")
 
+# On the public test stand, Facebook + TikTok sign-in stay available even when
+# Meta/TikTok app credentials are not yet provisioned (synthetic IdP).
+# Real LIVE platform integrations remain separately blocked.
+TEST_STAND_OAUTH_PROVIDERS = frozenset({"facebook", "tiktok"})
+
 # GitHub OAuth may be used only in local development/test tooling.
 DEVELOPMENT_ONLY_OAUTH_PROVIDERS = frozenset({"github"})
 
@@ -400,6 +405,10 @@ class Settings(BaseSettings):
         )
         return any(marker in lowered for marker in markers)
 
+    def test_stand_oauth_enabled(self, name: str) -> bool:
+        """True when the public stand may synthesize this consumer OAuth IdP."""
+        return self.is_public_test_stand and name.lower().strip() in TEST_STAND_OAUTH_PROVIDERS
+
     def auth_methods(self) -> dict[str, bool]:
         from app.sms import sms_configured
 
@@ -409,8 +418,10 @@ class Settings(BaseSettings):
             "email": True,
             "email_password": True,
             "email_otp": email_otp,
-            "tiktok": self.oauth_provider("tiktok") is not None,
-            "facebook": self.oauth_provider("facebook") is not None,
+            "tiktok": self.oauth_provider("tiktok") is not None
+            or self.test_stand_oauth_enabled("tiktok"),
+            "facebook": self.oauth_provider("facebook") is not None
+            or self.test_stand_oauth_enabled("facebook"),
             "google": self.oauth_provider("google") is not None,
             "apple": self.oauth_provider("apple") is not None,
         }

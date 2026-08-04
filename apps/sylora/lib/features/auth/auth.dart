@@ -592,16 +592,34 @@ final class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = const AuthState.unauthenticated(busy: true);
     try {
+      final trimmedEmail = email.trim();
       final result = await _repository.register(
-        email: email.trim(),
+        email: trimmedEmail,
         password: password,
         displayName: displayName.trim(),
         deviceLabel: 'SYLORA client',
       );
-      state = AuthState.unauthenticated(
-        notice: result.verified
-            ? 'Акаунт створено. Увійдіть з вашим паролем.'
-            : 'Перевірте пошту, щоб підтвердити акаунт.',
+      if (result.verified) {
+        // Test stand / auto-verify: sign in immediately so registration feels complete.
+        final loginResult = await _repository.login(
+          email: trimmedEmail,
+          password: password,
+          deviceLabel: 'SYLORA client',
+        );
+        if (loginResult.mfaRequired) {
+          state = AuthState.unauthenticated(
+            notice: 'Акаунт створено. Підтвердіть MFA, щоб увійти.',
+          );
+          return result;
+        }
+        state = AuthState(
+          status: AuthStatus.authenticated,
+          user: loginResult.user,
+        );
+        return result;
+      }
+      state = const AuthState.unauthenticated(
+        notice: 'Перевірте пошту, щоб підтвердити акаунт.',
       );
       return result;
     } on Object catch (error) {

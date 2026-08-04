@@ -13,12 +13,17 @@ from joserfc import jwt as jose_jwt
 from joserfc.errors import JoseError
 from joserfc.jwk import KeySet
 from joserfc.jwt import JWTClaimsRegistry
+from pydantic import SecretStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit import add_audit_event
 from app.auth_service import issue_token_pair
-from app.config import DEVELOPMENT_ONLY_OAUTH_PROVIDERS, OAuthProviderSettings, Settings
+from app.config import (
+    DEVELOPMENT_ONLY_OAUTH_PROVIDERS,
+    OAuthProviderSettings,
+    Settings,
+)
 from app.dependencies import get_session, get_settings
 from app.errors import APIError
 from app.identity_linking import (
@@ -43,9 +48,11 @@ from app.security import (
     normalize_email,
     utcnow,
 )
+from app.stand_provisioning import assert_stand_accepting_testers, provision_stand_tester
 
 router = APIRouter(prefix="/auth/oauth", tags=["OAuth"])
 STATE_COOKIE = "sylora_oauth_state"
+TEST_STAND_SUBJECT_COOKIE = "sylora_teststand_oauth_id"
 
 
 def provider_or_error(settings: Settings, provider: str) -> OAuthProviderSettings:
@@ -67,6 +74,14 @@ def provider_or_error(settings: Settings, provider: str) -> OAuthProviderSetting
             "This OAuth provider is not configured.",
         )
     return configuration
+
+
+def oauth_web_complete_url(settings: Settings, provider: str) -> str:
+    """Flutter web uses HashUrlStrategy (#/auth/...), so IdP must land on a hash route."""
+    return (
+        f"{settings.web_base_url.rstrip('/')}/#/auth/oauth/complete"
+        f"?provider={provider}"
+    )
 
 
 async def fetch_json(url: str, *, headers: dict[str, str] | None = None) -> dict[str, Any]:
@@ -106,12 +121,146 @@ async def fetch_json(url: str, *, headers: dict[str, str] | None = None) -> dict
     return data
 
 
-@router.get("/{provider}/start")
+async def _finish_oauth_login(
+    *,
+    request: Request,
+    db: AsyncSession,
+    settings: Settings,
+    provider_name: str,
+    user: User,
+    identity: OAuthIdentity,
+    wants_json: bool,
+) -> JSONResponse | RedirectResponse:
+    if user.status != UserStatus.active:
+        raise APIError(
+            403,
+            "account_unavailable",
+            "Account unavailable",
+            "This account cannot sign in with OAuth.",
+        )
+    identity.last_login_at = utcnow()
+    tokens, access_session = await issue_token_pair(
+        db, request, user, settings, f"{provider_name.title()} OAuth"
+    )
+    if settings.is_public_test_stand:
+        await provision_stand_tester(db, request, settings, user.id)
+    add_audit_event(
+        db,
+        request,
+        settings,
+        "identity.oauth_login_succeeded",
+        actor_user_id=user.id,
+        target_user_id=user.id,
+        metadata={
+            "provider": provider_name,
+            "session_id": str(access_session.id),
+            "test_stand": settings.test_stand_oauth_enabled(provider_name)
+            and settings.oauth_provider(provider_name) is None,
+        },
+    )
+    await db.commit()
+    bundle = create_oauth_state(
+        {
+            "tokens": tokens.model_dump(),
+            "provider": provider_name,
+        },
+        settings,
+    )
+    if wants_json:
+        response: JSONResponse | RedirectResponse = JSONResponse(tokens.model_dump())
+    else:
+        response = RedirectResponse(
+            oauth_web_complete_url(settings, provider_name),
+            status_code=303,
+        )
+    response.set_cookie(
+        "sylora_oauth_bundle",
+        bundle,
+        max_age=120,
+        httponly=True,
+        secure=settings.environment != "test",
+        samesite="lax",
+        path="/v1/auth/oauth",
+    )
+    return response
+
+
+async def _test_stand_oauth_start(
+    provider: str,
+    request: Request,
+    db: AsyncSession,
+    settings: Settings,
+) -> JSONResponse | RedirectResponse:
+    """Synthesize Facebook/TikTok sign-in on the public stand without IdP secrets."""
+    name = provider.lower().strip()
+    if not settings.test_stand_oauth_enabled(name):
+        raise APIError(
+            503,
+            "oauth_provider_unavailable",
+            "OAuth provider unavailable",
+            "This OAuth provider is not configured.",
+        )
+
+    subject_seed = request.cookies.get(TEST_STAND_SUBJECT_COOKIE) or secrets.token_urlsafe(18)
+    subject = f"teststand:{name}:{subject_seed}"
+    claims = {
+        "sub": subject,
+        "email_verified": False,
+        "name": f"{name.title()} Stand",
+    }
+    # Minimal provider settings object for resolve_oauth_user (no real secrets used).
+    configuration = OAuthProviderSettings(
+        name=name,
+        client_id="test-stand",
+        client_secret=SecretStr("test-stand-secret"),
+        discovery_url=f"builtin:{name}",
+        redirect_uri=f"{settings.web_base_url.rstrip('/')}/v1/auth/oauth/{name}/callback",
+        scopes="openid",
+    )
+    user, identity = await resolve_oauth_user(db, configuration, claims)
+    wants_json = "application/json" in (request.headers.get("accept") or "").lower()
+    response = await _finish_oauth_login(
+        request=request,
+        db=db,
+        settings=settings,
+        provider_name=name,
+        user=user,
+        identity=identity,
+        wants_json=wants_json,
+    )
+    response.set_cookie(
+        TEST_STAND_SUBJECT_COOKIE,
+        subject_seed,
+        max_age=60 * 60 * 24 * 365,
+        httponly=True,
+        secure=settings.environment != "test",
+        samesite="lax",
+        path="/v1/auth/oauth",
+    )
+    return response
+
+
+@router.get("/{provider}/start", response_model=None)
 async def oauth_start(
     provider: str,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
-) -> RedirectResponse:
-    configuration = provider_or_error(settings, provider)
+) -> RedirectResponse | JSONResponse:
+    assert_stand_accepting_testers(settings)
+    name = provider.lower().strip()
+    if name in DEVELOPMENT_ONLY_OAUTH_PROVIDERS:
+        if settings.environment not in {"development", "test"}:
+            raise APIError(
+                503,
+                "oauth_provider_unavailable",
+                "OAuth provider unavailable",
+                "GitHub sign-in is not part of the SYLORA consumer product.",
+            )
+    configuration = settings.oauth_provider(name)
+    if configuration is None:
+        return await _test_stand_oauth_start(name, request, db, settings)
+
     discovery = await fetch_json(configuration.discovery_url)
     authorization_endpoint = discovery.get("authorization_endpoint")
     if not isinstance(authorization_endpoint, str):
@@ -532,54 +681,15 @@ async def _oauth_callback_impl(
     if configuration.name == "apple":
         claims = _merge_apple_user_form(claims, apple_user_json)
     user, identity = await resolve_oauth_user(db, configuration, claims)
-    if user.status != UserStatus.active:
-        raise APIError(
-            403,
-            "account_unavailable",
-            "Account unavailable",
-            "This account cannot sign in with OAuth.",
-        )
-    identity.last_login_at = utcnow()
-    tokens, access_session = await issue_token_pair(
-        db, request, user, settings, f"{configuration.name.title()} OAuth"
-    )
-    add_audit_event(
-        db,
-        request,
-        settings,
-        "identity.oauth_login_succeeded",
-        actor_user_id=user.id,
-        target_user_id=user.id,
-        metadata={
-            "provider": configuration.name,
-            "session_id": str(access_session.id),
-        },
-    )
-    await db.commit()
-    bundle = create_oauth_state(
-        {
-            "tokens": tokens.model_dump(),
-            "provider": configuration.name,
-        },
-        settings,
-    )
     wants_json = "application/json" in (request.headers.get("accept") or "").lower()
-    if wants_json:
-        response: JSONResponse | RedirectResponse = JSONResponse(tokens.model_dump())
-    else:
-        redirect_target = (
-            f"{settings.web_base_url.rstrip('/')}/auth/oauth/complete"
-            f"?provider={configuration.name}"
-        )
-        response = RedirectResponse(redirect_target, status_code=303)
-    response.set_cookie(
-        "sylora_oauth_bundle",
-        bundle,
-        max_age=120,
-        httponly=True,
-        secure=settings.environment != "test",
-        samesite="lax",
-        path="/v1/auth/oauth",
+    response = await _finish_oauth_login(
+        request=request,
+        db=db,
+        settings=settings,
+        provider_name=configuration.name,
+        user=user,
+        identity=identity,
+        wants_json=wants_json,
     )
     response.delete_cookie(
         STATE_COOKIE,

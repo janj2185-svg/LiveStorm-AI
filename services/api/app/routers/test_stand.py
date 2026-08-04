@@ -138,6 +138,26 @@ async def public_stand_status(request: Request) -> dict[str, Any]:
             else "SMTP not connected — TEST_STAND_AUTO_VERIFY_EMAIL auto-verifies on this stand",
             mode="smtp" if settings.smtp_configured else "auto_verify",
         ),
+        "facebook_login": _feature(
+            "READY"
+            if settings.oauth_provider("facebook") is not None
+            or settings.test_stand_oauth_enabled("facebook")
+            else "BLOCKED",
+            "Meta OAuth configured"
+            if settings.oauth_provider("facebook") is not None
+            else "test-stand synthetic Facebook sign-in (add OAUTH_FACEBOOK_* for real IdP)",
+            mode="oauth" if settings.oauth_provider("facebook") is not None else "test_stand",
+        ),
+        "tiktok_login": _feature(
+            "READY"
+            if settings.oauth_provider("tiktok") is not None
+            or settings.test_stand_oauth_enabled("tiktok")
+            else "BLOCKED",
+            "TikTok Login Kit configured"
+            if settings.oauth_provider("tiktok") is not None
+            else "test-stand synthetic TikTok sign-in (add OAUTH_TIKTOK_* for real IdP)",
+            mode="oauth" if settings.oauth_provider("tiktok") is not None else "test_stand",
+        ),
         "ai_assistant": _feature(
             "READY" if llm_ok else "PARTIAL",
             "LLM configured" if llm_ok else "Provider not configured",

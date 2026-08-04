@@ -818,7 +818,10 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
           displayName: _displayName.text,
         );
     if (result != null && mounted) {
-      setState(() => _emailMode = _EmailMode.password);
+      final status = ref.read(authControllerProvider).status;
+      if (status != AuthStatus.authenticated) {
+        setState(() => _emailMode = _EmailMode.password);
+      }
     }
   }
 
