@@ -50,7 +50,71 @@ void main() {
       expect(tracks.single.isCreatorBgm, isTrue);
     },
   );
+
+  test('music repository sends playlist management mutations', () async {
+    final requests = <RequestOptions>[];
+    final repository = MusicRepository(
+      _client((options) {
+        requests.add(options);
+        if (options.method == 'PATCH') {
+          return jsonResponse(<String, dynamic>{
+            ..._musicPlaylistJson(),
+            'title': 'Road Trip',
+            'description': 'Favorites for the road.',
+          }, 200);
+        }
+        if (options.method == 'POST') {
+          return jsonResponse(_musicTrackJson(), 201);
+        }
+        return jsonResponse(<String, dynamic>{}, 204);
+      }),
+    );
+
+    final updated = await repository.updatePlaylist(
+      'playlist-id',
+      title: 'Road Trip',
+      description: 'Favorites for the road.',
+    );
+    final added = await repository.addTrackToPlaylist(
+      'playlist-id',
+      'track-id',
+    );
+    await repository.removeTrackFromPlaylist('playlist-id', 'track-id');
+    await repository.deletePlaylist('playlist-id');
+
+    expect(updated.title, 'Road Trip');
+    expect(updated.description, 'Favorites for the road.');
+    expect(added.id, 'track-id');
+    expect(requests.map((request) => request.method), <String>[
+      'PATCH',
+      'POST',
+      'DELETE',
+      'DELETE',
+    ]);
+    expect(requests.map((request) => request.uri.path), <String>[
+      '/v1/music/playlists/playlist-id',
+      '/v1/music/playlists/playlist-id/tracks',
+      '/v1/music/playlists/playlist-id/tracks/track-id',
+      '/v1/music/playlists/playlist-id',
+    ]);
+    expect(requests[0].data, <String, Object?>{
+      'title': 'Road Trip',
+      'description': 'Favorites for the road.',
+    });
+    expect(requests[1].data, <String, Object>{'track_id': 'track-id'});
+  });
 }
+
+Map<String, dynamic> _musicPlaylistJson() => <String, dynamic>{
+  'id': 'playlist-id',
+  'title': 'Working title',
+  'description': null,
+  'kind': 'personal',
+  'mood': null,
+  'cover_url': null,
+  'is_public': false,
+  'track_count': 1,
+};
 
 Map<String, dynamic> _musicTrackJson() => <String, dynamic>{
   'id': 'track-id',

@@ -181,6 +181,25 @@ final class MusicRepository {
     return MusicPlaylist.fromJson(requireObject(response.data, 'playlist'));
   }
 
+  Future<MusicPlaylist> updatePlaylist(
+    String playlistId, {
+    required String title,
+    String? description,
+  }) async {
+    final response = await _client.request(
+      'music/playlists/$playlistId',
+      method: 'PATCH',
+      data: <String, Object?>{'title': title, 'description': description},
+    );
+    return MusicPlaylist.fromJson(
+      requireObject(response.data, 'updated playlist'),
+    );
+  }
+
+  Future<void> deletePlaylist(String playlistId) async {
+    await _client.request('music/playlists/$playlistId', method: 'DELETE');
+  }
+
   Future<List<MusicTrack>> playlistTracks(String playlistId) async {
     final response = await _client.request(
       'music/playlists/$playlistId/tracks',
@@ -189,6 +208,30 @@ final class MusicRepository {
     return requireList(data, 'items')
         .map((item) => MusicTrack.fromJson(requireObject(item, 'track')))
         .toList(growable: false);
+  }
+
+  Future<MusicTrack> addTrackToPlaylist(
+    String playlistId,
+    String trackId,
+  ) async {
+    final response = await _client.request(
+      'music/playlists/$playlistId/tracks',
+      method: 'POST',
+      data: <String, Object>{'track_id': trackId},
+    );
+    return MusicTrack.fromJson(
+      requireObject(response.data, 'added playlist track'),
+    );
+  }
+
+  Future<void> removeTrackFromPlaylist(
+    String playlistId,
+    String trackId,
+  ) async {
+    await _client.request(
+      'music/playlists/$playlistId/tracks/$trackId',
+      method: 'DELETE',
+    );
   }
 }
 
@@ -199,6 +242,11 @@ final musicRepositoryProvider = Provider<MusicRepository>((ref) {
 final musicHomeProvider = FutureProvider.autoDispose<MusicHome>((ref) {
   return ref.watch(musicRepositoryProvider).home();
 });
+
+final musicPlaylistTracksProvider = FutureProvider.autoDispose
+    .family<List<MusicTrack>, String>((ref, playlistId) {
+      return ref.watch(musicRepositoryProvider).playlistTracks(playlistId);
+    });
 
 @immutable
 final class CreatorBgmSelection {
@@ -368,6 +416,46 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
     }
   }
 
+  Future<void> _createPlaylist() async {
+    try {
+      final playlist = await ref
+          .read(musicRepositoryProvider)
+          .createPlaylist('My Playlist ${DateTime.now().day}');
+      ref.invalidate(musicHomeProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Created ${playlist.title}')));
+      await _openPlaylist(playlist);
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+    }
+  }
+
+  Future<void> _openPlaylist(MusicPlaylist playlist) async {
+    final deleted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.92,
+        child: _PlaylistDetailSheet(
+          playlist: playlist,
+          onPlay: (track) => _play(track, contextLabel: 'playlist'),
+        ),
+      ),
+    );
+    if (deleted == true && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Playlist deleted.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final home = ref.watch(musicHomeProvider);
@@ -409,6 +497,7 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                         _MusicHomeTab(
                           data: data,
                           onPlay: _play,
+                          onOpenPlaylist: _openPlaylist,
                           searchController: _catalogSearch,
                           searchResults: _searchResults,
                           searchError: _searchError,
@@ -430,21 +519,8 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                           emptyTitle: 'No playlists yet',
                           emptyMessage:
                               'Create a personal playlist or ask Aura.',
-                          onCreate: () async {
-                            final playlist = await ref
-                                .read(musicRepositoryProvider)
-                                .createPlaylist(
-                                  'My Playlist ${DateTime.now().day}',
-                                );
-                            ref.invalidate(musicHomeProvider);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Created ${playlist.title}'),
-                                ),
-                              );
-                            }
-                          },
+                          onCreate: _createPlaylist,
+                          onOpen: _openPlaylist,
                         ),
                         _TrackList(
                           tracks: data.favorites,
@@ -463,6 +539,7 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                         _AuraMusicTab(
                           controller: _aiPrompt,
                           playlists: data.aiPlaylists,
+                          onOpenPlaylist: _openPlaylist,
                           onGenerate: () async {
                             final prompt = _aiPrompt.text.trim();
                             if (prompt.isEmpty) return;
@@ -491,6 +568,7 @@ final class _MusicHomeTab extends StatelessWidget {
   const _MusicHomeTab({
     required this.data,
     required this.onPlay,
+    required this.onOpenPlaylist,
     required this.onFavorite,
     required this.searchController,
     required this.searching,
@@ -501,6 +579,7 @@ final class _MusicHomeTab extends StatelessWidget {
 
   final MusicHome data;
   final Future<void> Function(MusicTrack track) onPlay;
+  final Future<void> Function(MusicPlaylist playlist) onOpenPlaylist;
   final Future<void> Function(MusicTrack track) onFavorite;
   final TextEditingController searchController;
   final List<MusicTrack>? searchResults;
@@ -575,25 +654,29 @@ final class _MusicHomeTab extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final playlist = data.moodPlaylists[index];
-              return SyloraGlass(
-                radius: SyloraTokens.radiusLg,
-                padding: const EdgeInsets.all(16),
-                child: SizedBox(
-                  width: 160,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Icon(Icons.graphic_eq_rounded, color: SyloraTokens.ion),
-                      const Spacer(),
-                      Text(playlist.title, style: SyloraTokens.title(15)),
-                      Text(
-                        '${playlist.trackCount} tracks',
-                        style: SyloraTokens.body(
-                          12,
-                          color: SyloraTokens.inkSoft,
+              return InkWell(
+                borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
+                onTap: () => onOpenPlaylist(playlist),
+                child: SyloraGlass(
+                  radius: SyloraTokens.radiusLg,
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: 160,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Icon(Icons.graphic_eq_rounded, color: SyloraTokens.ion),
+                        const Spacer(),
+                        Text(playlist.title, style: SyloraTokens.title(15)),
+                        Text(
+                          '${playlist.trackCount} tracks',
+                          style: SyloraTokens.body(
+                            12,
+                            color: SyloraTokens.inkSoft,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -791,12 +874,14 @@ final class _PlaylistGrid extends StatelessWidget {
     required this.emptyTitle,
     required this.emptyMessage,
     required this.onCreate,
+    required this.onOpen,
   });
 
   final List<MusicPlaylist> playlists;
   final String emptyTitle;
   final String emptyMessage;
   final VoidCallback onCreate;
+  final Future<void> Function(MusicPlaylist playlist) onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -838,20 +923,452 @@ final class _PlaylistGrid extends StatelessWidget {
           );
         }
         final playlist = playlists[index - 1];
-        return SyloraGlass(
-          radius: SyloraTokens.radiusLg,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(playlist.kind.toUpperCase(), style: SyloraTokens.label(10)),
-              const Spacer(),
-              Text(playlist.title, style: SyloraTokens.title(16)),
-              Text('${playlist.trackCount} tracks'),
-            ],
+        return InkWell(
+          onTap: () => onOpen(playlist),
+          borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
+          child: SyloraGlass(
+            radius: SyloraTokens.radiusLg,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  playlist.kind.toUpperCase(),
+                  style: SyloraTokens.label(10),
+                ),
+                const Spacer(),
+                Text(playlist.title, style: SyloraTokens.title(16)),
+                Text('${playlist.trackCount} tracks'),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+final class _PlaylistDetailSheet extends ConsumerStatefulWidget {
+  const _PlaylistDetailSheet({required this.playlist, required this.onPlay});
+
+  final MusicPlaylist playlist;
+  final Future<void> Function(MusicTrack track) onPlay;
+
+  @override
+  ConsumerState<_PlaylistDetailSheet> createState() =>
+      _PlaylistDetailSheetState();
+}
+
+final class _PlaylistDetailSheetState
+    extends ConsumerState<_PlaylistDetailSheet> {
+  late MusicPlaylist _playlist;
+  late final TextEditingController _title;
+  late final TextEditingController _description;
+  final _catalogSearch = TextEditingController();
+  List<MusicTrack>? _searchResults;
+  String? _error;
+  String? _searchError;
+  bool _saving = false;
+  bool _deleting = false;
+  bool _searching = false;
+  final Set<String> _trackMutations = <String>{};
+
+  bool get _editable => _playlist.kind == 'personal';
+
+  @override
+  void initState() {
+    super.initState();
+    _playlist = widget.playlist;
+    _title = TextEditingController(text: _playlist.title);
+    _description = TextEditingController(text: _playlist.description ?? '');
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _description.dispose();
+    _catalogSearch.dispose();
+    super.dispose();
+  }
+
+  void _refreshPlaylist() {
+    ref.invalidate(musicHomeProvider);
+    ref.invalidate(musicPlaylistTracksProvider(_playlist.id));
+  }
+
+  Future<void> _save() async {
+    final title = _title.text.trim();
+    if (title.isEmpty) {
+      setState(() => _error = 'Playlist title cannot be blank.');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final description = _description.text.trim();
+      final playlist = await ref
+          .read(musicRepositoryProvider)
+          .updatePlaylist(
+            _playlist.id,
+            title: title,
+            description: description.isEmpty ? null : description,
+          );
+      if (!mounted) return;
+      setState(() => _playlist = playlist);
+      ref.invalidate(musicHomeProvider);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Playlist details saved.')));
+    } on Object catch (error) {
+      if (mounted) setState(() => _error = messageFor(error));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete playlist?'),
+        content: Text(
+          '“${_playlist.title}” and its track list will be permanently deleted.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _deleting = true;
+      _error = null;
+    });
+    try {
+      await ref.read(musicRepositoryProvider).deletePlaylist(_playlist.id);
+      ref.invalidate(musicHomeProvider);
+      ref.invalidate(musicPlaylistTracksProvider(_playlist.id));
+      if (mounted) Navigator.pop(context, true);
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          _deleting = false;
+          _error = messageFor(error);
+        });
+      }
+    }
+  }
+
+  Future<void> _searchCatalog() async {
+    final query = _catalogSearch.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = null;
+        _searchError = null;
+      });
+      return;
+    }
+    setState(() {
+      _searching = true;
+      _searchError = null;
+    });
+    try {
+      final tracks = await ref.read(musicRepositoryProvider).tracks(q: query);
+      if (mounted) setState(() => _searchResults = tracks);
+    } on Object catch (error) {
+      if (mounted) setState(() => _searchError = messageFor(error));
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  Future<void> _addTrack(MusicTrack track) async {
+    setState(() {
+      _trackMutations.add(track.id);
+      _error = null;
+    });
+    try {
+      await ref
+          .read(musicRepositoryProvider)
+          .addTrackToPlaylist(_playlist.id, track.id);
+      _refreshPlaylist();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Added ${track.title}.')));
+      }
+    } on Object catch (error) {
+      if (mounted) setState(() => _error = messageFor(error));
+    } finally {
+      if (mounted) {
+        setState(() => _trackMutations.remove(track.id));
+      }
+    }
+  }
+
+  Future<void> _removeTrack(MusicTrack track) async {
+    setState(() {
+      _trackMutations.add(track.id);
+      _error = null;
+    });
+    try {
+      await ref
+          .read(musicRepositoryProvider)
+          .removeTrackFromPlaylist(_playlist.id, track.id);
+      _refreshPlaylist();
+    } on Object catch (error) {
+      if (mounted) setState(() => _error = messageFor(error));
+    } finally {
+      if (mounted) {
+        setState(() => _trackMutations.remove(track.id));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tracksValue = ref.watch(musicPlaylistTracksProvider(_playlist.id));
+    final playlistTrackIds =
+        tracksValue.valueOrNull?.map((track) => track.id).toSet() ??
+        const <String>{};
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CircleAvatar(
+                backgroundColor: SyloraTokens.ion.withValues(alpha: 0.18),
+                child: const Icon(Icons.queue_music_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(_playlist.title, style: SyloraTokens.title(22)),
+                    const SizedBox(height: 4),
+                    Text(
+                      _editable
+                          ? 'Personal playlist · you can edit this mix'
+                          : '${_playlist.kind.toUpperCase()} playlist · read only',
+                      style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Close playlist',
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          if (_editable) ...<Widget>[
+            TextField(
+              controller: _title,
+              maxLength: 200,
+              decoration: const InputDecoration(
+                labelText: 'Playlist name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _description,
+              minLines: 2,
+              maxLines: 4,
+              maxLength: 2000,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                hintText: 'What belongs in this playlist?',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                LumenPrimaryButton(
+                  label: 'Save details',
+                  icon: Icons.save_rounded,
+                  busy: _saving,
+                  onPressed: _saving || _deleting ? null : _save,
+                ),
+                LumenSecondaryButton(
+                  label: _deleting ? 'Deleting…' : 'Delete playlist',
+                  icon: Icons.delete_outline_rounded,
+                  onPressed: _saving || _deleting ? null : _delete,
+                  disabledReason: _deleting ? 'Deleting playlist.' : null,
+                ),
+              ],
+            ),
+          ] else if ((_playlist.description ?? '').isNotEmpty)
+            Text(
+              _playlist.description!,
+              style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+            ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                _error!,
+                style: SyloraTokens.body(13, color: SyloraTokens.petal),
+              ),
+            ),
+          const Divider(height: 32),
+          Text('Tracks', style: SyloraTokens.title(18)),
+          const SizedBox(height: 8),
+          tracksValue.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(28),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stackTrace) => ListTile(
+              leading: const Icon(Icons.error_outline_rounded),
+              title: Text(messageFor(error)),
+              trailing: TextButton(
+                onPressed: () =>
+                    ref.invalidate(musicPlaylistTracksProvider(_playlist.id)),
+                child: const Text('Retry'),
+              ),
+            ),
+            data: (tracks) => tracks.isEmpty
+                ? const ListTile(
+                    leading: Icon(Icons.library_music_outlined),
+                    title: Text('No tracks yet'),
+                    subtitle: Text('This playlist is currently empty.'),
+                  )
+                : Column(
+                    children: <Widget>[
+                      for (final track in tracks)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            backgroundColor: SyloraTokens.petal.withValues(
+                              alpha: 0.2,
+                            ),
+                            child: const Icon(Icons.music_note_rounded),
+                          ),
+                          title: Text(track.title),
+                          subtitle: Text(
+                            '${track.artistName} · ${track.licenseLabel}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              IconButton(
+                                tooltip: 'Play ${track.title}',
+                                onPressed: () => widget.onPlay(track),
+                                icon: const Icon(Icons.play_arrow_rounded),
+                              ),
+                              if (_editable)
+                                IconButton(
+                                  tooltip: 'Remove ${track.title}',
+                                  onPressed: _trackMutations.contains(track.id)
+                                      ? null
+                                      : () => _removeTrack(track),
+                                  icon: _trackMutations.contains(track.id)
+                                      ? const SizedBox.square(
+                                          dimension: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.remove_circle_outline_rounded,
+                                        ),
+                                ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+          if (_editable) ...<Widget>[
+            const Divider(height: 32),
+            Text('Add from catalog', style: SyloraTokens.title(18)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _catalogSearch,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _searchCatalog(),
+              decoration: InputDecoration(
+                hintText: 'Search tracks or artists',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _searching
+                    ? const Padding(
+                        padding: EdgeInsets.all(14),
+                        child: SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : IconButton(
+                        tooltip: 'Search catalog',
+                        onPressed: _searchCatalog,
+                        icon: const Icon(Icons.arrow_forward_rounded),
+                      ),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            if (_searchError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  _searchError!,
+                  style: SyloraTokens.body(13, color: SyloraTokens.petal),
+                ),
+              ),
+            if (_searchResults case final List<MusicTrack> results) ...<Widget>[
+              const SizedBox(height: 8),
+              if (results.isEmpty)
+                const ListTile(title: Text('No catalog tracks found'))
+              else
+                for (final track in results)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.album_outlined),
+                    title: Text(track.title),
+                    subtitle: Text(track.artistName),
+                    trailing: playlistTrackIds.contains(track.id)
+                        ? const LumenBadge(label: 'Added')
+                        : IconButton.filledTonal(
+                            tooltip: 'Add ${track.title}',
+                            onPressed: _trackMutations.contains(track.id)
+                                ? null
+                                : () => _addTrack(track),
+                            icon: _trackMutations.contains(track.id)
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.add_rounded),
+                          ),
+                  ),
+            ],
+          ],
+        ],
+      ),
     );
   }
 }
@@ -861,11 +1378,13 @@ final class _AuraMusicTab extends StatelessWidget {
     required this.controller,
     required this.playlists,
     required this.onGenerate,
+    required this.onOpenPlaylist,
   });
 
   final TextEditingController controller;
   final List<MusicPlaylist> playlists;
   final VoidCallback onGenerate;
+  final Future<void> Function(MusicPlaylist playlist) onOpenPlaylist;
 
   @override
   Widget build(BuildContext context) {
@@ -909,6 +1428,8 @@ final class _AuraMusicTab extends StatelessWidget {
             leading: const Icon(Icons.auto_awesome_outlined),
             title: Text(playlist.title),
             subtitle: Text(playlist.description ?? 'Aura playlist'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => onOpenPlaylist(playlist),
           ),
       ],
     );
