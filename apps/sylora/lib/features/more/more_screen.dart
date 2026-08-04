@@ -270,6 +270,16 @@ final class _QuickActionRow extends StatelessWidget {
           icon: Icons.auto_awesome_rounded,
           onTap: () => context.goNamed('ai'),
         ),
+        SyloraPortalChip(
+          label: 'Music',
+          icon: Icons.library_music_rounded,
+          onTap: () => context.goNamed('music'),
+        ),
+        SyloraPortalChip(
+          label: l10n.notificationsTitle,
+          icon: Icons.notifications_outlined,
+          onTap: () => context.pushNamed('notifications'),
+        ),
       ],
     );
   }
