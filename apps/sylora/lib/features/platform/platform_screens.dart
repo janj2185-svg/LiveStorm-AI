@@ -16,6 +16,7 @@ import '../../core/realtime.dart';
 import '../../design/sylora.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
+import '../creator_studio/media_publisher.dart';
 import 'repositories.dart';
 
 @immutable
@@ -151,30 +152,51 @@ final class LiveSnapshot {
   const LiveSnapshot({
     required this.sessions,
     required this.integrations,
+    this.incomingInvites = const <LiveGuestInviteModel>[],
+    this.sessionsError,
     this.integrationsError,
+    this.incomingInvitesError,
   });
 
   final List<LiveSessionModel> sessions;
   final List<NamedResource> integrations;
+  final List<LiveGuestInviteModel> incomingInvites;
+  final Object? sessionsError;
   final Object? integrationsError;
+  final Object? incomingInvitesError;
 }
 
 final liveProvider = FutureProvider.autoDispose<LiveSnapshot>((ref) async {
   final repository = ref.watch(liveRepositoryProvider);
-  final sessions = await repository.sessions();
+  var sessions = const <LiveSessionModel>[];
+  var integrations = const <NamedResource>[];
+  var incomingInvites = const <LiveGuestInviteModel>[];
+  Object? sessionsError;
+  Object? integrationsError;
+  Object? incomingInvitesError;
   try {
-    final integrations = await repository.integrations();
-    return LiveSnapshot(sessions: sessions, integrations: integrations);
+    sessions = await repository.sessions();
   } on Object catch (error) {
-    // Live session management and integration management use separate backend
-    // permissions. Keep direct MediaMTX sessions usable when integrations are
-    // unavailable to this account.
-    return LiveSnapshot(
-      sessions: sessions,
-      integrations: const <NamedResource>[],
-      integrationsError: error,
-    );
+    sessionsError = error;
   }
+  try {
+    integrations = await repository.integrations();
+  } on Object catch (error) {
+    integrationsError = error;
+  }
+  try {
+    incomingInvites = await repository.incomingGuestInvites();
+  } on Object catch (error) {
+    incomingInvitesError = error;
+  }
+  return LiveSnapshot(
+    sessions: sessions,
+    integrations: integrations,
+    incomingInvites: incomingInvites,
+    sessionsError: sessionsError,
+    integrationsError: integrationsError,
+    incomingInvitesError: incomingInvitesError,
+  );
 });
 
 final liveSessionProvider = FutureProvider.autoDispose
@@ -1531,6 +1553,8 @@ final class AiScreen extends ConsumerStatefulWidget {
 final class _AiScreenState extends ConsumerState<AiScreen> {
   late final SyloraAuraPresenceController _aura;
   JsonObject? _presence;
+  Object? _presenceError;
+  bool _avatarBusy = false;
 
   @override
   void initState() {
@@ -1542,9 +1566,14 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
   Future<void> _loadPresence() async {
     try {
       final presence = await ref.read(aiRepositoryProvider).auraPresence();
-      if (mounted) setState(() => _presence = presence);
-    } on Object {
-      // Presence is enhancement — chat still works without it.
+      if (mounted) {
+        setState(() {
+          _presence = presence;
+          _presenceError = null;
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) setState(() => _presenceError = error);
     }
   }
 
@@ -1559,6 +1588,7 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
     final value = ref.watch(aiProvider);
     _syncAura(value);
     final l10n = AppLocalizations.of(context);
+    final consentGranted = value.asData?.value.settings.consentGranted == true;
     final mood = _presence?['mood_label'] as String? ?? l10n.aiOnline;
     final personality =
         _presence?['personality'] as String? ??
@@ -1583,17 +1613,27 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
           onTap: () => context.pushNamed('ai-memory'),
         ),
         metrics: <Widget>[
-          if (_presence != null)
+          if (_presence != null && consentGranted)
             SyloraMetricPill(
               label: 'Memory',
               value: '${_presence!['memory_count']}',
               icon: Icons.memory_rounded,
             ),
-          if (_presence != null)
+          if (_presence != null && consentGranted)
             SyloraMetricPill(
               label: 'Voice',
-              value: _presence!['voice_ready'] == true ? 'Ready' : 'Setup',
+              value: _presence!['voice_output_ready'] == true
+                  ? 'Ready'
+                  : 'Offline',
               icon: Icons.record_voice_over_rounded,
+            ),
+          if (_presence != null && consentGranted)
+            SyloraMetricPill(
+              label: 'Avatar',
+              value: _presence!['avatar_ready'] == true
+                  ? '${_presence!['avatar_job_status'] ?? 'Ready'}'
+                  : 'Offline',
+              icon: Icons.face_retouching_natural_rounded,
             ),
         ],
       ),
@@ -1641,19 +1681,47 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
             );
           }
           if (!snapshot.providers.chatAvailable) {
-            return LumenEmptyView(
-              title: 'AI provider unavailable',
-              message:
-                  'The backend reports no available chat provider. SYLORA will not fabricate a response.',
-              actionLabel: 'Check again',
-              onAction: () => ref.invalidate(aiProvider),
-              icon: Icons.smart_toy_outlined,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _AuraPresencePanel(
+                  presence: _presence,
+                  error: _presenceError,
+                  avatarCapable:
+                      snapshot.providers.capabilities['avatar'] == true,
+                  avatarBusy: _avatarBusy,
+                  onRefresh: _loadPresence,
+                  onGenerateAvatar: () => _queueAvatar(),
+                ),
+                const SizedBox(height: 16),
+                LumenEmptyView(
+                  title: 'AI provider unavailable',
+                  message:
+                      'The backend reports no available chat provider. SYLORA will not fabricate a response.',
+                  actionLabel: 'Check again',
+                  onAction: () => ref.invalidate(aiProvider),
+                  icon: Icons.smart_toy_outlined,
+                ),
+              ],
             );
           }
           var index = 0;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              SyloraStaggeredReveal(
+                index: index++,
+                child: _AuraPresencePanel(
+                  presence: _presence,
+                  error: _presenceError,
+                  avatarCapable:
+                      snapshot.providers.capabilities['avatar'] == true,
+                  avatarBusy: _avatarBusy,
+                  onRefresh: _loadPresence,
+                  onGenerateAvatar: () => _queueAvatar(),
+                ),
+              ),
+              const SizedBox(height: 16),
               SyloraStaggeredReveal(
                 index: index++,
                 child: SyloraGlassTile(
@@ -1802,8 +1870,9 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
             tip: 'Звʼязок з AI хитається. Спробуй оновити.',
           )
         : (
-            emotion: AuraEmotion.greeting,
-            tip: 'Я Aura — пиши як людині, я поруч.',
+            emotion: _auraEmotion('${_presence?['emotion'] ?? 'greeting'}'),
+            tip:
+                '${_presence?['mood_label'] ?? 'Я Aura — пиши як людині, я поруч.'}',
           );
     if (_aura.emotion == next.emotion && _aura.tip == next.tip) {
       return;
@@ -1814,6 +1883,80 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
       }
     });
   }
+
+  Future<void> _queueAvatar() async {
+    final prompt = TextEditingController();
+    try {
+      final submitted = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Generate Aura avatar'),
+          content: SizedBox(
+            width: 520,
+            child: TextField(
+              controller: prompt,
+              minLines: 3,
+              maxLines: 7,
+              maxLength: 8000,
+              decoration: const InputDecoration(
+                labelText: 'Avatar direction',
+                helperText:
+                    'Describe visual style and expression. Generation runs only through a configured avatar provider.',
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (prompt.text.trim().isNotEmpty) {
+                  Navigator.pop(dialogContext, true);
+                }
+              },
+              child: const Text('Queue avatar'),
+            ),
+          ],
+        ),
+      );
+      if (submitted != true || !mounted) return;
+      setState(() => _avatarBusy = true);
+      await ref.read(aiRepositoryProvider).createJob(<String, dynamic>{
+        'capability': 'avatar',
+        'prompt': prompt.text.trim(),
+      });
+      await _loadPresence();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aura avatar generation queued.')),
+        );
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    } finally {
+      prompt.dispose();
+      if (mounted) setState(() => _avatarBusy = false);
+    }
+  }
+
+  static AuraEmotion _auraEmotion(String emotion) => switch (emotion) {
+    'idle' => AuraEmotion.idle,
+    'listening' => AuraEmotion.listening,
+    'thinking' => AuraEmotion.thinking,
+    'speaking' => AuraEmotion.speaking,
+    'amused' => AuraEmotion.amused,
+    'focused' => AuraEmotion.focused,
+    'delighted' => AuraEmotion.delighted,
+    'thoughtful' => AuraEmotion.thoughtful,
+    'supportive' => AuraEmotion.supportive,
+    _ => AuraEmotion.greeting,
+  };
 
   static Future<void> _createConversation(
     BuildContext context,
@@ -1944,6 +2087,245 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     text.dispose();
   }
+}
+
+final class _AuraPresencePanel extends StatelessWidget {
+  const _AuraPresencePanel({
+    required this.presence,
+    required this.error,
+    required this.avatarCapable,
+    required this.avatarBusy,
+    required this.onRefresh,
+    required this.onGenerateAvatar,
+  });
+
+  final JsonObject? presence;
+  final Object? error;
+  final bool avatarCapable;
+  final bool avatarBusy;
+  final VoidCallback onRefresh;
+  final VoidCallback onGenerateAvatar;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = presence;
+    final emotion = '${data?['emotion'] ?? 'greeting'}';
+    final mood = '${data?['mood_label'] ?? 'Checking Aura presence…'}';
+    final voiceOutputReady =
+        data?['voice_output_ready'] == true || data?['voice_ready'] == true;
+    final transcriptionReady = data?['transcription_ready'] == true;
+    final avatarReady = data?['avatar_ready'] == true && avatarCapable;
+    final avatarStatus = data?['avatar_job_status'] as String?;
+    final color = _emotionColor(emotion);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.72, end: 1),
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 620),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) => Transform.scale(
+                  scale: value,
+                  child: Container(
+                    width: 86,
+                    height: 86,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: <Color>[
+                          color.withValues(alpha: 0.24),
+                          color.withValues(alpha: 0.04),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.46),
+                        width: 1.5,
+                      ),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.22),
+                          blurRadius: 24,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: child,
+                  ),
+                ),
+                child: Center(
+                  child: SyloraAura(
+                    size: 62,
+                    emotion: _AiScreenState._auraEmotion(emotion),
+                    showLabel: false,
+                    animate: !reduceMotion,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            child: Text(
+                              mood,
+                              key: ValueKey<String>(mood),
+                              style: SyloraTokens.title(20),
+                            ),
+                          ),
+                        ),
+                        LumenBadge(label: emotion, color: color),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${data?['context_summary'] ?? 'Aura presence metrics are loading from the API.'}',
+                      style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+                    ),
+                    if (error != null) ...<Widget>[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Presence unavailable: ${messageFor(error!)}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Refresh Aura presence',
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: <Widget>[
+              _AuraSignalCard(
+                icon: Icons.psychology_alt_outlined,
+                color: LumenColors.pulse,
+                title: 'Memory',
+                value: '${data?['memory_count'] ?? '—'} remembered',
+                detail:
+                    'Only enabled after explicit AI consent and your memory setting.',
+              ),
+              _AuraSignalCard(
+                icon: Icons.graphic_eq_rounded,
+                color: voiceOutputReady
+                    ? LumenColors.verdigris
+                    : LumenColors.porcelainMuted,
+                title: 'Voice & captions',
+                value: voiceOutputReady ? 'Aura can speak' : 'TTS unavailable',
+                detail: transcriptionReady
+                    ? 'Speech-to-text is configured for recorded caption clips; captions are not continuous live transcription.'
+                    : 'Speech-to-text is not configured. The app will not claim captions are available.',
+              ),
+              _AuraSignalCard(
+                icon: Icons.face_retouching_natural_rounded,
+                color: avatarReady
+                    ? LumenColors.bloom
+                    : LumenColors.porcelainMuted,
+                title: 'Avatar',
+                value: avatarStatus == null
+                    ? (avatarReady ? 'Provider ready' : 'Provider offline')
+                    : 'Latest job: $avatarStatus',
+                detail: avatarReady
+                    ? 'Avatar generation is provider-backed and queued as a real AI job.'
+                    : 'No configured avatar provider is reporting capability.',
+                action: LumenSecondaryButton(
+                  label: avatarBusy
+                      ? 'Queueing…'
+                      : avatarStatus == null
+                      ? 'Generate'
+                      : 'Generate again',
+                  icon: Icons.auto_awesome_rounded,
+                  onPressed: avatarReady && !avatarBusy
+                      ? onGenerateAvatar
+                      : null,
+                  disabledReason:
+                      'Avatar generation stays disabled until a provider is configured.',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Color _emotionColor(String emotion) => switch (emotion) {
+    'speaking' || 'delighted' || 'amused' => LumenColors.bloom,
+    'thinking' || 'thoughtful' || 'focused' => LumenColors.pulse,
+    'listening' || 'supportive' => LumenColors.verdigris,
+    _ => LumenColors.aether,
+  };
+}
+
+final class _AuraSignalCard extends StatelessWidget {
+  const _AuraSignalCard({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.value,
+    required this.detail,
+    this.action,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String value;
+  final String detail;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 300,
+    child: Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(title, style: SyloraTokens.title(14))),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(value, style: SyloraTokens.title(17)),
+          const SizedBox(height: 4),
+          Text(
+            detail,
+            style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
+          ),
+          if (action != null) ...<Widget>[const SizedBox(height: 12), action!],
+        ],
+      ),
+    ),
+  );
 }
 
 final class AiConversationScreen extends ConsumerStatefulWidget {
@@ -2776,6 +3158,52 @@ final class LiveScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              Text('Guest invitations', style: SyloraTokens.title(20)),
+              const SizedBox(height: 6),
+              Text(
+                'Accept a real host invite, publish a separate WHIP contribution when credentials are issued, or send a gift to the host.',
+                style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+              ),
+              const SizedBox(height: 12),
+              if (snapshot.incomingInvitesError != null)
+                SyloraStaggeredReveal(
+                  index: index++,
+                  child: _StatusPanel(
+                    message:
+                        'Guest invitations could not load: ${messageFor(snapshot.incomingInvitesError!)}',
+                    error: true,
+                  ),
+                )
+              else if (snapshot.incomingInvites.isEmpty)
+                SyloraStaggeredReveal(
+                  index: index++,
+                  child: const SyloraGlassTile(
+                    child: Row(
+                      children: <Widget>[
+                        Icon(Icons.mark_email_read_outlined),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'No incoming guest invitations. Host invites will appear here.',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                for (final invite in snapshot.incomingInvites)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: SyloraStaggeredReveal(
+                      index: index++,
+                      child: _LiveGuestInviteCard(
+                        key: ValueKey<String>(invite.id),
+                        invite: invite,
+                      ),
+                    ),
+                  ),
+              const SizedBox(height: 24),
               Text(l10n.liveIntegrations, style: SyloraTokens.title(20)),
               const SizedBox(height: 12),
               SyloraStaggeredReveal(
@@ -2890,7 +3318,22 @@ final class LiveScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               Text(l10n.liveSessions, style: SyloraTokens.title(20)),
               const SizedBox(height: 12),
-              if (snapshot.sessions.isEmpty)
+              if (snapshot.sessionsError != null)
+                SyloraGlassTile(
+                  child: Row(
+                    children: <Widget>[
+                      const Icon(Icons.lock_outline_rounded),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Host session controls are unavailable for this account: '
+                          '${messageFor(snapshot.sessionsError!)}',
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else if (snapshot.sessions.isEmpty)
                 LumenEmptyView(
                   title: l10n.liveNoSessions,
                   message: l10n.liveNoSessionsMessage,
@@ -3052,6 +3495,395 @@ final class LiveScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+final class _LiveGuestInviteCard extends ConsumerStatefulWidget {
+  const _LiveGuestInviteCard({required this.invite, super.key});
+
+  final LiveGuestInviteModel invite;
+
+  @override
+  ConsumerState<_LiveGuestInviteCard> createState() =>
+      _LiveGuestInviteCardState();
+}
+
+final class _LiveGuestInviteCardState
+    extends ConsumerState<_LiveGuestInviteCard> {
+  late final CreatorMediaController _publisher;
+  late String _inviteStatus;
+  late String _mediaStatus;
+  JsonObject? _credentials;
+  String? _message;
+  bool _busy = false;
+  bool _previewReady = false;
+  bool _publishing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _publisher = CreatorMediaController();
+    _inviteStatus = widget.invite.status;
+    _mediaStatus = widget.invite.mediaStatus;
+  }
+
+  @override
+  void dispose() {
+    _publisher.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accepted = _inviteStatus == 'accepted';
+    final ended = widget.invite.sessionState == 'ended';
+    final credentialsReady =
+        _credentials?['status'] == 'available' &&
+        _credentials?['whip_url'] is String &&
+        _credentials?['bearer_token'] is String;
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LumenColors.aether.withValues(alpha: 0.12),
+                ),
+                child: const Icon(
+                  Icons.groups_2_outlined,
+                  color: LumenColors.aether,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      widget.invite.sessionTitle ?? 'Live guest invitation',
+                      style: SyloraTokens.title(18),
+                    ),
+                    Text(
+                      '${widget.invite.role == 'cohost' ? 'Cohost' : 'Guest'} · '
+                      '${widget.invite.sessionState ?? 'session state unknown'}',
+                      style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+                    ),
+                  ],
+                ),
+              ),
+              LumenBadge(
+                label: _inviteStatus,
+                color: _inviteStatus == 'accepted'
+                    ? LumenColors.verdigris
+                    : _inviteStatus == 'declined'
+                    ? LumenColors.rose
+                    : LumenColors.pulse,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: LumenColors.solar.withValues(alpha: 0.24),
+              borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
+              border: Border.all(
+                color: LumenColors.bloom.withValues(alpha: 0.2),
+              ),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Icon(Icons.info_outline_rounded, size: 20),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Guest WHIP publishes a separate contribution feed. It is not automatically composited with the host program; until multi-host SFU mixing is available, the host needs an external mixer or production workflow.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (_inviteStatus == 'pending')
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                LumenPrimaryButton(
+                  label: 'Accept invitation',
+                  icon: Icons.check_circle_outline_rounded,
+                  busy: _busy,
+                  onPressed: ended || _busy ? null : _accept,
+                  disabledReason: ended
+                      ? 'This live session has already ended.'
+                      : 'Invitation response is in progress.',
+                ),
+                LumenSecondaryButton(
+                  label: 'Decline',
+                  icon: Icons.close_rounded,
+                  onPressed: _busy ? null : _decline,
+                ),
+              ],
+            ),
+          if (accepted) ...<Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    credentialsReady
+                        ? 'Guest media ready · $_mediaStatus'
+                        : 'Guest media: $_mediaStatus',
+                    style: SyloraTokens.title(15),
+                  ),
+                ),
+                LumenBadge(
+                  label: credentialsReady ? 'WHIP ready' : 'not ready',
+                  color: credentialsReady
+                      ? LumenColors.verdigris
+                      : LumenColors.porcelainMuted,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              credentialsReady
+                  ? 'Short-lived credentials are loaded for your isolated guest ingest path.'
+                  : 'No usable guest credentials are loaded. Retry only issues them when the media provider is configured.',
+              style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+            ),
+            const SizedBox(height: 12),
+            if (_publisher.supported) ...<Widget>[
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: _previewReady
+                    ? _publisher.preview()
+                    : Container(
+                        key: const ValueKey<String>('guest-preview-idle'),
+                        height: 180,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(
+                            SyloraTokens.radiusLg,
+                          ),
+                        ),
+                        child: const Text(
+                          'Camera and microphone preview is off.',
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                LumenSecondaryButton(
+                  label: _busy
+                      ? 'Checking…'
+                      : credentialsReady
+                      ? 'Refresh credentials'
+                      : 'Check media access',
+                  icon: Icons.refresh_rounded,
+                  onPressed: ended || _busy ? null : _loadCredentials,
+                  disabledReason: ended
+                      ? 'This live session has ended.'
+                      : 'Credential check is already running.',
+                ),
+                LumenSecondaryButton(
+                  label: _previewReady ? 'Preview ready' : 'Start preview',
+                  icon: Icons.videocam_outlined,
+                  onPressed: _publisher.supported && !_previewReady && !_busy
+                      ? _startPreview
+                      : null,
+                  disabledReason: !_publisher.supported
+                      ? 'Camera publishing is unavailable on this platform.'
+                      : 'Preview is already active.',
+                ),
+                LumenPrimaryButton(
+                  label: _publishing
+                      ? 'Publishing guest feed'
+                      : 'Publish guest feed',
+                  icon: Icons.podcasts_rounded,
+                  busy: _busy,
+                  onPressed:
+                      credentialsReady &&
+                          _previewReady &&
+                          !_publishing &&
+                          !_busy &&
+                          !ended
+                      ? _publish
+                      : null,
+                  disabledReason: !credentialsReady
+                      ? 'Usable guest WHIP credentials are required.'
+                      : !_previewReady
+                      ? 'Start camera and microphone preview first.'
+                      : ended
+                      ? 'This live session has ended.'
+                      : 'Guest publishing is already active.',
+                ),
+              ],
+            ),
+            if (widget.invite.hostUserId != null) ...<Widget>[
+              const SizedBox(height: 16),
+              _LiveGiftTray(
+                sessionId: widget.invite.sessionId,
+                hostUserId: widget.invite.hostUserId,
+              ),
+            ],
+          ],
+          if (_message != null) ...<Widget>[
+            const SizedBox(height: 12),
+            _StatusPanel(
+              message: _message!,
+              error: _message!.startsWith('Could not'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _accept() async {
+    setState(() => _busy = true);
+    try {
+      final result = await ref
+          .read(liveRepositoryProvider)
+          .acceptGuestInvite(widget.invite.sessionId, widget.invite.id);
+      _applyGuestResult(result);
+      if (mounted) {
+        setState(() {
+          _inviteStatus = 'accepted';
+          _message = _credentials == null
+              ? 'Invitation accepted. The media provider is not ready, so publishing remains disabled.'
+              : 'Invitation accepted. Start preview when you are ready to contribute.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _message = 'Could not accept invite: ${messageFor(error)}',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _decline() async {
+    setState(() => _busy = true);
+    try {
+      final invite = await ref
+          .read(liveRepositoryProvider)
+          .declineGuestInvite(widget.invite.sessionId, widget.invite.id);
+      if (mounted) {
+        setState(() {
+          _inviteStatus = invite.status;
+          _mediaStatus = invite.mediaStatus;
+          _message = 'Invitation declined.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _message = 'Could not decline invite: ${messageFor(error)}',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _loadCredentials() async {
+    setState(() => _busy = true);
+    try {
+      final result = await ref
+          .read(liveRepositoryProvider)
+          .guestPublishCredentials(widget.invite.id);
+      _applyGuestResult(result);
+      if (mounted) {
+        setState(() {
+          _message = _credentials == null
+              ? 'The guest media plane is still unavailable. No credentials were issued.'
+              : 'Fresh guest WHIP credentials loaded.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _message =
+              'Could not load guest credentials: ${messageFor(error)}',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _applyGuestResult(JsonObject result) {
+    final credentials = result['publish_credentials'];
+    if (mounted) {
+      setState(() {
+        _inviteStatus = '${result['status'] ?? _inviteStatus}';
+        _mediaStatus = '${result['media_status'] ?? _mediaStatus}';
+        _credentials = credentials == null
+            ? null
+            : requireObject(credentials, 'guest publish credentials');
+      });
+    }
+  }
+
+  Future<void> _startPreview() async {
+    setState(() => _busy = true);
+    try {
+      await _publisher.startPreview();
+      if (mounted) {
+        setState(() {
+          _previewReady = true;
+          _message = 'Camera and microphone preview ready.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _message = 'Could not start preview: ${messageFor(error)}',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _publish() async {
+    final credentials = _credentials;
+    if (credentials == null) return;
+    setState(() => _busy = true);
+    try {
+      final message = await _publisher.publishWhip(credentials);
+      if (mounted) {
+        setState(() {
+          _publishing = true;
+          _message =
+              '$message This is your guest contribution feed, not a composited multi-host program.';
+        });
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _message = 'Could not publish guest feed: ${messageFor(error)}',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 }
 

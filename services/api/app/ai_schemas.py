@@ -517,6 +517,10 @@ class AuraPresenceResponse(StrictSchema):
     mood_label: str
     personality: str
     voice_ready: bool
+    voice_output_ready: bool
+    transcription_ready: bool
+    avatar_ready: bool
+    avatar_job_status: str | None = None
     memory_count: int
     context_summary: str
     recommendations: list[str] = Field(default_factory=list)

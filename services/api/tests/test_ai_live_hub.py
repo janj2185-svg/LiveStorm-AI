@@ -660,6 +660,15 @@ async def test_live_guest_accept_issues_guest_publish_credentials(
         assert invited.status_code == 201, invited.text
         invite = invited.json()
 
+        incoming = await api.client.get(
+            "/v1/live/guest-invites",
+            headers=bearer(guest_tokens["access_token"]),
+        )
+        assert incoming.status_code == 200, incoming.text
+        assert incoming.json()[0]["id"] == invite["id"]
+        assert incoming.json()[0]["session_title"] == "Guest WHIP media plane"
+        assert incoming.json()[0]["host_user_id"] == created.json()["owner_user_id"]
+
         accepted = await api.client.post(
             f"/v1/live/sessions/{session_id}/guests/{invite['id']}/accept",
             headers=bearer(guest_tokens["access_token"]),
@@ -686,6 +695,14 @@ async def test_live_guest_accept_issues_guest_publish_credentials(
         assert payload["sid"] == session_id
         assert payload["path"] == guest_path
         assert payload["sub"] == str(guest.id)
+
+        reissued = await api.client.post(
+            f"/v1/live/guest-invites/{invite['id']}/publish-credentials",
+            headers=bearer(guest_tokens["access_token"]),
+        )
+        assert reissued.status_code == 200, reissued.text
+        assert reissued.json()["media_status"] == "ready"
+        assert reissued.json()["publish_credentials"]["ingest_path"] == guest_path
 
 
 @pytest.mark.asyncio

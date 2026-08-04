@@ -1604,6 +1604,7 @@ abstract interface class LiveRepository {
   Future<LiveSessionModel> session(String id);
   Future<JsonObject> mediaCapability(String sessionId);
   Future<JsonObject> publishCredentials(String sessionId);
+  Future<List<LiveGuestInviteModel>> incomingGuestInvites();
   Future<List<LiveGuestInviteModel>> guests(String sessionId);
   Future<LiveGuestInviteModel> inviteGuest(
     String sessionId, {
@@ -1611,6 +1612,7 @@ abstract interface class LiveRepository {
     required String role,
   });
   Future<JsonObject> acceptGuestInvite(String sessionId, String inviteId);
+  Future<JsonObject> guestPublishCredentials(String inviteId);
   Future<LiveGuestInviteModel> declineGuestInvite(
     String sessionId,
     String inviteId,
@@ -1761,6 +1763,15 @@ final class DioLiveRepository implements LiveRepository {
   }
 
   @override
+  Future<List<LiveGuestInviteModel>> incomingGuestInvites() async {
+    final response = await _client.request('live/guest-invites');
+    return _array(
+      response.data,
+      'incoming live guest invites',
+    ).map(LiveGuestInviteModel.fromJson).toList(growable: false);
+  }
+
+  @override
   Future<List<LiveGuestInviteModel>> guests(String sessionId) async {
     final response = await _client.request('live/sessions/$sessionId/guests');
     return _array(
@@ -1801,6 +1812,15 @@ final class DioLiveRepository implements LiveRepository {
       method: 'POST',
     );
     return requireObject(response.data, 'live guest invite acceptance');
+  }
+
+  @override
+  Future<JsonObject> guestPublishCredentials(String inviteId) async {
+    final response = await _client.request(
+      'live/guest-invites/$inviteId/publish-credentials',
+      method: 'POST',
+    );
+    return requireObject(response.data, 'live guest publish credentials');
   }
 
   @override

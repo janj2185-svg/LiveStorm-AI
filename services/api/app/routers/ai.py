@@ -26,7 +26,14 @@ from app.ai_models import (
     AIToolProposal,
     AIUsageRecord,
 )
-from app.ai_providers import TranscriptionProviderRequest
+from app.ai_providers import (
+    AsyncGenerationProvider,
+    AvatarProvider,
+    SpeechProvider,
+    TranscriptionProvider,
+    TranscriptionProviderRequest,
+    owner_configured_transcription_provider,
+)
 from app.ai_schemas import (
     AIConversationCreate,
     AIConversationPage,
@@ -205,7 +212,13 @@ async def get_aura_presence(
     settings = await settings_for(db, auth.user.id)
     memory_count = int(
         await db.scalar(
-            select(func.count()).select_from(AIMemory).where(AIMemory.user_id == auth.user.id)
+            select(func.count())
+            .select_from(AIMemory)
+            .where(
+                AIMemory.user_id == auth.user.id,
+                AIMemory.deleted_at.is_(None),
+                (AIMemory.expires_at.is_(None) | (AIMemory.expires_at > utcnow())),
+            )
         )
         or 0
     )
@@ -237,13 +250,40 @@ async def get_aura_presence(
             mood = "Listening closely"
 
     registry = _registry(request)
-    voice_ready = False
+    voice_output_ready = False
+    transcription_ready = False
+    avatar_ready = False
     try:
-        voice_ready = any(
-            AICapability.voice in provider.capabilities for provider in registry.providers()
+        providers = registry.providers()
+        voice_output_ready = any(
+            AICapability.voice in provider.capabilities
+            and isinstance(provider, SpeechProvider | AsyncGenerationProvider)
+            for provider in providers
+        )
+        transcription_ready = owner_configured_transcription_provider() is not None or any(
+            AICapability.voice in provider.capabilities
+            and isinstance(provider, TranscriptionProvider)
+            for provider in providers
+        )
+        avatar_ready = any(
+            AICapability.avatar in provider.capabilities
+            and isinstance(provider, AvatarProvider | AsyncGenerationProvider)
+            for provider in providers
         )
     except Exception:  # noqa: BLE001
-        voice_ready = False
+        voice_output_ready = False
+        transcription_ready = False
+        avatar_ready = False
+
+    latest_avatar_job = await db.scalar(
+        select(AIJob)
+        .where(
+            AIJob.user_id == auth.user.id,
+            AIJob.capability == AICapability.avatar,
+        )
+        .order_by(AIJob.created_at.desc(), AIJob.id.desc())
+        .limit(1)
+    )
 
     recommendations = [
         "Open Live Studio with Aura as co-host",
@@ -261,10 +301,14 @@ async def get_aura_presence(
         else "Aura is waiting for consent before deepening memory."
     )
     return AuraPresenceResponse(
-        emotion=emotion,  # type: ignore[arg-type]
+        emotion=emotion,
         mood_label=mood,
         personality="Warm · Curious · Precise · Alive",
-        voice_ready=voice_ready,
+        voice_ready=voice_output_ready,
+        voice_output_ready=voice_output_ready,
+        transcription_ready=transcription_ready,
+        avatar_ready=avatar_ready,
+        avatar_job_status=latest_avatar_job.status.value if latest_avatar_job else None,
         memory_count=memory_count,
         context_summary=summary,
         recommendations=recommendations,

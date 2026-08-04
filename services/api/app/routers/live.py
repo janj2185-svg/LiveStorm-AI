@@ -43,6 +43,9 @@ from app.live_models import (
     LiveGameQuestion,
     LiveGameScore,
     LiveGameSession,
+    LiveGuestInvite,
+    LiveGuestInviteStatus,
+    LiveGuestMediaStatus,
     LiveModerationDecision,
     LiveNormalizedEvent,
     LiveReplay,
@@ -66,6 +69,7 @@ from app.live_schemas import (
     LiveActionResponse,
     LiveDestinationCreate,
     LiveDestinationResponse,
+    LiveGuestInvitationResponse,
     LiveGuestInviteAcceptResponse,
     LiveGuestInviteCreate,
     LiveGuestInviteResponse,
@@ -714,6 +718,91 @@ async def publish_credentials_endpoint(
     await live_rate_limit(request, auth.user.id)
     record = await owned_live_session(db, session_id, auth.user.id)
     return publish_credentials_response(settings, record)
+
+
+@router.get("/guest-invites", response_model=list[LiveGuestInvitationResponse])
+async def list_my_guest_invites(
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+) -> list[LiveGuestInvitationResponse]:
+    rows = (
+        await db.execute(
+            select(LiveGuestInvite, LiveSession)
+            .join(LiveSession, LiveSession.id == LiveGuestInvite.session_id)
+            .where(LiveGuestInvite.invitee_user_id == auth.user.id)
+            .order_by(LiveGuestInvite.created_at.desc(), LiveGuestInvite.id.desc())
+            .limit(100)
+        )
+    ).all()
+    return [
+        LiveGuestInvitationResponse(
+            **LiveGuestInviteResponse.model_validate(invite).model_dump(),
+            session_title=live_session.title,
+            session_state=live_session.state,
+            host_user_id=live_session.owner_user_id,
+        )
+        for invite, live_session in rows
+    ]
+
+
+@router.post(
+    "/guest-invites/{invite_id}/publish-credentials",
+    response_model=LiveGuestInviteAcceptResponse,
+)
+async def guest_publish_credentials(
+    invite_id: uuid.UUID,
+    request: Request,
+    auth: Authenticated,
+    db: AsyncSession = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> LiveGuestInviteAcceptResponse:
+    await live_rate_limit(request, auth.user.id)
+    row = (
+        await db.execute(
+            select(LiveGuestInvite, LiveSession)
+            .join(LiveSession, LiveSession.id == LiveGuestInvite.session_id)
+            .where(
+                LiveGuestInvite.id == invite_id,
+                LiveGuestInvite.invitee_user_id == auth.user.id,
+            )
+        )
+    ).first()
+    if row is None:
+        raise APIError(
+            404,
+            "live_guest_invite_not_found",
+            "Live guest invite not found",
+            "The live guest invite does not exist.",
+        )
+    invite, live_session = row
+    if invite.status != LiveGuestInviteStatus.accepted or invite.guest_ingest_path is None:
+        raise APIError(
+            409,
+            "live_guest_invite_state_conflict",
+            "Live guest invite is not accepted",
+            "Accept the live guest invite before requesting publish credentials.",
+        )
+    credentials = publish_credentials_response(
+        settings,
+        live_session,
+        ingest_path=invite.guest_ingest_path,
+        subject_user_id=auth.user.id,
+        token_type="live_guest_whip_publish",
+    )
+    issued_credentials = credentials if credentials.status == "available" else None
+    next_media_status = (
+        LiveGuestMediaStatus.ready
+        if issued_credentials is not None
+        else LiveGuestMediaStatus.awaiting_media_plane
+    )
+    if invite.media_status != next_media_status:
+        invite.media_status = next_media_status
+        await db.commit()
+        await db.refresh(invite)
+    return LiveGuestInviteAcceptResponse(
+        **LiveGuestInviteResponse.model_validate(invite).model_dump(),
+        publish_credentials=issued_credentials,
+    )
 
 
 @router.get(

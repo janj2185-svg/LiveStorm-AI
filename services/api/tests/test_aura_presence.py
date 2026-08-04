@@ -10,9 +10,7 @@ from tests.test_wallet_gifts import create_member
 
 @pytest.mark.asyncio
 async def test_aura_presence(api: APIHarness) -> None:
-    _, tokens = await create_member(
-        api, email="aura-presence@example.com", display_name="Aura Fan"
-    )
+    _, tokens = await create_member(api, email="aura-presence@example.com", display_name="Aura Fan")
     response = await api.client.get(
         "/v1/ai/aura/presence",
         headers=bearer(tokens["access_token"]),
@@ -32,4 +30,8 @@ async def test_aura_presence(api: APIHarness) -> None:
         "supportive",
     }
     assert "personality" in body
+    assert body["voice_ready"] == body["voice_output_ready"]
+    assert isinstance(body["transcription_ready"], bool)
+    assert isinstance(body["avatar_ready"], bool)
+    assert body["avatar_job_status"] is None
     assert isinstance(body["recommendations"], list)

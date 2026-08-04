@@ -859,6 +859,9 @@ final class LiveGuestInviteModel {
     required this.mediaStatus,
     required this.createdAt,
     this.guestIngestPath,
+    this.sessionTitle,
+    this.sessionState,
+    this.hostUserId,
   });
 
   factory LiveGuestInviteModel.fromJson(JsonObject json) =>
@@ -870,6 +873,9 @@ final class LiveGuestInviteModel {
         role: requireString(json, 'role'),
         mediaStatus: requireString(json, 'media_status'),
         guestIngestPath: optionalString(json, 'guest_ingest_path'),
+        sessionTitle: optionalString(json, 'session_title'),
+        sessionState: optionalString(json, 'session_state'),
+        hostUserId: optionalString(json, 'host_user_id'),
         createdAt: requireDateTime(json, 'created_at'),
       );
 
@@ -880,5 +886,8 @@ final class LiveGuestInviteModel {
   final String role;
   final String mediaStatus;
   final String? guestIngestPath;
+  final String? sessionTitle;
+  final String? sessionState;
+  final String? hostUserId;
   final DateTime createdAt;
 }

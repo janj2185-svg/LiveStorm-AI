@@ -69,6 +69,7 @@ final class _CreatorStudioScreenState
   bool _auraDockEnabled = true;
   String _guestRole = 'guest';
   String? _guestsStatus;
+  String? _guestsLoadedForSession;
   List<LiveGuestInviteModel> _guests = const <LiveGuestInviteModel>[];
 
   @override
@@ -145,6 +146,7 @@ final class _CreatorStudioScreenState
 
   Widget _buildStudio(List<LiveSessionModel> sessions) {
     final session = _selectedSession(sessions);
+    _ensureGuestsLoaded(session);
     final audioDevices = _devices
         .where((device) => device.kind == 'audioinput')
         .toList();
@@ -202,6 +204,7 @@ final class _CreatorStudioScreenState
                     _credentials = null;
                     _serverPreflight = null;
                     _guests = const <LiveGuestInviteModel>[];
+                    _guestsLoadedForSession = null;
                     _guestsStatus = null;
                     _obsScenesAvailable = false;
                     _obsCheckError = null;
@@ -721,7 +724,7 @@ final class _CreatorStudioScreenState
           ),
           const SizedBox(height: 8),
           const Text(
-            'Invite a guest or cohost by user ID or @username. Accepted guests receive a separate WHIP publishing path when MediaMTX is configured.',
+            'Invite a guest or cohost by user ID or @username. Accepted guests receive a separate WHIP contribution path when MediaMTX is configured. It is not automatically composited with the host feed; use an external mixer until multi-host SFU mixing is available.',
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -1390,12 +1393,26 @@ final class _CreatorStudioScreenState
     return '$name $index';
   }
 
+  void _ensureGuestsLoaded(LiveSessionModel? session) {
+    if (session == null || _guestsLoadedForSession == session.id) return;
+    _guestsLoadedForSession = session.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _selectedSessionIdMatches(session.id)) {
+        _refreshGuests(session);
+      }
+    });
+  }
+
+  bool _selectedSessionIdMatches(String sessionId) =>
+      _sessionId == null || _sessionId == sessionId;
+
   Future<void> _refreshGuests(LiveSessionModel session) async {
     setState(() => _guestsBusy = true);
     try {
       final guests = await ref.read(liveRepositoryProvider).guests(session.id);
       if (mounted) {
         setState(() {
+          _guestsLoadedForSession = session.id;
           _guests = guests;
           _guestsStatus = 'Guest list refreshed.';
         });

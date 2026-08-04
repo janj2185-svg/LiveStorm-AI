@@ -387,6 +387,12 @@ class LiveGuestInviteResponse(ORMStrictSchema):
     updated_at: datetime
 
 
+class LiveGuestInvitationResponse(LiveGuestInviteResponse):
+    session_title: str
+    session_state: LiveSessionState
+    host_user_id: uuid.UUID | None
+
+
 class StreamKeyRevealResponse(StrictSchema):
     session_id: uuid.UUID
     ingest_path: str
