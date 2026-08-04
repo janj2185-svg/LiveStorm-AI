@@ -263,6 +263,7 @@ final class ApiClient {
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? headers,
     ResponseType? responseType,
+    Duration? receiveTimeout,
     bool authentication = true,
     bool refreshOnUnauthorized = true,
   }) async {
@@ -279,6 +280,7 @@ final class ApiClient {
           method: method,
           headers: headers,
           responseType: responseType,
+          receiveTimeout: receiveTimeout,
           extra: <String, dynamic>{
             if (!authentication) 'skipAuthentication': true,
             if (!refreshOnUnauthorized) 'skipRefresh': true,

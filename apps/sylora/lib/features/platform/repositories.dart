@@ -1452,6 +1452,7 @@ final class DioAiRepository implements AiRepository {
           'content_refs': <Object>[],
         },
         responseType: ResponseType.stream,
+        receiveTimeout: const Duration(minutes: 3),
       );
       final body = response.data;
       if (body is! ResponseBody) {
