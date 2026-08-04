@@ -15,12 +15,12 @@ from app.music_models import MusicMood, MusicPlaylist, MusicTrackKind
 from app.music_schemas import (
     MusicAiPlaylistRequest,
     MusicHomeResponse,
-    MusicPlayRequest,
     MusicPlaylistAddTrack,
     MusicPlaylistCreate,
     MusicPlaylistPage,
     MusicPlaylistResponse,
     MusicPlaylistUpdate,
+    MusicPlayRequest,
     MusicTrackPage,
     MusicTrackResponse,
 )
