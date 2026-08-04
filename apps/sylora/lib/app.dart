@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,9 @@ import 'features/business/business_screens.dart';
 import 'features/conferences/conference_screens.dart';
 import 'features/creator/creator_screens.dart';
 import 'features/creator_studio/creator_studio_screen.dart';
+import 'features/landing/aether_bridge.dart'
+    if (dart.library.html) 'features/landing/aether_bridge_web.dart'
+    as aether_bridge;
 import 'features/landing/landing_experience.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
@@ -587,7 +591,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/reset-password',
       }.contains(location);
       return switch (authView.status) {
-        AuthStatus.checking => location == '/splash' ? null : '/splash',
+        // Never yank /auth → /splash during session restore. That made
+        // "Почати" look hung: checking→splash→welcome, losing #/auth.
+        AuthStatus.checking =>
+          (public || location == '/splash') ? null : '/splash',
         AuthStatus.mfaRequired => location == '/mfa' ? null : '/mfa',
         AuthStatus.unauthenticated => public ? null : '/welcome',
         AuthStatus.authenticated =>
@@ -652,14 +659,30 @@ String _localizedDestinationLabel(AppLocalizations l10n, String path) =>
       _ => l10n.navMore,
     };
 
-final class SyloraApp extends ConsumerWidget {
+final class SyloraApp extends ConsumerStatefulWidget {
   const SyloraApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SyloraApp> createState() => _SyloraAppState();
+}
+
+final class _SyloraAppState extends ConsumerState<SyloraApp> {
+  var _navBridgeArmed = false;
+
+  void _armNavBridge(GoRouter router) {
+    if (_navBridgeArmed || !kIsWeb) {
+      return;
+    }
+    _navBridgeArmed = true;
+    aether_bridge.registerAppNavigator(router.go);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final visual = ref.watch(visualSettingsProvider);
     final locale = ref.watch(localeControllerProvider);
     final router = ref.watch(routerProvider);
+    _armNavBridge(router);
     final mode = switch (visual.themeMode) {
       LumenThemeMode.system => ThemeMode.system,
       LumenThemeMode.light => ThemeMode.light,

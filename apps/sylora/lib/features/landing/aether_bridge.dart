@@ -6,3 +6,5 @@ void hideAetherShell() {}
 void enterAetherApp({required bool create}) {
   // Handled by GoRouter in LandingExperience for non-web.
 }
+
+void registerAppNavigator(void Function(String path) go) {}

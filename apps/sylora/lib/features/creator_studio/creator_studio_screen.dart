@@ -7,6 +7,7 @@ import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../design/sylora.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import '../platform/repositories.dart';
 import 'media_publisher.dart';
@@ -83,32 +84,31 @@ final class _CreatorStudioScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final sessions = ref.watch(creatorStudioSessionsProvider);
     _syncAuraForSessions(sessions);
     return LumenPage(
-      title: 'Creator Studio',
-      subtitle:
-          'Web camera publishing for SYLORA Live through MediaMTX WHIP, with OBS kept as the companion path.',
+      title: l10n.creatorStudioTitle,
+      subtitle: l10n.creatorStudioSubtitle,
       intensity: 0.94,
       showAuraPresence: _auraDockEnabled,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.creatorStudio,
       header: SyloraUniverseHero(
-        eyebrow: 'STUDIO',
-        title: 'Creator Studio',
-        body:
-            'Preview, publish, overlays, and guests — one luminous control surface.',
+        eyebrow: l10n.creatorStudioHeroEyebrow,
+        title: l10n.creatorStudioTitle,
+        body: l10n.creatorStudioHeroBody,
         trailing: Wrap(
           spacing: 8,
           runSpacing: 8,
           children: <Widget>[
             SyloraPortalChip(
-              label: 'Open Live',
+              label: l10n.creatorStudioOpenLive,
               icon: Icons.sensors_outlined,
               onTap: () => context.goNamed('live'),
             ),
             SyloraPortalChip(
-              label: 'Go Live',
+              label: l10n.liveGoLive,
               icon: Icons.podcasts_rounded,
               onTap: () => context.goNamed('live'),
             ),
@@ -117,7 +117,7 @@ final class _CreatorStudioScreenState
       ),
       actions: <Widget>[
         IconButton(
-          tooltip: 'Open Live',
+          tooltip: l10n.creatorStudioOpenLive,
           onPressed: () => context.goNamed('live'),
           icon: const Icon(Icons.sensors_outlined),
         ),

@@ -400,83 +400,102 @@
     window._syloraFlutterFrameListener = true;
     window.addEventListener('flutter-first-frame', () => {
       window._syloraFlutterFrame = true;
+      window._syloraFlutterRunning = true;
     }, { once: true });
   }
 
-  function waitForFlutterFirstFrame(timeoutMs) {
-    armFlutterFrameListener();
-    if (window._syloraFlutterFrame || window._syloraFlutterRunning) {
-      return Promise.resolve();
+  function setEnterStatus(text) {
+    const label = qs('[data-aether-enter] span');
+    if (label) label.textContent = text;
+    let veil = qs('[data-aether-loading]');
+    if (!veil) {
+      const root = qs('#sylora-aether');
+      if (!root) return;
+      veil = document.createElement('div');
+      veil.className = 'aether-loading';
+      veil.setAttribute('data-aether-loading', '1');
+      veil.innerHTML = '<div class="aether-loading-card"><div class="aether-loading-spin"></div><p data-aether-loading-text></p></div>';
+      root.appendChild(veil);
     }
-    return new Promise((resolve) => {
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        resolve();
-      };
-      const onFrame = () => {
-        window._syloraFlutterFrame = true;
-        finish();
-      };
-      window.addEventListener('flutter-first-frame', onFrame, { once: true });
-      setTimeout(finish, timeoutMs);
+    veil.style.display = 'flex';
+    const t = qs('[data-aether-loading-text]', veil);
+    if (t) t.textContent = text;
+  }
+
+  function clearEnterStatus() {
+    const veil = qs('[data-aether-loading]');
+    if (veil) veil.style.display = 'none';
+  }
+
+  function stopAetherWorld() {
+    state.running = false;
+    cancelAnimationFrame(state.raf);
+  }
+
+  function prefetchFlutterAssets() {
+    if (state.preloadScheduled) return;
+    state.preloadScheduled = true;
+    // Prefetch only — do NOT runApp under the living landing (that froze phones).
+    [
+      'flutter_bootstrap.js',
+      'main.dart.js',
+      'canvaskit/canvaskit.js',
+      'canvaskit/canvaskit.wasm',
+    ].forEach((href) => {
+      if (document.querySelector(`link[data-sylora-prefetch="${href}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = href.endsWith('.wasm') ? 'fetch' : 'script';
+      link.href = href;
+      link.setAttribute('data-sylora-prefetch', href);
+      document.head.appendChild(link);
     });
   }
 
   function loadFlutter() {
     if (state.flutterPromise) return state.flutterPromise;
-    if (window._syloraFlutterRunning) return Promise.resolve();
+    if (window._syloraFlutterRunning || window._syloraFlutterFrame) {
+      return Promise.resolve();
+    }
+
+    armFlutterFrameListener();
     state.flutterPromise = new Promise((resolve, reject) => {
-      if (window._flutter && window._flutter.loader) {
+      let settled = false;
+      const succeed = () => {
+        if (settled) return;
+        settled = true;
+        window._syloraFlutterRunning = true;
         resolve();
-        return;
+      };
+      const fail = (err) => {
+        if (settled) return;
+        settled = true;
+        state.flutterPromise = null;
+        reject(err instanceof Error ? err : new Error(String(err)));
+      };
+
+      window.addEventListener('flutter-first-frame', succeed, { once: true });
+
+      // flutter_bootstrap.js already calls loader.load() once.
+      // Calling load() again deadlocks CanvasKit on many devices.
+      if (!document.querySelector('script[data-sylora-flutter]')) {
+        const script = document.createElement('script');
+        script.src = 'flutter_bootstrap.js';
+        script.async = true;
+        script.setAttribute('data-sylora-flutter', '1');
+        script.onerror = () => fail(new Error('flutter_bootstrap failed'));
+        document.body.appendChild(script);
       }
-      const script = document.createElement('script');
-      script.src = 'flutter_bootstrap.js';
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('flutter_bootstrap failed'));
-      document.body.appendChild(script);
-    }).then(async () => {
-      if (window._syloraFlutterRunning) return;
-      if (window._flutter && window._flutter.loader) {
-        await window._flutter.loader.load({
-          config: { canvasKitBaseUrl: 'canvaskit/' },
-          onEntrypointLoaded: async (engineInitializer) => {
-            if (window._syloraFlutterRunning) return;
-            const appRunner = await engineInitializer.initializeEngine({
-              // Prefer path that matches current hash so Auth boots first.
-              assetBase: undefined,
-            });
-            await appRunner.runApp();
-            window._syloraFlutterRunning = true;
-          },
-        });
-      }
-    }).catch((err) => {
-      state.flutterPromise = null;
-      throw err;
+
+      setTimeout(() => {
+        if (window._syloraFlutterFrame || window._syloraFlutterRunning) {
+          succeed();
+          return;
+        }
+        fail(new Error('Flutter startup timed out'));
+      }, 22000);
     });
     return state.flutterPromise;
-  }
-
-  function scheduleFlutterPreload() {
-    if (state.preloadScheduled || state.flutterPromise || window._syloraFlutterRunning) {
-      return;
-    }
-    state.preloadScheduled = true;
-    const start = () => {
-      // Warm CanvasKit under the HTML shell so "Почати" is near-instant.
-      loadFlutter().catch(() => {
-        state.preloadScheduled = false;
-      });
-    };
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(start, { timeout: 1800 });
-    } else {
-      setTimeout(start, 900);
-    }
   }
 
   async function enterApp(create) {
@@ -484,28 +503,63 @@
     buttons.forEach((b) => { b.disabled = true; });
     const label = qs('[data-aether-enter] span');
     const previousLabel = label ? label.textContent : '';
-    if (label) label.textContent = 'Завантаження…';
     setEmotion('speaking', 2400);
 
-    // Route BEFORE Flutter paints so the first frame is Auth, not Welcome.
+    // Free GPU immediately — landing canvas + CanvasKit together freezes mobile.
+    stopAetherWorld();
+    setEnterStatus('Завантаження…');
+
+    // Route BEFORE Flutter boots so Auth is the first Flutter route.
     const target = create ? '#/auth?create=1' : '#/auth';
     if (location.hash !== target) {
       location.hash = target;
     }
 
+    // Drop stale service workers that can pin old broken builds.
     try {
-      const already = !!(window._syloraFlutterRunning || state.flutterPromise);
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    } catch (_) { /* ignore */ }
+
+    try {
+      setEnterStatus('Запуск SYLORA…');
       await loadFlutter();
-      await waitForFlutterFirstFrame(already ? 1200 : 5000);
-      // Let GoRouter paint Auth under the shell before removing HTML overlay.
+      setEnterStatus('Майже готово…');
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise((r) => setTimeout(r, already ? 80 : 160));
+      await new Promise((r) => setTimeout(r, 120));
+      // Re-assert auth route in case session-restore redirects raced.
+      if (!/^#\/auth/.test(location.hash || '')) {
+        location.hash = target;
+      }
+      if (window.SyloraApp && typeof window.SyloraApp.go === 'function') {
+        window.SyloraApp.go(create ? '/auth?create=1' : '/auth');
+      }
+      clearEnterStatus();
       hide();
     } catch (err) {
       console.error('SYLORA enter failed', err);
+      clearEnterStatus();
       if (label) label.textContent = previousLabel || 'Почати';
       buttons.forEach((b) => { b.disabled = false; });
       setEmotion('idle', 0);
+      // Resume soft landing animation so the page is not dead.
+      if (!state.running) {
+        state.running = true;
+        state.raf = requestAnimationFrame(frame);
+      }
+      const root = qs('#sylora-aether');
+      let errEl = qs('[data-aether-enter-error]');
+      if (!errEl && root) {
+        errEl = document.createElement('p');
+        errEl.setAttribute('data-aether-enter-error', '1');
+        errEl.className = 'aether-enter-error';
+        root.appendChild(errEl);
+      }
+      if (errEl) {
+        errEl.textContent = 'Не вдалося завантажити. Перевірте мережу й спробуйте ще раз.';
+      }
     }
   }
 
@@ -633,7 +687,7 @@
     state.blinkAt = performance.now() + 900;
     requestAnimationFrame(() => root.classList.add('aether-revealed'));
     state.raf = requestAnimationFrame(frame);
-    scheduleFlutterPreload();
+    prefetchFlutterAssets();
   }
 
   function hide() {
