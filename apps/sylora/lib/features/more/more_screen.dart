@@ -12,7 +12,8 @@ import '../social/social_screens.dart';
 enum MoreEntryKind {
   learning,
   wallet,
-  gifts,
+  giftShop,
+  music,
   ai,
   live,
   conferences,
@@ -20,6 +21,7 @@ enum MoreEntryKind {
   creator,
   workspace,
   admin,
+  mediaSettings,
   settings,
 }
 
@@ -50,9 +52,14 @@ const _entries = <MoreEntry>[
     icon: Icons.account_balance_wallet_outlined,
   ),
   MoreEntry(
-    kind: MoreEntryKind.gifts,
+    kind: MoreEntryKind.giftShop,
     routeName: 'gifts',
-    icon: Icons.card_giftcard_outlined,
+    icon: Icons.storefront_outlined,
+  ),
+  MoreEntry(
+    kind: MoreEntryKind.music,
+    routeName: 'music',
+    icon: Icons.library_music_outlined,
   ),
   MoreEntry(
     kind: MoreEntryKind.ai,
@@ -92,6 +99,11 @@ const _entries = <MoreEntry>[
     routeName: 'admin',
     icon: Icons.admin_panel_settings_outlined,
     roles: <String>{'admin'},
+  ),
+  MoreEntry(
+    kind: MoreEntryKind.mediaSettings,
+    routeName: 'media-settings',
+    icon: Icons.tune_rounded,
   ),
   MoreEntry(
     kind: MoreEntryKind.settings,
@@ -360,7 +372,8 @@ final class _MoreModuleTileState extends State<_MoreModuleTile> {
 String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
   MoreEntryKind.learning => l10n.moreLearning,
   MoreEntryKind.wallet => l10n.walletShortLabel,
-  MoreEntryKind.gifts => l10n.giftsShortLabel,
+  MoreEntryKind.giftShop => 'Gift Shop',
+  MoreEntryKind.music => 'Music',
   MoreEntryKind.ai => l10n.aiShortLabel,
   MoreEntryKind.live => l10n.liveShortLabel,
   MoreEntryKind.conferences => l10n.moreConferences,
@@ -368,5 +381,6 @@ String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
   MoreEntryKind.creator => l10n.moreCreator,
   MoreEntryKind.workspace => l10n.moreWorkspace,
   MoreEntryKind.admin => l10n.moreAdmin,
+  MoreEntryKind.mediaSettings => 'Camera & Audio',
   MoreEntryKind.settings => l10n.moreSettings,
 };

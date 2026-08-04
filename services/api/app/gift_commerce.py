@@ -46,6 +46,88 @@ from app.ledger_service import (
 from app.models import User, UserStatus
 from app.security import utcnow
 from app.social_service import are_friends, is_blocked
+from app.conference_models import ConferenceStatus, LiveConference, LiveConferenceParticipant
+from app.live_models import LiveSession, LiveSessionState
+
+
+async def require_live_send_context(
+    db: AsyncSession,
+    *,
+    payload: GiftSendRequest,
+    recipient_user_id: uuid.UUID,
+) -> None:
+    """Gifts may only be sent inside live communication contexts."""
+    if payload.live_session_id is not None:
+        session = await db.get(LiveSession, payload.live_session_id)
+        if session is None:
+            raise APIError(
+                404,
+                "live_session_not_found",
+                "Live session not found",
+                "The live session for this gift does not exist.",
+            )
+        if session.state not in {
+            LiveSessionState.live,
+            LiveSessionState.reconnecting,
+            LiveSessionState.starting,
+        }:
+            raise APIError(
+                409,
+                "live_session_not_active",
+                "Live session not active",
+                "Gifts can only be sent while the live session is active.",
+            )
+        if session.owner_user_id != recipient_user_id:
+            raise APIError(
+                400,
+                "gift_recipient_not_host",
+                "Gift recipient must be the live host",
+                "Send gifts to the host of the active live session.",
+            )
+        return
+
+    if payload.conference_id is not None:
+        conference = await db.get(LiveConference, payload.conference_id)
+        if conference is None:
+            raise APIError(
+                404,
+                "conference_not_found",
+                "Conference not found",
+                "The conference for this gift does not exist.",
+            )
+        if conference.status == ConferenceStatus.ended:
+            raise APIError(
+                409,
+                "conference_not_live",
+                "Conference not live",
+                "Gifts can only be sent during a live conference or voice room.",
+            )
+        if conference.status == ConferenceStatus.scheduled:
+            conference.status = ConferenceStatus.live
+        if conference.host_id == recipient_user_id:
+            return
+        participant = await db.scalar(
+            select(LiveConferenceParticipant).where(
+                LiveConferenceParticipant.conference_id == conference.id,
+                LiveConferenceParticipant.user_id == recipient_user_id,
+                LiveConferenceParticipant.left_at.is_(None),
+            )
+        )
+        if participant is None:
+            raise APIError(
+                400,
+                "gift_recipient_not_in_conference",
+                "Recipient not in conference",
+                "Gift recipient must be an active conference participant.",
+            )
+        return
+
+    raise APIError(
+        400,
+        "live_context_required",
+        "Live context required",
+        "Gifts can only be sent during Live, Guest, Multi-host, Conference, or Voice Rooms.",
+    )
 
 
 async def enforce_acquisition_limits(
@@ -326,6 +408,18 @@ async def send_gift(
                 "This idempotency key was already used for a different gift send.",
             )
         return existing, [], False
+
+    if sender_user_id == payload.recipient_user_id:
+        raise APIError(
+            422,
+            "self_gift_forbidden",
+            "Self-gifting is not allowed",
+            "A gift sender and recipient must be different users.",
+        )
+
+    await require_live_send_context(
+        db, payload=payload, recipient_user_id=payload.recipient_user_id
+    )
 
     inventory: InventoryItem | None = None
     if payload.inventory_item_id is not None:

@@ -12,6 +12,7 @@ import '../../core/realtime.dart';
 import '../../design/sylora.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
+import '../conferences/conference_screens.dart';
 import '../platform/repositories.dart';
 
 final feedProvider = FutureProvider.autoDispose<CursorPage<PostModel>>(
@@ -386,9 +387,9 @@ final class _HomeUniverseHero extends StatelessWidget {
     final portals = <(String, String, IconData)>[
       (l10n.navAi, 'ai', Icons.auto_awesome_rounded),
       (l10n.navLive, 'live', Icons.podcasts_rounded),
+      ('Music', 'music', Icons.library_music_rounded),
       (l10n.navFriends, 'friends', Icons.group_rounded),
       (l10n.navMessages, 'messages', Icons.forum_rounded),
-      (l10n.navGifts, 'gifts', Icons.card_giftcard_rounded),
       (l10n.moreLearning, 'learning', Icons.school_rounded),
       (l10n.navMarket, 'marketplace', Icons.storefront_rounded),
       (l10n.navCreator, 'creator', Icons.videocam_rounded),
@@ -2690,6 +2691,32 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     super.dispose();
   }
 
+  Future<void> _startCall(
+    BuildContext context, {
+    required String purpose,
+    required String title,
+  }) async {
+    try {
+      final room = await ref.read(conferenceRepositoryProvider).create(
+            title: title,
+            purpose: purpose,
+          );
+      await ref.read(conferenceRepositoryProvider).join(room.id);
+      if (context.mounted) {
+        context.pushNamed(
+          'conference-room',
+          pathParameters: <String, String>{'id': room.id},
+        );
+      }
+    } on Object catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(messageFor(error))),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -2708,6 +2735,25 @@ final class _ConversationScreenState extends ConsumerState<ConversationScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          actions: <Widget>[
+            IconButton(
+              tooltip: 'Voice call',
+              onPressed: () => _startCall(context, purpose: 'social', title: 'Voice call'),
+              icon: const Icon(Icons.call_rounded),
+            ),
+            IconButton(
+              tooltip: 'Video call',
+              onPressed: () =>
+                  _startCall(context, purpose: 'social', title: 'Video call'),
+              icon: const Icon(Icons.videocam_rounded),
+            ),
+            IconButton(
+              tooltip: 'Conference',
+              onPressed: () =>
+                  _startCall(context, purpose: 'social', title: 'Group conference'),
+              icon: const Icon(Icons.groups_rounded),
+            ),
+          ],
         ),
         body: Column(
           children: <Widget>[

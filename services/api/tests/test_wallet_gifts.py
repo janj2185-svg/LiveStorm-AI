@@ -74,6 +74,23 @@ async def create_member(
     return user, await login(api, email=email)
 
 
+async def gift_live_context(api: APIHarness, host_tokens: dict[str, Any]) -> dict[str, str]:
+    """Open a live conference so gift sends satisfy the live-context rule."""
+    created = await api.client.post(
+        "/v1/conferences",
+        headers=bearer(host_tokens["access_token"]),
+        json={"title": "Gift live context", "purpose": "social"},
+    )
+    assert created.status_code == 201, created.text
+    conference_id = created.json()["id"]
+    joined = await api.client.post(
+        f"/v1/conferences/{conference_id}/join",
+        headers=bearer(host_tokens["access_token"]),
+    )
+    assert joined.status_code == 200, joined.text
+    return {"conference_id": conference_id}
+
+
 def manifest_payload(
     asset_id: uuid.UUID,
     *,
@@ -711,7 +728,7 @@ async def test_atomic_purchase_send_split_idempotency_and_event_replay(
     sender, sender_tokens = await create_member(
         api, email="commerce-sender@example.com", display_name="Sender"
     )
-    recipient, _ = await create_member(
+    recipient, recipient_tokens = await create_member(
         api,
         email="commerce-recipient@example.com",
         display_name="Recipient",
@@ -761,7 +778,7 @@ async def test_atomic_purchase_send_split_idempotency_and_event_replay(
     sent = await api.client.post(
         "/v1/gifts/sends",
         headers=send_headers,
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "inventory_item_id": purchase.json()["id"],
             "message": "Congratulations!",
@@ -772,7 +789,7 @@ async def test_atomic_purchase_send_split_idempotency_and_event_replay(
     duplicate_send = await api.client.post(
         "/v1/gifts/sends",
         headers=send_headers,
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "inventory_item_id": purchase.json()["id"],
             "message": "Congratulations!",
@@ -998,7 +1015,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     sender, sender_tokens = await create_member(
         api, email="policy-sender@example.com", display_name="Policy Sender"
     )
-    recipient, _ = await create_member(
+    recipient, recipient_tokens = await create_member(
         api, email="policy-recipient@example.com", display_name="Policy Recipient"
     )
     gift_id, _, _ = await create_gift(
@@ -1019,7 +1036,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     self_send = await api.client.post(
         "/v1/gifts/sends",
         headers={**base, "Idempotency-Key": "policy-self-0001"},
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(sender.id),
             "gift_definition_id": str(gift_id),
         },
@@ -1029,7 +1046,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     disabled = await api.client.post(
         "/v1/gifts/sends",
         headers={**base, "Idempotency-Key": "policy-disabled-0001"},
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "gift_definition_id": str(gift_id),
         },
@@ -1059,7 +1076,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     recipient_disabled = await api.client.post(
         "/v1/gifts/sends",
         headers={**base, "Idempotency-Key": "policy-preference-0001"},
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "gift_definition_id": str(gift_id),
         },
@@ -1075,7 +1092,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     private = await api.client.post(
         "/v1/gifts/sends",
         headers={**base, "Idempotency-Key": "policy-private-0001"},
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "gift_definition_id": str(gift_id),
         },
@@ -1090,7 +1107,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     limited = await api.client.post(
         "/v1/gifts/sends",
         headers={**base, "Idempotency-Key": "policy-limit-0001"},
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "gift_definition_id": str(gift_id),
         },
@@ -1106,7 +1123,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     blocked = await api.client.post(
         "/v1/gifts/sends",
         headers={**base, "Idempotency-Key": "policy-block-0001"},
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "gift_definition_id": str(gift_id),
         },
@@ -1134,7 +1151,7 @@ async def test_send_policy_daily_limit_inventory_expiry_and_creator_setting(
     expired = await api.client.post(
         "/v1/gifts/sends",
         headers={**base, "Idempotency-Key": "policy-expired-0001"},
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "inventory_item_id": purchase.json()["id"],
         },
@@ -1166,7 +1183,7 @@ async def test_retry_does_not_recharge_refund_is_single_and_records_shortfall(
     sender, sender_tokens = await create_member(
         api, email="refund-sender@example.com", display_name="Refund Sender"
     )
-    recipient, _ = await create_member(
+    recipient, recipient_tokens = await create_member(
         api, email="refund-recipient@example.com", display_name="Refund Recipient"
     )
     gift_id, _, _ = await create_gift(
@@ -1197,7 +1214,7 @@ async def test_retry_does_not_recharge_refund_is_single_and_records_shortfall(
             **bearer(sender_tokens["access_token"]),
             "Idempotency-Key": "refund-send-0001",
         },
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "gift_definition_id": str(gift_id),
         },
@@ -1337,7 +1354,7 @@ async def test_same_gift_combo_increment_and_rankings(api: APIHarness) -> None:
                 **bearer(sender_tokens["access_token"]),
                 "Idempotency-Key": f"same-gift-combo-{index}",
             },
-            json={
+            json={**(await gift_live_context(api, recipient_tokens)), 
                 "recipient_user_id": str(recipient.id),
                 "gift_definition_id": str(gift_id),
             },
@@ -1447,7 +1464,7 @@ async def test_recommendation_explanation_history_cursor_and_combination_event(
                 **bearer(sender_tokens["access_token"]),
                 "Idempotency-Key": f"combination-send-{index:04d}",
             },
-            json={
+            json={**(await gift_live_context(api, recipient_tokens)), 
                 "recipient_user_id": str(recipient.id),
                 "gift_definition_id": str(gift_id),
             },

@@ -504,11 +504,18 @@ class GiftSendRequest(StrictSchema):
     inventory_item_id: uuid.UUID | None = None
     gift_definition_id: uuid.UUID | None = None
     message: str | None = Field(default=None, min_length=1, max_length=500)
+    live_session_id: uuid.UUID | None = None
+    conference_id: uuid.UUID | None = None
 
     @model_validator(mode="after")
     def single_source(self) -> GiftSendRequest:
         if (self.inventory_item_id is None) == (self.gift_definition_id is None):
             raise ValueError("provide exactly one inventory item or gift definition")
+        if (self.live_session_id is None) == (self.conference_id is None):
+            raise ValueError(
+                "provide exactly one live_session_id or conference_id — "
+                "gifts can only be sent during live communication"
+            )
         if self.message is not None and re.search(r"<[^>]+>", self.message):
             raise ValueError("gift messages are plain text and cannot contain HTML")
         return self

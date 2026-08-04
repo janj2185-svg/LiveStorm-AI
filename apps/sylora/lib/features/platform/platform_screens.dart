@@ -555,6 +555,119 @@ final class _GiftRankingStrip extends StatelessWidget {
   }
 }
 
+final class _LiveGiftTray extends ConsumerWidget {
+  const _LiveGiftTray({required this.sessionId, required this.hostUserId});
+
+  final String sessionId;
+  final String? hostUserId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inventory = ref.watch(giftInventoryProvider);
+    final catalog = ref.watch(giftCatalogProvider);
+    return LumenSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text('Send a gift', style: SyloraTokens.title(16)),
+          const SizedBox(height: 6),
+          Text(
+            'Gifts fly only during live communication.',
+            style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+          ),
+          const SizedBox(height: 12),
+          if (hostUserId == null)
+            const Text('Host identity unavailable for this session.')
+          else
+            inventory.when(
+              loading: () => const LinearProgressIndicator(),
+              error: (error, _) => Text(messageFor(error)),
+              data: (page) {
+                final items = page.items;
+                if (items.isNotEmpty) {
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: <Widget>[
+                      for (final item in items.take(8))
+                        FilledButton.tonalIcon(
+                          onPressed: () => _send(
+                            context,
+                            ref,
+                            hostUserId: hostUserId!,
+                            inventoryItemId: item.id,
+                          ),
+                          icon: const Icon(Icons.card_giftcard_rounded),
+                          label: Text('Inv ×${item.quantity}'),
+                        ),
+                    ],
+                  );
+                }
+                return catalog.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (error, _) => Text(messageFor(error)),
+                  data: (gifts) {
+                    if (gifts.items.isEmpty) {
+                      return const Text('Gift catalog is empty.');
+                    }
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        for (final gift in gifts.items.take(8))
+                          FilledButton.tonalIcon(
+                            onPressed: () => _send(
+                              context,
+                              ref,
+                              hostUserId: hostUserId!,
+                              giftDefinitionId: gift.id,
+                            ),
+                            icon: const Icon(Icons.auto_awesome),
+                            label: Text(gift.name),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _send(
+    BuildContext context,
+    WidgetRef ref, {
+    required String hostUserId,
+    String? inventoryItemId,
+    String? giftDefinitionId,
+  }) async {
+    try {
+      await ref.read(giftRepositoryProvider).send(
+            recipientUserId: hostUserId,
+            inventoryItemId: inventoryItemId,
+            giftDefinitionId: giftDefinitionId,
+            liveSessionId: sessionId,
+            message: 'Sent during live',
+          );
+      ref.invalidate(giftInventoryProvider);
+      ref.invalidate(liveGiftRankingsProvider(sessionId));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gift sent to the live host.')),
+        );
+      }
+    } on Object catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(messageFor(error))),
+        );
+      }
+    }
+  }
+}
+
 final class GiftsScreen extends ConsumerStatefulWidget {
   const GiftsScreen({super.key});
 
@@ -621,7 +734,7 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
             backgroundColor: SyloraTokens.glassStrong,
             elevation: 0,
             title: Text(
-              l10n.giftsTitle,
+              'Gift Shop',
               style: SyloraTokens.title(20),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -644,11 +757,23 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: SyloraUniverseHero(
-                  eyebrow: l10n.giftsHeroEyebrow,
-                  title: l10n.giftsTitle,
-                  body: l10n.giftsHeroBody,
+                  eyebrow: 'GIFT SHOP',
+                  title: 'Buy & manage gifts',
+                  body:
+                      'Purchase and organize your gift inventory here. Sending gifts happens only during Live Streams, Guest Streams, Multi-host Conferences, and Voice Rooms.',
                   compactBreakpoint: 720,
                 ),
+              ),
+              MaterialBanner(
+                content: const Text(
+                  'Send gifts only inside live communication — not from the shop.',
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => context.goNamed('live'),
+                    child: const Text('Go Live'),
+                  ),
+                ],
               ),
               TabBar(
                 tabs: <Tab>[
@@ -814,13 +939,10 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
                               'Gift ${item.giftDefinitionId.substring(0, 8)}',
                             ),
                             subtitle: Text(
-                              '${item.quantity} available • ${item.unitPriceMinor} LUMEN each',
+                              '${item.quantity} available • ${item.unitPriceMinor} LUMEN each\nReady to send during Live / Conference / Voice Rooms',
                             ),
-                            trailing: FilledButton(
-                              onPressed: () =>
-                                  _sendInventory(context, ref, item),
-                              child: const Text('Send'),
-                            ),
+                            isThreeLine: true,
+                            trailing: const Chip(label: Text('In inventory')),
                           ),
                         );
                       },
@@ -876,81 +998,6 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
     );
   }
 
-  static Future<void> _sendInventory(
-    BuildContext context,
-    WidgetRef ref,
-    InventoryItemModel item,
-  ) async {
-    final recipient = TextEditingController();
-    final message = TextEditingController();
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Send gift'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(
-              controller: recipient,
-              decoration: const InputDecoration(labelText: 'Recipient user ID'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: message,
-              maxLength: 500,
-              decoration: const InputDecoration(
-                labelText: 'Message (optional)',
-              ),
-            ),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (recipient.text.trim().isEmpty) {
-                return;
-              }
-              try {
-                await ref
-                    .read(giftRepositoryProvider)
-                    .send(
-                      recipientUserId: recipient.text.trim(),
-                      inventoryItemId: item.id,
-                      message: message.text.trim().isEmpty
-                          ? null
-                          : message.text.trim(),
-                    );
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Gift send accepted by the API.'),
-                    ),
-                  );
-                }
-                ref.invalidate(giftInventoryProvider);
-                ref.invalidate(giftEventsProvider);
-              } on Object catch (error) {
-                if (dialogContext.mounted) {
-                  ScaffoldMessenger.of(
-                    dialogContext,
-                  ).showSnackBar(SnackBar(content: Text(messageFor(error))));
-                }
-              }
-            },
-            child: const Text('Send'),
-          ),
-        ],
-      ),
-    );
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    recipient.dispose();
-    message.dispose();
-  }
 
   static Future<void> _showGiftPreferences(
     BuildContext context,
@@ -2880,6 +2927,11 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
               ),
             ),
             _GiftRankingStrip(value: giftRankings, title: 'Live gift leaders'),
+            const SizedBox(height: 16),
+            _LiveGiftTray(
+              sessionId: session.id,
+              hostUserId: session.ownerUserId,
+            ),
             const SizedBox(height: 16),
             if (session.replay case final replay?
                 when replay.status == 'ready') ...<Widget>[

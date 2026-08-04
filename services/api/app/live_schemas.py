@@ -328,6 +328,7 @@ class LiveReplayPlaybackResponse(LiveReplayResponse):
 
 class LiveSessionResponse(ORMStrictSchema):
     id: uuid.UUID
+    owner_user_id: uuid.UUID | None = None
     workspace_id: uuid.UUID | None
     title: str
     language: str

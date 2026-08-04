@@ -806,6 +806,7 @@ final class LiveSessionModel {
     required this.state,
     required this.ingestPath,
     required this.ingestProvisioned,
+    this.ownerUserId,
     this.streamKeyOnce,
     this.destinations = const <LiveDestinationModel>[],
     this.replay,
@@ -817,6 +818,7 @@ final class LiveSessionModel {
     state: requireString(json, 'state'),
     ingestPath: requireString(json, 'ingest_path'),
     ingestProvisioned: requireBool(json, 'ingest_provisioned'),
+    ownerUserId: optionalString(json, 'owner_user_id'),
     streamKeyOnce: optionalString(json, 'stream_key_once'),
     destinations: requireList(json, 'destinations')
         .map(
@@ -837,6 +839,7 @@ final class LiveSessionModel {
   final String state;
   final String ingestPath;
   final bool ingestProvisioned;
+  final String? ownerUserId;
   final String? streamKeyOnce;
   final List<LiveDestinationModel> destinations;
   final LiveReplayModel? replay;

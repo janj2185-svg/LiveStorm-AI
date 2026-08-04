@@ -69,6 +69,7 @@ from app.routers import (
     live,
     marketplace,
     messaging,
+    music,
     oauth,
     push,
     social,
@@ -308,6 +309,7 @@ def create_app(
     app.include_router(gifts.router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.admin_router, prefix=resolved_settings.api_prefix)
     app.include_router(gifts.websocket_router, prefix=resolved_settings.api_prefix)
+    app.include_router(music.router, prefix=resolved_settings.api_prefix)
     app.include_router(creator_platform.router, prefix=resolved_settings.api_prefix)
     app.include_router(marketplace.router, prefix=resolved_settings.api_prefix)
     app.include_router(learning.router, prefix=resolved_settings.api_prefix)

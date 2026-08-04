@@ -21,7 +21,9 @@ import 'features/landing/landing_experience.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
 import 'features/more/more_screen.dart';
+import 'features/music/music_screens.dart';
 import 'features/platform/platform_screens.dart';
+import 'features/settings/media_settings_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/social/social_screens.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -80,6 +82,18 @@ const _adminDestination = ShellDestination(
   selectedIcon: Icons.admin_panel_settings_rounded,
   path: '/admin',
 );
+const _musicDestination = ShellDestination(
+  label: 'Music',
+  icon: Icons.library_music_outlined,
+  selectedIcon: Icons.library_music_rounded,
+  path: '/music',
+);
+const _aiDestination = ShellDestination(
+  label: 'Aura',
+  icon: Icons.auto_awesome_outlined,
+  selectedIcon: Icons.auto_awesome_rounded,
+  path: '/ai',
+);
 const _moreDestination = ShellDestination(
   label: 'Me',
   icon: Icons.person_outline_rounded,
@@ -104,6 +118,8 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
     _liveDestination,
     _searchDestination,
     _messagesDestination,
+    _musicDestination,
+    _aiDestination,
     _friendsDestination,
     _marketplaceDestination,
     if (roleSet.contains('creator') || roleSet.contains('admin'))
@@ -324,6 +340,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 _page(state, const GiftsScreen(), reducedMotion),
           ),
           GoRoute(
+            path: '/music',
+            name: 'music',
+            pageBuilder: (context, state) =>
+                _page(state, const MusicScreen(), reducedMotion),
+          ),
+          GoRoute(
             path: '/ai',
             name: 'ai',
             pageBuilder: (context, state) =>
@@ -346,6 +368,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'settings',
             pageBuilder: (context, state) =>
                 _page(state, const SettingsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/settings/media',
+            name: 'media-settings',
+            pageBuilder: (context, state) =>
+                _page(state, const MediaSettingsScreen(), reducedMotion),
           ),
         ],
       ),

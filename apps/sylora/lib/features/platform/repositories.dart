@@ -753,6 +753,8 @@ abstract interface class GiftRepository {
     String? inventoryItemId,
     String? giftDefinitionId,
     String? message,
+    String? liveSessionId,
+    String? conferenceId,
   });
   Future<CursorPage<NamedResource>> sentHistory({String? cursor});
   Future<CursorPage<NamedResource>> receivedHistory({String? cursor});
@@ -874,6 +876,8 @@ final class DioGiftRepository implements GiftRepository {
     String? inventoryItemId,
     String? giftDefinitionId,
     String? message,
+    String? liveSessionId,
+    String? conferenceId,
   }) async {
     final response = await _client.request(
       'gifts/sends',
@@ -884,6 +888,8 @@ final class DioGiftRepository implements GiftRepository {
         'inventory_item_id': inventoryItemId,
         'gift_definition_id': giftDefinitionId,
         'message': message,
+        'live_session_id': liveSessionId,
+        'conference_id': conferenceId,
       },
     );
     return requireObject(response.data, 'gift send');

@@ -226,6 +226,7 @@ async def session_response(db: AsyncSession, record: LiveSession) -> LiveSession
     replay = await latest_session_replay(db, record.id)
     return LiveSessionResponse(
         id=record.id,
+        owner_user_id=record.owner_user_id,
         workspace_id=record.workspace_id,
         title=record.title,
         language=record.language,

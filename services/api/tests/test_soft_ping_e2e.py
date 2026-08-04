@@ -32,7 +32,7 @@ from app.gift_models import (
 from app.gift_schemas import RuntimeManifest
 from app.security import utcnow
 from tests.conftest import APIHarness, bearer
-from tests.test_wallet_gifts import create_member, issue
+from tests.test_wallet_gifts import create_member, gift_live_context, issue
 
 ROOT = Path(__file__).resolve().parents[3]
 SOFT = ROOT / "artifacts" / "sylora-gift-100-originals" / "soft-ping"
@@ -95,7 +95,7 @@ async def test_soft_ping_author_publish_catalog_send(api: APIHarness) -> None:
         email="soft-ping-sender@sylora.dev",
         display_name="Soft Ping Sender",
     )
-    recipient, _ = await create_member(
+    recipient, recipient_tokens = await create_member(
         api,
         email="soft-ping-recipient@sylora.dev",
         display_name="Soft Ping Recipient",
@@ -217,7 +217,7 @@ async def test_soft_ping_author_publish_catalog_send(api: APIHarness) -> None:
             **bearer(sender_tokens["access_token"]),
             "Idempotency-Key": "soft-ping-send-0001",
         },
-        json={
+        json={**(await gift_live_context(api, recipient_tokens)), 
             "recipient_user_id": str(recipient.id),
             "gift_definition_id": definition.json()["id"],
         },
