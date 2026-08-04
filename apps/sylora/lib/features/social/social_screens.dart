@@ -993,10 +993,13 @@ final class SearchScreen extends ConsumerStatefulWidget {
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
+enum _SearchCategory { all, people, posts, communities }
+
 final class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _query = TextEditingController();
   final _searchFocus = FocusNode();
   Future<SocialSearchBundle>? _results;
+  _SearchCategory _category = _SearchCategory.all;
 
   @override
   void dispose() {
@@ -1059,61 +1062,110 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
             SyloraPortalChip(
               label: l10n.searchPeople,
               icon: Icons.person_search_rounded,
-              onTap: _searchFocus.requestFocus,
+              onTap: () => _selectCategory(_SearchCategory.people),
             ),
             SyloraPortalChip(
               label: l10n.searchPosts,
               icon: Icons.article_outlined,
-              onTap: _searchFocus.requestFocus,
+              onTap: () => _selectCategory(_SearchCategory.posts),
             ),
             SyloraPortalChip(
               label: l10n.searchCommunities,
               icon: Icons.groups_2_outlined,
-              onTap: _searchFocus.requestFocus,
+              onTap: () => _selectCategory(_SearchCategory.communities),
             ),
           ],
         ),
       ),
       child: _results == null
-          ? LumenEmptyView(
-              title: l10n.searchFindPeople,
-              message: l10n.searchFindPeopleMessage,
-              actionLabel: l10n.searchFocus,
-              onAction: _searchFocus.requestFocus,
-              icon: Icons.travel_explore_rounded,
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _SearchCategoryBar(
+                  selected: _category,
+                  onSelected: _selectCategory,
+                ),
+                const SizedBox(height: SyloraTokens.space4),
+                LumenEmptyView(
+                  title: l10n.searchFindPeople,
+                  message: l10n.searchFindPeopleMessage,
+                  actionLabel: l10n.searchFocus,
+                  onAction: _searchFocus.requestFocus,
+                  icon: Icons.travel_explore_rounded,
+                ),
+              ],
             )
           : FutureBuilder<SocialSearchBundle>(
               future: _results,
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
-                  return const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator(),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      _SearchCategoryBar(
+                        selected: _category,
+                        onSelected: _selectCategory,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    ],
                   );
                 }
                 if (snapshot.hasError) {
-                  return LumenErrorView(
-                    error: snapshot.error!,
-                    onRetry: _search,
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      _SearchCategoryBar(
+                        selected: _category,
+                        onSelected: _selectCategory,
+                      ),
+                      const SizedBox(height: SyloraTokens.space4),
+                      LumenErrorView(error: snapshot.error!, onRetry: _search),
+                    ],
                   );
                 }
                 final data = snapshot.requireData;
-                if (data.users.isEmpty &&
-                    data.posts.isEmpty &&
-                    data.communities.isEmpty) {
-                  return LumenEmptyView(
-                    title: l10n.searchNoResults,
-                    message: l10n.searchNoResultsMessage,
-                    actionLabel: l10n.searchEdit,
-                    onAction: _searchFocus.requestFocus,
-                    icon: Icons.search_off_rounded,
-                  );
-                }
+                final showPeople =
+                    _category == _SearchCategory.all ||
+                    _category == _SearchCategory.people;
+                final showPosts =
+                    _category == _SearchCategory.all ||
+                    _category == _SearchCategory.posts;
+                final showCommunities =
+                    _category == _SearchCategory.all ||
+                    _category == _SearchCategory.communities;
+                final selectedIsEmpty = switch (_category) {
+                  _SearchCategory.all =>
+                    data.users.isEmpty &&
+                        data.posts.isEmpty &&
+                        data.communities.isEmpty,
+                  _SearchCategory.people => data.users.isEmpty,
+                  _SearchCategory.posts => data.posts.isEmpty,
+                  _SearchCategory.communities => data.communities.isEmpty,
+                };
                 var index = 0;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    if (data.users.isNotEmpty) ...<Widget>[
+                    _SearchCategoryBar(
+                      selected: _category,
+                      peopleCount: data.users.length,
+                      postCount: data.posts.length,
+                      communityCount: data.communities.length,
+                      onSelected: _selectCategory,
+                    ),
+                    const SizedBox(height: SyloraTokens.space4),
+                    if (selectedIsEmpty)
+                      LumenEmptyView(
+                        title: l10n.searchNoResults,
+                        message: l10n.searchNoResultsMessage,
+                        actionLabel: l10n.searchEdit,
+                        onAction: _searchFocus.requestFocus,
+                        icon: Icons.search_off_rounded,
+                      ),
+                    if (showPeople && data.users.isNotEmpty) ...<Widget>[
                       Text(l10n.searchPeople, style: SyloraTokens.title(20)),
                       const SizedBox(height: 12),
                       for (final user in data.users)
@@ -1163,7 +1215,7 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                         ),
                     ],
-                    if (data.posts.isNotEmpty) ...<Widget>[
+                    if (showPosts && data.posts.isNotEmpty) ...<Widget>[
                       const SizedBox(height: 8),
                       Text(l10n.searchPosts, style: SyloraTokens.title(20)),
                       const SizedBox(height: 12),
@@ -1176,7 +1228,8 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                         ),
                     ],
-                    if (data.communities.isNotEmpty) ...<Widget>[
+                    if (showCommunities &&
+                        data.communities.isNotEmpty) ...<Widget>[
                       const SizedBox(height: 8),
                       Text(
                         l10n.searchCommunities,
@@ -1252,6 +1305,90 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() {
       _results = ref.read(socialRepositoryProvider).search(query);
     });
+  }
+
+  void _selectCategory(_SearchCategory category) {
+    setState(() => _category = category);
+    if (_results == null) {
+      _searchFocus.requestFocus();
+    }
+  }
+}
+
+final class _SearchCategoryBar extends StatelessWidget {
+  const _SearchCategoryBar({
+    required this.selected,
+    required this.onSelected,
+    this.peopleCount,
+    this.postCount,
+    this.communityCount,
+  });
+
+  final _SearchCategory selected;
+  final ValueChanged<_SearchCategory> onSelected;
+  final int? peopleCount;
+  final int? postCount;
+  final int? communityCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final categories = <(_SearchCategory, String, IconData, int?)>[
+      (_SearchCategory.all, 'All', Icons.grid_view_rounded, _totalCount),
+      (
+        _SearchCategory.people,
+        l10n.searchPeople,
+        Icons.person_search_rounded,
+        peopleCount,
+      ),
+      (
+        _SearchCategory.posts,
+        l10n.searchPosts,
+        Icons.article_outlined,
+        postCount,
+      ),
+      (
+        _SearchCategory.communities,
+        l10n.searchCommunities,
+        Icons.groups_2_outlined,
+        communityCount,
+      ),
+    ];
+    return Semantics(
+      label: l10n.searchSubtitle,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: <Widget>[
+            for (var index = 0; index < categories.length; index++) ...<Widget>[
+              ChoiceChip(
+                key: ValueKey<String>(
+                  'search-category-${categories[index].$1.name}',
+                ),
+                selected: selected == categories[index].$1,
+                showCheckmark: false,
+                avatar: Icon(categories[index].$3, size: 17),
+                label: Text(
+                  categories[index].$4 == null
+                      ? categories[index].$2
+                      : '${categories[index].$2} ${categories[index].$4}',
+                ),
+                onSelected: (_) => onSelected(categories[index].$1),
+              ),
+              if (index != categories.length - 1)
+                const SizedBox(width: SyloraTokens.space2),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  int? get _totalCount {
+    if (peopleCount == null || postCount == null || communityCount == null) {
+      return null;
+    }
+    return peopleCount! + postCount! + communityCount!;
   }
 }
 
@@ -1670,8 +1807,9 @@ final class _FriendsList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     if (friends.isEmpty) {
       return _FriendsEmptyState(
+        key: key,
         title: l10n.friendsNoFriends,
-        message: l10n.friendsSearchFriends,
+        message: l10n.friendsSubtitle,
         actionLabel: l10n.friendsSearchFriends,
         icon: Icons.group_outlined,
       );
@@ -1717,10 +1855,13 @@ final class _RequestsList extends StatelessWidget {
     final total = requests.incoming.length + requests.outgoing.length;
     if (total == 0) {
       return _FriendsEmptyState(
+        key: key,
         title: l10n.friendsRequests,
-        message: l10n.friendsSearchFriends,
+        message:
+            '${l10n.friendsPendingIncoming}: 0 · '
+            '${l10n.friendsPendingOutgoing}: 0',
         actionLabel: l10n.friendsSearchFriends,
-        icon: Icons.mark_email_unread_outlined,
+        icon: Icons.mark_email_read_outlined,
       );
     }
     var index = 0;
@@ -1791,8 +1932,9 @@ final class _SuggestionsList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     if (suggestions.isEmpty) {
       return _FriendsEmptyState(
+        key: key,
         title: l10n.friendsSuggestions,
-        message: l10n.friendsSearchFriends,
+        message: l10n.friendsSubtitle,
         actionLabel: l10n.friendsSearchFriends,
         icon: Icons.auto_awesome_outlined,
       );
@@ -1884,6 +2026,7 @@ final class _RequestCard extends StatelessWidget {
     final requestedAt = DateFormat.MMMd().add_jm().format(
       request.requestedAt.toLocal(),
     );
+    final actionBusy = acceptBusy || rejectBusy || cancelBusy;
     return _PersonCard(
       avatarUrl: request.avatarUrl,
       displayName: request.displayName,
@@ -1904,7 +2047,7 @@ final class _RequestCard extends StatelessWidget {
                   icon: Icons.check_rounded,
                   expanded: false,
                   busy: acceptBusy,
-                  onPressed: onAccept,
+                  onPressed: actionBusy && !acceptBusy ? null : onAccept,
                 ),
                 SyloraButton(
                   label: l10n.friendsReject,
@@ -1912,7 +2055,7 @@ final class _RequestCard extends StatelessWidget {
                   variant: SyloraButtonVariant.ghost,
                   expanded: false,
                   busy: rejectBusy,
-                  onPressed: onReject,
+                  onPressed: actionBusy && !rejectBusy ? null : onReject,
                 ),
               ],
             )
@@ -1922,7 +2065,7 @@ final class _RequestCard extends StatelessWidget {
               variant: SyloraButtonVariant.secondary,
               expanded: false,
               busy: cancelBusy,
-              onPressed: onCancel,
+              onPressed: actionBusy && !cancelBusy ? null : onCancel,
             ),
     );
   }
@@ -2144,6 +2287,7 @@ final class _FriendsEmptyState extends StatelessWidget {
     required this.message,
     required this.actionLabel,
     required this.icon,
+    super.key,
   });
 
   final String title;
@@ -2720,25 +2864,9 @@ final class PublicProfileScreen extends ConsumerWidget {
                 children: <Widget>[
                   SizedBox(
                     width: actionWidth,
-                    child: LumenPrimaryButton(
-                      label: profile.followedByViewer
-                          ? l10n.profileUnfollow
-                          : l10n.profileFollow,
-                      icon: Icons.person_add_alt_1_rounded,
-                      onPressed: () async {
-                        final repository = ref.read(socialRepositoryProvider);
-                        if (profile.followedByViewer) {
-                          await repository.unfollow(handle);
-                        } else {
-                          final status = await repository.follow(handle);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(status)));
-                          }
-                        }
-                        ref.invalidate(publicProfileProvider(handle));
-                      },
+                    child: _ProfileFollowButton(
+                      handle: handle,
+                      profile: profile,
                     ),
                   ),
                   SizedBox(
@@ -2819,6 +2947,94 @@ final class PublicProfileScreen extends ConsumerWidget {
   }
 }
 
+final class _ProfileFollowButton extends ConsumerStatefulWidget {
+  const _ProfileFollowButton({required this.handle, required this.profile});
+
+  final String handle;
+  final ProfileModel profile;
+
+  @override
+  ConsumerState<_ProfileFollowButton> createState() =>
+      _ProfileFollowButtonState();
+}
+
+final class _ProfileFollowButtonState
+    extends ConsumerState<_ProfileFollowButton> {
+  String? _localStatus;
+  bool _locallyUnfollowed = false;
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final following =
+        !_locallyUnfollowed &&
+        (widget.profile.followedByViewer || _localStatus == 'following');
+    final requested = !following && _localStatus == 'requested';
+    return SyloraButton(
+      label: following
+          ? l10n.profileUnfollow
+          : requested
+          ? l10n.commonCancel
+          : l10n.profileFollow,
+      icon: following
+          ? Icons.person_remove_outlined
+          : requested
+          ? Icons.undo_rounded
+          : Icons.person_add_alt_1_rounded,
+      variant: following || requested
+          ? SyloraButtonVariant.secondary
+          : SyloraButtonVariant.primary,
+      busy: _busy,
+      onPressed: _busy ? null : () => _toggle(following, requested),
+    );
+  }
+
+  Future<void> _toggle(bool following, bool requested) async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _busy = true);
+    try {
+      final repository = ref.read(socialRepositoryProvider);
+      if (following || requested) {
+        await repository.unfollow(widget.handle);
+        _localStatus = null;
+        _locallyUnfollowed = true;
+      } else {
+        final status = await repository.follow(widget.handle);
+        _localStatus = status;
+        _locallyUnfollowed = false;
+        if (mounted && status == 'requested') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${l10n.profileFollow}: ${l10n.friendsPendingOutgoing}',
+              ),
+            ),
+          );
+        }
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+}
+
+@immutable
+final class _PendingFriendRequest {
+  const _PendingFriendRequest({required this.request, required this.incoming});
+
+  final FriendRequestSummaryModel request;
+  final bool incoming;
+}
+
 final class _ProfileFriendButton extends ConsumerStatefulWidget {
   const _ProfileFriendButton({required this.handle, required this.profile});
 
@@ -2840,36 +3056,58 @@ final class _ProfileFriendButtonState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final requests = ref.watch(friendRequestsProvider);
-    final outgoingPending = requests.maybeWhen(
-      data: (value) =>
-          value.outgoing.any((request) => request.handle == widget.handle),
-      orElse: () => false,
+    final pendingRequest = requests.maybeWhen(
+      data: (value) {
+        for (final request in value.incoming) {
+          if (request.handle == widget.handle) {
+            return _PendingFriendRequest(request: request, incoming: true);
+          }
+        }
+        for (final request in value.outgoing) {
+          if (request.handle == widget.handle) {
+            return _PendingFriendRequest(request: request, incoming: false);
+          }
+        }
+        return null;
+      },
+      orElse: () => null,
     );
     final accepted =
         !_locallyUnfriended &&
         (widget.profile.friendWithViewer || _localStatus == 'friends');
-    final pending =
-        !accepted && (_localStatus == 'requested' || outgoingPending);
+    final locallyRequested = !accepted && _localStatus == 'requested';
+    final pending = accepted ? null : pendingRequest;
     return SyloraButton(
       label: accepted
           ? l10n.friendsUnfriend
-          : pending
-          ? l10n.friendsPendingOutgoing
+          : pending?.incoming == true
+          ? l10n.friendsAccept
+          : pending != null || locallyRequested
+          ? l10n.commonCancel
           : l10n.friendsAddFriend,
       icon: accepted
-          ? Icons.group_rounded
-          : pending
-          ? Icons.hourglass_top_rounded
+          ? Icons.person_remove_outlined
+          : pending?.incoming == true
+          ? Icons.check_rounded
+          : pending != null || locallyRequested
+          ? Icons.undo_rounded
           : Icons.group_add_outlined,
-      variant: accepted
+      variant:
+          accepted || locallyRequested || (pending != null && !pending.incoming)
           ? SyloraButtonVariant.secondary
           : SyloraButtonVariant.primary,
       busy: _busy,
-      onPressed: pending || _busy ? null : () => _toggle(accepted),
+      onPressed: _busy
+          ? null
+          : () => _toggle(accepted, pending, locallyRequested),
     );
   }
 
-  Future<void> _toggle(bool accepted) async {
+  Future<void> _toggle(
+    bool accepted,
+    _PendingFriendRequest? pending,
+    bool locallyRequested,
+  ) async {
     final l10n = AppLocalizations.of(context);
     setState(() => _busy = true);
     try {
@@ -2878,13 +3116,31 @@ final class _ProfileFriendButtonState
         await repository.unfriend(widget.handle);
         _localStatus = null;
         _locallyUnfriended = true;
+      } else if (pending?.incoming == true) {
+        await repository.acceptFriendRequest(pending!.request.id);
+        _localStatus = 'friends';
+        _locallyUnfriended = false;
+      } else if (pending != null) {
+        await repository.cancelFriendRequest(pending.request.id);
+        _localStatus = null;
+        _locallyUnfriended = false;
+      } else if (locallyRequested) {
+        await repository.unfriend(widget.handle);
+        _localStatus = null;
+        _locallyUnfriended = false;
       } else {
         final status = await repository.friend(widget.handle);
         _localStatus = status;
         _locallyUnfriended = false;
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.friendsTitle}: $status')),
+            SnackBar(
+              content: Text(
+                status == 'requested'
+                    ? l10n.friendsPendingOutgoing
+                    : l10n.friendsTitle,
+              ),
+            ),
           );
         }
       }
