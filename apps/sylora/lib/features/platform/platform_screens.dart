@@ -255,12 +255,21 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
                   ),
                   SyloraStaggeredReveal(
                     index: index++,
-                    child: _BalanceCard(
-                      label: l10n.walletCreatorEarnings,
-                      balance: snapshot.earnings,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
+                      onTap: () => context.goNamed('earnings'),
+                      child: _BalanceCard(
+                        label: l10n.walletCreatorEarnings,
+                        balance: snapshot.earnings,
+                      ),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Tap earnings to open Creator Earnings · live gifts only',
+                style: SyloraTokens.body(12, color: SyloraTokens.inkSoft),
               ),
               const SizedBox(height: 18),
               Wrap(
@@ -276,6 +285,11 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
                     label: l10n.walletPayout,
                     icon: Icons.account_balance_outlined,
                     onPressed: () => _showPaymentDialog(payout: true),
+                  ),
+                  LumenSecondaryButton(
+                    label: 'Earnings',
+                    icon: Icons.insights_outlined,
+                    onPressed: () => context.goNamed('earnings'),
                   ),
                 ],
               ),

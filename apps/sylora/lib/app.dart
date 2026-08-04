@@ -13,6 +13,7 @@ import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
 import 'features/conferences/conference_screens.dart';
 import 'features/creator/creator_screens.dart';
+import 'features/creator/earnings_screen.dart';
 import 'features/creator_studio/creator_studio_screen.dart';
 import 'features/landing/aether_bridge.dart'
     if (dart.library.html) 'features/landing/aether_bridge_web.dart'
@@ -332,6 +333,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'wallet',
             pageBuilder: (context, state) =>
                 _page(state, const WalletScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/earnings',
+            name: 'earnings',
+            pageBuilder: (context, state) =>
+                _page(state, const CreatorEarningsScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/gifts',

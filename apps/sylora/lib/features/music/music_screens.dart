@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
@@ -178,7 +179,61 @@ final musicHomeProvider = FutureProvider.autoDispose<MusicHome>((ref) {
   return ref.watch(musicRepositoryProvider).home();
 });
 
-final musicPlayerTrackProvider = StateProvider<MusicTrack?>((ref) => null);
+final class MusicPlayerController extends ChangeNotifier {
+  MusicPlayerController() {
+    _player.playerStateStream.listen((_) => notifyListeners());
+    _player.positionStream.listen((_) => notifyListeners());
+  }
+
+  final AudioPlayer _player = AudioPlayer();
+  MusicTrack? _track;
+  String? _error;
+
+  MusicTrack? get track => _track;
+  String? get error => _error;
+  bool get playing => _player.playing;
+  Duration get position => _player.position;
+  Duration? get duration => _player.duration;
+
+  Future<void> play(MusicTrack track) async {
+    _track = track;
+    _error = null;
+    notifyListeners();
+    try {
+      await _player.setUrl(track.audioUrl);
+      await _player.play();
+    } on Object catch (error) {
+      _error = error.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggle() async {
+    if (_player.playing) {
+      await _player.pause();
+    } else {
+      await _player.play();
+    }
+  }
+
+  Future<void> stop() async {
+    await _player.stop();
+    _track = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+}
+
+final musicPlayerProvider = ChangeNotifierProvider<MusicPlayerController>((ref) {
+  final controller = MusicPlayerController();
+  ref.onDispose(controller.dispose);
+  return controller;
+});
 
 final class MusicScreen extends ConsumerStatefulWidget {
   const MusicScreen({super.key});
@@ -206,7 +261,8 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
   }
 
   Future<void> _play(MusicTrack track, {String contextLabel = 'player'}) async {
-    ref.read(musicPlayerTrackProvider.notifier).state = track;
+    final player = ref.read(musicPlayerProvider);
+    await player.play(track);
     try {
       await ref.read(musicRepositoryProvider).play(track.id, context: contextLabel);
     } on Object catch (error) {
@@ -221,7 +277,7 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
   @override
   Widget build(BuildContext context) {
     final home = ref.watch(musicHomeProvider);
-    final nowPlaying = ref.watch(musicPlayerTrackProvider);
+    final player = ref.watch(musicPlayerProvider);
     final compact = MediaQuery.sizeOf(context).width < 720;
 
     return SyloraLivingScaffold(
@@ -315,7 +371,7 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                 ),
               ),
             ),
-            if (nowPlaying != null) _MiniPlayer(track: nowPlaying),
+            if (player.track != null) _MiniPlayer(player: player),
           ],
         ),
       ),
@@ -696,26 +752,50 @@ final class _AuraMusicTab extends StatelessWidget {
 }
 
 final class _MiniPlayer extends StatelessWidget {
-  const _MiniPlayer({required this.track});
+  const _MiniPlayer({required this.player});
 
-  final MusicTrack track;
+  final MusicPlayerController player;
 
   @override
   Widget build(BuildContext context) {
+    final track = player.track!;
+    final duration = player.duration ?? Duration(seconds: track.durationSeconds);
+    final progress = duration.inMilliseconds == 0
+        ? 0.0
+        : (player.position.inMilliseconds / duration.inMilliseconds).clamp(
+            0.0,
+            1.0,
+          );
     return Material(
       color: SyloraTokens.glassStrong,
       elevation: 8,
       child: SafeArea(
         top: false,
-        child: ListTile(
-          leading: const Icon(Icons.graphic_eq_rounded, color: SyloraTokens.ion),
-          title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            '${track.artistName} · now playing across SYLORA',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: const Icon(Icons.expand_less_rounded),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            LinearProgressIndicator(value: progress),
+            ListTile(
+              leading: IconButton.filledTonal(
+                onPressed: player.toggle,
+                icon: Icon(
+                  player.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                ),
+              ),
+              title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(
+                player.error ??
+                    '${track.artistName} · ${player.playing ? 'playing' : 'paused'}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: IconButton(
+                tooltip: 'Stop',
+                onPressed: player.stop,
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ),
+          ],
         ),
       ),
     );

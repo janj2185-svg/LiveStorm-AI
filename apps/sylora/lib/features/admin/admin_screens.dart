@@ -19,6 +19,8 @@ final class _AdminSnapshot {
     required this.analytics,
     required this.health,
     required this.security,
+    required this.moderationSummary,
+    required this.moderationReports,
   });
 
   final CursorPage<AdminUser> users;
@@ -28,6 +30,8 @@ final class _AdminSnapshot {
   final AdminDashboard analytics;
   final List<AdminResource> health;
   final AdminDashboard security;
+  final JsonObject moderationSummary;
+  final CursorPage<AdminResource> moderationReports;
 }
 
 final _adminProvider = FutureProvider.autoDispose<_AdminSnapshot>((ref) async {
@@ -40,6 +44,8 @@ final _adminProvider = FutureProvider.autoDispose<_AdminSnapshot>((ref) async {
     repository.analytics(),
     repository.serviceHealth(),
     repository.security(),
+    repository.moderationSummary(),
+    repository.moderationReports(),
   ]);
   return _AdminSnapshot(
     users: values[0] as CursorPage<AdminUser>,
@@ -49,6 +55,8 @@ final _adminProvider = FutureProvider.autoDispose<_AdminSnapshot>((ref) async {
     analytics: values[4] as AdminDashboard,
     health: values[5] as List<AdminResource>,
     security: values[6] as AdminDashboard,
+    moderationSummary: values[7] as JsonObject,
+    moderationReports: values[8] as CursorPage<AdminResource>,
   );
 });
 
@@ -64,7 +72,7 @@ final class AdminScreen extends ConsumerWidget {
       value: ref.watch(_adminProvider),
       onRetry: () => ref.invalidate(_adminProvider),
       data: (snapshot) => DefaultTabController(
-        length: 6,
+        length: 7,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -72,6 +80,7 @@ final class AdminScreen extends ConsumerWidget {
               isScrollable: true,
               tabs: <Tab>[
                 Tab(text: 'Analytics'),
+                Tab(text: 'Moderation'),
                 Tab(text: 'Users'),
                 Tab(text: 'Feature flags'),
                 Tab(text: 'Settings'),
@@ -81,10 +90,17 @@ final class AdminScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 14),
             SizedBox(
-              height: 760,
+              height: (MediaQuery.sizeOf(context).height * 0.72).clamp(
+                480.0,
+                920.0,
+              ),
               child: TabBarView(
                 children: <Widget>[
                   _DashboardView(dashboard: snapshot.analytics),
+                  _ModerationView(
+                    summary: snapshot.moderationSummary,
+                    reports: snapshot.moderationReports,
+                  ),
                   _AdminUsersView(initialPage: snapshot.users),
                   _FeatureFlagsView(
                     flags: snapshot.flags,
@@ -107,6 +123,66 @@ final class AdminScreen extends ConsumerWidget {
       ),
     ),
   );
+}
+
+final class _ModerationView extends StatelessWidget {
+  const _ModerationView({required this.summary, required this.reports});
+
+  final JsonObject summary;
+  final CursorPage<AdminResource> reports;
+
+  @override
+  Widget build(BuildContext context) {
+    final queue = summary['queue'];
+    final decisions = summary['decisions'];
+    return ListView(
+      children: <Widget>[
+        Text('Queue summary', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        if (queue is Map)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              for (final entry in queue.entries)
+                Chip(label: Text('${entry.key}: ${entry.value}')),
+            ],
+          )
+        else
+          const Text('No open queue counts.'),
+        const SizedBox(height: 16),
+        Text('Decisions', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        if (decisions is Map)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              for (final entry in decisions.entries)
+                Chip(label: Text('${entry.key}: ${entry.value}')),
+            ],
+          )
+        else
+          const Text('No moderation decisions recorded.'),
+        const SizedBox(height: 20),
+        Text('Open reports', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        if (reports.items.isEmpty)
+          const Text('Trust & Safety queue is empty.')
+        else
+          for (final report in reports.items)
+            ListTile(
+              leading: const Icon(Icons.gavel_rounded),
+              title: Text(report.label),
+              subtitle: Text(report.summary.entries
+                  .take(3)
+                  .map((e) => '${e.key}: ${e.value}')
+                  .join(' · ')),
+              trailing: Text(report.status ?? ''),
+            ),
+      ],
+    );
+  }
 }
 
 final class _DashboardView extends StatelessWidget {

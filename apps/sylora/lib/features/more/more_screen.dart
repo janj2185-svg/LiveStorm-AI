@@ -12,6 +12,7 @@ import '../social/social_screens.dart';
 enum MoreEntryKind {
   learning,
   wallet,
+  earnings,
   giftShop,
   music,
   ai,
@@ -50,6 +51,12 @@ const _entries = <MoreEntry>[
     kind: MoreEntryKind.wallet,
     routeName: 'wallet',
     icon: Icons.account_balance_wallet_outlined,
+  ),
+  MoreEntry(
+    kind: MoreEntryKind.earnings,
+    routeName: 'earnings',
+    icon: Icons.insights_outlined,
+    roles: <String>{'creator', 'admin'},
   ),
   MoreEntry(
     kind: MoreEntryKind.giftShop,
@@ -382,6 +389,7 @@ final class _MoreModuleTileState extends State<_MoreModuleTile> {
 String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
   MoreEntryKind.learning => l10n.moreLearning,
   MoreEntryKind.wallet => l10n.walletShortLabel,
+  MoreEntryKind.earnings => 'Earnings',
   MoreEntryKind.giftShop => 'Gift Shop',
   MoreEntryKind.music => 'Music',
   MoreEntryKind.ai => l10n.aiShortLabel,

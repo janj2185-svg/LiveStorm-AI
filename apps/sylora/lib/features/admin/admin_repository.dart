@@ -243,6 +243,8 @@ abstract interface class AdminRepository {
   Future<AdminDashboard> analytics();
   Future<List<AdminResource>> serviceHealth();
   Future<AdminDashboard> security();
+  Future<JsonObject> moderationSummary();
+  Future<CursorPage<AdminResource>> moderationReports({String? cursor});
 }
 
 final class DioAdminRepository implements AdminRepository {
@@ -432,6 +434,28 @@ final class DioAdminRepository implements AdminRepository {
     final response = await _client.request('admin/security');
     return AdminDashboard.fromJson(
       requireObject(response.data, 'security dashboard'),
+    );
+  }
+
+  @override
+  Future<JsonObject> moderationSummary() async {
+    final response = await _client.request('admin/moderation/summary');
+    return requireObject(response.data, 'moderation summary');
+  }
+
+  @override
+  Future<CursorPage<AdminResource>> moderationReports({String? cursor}) async {
+    final response = await _client.request(
+      'trust-safety/reports',
+      queryParameters: <String, dynamic>{'cursor': cursor},
+    );
+    return CursorPage<AdminResource>.fromJson(
+      requireObject(response.data, 'moderation reports'),
+      (json) => AdminResource.fromJson(
+        json,
+        labelKeys: const <String>['reason', 'target_type', 'status'],
+        statusKeys: const <String>['status'],
+      ),
     );
   }
 }
