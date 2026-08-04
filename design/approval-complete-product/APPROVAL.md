@@ -1,6 +1,8 @@
 # SYLORA — Complete Product Design (Approval Gate)
 
 **Status:** Development paused until you approve this entire package.  
+**After approval:** Continuous full implementation begins immediately (see `POST_APPROVAL_CHARTER.md`) until production-ready — all platforms in parallel (Android, iOS, Web, Windows, macOS, Linux).  
+**Owner checklist / major decisions:** `OWNER_SERVICES_AND_DECISIONS.md`  
 **Visual language:** Light glass OS · champagne accents · Aura companion · island dock (phone) · cinema rail (desktop)
 
 ## Architecture locks (non-negotiable in this design)
