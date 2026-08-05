@@ -67,7 +67,7 @@ Responsive columns: **P** = phone · **T** = tablet · **D** = desktop. Light is
 
 | # | Screen | Board refs | Route / widget | P | T | D | States | Status |
 |---|--------|------------|----------------|---|---|---|--------|--------|
-| 01 | Home | 02,03,17 | `/home` `FeedScreen` | △ | △ | △ | △ | **FAIL** — no Moments, weak glass feed, portal chips clutter |
+| 01 | Home | 02,03,17 | `/home` `FeedScreen` | △ | △ | △ | △ | **PARTIAL** — Moments tray + glass cards + greeting (D1); still missing For You tabs / story API / desktop Aura rail |
 | 02 | Feed | 03 | same + For You tabs | △ | △ | △ | △ | **PARTIAL** — tabs exist; not FINAL card fidelity |
 | 03 | Profile | 03,15 | `/u/:handle` · More hero | △ | △ | △ | △ | **PARTIAL** |
 | 04 | Search | 03,15 | `/search` | △ | △ | △ | △ | **PARTIAL** |
@@ -255,8 +255,8 @@ Each product screen must match its board(s) at phone, tablet, and desktop before
 4. ~~`SyloraDialog` + sheet primitives~~ (`sylora_dialogs.dart` — migrate ~53 AlertDialogs next)
 5. Primary button / spinner contrast vs FINAL-01 (spinner → ink) 
 
-### Wave D1 — Shell & Home
-Moments tray · glass feed cards · desktop Aura companion rail · Aura always-reachable orb  
+### Wave D1 — Shell & Home (**started**)
+Moments tray placeholder · glass feed cards · greeting hero · portal chips removed · desktop Aura companion rail still open 
 
 ### Wave D2 — Auth onboarding FINAL-14
 Interest → music taste → follow → Meet Aura → permissions  
