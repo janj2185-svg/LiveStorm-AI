@@ -157,25 +157,60 @@ final class _CourseCatalogState extends ConsumerState<_CourseCatalog> {
             ? LumenEmptyView(
                 title: 'No published courses',
                 message:
-                    'The learning catalog returned no courses for these filters.',
-                actionLabel: 'Clear filters',
-                onAction: _clear,
+                    'The catalog is quiet. Clear filters, or ask Aura Tutor to guide your first lesson path.',
+                actionLabel: 'Ask Aura Tutor',
+                onAction: () => openAuraConversation(
+                  context,
+                  ref,
+                  purpose: 'learning_tutor',
+                  title: 'Learning Tutor',
+                ),
+                secondaryLabel: 'Clear filters',
+                onSecondary: _clear,
                 icon: Icons.school_outlined,
               )
             : ListView(
                 children: <Widget>[
-                  for (final course in _items)
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.school_outlined),
-                        title: Text(course.title),
-                        subtitle: Text(
-                          '${course.category} • ${_coursePrice(course)}',
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => context.pushNamed(
-                          'learning-course',
-                          pathParameters: <String, String>{'id': course.id},
+                  for (var i = 0; i < _items.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: SyloraStaggeredReveal(
+                        index: i,
+                        child: SyloraGlassTile(
+                          onTap: () => context.pushNamed(
+                            'learning-course',
+                            pathParameters: <String, String>{
+                              'id': _items[i].id,
+                            },
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              const Icon(
+                                Icons.school_outlined,
+                                color: SyloraTokens.violet,
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      _items[i].title,
+                                      style: SyloraTokens.title(16),
+                                    ),
+                                    Text(
+                                      '${_items[i].category} • ${_coursePrice(_items[i])}',
+                                      style: SyloraTokens.body(
+                                        13,
+                                        color: SyloraTokens.inkMute,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -274,30 +309,65 @@ final class _EnrollmentListState extends ConsumerState<_EnrollmentList> {
   @override
   Widget build(BuildContext context) => _items.isEmpty
       ? LumenEmptyView(
-          title: 'No enrollments',
-          message: 'The enrollment API returned no learning records.',
+          title: 'No enrollments yet',
+          message:
+              'Browse the catalog to start a course, or ask Aura Tutor where to begin.',
           actionLabel: 'Browse courses',
           onAction: () => DefaultTabController.of(context).animateTo(0),
+          secondaryLabel: 'Ask Aura Tutor',
+          onSecondary: () => openAuraConversation(
+            context,
+            ref,
+            purpose: 'learning_tutor',
+            title: 'Learning Tutor',
+          ),
           icon: Icons.menu_book_outlined,
         )
       : ListView(
           children: <Widget>[
-            for (final enrollment in _items)
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.menu_book_outlined),
-                  title: Text('Course ${enrollment.courseId.substring(0, 8)}'),
-                  subtitle: Text(
-                    '${enrollment.settlementMethod} • enrolled '
-                    '${DateFormat.yMMMd().format(enrollment.enrolledAt.toLocal())}',
-                  ),
-                  trailing: LumenBadge(label: enrollment.status),
-                  onTap: () => context.pushNamed(
-                    'learning-enrollment',
-                    pathParameters: <String, String>{
-                      'id': enrollment.id,
-                      'courseId': enrollment.courseId,
-                    },
+            for (var i = 0; i < _items.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: SyloraStaggeredReveal(
+                  index: i,
+                  child: SyloraGlassTile(
+                    onTap: () => context.pushNamed(
+                      'learning-enrollment',
+                      pathParameters: <String, String>{
+                        'id': _items[i].id,
+                        'courseId': _items[i].courseId,
+                      },
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Icon(
+                          Icons.menu_book_outlined,
+                          color: SyloraTokens.violet,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                'Course ${_items[i].courseId.substring(0, 8)}',
+                                style: SyloraTokens.title(16),
+                              ),
+                              Text(
+                                '${_items[i].settlementMethod} • enrolled '
+                                '${DateFormat.yMMMd().format(_items[i].enrolledAt.toLocal())}',
+                                style: SyloraTokens.body(
+                                  13,
+                                  color: SyloraTokens.inkMute,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        LumenBadge(label: _items[i].status),
+                        const Icon(Icons.chevron_right_rounded),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1340,24 +1410,28 @@ final class _LearningEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 20),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Icon(icon, size: 42, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 12),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          message,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: SyloraGlass(
+      radius: SyloraTokens.radiusXl,
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 36, color: SyloraTokens.champagneDeep),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: SyloraTokens.title(18),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+          ),
+        ],
+      ),
     ),
   );
 }

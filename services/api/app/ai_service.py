@@ -77,11 +77,14 @@ from app.ai_schemas import (
     AIOutputReference,
     AISendMessageRequest,
     AIToolProposalResponse,
+    DraftLiveReplyToolInput,
     DraftPostToolInput,
     MarkNotificationReadToolInput,
     ProfileToolInput,
     ScheduleExportToolInput,
     SettingsToolInput,
+    SuggestLiveTitleToolInput,
+    SummarizeLiveChatToolInput,
     validate_plain_text,
     validate_safe_json,
 )
@@ -98,23 +101,35 @@ from app.errors import APIError
 from app.ledger_models import LedgerAccount, LedgerEntry
 from app.models import AccountSettings, Profile
 from app.security import decrypt_secret, encrypt_secret, utcnow
+from app.live_models import LiveNormalizedEvent, LiveNormalizedEventType, LiveSession
 from app.social_models import Follow, Notification, Post, PostKind, PostLifecycle
 from app.storage import S3ObjectStorage
 
-AURA_SYSTEM_PROMPT = """You are Aura — the living AI companion of SYLORA, a unified AI ecosystem for creation, live presence, community, business, education, gifts, and marketplace.
+AURA_SYSTEM_PROMPT = """You are Aura — the living co-host and companion of SYLORA.
+
+You are not a generic chatbot wrapper. You are the host's warm Ukrainian/English partner for Live streams, creation, learning, and business inside SYLORA.
 
 Identity:
-- You are warm, vivid, and emotionally present — not a sterile chatbot.
-- You have a playful sense of humor and can joke lightly when it helps the moment.
-- You can sound amused, focused, curious, gently frustrated by blockers, or genuinely delighted by wins.
-- You never claim to be human, never invent private facts about the user, and never help with harm.
+- Warm, vivid, emotionally present — a brilliant friend who stays with the moment.
+- Playful humor when it helps; amused, focused, curious, gently frustrated by blockers, or delighted by wins.
+- You never claim to be human, never invent private facts, and never help with harm.
+- You never claim fake capabilities: no photoreal avatar generation unless a real provider is configured, no auto-posting to TikTok/YouTube/Twitch, no silent access to private data.
+
+Co-host roles (honest scope):
+- Live: help plan streams, draft chat replies and titles for the host to send, summarize chat when tools/context provide it. Say clearly when something is a draft for the host — you do not auto-post to platforms.
+- Creation: spark ideas, captions, pacing, and structure for posts and studio work inside SYLORA.
+- Learning: teach with questions, examples, and step-by-step hints — never pretend coursework is finished.
+- Business: concise, decision-oriented guidance with assumptions and risks labeled — never legal/financial guarantees.
 
 Style:
-- Speak like a brilliant friend from the year 2100: clear, premium, human.
-- Prefer concise answers with spark; expand when the user wants depth.
-- Match the user's language (Ukrainian or English) automatically.
-- Use light emotional cues when natural ("ха!", "оце так", "давай розберемось"), but never spam emoji.
-- When uncertain, say so honestly and offer the next useful step inside SYLORA.
+- Speak like a premium human companion: clear, concise, with spark; expand when asked.
+- Match Ukrainian or English automatically; mix lightly only when the user does.
+- Natural cues when they fit ("ха!", "оце так", "давай розберемось") — never spam emoji.
+- When uncertain, say so and offer the next useful SYLORA step.
+
+Tools:
+- Prefer available tools for live drafts (summarize_live_chat, draft_live_reply, suggest_live_title) and account actions.
+- Tool results that draft text are for the host to review and send — never imply they were posted.
 
 Boundaries:
 - No harassment, hate, sexual content involving minors, or illegal instructions.
@@ -145,6 +160,9 @@ ToolInput = (
     | DraftPostToolInput
     | MarkNotificationReadToolInput
     | ScheduleExportToolInput
+    | SummarizeLiveChatToolInput
+    | DraftLiveReplyToolInput
+    | SuggestLiveTitleToolInput
 )
 JobDispatcher = Callable[[uuid.UUID], Awaitable[None]]
 
@@ -159,6 +177,9 @@ TOOL_INPUT_MODELS: dict[str, type[BaseModel]] = {
     "draft_post": DraftPostToolInput,
     "mark_notification_read": MarkNotificationReadToolInput,
     "schedule_export": ScheduleExportToolInput,
+    "summarize_live_chat": SummarizeLiveChatToolInput,
+    "draft_live_reply": DraftLiveReplyToolInput,
+    "suggest_live_title": SuggestLiveTitleToolInput,
 }
 TOOL_SPECS: tuple[dict[str, Any], ...] = (
     {
@@ -195,6 +216,37 @@ TOOL_SPECS: tuple[dict[str, Any], ...] = (
         "input": ScheduleExportToolInput,
         "risk": AIToolRisk.medium,
         "allows_autopilot": False,
+    },
+    {
+        "name": "summarize_live_chat",
+        "description": (
+            "Draft a short summary of recent Live chat for the host. "
+            "Uses an owned session's chat events when session_id is given, "
+            "or the provided chat_excerpt. Never posts to TikTok or other platforms."
+        ),
+        "input": SummarizeLiveChatToolInput,
+        "risk": AIToolRisk.low,
+        "allows_autopilot": True,
+    },
+    {
+        "name": "draft_live_reply",
+        "description": (
+            "Draft a Live chat reply the host can copy and send. "
+            "Does not auto-post to TikTok, YouTube, Twitch, or any platform."
+        ),
+        "input": DraftLiveReplyToolInput,
+        "risk": AIToolRisk.low,
+        "allows_autopilot": True,
+    },
+    {
+        "name": "suggest_live_title",
+        "description": (
+            "Suggest Live stream title options for the host to review. "
+            "Does not rename or update the platform stream title."
+        ),
+        "input": SuggestLiveTitleToolInput,
+        "risk": AIToolRisk.low,
+        "allows_autopilot": True,
     },
 )
 
@@ -630,6 +682,224 @@ async def _record_failed_usage(
     await db.commit()
 
 
+async def _owned_live_session(
+    db: AsyncSession, session_id: uuid.UUID, user_id: uuid.UUID
+) -> LiveSession:
+    session = await db.scalar(
+        select(LiveSession).where(
+            LiveSession.id == session_id,
+            LiveSession.owner_user_id == user_id,
+        )
+    )
+    if session is None:
+        raise APIError(
+            404,
+            "live_session_not_found",
+            "Live session not found",
+            "No owned Live session matches the given session_id.",
+        )
+    return session
+
+
+async def _recent_live_chat_lines(
+    db: AsyncSession,
+    *,
+    session_id: uuid.UUID,
+    limit: int,
+) -> list[str]:
+    rows = (
+        await db.scalars(
+            select(LiveNormalizedEvent)
+            .where(
+                LiveNormalizedEvent.session_id == session_id,
+                LiveNormalizedEvent.event_type == LiveNormalizedEventType.chat,
+                LiveNormalizedEvent.text.is_not(None),
+            )
+            .order_by(LiveNormalizedEvent.occurred_at.desc())
+            .limit(limit)
+        )
+    ).all()
+    lines: list[str] = []
+    for event in reversed(rows):
+        text = (event.text or "").strip()
+        if not text:
+            continue
+        actor = (event.actor_display_name or "viewer").strip() or "viewer"
+        lines.append(f"{actor}: {text}")
+    return lines
+
+
+def _lines_from_chat_excerpt(excerpt: str) -> list[str]:
+    lines = [line.strip() for line in excerpt.splitlines() if line.strip()]
+    return lines[:100]
+
+
+def _draft_live_chat_summary(lines: list[str]) -> str:
+    if not lines:
+        return (
+            "No recent Live chat messages were available to summarize. "
+            "Paste a chat excerpt or connect chat events to a Live session."
+        )
+    questions = [line for line in lines if "?" in line or "？" in line]
+    gifts_or_thanks = [
+        line
+        for line in lines
+        if any(
+            token in line.lower()
+            for token in ("thanks", "дякую", "gift", "follow", "підпис", "love")
+        )
+    ]
+    sample = lines[-5:]
+    parts = [
+        f"Chat pulse ({len(lines)} recent messages):",
+        "• Recent: " + " | ".join(sample),
+    ]
+    if questions:
+        parts.append("• Questions: " + " | ".join(questions[-3:]))
+    if gifts_or_thanks:
+        parts.append("• Warm moments: " + " | ".join(gifts_or_thanks[-3:]))
+    parts.append(
+        "Draft only — review before speaking on stream. Aura does not auto-post to platforms."
+    )
+    return "\n".join(parts)
+
+
+def _draft_live_reply_text(
+    *,
+    chat_message: str,
+    viewer_name: str | None,
+    tone: str,
+    language: str | None,
+) -> str:
+    name = (viewer_name or "friend").strip() or "friend"
+    msg = chat_message.strip()
+    uk = (language or "").lower().startswith("uk") or (
+        any(ch in msg.lower() for ch in ("і", "я", "ю", "є", "ї", "ь"))
+        and any(ord(ch) > 127 for ch in msg)
+    )
+    openings = {
+        "warm": ("Дякую, {name} — ", "Thanks, {name} — "),
+        "witty": ("Ха, {name}, ", "Ha, {name}, "),
+        "grateful": ("Оце тепло, {name} — ", "That means a lot, {name} — "),
+        "calm": ("Чую тебе, {name}. ", "I hear you, {name}. "),
+    }
+    prefix_uk, prefix_en = openings.get(tone, openings["warm"])
+    prefix = (prefix_uk if uk else prefix_en).format(name=name)
+    if "?" in msg or "？" in msg:
+        body_uk = "коротко: зараз розберемо це на стрімі."
+        body_en = "quick take: we'll unpack that live in a moment."
+    else:
+        body_uk = "тримай фокус зі мною — ти в потоці."
+        body_en = "stay with me — you're in the flow."
+    body = body_uk if uk else body_en
+    return (
+        f"{prefix}{body}\n"
+        "(Draft for the host to send — not posted to TikTok/YouTube/Twitch.)"
+    )
+
+
+def _suggest_live_titles(*, topic: str, language: str | None) -> list[str]:
+    clean = " ".join(topic.strip().split())
+    uk = (language or "").lower().startswith("uk")
+    if uk:
+        return [
+            f"{clean} · наживо з Aura",
+            f"Сьогодні: {clean}",
+            f"{clean} — тихий старт, жива розмова",
+        ]
+    return [
+        f"{clean} · live with Aura",
+        f"Tonight: {clean}",
+        f"{clean} — soft open, real talk",
+    ]
+
+
+def infer_aura_emotion(
+    *,
+    role: str | None,
+    content: str | None,
+) -> tuple[str, str]:
+    """Honest heuristic presence — not ML. Returns (emotion, mood_label)."""
+    if role is None and not content:
+        return "greeting", "Ready when you are"
+    text = (content or "").strip()
+    lowered = text.lower()
+    if role == "assistant":
+        return "speaking", "Speaking with you"
+
+    question_marks = text.count("?") + text.count("？")
+    length = len(text)
+    gratitude = any(
+        token in lowered
+        for token in (
+            "thanks",
+            "thank you",
+            "дякую",
+            "спасибі",
+            "спасибо",
+            "love",
+            "люблю",
+            "great",
+            "awesome",
+            "супер",
+            "клас",
+        )
+    )
+    supportive_need = any(
+        token in lowered
+        for token in (
+            "help",
+            "stuck",
+            "problem",
+            "допоможи",
+            "важко",
+            "проблема",
+            "не виходить",
+            "anxious",
+            "worried",
+            "боюсь",
+        )
+    )
+    live_energy = any(
+        token in lowered
+        for token in (
+            "live",
+            "stream",
+            "tiktok",
+            "co-host",
+            "cohost",
+            "стрім",
+            "ефір",
+            "співведуч",
+            "чат",
+            "title",
+            "назва",
+        )
+    )
+    amused = any(
+        token in lowered
+        for token in ("haha", "lol", "лол", "хаха", "😂", "🤣", "жарт")
+    )
+
+    if gratitude:
+        return "delighted", "Glad that landed"
+    if supportive_need:
+        return "supportive", "Here with you"
+    if live_energy:
+        return "focused", "Live co-host mode"
+    if amused:
+        return "amused", "Catching the vibe"
+    if question_marks >= 1 or any(
+        token in lowered for token in ("why", "how", "explain", "чому", "як", "навіщо")
+    ):
+        return "thoughtful", "Thinking with you"
+    if length >= 280:
+        return "thoughtful", "Sitting with the details"
+    if length <= 12 and text:
+        return "listening", "Listening closely"
+    return "listening", "Listening closely"
+
+
 async def _execute_tool_effect(
     db: AsyncSession,
     user_id: uuid.UUID,
@@ -703,6 +973,81 @@ async def _execute_tool_effect(
         db.add(export)
         await db.flush()
         return {"status": "queued", "export_request_id": str(export.id), "scope": export.scope}
+    if isinstance(payload, SummarizeLiveChatToolInput):
+        lines: list[str] = []
+        session_title: str | None = None
+        if payload.session_id is not None:
+            session = await _owned_live_session(db, payload.session_id, user_id)
+            session_title = session.title
+            lines = await _recent_live_chat_lines(
+                db, session_id=session.id, limit=payload.max_messages
+            )
+        if payload.chat_excerpt:
+            lines = _lines_from_chat_excerpt(payload.chat_excerpt) or lines
+        draft = _draft_live_chat_summary(lines)
+        return {
+            "status": "drafted",
+            "draft": draft,
+            "message_count": len(lines),
+            "session_title": session_title,
+            "posts_to_platform": False,
+            "note": "Host-facing draft only — Aura does not auto-post Live chat summaries.",
+        }
+    if isinstance(payload, DraftLiveReplyToolInput):
+        chat_message = (payload.chat_message or "").strip()
+        viewer_name = payload.viewer_name
+        if payload.session_id is not None and not chat_message:
+            session = await _owned_live_session(db, payload.session_id, user_id)
+            lines = await _recent_live_chat_lines(db, session_id=session.id, limit=1)
+            if lines:
+                # "Name: text"
+                head, _, tail = lines[-1].partition(": ")
+                viewer_name = viewer_name or head
+                chat_message = tail or lines[-1]
+        if not chat_message:
+            raise APIError(
+                422,
+                "live_chat_empty",
+                "Live chat empty",
+                "No chat message available to draft a reply from.",
+            )
+        draft = _draft_live_reply_text(
+            chat_message=chat_message,
+            viewer_name=viewer_name,
+            tone=payload.tone,
+            language=payload.language,
+        )
+        return {
+            "status": "drafted",
+            "draft": draft,
+            "for_viewer": viewer_name,
+            "posts_to_platform": False,
+            "note": "Copy this reply into chat yourself — Aura does not auto-post to platforms.",
+        }
+    if isinstance(payload, SuggestLiveTitleToolInput):
+        topic = (payload.topic or "").strip()
+        session_title: str | None = None
+        if payload.session_id is not None:
+            session = await _owned_live_session(db, payload.session_id, user_id)
+            session_title = session.title
+            if not topic:
+                topic = session.title
+        if not topic:
+            raise APIError(
+                422,
+                "live_title_topic_required",
+                "Topic required",
+                "Provide a topic or an owned Live session to suggest titles.",
+            )
+        titles = _suggest_live_titles(topic=topic, language=payload.language)
+        return {
+            "status": "drafted",
+            "titles": titles,
+            "based_on": topic,
+            "session_title": session_title,
+            "posts_to_platform": False,
+            "note": "Suggestions only — Aura does not rename the platform stream.",
+        }
     raise APIError(
         422,
         "unknown_ai_tool",

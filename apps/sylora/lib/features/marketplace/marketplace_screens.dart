@@ -227,34 +227,61 @@ final class _CatalogViewState extends ConsumerState<_CatalogView> {
       Expanded(
         child: _items.isEmpty
             ? LumenEmptyView(
-                title: 'No marketplace products',
+                title: 'Marketplace is warming up',
                 message:
-                    'The catalog API returned no products for these filters.',
-                actionLabel: 'Clear filters',
-                onAction: _clear,
+                    'No products match these filters yet. Browse the Gift Shop while the catalog seeds, or clear filters.',
+                actionLabel: 'Open Gift Shop',
+                onAction: () => context.goNamed('gifts'),
+                secondaryLabel: 'Clear filters',
+                onSecondary: _clear,
                 icon: Icons.storefront_outlined,
               )
             : ListView(
                 children: <Widget>[
-                  for (final product in _items)
-                    Card(
-                      child: ListTile(
-                        leading: Icon(
-                          product.kind == 'digital'
-                              ? Icons.download_outlined
-                              : product.kind == 'service'
-                              ? Icons.event_available_outlined
-                              : Icons.inventory_2_outlined,
-                        ),
-                        title: Text(product.title),
-                        subtitle: Text(
-                          '${product.category} • ${product.amountMinor} ${product.currency}'
-                          ' • ${product.ratingCount} reviews',
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => context.pushNamed(
-                          'marketplace-product',
-                          pathParameters: <String, String>{'id': product.id},
+                  for (var i = 0; i < _items.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: SyloraStaggeredReveal(
+                        index: i,
+                        child: SyloraGlassTile(
+                          onTap: () => context.pushNamed(
+                            'marketplace-product',
+                            pathParameters: <String, String>{
+                              'id': _items[i].id,
+                            },
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(
+                                _items[i].kind == 'digital'
+                                    ? Icons.download_outlined
+                                    : _items[i].kind == 'service'
+                                    ? Icons.event_available_outlined
+                                    : Icons.inventory_2_outlined,
+                                color: SyloraTokens.violet,
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      _items[i].title,
+                                      style: SyloraTokens.title(16),
+                                    ),
+                                    Text(
+                                      '${_items[i].category} • ${_items[i].amountMinor} ${_items[i].currency}',
+                                      style: SyloraTokens.body(
+                                        13,
+                                        color: SyloraTokens.inkMute,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded),
+                            ],
+                          ),
                         ),
                       ),
                     ),

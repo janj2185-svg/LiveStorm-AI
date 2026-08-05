@@ -244,19 +244,40 @@ final class _CreatorStudioScreenState
                   'Ingest path: ${session.ingestPath}',
                   style: const TextStyle(fontFamily: 'monospace'),
                 ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: LumenSecondaryButton(
+                    label: 'Open session',
+                    icon: Icons.sensors_rounded,
+                    onPressed: () => context.pushNamed(
+                      'live-session',
+                      pathParameters: <String, String>{'id': session.id},
+                    ),
+                  ),
+                ),
               ],
             ],
           ),
         ),
         const SizedBox(height: 16),
-        _buildWaveBSections(session),
-        const SizedBox(height: 16),
-        LumenSurface(
+        // Director go-live path first: preview → publish WHIP → status
+        SyloraGlass(
+          radius: SyloraTokens.radiusXl,
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text('Preview', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 12),
+              Text(
+                'Director go-live',
+                style: SyloraTokens.title(20),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Preview camera, publish WHIP, then return to the session to Start.',
+                style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+              ),
+              const SizedBox(height: 14),
               _publisher.preview(),
               const SizedBox(height: 16),
               Wrap(
@@ -305,38 +326,20 @@ final class _CreatorStudioScreenState
                     disabledReason:
                         'Camera preview is unavailable on this platform.',
                   ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildPreflightChecklist(session),
-        const SizedBox(height: 16),
-        LumenSurface(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text('Publish', style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              const Text(
-                'Start with this device uses WebRTC WHIP against MediaMTX. Connect OBS keeps the external encoder path and does not claim TikTok/Kick/Facebook publishing.',
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: <Widget>[
                   LumenSecondaryButton(
-                    label: 'Check media capability',
+                    label: 'Run preflight',
                     icon: Icons.fact_check_outlined,
-                    onPressed: session == null
-                        ? null
-                        : () => _checkCapability(session),
-                    disabledReason: 'Select a live session first.',
+                    onPressed: session != null &&
+                            {'draft', 'preflight'}.contains(session.state) &&
+                            !_preflightBusy
+                        ? () => _runGoLivePreflight(session)
+                        : null,
+                    disabledReason: session == null
+                        ? 'Select a live session first.'
+                        : 'Preflight is available only before a session is live.',
                   ),
                   LumenPrimaryButton(
-                    label: 'Start with this device (WHIP)',
+                    label: 'Publish WHIP',
                     icon: Icons.podcasts_rounded,
                     busy: _busy,
                     onPressed:
@@ -352,9 +355,26 @@ final class _CreatorStudioScreenState
                         : !_devicePreviewReady
                         ? 'Start a camera and microphone preview first.'
                         : !_corePreflightReady
-                        ? 'Run preflight and resolve every required check first.'
+                        ? 'Run preflight and resolve required checks first.'
                         : 'The selected media path is not ready.',
                   ),
+                  LumenSecondaryButton(
+                    label: 'Connect OBS',
+                    icon: Icons.desktop_windows_outlined,
+                    onPressed: session == null
+                        ? null
+                        : () => _showObsPath(session),
+                    disabledReason: 'Select a live session first.',
+                  ),
+                  if (session != null)
+                    LumenSecondaryButton(
+                      label: 'Open session to Start',
+                      icon: Icons.play_circle_outline_rounded,
+                      onPressed: () => context.pushNamed(
+                        'live-session',
+                        pathParameters: <String, String>{'id': session.id},
+                      ),
+                    ),
                   ValueListenableBuilder<String>(
                     valueListenable: _publisher.connectionState,
                     builder: (context, connectionState, _) {
@@ -369,14 +389,6 @@ final class _CreatorStudioScreenState
                             : () => _reconnectPublisher(session),
                       );
                     },
-                  ),
-                  LumenSecondaryButton(
-                    label: 'Connect OBS',
-                    icon: Icons.desktop_windows_outlined,
-                    onPressed: session == null
-                        ? null
-                        : () => _showObsPath(session),
-                    disabledReason: 'Select a live session first.',
                   ),
                 ],
               ),
@@ -398,10 +410,70 @@ final class _CreatorStudioScreenState
               ],
               if (_status != null) ...<Widget>[
                 const SizedBox(height: 12),
-                Text(_status!),
+                Text(
+                  _status!,
+                  style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+                ),
               ],
             ],
           ),
+        ),
+        const SizedBox(height: 16),
+        ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: EdgeInsets.zero,
+          title: Text(
+            'Technical checklist',
+            style: SyloraTokens.title(18),
+          ),
+          subtitle: Text(
+            _goLiveReady
+                ? 'All required checks ready'
+                : 'Preflight, credentials, and OBS details',
+            style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+          ),
+          children: <Widget>[
+            _buildPreflightChecklist(session),
+            const SizedBox(height: 12),
+            LumenSurface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    'Capability probe',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Start with this device uses WebRTC WHIP against MediaMTX. Connect OBS keeps the external encoder path and does not claim TikTok/Kick/Facebook publishing.',
+                  ),
+                  const SizedBox(height: 12),
+                  LumenSecondaryButton(
+                    label: 'Check media capability',
+                    icon: Icons.fact_check_outlined,
+                    onPressed: session == null
+                        ? null
+                        : () => _checkCapability(session),
+                    disabledReason: 'Select a live session first.',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: EdgeInsets.zero,
+          title: Text(
+            'Scenes, guests & overlays',
+            style: SyloraTokens.title(18),
+          ),
+          subtitle: Text(
+            'Optional director tools',
+            style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+          ),
+          children: <Widget>[_buildWaveBSections(session)],
         ),
       ],
     );

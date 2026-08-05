@@ -123,6 +123,7 @@ Future<void> openAuraConversation(
   WidgetRef ref, {
   required String purpose,
   required String title,
+  String? seedMessage,
 }) async {
   try {
     final conversation = await ref
@@ -133,6 +134,9 @@ Future<void> openAuraConversation(
       await context.pushNamed(
         'ai-conversation',
         pathParameters: <String, String>{'id': conversation.id},
+        extra: seedMessage == null || seedMessage.trim().isEmpty
+            ? null
+            : <String, dynamic>{'seedMessage': seedMessage.trim()},
       );
     }
   } on Object catch (error) {
@@ -1846,6 +1850,46 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                   SyloraGlassTile(
                     child: Row(
                       children: <Widget>[
+                        Icon(
+                          snapshot.settings.memoryEnabled
+                              ? Icons.psychology_alt_rounded
+                              : Icons.psychology_alt_outlined,
+                          color: SyloraTokens.champagneDeep,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                l10n.aiMemory,
+                                style: SyloraTokens.title(15),
+                              ),
+                              Text(
+                                snapshot.settings.memoryEnabled
+                                    ? 'Memory is on — Aura can remember what you choose to share.'
+                                    : 'Memory stays off until you enable it.',
+                                style: SyloraTokens.body(
+                                  12.5,
+                                  color: SyloraTokens.inkMute,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch.adaptive(
+                          value: snapshot.settings.memoryEnabled,
+                          onChanged: (enabled) => unawaited(
+                            _toggleMemory(enabled),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SyloraGlassTile(
+                    child: Row(
+                      children: <Widget>[
                         const Icon(
                           Icons.data_usage_rounded,
                           color: SyloraTokens.champagneDeep,
@@ -1986,6 +2030,32 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
     });
   }
 
+  Future<void> _toggleMemory(bool enabled) async {
+    try {
+      await ref.read(aiRepositoryProvider).updateSettings(
+        <String, dynamic>{'memory_enabled': enabled},
+      );
+      ref.invalidate(aiProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              enabled
+                  ? 'Memory enabled — Aura can remember what you share.'
+                  : 'Memory is off again.',
+            ),
+          ),
+        );
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
+    }
+  }
+
   Future<void> _queueAvatar() async {
     final prompt = TextEditingController();
     try {
@@ -2100,11 +2170,15 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
         }
         return;
       }
+      if (!context.mounted) {
+        return;
+      }
       await openAuraConversation(
         context,
         ref,
         purpose: purpose,
         title: title,
+        seedMessage: title,
       );
     } on Object catch (error) {
       if (context.mounted) {
@@ -2432,9 +2506,14 @@ final class _AuraSignalCard extends StatelessWidget {
 }
 
 final class AiConversationScreen extends ConsumerStatefulWidget {
-  const AiConversationScreen({required this.conversationId, super.key});
+  const AiConversationScreen({
+    required this.conversationId,
+    this.seedMessage,
+    super.key,
+  });
 
   final String conversationId;
+  final String? seedMessage;
 
   @override
   ConsumerState<AiConversationScreen> createState() =>
@@ -2456,6 +2535,7 @@ final class _AiConversationScreenState
   bool _voiceBusy = false;
   String? _voiceStatus;
   String? _speakingMessageId;
+  bool _seedAttempted = false;
 
   @override
   void initState() {
@@ -2465,7 +2545,10 @@ final class _AiConversationScreenState
       mode: SyloraAuraPresenceMode.companion,
     );
     _messageFocus.addListener(_syncAuraForFocus);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadVoicePresence());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_loadVoicePresence());
+      _maybeSeedConversation();
+    });
   }
 
   @override
@@ -2494,21 +2577,29 @@ final class _AiConversationScreenState
         _presence?['voice_output_ready'] == true ||
         _presence?['voice_ready'] == true;
     final purpose = conversation.asData?.value.purpose ?? 'general';
-    final conversationHeight = (MediaQuery.sizeOf(context).height - 260).clamp(
-      420.0,
-      820.0,
+    final conversationHeight = (MediaQuery.sizeOf(context).height - 220).clamp(
+      460.0,
+      900.0,
     );
+    final livingEmotion = _sending
+        ? AuraEmotion.thinking
+        : (_streamingText != null
+              ? AuraEmotion.speaking
+              : (_messageFocus.hasFocus
+                    ? AuraEmotion.listening
+                    : AuraEmotion.greeting));
+    final livingLabel = _sending
+        ? 'Думаю…'
+        : (_streamingText != null
+              ? 'Відповідаю…'
+              : (_messageFocus.hasFocus ? 'Слухаю' : 'Поруч'));
     return LumenPage(
       title: _aiPurposeTitle(purpose),
       subtitle: _aiPurposeSubtitle(purpose),
-      header: SyloraUniverseHero(
-        eyebrow: _aiPurposeLabel(purpose).toUpperCase(),
-        title: _aiPurposeTitle(purpose),
-        body: _aiPurposeSubtitle(purpose),
-      ),
+      header: null,
       showAuraDock: false,
-      auraEmotion: _sending ? AuraEmotion.thinking : AuraEmotion.listening,
-      auraLabel: _sending ? 'Думаю…' : 'Слухаю',
+      auraEmotion: livingEmotion,
+      auraLabel: livingLabel,
       showAuraPresence: true,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.ai,
@@ -2517,6 +2608,14 @@ final class _AiConversationScreenState
         height: conversationHeight,
         child: Column(
           children: <Widget>[
+            Center(
+              child: SyloraAura(
+                size: 132,
+                emotion: livingEmotion,
+                label: livingLabel,
+              ),
+            ),
+            const SizedBox(height: 8),
             _AuraVoiceControls(
               consentGranted: consentGranted,
               transcriptionReady: transcriptionReady,
@@ -2639,6 +2738,38 @@ final class _AiConversationScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _maybeSeedConversation() async {
+    final seed = widget.seedMessage?.trim();
+    if (_seedAttempted || seed == null || seed.isEmpty) {
+      return;
+    }
+    _seedAttempted = true;
+    try {
+      final page = await ref.read(
+        aiMessagesProvider(widget.conversationId).future,
+      );
+      if (!mounted || page.items.isNotEmpty || _sending) {
+        return;
+      }
+      final sent = await _sendContent(seed, clearComposer: true);
+      if (!sent && mounted) {
+        _message.text = seed;
+        _message.selection = TextSelection.collapsed(offset: seed.length);
+        _messageFocus.requestFocus();
+        _aura.listen('Можеш надіслати — я слухаю.');
+      }
+    } on Object {
+      if (!mounted) {
+        return;
+      }
+      // Prefill composer if auto-send is blocked (consent/provider/network).
+      _message.text = seed;
+      _message.selection = TextSelection.collapsed(offset: seed.length);
+      _messageFocus.requestFocus();
+      _aura.listen('Можеш надіслати — я слухаю.');
+    }
   }
 
   Future<void> _send() async {
@@ -4166,6 +4297,9 @@ final class LiveScreen extends ConsumerWidget {
     ref.invalidate(liveProvider);
     await _showStreamKey(context, session);
     if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.liveSessionCreatedNext)),
+      );
       await context.pushNamed(
         'live-session',
         pathParameters: <String, String>{'id': session.id},
@@ -4716,7 +4850,16 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
           error: error,
           onRetry: () => ref.invalidate(liveSessionProvider(widget.sessionId)),
         ),
-        data: (session) => Column(
+        data: (session) {
+          final canStart = {'draft', 'preflight'}.contains(session.state);
+          final statusLine = _status ??
+              switch (session.state) {
+                'live' => l10n.liveStatusLiveNow,
+                'ended' => l10n.liveStatusEnded,
+                'preflight' => l10n.liveStatusReadyToStart,
+                _ => l10n.liveStatusOpenStudio,
+              };
+          return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             SyloraUniverseHero(
@@ -4724,69 +4867,122 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
               title: session.title,
               body: session.state == 'live'
                   ? l10n.liveYourStageBody
-                  : l10n.liveNoSessionsBody,
-              trailing: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                  : l10n.liveStartStreamingBody,
+              trailing: SyloraMetricPill(
+                label: l10n.liveTitle,
+                value: session.state,
+                icon: Icons.sensors_rounded,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SyloraGlass(
+              radius: SyloraTokens.radiusXl,
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  SyloraMetricPill(
-                    label: l10n.liveTitle,
-                    value: session.state,
-                    icon: Icons.sensors_rounded,
+                  Text(
+                    l10n.liveStartStreaming,
+                    style: SyloraTokens.title(20),
                   ),
-                  SyloraPortalChip(
-                    label: l10n.liveOpenStudio,
-                    icon: Icons.video_camera_front_outlined,
-                    onTap: () => context.goNamed('creator-studio'),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.liveStartStreamingBody,
+                    style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
                   ),
-                  if ({'draft', 'preflight'}.contains(session.state))
-                    SyloraPortalChip(
-                      label: l10n.liveGoLive,
-                      icon: Icons.play_arrow_rounded,
-                      onTap: () async {
-                        try {
-                          final repo = ref.read(liveRepositoryProvider);
-                          if (session.state == 'draft') {
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: <Widget>[
+                      SyloraPortalChip(
+                        label: '1 · ${l10n.liveStepOpenStudio}',
+                        icon: Icons.video_camera_front_outlined,
+                        onTap: () => context.goNamed('creator-studio'),
+                      ),
+                      SyloraPortalChip(
+                        label: '2 · ${l10n.liveStepPreflight}',
+                        icon: Icons.fact_check_outlined,
+                        onTap: () async {
+                          if (!canStart) {
                             setState(
-                              () => _status =
-                                  'Running preflight before start…',
+                              () => _status = session.state == 'live'
+                                  ? l10n.liveStatusLiveNow
+                                  : l10n.liveStatusEnded,
                             );
-                            final result = await repo.preflight(session.id);
-                            final ready = result['ready'] == true;
-                            if (!ready) {
+                            return;
+                          }
+                          final result = await ref
+                              .read(liveRepositoryProvider)
+                              .preflight(session.id);
+                          setState(
+                            () => _status = (result['ready'] as bool)
+                                ? l10n.livePreflightPassed
+                                : l10n.livePreflightNeedsAttention,
+                          );
+                          ref.invalidate(
+                            liveSessionProvider(widget.sessionId),
+                          );
+                        },
+                      ),
+                      if (canStart)
+                        SyloraPortalChip(
+                          label: '3 · ${l10n.liveStepStart}',
+                          icon: Icons.play_arrow_rounded,
+                          onTap: () async {
+                            try {
+                              final repo = ref.read(liveRepositoryProvider);
+                              if (session.state == 'draft') {
+                                setState(
+                                  () => _status = l10n.livePreflightRunning,
+                                );
+                                final result =
+                                    await repo.preflight(session.id);
+                                final ready = result['ready'] == true;
+                                if (!ready) {
+                                  setState(
+                                    () => _status =
+                                        l10n.livePreflightNeedsAttention,
+                                  );
+                                  ref.invalidate(
+                                    liveSessionProvider(widget.sessionId),
+                                  );
+                                  return;
+                                }
+                              }
+                              await repo.start(session.id);
                               setState(
-                                () => _status =
-                                    'Preflight reported checks that need attention.',
+                                () => _status = l10n.liveSessionStarted,
                               );
                               ref.invalidate(
                                 liveSessionProvider(widget.sessionId),
                               );
-                              return;
+                            } on Object catch (error) {
+                              setState(() => _status = messageFor(error));
                             }
-                          }
-                          await repo.start(session.id);
-                          setState(() => _status = 'Live session started.');
-                          ref.invalidate(
-                            liveSessionProvider(widget.sessionId),
-                          );
-                        } on Object catch (error) {
-                          setState(() => _status = messageFor(error));
-                        }
-                      },
-                    ),
-                  if (session.state == 'live')
-                    SyloraPortalChip(
-                      label: 'End',
-                      icon: Icons.stop_rounded,
-                      onTap: () async {
-                        await ref
-                            .read(liveRepositoryProvider)
-                            .end(session.id);
-                        ref.invalidate(
-                          liveSessionProvider(widget.sessionId),
-                        );
-                      },
-                    ),
+                          },
+                        ),
+                      if (session.state == 'live')
+                        SyloraPortalChip(
+                          label: l10n.liveEndBroadcast,
+                          icon: Icons.stop_rounded,
+                          onTap: () async {
+                            await ref
+                                .read(liveRepositoryProvider)
+                                .end(session.id);
+                            setState(() => _status = l10n.liveStatusEnded);
+                            ref.invalidate(
+                              liveSessionProvider(widget.sessionId),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    statusLine,
+                    style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+                  ),
                 ],
               ),
             ),
@@ -4798,7 +4994,7 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Stage ingest',
+                    l10n.liveStageIngest,
                     style: SyloraTokens.title(18),
                   ),
                   const SizedBox(height: 8),
@@ -4809,7 +5005,7 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Use OBS with this path, or open Creator Studio for browser WHIP when MediaMTX is ready.',
+                    l10n.liveStageIngestHint,
                     style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
                   ),
                   const SizedBox(height: 14),
@@ -4817,36 +5013,20 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: <Widget>[
-                      SyloraPortalChip(
-                        label: 'Preflight',
-                        icon: Icons.fact_check_outlined,
-                        onTap: () async {
-                          final result = await ref
-                              .read(liveRepositoryProvider)
-                              .preflight(session.id);
-                          setState(
-                            () => _status = (result['ready'] as bool)
-                                ? 'Preflight passed.'
-                                : 'Preflight reported checks that need attention.',
-                          );
-                          ref.invalidate(liveSessionProvider(widget.sessionId));
-                        },
-                      ),
                       if (session.shareWatchUrl != null)
                         SyloraPortalChip(
-                          label: 'Share watch link',
+                          label: l10n.liveShareWatchLink,
                           icon: Icons.ios_share_rounded,
                           onTap: () async {
                             final url = session.shareWatchUrl!;
                             await Clipboard.setData(ClipboardData(text: url));
                             setState(
-                              () => _status =
-                                  'Watch link copied. Friends open it in a browser.',
+                              () => _status = l10n.liveWatchLinkCopied,
                             );
                           },
                         ),
                       SyloraPortalChip(
-                        label: 'Rotate stream key',
+                        label: l10n.liveRotateStreamKey,
                         icon: Icons.key_rounded,
                         onTap: () async {
                           final result = await ref
@@ -4858,7 +5038,7 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                               context: context,
                               barrierDismissible: false,
                               builder: (context) => AlertDialog(
-                                title: const Text('New reveal-once key'),
+                                title: Text(l10n.liveCopyStreamKey),
                                 content: SelectableText(
                                   key,
                                   style: const TextStyle(
@@ -4876,7 +5056,7 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                                       }
                                     },
                                     icon: const Icon(Icons.copy_rounded),
-                                    label: const Text('Copy and close'),
+                                    label: Text(l10n.liveCopyClose),
                                   ),
                                 ],
                               ),
@@ -4886,13 +5066,6 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                       ),
                     ],
                   ),
-                  if (_status != null) ...<Widget>[
-                    const SizedBox(height: 12),
-                    Text(
-                      _status!,
-                      style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -5115,7 +5288,8 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
               ),
             ),
           ],
-        ),
+        );
+        },
       ),
     );
   }

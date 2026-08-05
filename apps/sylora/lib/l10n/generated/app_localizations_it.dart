@@ -1624,4 +1624,78 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get liveNoGuestInvites =>
       'No incoming guest invitations. Host invites will appear here.';
+
+  @override
+  String get liveStartStreaming => 'Start streaming';
+
+  @override
+  String get liveStartStreamingBody =>
+      'One clear path: open Studio, run preflight, then start the broadcast.';
+
+  @override
+  String get liveStepOpenStudio => 'Open Studio';
+
+  @override
+  String get liveStepPreflight => 'Preflight';
+
+  @override
+  String get liveStepStart => 'Start';
+
+  @override
+  String get liveStatusOpenStudio =>
+      'Next: open Creator Studio to preview and publish WHIP.';
+
+  @override
+  String get liveStatusRunPreflight =>
+      'Next: run preflight, then start when checks pass.';
+
+  @override
+  String get liveStatusReadyToStart =>
+      'Preflight passed — tap Start when your ingest is ready.';
+
+  @override
+  String get liveStatusLiveNow => 'You are live. End when the stage is done.';
+
+  @override
+  String get liveStatusEnded => 'Session ended.';
+
+  @override
+  String get liveStartBroadcast => 'Start';
+
+  @override
+  String get liveEndBroadcast => 'End';
+
+  @override
+  String get liveStageIngest => 'Stage ingest';
+
+  @override
+  String get liveStageIngestHint =>
+      'Use OBS with this path, or open Creator Studio for browser WHIP when MediaMTX is ready.';
+
+  @override
+  String get liveShareWatchLink => 'Share watch link';
+
+  @override
+  String get liveRotateStreamKey => 'Rotate stream key';
+
+  @override
+  String get liveWatchLinkCopied =>
+      'Watch link copied. Friends open it in a browser.';
+
+  @override
+  String get livePreflightPassed => 'Preflight passed.';
+
+  @override
+  String get livePreflightNeedsAttention =>
+      'Preflight reported checks that need attention.';
+
+  @override
+  String get livePreflightRunning => 'Running preflight before start…';
+
+  @override
+  String get liveSessionStarted => 'Live session started.';
+
+  @override
+  String get liveSessionCreatedNext =>
+      'Session ready — open Studio, run preflight, then Start.';
 }

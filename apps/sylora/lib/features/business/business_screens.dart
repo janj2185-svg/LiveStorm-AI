@@ -52,25 +52,94 @@ final class BusinessScreen extends ConsumerWidget {
       value: ref.watch(_workspacesProvider),
       onRetry: () => ref.invalidate(_workspacesProvider),
       data: (workspaces) => workspaces.isEmpty
-          ? LumenEmptyView(
-              title: 'No business workspaces',
-              message: 'The workspace API returned no tenant memberships.',
-              actionLabel: 'Create workspace',
-              onAction: () => _createWorkspace(context, ref),
-              icon: Icons.business_outlined,
+          ? SyloraStaggeredReveal(
+              index: 0,
+              child: SyloraGlass(
+                radius: SyloraTokens.radiusXl,
+                padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+                child: Column(
+                  children: <Widget>[
+                    SyloraPulseGlow(
+                      color: SyloraTokens.petal,
+                      child: SyloraAura(
+                        size: 112,
+                        emotion: AuraEmotion.listening,
+                        label: 'Aura',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No workspaces yet',
+                      style: SyloraTokens.display(28),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create a tenant workspace for CRM, ops, and finance — or ask Aura as your business co-pilot.',
+                      style: SyloraTokens.body(15, color: SyloraTokens.inkSoft),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 18),
+                    SyloraButton(
+                      label: 'Create workspace',
+                      icon: Icons.add_business_rounded,
+                      onPressed: () => _createWorkspace(context, ref),
+                    ),
+                    const SizedBox(height: 10),
+                    SyloraPortalChip(
+                      label: 'Talk to Aura Business',
+                      icon: Icons.auto_awesome_rounded,
+                      onTap: () => openAuraConversation(
+                        context,
+                        ref,
+                        purpose: 'business_copilot',
+                        title: 'Business Copilot',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             )
           : Column(
               children: <Widget>[
-                for (final workspace in workspaces)
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.business_outlined),
-                      title: Text(workspace.name),
-                      subtitle: Text(
-                        '/${workspace.slug} • ${workspace.type} • ${workspace.currency}',
+                for (var i = 0; i < workspaces.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SyloraStaggeredReveal(
+                      index: i,
+                      child: SyloraGlassTile(
+                        onTap: () =>
+                            _openWorkspace(context, ref, workspaces[i]),
+                        child: Row(
+                          children: <Widget>[
+                            const Icon(
+                              Icons.business_outlined,
+                              color: SyloraTokens.violet,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    workspaces[i].name,
+                                    style: SyloraTokens.title(16),
+                                  ),
+                                  Text(
+                                    '/${workspaces[i].slug} • ${workspaces[i].type} • ${workspaces[i].currency}',
+                                    style: SyloraTokens.body(
+                                      13,
+                                      color: SyloraTokens.inkMute,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            LumenBadge(label: workspaces[i].status),
+                            const Icon(Icons.chevron_right_rounded),
+                          ],
+                        ),
                       ),
-                      trailing: LumenBadge(label: workspace.status),
-                      onTap: () => _openWorkspace(context, ref, workspace),
                     ),
                   ),
               ],

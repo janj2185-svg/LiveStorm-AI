@@ -465,11 +465,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/ai/conversations/:id',
         name: 'ai-conversation',
-        pageBuilder: (context, state) => _page(
-          state,
-          AiConversationScreen(conversationId: state.pathParameters['id']!),
-          reducedMotion,
-        ),
+        pageBuilder: (context, state) {
+          final extra = state.extra;
+          String? seedMessage;
+          if (extra is Map) {
+            final raw = extra['seedMessage'];
+            if (raw is String && raw.trim().isNotEmpty) {
+              seedMessage = raw.trim();
+            }
+          }
+          return _page(
+            state,
+            AiConversationScreen(
+              conversationId: state.pathParameters['id']!,
+              seedMessage: seedMessage,
+            ),
+            reducedMotion,
+          );
+        },
       ),
       GoRoute(
         path: '/ai/memory',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../core/api.dart';
@@ -810,8 +811,8 @@ final class _TrackList extends StatelessWidget {
       return LumenEmptyView(
         title: emptyTitle,
         message: emptyMessage,
-        actionLabel: 'Refresh',
-        onAction: () {},
+        actionLabel: 'Talk to Aura',
+        onAction: () => context.goNamed('ai'),
         icon: Icons.library_music_outlined,
       );
     }

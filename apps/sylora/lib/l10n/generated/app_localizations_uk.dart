@@ -1617,4 +1617,77 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get liveNoGuestInvites =>
       'Немає вхідних запрошень гостей. Запрошення від хоста з’являться тут.';
+
+  @override
+  String get liveStartStreaming => 'Почати стрім';
+
+  @override
+  String get liveStartStreamingBody =>
+      'Один шлях: відкрий Studio, пройди preflight, потім стартуй ефір.';
+
+  @override
+  String get liveStepOpenStudio => 'Відкрити Studio';
+
+  @override
+  String get liveStepPreflight => 'Preflight';
+
+  @override
+  String get liveStepStart => 'Старт';
+
+  @override
+  String get liveStatusOpenStudio =>
+      'Далі: відкрий Creator Studio для превʼю та WHIP.';
+
+  @override
+  String get liveStatusRunPreflight => 'Далі: пройди preflight, потім стартуй.';
+
+  @override
+  String get liveStatusReadyToStart =>
+      'Preflight пройдено — натисни Старт, коли ingest готовий.';
+
+  @override
+  String get liveStatusLiveNow => 'Ти в ефірі. Заверши, коли сцена закінчена.';
+
+  @override
+  String get liveStatusEnded => 'Сесію завершено.';
+
+  @override
+  String get liveStartBroadcast => 'Старт';
+
+  @override
+  String get liveEndBroadcast => 'Завершити';
+
+  @override
+  String get liveStageIngest => 'Ingest сцени';
+
+  @override
+  String get liveStageIngestHint =>
+      'Використай OBS із цим шляхом або Creator Studio для WHIP у браузері, коли MediaMTX готовий.';
+
+  @override
+  String get liveShareWatchLink => 'Поділитись посиланням';
+
+  @override
+  String get liveRotateStreamKey => 'Оновити ключ стріму';
+
+  @override
+  String get liveWatchLinkCopied =>
+      'Посилання скопійовано. Друзі відкривають його в браузері.';
+
+  @override
+  String get livePreflightPassed => 'Preflight пройдено.';
+
+  @override
+  String get livePreflightNeedsAttention =>
+      'Preflight виявив перевірки, що потребують уваги.';
+
+  @override
+  String get livePreflightRunning => 'Запускаємо preflight перед стартом…';
+
+  @override
+  String get liveSessionStarted => 'Live-сесію розпочато.';
+
+  @override
+  String get liveSessionCreatedNext =>
+      'Сесія готова — відкрий Studio, пройди preflight, потім Старт.';
 }

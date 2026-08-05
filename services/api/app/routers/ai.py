@@ -77,6 +77,7 @@ from app.ai_service import (
     delete_memories,
     event_response,
     execute_proposal,
+    infer_aura_emotion,
     invoke_moderation,
     invoke_transcription,
     invoke_translation,
@@ -231,25 +232,16 @@ async def get_aura_presence(
         .order_by(AIMessage.created_at.desc())
         .limit(1)
     )
-    emotion: str = "greeting" if latest is None else "focused"
-    mood = "Ready to help"
-    if latest is not None:
-        content = (getattr(latest, "content", None) or "").lower()
-        if latest.role.value == "assistant":
-            emotion = "speaking"
-            mood = "Speaking with you"
-        elif any(word in content for word in ("why", "how", "explain", "чому", "як")):
-            emotion = "thoughtful"
-            mood = "Thinking with you"
-        elif any(word in content for word in ("thanks", "дякую", "love", "great")):
-            emotion = "delighted"
-            mood = "Glad that landed"
-        elif any(word in content for word in ("help", "stuck", "problem", "допоможи")):
-            emotion = "supportive"
-            mood = "Here with you"
-        else:
-            emotion = "listening"
-            mood = "Listening closely"
+    emotion: str
+    mood: str
+    if latest is None:
+        emotion, mood = infer_aura_emotion(role=None, content=None)
+    else:
+        emotion, mood = infer_aura_emotion(
+            role=getattr(getattr(latest, "role", None), "value", None)
+            or str(getattr(latest, "role", "")),
+            content=getattr(latest, "content", None),
+        )
 
     registry = _registry(request)
     voice_output_ready = False

@@ -407,17 +407,17 @@ final class _AuraCompanionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = SizedBox(
-      width: 236,
+      width: 268,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.bottomRight,
         children: <Widget>[
           Positioned(
-            right: 88,
-            bottom: 28,
+            right: 108,
+            bottom: 36,
             child: IgnorePointer(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 148),
+                constraints: const BoxConstraints(maxWidth: 158),
                 child: SyloraGlass(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -457,7 +457,7 @@ final class _AuraCompanionCard extends StatelessWidget {
               child: Semantics(
                 button: true,
                 label: 'Aura',
-                child: SyloraAura(size: 96, emotion: emotion, label: 'Aura'),
+                child: SyloraAura(size: 128, emotion: emotion, label: 'Aura'),
               ),
             ),
           ),

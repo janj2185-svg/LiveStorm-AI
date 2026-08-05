@@ -694,6 +694,65 @@ class ScheduleExportToolInput(StrictSchema):
     scope: Literal["ai_memory", "account_data"] = "account_data"
 
 
+class SummarizeLiveChatToolInput(StrictSchema):
+    """Draft a chat summary for the host — never posts to TikTok or other platforms."""
+
+    session_id: uuid.UUID | None = None
+    chat_excerpt: str | None = Field(default=None, min_length=1, max_length=20_000)
+    max_messages: int = Field(default=40, ge=5, le=100)
+
+    _excerpt = field_validator("chat_excerpt")(
+        lambda value: validate_plain_text(value) if value else value
+    )
+
+    @model_validator(mode="after")
+    def require_source(self) -> SummarizeLiveChatToolInput:
+        if self.session_id is None and not self.chat_excerpt:
+            raise ValueError("session_id or chat_excerpt is required")
+        return self
+
+
+class DraftLiveReplyToolInput(StrictSchema):
+    """Draft a reply the host can copy/send — never auto-posts to live platforms."""
+
+    session_id: uuid.UUID | None = None
+    chat_message: str | None = Field(default=None, min_length=1, max_length=2_000)
+    viewer_name: str | None = Field(default=None, min_length=1, max_length=120)
+    tone: Literal["warm", "witty", "grateful", "calm"] = "warm"
+    language: str | None = Field(default=None, min_length=2, max_length=16)
+
+    _message = field_validator("chat_message")(
+        lambda value: validate_plain_text(value) if value else value
+    )
+    _viewer = field_validator("viewer_name")(
+        lambda value: validate_plain_text(value) if value else value
+    )
+
+    @model_validator(mode="after")
+    def require_source(self) -> DraftLiveReplyToolInput:
+        if self.session_id is None and not self.chat_message:
+            raise ValueError("session_id or chat_message is required")
+        return self
+
+
+class SuggestLiveTitleToolInput(StrictSchema):
+    """Suggest a Live title for the host to review — never renames the platform stream."""
+
+    session_id: uuid.UUID | None = None
+    topic: str | None = Field(default=None, min_length=1, max_length=500)
+    language: str | None = Field(default=None, min_length=2, max_length=16)
+
+    _topic = field_validator("topic")(
+        lambda value: validate_plain_text(value) if value else value
+    )
+
+    @model_validator(mode="after")
+    def require_source(self) -> SuggestLiveTitleToolInput:
+        if self.session_id is None and not self.topic:
+            raise ValueError("session_id or topic is required")
+        return self
+
+
 class ToolActionResponse(StrictSchema):
     proposal: AIToolProposalResponse
     execution_id: uuid.UUID | None = None

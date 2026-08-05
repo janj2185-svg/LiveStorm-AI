@@ -187,13 +187,14 @@ final class FakeAiRepository implements AiRepository {
   FakeAiRepository({required this.consent, required this.chatAvailable});
 
   bool consent;
+  bool memoryEnabled = false;
   final bool chatAvailable;
   int settingsUpdates = 0;
 
   @override
   Future<AiSettingsModel> settings() async => AiSettingsModel(
     consentGranted: consent,
-    memoryEnabled: false,
+    memoryEnabled: memoryEnabled,
     preferredLocale: 'en',
     capabilityFlags: const <String, bool>{},
   );
@@ -210,6 +211,7 @@ final class FakeAiRepository implements AiRepository {
   Future<AiSettingsModel> updateSettings(JsonObject patch) async {
     settingsUpdates += 1;
     consent = patch['consent_granted'] as bool? ?? consent;
+    memoryEnabled = patch['memory_enabled'] as bool? ?? memoryEnabled;
     return settings();
   }
 

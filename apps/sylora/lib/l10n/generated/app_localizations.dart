@@ -3115,6 +3115,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No incoming guest invitations. Host invites will appear here.'**
   String get liveNoGuestInvites;
+
+  /// No description provided for @liveStartStreaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Start streaming'**
+  String get liveStartStreaming;
+
+  /// No description provided for @liveStartStreamingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'One clear path: open Studio, run preflight, then start the broadcast.'**
+  String get liveStartStreamingBody;
+
+  /// No description provided for @liveStepOpenStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Studio'**
+  String get liveStepOpenStudio;
+
+  /// No description provided for @liveStepPreflight.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight'**
+  String get liveStepPreflight;
+
+  /// No description provided for @liveStepStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get liveStepStart;
+
+  /// No description provided for @liveStatusOpenStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: open Creator Studio to preview and publish WHIP.'**
+  String get liveStatusOpenStudio;
+
+  /// No description provided for @liveStatusRunPreflight.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: run preflight, then start when checks pass.'**
+  String get liveStatusRunPreflight;
+
+  /// No description provided for @liveStatusReadyToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight passed — tap Start when your ingest is ready.'**
+  String get liveStatusReadyToStart;
+
+  /// No description provided for @liveStatusLiveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'You are live. End when the stage is done.'**
+  String get liveStatusLiveNow;
+
+  /// No description provided for @liveStatusEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Session ended.'**
+  String get liveStatusEnded;
+
+  /// No description provided for @liveStartBroadcast.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get liveStartBroadcast;
+
+  /// No description provided for @liveEndBroadcast.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get liveEndBroadcast;
+
+  /// No description provided for @liveStageIngest.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage ingest'**
+  String get liveStageIngest;
+
+  /// No description provided for @liveStageIngestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use OBS with this path, or open Creator Studio for browser WHIP when MediaMTX is ready.'**
+  String get liveStageIngestHint;
+
+  /// No description provided for @liveShareWatchLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share watch link'**
+  String get liveShareWatchLink;
+
+  /// No description provided for @liveRotateStreamKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate stream key'**
+  String get liveRotateStreamKey;
+
+  /// No description provided for @liveWatchLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch link copied. Friends open it in a browser.'**
+  String get liveWatchLinkCopied;
+
+  /// No description provided for @livePreflightPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight passed.'**
+  String get livePreflightPassed;
+
+  /// No description provided for @livePreflightNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight reported checks that need attention.'**
+  String get livePreflightNeedsAttention;
+
+  /// No description provided for @livePreflightRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running preflight before start…'**
+  String get livePreflightRunning;
+
+  /// No description provided for @liveSessionStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Live session started.'**
+  String get liveSessionStarted;
+
+  /// No description provided for @liveSessionCreatedNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Session ready — open Studio, run preflight, then Start.'**
+  String get liveSessionCreatedNext;
 }
 
 class _AppLocalizationsDelegate

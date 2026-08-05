@@ -214,8 +214,13 @@ async def test_stand_facebook_and_tiktok_login_without_idp_secrets(api_factory: 
         stand = await api.client.get("/v1/public/stand-status")
         assert stand.status_code == 200
         features = stand.json()["features"]
-        assert features["facebook_login"]["status"] == "READY"
-        assert features["tiktok_login"]["status"] == "READY"
+        # Login IdPs on the stand are Google / Apple / Email only —
+        # Facebook and TikTok are Live destinations, not consumer login.
+        assert "facebook_login" not in features
+        assert "tiktok_login" not in features
+        assert features["email_login"]["status"] == "READY"
+        assert features["google_login"]["status"] in {"READY", "BLOCKED"}
+        assert features["apple_login"]["status"] in {"READY", "BLOCKED"}
 
 
 @pytest.mark.asyncio
