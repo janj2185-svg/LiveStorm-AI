@@ -4559,16 +4559,62 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                         onPressed:
                             {'draft', 'preflight'}.contains(session.state)
                             ? () async {
-                                await ref
-                                    .read(liveRepositoryProvider)
-                                    .start(session.id);
-                                ref.invalidate(
-                                  liveSessionProvider(widget.sessionId),
-                                );
+                                try {
+                                  final repo = ref.read(
+                                    liveRepositoryProvider,
+                                  );
+                                  if (session.state == 'draft') {
+                                    setState(
+                                      () => _status =
+                                          'Running preflight before start…',
+                                    );
+                                    final result = await repo.preflight(
+                                      session.id,
+                                    );
+                                    final ready = result['ready'] == true;
+                                    if (!ready) {
+                                      setState(
+                                        () => _status =
+                                            'Preflight reported checks that need attention.',
+                                      );
+                                      ref.invalidate(
+                                        liveSessionProvider(widget.sessionId),
+                                      );
+                                      return;
+                                    }
+                                  }
+                                  await repo.start(session.id);
+                                  setState(() => _status = 'Live session started.');
+                                  ref.invalidate(
+                                    liveSessionProvider(widget.sessionId),
+                                  );
+                                } on Object catch (error) {
+                                  setState(
+                                    () => _status = messageFor(error),
+                                  );
+                                }
                               }
                             : null,
                         disabledReason:
                             'Start is available only after draft or preflight.',
+                      ),
+                      LumenSecondaryButton(
+                        label: 'Share watch link',
+                        icon: Icons.ios_share_rounded,
+                        onPressed: session.shareWatchUrl == null
+                            ? null
+                            : () async {
+                                final url = session.shareWatchUrl!;
+                                await Clipboard.setData(
+                                  ClipboardData(text: url),
+                                );
+                                setState(
+                                  () => _status =
+                                      'Watch link copied. Friends open it in a browser.',
+                                );
+                              },
+                        disabledReason:
+                            'Watch link appears after MediaMTX playback is configured.',
                       ),
                       LumenSecondaryButton(
                         label: 'End',

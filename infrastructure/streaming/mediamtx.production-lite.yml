@@ -1,0 +1,80 @@
+# Memory-conscious MediaMTX for the public test stand (CX22 ~4GB).
+# - No recording (saves disk + RAM)
+# - Anonymous publish/read for WHIP/HLS behind HTTPS nginx
+#   (Authorization headers are stripped at the edge so Bearer JWTs do not
+#   collide with authInternalUsers; control API stays on the Docker network)
+# - API user is injected via MTX_AUTHINTERNALUSERS_0_* env at runtime
+# - WebRTC ICE advertises the host public IP (Cloudflare proxies HTTPS only)
+
+logLevel: info
+logDestinations:
+  - stdout
+readTimeout: 10s
+writeTimeout: 10s
+writeQueueSize: 512
+
+authMethod: internal
+authInternalUsers:
+  - user: disabled-operator-without-runtime-secret
+    pass: sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    ips: []
+    permissions:
+      - action: api
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+      - action: read
+      - action: playback
+      - action: metrics
+
+api: true
+apiAddress: :9997
+apiEncryption: false
+apiAllowOrigins:
+  - "*"
+
+metrics: true
+metricsAddress: :9998
+metricsEncryption: false
+
+playback: false
+
+rtsp: false
+
+rtmp: true
+rtmpAddress: :1935
+rtmpEncryption: "no"
+
+hls: true
+hlsAddress: :8888
+hlsEncryption: false
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsAllowOrigins:
+  - "*"
+
+webrtc: true
+webrtcAddress: :8889
+webrtcEncryption: false
+webrtcAllowOrigins:
+  - "*"
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts:
+  - 127.0.0.1
+webrtcICEServers2: []
+
+srt: false
+
+pathDefaults:
+  source: publisher
+  overridePublisher: true
+  record: false
+
+paths:
+  all_others:

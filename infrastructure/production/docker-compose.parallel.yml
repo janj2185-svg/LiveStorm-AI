@@ -53,6 +53,15 @@ x-api-env-parallel: &api-env-parallel
   API_WORKERS: "${API_WORKERS:-1}"
   API_LOG_LEVEL: "${API_LOG_LEVEL:-info}"
   LOG_FORMAT: json
+  # Media plane (MediaMTX lite). Control stays on the Compose network.
+  MEDIAMTX_CONTROL_URL: "${MEDIAMTX_CONTROL_URL:-http://mediamtx:9997}"
+  MEDIAMTX_CONTROL_USERNAME: "${MEDIAMTX_CONTROL_USERNAME:-}"
+  MEDIAMTX_CONTROL_PASSWORD: "${MEDIAMTX_CONTROL_PASSWORD:-}"
+  MEDIAMTX_WHIP_BASE_URL: "${MEDIAMTX_WHIP_BASE_URL:-https://${DOMAIN}/webrtc}"
+  MEDIAMTX_PLAYBACK_BASE_URL: "${MEDIAMTX_PLAYBACK_BASE_URL:-https://${DOMAIN}/hls}"
+  TURN_URLS: "${TURN_URLS:-[]}"
+  TURN_USERNAME: "${TURN_USERNAME:-}"
+  TURN_CREDENTIAL: "${TURN_CREDENTIAL:-}"
 
 services:
   # Keep edge/HA/backup services out of the parallel validation profile set.
@@ -80,6 +89,8 @@ services:
         condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
+      mediamtx:
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -88,6 +99,31 @@ services:
   migrate:
     environment:
       <<: *api-env-parallel
+
+  # Lite MediaMTX for browser WHIP + HLS watch (no coturn/recording).
+  # UDP/TCP 8189 must be reachable on the host public IP for WebRTC ICE
+  # (Cloudflare only proxies HTTPS signaling on :443).
+  mediamtx:
+    image: bluenviron/mediamtx:1.19.3-ffmpeg
+    restart: unless-stopped
+    environment:
+      MTX_AUTHINTERNALUSERS_0_USER: "${MEDIAMTX_CONTROL_USERNAME:-sylora_mtx}"
+      MTX_AUTHINTERNALUSERS_0_PASS: "${MEDIAMTX_CONTROL_PASSWORD:-changeme}"
+      MTX_WEBRTCADDITIONALHOSTS: "${MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS:-46.225.84.210}"
+    volumes:
+      - ../streaming/mediamtx.production-lite.yml:/mediamtx.yml:ro
+    ports:
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:8889:8889"
+      - "0.0.0.0:8189:8189/udp"
+      - "0.0.0.0:8189:8189/tcp"
+      - "127.0.0.1:1935:1935"
+    networks:
+      - application
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   postgres:
     command:

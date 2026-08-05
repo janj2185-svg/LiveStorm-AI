@@ -844,6 +844,9 @@ final class LiveSessionModel {
     this.bgmPlaylistId,
     this.destinations = const <LiveDestinationModel>[],
     this.replay,
+    this.playbackUrl,
+    this.whepUrl,
+    this.watchHlsUrl,
   });
 
   factory LiveSessionModel.fromJson(JsonObject json) => LiveSessionModel(
@@ -868,6 +871,9 @@ final class LiveSessionModel {
         : LiveReplayModel.fromJson(
             requireObject(json['replay'], 'live replay'),
           ),
+    playbackUrl: optionalString(json, 'playback_url'),
+    whepUrl: optionalString(json, 'whep_url'),
+    watchHlsUrl: optionalString(json, 'watch_hls_url'),
   );
 
   final String id;
@@ -881,6 +887,18 @@ final class LiveSessionModel {
   final String? bgmPlaylistId;
   final List<LiveDestinationModel> destinations;
   final LiveReplayModel? replay;
+  final String? playbackUrl;
+  final String? whepUrl;
+  final String? watchHlsUrl;
+
+  /// Friend-share URL that opens the public HLS watch page.
+  String? get shareWatchUrl {
+    final hls = watchHlsUrl;
+    if (hls == null || hls.isEmpty) {
+      return null;
+    }
+    return 'https://getsylora.com/watch.html?src=${Uri.encodeComponent(hls)}';
+  }
 }
 
 @immutable

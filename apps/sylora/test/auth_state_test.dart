@@ -108,6 +108,9 @@ final class _FakeAuthRepository implements AuthRepository {
   Future<UserAccount?> restore() async => restoredUser;
 
   @override
+  Future<UserAccount> currentUser() async => restoredUser ?? user;
+
+  @override
   Future<LoginResult> login({
     required String email,
     required String password,

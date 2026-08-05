@@ -558,14 +558,31 @@ final class _CreatorStudioScreenState
               LumenPrimaryButton(
                 label: session?.state == 'live' ? 'Live now' : 'Go live',
                 icon: Icons.sensors_rounded,
-                busy: _busy,
-                onPressed: sessionCanStart && _goLiveReady && !_preflightBusy
-                    ? () => _goLive(session)
+                busy: _busy || _preflightBusy,
+                onPressed: session != null &&
+                        {'draft', 'preflight'}.contains(session.state) &&
+                        !_busy &&
+                        !_preflightBusy
+                    ? () => _oneTapGoLive(session)
                     : null,
-                disabledReason: sessionCanStart
-                    ? 'Complete preflight and connect a publishing path first.'
-                    : 'Select a draft or preflighted session.',
+                disabledReason: session == null
+                    ? 'Select a live session first.'
+                    : 'Session must be draft or preflight to go live.',
               ),
+              if (session?.shareWatchUrl case final shareUrl?)
+                LumenSecondaryButton(
+                  label: 'Copy watch link',
+                  icon: Icons.ios_share_rounded,
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: shareUrl));
+                    if (mounted) {
+                      setState(
+                        () => _status =
+                            'Watch link copied — send it to friends.',
+                      );
+                    }
+                  },
+                ),
             ],
           ),
         ],
@@ -1866,6 +1883,86 @@ final class _CreatorStudioScreenState
     } finally {
       if (mounted) {
         setState(() => _busy = false);
+      }
+    }
+  }
+
+  /// One-tap path for the public stand: preflight → WHIP publish → start.
+  Future<void> _oneTapGoLive(LiveSessionModel session) async {
+    setState(() {
+      _busy = true;
+      _preflightBusy = true;
+      _status = 'Preparing go-live…';
+    });
+    _aura.think('Aura is preparing your go-live.');
+    try {
+      final repository = ref.read(liveRepositoryProvider);
+      await _loadMediaPreferences();
+      final values = await Future.wait<JsonObject>(<Future<JsonObject>>[
+        repository.preflight(session.id),
+        repository.mediaCapability(session.id),
+        repository.publishCredentials(session.id),
+      ]);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _serverPreflight = values[0];
+        _capability = values[1];
+        _credentials = values[2];
+      });
+      if (!_serverPreflightReady || !_credentialsReady) {
+        setState(() {
+          _status =
+              'Preflight blocked go-live. Fix the checklist items and try again.';
+        });
+        return;
+      }
+      await _pauseAppAudioForLiveInput();
+      if (!_publisher.hasVideoTrack || !_publisher.hasAudioTrack) {
+        await _publisher.startPreview(
+          audioDeviceId: _audioDeviceId,
+          videoDeviceId: _videoDeviceId,
+        );
+      }
+      final credentials = _credentials;
+      if (credentials == null) {
+        setState(() => _status = 'Publish credentials missing after preflight.');
+        return;
+      }
+      if (!_browserPublishing) {
+        final message = await _publisher.publishWhip(credentials);
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _browserPublishing = true;
+          _status = message;
+        });
+      }
+      final started = await repository.start(session.id);
+      if (!mounted) {
+        return;
+      }
+      final share = started.shareWatchUrl;
+      setState(() {
+        _status = share == null
+            ? '${started.title} is live.'
+            : '${started.title} is live. Share: $share';
+      });
+      ref.invalidate(creatorStudioSessionsProvider);
+      _aura.speak('You are live. Share the watch link with friends.');
+      if (share != null) {
+        await Clipboard.setData(ClipboardData(text: share));
+      }
+    } on Object catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _preflightBusy = false;
+        });
       }
     }
   }

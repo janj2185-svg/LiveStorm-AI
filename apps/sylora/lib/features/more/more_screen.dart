@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../design/sylora.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -220,6 +223,7 @@ final class MoreScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
+          const _TestStandRolePanel(),
           Text(
             l10n.moreQuickActions,
             style: SyloraTokens.label(11, color: SyloraTokens.ion),
@@ -412,3 +416,126 @@ String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
   MoreEntryKind.mediaSettings => 'Camera & Audio',
   MoreEntryKind.settings => l10n.moreSettings,
 };
+
+final class _TestStandRolePanel extends ConsumerStatefulWidget {
+  const _TestStandRolePanel();
+
+  @override
+  ConsumerState<_TestStandRolePanel> createState() =>
+      _TestStandRolePanelState();
+}
+
+final class _TestStandRolePanelState
+    extends ConsumerState<_TestStandRolePanel> {
+  bool _standEnabled = false;
+  bool _loading = true;
+  bool _busy = false;
+  String? _status;
+
+  static const _roles = <String>['creator', 'streamer', 'viewer', 'user'];
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadStand());
+  }
+
+  Future<void> _loadStand() async {
+    try {
+      final response = await ref
+          .read(apiClientProvider)
+          .request(
+            'public/stand-status',
+            authentication: false,
+            refreshOnUnauthorized: false,
+          );
+      final body = requireObject(response.data, 'stand status');
+      final stand = requireObject(body['stand'], 'stand');
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _standEnabled = stand['enabled'] == true;
+        _loading = false;
+      });
+    } on Object {
+      if (mounted) {
+        setState(() {
+          _standEnabled = false;
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _assume(String role) async {
+    setState(() {
+      _busy = true;
+      _status = 'Switching to $role…';
+    });
+    try {
+      await ref
+          .read(apiClientProvider)
+          .request('test-stand/assume-role/$role', method: 'POST');
+      await ref.read(authControllerProvider.notifier).refreshMe();
+      if (mounted) {
+        setState(() => _status = 'Role set to $role. Live tools unlocked.');
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _status = messageFor(error));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading || !_standEnabled) {
+      return const SizedBox.shrink();
+    }
+    final roles =
+        ref.watch(authControllerProvider).user?.roles ?? const <String>[];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SyloraTokens.space5),
+      child: SyloraGlass(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              'Public stand · go-live role',
+              style: SyloraTokens.title(16),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Pick creator or streamer before hosting. Current: ${roles.isEmpty ? 'none' : roles.join(', ')}',
+              style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final role in _roles)
+                  LumenSecondaryButton(
+                    label: role,
+                    icon: role == 'creator' || role == 'streamer'
+                        ? Icons.podcasts_rounded
+                        : Icons.person_outline_rounded,
+                    onPressed: _busy ? null : () => _assume(role),
+                  ),
+              ],
+            ),
+            if (_status != null) ...<Widget>[
+              const SizedBox(height: 8),
+              Text(_status!, style: SyloraTokens.body(12)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

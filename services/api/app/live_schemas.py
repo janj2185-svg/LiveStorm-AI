@@ -349,6 +349,10 @@ class LiveSessionResponse(ORMStrictSchema):
     updated_at: datetime
     destinations: list[LiveDestinationResponse] = Field(default_factory=list)
     replay: LiveReplayResponse | None = None
+    # Public watch URLs when MediaMTX playback/WHIP bases are configured.
+    playback_url: str | None = None
+    whep_url: str | None = None
+    watch_hls_url: str | None = None
 
 
 class LiveSessionCreated(LiveSessionResponse):

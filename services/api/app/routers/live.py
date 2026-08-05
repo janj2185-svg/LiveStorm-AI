@@ -248,9 +248,17 @@ def guest_invite_response(
     return LiveGuestInviteResponse(**payload)
 
 
-async def session_response(db: AsyncSession, record: LiveSession) -> LiveSessionResponse:
+async def session_response(
+    db: AsyncSession,
+    record: LiveSession,
+    settings: Settings | None = None,
+) -> LiveSessionResponse:
     destinations = await session_destinations(db, record.id)
     replay = await latest_session_replay(db, record.id)
+    resolved = settings or get_settings()
+    playback = media_playback_url(resolved, record.ingest_path)
+    whep = media_whep_url(resolved, record.ingest_path)
+    watch_hls = f"{playback.rstrip('/')}/index.m3u8" if playback else None
     return LiveSessionResponse(
         id=record.id,
         owner_user_id=record.owner_user_id,
@@ -274,6 +282,9 @@ async def session_response(db: AsyncSession, record: LiveSession) -> LiveSession
         updated_at=record.updated_at,
         destinations=[LiveDestinationResponse.model_validate(item) for item in destinations],
         replay=LiveReplayResponse.model_validate(replay) if replay else None,
+        playback_url=playback,
+        whep_url=whep,
+        watch_hls_url=watch_hls,
     )
 
 

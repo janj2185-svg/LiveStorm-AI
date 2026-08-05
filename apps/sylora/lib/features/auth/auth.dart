@@ -134,6 +134,7 @@ final class SessionModel {
 abstract interface class AuthRepository {
   Future<AuthMethods> authMethods();
   Future<UserAccount?> restore();
+  Future<UserAccount> currentUser();
   Future<LoginResult> login({
     required String email,
     required String password,
@@ -204,6 +205,9 @@ final class DioAuthRepository implements AuthRepository {
     final response = await client.request('auth/me');
     return UserAccount.fromJson(requireObject(response.data, 'current user'));
   }
+
+  @override
+  Future<UserAccount> currentUser() => _me();
 
   Future<UserAccount> _saveTokensAndMe(JsonObject tokens) async {
     await tokenStore.save(AuthTokens.fromJson(tokens));
@@ -549,6 +553,19 @@ final class AuthController extends StateNotifier<AuthState> {
       }
     } on Object {
       state = const AuthState.unauthenticated();
+    }
+  }
+
+  /// Re-fetch /auth/me without clearing the session (e.g. after assume-role).
+  Future<void> refreshMe() async {
+    if (state.status != AuthStatus.authenticated) {
+      return;
+    }
+    try {
+      final user = await _repository.currentUser();
+      state = AuthState(status: AuthStatus.authenticated, user: user);
+    } on Object catch (error) {
+      state = state.copyWith(error: messageFor(error));
     }
   }
 
