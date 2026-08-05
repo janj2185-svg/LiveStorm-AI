@@ -181,7 +181,7 @@ final class ConferencesScreen extends ConsumerWidget {
     return LumenPage(
       title: l10n.conferencesTitle,
       subtitle: l10n.conferencesSubtitle,
-      showAuraDock: true,
+      showAuraDock: false,
       maxContentWidth: 1120,
       actions: <Widget>[
         OutlinedButton.icon(
@@ -419,7 +419,7 @@ final class _ConferenceRoomScreenState
     return SyloraModuleScaffold(
       title: l10n.conferencesRoomScreenTitle,
       subtitle: l10n.conferencesRoomScreenSubtitle,
-      showAuraDock: true,
+      showAuraDock: false,
       auraEmotion: AuraEmotion.focused,
       child: roomValue.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -280,7 +280,7 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
       showAuraPresence: false,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.feed,
-      showAuraDock: wide,
+      showAuraDock: false,
       auraEmotion: AuraEmotion.greeting,
       maxContentWidth: 1080,
       actions: <Widget>[

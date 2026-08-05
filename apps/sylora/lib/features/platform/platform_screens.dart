@@ -3246,7 +3246,7 @@ final class AiMemoryScreen extends ConsumerWidget {
     return LumenPage(
       title: 'AI memory',
       subtitle: 'Preference memory controlled by persisted AI settings.',
-      showAuraDock: true,
+      showAuraDock: false,
       auraEmotion: AuraEmotion.focused,
       auraLabel: 'Memory',
       actions: <Widget>[
@@ -3391,7 +3391,7 @@ final class _AiJobsScreenState extends ConsumerState<AiJobsScreen> {
         title: 'AI generation jobs',
         subtitle:
             'Queued provider work for image, video, music, voice, or avatar generation.',
-        showAuraDock: true,
+        showAuraDock: false,
         auraEmotion: AuraEmotion.focused,
         auraLabel: 'Jobs',
         actions: <Widget>[
