@@ -91,7 +91,7 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
         ref.watch(visualSettingsProvider.select((value) => value.reducedMotion));
     final showHud = _reducedMotion || _field.stage > 0.55;
     final width = MediaQuery.sizeOf(context).width;
-    final brandSize = (width * 0.14).clamp(34.0, 72.0);
+    final markSize = (width * 0.46).clamp(148.0, 280.0);
 
     return Scaffold(
       backgroundColor: SyloraTokens.canvas,
@@ -166,39 +166,27 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                         ],
                       ),
                       const Spacer(),
-                      SyloraMark(size: brandSize * 2.4, animated: true),
-                      const SizedBox(height: 18),
+                      SyloraMark(size: markSize, animated: true),
+                      const SizedBox(height: 22),
                       Text(
-                        'НАСТУПНЕ ПОКОЛІННЯ ЦИФРОВОГО СВІТУ',
+                        'SYLORA',
                         textAlign: TextAlign.center,
                         style: LandingTokens.body(
-                          11,
-                          color: SyloraTokens.champagneDeep,
+                          13,
+                          color: LandingTokens.ink,
                           weight: FontWeight.w700,
-                        ).copyWith(letterSpacing: 2.4),
+                        ).copyWith(letterSpacing: 4.2),
                       ),
-                      const SizedBox(height: 12),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          'SYLORA',
-                          maxLines: 1,
-                          style: LandingTokens.display(brandSize).copyWith(
-                            letterSpacing: brandSize * 0.06,
-                            color: SyloraTokens.ink,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 440),
+                        constraints: const BoxConstraints(maxWidth: 420),
                         child: Text(
                           'Живий ефір, творчість, звʼязок і інтелект — одна преміальна платформа.',
                           textAlign: TextAlign.center,
                           style: LandingTokens.body(15),
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 24),
                       _AetherButton(
                         label: 'Увійти у світ',
                         filled: true,
