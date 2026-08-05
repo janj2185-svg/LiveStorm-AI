@@ -1013,6 +1013,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get giftsAuthoring => 'Gift authoring';
 
   @override
+  String get giftsDetailTitle => 'Gift detail';
+
+  @override
   String get giftsEmpty => 'No gifts available';
 
   @override
@@ -1071,6 +1074,124 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get creatorStudioOpenLive => 'Open Live';
+
+  @override
+  String get creatorStudioDirectorGoLive => 'Director go-live';
+
+  @override
+  String get creatorStudioDirectorGoLiveBody =>
+      'Preview camera, publish WHIP, then return to the session to Start.';
+
+  @override
+  String get creatorStudioSession => 'Session';
+
+  @override
+  String get creatorStudioNoSessionsMessage =>
+      'Create a live session first, then return to Creator Studio.';
+
+  @override
+  String get creatorStudioLiveSessionLabel => 'Live session';
+
+  @override
+  String get creatorStudioOpenSession => 'Open session';
+
+  @override
+  String get creatorStudioOpenSessionToStart => 'Open session to Start';
+
+  @override
+  String get creatorStudioCamera => 'Camera';
+
+  @override
+  String get creatorStudioMicrophone => 'Microphone';
+
+  @override
+  String get creatorStudioRefreshDevices => 'Refresh devices';
+
+  @override
+  String get creatorStudioRunPreflight => 'Run preflight';
+
+  @override
+  String get creatorStudioConnectObs => 'Connect OBS';
+
+  @override
+  String get creatorStudioLiveNow => 'Live now';
+
+  @override
+  String get creatorStudioCopyWatchLink => 'Copy watch link';
+
+  @override
+  String get creatorStudioSelectSessionFirst => 'Select a live session first.';
+
+  @override
+  String get creatorStudioPreflightOnlyBeforeLive =>
+      'Preflight is available only before a session is live.';
+
+  @override
+  String get creatorStudioPreflightAlreadyRunning =>
+      'Preflight is already running.';
+
+  @override
+  String get creatorStudioDevicesUnavailable =>
+      'Device enumeration is unavailable on this platform.';
+
+  @override
+  String get creatorStudioPreviewUnavailable =>
+      'Camera preview is unavailable on this platform.';
+
+  @override
+  String get creatorStudioWhipUnavailable =>
+      'WHIP publishing is unavailable on this platform.';
+
+  @override
+  String get creatorStudioStartPreviewFirst =>
+      'Start a camera and microphone preview first.';
+
+  @override
+  String get creatorStudioRunPreflightFirst =>
+      'Run preflight and resolve required checks first.';
+
+  @override
+  String get creatorStudioMediaPathNotReady =>
+      'The selected media path is not ready.';
+
+  @override
+  String get creatorStudioGoLivePreflight => 'Go-live preflight';
+
+  @override
+  String get creatorStudioPreflightChecking =>
+      'Checking media plane, credentials, and integrations…';
+
+  @override
+  String get creatorStudioPreflightPassedConnect =>
+      'Preflight passed. Connect a publishing path before going live.';
+
+  @override
+  String get creatorStudioPreflightFoundBlockers =>
+      'Preflight found blockers. Review the checklist.';
+
+  @override
+  String get creatorStudioSessionMustBeDraft =>
+      'Session must be draft or preflight to go live.';
+
+  @override
+  String get creatorStudioPublishingUnsupported =>
+      'Camera publishing is not available on this platform. Use OBS companion with the session ingest path and reveal-once stream key.';
+
+  @override
+  String creatorStudioIngestPath(String path) {
+    return 'Ingest path: $path';
+  }
+
+  @override
+  String get creatorStudioPreparingGoLive => 'Preparing go-live…';
+
+  @override
+  String get creatorStudioPreflightBlockedGoLive =>
+      'Preflight blocked go-live. Fix the checklist items and try again.';
+
+  @override
+  String get creatorStudioGoLiveBlocked =>
+      'Go-live is blocked until preflight passes and a publishing path is connected.';
 
   @override
   String get settingsHeroEyebrow => 'ACCOUNT';

@@ -1027,6 +1027,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get giftsAuthoring => 'Створення подарунків';
 
   @override
+  String get giftsDetailTitle => 'Деталі подарунка';
+
+  @override
   String get giftsEmpty => 'Подарунків немає';
 
   @override
@@ -1084,6 +1087,123 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get creatorStudioOpenLive => 'Відкрити Live';
+
+  @override
+  String get creatorStudioDirectorGoLive => 'Режисерський ефір';
+
+  @override
+  String get creatorStudioDirectorGoLiveBody =>
+      'Превʼю камери, публікація WHIP, потім повернись до сесії для Старту.';
+
+  @override
+  String get creatorStudioSession => 'Сесія';
+
+  @override
+  String get creatorStudioNoSessionsMessage =>
+      'Спочатку створи live-сесію, потім повернись до Creator Studio.';
+
+  @override
+  String get creatorStudioLiveSessionLabel => 'Live-сесія';
+
+  @override
+  String get creatorStudioOpenSession => 'Відкрити сесію';
+
+  @override
+  String get creatorStudioOpenSessionToStart => 'Відкрити сесію для Старту';
+
+  @override
+  String get creatorStudioCamera => 'Камера';
+
+  @override
+  String get creatorStudioMicrophone => 'Мікрофон';
+
+  @override
+  String get creatorStudioRefreshDevices => 'Оновити пристрої';
+
+  @override
+  String get creatorStudioRunPreflight => 'Запустити перевірку';
+
+  @override
+  String get creatorStudioConnectObs => 'Підключити OBS';
+
+  @override
+  String get creatorStudioLiveNow => 'Зараз в ефірі';
+
+  @override
+  String get creatorStudioCopyWatchLink => 'Копіювати посилання';
+
+  @override
+  String get creatorStudioSelectSessionFirst => 'Спочатку обери live-сесію.';
+
+  @override
+  String get creatorStudioPreflightOnlyBeforeLive =>
+      'Перевірка доступна лише до виходу в ефір.';
+
+  @override
+  String get creatorStudioPreflightAlreadyRunning => 'Перевірка вже триває.';
+
+  @override
+  String get creatorStudioDevicesUnavailable =>
+      'Перелік пристроїв недоступний на цій платформі.';
+
+  @override
+  String get creatorStudioPreviewUnavailable =>
+      'Превʼю камери недоступне на цій платформі.';
+
+  @override
+  String get creatorStudioWhipUnavailable =>
+      'Публікація WHIP недоступна на цій платформі.';
+
+  @override
+  String get creatorStudioStartPreviewFirst =>
+      'Спочатку запусти превʼю камери та мікрофона.';
+
+  @override
+  String get creatorStudioRunPreflightFirst =>
+      'Спочатку пройди перевірку й усунь обовʼязкові пункти.';
+
+  @override
+  String get creatorStudioMediaPathNotReady =>
+      'Обраний медіашлях ще не готовий.';
+
+  @override
+  String get creatorStudioGoLivePreflight => 'Передстартова перевірка';
+
+  @override
+  String get creatorStudioPreflightChecking =>
+      'Перевіряємо медіасервіс, ключі та інтеграції…';
+
+  @override
+  String get creatorStudioPreflightPassedConnect =>
+      'Перевірку пройдено. Підключи шлях публікації перед ефіром.';
+
+  @override
+  String get creatorStudioPreflightFoundBlockers =>
+      'Перевірка виявила блокери. Переглянь чекліст.';
+
+  @override
+  String get creatorStudioSessionMustBeDraft =>
+      'Сесія має бути в стані draft або preflight, щоб вийти в ефір.';
+
+  @override
+  String get creatorStudioPublishingUnsupported =>
+      'Публікація з камери недоступна на цій платформі. Використай OBS із ingest-шляхом сесії та одноразовим ключем.';
+
+  @override
+  String creatorStudioIngestPath(String path) {
+    return 'Ingest-шлях: $path';
+  }
+
+  @override
+  String get creatorStudioPreparingGoLive => 'Готуємо вихід в ефір…';
+
+  @override
+  String get creatorStudioPreflightBlockedGoLive =>
+      'Перевірка заблокувала ефір. Виправ пункти чекліста й спробуй знову.';
+
+  @override
+  String get creatorStudioGoLiveBlocked =>
+      'Ефір заблоковано, доки не пройде перевірка і не буде підключено шлях публікації.';
 
   @override
   String get settingsHeroEyebrow => 'АКАУНТ';
@@ -1727,13 +1847,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get liveStartStreamingBody =>
-      'Один шлях: відкрий Studio, пройди preflight, потім стартуй ефір.';
+      'Один шлях: відкрий Studio, пройди перевірку, потім стартуй ефір.';
 
   @override
   String get liveStepOpenStudio => 'Відкрити Studio';
 
   @override
-  String get liveStepPreflight => 'Preflight';
+  String get liveStepPreflight => 'Перевірка';
 
   @override
   String get liveStepStart => 'Старт';
@@ -1743,11 +1863,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Далі: відкрий Creator Studio для превʼю та WHIP.';
 
   @override
-  String get liveStatusRunPreflight => 'Далі: пройди preflight, потім стартуй.';
+  String get liveStatusRunPreflight => 'Далі: пройди перевірку, потім стартуй.';
 
   @override
   String get liveStatusReadyToStart =>
-      'Preflight пройдено — натисни Старт, коли ingest готовий.';
+      'Перевірку пройдено — натисни Старт, коли ingest готовий.';
 
   @override
   String get liveStatusLiveNow => 'Ти в ефірі. Заверши, коли сцена закінчена.';
@@ -1779,19 +1899,19 @@ class AppLocalizationsUk extends AppLocalizations {
       'Посилання скопійовано. Друзі відкривають його в браузері.';
 
   @override
-  String get livePreflightPassed => 'Preflight пройдено.';
+  String get livePreflightPassed => 'Перевірку пройдено.';
 
   @override
   String get livePreflightNeedsAttention =>
-      'Preflight виявив перевірки, що потребують уваги.';
+      'Перевірка виявила пункти, що потребують уваги.';
 
   @override
-  String get livePreflightRunning => 'Запускаємо preflight перед стартом…';
+  String get livePreflightRunning => 'Запускаємо перевірку перед стартом…';
 
   @override
   String get liveSessionStarted => 'Live-сесію розпочато.';
 
   @override
   String get liveSessionCreatedNext =>
-      'Сесія готова — відкрий Studio, пройди preflight, потім Старт.';
+      'Сесія готова — відкрий Studio, пройди перевірку, потім Старт.';
 }

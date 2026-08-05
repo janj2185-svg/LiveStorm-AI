@@ -999,7 +999,7 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
             backgroundColor: SyloraTokens.glassStrong,
             elevation: 0,
             title: Text(
-              'Gift Shop',
+              l10n.giftsTitle,
               style: SyloraTokens.title(20),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1036,7 +1036,7 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
                 actions: <Widget>[
                   TextButton(
                     onPressed: () => context.goNamed('live'),
-                    child: const Text('Go Live'),
+                    child: Text(l10n.liveGoLive),
                   ),
                 ],
               ),
@@ -1362,9 +1362,10 @@ final class GiftDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(giftProvider(slug));
     return Scaffold(
-      appBar: AppBar(title: const Text('Gift detail')),
+      appBar: AppBar(title: Text(l10n.giftsDetailTitle)),
       body: value.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => LumenErrorView(
@@ -1470,8 +1471,10 @@ final class _GiftAuthoringScreenState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Gift authoring')),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+    appBar: AppBar(title: Text(l10n.giftsAuthoring)),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: <Widget>[
@@ -1523,6 +1526,7 @@ final class _GiftAuthoringScreenState
       ],
     ),
   );
+  }
 
   Future<void> _createCategory() async {
     if (_slug.text.trim().length < 3 || _name.text.trim().length < 2) {

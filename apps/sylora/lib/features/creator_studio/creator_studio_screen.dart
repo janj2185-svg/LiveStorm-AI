@@ -190,7 +190,7 @@ final class _CreatorStudioScreenState
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Camera publishing is not available on this platform. Use OBS companion with the session ingest path and reveal-once stream key.',
+                    l10n.creatorStudioPublishingUnsupported,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -202,21 +202,25 @@ final class _CreatorStudioScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text('Session', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                l10n.creatorStudioSession,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 12),
               if (sessions.isEmpty)
                 LumenEmptyView(
-                  title: 'No live sessions',
-                  message:
-                      'Create a live session first, then return to Creator Studio.',
-                  actionLabel: 'Open Live',
+                  title: l10n.liveNoSessions,
+                  message: l10n.creatorStudioNoSessionsMessage,
+                  actionLabel: l10n.creatorStudioOpenLive,
                   onAction: () => context.goNamed('live'),
                   icon: Icons.sensors_outlined,
                 )
               else
                 DropdownButtonFormField<String>(
                   initialValue: session?.id,
-                  decoration: const InputDecoration(labelText: 'Live session'),
+                  decoration: InputDecoration(
+                    labelText: l10n.creatorStudioLiveSessionLabel,
+                  ),
                   items: <DropdownMenuItem<String>>[
                     for (final item in sessions)
                       DropdownMenuItem<String>(
@@ -241,14 +245,14 @@ final class _CreatorStudioScreenState
               if (session != null) ...<Widget>[
                 const SizedBox(height: 12),
                 SelectableText(
-                  'Ingest path: ${session.ingestPath}',
+                  l10n.creatorStudioIngestPath(session.ingestPath),
                   style: const TextStyle(fontFamily: 'monospace'),
                 ),
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: LumenSecondaryButton(
-                    label: 'Open session',
+                    label: l10n.creatorStudioOpenSession,
                     icon: Icons.sensors_rounded,
                     onPressed: () => context.pushNamed(
                       'live-session',
@@ -269,12 +273,12 @@ final class _CreatorStudioScreenState
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
-                'Director go-live',
+                l10n.creatorStudioDirectorGoLive,
                 style: SyloraTokens.title(20),
               ),
               const SizedBox(height: 6),
               Text(
-                'Preview camera, publish WHIP, then return to the session to Start.',
+                l10n.creatorStudioDirectorGoLiveBody,
                 style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
               ),
               const SizedBox(height: 14),
@@ -287,7 +291,7 @@ final class _CreatorStudioScreenState
                   SizedBox(
                     width: 280,
                     child: _deviceMenu(
-                      label: 'Camera',
+                      label: l10n.creatorStudioCamera,
                       value: _videoDeviceId,
                       devices: videoDevices,
                       onChanged: (value) =>
@@ -297,7 +301,7 @@ final class _CreatorStudioScreenState
                   SizedBox(
                     width: 280,
                     child: _deviceMenu(
-                      label: 'Microphone',
+                      label: l10n.creatorStudioMicrophone,
                       value: _audioDeviceId,
                       devices: audioDevices,
                       onChanged: (value) =>
@@ -312,22 +316,20 @@ final class _CreatorStudioScreenState
                 runSpacing: 8,
                 children: <Widget>[
                   LumenSecondaryButton(
-                    label: 'Refresh devices',
+                    label: l10n.creatorStudioRefreshDevices,
                     icon: Icons.refresh_rounded,
                     onPressed: _publisher.supported ? _loadDevices : null,
-                    disabledReason:
-                        'Device enumeration is unavailable on this platform.',
+                    disabledReason: l10n.creatorStudioDevicesUnavailable,
                   ),
                   LumenPrimaryButton(
-                    label: 'Start preview',
+                    label: l10n.conferencesStartPreview,
                     icon: Icons.videocam_rounded,
                     busy: _busy,
                     onPressed: _publisher.supported ? _startPreview : null,
-                    disabledReason:
-                        'Camera preview is unavailable on this platform.',
+                    disabledReason: l10n.creatorStudioPreviewUnavailable,
                   ),
                   LumenSecondaryButton(
-                    label: 'Run preflight',
+                    label: l10n.creatorStudioRunPreflight,
                     icon: Icons.fact_check_outlined,
                     onPressed: session != null &&
                             {'draft', 'preflight'}.contains(session.state) &&
@@ -335,11 +337,11 @@ final class _CreatorStudioScreenState
                         ? () => _runGoLivePreflight(session)
                         : null,
                     disabledReason: session == null
-                        ? 'Select a live session first.'
-                        : 'Preflight is available only before a session is live.',
+                        ? l10n.creatorStudioSelectSessionFirst
+                        : l10n.creatorStudioPreflightOnlyBeforeLive,
                   ),
                   LumenPrimaryButton(
-                    label: 'Publish WHIP',
+                    label: l10n.conferencesPublishWhip,
                     icon: Icons.podcasts_rounded,
                     busy: _busy,
                     onPressed:
@@ -349,26 +351,26 @@ final class _CreatorStudioScreenState
                         ? _publish
                         : null,
                     disabledReason: session == null
-                        ? 'Select a live session first.'
+                        ? l10n.creatorStudioSelectSessionFirst
                         : !_publisher.supported
-                        ? 'WHIP publishing is unavailable on this platform.'
+                        ? l10n.creatorStudioWhipUnavailable
                         : !_devicePreviewReady
-                        ? 'Start a camera and microphone preview first.'
+                        ? l10n.creatorStudioStartPreviewFirst
                         : !_corePreflightReady
-                        ? 'Run preflight and resolve required checks first.'
-                        : 'The selected media path is not ready.',
+                        ? l10n.creatorStudioRunPreflightFirst
+                        : l10n.creatorStudioMediaPathNotReady,
                   ),
                   LumenSecondaryButton(
-                    label: 'Connect OBS',
+                    label: l10n.creatorStudioConnectObs,
                     icon: Icons.desktop_windows_outlined,
                     onPressed: session == null
                         ? null
                         : () => _showObsPath(session),
-                    disabledReason: 'Select a live session first.',
+                    disabledReason: l10n.creatorStudioSelectSessionFirst,
                   ),
                   if (session != null)
                     LumenSecondaryButton(
-                      label: 'Open session to Start',
+                      label: l10n.creatorStudioOpenSessionToStart,
                       icon: Icons.play_circle_outline_rounded,
                       onPressed: () => context.pushNamed(
                         'live-session',
@@ -454,7 +456,7 @@ final class _CreatorStudioScreenState
                     onPressed: session == null
                         ? null
                         : () => _checkCapability(session),
-                    disabledReason: 'Select a live session first.',
+                    disabledReason: l10n.creatorStudioSelectSessionFirst,
                   ),
                 ],
               ),
@@ -513,6 +515,7 @@ final class _CreatorStudioScreenState
       _corePreflightReady && (_browserPublishing || _obsScenesAvailable);
 
   Widget _buildPreflightChecklist(LiveSessionModel? session) {
+    final l10n = AppLocalizations.of(context);
     final obsIsActivePath = _obsScenesAvailable;
     final sessionCanStart =
         session != null && {'draft', 'preflight'}.contains(session.state);
@@ -524,7 +527,7 @@ final class _CreatorStudioScreenState
             children: <Widget>[
               Expanded(
                 child: Text(
-                  'Go-live preflight',
+                  l10n.creatorStudioGoLivePreflight,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
@@ -619,19 +622,21 @@ final class _CreatorStudioScreenState
             runSpacing: 8,
             children: <Widget>[
               LumenSecondaryButton(
-                label: 'Run preflight',
+                label: l10n.creatorStudioRunPreflight,
                 icon: Icons.fact_check_outlined,
                 onPressed: sessionCanStart && !_preflightBusy
                     ? () => _runGoLivePreflight(session)
                     : null,
                 disabledReason: session == null
-                    ? 'Select a live session first.'
+                    ? l10n.creatorStudioSelectSessionFirst
                     : !sessionCanStart
-                    ? 'Preflight is available only before a session is live.'
-                    : 'Preflight is already running.',
+                    ? l10n.creatorStudioPreflightOnlyBeforeLive
+                    : l10n.creatorStudioPreflightAlreadyRunning,
               ),
               LumenPrimaryButton(
-                label: session?.state == 'live' ? 'Live now' : 'Go live',
+                label: session?.state == 'live'
+                    ? l10n.creatorStudioLiveNow
+                    : l10n.liveGoLive,
                 icon: Icons.sensors_rounded,
                 busy: _busy || _preflightBusy,
                 onPressed: session != null &&
@@ -641,19 +646,18 @@ final class _CreatorStudioScreenState
                     ? () => _oneTapGoLive(session)
                     : null,
                 disabledReason: session == null
-                    ? 'Select a live session first.'
-                    : 'Session must be draft or preflight to go live.',
+                    ? l10n.creatorStudioSelectSessionFirst
+                    : l10n.creatorStudioSessionMustBeDraft,
               ),
               if (session?.shareWatchUrl case final shareUrl?)
                 LumenSecondaryButton(
-                  label: 'Copy watch link',
+                  label: l10n.creatorStudioCopyWatchLink,
                   icon: Icons.ios_share_rounded,
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: shareUrl));
                     if (mounted) {
                       setState(
-                        () => _status =
-                            'Watch link copied — send it to friends.',
+                        () => _status = l10n.liveWatchLinkCopied,
                       );
                     }
                   },
@@ -1873,12 +1877,13 @@ final class _CreatorStudioScreenState
   }
 
   Future<void> _runGoLivePreflight(LiveSessionModel session) async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _preflightBusy = true;
       _serverPreflight = null;
       _credentials = null;
       _obsCheckError = null;
-      _status = 'Checking media plane, credentials, and integrations…';
+      _status = l10n.creatorStudioPreflightChecking;
     });
     _aura.think('Aura is running the go-live preflight.');
     try {
@@ -1906,8 +1911,8 @@ final class _CreatorStudioScreenState
         _obsCheckError = obsError;
         _obsScenesAvailable = obsResponse != null;
         _status = _serverPreflightReady && _credentialsReady
-            ? 'Preflight passed. Connect a publishing path before going live.'
-            : 'Preflight found blockers. Review the checklist.';
+            ? l10n.creatorStudioPreflightPassedConnect
+            : l10n.creatorStudioPreflightFoundBlockers;
       });
       if (obsResponse != null) {
         await _pauseAppAudioForLiveInput();
@@ -1936,10 +1941,10 @@ final class _CreatorStudioScreenState
   }
 
   Future<void> _goLive(LiveSessionModel session) async {
+    final l10n = AppLocalizations.of(context);
     if (!_goLiveReady) {
       setState(() {
-        _status =
-            'Go-live is blocked until preflight passes and a publishing path is connected.';
+        _status = l10n.creatorStudioGoLiveBlocked;
       });
       return;
     }
@@ -1964,10 +1969,11 @@ final class _CreatorStudioScreenState
 
   /// One-tap path for the public stand: preflight → WHIP publish → start.
   Future<void> _oneTapGoLive(LiveSessionModel session) async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _busy = true;
       _preflightBusy = true;
-      _status = 'Preparing go-live…';
+      _status = l10n.creatorStudioPreparingGoLive;
     });
     _aura.think('Aura is preparing your go-live.');
     try {
@@ -1988,8 +1994,7 @@ final class _CreatorStudioScreenState
       });
       if (!_serverPreflightReady || !_credentialsReady) {
         setState(() {
-          _status =
-              'Preflight blocked go-live. Fix the checklist items and try again.';
+          _status = l10n.creatorStudioPreflightBlockedGoLive;
         });
         return;
       }

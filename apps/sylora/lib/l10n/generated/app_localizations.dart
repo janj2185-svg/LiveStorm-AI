@@ -2054,6 +2054,12 @@ abstract class AppLocalizations {
   /// **'Gift authoring'**
   String get giftsAuthoring;
 
+  /// No description provided for @giftsDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift detail'**
+  String get giftsDetailTitle;
+
   /// No description provided for @giftsEmpty.
   ///
   /// In en, this message translates to:
@@ -2161,6 +2167,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Live'**
   String get creatorStudioOpenLive;
+
+  /// No description provided for @creatorStudioDirectorGoLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Director go-live'**
+  String get creatorStudioDirectorGoLive;
+
+  /// No description provided for @creatorStudioDirectorGoLiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview camera, publish WHIP, then return to the session to Start.'**
+  String get creatorStudioDirectorGoLiveBody;
+
+  /// No description provided for @creatorStudioSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Session'**
+  String get creatorStudioSession;
+
+  /// No description provided for @creatorStudioNoSessionsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a live session first, then return to Creator Studio.'**
+  String get creatorStudioNoSessionsMessage;
+
+  /// No description provided for @creatorStudioLiveSessionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Live session'**
+  String get creatorStudioLiveSessionLabel;
+
+  /// No description provided for @creatorStudioOpenSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Open session'**
+  String get creatorStudioOpenSession;
+
+  /// No description provided for @creatorStudioOpenSessionToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Open session to Start'**
+  String get creatorStudioOpenSessionToStart;
+
+  /// No description provided for @creatorStudioCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get creatorStudioCamera;
+
+  /// No description provided for @creatorStudioMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone'**
+  String get creatorStudioMicrophone;
+
+  /// No description provided for @creatorStudioRefreshDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh devices'**
+  String get creatorStudioRefreshDevices;
+
+  /// No description provided for @creatorStudioRunPreflight.
+  ///
+  /// In en, this message translates to:
+  /// **'Run preflight'**
+  String get creatorStudioRunPreflight;
+
+  /// No description provided for @creatorStudioConnectObs.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect OBS'**
+  String get creatorStudioConnectObs;
+
+  /// No description provided for @creatorStudioLiveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Live now'**
+  String get creatorStudioLiveNow;
+
+  /// No description provided for @creatorStudioCopyWatchLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy watch link'**
+  String get creatorStudioCopyWatchLink;
+
+  /// No description provided for @creatorStudioSelectSessionFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a live session first.'**
+  String get creatorStudioSelectSessionFirst;
+
+  /// No description provided for @creatorStudioPreflightOnlyBeforeLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight is available only before a session is live.'**
+  String get creatorStudioPreflightOnlyBeforeLive;
+
+  /// No description provided for @creatorStudioPreflightAlreadyRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight is already running.'**
+  String get creatorStudioPreflightAlreadyRunning;
+
+  /// No description provided for @creatorStudioDevicesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Device enumeration is unavailable on this platform.'**
+  String get creatorStudioDevicesUnavailable;
+
+  /// No description provided for @creatorStudioPreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera preview is unavailable on this platform.'**
+  String get creatorStudioPreviewUnavailable;
+
+  /// No description provided for @creatorStudioWhipUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'WHIP publishing is unavailable on this platform.'**
+  String get creatorStudioWhipUnavailable;
+
+  /// No description provided for @creatorStudioStartPreviewFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a camera and microphone preview first.'**
+  String get creatorStudioStartPreviewFirst;
+
+  /// No description provided for @creatorStudioRunPreflightFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Run preflight and resolve required checks first.'**
+  String get creatorStudioRunPreflightFirst;
+
+  /// No description provided for @creatorStudioMediaPathNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected media path is not ready.'**
+  String get creatorStudioMediaPathNotReady;
+
+  /// No description provided for @creatorStudioGoLivePreflight.
+  ///
+  /// In en, this message translates to:
+  /// **'Go-live preflight'**
+  String get creatorStudioGoLivePreflight;
+
+  /// No description provided for @creatorStudioPreflightChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking media plane, credentials, and integrations…'**
+  String get creatorStudioPreflightChecking;
+
+  /// No description provided for @creatorStudioPreflightPassedConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight passed. Connect a publishing path before going live.'**
+  String get creatorStudioPreflightPassedConnect;
+
+  /// No description provided for @creatorStudioPreflightFoundBlockers.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight found blockers. Review the checklist.'**
+  String get creatorStudioPreflightFoundBlockers;
+
+  /// No description provided for @creatorStudioSessionMustBeDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Session must be draft or preflight to go live.'**
+  String get creatorStudioSessionMustBeDraft;
+
+  /// No description provided for @creatorStudioPublishingUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera publishing is not available on this platform. Use OBS companion with the session ingest path and reveal-once stream key.'**
+  String get creatorStudioPublishingUnsupported;
+
+  /// No description provided for @creatorStudioIngestPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingest path: {path}'**
+  String creatorStudioIngestPath(String path);
+
+  /// No description provided for @creatorStudioPreparingGoLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing go-live…'**
+  String get creatorStudioPreparingGoLive;
+
+  /// No description provided for @creatorStudioPreflightBlockedGoLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Preflight blocked go-live. Fix the checklist items and try again.'**
+  String get creatorStudioPreflightBlockedGoLive;
+
+  /// No description provided for @creatorStudioGoLiveBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Go-live is blocked until preflight passes and a publishing path is connected.'**
+  String get creatorStudioGoLiveBlocked;
 
   /// No description provided for @settingsHeroEyebrow.
   ///
