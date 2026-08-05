@@ -888,7 +888,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get moreHeroBody =>
-      'Гаманець, Live, Aura, навчання та інструменти творця — одна світлова панель.';
+      'Гаманець, ефір, Aura, навчання та інструменти творця — одна світлова панель.';
 
   @override
   String get moreQuickActions => 'ШВИДКІ ДІЇ';
@@ -906,7 +906,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get moreEditProfile => 'Редагувати профіль';
 
   @override
-  String get liveTitle => 'Live';
+  String get liveTitle => 'Ефір';
 
   @override
   String get liveSubtitle =>
@@ -928,14 +928,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get liveCreateSession => 'Створити сесію';
 
   @override
-  String get liveNoSessions => 'Немає live-сесій';
+  String get liveNoSessions => 'Немає ефірних сесій';
 
   @override
   String get liveNoSessionsMessage =>
       'Створи сесію, щоб отримати одноразовий ключ стріму.';
 
   @override
-  String get liveOpenStudio => 'Відкрити Creator Studio';
+  String get liveOpenStudio => 'Відкрити студію автора';
 
   @override
   String get liveGoLive => 'В ефір';
@@ -1836,7 +1836,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get liveGuestInvitationsBody =>
-      'Прийми запрошення від хоста, опублікуй окремий WHIP-внесок, коли видадуть ключі, або надішли подарунок хосту.';
+      'Прийми запрошення від ведучого, опублікуй свій внесок у сцену, коли видадуть ключі, або надішли подарунок ведучому.';
 
   @override
   String get liveNoGuestInvites =>
@@ -1847,10 +1847,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get liveStartStreamingBody =>
-      'Один шлях: відкрий Studio, пройди перевірку, потім стартуй ефір.';
+      'Один шлях: відкрий студію, пройди перевірку, потім стартуй ефір.';
 
   @override
-  String get liveStepOpenStudio => 'Відкрити Studio';
+  String get liveStepOpenStudio => 'Відкрити студію';
 
   @override
   String get liveStepPreflight => 'Перевірка';
@@ -1860,14 +1860,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get liveStatusOpenStudio =>
-      'Далі: відкрий Creator Studio для превʼю та WHIP.';
+      'Далі: відкрий студію автора для превʼю та публікації.';
 
   @override
   String get liveStatusRunPreflight => 'Далі: пройди перевірку, потім стартуй.';
 
   @override
   String get liveStatusReadyToStart =>
-      'Перевірку пройдено — натисни Старт, коли ingest готовий.';
+      'Перевірку пройдено — натисни Старт, коли прийом потоку готовий.';
 
   @override
   String get liveStatusLiveNow => 'Ти в ефірі. Заверши, коли сцена закінчена.';
@@ -1882,11 +1882,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get liveEndBroadcast => 'Завершити';
 
   @override
-  String get liveStageIngest => 'Ingest сцени';
+  String get liveStageIngest => 'Прийом сцени';
 
   @override
   String get liveStageIngestHint =>
-      'Використай OBS із цим шляхом або Creator Studio для WHIP у браузері, коли MediaMTX готовий.';
+      'Використай OBS із цим шляхом або студію автора в браузері, коли медіасервер готовий.';
 
   @override
   String get liveShareWatchLink => 'Поділитись посиланням';
@@ -1909,11 +1909,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get livePreflightRunning => 'Запускаємо перевірку перед стартом…';
 
   @override
-  String get liveSessionStarted => 'Live-сесію розпочато.';
+  String get liveSessionStarted => 'Ефірну сесію розпочато.';
 
   @override
   String get liveSessionCreatedNext =>
-      'Сесія готова — відкрий Studio, пройди перевірку, потім Старт.';
+      'Сесія готова — відкрий студію, пройди перевірку, потім Старт.';
 
   @override
   String get profileSubtitleOwn =>
