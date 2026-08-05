@@ -191,7 +191,7 @@ body.sylora-aether-active #sylora-aether { display: block; }
 
 .aether-hero {
   flex: 1;
-  min-height: calc(100svh - 5.5rem);
+  min-height: calc(100svh - 7.5rem);
   display: grid;
   grid-template-columns: 1fr;
   align-content: center;
