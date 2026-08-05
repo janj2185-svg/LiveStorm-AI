@@ -777,7 +777,7 @@
     if (!document.querySelector('link[data-sylora-aether-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'aether/sylora-aether.css?v=qw6';
+      link.href = 'aether/sylora-aether.css?v=qw7';
       link.setAttribute('data-sylora-aether-css', '1');
       document.head.appendChild(link);
     }
