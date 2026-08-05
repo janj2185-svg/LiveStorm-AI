@@ -1637,35 +1637,100 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
         onRetry: () => ref.invalidate(aiProvider),
         data: (snapshot) {
           if (!snapshot.settings.consentGranted) {
-            return SyloraStaggeredReveal(
-              index: 0,
-              child: SyloraGlassTile(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    const Icon(
-                      Icons.shield_outlined,
-                      size: 44,
-                      color: SyloraTokens.violet,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                SyloraStaggeredReveal(
+                  index: 0,
+                  child: SyloraGlass(
+                    radius: SyloraTokens.radiusXl,
+                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+                    child: Column(
+                      children: <Widget>[
+                        SyloraAura(
+                          size: 148,
+                          emotion: AuraEmotion.greeting,
+                          label: l10n.auraCompanionLabel,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Aura',
+                          style: SyloraTokens.display(36),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.aiHeroBody,
+                          style: SyloraTokens.body(15, color: SyloraTokens.inkSoft),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 18),
+                        SyloraButton(
+                          label: l10n.aiTalkNow,
+                          icon: Icons.auto_awesome_rounded,
+                          onPressed: () => _beginAura(
+                            context,
+                            ref,
+                            purpose: 'general',
+                            title: l10n.aiTalkNow,
+                            grantConsent: true,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: <Widget>[
+                            SyloraPortalChip(
+                              label: l10n.aiStarterQuiet,
+                              icon: Icons.spa_outlined,
+                              onTap: () => _beginAura(
+                                context,
+                                ref,
+                                purpose: 'general',
+                                title: l10n.aiStarterQuiet,
+                                grantConsent: true,
+                                forceNew: true,
+                              ),
+                            ),
+                            SyloraPortalChip(
+                              label: l10n.aiStarterCreate,
+                              icon: Icons.brush_outlined,
+                              onTap: () => _beginAura(
+                                context,
+                                ref,
+                                purpose: 'general',
+                                title: l10n.aiStarterCreate,
+                                grantConsent: true,
+                                forceNew: true,
+                              ),
+                            ),
+                            SyloraPortalChip(
+                              label: l10n.aiStarterLive,
+                              icon: Icons.podcasts_rounded,
+                              onTap: () => _beginAura(
+                                context,
+                                ref,
+                                purpose: 'general',
+                                title: l10n.aiStarterLive,
+                                grantConsent: true,
+                                forceNew: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          l10n.aiConsentBody,
+                          style: SyloraTokens.body(12.5, color: SyloraTokens.inkMute),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    Text(l10n.aiConsentTitle, style: SyloraTokens.title(22)),
-                    const SizedBox(height: 8),
-                    Text(l10n.aiConsentBody, softWrap: true),
-                    const SizedBox(height: 20),
-                    LumenPrimaryButton(
-                      label: l10n.aiGrantConsent,
-                      icon: Icons.verified_user_outlined,
-                      onPressed: () async {
-                        await ref.read(aiRepositoryProvider).updateSettings(
-                          <String, dynamic>{'consent_granted': true},
-                        );
-                        ref.invalidate(aiProvider);
-                      },
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             );
           }
           if (!snapshot.providers.chatAvailable) {
@@ -1706,7 +1771,11 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                     SyloraButton(
                       label: l10n.aiTalkNow,
                       icon: Icons.auto_awesome_rounded,
-                      onPressed: () => _createConversation(context, ref),
+                      onPressed: () => _createConversation(
+                        context,
+                        ref,
+                        title: l10n.aiTalkNow,
+                      ),
                     ),
                     if (snapshot.conversations.items.isNotEmpty)
                       SyloraButton(
@@ -1723,17 +1792,35 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                     SyloraPortalChip(
                       label: l10n.aiStarterQuiet,
                       icon: Icons.spa_outlined,
-                      onTap: () => _createConversation(context, ref),
+                      onTap: () => _beginAura(
+                        context,
+                        ref,
+                        purpose: 'general',
+                        title: l10n.aiStarterQuiet,
+                        forceNew: true,
+                      ),
                     ),
                     SyloraPortalChip(
                       label: l10n.aiStarterCreate,
                       icon: Icons.brush_outlined,
-                      onTap: () => _createConversation(context, ref),
+                      onTap: () => _beginAura(
+                        context,
+                        ref,
+                        purpose: 'general',
+                        title: l10n.aiStarterCreate,
+                        forceNew: true,
+                      ),
                     ),
                     SyloraPortalChip(
                       label: l10n.aiStarterLive,
                       icon: Icons.podcasts_rounded,
-                      onTap: () => _createConversation(context, ref),
+                      onTap: () => _beginAura(
+                        context,
+                        ref,
+                        purpose: 'general',
+                        title: l10n.aiStarterLive,
+                        forceNew: true,
+                      ),
                     ),
                   ],
                 ),
@@ -1975,57 +2062,56 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
 
   static Future<void> _createConversation(
     BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final title = TextEditingController();
-    final created = await showDialog<AiConversationModel>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New AI conversation'),
-        content: TextField(
-          controller: title,
-          maxLength: 200,
-          decoration: const InputDecoration(labelText: 'Title (optional)'),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              try {
-                final conversation = await ref
-                    .read(aiRepositoryProvider)
-                    .createConversation(
-                      title: title.text.trim().isEmpty
-                          ? null
-                          : title.text.trim(),
-                    );
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext, conversation);
-                }
-              } on Object catch (error) {
-                if (dialogContext.mounted) {
-                  ScaffoldMessenger.of(
-                    dialogContext,
-                  ).showSnackBar(SnackBar(content: Text(messageFor(error))));
-                }
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
+    WidgetRef ref, {
+    String purpose = 'general',
+    String? title,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    return _beginAura(
+      context,
+      ref,
+      purpose: purpose,
+      title: title ?? l10n.aiTalkNow,
     );
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    title.dispose();
-    if (created != null && context.mounted) {
-      ref.invalidate(aiProvider);
-      await context.pushNamed(
-        'ai-conversation',
-        pathParameters: <String, String>{'id': created.id},
+  }
+
+  static Future<void> _beginAura(
+    BuildContext context,
+    WidgetRef ref, {
+    required String purpose,
+    required String title,
+    bool grantConsent = false,
+    bool forceNew = false,
+  }) async {
+    try {
+      if (grantConsent) {
+        await ref.read(aiRepositoryProvider).updateSettings(
+          <String, dynamic>{'consent_granted': true},
+        );
+        ref.invalidate(aiProvider);
+      }
+      final existing = ref.read(aiProvider).asData?.value.conversations.items;
+      if (!forceNew && existing != null && existing.isNotEmpty) {
+        if (context.mounted) {
+          await context.pushNamed(
+            'ai-conversation',
+            pathParameters: <String, String>{'id': existing.first.id},
+          );
+        }
+        return;
+      }
+      await openAuraConversation(
+        context,
+        ref,
+        purpose: purpose,
+        title: title,
       );
+    } on Object catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+      }
     }
   }
 
@@ -3692,14 +3778,63 @@ final class LiveScreen extends ConsumerWidget {
                   ),
                 )
               else if (snapshot.sessions.isEmpty)
-                LumenEmptyView(
-                  title: l10n.liveNoSessionsTitle,
-                  message: l10n.liveNoSessionsBody,
-                  actionLabel: l10n.liveGoLive,
-                  onAction: () => _createSession(context, ref),
-                  secondaryLabel: l10n.liveOpenStudio,
-                  onSecondary: () => context.goNamed('creator-studio'),
-                  icon: Icons.sensors_outlined,
+                SyloraStaggeredReveal(
+                  index: index++,
+                  child: SyloraGlass(
+                    radius: SyloraTokens.radiusXl,
+                    padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+                    child: Column(
+                      children: <Widget>[
+                        SyloraPulseGlow(
+                          color: SyloraTokens.petal,
+                          child: SyloraAura(
+                            size: 112,
+                            emotion: AuraEmotion.listening,
+                            label: l10n.auraCompanionLabel,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.liveNoSessionsTitle,
+                          style: SyloraTokens.display(30),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.liveNoSessionsBody,
+                          style: SyloraTokens.body(
+                            15,
+                            color: SyloraTokens.inkSoft,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 18),
+                        SyloraButton(
+                          label: l10n.liveGoLive,
+                          icon: Icons.podcasts_rounded,
+                          onPressed: () => _createSession(context, ref),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: <Widget>[
+                            SyloraPortalChip(
+                              label: l10n.liveOpenStudio,
+                              icon: Icons.video_camera_front_outlined,
+                              onTap: () => context.goNamed('creator-studio'),
+                            ),
+                            SyloraPortalChip(
+                              label: l10n.aiTalkNow,
+                              icon: Icons.auto_awesome_rounded,
+                              onTap: () => context.goNamed('ai'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 )
               else
                 for (final session in snapshot.sessions)
@@ -4563,67 +4698,129 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(liveSessionProvider(widget.sessionId));
     final integrations = ref.watch(liveIntegrationsProvider);
     final controls = ref.watch(liveControlsProvider(widget.sessionId));
     final giftRankings = ref.watch(liveGiftRankingsProvider(widget.sessionId));
-    return Scaffold(
-      appBar: AppBar(title: const Text('Live session')),
-      body: value.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+    return LumenPage(
+      title: l10n.liveTitle,
+      subtitle: l10n.liveYourStageBody,
+      intensity: 1.0,
+      showAuraPresence: true,
+      auraPresencePreset: SyloraAuraContextPreset.live,
+      auraEmotion: AuraEmotion.listening,
+      child: value.when(
+        loading: () => SyloraStates.loading(message: l10n.commonLoading),
         error: (error, stackTrace) => LumenErrorView(
           error: error,
           onRetry: () => ref.invalidate(liveSessionProvider(widget.sessionId)),
         ),
-        data: (session) => ListView(
-          padding: const EdgeInsets.all(20),
+        data: (session) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            LumenSurface(
+            SyloraUniverseHero(
+              eyebrow: l10n.liveHeroEyebrow,
+              title: session.title,
+              body: session.state == 'live'
+                  ? l10n.liveYourStageBody
+                  : l10n.liveNoSessionsBody,
+              trailing: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  SyloraMetricPill(
+                    label: l10n.liveTitle,
+                    value: session.state,
+                    icon: Icons.sensors_rounded,
+                  ),
+                  SyloraPortalChip(
+                    label: l10n.liveOpenStudio,
+                    icon: Icons.video_camera_front_outlined,
+                    onTap: () => context.goNamed('creator-studio'),
+                  ),
+                  if ({'draft', 'preflight'}.contains(session.state))
+                    SyloraPortalChip(
+                      label: l10n.liveGoLive,
+                      icon: Icons.play_arrow_rounded,
+                      onTap: () async {
+                        try {
+                          final repo = ref.read(liveRepositoryProvider);
+                          if (session.state == 'draft') {
+                            setState(
+                              () => _status =
+                                  'Running preflight before start…',
+                            );
+                            final result = await repo.preflight(session.id);
+                            final ready = result['ready'] == true;
+                            if (!ready) {
+                              setState(
+                                () => _status =
+                                    'Preflight reported checks that need attention.',
+                              );
+                              ref.invalidate(
+                                liveSessionProvider(widget.sessionId),
+                              );
+                              return;
+                            }
+                          }
+                          await repo.start(session.id);
+                          setState(() => _status = 'Live session started.');
+                          ref.invalidate(
+                            liveSessionProvider(widget.sessionId),
+                          );
+                        } on Object catch (error) {
+                          setState(() => _status = messageFor(error));
+                        }
+                      },
+                    ),
+                  if (session.state == 'live')
+                    SyloraPortalChip(
+                      label: 'End',
+                      icon: Icons.stop_rounded,
+                      onTap: () async {
+                        await ref
+                            .read(liveRepositoryProvider)
+                            .end(session.id);
+                        ref.invalidate(
+                          liveSessionProvider(widget.sessionId),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SyloraGlass(
+              radius: SyloraTokens.radiusXl,
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          session.title,
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                      ),
-                      LumenBadge(
-                        label: session.state,
-                        color: LumenColors.pulse,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
                   Text(
-                    'MediaMTX ingest configuration',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    'Stage ingest',
+                    style: SyloraTokens.title(18),
                   ),
                   const SizedBox(height: 8),
                   SelectableText(
                     session.ingestPath,
-                    style: const TextStyle(fontFamily: 'monospace'),
+                    style: SyloraTokens.body(13, color: SyloraTokens.inkSoft)
+                        .copyWith(fontFamily: 'monospace'),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Use this server-provided path with OBS or open Creator Studio for browser WHIP publishing when MediaMTX is configured.',
+                  Text(
+                    'Use OBS with this path, or open Creator Studio for browser WHIP when MediaMTX is ready.',
+                    style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: <Widget>[
-                      LumenSecondaryButton(
-                        label: 'Creator Studio',
-                        icon: Icons.video_camera_front_outlined,
-                        onPressed: () => context.goNamed('creator-studio'),
-                      ),
-                      LumenSecondaryButton(
+                      SyloraPortalChip(
                         label: 'Preflight',
                         icon: Icons.fact_check_outlined,
-                        onPressed: () async {
+                        onTap: () async {
                           final result = await ref
                               .read(liveRepositoryProvider)
                               .preflight(session.id);
@@ -4635,88 +4832,23 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                           ref.invalidate(liveSessionProvider(widget.sessionId));
                         },
                       ),
-                      LumenPrimaryButton(
-                        label: 'Start',
-                        icon: Icons.play_arrow_rounded,
-                        onPressed:
-                            {'draft', 'preflight'}.contains(session.state)
-                            ? () async {
-                                try {
-                                  final repo = ref.read(
-                                    liveRepositoryProvider,
-                                  );
-                                  if (session.state == 'draft') {
-                                    setState(
-                                      () => _status =
-                                          'Running preflight before start…',
-                                    );
-                                    final result = await repo.preflight(
-                                      session.id,
-                                    );
-                                    final ready = result['ready'] == true;
-                                    if (!ready) {
-                                      setState(
-                                        () => _status =
-                                            'Preflight reported checks that need attention.',
-                                      );
-                                      ref.invalidate(
-                                        liveSessionProvider(widget.sessionId),
-                                      );
-                                      return;
-                                    }
-                                  }
-                                  await repo.start(session.id);
-                                  setState(() => _status = 'Live session started.');
-                                  ref.invalidate(
-                                    liveSessionProvider(widget.sessionId),
-                                  );
-                                } on Object catch (error) {
-                                  setState(
-                                    () => _status = messageFor(error),
-                                  );
-                                }
-                              }
-                            : null,
-                        disabledReason:
-                            'Start is available only after draft or preflight.',
-                      ),
-                      LumenSecondaryButton(
-                        label: 'Share watch link',
-                        icon: Icons.ios_share_rounded,
-                        onPressed: session.shareWatchUrl == null
-                            ? null
-                            : () async {
-                                final url = session.shareWatchUrl!;
-                                await Clipboard.setData(
-                                  ClipboardData(text: url),
-                                );
-                                setState(
-                                  () => _status =
-                                      'Watch link copied. Friends open it in a browser.',
-                                );
-                              },
-                        disabledReason:
-                            'Watch link appears after MediaMTX playback is configured.',
-                      ),
-                      LumenSecondaryButton(
-                        label: 'End',
-                        icon: Icons.stop_rounded,
-                        onPressed: session.state == 'live'
-                            ? () async {
-                                await ref
-                                    .read(liveRepositoryProvider)
-                                    .end(session.id);
-                                ref.invalidate(
-                                  liveSessionProvider(widget.sessionId),
-                                );
-                              }
-                            : null,
-                        disabledReason: 'Only a live session can be ended.',
-                      ),
-                      LumenSecondaryButton(
+                      if (session.shareWatchUrl != null)
+                        SyloraPortalChip(
+                          label: 'Share watch link',
+                          icon: Icons.ios_share_rounded,
+                          onTap: () async {
+                            final url = session.shareWatchUrl!;
+                            await Clipboard.setData(ClipboardData(text: url));
+                            setState(
+                              () => _status =
+                                  'Watch link copied. Friends open it in a browser.',
+                            );
+                          },
+                        ),
+                      SyloraPortalChip(
                         label: 'Rotate stream key',
                         icon: Icons.key_rounded,
-                        onPressed: () async {
+                        onTap: () async {
                           final result = await ref
                               .read(liveRepositoryProvider)
                               .rotateStreamKey(session.id);
@@ -4756,11 +4888,15 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                   ),
                   if (_status != null) ...<Widget>[
                     const SizedBox(height: 12),
-                    Text(_status!),
+                    Text(
+                      _status!,
+                      style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+                    ),
                   ],
                 ],
               ),
             ),
+            const SizedBox(height: 16),
             _GiftRankingStrip(value: giftRankings, title: 'Live gift leaders'),
             const SizedBox(height: 16),
             _LiveGiftTray(

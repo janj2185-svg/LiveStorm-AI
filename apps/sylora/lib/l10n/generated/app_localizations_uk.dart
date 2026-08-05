@@ -250,7 +250,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get commonSomethingWentWrong => 'Щось пішло не так';
 
   @override
-  String get auraCompanionLabel => 'Aura · AI-компаньйон';
+  String get auraCompanionLabel => 'Aura · жива супутниця';
 
   @override
   String get auraGreeting => 'Aura готова допомогти.';
@@ -806,14 +806,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get liveSubtitle =>
-      'Ефір через WHIP, OBS або студію — лише чесні інтеграції.';
+      'Вийди в ефір одним подихом — Aura може бути співведучою.';
 
   @override
-  String get liveHeroEyebrow => 'ЕФІР';
+  String get liveHeroEyebrow => 'СЕРЦЕ SYLORA';
 
   @override
-  String get liveHeroBody =>
-      'Створи сесію, відкрий Creator Studio й тримай інтеграції реальними.';
+  String get liveHeroBody => 'Твоя сцена. Твоя аудиторія. Жива співведуча.';
 
   @override
   String get liveIntegrations => 'Інтеграції';
@@ -950,14 +949,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get aiOnline => 'Aura онлайн';
 
   @override
-  String get aiConsentTitle => 'Потрібна згода на AI';
+  String get aiConsentTitle => 'Aura готова зустріти тебе';
 
   @override
   String get aiConsentBody =>
-      'Згода вмикає AI-запити. Пам’ять лишається вимкненою, доки ти її не увімкнеш.';
+      'Починаючи розмову, ти дозволяєш Aura слухати й памʼятати те, чим ділишся.';
 
   @override
-  String get aiGrantConsent => 'Надати згоду на AI';
+  String get aiGrantConsent => 'Зустріти Aura';
 
   @override
   String get aiConversations => 'Розмови';

@@ -158,6 +158,58 @@ final class _SyloraAuraState extends State<SyloraAura>
                             ),
                           ),
                         ),
+                        // Living lids — soft blink cycle
+                        IgnorePointer(
+                          child: Opacity(
+                            opacity: () {
+                              final cycle = t % 4.8;
+                              if (cycle > 4.55 && cycle < 4.72) {
+                                return 0.72;
+                              }
+                              return 0.0;
+                            }(),
+                            child: ColoredBox(
+                              color: SyloraTokens.canvas.withValues(alpha: 0.82),
+                            ),
+                          ),
+                        ),
+                        // Gaze shimmer / life spark
+                        IgnorePointer(
+                          child: Align(
+                            alignment: Alignment(
+                              math.sin(t * 0.55) * 0.18,
+                              -0.12 + math.cos(t * 0.4) * 0.06,
+                            ),
+                            child: Container(
+                              width: widget.size * 0.14,
+                              height: widget.size * 0.06,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(99),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.0),
+                                    Colors.white.withValues(alpha: 0.35),
+                                    Colors.white.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Outer living ring
+                        IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: glowColor.withValues(
+                                  alpha: 0.22 + 0.12 * (0.5 + 0.5 * math.sin(t * 1.4)),
+                                ),
+                                width: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

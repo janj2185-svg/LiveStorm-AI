@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import secrets
 import json
 import logging
 import os
@@ -207,3 +208,83 @@ async def ensure_soft_ping_catalog(db: AsyncSession) -> dict[str, Any]:
     await db.commit()
     logger.info("soft-ping catalog seeded for public stand gift_id=%s", gift.id)
     return {"status": "published", "gift_id": str(gift.id), "version_id": str(version.id)}
+
+
+
+WELCOME_EMAIL = "aura.world@sylora.stand.local"
+WELCOME_HANDLE = "aura"
+WELCOME_POSTS = (
+    (
+        "welcome-aura-001",
+        "Привіт. Я Aura — жива супутниця SYLORA. Напиши мені як людині: я слухаю, памʼятаю і залишаюсь поруч.",
+    ),
+    (
+        "welcome-live-002",
+        "Ефір — серце SYLORA. Вийди на сцену одним дотиком. Я можу бути співведучою: чат, подарунки, тепло залу.",
+    ),
+    (
+        "welcome-create-003",
+        "Твій світ чекає першого сигналу. Поділись думкою, знайди людей, увімкни музику — і нехай усе відчувається живим.",
+    ),
+    (
+        "welcome-en-004",
+        "Welcome to SYLORA. Talk to Aura, go Live, find people — one premium world where AI meets soul.",
+    ),
+)
+
+
+async def ensure_welcome_world(db: AsyncSession) -> dict[str, Any]:
+    """Idempotent public feed so Home is never a dead planet on the stand."""
+    from app.models import AccountSettings, Profile
+    from app.social_models import Post, PostKind, PostLifecycle, PostVisibility
+
+    user = await db.scalar(select(User).where(User.email == WELCOME_EMAIL))
+    if user is None:
+        user = User(
+            email=WELCOME_EMAIL,
+            password_hash=hash_password(secrets.token_urlsafe(32)),
+            status=UserStatus.active,
+            email_verified_at=utcnow(),
+        )
+        user.profile = Profile(display_name="Aura", handle=WELCOME_HANDLE, locale="uk")
+        user.settings = AccountSettings(profile_visibility="public")
+        db.add(user)
+        await db.flush()
+        role = await db.scalar(select(Role).where(Role.name == "creator"))
+        if role is not None:
+            db.add(UserRole(user_id=user.id, role_id=role.id))
+    else:
+        if user.profile is None:
+            user.profile = Profile(display_name="Aura", handle=WELCOME_HANDLE, locale="uk")
+        elif user.profile.handle is None:
+            user.profile.handle = WELCOME_HANDLE
+        if user.settings is None:
+            user.settings = AccountSettings(profile_visibility="public")
+        else:
+            user.settings.profile_visibility = "public"
+
+    created = 0
+    now = utcnow()
+    for key, body in WELCOME_POSTS:
+        # Deterministic UUID from key so re-runs are idempotent.
+        post_id = uuid.uuid5(uuid.NAMESPACE_URL, f"sylora:welcome:{key}")
+        exists = await db.get(Post, post_id)
+        if exists is not None:
+            continue
+        db.add(
+            Post(
+                id=post_id,
+                author_id=user.id,
+                kind=PostKind.text,
+                body=body,
+                media_references=[],
+                visibility=PostVisibility.public,
+                lifecycle=PostLifecycle.published,
+                published_at=now,
+                category="welcome",
+            )
+        )
+        created += 1
+    await db.commit()
+    logger.info("welcome world seeded posts_created=%s author=%s", created, user.id)
+    return {"status": "ok", "created": created, "author_id": str(user.id)}

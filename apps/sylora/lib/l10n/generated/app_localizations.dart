@@ -581,7 +581,7 @@ abstract class AppLocalizations {
   /// No description provided for @auraCompanionLabel.
   ///
   /// In en, this message translates to:
-  /// **'Aura · AI companion'**
+  /// **'Aura · living companion'**
   String get auraCompanionLabel;
 
   /// No description provided for @auraGreeting.
@@ -1637,19 +1637,19 @@ abstract class AppLocalizations {
   /// No description provided for @liveSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Go live with WHIP, OBS, or studio tools — honest platform integrations only.'**
+  /// **'Go live in one breath — Aura can co-host beside you.'**
   String get liveSubtitle;
 
   /// No description provided for @liveHeroEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'BROADCAST'**
+  /// **'THE HEART OF SYLORA'**
   String get liveHeroEyebrow;
 
   /// No description provided for @liveHeroBody.
   ///
   /// In en, this message translates to:
-  /// **'Stage a session, open Creator Studio, and keep every integration real.'**
+  /// **'Your stage. Your audience. Your living co-host.'**
   String get liveHeroBody;
 
   /// No description provided for @liveIntegrations.
@@ -1907,19 +1907,19 @@ abstract class AppLocalizations {
   /// No description provided for @aiConsentTitle.
   ///
   /// In en, this message translates to:
-  /// **'AI requires your consent'**
+  /// **'Aura is ready to meet you'**
   String get aiConsentTitle;
 
   /// No description provided for @aiConsentBody.
   ///
   /// In en, this message translates to:
-  /// **'Consent enables provider-backed AI requests. Memory stays off until you enable it.'**
+  /// **'By talking, you allow Aura to listen and remember what you choose to share.'**
   String get aiConsentBody;
 
   /// No description provided for @aiGrantConsent.
   ///
   /// In en, this message translates to:
-  /// **'Grant AI consent'**
+  /// **'Meet Aura'**
   String get aiGrantConsent;
 
   /// No description provided for @aiConversations.

@@ -250,7 +250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSomethingWentWrong => 'Something went wrong';
 
   @override
-  String get auraCompanionLabel => 'Aura · AI companion';
+  String get auraCompanionLabel => 'Aura · living companion';
 
   @override
   String get auraGreeting => 'Aura is ready to help.';
@@ -806,14 +806,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveSubtitle =>
-      'Go live with WHIP, OBS, or studio tools — honest platform integrations only.';
+      'Go live in one breath — Aura can co-host beside you.';
 
   @override
-  String get liveHeroEyebrow => 'BROADCAST';
+  String get liveHeroEyebrow => 'THE HEART OF SYLORA';
 
   @override
-  String get liveHeroBody =>
-      'Stage a session, open Creator Studio, and keep every integration real.';
+  String get liveHeroBody => 'Your stage. Your audience. Your living co-host.';
 
   @override
   String get liveIntegrations => 'Integrations';
@@ -950,14 +949,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiOnline => 'Aura online';
 
   @override
-  String get aiConsentTitle => 'AI requires your consent';
+  String get aiConsentTitle => 'Aura is ready to meet you';
 
   @override
   String get aiConsentBody =>
-      'Consent enables provider-backed AI requests. Memory stays off until you enable it.';
+      'By talking, you allow Aura to listen and remember what you choose to share.';
 
   @override
-  String get aiGrantConsent => 'Grant AI consent';
+  String get aiGrantConsent => 'Meet Aura';
 
   @override
   String get aiConversations => 'Conversations';

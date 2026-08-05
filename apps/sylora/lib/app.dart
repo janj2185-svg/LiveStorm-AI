@@ -108,17 +108,16 @@ const _meDestination = ShellDestination(
   path: '/more',
 );
 
-/// Phone island — FINAL-19: Home · Live · Search · Messages · Me
+/// Phone island — Home · Live · Aura · Messages · Me (soul spine)
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
   _liveDestination,
-  _searchDestination,
+  _aiDestination,
   _messagesDestination,
   _meDestination,
 ];
 
-/// Desktop/tablet cinema rail — FINAL-19:
-/// Home · Live · Friends · Messages · Music · Aura · Market · Business/Edu · Studio · More
+/// Desktop/tablet cinema rail — Aura elevated next to Live
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   final roleSet = roles.toSet();
   final showStudio =
@@ -132,13 +131,13 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   return <ShellDestination>[
     _homeDestination,
     _liveDestination,
+    _aiDestination,
     _friendsDestination,
     _messagesDestination,
     _musicDestination,
-    _aiDestination,
+    if (showStudio) _studioDestination,
     _marketplaceDestination,
     if (showBusiness) _businessDestination else _learningDestination,
-    if (showStudio) _studioDestination,
     _moreDestination,
   ];
 }

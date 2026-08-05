@@ -166,7 +166,7 @@ def create_app(
             if resolved_settings.is_public_test_stand or os.environ.get(
                 "BOOTSTRAP_SOFT_PING", ""
             ).lower() in {"1", "true", "yes"}:
-                from app.stand_bootstrap import ensure_soft_ping_catalog
+                from app.stand_bootstrap import ensure_soft_ping_catalog, ensure_welcome_world
 
                 try:
                     await ensure_soft_ping_catalog(session)
@@ -174,6 +174,12 @@ def create_app(
                     import logging
 
                     logging.getLogger(__name__).exception("soft-ping stand bootstrap failed")
+                try:
+                    await ensure_welcome_world(session)
+                except Exception:  # noqa: BLE001 - stand must still boot with a living feed
+                    import logging
+
+                    logging.getLogger(__name__).exception("welcome world stand bootstrap failed")
             if os.environ.get("BOOTSTRAP_READY_GIFTS", "").lower() in {"1", "true", "yes"}:
                 import logging
 
