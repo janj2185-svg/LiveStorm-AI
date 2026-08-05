@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import 'sylora_aura.dart';
 import 'sylora_components.dart';
 import 'sylora_tokens.dart';
@@ -19,131 +20,115 @@ enum SyloraAuraContextPreset {
   conferences,
 }
 
-@immutable
-final class SyloraAuraPresetState {
-  const SyloraAuraPresetState({required this.emotion, required this.tip});
+final Map<SyloraAuraContextPreset, AuraEmotion> _presetEmotions =
+    <SyloraAuraContextPreset, AuraEmotion>{
+      SyloraAuraContextPreset.feed: AuraEmotion.greeting,
+      SyloraAuraContextPreset.friends: AuraEmotion.amused,
+      SyloraAuraContextPreset.conferences: AuraEmotion.listening,
+      SyloraAuraContextPreset.live: AuraEmotion.focused,
+      SyloraAuraContextPreset.ai: AuraEmotion.greeting,
+      SyloraAuraContextPreset.gifts: AuraEmotion.amused,
+      SyloraAuraContextPreset.creatorStudio: AuraEmotion.greeting,
+      SyloraAuraContextPreset.marketplace: AuraEmotion.amused,
+      SyloraAuraContextPreset.business: AuraEmotion.focused,
+      SyloraAuraContextPreset.learning: AuraEmotion.listening,
+      SyloraAuraContextPreset.creator: AuraEmotion.greeting,
+      SyloraAuraContextPreset.settings: AuraEmotion.focused,
+    };
 
-  final AuraEmotion emotion;
-  final String tip;
-}
-
-final Map<SyloraAuraContextPreset, SyloraAuraPresetState> _presetStates =
-    <SyloraAuraContextPreset, SyloraAuraPresetState>{
-      SyloraAuraContextPreset.feed: const SyloraAuraPresetState(
-        emotion: AuraEmotion.greeting,
-        tip: 'Привіт — я поруч, поки ти гортаєш стрічку.',
-      ),
-      SyloraAuraContextPreset.friends: const SyloraAuraPresetState(
-        emotion: AuraEmotion.amused,
-        tip: 'Давай знайдемо людей, з якими тобі буде тепло.',
-      ),
-      SyloraAuraContextPreset.conferences: const SyloraAuraPresetState(
-        emotion: AuraEmotion.listening,
-        tip: 'Я слухаю зустріч і можу підказати по ходу.',
-      ),
-      SyloraAuraContextPreset.live: const SyloraAuraPresetState(
-        emotion: AuraEmotion.focused,
-        tip: 'Тримаю ефір у фокусі — скажи, якщо треба допомога.',
-      ),
-      SyloraAuraContextPreset.ai: const SyloraAuraPresetState(
-        emotion: AuraEmotion.greeting,
-        tip: 'Я Aura. Пиши як людині — я відповім по-людськи.',
-      ),
-      SyloraAuraContextPreset.gifts: const SyloraAuraPresetState(
-        emotion: AuraEmotion.amused,
-        tip: 'Підкажу подарунок, який справді вразить.',
-      ),
-      SyloraAuraContextPreset.creatorStudio: const SyloraAuraPresetState(
-        emotion: AuraEmotion.greeting,
-        tip: 'Готова допомогти зі студією — крок за кроком.',
-      ),
-      SyloraAuraContextPreset.marketplace: const SyloraAuraPresetState(
-        emotion: AuraEmotion.amused,
-        tip: 'Шукаємо те, що тобі справді підійде.',
-      ),
-      SyloraAuraContextPreset.business: const SyloraAuraPresetState(
-        emotion: AuraEmotion.focused,
-        tip: 'Тримаю контекст бізнесу, щоб ти не губився.',
-      ),
-      SyloraAuraContextPreset.learning: const SyloraAuraPresetState(
-        emotion: AuraEmotion.listening,
-        tip: 'Вчуся разом із тобою — питайте що завгодно.',
-      ),
-      SyloraAuraContextPreset.creator: const SyloraAuraPresetState(
-        emotion: AuraEmotion.greeting,
-        tip: 'Твій творчий ритм — я підлаштуюсь.',
-      ),
-      SyloraAuraContextPreset.settings: const SyloraAuraPresetState(
-        emotion: AuraEmotion.focused,
-        tip: 'Налаштуємо все зручно, без зайвого шуму.',
-      ),
+String auraTipForPreset(
+  AppLocalizations l10n,
+  SyloraAuraContextPreset preset,
+) =>
+    switch (preset) {
+      SyloraAuraContextPreset.feed => l10n.auraTipFeed,
+      SyloraAuraContextPreset.friends => l10n.auraTipFriends,
+      SyloraAuraContextPreset.conferences => l10n.auraTipConferences,
+      SyloraAuraContextPreset.live => l10n.auraTipLive,
+      SyloraAuraContextPreset.ai => l10n.auraTipAi,
+      SyloraAuraContextPreset.gifts => l10n.auraTipGifts,
+      SyloraAuraContextPreset.creatorStudio => l10n.auraTipCreatorStudio,
+      SyloraAuraContextPreset.marketplace => l10n.auraTipMarketplace,
+      SyloraAuraContextPreset.business => l10n.auraTipBusiness,
+      SyloraAuraContextPreset.learning => l10n.auraTipLearning,
+      SyloraAuraContextPreset.creator => l10n.auraTipCreator,
+      SyloraAuraContextPreset.settings => l10n.auraTipSettings,
     };
 
 final class SyloraAuraPresenceController extends ChangeNotifier {
   SyloraAuraPresenceController({
     AuraEmotion emotion = AuraEmotion.greeting,
-    String tip = 'Я Aura — готова допомогти.',
+    String? tip,
     SyloraAuraContextPreset preset = SyloraAuraContextPreset.ai,
-  }) : this._(emotion: emotion, tip: tip, preset: preset);
+  }) : this._(emotion: emotion, customTip: tip, preset: preset);
 
   SyloraAuraPresenceController._({
     required this._emotion,
-    required this._tip,
+    required this._customTip,
     required this._preset,
   });
 
   factory SyloraAuraPresenceController.forPreset(
     SyloraAuraContextPreset preset,
-  ) {
-    final state = _presetStates[preset]!;
-    return SyloraAuraPresenceController(
-      preset: preset,
-      emotion: state.emotion,
-      tip: state.tip,
-    );
-  }
+  ) =>
+      SyloraAuraPresenceController(
+        preset: preset,
+        emotion: _presetEmotions[preset] ?? AuraEmotion.greeting,
+      );
 
   AuraEmotion get emotion => _emotion;
-  String get tip => _tip;
   SyloraAuraContextPreset get preset => _preset;
 
+  /// Localized tip for the current preset, or a one-off custom tip.
+  String tipFor(AppLocalizations l10n) =>
+      _customTip ?? auraTipForPreset(l10n, _preset);
+
+  /// Backward-compatible raw tip (custom only). Prefer [tipFor].
+  String get tip => _customTip ?? '';
+
   AuraEmotion _emotion;
-  String _tip;
+  String? _customTip;
   SyloraAuraContextPreset _preset;
 
   void setPreset(SyloraAuraContextPreset preset) {
-    final state = _presetStates[preset]!;
-    update(emotion: state.emotion, tip: state.tip, preset: preset);
+    update(
+      emotion: _presetEmotions[preset] ?? AuraEmotion.greeting,
+      clearTip: true,
+      preset: preset,
+    );
   }
 
   void greet([String? tip]) =>
-      update(emotion: AuraEmotion.greeting, tip: tip ?? _tip);
+      update(emotion: AuraEmotion.greeting, tip: tip);
 
   void listen([String? tip]) =>
-      update(emotion: AuraEmotion.listening, tip: tip ?? _tip);
+      update(emotion: AuraEmotion.listening, tip: tip);
 
   void think([String? tip]) =>
-      update(emotion: AuraEmotion.thinking, tip: tip ?? _tip);
+      update(emotion: AuraEmotion.thinking, tip: tip);
 
   void focus([String? tip]) =>
-      update(emotion: AuraEmotion.focused, tip: tip ?? _tip);
+      update(emotion: AuraEmotion.focused, tip: tip);
 
   void speak([String? tip]) =>
-      update(emotion: AuraEmotion.speaking, tip: tip ?? _tip);
+      update(emotion: AuraEmotion.speaking, tip: tip);
 
   void update({
     AuraEmotion? emotion,
     String? tip,
+    bool clearTip = false,
     SyloraAuraContextPreset? preset,
   }) {
     final nextEmotion = emotion ?? _emotion;
-    final nextTip = tip ?? _tip;
+    final nextTip = clearTip ? null : (tip ?? _customTip);
     final nextPreset = preset ?? _preset;
-    if (nextEmotion == _emotion && nextTip == _tip && nextPreset == _preset) {
+    if (nextEmotion == _emotion &&
+        nextTip == _customTip &&
+        nextPreset == _preset) {
       return;
     }
     _emotion = nextEmotion;
-    _tip = nextTip;
+    _customTip = nextTip;
     _preset = nextPreset;
     notifyListeners();
   }
@@ -227,12 +212,15 @@ final class _SyloraAuraPresenceState extends State<SyloraAuraPresence> {
           alignment: widget.alignment,
           child: AnimatedBuilder(
             animation: _controller,
-            builder: (context, _) => _AuraPresenceCard(
-              emotion: _controller.emotion,
-              tip: _controller.tip,
-              reduceMotion: reduceMotion,
-              onAuraTap: widget.onAuraTap,
-            ),
+            builder: (context, _) {
+              final l10n = AppLocalizations.of(context);
+              return _AuraPresenceCard(
+                emotion: _controller.emotion,
+                tip: _controller.tipFor(l10n),
+                reduceMotion: reduceMotion,
+                onAuraTap: widget.onAuraTap,
+              );
+            },
           ),
         ),
       ),

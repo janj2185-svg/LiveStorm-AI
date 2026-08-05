@@ -7,6 +7,31 @@
 
   const EMOTIONS = ['idle', 'greeting', 'listening', 'thinking', 'speaking', 'amused', 'focused'];
 
+  const COPY = {
+    uk: {
+      signIn: 'Увійти',
+      kicker: 'Де AI зустрічає душу',
+      line: 'Твій світ у гармонії — жива присутність, творчий потік і Aura поруч.',
+      cta: 'Почати подорож',
+      auraLabel: 'Aura · супутниця',
+      auraAria: 'Aura — жива AI-супутниця',
+      loading: 'Відкриваємо світ…',
+      enterError: 'Не вдалося завантажити. Перевірте мережу й спробуйте ще раз.',
+      langLabel: 'Мова',
+    },
+    en: {
+      signIn: 'Sign in',
+      kicker: 'Where AI meets soul',
+      line: 'Your world. In harmony — live presence, creative flow, and Aura by your side.',
+      cta: 'Begin your journey',
+      auraLabel: 'Aura · companion',
+      auraAria: 'Aura — living AI companion',
+      loading: 'Opening your world…',
+      enterError: 'Could not load. Check your network and try again.',
+      langLabel: 'Language',
+    },
+  };
+
   const state = {
     running: false,
     reduced: false,
@@ -30,7 +55,30 @@
     lid: 0,
     headYaw: 0,
     headPitch: 0,
+    lang: 'uk',
   };
+
+  function readStoredLang() {
+    try {
+      const stored = localStorage.getItem('locale.languageCode');
+      if (stored && COPY[stored]) return stored;
+    } catch (_) { /* ignore */ }
+    const nav = (navigator.language || 'uk').toLowerCase();
+    return nav.startsWith('uk') ? 'uk' : 'en';
+  }
+
+  function t() {
+    return COPY[state.lang] || COPY.uk;
+  }
+
+  function setLang(lang) {
+    state.lang = COPY[lang] ? lang : 'uk';
+    try {
+      localStorage.setItem('locale.languageCode', state.lang);
+    } catch (_) { /* ignore */ }
+    document.documentElement.lang = state.lang;
+    applyCopy();
+  }
 
   function prefersAetherRoute() {
     const hash = (location.hash || '').replace(/^#/, '');
@@ -191,6 +239,12 @@
   function setEmotion(name, ms) {
     state.emotion = name;
     state.emotionUntil = performance.now() + ms;
+    const wrap = qs('.aether-aura-wrap');
+    if (wrap) {
+      EMOTIONS.forEach((emotion) => wrap.classList.remove(`is-${emotion}`));
+      wrap.classList.add(`is-${name}`);
+      wrap.dataset.emotion = name;
+    }
   }
 
   function updateEmotion(now) {
@@ -200,6 +254,34 @@
     setEmotion(cycle === 'greeting' ? 'idle' : cycle, 3800 + Math.random() * 1200);
   }
 
+  function updateAuraPresence(now) {
+    const wrap = qs('.aether-aura-wrap');
+    const portrait = qs('.aether-aura-portrait');
+    const lids = qs('.aether-aura-lids');
+    if (!wrap || !portrait) return;
+
+    updateEmotion(now);
+
+    // Soft gaze toward pointer — companion, not a frozen headshot.
+    const targetYaw = state.pointer.x * 7;
+    const targetPitch = -state.pointer.y * 5;
+    state.headYaw += (targetYaw - state.headYaw) * 0.06;
+    state.headPitch += (targetPitch - state.headPitch) * 0.06;
+
+    if (now >= state.blinkAt) {
+      state.lid = 1;
+      state.blinkAt = now + 2200 + Math.random() * 3200;
+    }
+    state.lid *= 0.82;
+
+    const speakBoost = state.emotion === 'speaking' ? 1.03 : 1;
+    const thinkDim = state.emotion === 'thinking' ? 0.92 : 1;
+    portrait.style.transform =
+      `translate3d(${state.headYaw}px, ${state.headPitch}px, 0) scale(${speakBoost * thinkDim})`;
+    if (lids) {
+      lids.style.opacity = String(Math.min(1, state.lid * 1.35));
+    }
+  }
 
   function frame(now) {
     if (!state.running) return;
@@ -209,7 +291,7 @@
     if (!ctx) return;
 
     if (!state.t0) state.t0 = now;
-    const t = (now - state.t0) / 1000;
+    const elapsed = (now - state.t0) / 1000;
     state.pointer.x += (state.pointer.tx - state.pointer.x) * 0.08;
     state.pointer.y += (state.pointer.ty - state.pointer.y) * 0.08;
     state.pointer.active *= 0.96;
@@ -237,8 +319,9 @@
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, state.width, state.height);
 
-    if (!state.reduced) drawWaves(ctx, t);
-    drawParticles(ctx, t);
+    if (!state.reduced) drawWaves(ctx, elapsed);
+    drawParticles(ctx, elapsed);
+    updateAuraPresence(now);
 
     // parallax glow layer
     const glow = qs('.aether-wave');
@@ -411,13 +494,36 @@
         root.appendChild(errEl);
       }
       if (errEl) {
-        errEl.textContent = 'Не вдалося завантажити. Перевірте мережу й спробуйте ще раз.';
+        errEl.textContent = t().enterError;
       }
     }
   }
 
 
+  function applyCopy() {
+    const copy = t();
+    const signIn = qs('[data-aether-signin]');
+    if (signIn) signIn.textContent = copy.signIn;
+    const kicker = qs('.aether-kicker');
+    if (kicker) kicker.textContent = copy.kicker;
+    const line = qs('.aether-line');
+    if (line) line.textContent = copy.line;
+    const enterBtn = qs('[data-aether-enter]');
+    const cta = qs('[data-aether-enter] span');
+    if (cta && enterBtn && !enterBtn.disabled) cta.textContent = copy.cta;
+    const auraLabel = qs('.aether-aura-label');
+    if (auraLabel) auraLabel.textContent = copy.auraLabel;
+    const wrap = qs('.aether-aura-wrap');
+    if (wrap) wrap.setAttribute('aria-label', copy.auraAria);
+    document.querySelectorAll('[data-aether-lang]').forEach((btn) => {
+      const active = btn.getAttribute('data-aether-lang') === state.lang;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
   function mountHud(root) {
+    const copy = t();
     root.innerHTML = `
       <canvas id="aether-canvas" aria-hidden="true"></canvas>
       <div class="aether-wave" aria-hidden="true"></div>
@@ -429,21 +535,31 @@
               <span class="aether-mark" aria-hidden="true"></span>
               <span class="aether-brand-mini">SYLORA</span>
             </div>
-            <button type="button" class="aether-link" data-aether-signin>Увійти</button>
+            <div class="aether-top-actions">
+              <div class="aether-lang" role="group" aria-label="${copy.langLabel}">
+                <button type="button" class="aether-lang-btn" data-aether-lang="uk">UK</button>
+                <button type="button" class="aether-lang-btn" data-aether-lang="en">EN</button>
+              </div>
+              <button type="button" class="aether-link" data-aether-signin>${copy.signIn}</button>
+            </div>
           </div>
           <section class="aether-hero">
             <div>
-              <p class="aether-kicker">Where AI meets soul</p>
+              <p class="aether-kicker">${copy.kicker}</p>
               <h1 class="aether-brand">SYLORA</h1>
-              <p class="aether-line">Your world. In harmony — live presence, creative flow, and Aura by your side.</p>
+              <p class="aether-line">${copy.line}</p>
               <div class="aether-cta-wrap">
-                <button type="button" class="aether-portal" data-aether-enter><span>Begin your journey</span></button>
+                <button type="button" class="aether-portal" data-aether-enter><span>${copy.cta}</span></button>
               </div>
             </div>
-            <div class="aether-aura-wrap" aria-label="Aura — AI companion">
+            <div class="aether-aura-wrap is-greeting" data-emotion="greeting" aria-label="${copy.auraAria}">
               <div class="aether-aura-halo" aria-hidden="true"></div>
-              <img class="aether-aura-portrait" src="aether/assets/aura-companion.png" alt="" width="512" height="512" decoding="async" />
-              <span class="aether-aura-label">Aura · companion</span>
+              <div class="aether-aura-stage" aria-hidden="true">
+                <img class="aether-aura-portrait" src="aether/assets/aura-companion.png" alt="" width="512" height="512" decoding="async" />
+                <span class="aether-aura-lids"></span>
+                <span class="aether-aura-breath"></span>
+              </div>
+              <span class="aether-aura-label">${copy.auraLabel}</span>
             </div>
           </section>
         </div>
@@ -451,6 +567,10 @@
     `;
     qs('[data-aether-enter]', root).addEventListener('click', () => enterApp(true));
     qs('[data-aether-signin]', root).addEventListener('click', () => enterApp(false));
+    root.querySelectorAll('[data-aether-lang]').forEach((btn) => {
+      btn.addEventListener('click', () => setLang(btn.getAttribute('data-aether-lang')));
+    });
+    applyCopy();
   }
 
   function bindPointer(canvas, scrollEl) {
@@ -485,6 +605,8 @@
       root.id = 'sylora-aether';
       document.body.prepend(root);
     }
+    state.lang = readStoredLang();
+    document.documentElement.lang = state.lang;
     state.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     mountHud(root);
     document.body.classList.add('sylora-aether-active');

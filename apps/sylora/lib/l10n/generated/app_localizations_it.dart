@@ -1439,4 +1439,75 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get communitiesNoChannelsMessage =>
       'No channels are visible in this community.';
+
+  @override
+  String get navMusic => 'Music';
+
+  @override
+  String get navAura => 'Aura';
+
+  @override
+  String get navStudio => 'Studio';
+
+  @override
+  String get navLearn => 'Learn';
+
+  @override
+  String get navMe => 'Me';
+
+  @override
+  String get moreCommunities => 'Communities';
+
+  @override
+  String get moreEarnings => 'Earnings';
+
+  @override
+  String get moreGiftShop => 'Gift Shop';
+
+  @override
+  String get moreMediaSettings => 'Camera & Audio';
+
+  @override
+  String get auraTipFeed => 'Hi — I am here while you scroll the feed.';
+
+  @override
+  String get auraTipFriends => 'Let us find people who feel warm to you.';
+
+  @override
+  String get auraTipConferences =>
+      'I am listening to the meeting and can help as it goes.';
+
+  @override
+  String get auraTipLive =>
+      'Keeping the stream in focus — tell me if you need help.';
+
+  @override
+  String get auraTipAi =>
+      'I am Aura. Write like a person — I will answer like one.';
+
+  @override
+  String get auraTipGifts => 'I can suggest a gift that will truly land.';
+
+  @override
+  String get auraTipCreatorStudio =>
+      'Ready to help with the studio — step by step.';
+
+  @override
+  String get auraTipMarketplace => 'Looking for what actually fits you.';
+
+  @override
+  String get auraTipBusiness =>
+      'Holding business context so you do not get lost.';
+
+  @override
+  String get auraTipLearning => 'Learning with you — ask anything.';
+
+  @override
+  String get auraTipCreator => 'Your creative rhythm — I will adapt.';
+
+  @override
+  String get auraTipSettings => 'Let us set things up quietly, without noise.';
+
+  @override
+  String get auraTipDefault => 'I am Aura — ready to help.';
 }

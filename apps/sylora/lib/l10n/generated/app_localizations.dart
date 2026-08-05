@@ -2779,6 +2779,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No channels are visible in this community.'**
   String get communitiesNoChannelsMessage;
+
+  /// No description provided for @navMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Music'**
+  String get navMusic;
+
+  /// No description provided for @navAura.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura'**
+  String get navAura;
+
+  /// No description provided for @navStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Studio'**
+  String get navStudio;
+
+  /// No description provided for @navLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get navLearn;
+
+  /// No description provided for @navMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get navMe;
+
+  /// No description provided for @moreCommunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get moreCommunities;
+
+  /// No description provided for @moreEarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings'**
+  String get moreEarnings;
+
+  /// No description provided for @moreGiftShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift Shop'**
+  String get moreGiftShop;
+
+  /// No description provided for @moreMediaSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera & Audio'**
+  String get moreMediaSettings;
+
+  /// No description provided for @auraTipFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi — I am here while you scroll the feed.'**
+  String get auraTipFeed;
+
+  /// No description provided for @auraTipFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Let us find people who feel warm to you.'**
+  String get auraTipFriends;
+
+  /// No description provided for @auraTipConferences.
+  ///
+  /// In en, this message translates to:
+  /// **'I am listening to the meeting and can help as it goes.'**
+  String get auraTipConferences;
+
+  /// No description provided for @auraTipLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeping the stream in focus — tell me if you need help.'**
+  String get auraTipLive;
+
+  /// No description provided for @auraTipAi.
+  ///
+  /// In en, this message translates to:
+  /// **'I am Aura. Write like a person — I will answer like one.'**
+  String get auraTipAi;
+
+  /// No description provided for @auraTipGifts.
+  ///
+  /// In en, this message translates to:
+  /// **'I can suggest a gift that will truly land.'**
+  String get auraTipGifts;
+
+  /// No description provided for @auraTipCreatorStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to help with the studio — step by step.'**
+  String get auraTipCreatorStudio;
+
+  /// No description provided for @auraTipMarketplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for what actually fits you.'**
+  String get auraTipMarketplace;
+
+  /// No description provided for @auraTipBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Holding business context so you do not get lost.'**
+  String get auraTipBusiness;
+
+  /// No description provided for @auraTipLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning with you — ask anything.'**
+  String get auraTipLearning;
+
+  /// No description provided for @auraTipCreator.
+  ///
+  /// In en, this message translates to:
+  /// **'Your creative rhythm — I will adapt.'**
+  String get auraTipCreator;
+
+  /// No description provided for @auraTipSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Let us set things up quietly, without noise.'**
+  String get auraTipSettings;
+
+  /// No description provided for @auraTipDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'I am Aura — ready to help.'**
+  String get auraTipDefault;
 }
 
 class _AppLocalizationsDelegate

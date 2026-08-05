@@ -291,7 +291,7 @@ final class _QuickActionRow extends StatelessWidget {
           onTap: () => context.goNamed('ai'),
         ),
         SyloraPortalChip(
-          label: 'Music',
+          label: l10n.navMusic,
           icon: Icons.library_music_rounded,
           onTap: () => context.goNamed('music'),
         ),
@@ -400,12 +400,12 @@ final class _MoreModuleTileState extends State<_MoreModuleTile> {
 }
 
 String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
-  MoreEntryKind.communities => 'Communities',
+  MoreEntryKind.communities => l10n.moreCommunities,
   MoreEntryKind.learning => l10n.moreLearning,
   MoreEntryKind.wallet => l10n.walletShortLabel,
-  MoreEntryKind.earnings => 'Earnings',
-  MoreEntryKind.giftShop => 'Gift Shop',
-  MoreEntryKind.music => 'Music',
+  MoreEntryKind.earnings => l10n.moreEarnings,
+  MoreEntryKind.giftShop => l10n.moreGiftShop,
+  MoreEntryKind.music => l10n.navMusic,
   MoreEntryKind.ai => l10n.aiShortLabel,
   MoreEntryKind.live => l10n.liveShortLabel,
   MoreEntryKind.conferences => l10n.moreConferences,
@@ -413,7 +413,7 @@ String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
   MoreEntryKind.creator => l10n.moreCreator,
   MoreEntryKind.workspace => l10n.moreWorkspace,
   MoreEntryKind.admin => l10n.moreAdmin,
-  MoreEntryKind.mediaSettings => 'Camera & Audio',
+  MoreEntryKind.mediaSettings => l10n.moreMediaSettings,
   MoreEntryKind.settings => l10n.moreSettings,
 };
 

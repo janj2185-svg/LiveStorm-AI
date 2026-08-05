@@ -1435,4 +1435,72 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get communitiesNoChannelsMessage =>
       'У цій спільноті немає видимих каналів.';
+
+  @override
+  String get navMusic => 'Музика';
+
+  @override
+  String get navAura => 'Aura';
+
+  @override
+  String get navStudio => 'Студія';
+
+  @override
+  String get navLearn => 'Навчання';
+
+  @override
+  String get navMe => 'Я';
+
+  @override
+  String get moreCommunities => 'Спільноти';
+
+  @override
+  String get moreEarnings => 'Дохід';
+
+  @override
+  String get moreGiftShop => 'Магазин подарунків';
+
+  @override
+  String get moreMediaSettings => 'Камера і звук';
+
+  @override
+  String get auraTipFeed => 'Привіт — я поруч, поки ти гортаєш стрічку.';
+
+  @override
+  String get auraTipFriends => 'Давай знайдемо людей, з якими тобі буде тепло.';
+
+  @override
+  String get auraTipConferences => 'Я слухаю зустріч і можу підказати по ходу.';
+
+  @override
+  String get auraTipLive =>
+      'Тримаю ефір у фокусі — скажи, якщо треба допомога.';
+
+  @override
+  String get auraTipAi => 'Я Aura. Пиши як людині — я відповім по-людськи.';
+
+  @override
+  String get auraTipGifts => 'Підкажу подарунок, який справді вразить.';
+
+  @override
+  String get auraTipCreatorStudio =>
+      'Готова допомогти зі студією — крок за кроком.';
+
+  @override
+  String get auraTipMarketplace => 'Шукаємо те, що тобі справді підійде.';
+
+  @override
+  String get auraTipBusiness => 'Тримаю контекст бізнесу, щоб ти не губився.';
+
+  @override
+  String get auraTipLearning => 'Вчуся разом із тобою — питайте що завгодно.';
+
+  @override
+  String get auraTipCreator => 'Твій творчий ритм — я підлаштуюсь.';
+
+  @override
+  String get auraTipSettings => 'Налаштуємо все зручно, без зайвого шуму.';
+
+  @override
+  String get auraTipDefault => 'Я Aura — готова допомогти.';
 }

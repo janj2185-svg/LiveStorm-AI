@@ -85,8 +85,31 @@ final class _SyloraAuraState extends State<SyloraAura>
   @override
   Widget build(BuildContext context) {
     final t = widget.animate ? _elapsed.inMilliseconds / 1000 : 0.0;
-    final breathe = 1 + math.sin(t * 1.2) * 0.018;
-    final floatY = math.sin(t * 1.1) * 3.0;
+    final emotionPulse = switch (widget.emotion) {
+      AuraEmotion.speaking => 0.034,
+      AuraEmotion.thinking || AuraEmotion.thoughtful => 0.012,
+      AuraEmotion.listening => 0.022,
+      AuraEmotion.amused || AuraEmotion.delighted => 0.028,
+      AuraEmotion.focused || AuraEmotion.supportive => 0.016,
+      AuraEmotion.greeting => 0.024,
+      AuraEmotion.idle => 0.018,
+    };
+    final breathe = 1 + math.sin(t * 1.2) * emotionPulse;
+    final floatY = math.sin(t * 1.1) * (widget.emotion == AuraEmotion.speaking ? 4.2 : 3.0);
+    final glowColor = switch (widget.emotion) {
+      AuraEmotion.speaking => SyloraTokens.champagne,
+      AuraEmotion.thinking || AuraEmotion.thoughtful => SyloraTokens.inkSoft,
+      AuraEmotion.listening || AuraEmotion.supportive => SyloraTokens.softSky,
+      AuraEmotion.amused || AuraEmotion.delighted => const Color(0xFFE8C98A),
+      AuraEmotion.focused => SyloraTokens.champagneDeep,
+      _ => SyloraTokens.champagne,
+    };
+    final glowOpacity = switch (widget.emotion) {
+      AuraEmotion.speaking => 0.48,
+      AuraEmotion.thinking || AuraEmotion.thoughtful => 0.22,
+      AuraEmotion.focused => 0.4,
+      _ => 0.32,
+    };
 
     return SizedBox(
       width: widget.size,
@@ -102,9 +125,9 @@ final class _SyloraAuraState extends State<SyloraAura>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: SyloraTokens.glow(
-                      SyloraTokens.champagne,
-                      blur: widget.size * 0.35,
-                      opacity: 0.35,
+                      glowColor,
+                      blur: widget.size * (widget.emotion == AuraEmotion.speaking ? 0.42 : 0.35),
+                      opacity: glowOpacity,
                     ),
                   ),
                   child: ClipOval(
@@ -117,6 +140,7 @@ final class _SyloraAuraState extends State<SyloraAura>
                         Image.asset(
                           'assets/brand/aura-companion.png',
                           fit: BoxFit.cover,
+                          alignment: const Alignment(0, -0.35),
                           errorBuilder: (context, error, stackTrace) => CustomPaint(
                             painter: _AuraPainter(
                               t: t,
@@ -129,7 +153,7 @@ final class _SyloraAuraState extends State<SyloraAura>
                             gradient: RadialGradient(
                               colors: [
                                 Colors.transparent,
-                                SyloraTokens.champagne.withValues(alpha: 0.12),
+                                glowColor.withValues(alpha: 0.14),
                               ],
                             ),
                           ),

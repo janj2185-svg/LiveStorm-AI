@@ -320,19 +320,89 @@ body.sylora-aether-active #sylora-aether { display: block; }
   border-radius: 50%;
   background: radial-gradient(circle, rgba(230, 200, 139, 0.35), rgba(220, 238, 255, 0.18) 45%, transparent 70%);
   animation: haloPulse 4.2s ease-in-out infinite;
+  transition: background 0.6s ease, opacity 0.6s ease;
 }
 
-.aether-aura-portrait {
+.aether-aura-stage {
   position: absolute;
   inset: 6%;
-  width: 88%;
-  height: 88%;
   border-radius: 50%;
-  object-fit: cover;
+  overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.72);
   box-shadow:
     0 18px 40px rgba(15, 23, 32, 0.12),
     0 0 0 8px rgba(255, 252, 248, 0.35);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 252, 248, 0.65), transparent 42%),
+    linear-gradient(160deg, #efe4d4 0%, #d9c4a2 55%, #c9b089 100%);
+}
+
+.aether-aura-portrait {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  transform-origin: 50% 42%;
+  will-change: transform;
+  filter: saturate(1.05) contrast(1.02);
+  transition: filter 0.45s ease;
+  /* Soft vignette so it reads as presence, not a raw photo cutout */
+  -webkit-mask-image: radial-gradient(circle at 50% 42%, #000 58%, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 42%, #000 58%, transparent 78%);
+}
+
+.aether-aura-lids {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(28, 23, 18, 0.55) 0%,
+    rgba(28, 23, 18, 0.55) 38%,
+    transparent 46%,
+    transparent 58%,
+    rgba(28, 23, 18, 0.5) 68%,
+    rgba(28, 23, 18, 0.55) 100%
+  );
+  transition: opacity 0.05s linear;
+}
+
+.aether-aura-breath {
+  position: absolute;
+  inset: 18% 22% auto;
+  height: 42%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 252, 248, 0.28), transparent 70%);
+  animation: auraBreath 3.6s ease-in-out infinite;
+}
+
+.aether-aura-wrap.is-speaking .aether-aura-halo {
+  background: radial-gradient(circle, rgba(230, 200, 139, 0.55), rgba(255, 220, 170, 0.22) 45%, transparent 72%);
+  animation-duration: 2.2s;
+}
+
+.aether-aura-wrap.is-thinking .aether-aura-portrait {
+  filter: saturate(0.92) brightness(0.96) contrast(1.04);
+}
+
+.aether-aura-wrap.is-listening .aether-aura-halo {
+  animation-duration: 3s;
+}
+
+.aether-aura-wrap.is-amused .aether-aura-breath {
+  animation-duration: 2.4s;
+  opacity: 0.9;
+}
+
+.aether-aura-wrap.is-focused .aether-aura-stage {
+  box-shadow:
+    0 18px 40px rgba(15, 23, 32, 0.14),
+    0 0 0 8px rgba(255, 252, 248, 0.4),
+    0 0 28px rgba(201, 164, 92, 0.35);
 }
 
 .aether-aura-label {
@@ -346,6 +416,40 @@ body.sylora-aether-active #sylora-aether { display: block; }
   text-transform: uppercase;
   color: var(--ink-mute);
   font-weight: 650;
+}
+
+.aether-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.aether-lang {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.15rem;
+  border-radius: 999px;
+  background: rgba(255, 252, 248, 0.55);
+  border: 1px solid rgba(201, 164, 92, 0.28);
+}
+
+.aether-lang-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-mute);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.aether-lang-btn.is-active {
+  background: rgba(201, 164, 92, 0.28);
+  color: var(--ink);
 }
 
 .aether-revealed .aether-top { animation: rise 0.9s 0.05s var(--ease) forwards; }
@@ -382,6 +486,11 @@ body.sylora-aether-active #sylora-aether { display: block; }
 @keyframes auraFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-12px); }
+}
+
+@keyframes auraBreath {
+  0%, 100% { transform: scale(0.96); opacity: 0.45; }
+  50% { transform: scale(1.08); opacity: 0.85; }
 }
 
 @keyframes portalHeartbeat {
