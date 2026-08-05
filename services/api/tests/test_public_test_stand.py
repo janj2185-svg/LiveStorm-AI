@@ -173,7 +173,8 @@ async def test_stand_email_otp_and_password_reset_expose_debug_delivery(
 
 
 @pytest.mark.asyncio
-async def test_stand_facebook_and_tiktok_login_without_idp_secrets(api_factory: Any) -> None:
+async def test_stand_login_features_are_google_apple_email_only(api_factory: Any) -> None:
+    """Consumer login IdPs: Google / Apple / Email. Facebook & TikTok are not login."""
     async with api_factory(
         smtp_host=None,
         smtp_from_email=None,
@@ -184,8 +185,10 @@ async def test_stand_facebook_and_tiktok_login_without_idp_secrets(api_factory: 
         methods = await api.client.get("/v1/auth/methods")
         assert methods.status_code == 200
         body = methods.json()
-        assert body["facebook"] is True
-        assert body["tiktok"] is True
+        assert body["email"] is True
+        assert body["email_password"] is True
+        assert body["facebook"] is False
+        assert body["tiktok"] is False
 
         for provider in ("facebook", "tiktok"):
             start = await api.client.get(
@@ -193,29 +196,11 @@ async def test_stand_facebook_and_tiktok_login_without_idp_secrets(api_factory: 
                 headers={"Accept": "application/json"},
                 follow_redirects=False,
             )
-            assert start.status_code == 200, start.text
-            tokens = start.json()
-            assert "access_token" in tokens
-            me = await api.client.get(
-                "/v1/auth/me",
-                headers={"Authorization": f"Bearer {tokens['access_token']}"},
-            )
-            assert me.status_code == 200, me.text
-            assert me.json()["status"] == "active"
-
-        # Browser-style redirect lands on Flutter hash complete route.
-        redirect = await api.client.get(
-            "/v1/auth/oauth/facebook/start",
-            follow_redirects=False,
-        )
-        assert redirect.status_code == 303
-        assert "/#/auth/oauth/complete" in redirect.headers["location"]
+            assert start.status_code in {400, 403, 404, 422}, start.text
 
         stand = await api.client.get("/v1/public/stand-status")
         assert stand.status_code == 200
         features = stand.json()["features"]
-        # Login IdPs on the stand are Google / Apple / Email only —
-        # Facebook and TikTok are Live destinations, not consumer login.
         assert "facebook_login" not in features
         assert "tiktok_login" not in features
         assert features["email_login"]["status"] == "READY"
