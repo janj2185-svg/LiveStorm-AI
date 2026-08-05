@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="aether/sylora-aether.css?v=qw3" data-sylora-aether-css="1">
+  <link rel="stylesheet" href="aether/sylora-aether.css?v=qw4" data-sylora-aether-css="1">
   <style>
     html, body {
       margin: 0;
@@ -44,6 +44,12 @@
   <main aria-label="SYLORA">
     <h1 class="visually-hidden">SYLORA — next-generation AI ecosystem</h1>
   </main>
-  <script src="aether/sylora-aether.js?v=qw3"></script>
+  <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister()));
+  if (window.caches) caches.keys().then((ks) => ks.forEach((k) => caches.delete(k)));
+}
+</script>
+<script src="aether/sylora-aether.js?v=qw4"></script>
 </body>
 </html>
