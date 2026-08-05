@@ -1701,7 +1701,7 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                       'The backend reports no available chat provider. SYLORA will not fabricate a response.',
                   actionLabel: 'Check again',
                   onAction: () => ref.invalidate(aiProvider),
-                  icon: Icons.smart_toy_outlined,
+                  icon: Icons.auto_awesome_rounded,
                 ),
               ],
             );

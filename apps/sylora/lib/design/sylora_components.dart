@@ -34,10 +34,13 @@ final class _SyloraButtonState extends State<SyloraButton> {
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null && !widget.busy;
     final child = widget.busy
-        ? const SizedBox(
+        ? SizedBox(
             width: 18,
             height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: SyloraTokens.ink,
+            ),
           )
         : Row(
             mainAxisAlignment: MainAxisAlignment.center,

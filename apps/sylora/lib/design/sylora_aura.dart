@@ -61,14 +61,19 @@ final class _SyloraAuraState extends State<SyloraAura>
       _elapsed = d;
       if (mounted) setState(() {});
     });
-    if (!widget.animate) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_ticker.isActive) {
-        _ticker.start();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final disable = MediaQuery.disableAnimationsOf(context);
+    if (disable || !widget.animate) {
+      if (_ticker.isActive) {
+        _ticker.stop();
       }
-    });
+    } else if (!_ticker.isActive) {
+      _ticker.start();
+    }
   }
 
   @override

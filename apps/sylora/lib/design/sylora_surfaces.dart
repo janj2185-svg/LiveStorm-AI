@@ -413,26 +413,38 @@ final class SyloraPulseGlow extends StatefulWidget {
 
 final class _SyloraPulseGlowState extends State<SyloraPulseGlow>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1800),
-  )..repeat(reverse: true);
+  AnimationController? _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final disable = MediaQuery.disableAnimationsOf(context);
+    if (disable) {
+      _controller?.stop();
+      return;
+    }
+    _controller ??= AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) {
+    final controller = _controller;
+    if (controller == null || MediaQuery.disableAnimationsOf(context)) {
       return widget.child;
     }
     return AnimatedBuilder(
-      animation: _controller,
+      animation: controller,
       builder: (context, child) {
-        final pulse = 0.82 + (0.18 * _controller.value);
+        final pulse = 0.82 + (0.18 * controller.value);
         return DecoratedBox(
           decoration: BoxDecoration(
             boxShadow: SyloraTokens.glow(

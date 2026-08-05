@@ -10,6 +10,7 @@ import 'package:sylora/features/learning/learning_screens.dart';
 import 'package:sylora/features/marketplace/marketplace_repository.dart';
 import 'package:sylora/features/marketplace/marketplace_screens.dart';
 import 'package:sylora/features/more/more_screen.dart';
+import 'package:sylora/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('More navigation exposes workspaces only for matching roles', (
@@ -152,6 +153,16 @@ void main() {
 
 Widget _material(Widget home) => MaterialApp(
   theme: LumenTheme.light(),
+  locale: const Locale('en'),
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  builder: (context, child) {
+    final media = MediaQuery.of(context);
+    return MediaQuery(
+      data: media.copyWith(disableAnimations: true),
+      child: child ?? const SizedBox.shrink(),
+    );
+  },
   home: Scaffold(body: home),
 );
 

@@ -82,7 +82,9 @@ final class _SyloraLivingCanvasState extends State<SyloraLivingCanvas>
 
   @override
   Widget build(BuildContext context) {
-    _reduced = refReducedMotion(context) || !widget.animate;
+    _reduced = refReducedMotion(context) ||
+        !widget.animate ||
+        MediaQuery.disableAnimationsOf(context);
     final shouldRun = widget.animate && _armed && !_reduced;
     if (!shouldRun && _ticker.isActive) {
       _ticker.stop();

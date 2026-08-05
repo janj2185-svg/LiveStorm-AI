@@ -136,37 +136,12 @@ final class LumenEmptyView extends StatelessWidget {
   final IconData icon;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 520),
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(icon, size: 48, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 20),
-            LumenPrimaryButton(
-              label: actionLabel,
-              icon: Icons.refresh_rounded,
-              onPressed: onAction,
-            ),
-          ],
-        ),
-      ),
-    ),
+  Widget build(BuildContext context) => SyloraStates.empty(
+    title: title,
+    message: message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    icon: icon,
   );
 }
 
@@ -223,7 +198,7 @@ final class LumenAsyncView<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => value.when(
     data: data,
-    loading: () => const Center(child: CircularProgressIndicator()),
+    loading: () => SyloraStates.loading(),
     error: (error, stackTrace) =>
         LumenErrorView(error: error, onRetry: onRetry),
   );

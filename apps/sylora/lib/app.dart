@@ -71,23 +71,11 @@ const _learningDestination = ShellDestination(
   selectedIcon: Icons.school_rounded,
   path: '/learning',
 );
-const _creatorDestination = ShellDestination(
-  label: 'Creator',
-  icon: Icons.edit_note_outlined,
-  selectedIcon: Icons.edit_note_rounded,
-  path: '/creator',
-);
 const _businessDestination = ShellDestination(
   label: 'Workspace',
   icon: Icons.business_outlined,
   selectedIcon: Icons.business_rounded,
   path: '/business',
-);
-const _adminDestination = ShellDestination(
-  label: 'Admin',
-  icon: Icons.admin_panel_settings_outlined,
-  selectedIcon: Icons.admin_panel_settings_rounded,
-  path: '/admin',
 );
 const _musicDestination = ShellDestination(
   label: 'Music',
@@ -101,45 +89,56 @@ const _aiDestination = ShellDestination(
   selectedIcon: Icons.auto_awesome_rounded,
   path: '/ai',
 );
+const _studioDestination = ShellDestination(
+  label: 'Studio',
+  icon: Icons.movie_creation_outlined,
+  selectedIcon: Icons.movie_creation_rounded,
+  path: '/creator-studio',
+);
 const _moreDestination = ShellDestination(
+  label: 'More',
+  icon: Icons.apps_outlined,
+  selectedIcon: Icons.apps_rounded,
+  path: '/more',
+);
+const _meDestination = ShellDestination(
   label: 'Me',
   icon: Icons.person_outline_rounded,
   selectedIcon: Icons.person_rounded,
   path: '/more',
 );
 
-/// A4 Adaptive — phone Shorts dock (icon-first, no label clutter).
+/// Phone island — FINAL-19: Home · Live · Search · Messages · Me
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
   _liveDestination,
   _searchDestination,
   _messagesDestination,
-  _moreDestination,
+  _meDestination,
 ];
 
-/// A4 Adaptive — desktop/tablet Cinema rail (same IA + role tools).
+/// Desktop/tablet cinema rail — FINAL-19:
+/// Home · Live · Friends · Messages · Music · Aura · Market · Business/Edu · Studio · More
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   final roleSet = roles.toSet();
+  final showStudio =
+      roleSet.contains('creator') ||
+      roleSet.contains('admin') ||
+      roleSet.contains('owner');
+  final showBusiness =
+      roleSet.contains('business') ||
+      roleSet.contains('admin') ||
+      roleSet.contains('owner');
   return <ShellDestination>[
     _homeDestination,
     _liveDestination,
-    _searchDestination,
+    _friendsDestination,
     _messagesDestination,
     _musicDestination,
     _aiDestination,
-    _friendsDestination,
     _marketplaceDestination,
-    _learningDestination,
-    if (roleSet.contains('creator') ||
-        roleSet.contains('admin') ||
-        roleSet.contains('owner'))
-      _creatorDestination,
-    if (roleSet.contains('business') ||
-        roleSet.contains('admin') ||
-        roleSet.contains('owner'))
-      _businessDestination,
-    if (roleSet.contains('admin') || roleSet.contains('owner'))
-      _adminDestination,
+    if (showBusiness) _businessDestination else _learningDestination,
+    if (showStudio) _studioDestination,
     _moreDestination,
   ];
 }
@@ -703,7 +702,11 @@ List<ShellDestination> _localizedDestinations(
   return <ShellDestination>[
     for (final destination in destinations)
       ShellDestination(
-        label: _localizedDestinationLabel(l10n, destination.path),
+        label: _localizedDestinationLabel(
+          l10n,
+          destination.path,
+          fallback: destination.label,
+        ),
         icon: destination.icon,
         selectedIcon: destination.selectedIcon,
         path: destination.path,
@@ -711,7 +714,11 @@ List<ShellDestination> _localizedDestinations(
   ];
 }
 
-String _localizedDestinationLabel(AppLocalizations l10n, String path) =>
+String _localizedDestinationLabel(
+  AppLocalizations l10n,
+  String path, {
+  String fallback = '',
+}) =>
     switch (path) {
       '/home' => l10n.navHome,
       '/live' => l10n.navLive,
@@ -719,11 +726,15 @@ String _localizedDestinationLabel(AppLocalizations l10n, String path) =>
       '/friends' => l10n.navFriends,
       '/messages' => l10n.navMessages,
       '/marketplace' => l10n.navMarket,
+      '/music' => fallback.isEmpty ? 'Music' : fallback,
+      '/ai' => fallback.isEmpty ? 'Aura' : fallback,
+      '/learning' => fallback.isEmpty ? 'Learn' : fallback,
       '/creator' => l10n.navCreator,
+      '/creator-studio' => fallback.isEmpty ? 'Studio' : fallback,
       '/business' => l10n.navWorkspace,
       '/admin' => l10n.navAdmin,
-      '/more' => l10n.navProfile,
-      _ => l10n.navMore,
+      '/more' => fallback == 'Me' ? 'Me' : l10n.navMore,
+      _ => fallback.isEmpty ? l10n.navMore : fallback,
     };
 
 final class SyloraApp extends ConsumerStatefulWidget {
