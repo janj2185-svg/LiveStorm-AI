@@ -96,6 +96,14 @@ services:
         limits:
           memory: 768M
 
+  worker:
+    environment:
+      <<: *api-env-parallel
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   migrate:
     environment:
       <<: *api-env-parallel

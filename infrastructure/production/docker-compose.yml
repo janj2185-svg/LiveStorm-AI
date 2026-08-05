@@ -193,6 +193,39 @@ services:
       - data
     logging: *default-logging
 
+  worker:
+    image: sylora-api:${IMAGE_TAG:-production}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      <<: *api-env
+    volumes:
+      - ../../artifacts/sylora-gift-100-originals:/artifacts/sylora-gift-100-originals:ro
+    command:
+      [
+        "celery",
+        "-A",
+        "app.celery_app.celery_app",
+        "worker",
+        "--loglevel=INFO",
+        "--concurrency=1",
+        "-Q",
+        "celery",
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      api-image:
+        condition: service_completed_successfully
+    networks:
+      - application
+      - data
+    logging: *default-logging
+
   api2:
     image: sylora-api:${IMAGE_TAG:-production}
     restart: unless-stopped
