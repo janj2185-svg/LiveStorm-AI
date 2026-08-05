@@ -1,0 +1,22 @@
+# Ethereal v2 — Consistency checklist (founder sign-off)
+
+- [ ] Liquid S Sigil locked (SVG master) across favicon, nav, landing, splash
+- [ ] No Aura portrait on public landing hero
+- [ ] Aura minimized/hidden by default in app shell
+- [ ] Wallet has one primary nav home
+- [ ] Gifts purchased in Gift Shop; sent only in Live
+- [ ] No duplicate earnings hubs (Studio primary)
+- [ ] Ukrainian locale: zero mixed EN strings in UI
+- [ ] Glass stroke + blur tokens consistent
+- [ ] Gold CTA metal consistent (not random orange)
+- [ ] Violet used as accent only
+- [ ] No broken/placeholder icons
+- [ ] No QA/test account names in comps or copy
+- [ ] Loading / empty / error patterns applied
+- [ ] Mobile bottom bar IA matches map
+- [ ] Desktop sidebar order matches map
+- [ ] Motion respects reduced-motion
+- [ ] Legal pages reachable from public + settings
+- [ ] Admin/Owner keys gated visually
+- [ ] All inventory rows Hi-fi or explicit Spec
+- [ ] Founder written approval recorded before implementation
