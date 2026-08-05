@@ -94,10 +94,23 @@ Every authenticated surface uses Sylora tokens + glass + living canvas.
 
 ---
 
-## 6. Sign-off
+## 6. Wave status (2026-08-05 evening)
+
+Deployed to getsylora.com: `9b3deb8` / `280d72a` (aether cache-bust `?v=qw2`).
+
+| Check | Status |
+|-------|--------|
+| Aura not always-on (dock + presence off by default) | **Fixed in code + redeployed** |
+| Landing cinematic + chapters | **Verified live (UK + chapters)** |
+| Auth without FB/TikTok | **Verified** |
+| Stand public handle / Friends | **Verified** |
+| Locale landing → app | **Implemented** (needs human spot-check) |
+| Photoreal Aura / TikTok co-host / full UK / glass dialogs | **Still open — feature freeze holds** |
+
+## 7. Sign-off
 
 | Role | Status |
 |------|--------|
 | Product / Design | **HOLD** — not world-class |
-| Engineering | Implementing quality wave |
+| Engineering | Quality wave 1 shipped; freeze continues |
 | Owner | Required before feature resume |
