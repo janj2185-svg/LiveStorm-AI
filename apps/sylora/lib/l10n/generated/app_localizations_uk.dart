@@ -479,11 +479,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messagesTitle => 'Повідомлення';
 
   @override
-  String get messagesEmpty => 'Немає розмов';
+  String get messagesEmpty => 'Твої розмови починаються тут';
 
   @override
   String get messagesEmptyMessage =>
-      'Історію розмов не повернено. Почніть розмову з публічним нікнеймом.';
+      'Знайди людину, яка тобі близька, або поговори з Aura — і тримай нитку теплою.';
 
   @override
   String get messagesTypeMessage => 'Повідомлення';
@@ -508,6 +508,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get messagesDeclineRequest => 'Відхилити запит на повідомлення';
+
+  @override
+  String get messagesFindPeople => 'Знайти людей';
+
+  @override
+  String get messagesStartCall => 'Почати дзвінок';
 
   @override
   String get moreTitle => 'Більше';
@@ -726,17 +732,115 @@ class AppLocalizationsUk extends AppLocalizations {
   String get searchHeroEyebrow => 'ВІДКРИТТЯ';
 
   @override
-  String get messagesSubtitle => 'Особисті сигнали, запити та живі розмови.';
+  String get messagesSubtitle =>
+      'Де зустрічаються люди — теплі слова, жива присутність, справжній зв’язок.';
 
   @override
-  String get messagesHeroEyebrow => 'ВХІДНІ';
+  String get messagesHeroEyebrow => 'ЗВ’ЯЗОК';
 
   @override
   String get messagesHeroBody =>
-      'Приватні чати з кінематографічною присутністю — запити, відповіді та контекст Aura.';
+      'Повідомлення — це те, як SYLORA відчувається по-людськи. Пиши друзям, відповідай з теплом і залишайся поруч — не як вхідні листи для адміністрування.';
 
   @override
   String get messagesRequestBadge => 'Запит';
+
+  @override
+  String get musicTitle => 'Музика';
+
+  @override
+  String get musicHeroEyebrow => 'АТМОСФЕРА';
+
+  @override
+  String get musicHeroTitle => 'Відчуй простір';
+
+  @override
+  String get musicHeroBody =>
+      'Музика — атмосфера для Live і творчості: настрої, royalty-free BGM і мікси від Aura в одному світловому плеєрі.';
+
+  @override
+  String get musicEmptyTitle => 'У кімнаті тихо';
+
+  @override
+  String get musicEmptyMessage =>
+      'Попроси Aura зібрати мікс або увімкни перший трек, коли каталог буде готовий.';
+
+  @override
+  String get musicPlayFirst => 'Увімкнути перший трек';
+
+  @override
+  String get musicTabHome => 'Домівка';
+
+  @override
+  String get musicTabPlaylists => 'Плейлисти';
+
+  @override
+  String get musicTabFavorites => 'Улюблені';
+
+  @override
+  String get musicTabCreatorBgm => 'BGM творця';
+
+  @override
+  String get musicTabAura => 'Aura AI';
+
+  @override
+  String get musicSearchHint => 'Шукай треки або артистів';
+
+  @override
+  String get musicRecentlyPlayed => 'Нещодавно слухали';
+
+  @override
+  String get musicMoodPlaylists => 'Настрої';
+
+  @override
+  String get musicRoyaltyFree => 'Royalty-free';
+
+  @override
+  String get musicNoPlaylists => 'Ще немає плейлистів';
+
+  @override
+  String get musicNoPlaylistsMessage =>
+      'Створи свій плейлист або попроси Aura.';
+
+  @override
+  String get musicNoFavorites => 'Немає улюблених';
+
+  @override
+  String get musicNoFavoritesMessage =>
+      'Додавай треки в серце, щоб зібрати улюблені.';
+
+  @override
+  String get musicNoCreatorBgm => 'Немає BGM для творця';
+
+  @override
+  String get musicNoCreatorBgmMessage => 'Royalty-free фон для стрімів.';
+
+  @override
+  String get musicCatalogWarming => 'Каталог прогрівається';
+
+  @override
+  String get musicCatalogWarmingMessage => 'Royalty-free треки з’являться тут.';
+
+  @override
+  String get musicNoTracksFound => 'Треків не знайдено';
+
+  @override
+  String get musicNoTracksFoundMessage => 'Спробуй іншу назву або артиста.';
+
+  @override
+  String get musicCreatePlaylist => 'Створити плейлист';
+
+  @override
+  String get musicPlaying => 'грає';
+
+  @override
+  String get musicPaused => 'пауза';
+
+  @override
+  String get musicStop => 'Стоп';
+
+  @override
+  String get musicRecentlyEmpty => 'Увімкни щось, щоб заповнити нещодавні.';
 
   @override
   String get friendsSubtitle =>

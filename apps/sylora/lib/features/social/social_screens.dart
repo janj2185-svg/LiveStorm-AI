@@ -3536,10 +3536,31 @@ final class ConversationsScreen extends ConsumerWidget {
         eyebrow: l10n.messagesHeroEyebrow,
         title: l10n.messagesTitle,
         body: l10n.messagesHeroBody,
-        trailing: SyloraPortalChip(
-          label: l10n.messagesNewConversation,
-          icon: Icons.edit_square,
-          onTap: () => _createConversation(context, ref),
+        trailing: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            SyloraPortalChip(
+              label: l10n.messagesNewConversation,
+              icon: Icons.edit_square,
+              onTap: () => _createConversation(context, ref),
+            ),
+            SyloraPortalChip(
+              label: l10n.messagesFindPeople,
+              icon: Icons.group_outlined,
+              onTap: () => context.goNamed('friends'),
+            ),
+            SyloraPortalChip(
+              label: l10n.aiTalkNow,
+              icon: Icons.auto_awesome_rounded,
+              onTap: () => context.goNamed('ai'),
+            ),
+            SyloraPortalChip(
+              label: l10n.messagesStartCall,
+              icon: Icons.videocam_outlined,
+              onTap: () => context.goNamed('conferences'),
+            ),
+          ],
         ),
       ),
       child: LumenAsyncView<List<ConversationModel>>(
@@ -3549,8 +3570,10 @@ final class ConversationsScreen extends ConsumerWidget {
             ? LumenEmptyView(
                 title: l10n.messagesEmpty,
                 message: l10n.messagesEmptyMessage,
-                actionLabel: l10n.messagesNewConversation,
-                onAction: () => _createConversation(context, ref),
+                actionLabel: l10n.messagesFindPeople,
+                onAction: () => context.goNamed('friends'),
+                secondaryLabel: l10n.aiTalkNow,
+                onSecondary: () => context.goNamed('ai'),
                 icon: Icons.forum_outlined,
               )
             : Column(

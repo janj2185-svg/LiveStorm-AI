@@ -478,11 +478,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagesTitle => 'Messages';
 
   @override
-  String get messagesEmpty => 'No conversations';
+  String get messagesEmpty => 'Your conversations start here';
 
   @override
   String get messagesEmptyMessage =>
-      'No conversation history was returned. Start one with a public handle.';
+      'Find someone you care about, or talk with Aura — then keep the thread warm.';
 
   @override
   String get messagesTypeMessage => 'Message';
@@ -507,6 +507,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messagesDeclineRequest => 'Decline message request';
+
+  @override
+  String get messagesFindPeople => 'Find people';
+
+  @override
+  String get messagesStartCall => 'Start a call';
 
   @override
   String get moreTitle => 'More';
@@ -726,17 +732,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messagesSubtitle =>
-      'Direct signals, requests, and living conversations.';
+      'Where people meet — private words, warm presence, living connection.';
 
   @override
-  String get messagesHeroEyebrow => 'INBOX';
+  String get messagesHeroEyebrow => 'CONNECTION';
 
   @override
   String get messagesHeroBody =>
-      'Private threads with cinematic presence — requests, replies, and Aura-ready context.';
+      'Messages are how SYLORA feels human. Reach friends, answer with care, and stay close — not an inbox to administer.';
 
   @override
   String get messagesRequestBadge => 'Request';
+
+  @override
+  String get musicTitle => 'Music';
+
+  @override
+  String get musicHeroEyebrow => 'ATMOSPHERE';
+
+  @override
+  String get musicHeroTitle => 'Feel the room';
+
+  @override
+  String get musicHeroBody =>
+      'Music is atmosphere for Live and creation — mood sets, royalty-free BGM, and Aura-built mixes in one luminous player.';
+
+  @override
+  String get musicEmptyTitle => 'The room is quiet';
+
+  @override
+  String get musicEmptyMessage =>
+      'Ask Aura to shape a mix, or play the first track when the catalog is ready.';
+
+  @override
+  String get musicPlayFirst => 'Play first track';
+
+  @override
+  String get musicTabHome => 'Home';
+
+  @override
+  String get musicTabPlaylists => 'Playlists';
+
+  @override
+  String get musicTabFavorites => 'Favorites';
+
+  @override
+  String get musicTabCreatorBgm => 'Creator BGM';
+
+  @override
+  String get musicTabAura => 'Aura AI';
+
+  @override
+  String get musicSearchHint => 'Search tracks or artists';
+
+  @override
+  String get musicRecentlyPlayed => 'Recently played';
+
+  @override
+  String get musicMoodPlaylists => 'Mood playlists';
+
+  @override
+  String get musicRoyaltyFree => 'Royalty-free';
+
+  @override
+  String get musicNoPlaylists => 'No playlists yet';
+
+  @override
+  String get musicNoPlaylistsMessage =>
+      'Create a personal playlist or ask Aura.';
+
+  @override
+  String get musicNoFavorites => 'No favorites';
+
+  @override
+  String get musicNoFavoritesMessage => 'Heart tracks to build your favorites.';
+
+  @override
+  String get musicNoCreatorBgm => 'No creator BGM';
+
+  @override
+  String get musicNoCreatorBgmMessage =>
+      'Royalty-free background music for streams.';
+
+  @override
+  String get musicCatalogWarming => 'Catalog warming up';
+
+  @override
+  String get musicCatalogWarmingMessage =>
+      'Royalty-free tracks will appear here.';
+
+  @override
+  String get musicNoTracksFound => 'No tracks found';
+
+  @override
+  String get musicNoTracksFoundMessage => 'Try another title or artist.';
+
+  @override
+  String get musicCreatePlaylist => 'Create playlist';
+
+  @override
+  String get musicPlaying => 'playing';
+
+  @override
+  String get musicPaused => 'paused';
+
+  @override
+  String get musicStop => 'Stop';
+
+  @override
+  String get musicRecentlyEmpty => 'Play something to fill recently played.';
 
   @override
   String get friendsSubtitle =>

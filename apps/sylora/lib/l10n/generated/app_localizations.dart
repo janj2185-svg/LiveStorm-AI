@@ -1013,13 +1013,13 @@ abstract class AppLocalizations {
   /// No description provided for @messagesEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No conversations'**
+  /// **'Your conversations start here'**
   String get messagesEmpty;
 
   /// No description provided for @messagesEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'No conversation history was returned. Start one with a public handle.'**
+  /// **'Find someone you care about, or talk with Aura — then keep the thread warm.'**
   String get messagesEmptyMessage;
 
   /// No description provided for @messagesTypeMessage.
@@ -1069,6 +1069,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decline message request'**
   String get messagesDeclineRequest;
+
+  /// No description provided for @messagesFindPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Find people'**
+  String get messagesFindPeople;
+
+  /// No description provided for @messagesStartCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a call'**
+  String get messagesStartCall;
 
   /// No description provided for @moreTitle.
   ///
@@ -1487,19 +1499,19 @@ abstract class AppLocalizations {
   /// No description provided for @messagesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Direct signals, requests, and living conversations.'**
+  /// **'Where people meet — private words, warm presence, living connection.'**
   String get messagesSubtitle;
 
   /// No description provided for @messagesHeroEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'INBOX'**
+  /// **'CONNECTION'**
   String get messagesHeroEyebrow;
 
   /// No description provided for @messagesHeroBody.
   ///
   /// In en, this message translates to:
-  /// **'Private threads with cinematic presence — requests, replies, and Aura-ready context.'**
+  /// **'Messages are how SYLORA feels human. Reach friends, answer with care, and stay close — not an inbox to administer.'**
   String get messagesHeroBody;
 
   /// No description provided for @messagesRequestBadge.
@@ -1507,6 +1519,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request'**
   String get messagesRequestBadge;
+
+  /// No description provided for @musicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Music'**
+  String get musicTitle;
+
+  /// No description provided for @musicHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'ATMOSPHERE'**
+  String get musicHeroEyebrow;
+
+  /// No description provided for @musicHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feel the room'**
+  String get musicHeroTitle;
+
+  /// No description provided for @musicHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Music is atmosphere for Live and creation — mood sets, royalty-free BGM, and Aura-built mixes in one luminous player.'**
+  String get musicHeroBody;
+
+  /// No description provided for @musicEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The room is quiet'**
+  String get musicEmptyTitle;
+
+  /// No description provided for @musicEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Aura to shape a mix, or play the first track when the catalog is ready.'**
+  String get musicEmptyMessage;
+
+  /// No description provided for @musicPlayFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Play first track'**
+  String get musicPlayFirst;
+
+  /// No description provided for @musicTabHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get musicTabHome;
+
+  /// No description provided for @musicTabPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get musicTabPlaylists;
+
+  /// No description provided for @musicTabFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get musicTabFavorites;
+
+  /// No description provided for @musicTabCreatorBgm.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator BGM'**
+  String get musicTabCreatorBgm;
+
+  /// No description provided for @musicTabAura.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura AI'**
+  String get musicTabAura;
+
+  /// No description provided for @musicSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search tracks or artists'**
+  String get musicSearchHint;
+
+  /// No description provided for @musicRecentlyPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently played'**
+  String get musicRecentlyPlayed;
+
+  /// No description provided for @musicMoodPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood playlists'**
+  String get musicMoodPlaylists;
+
+  /// No description provided for @musicRoyaltyFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Royalty-free'**
+  String get musicRoyaltyFree;
+
+  /// No description provided for @musicNoPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists yet'**
+  String get musicNoPlaylists;
+
+  /// No description provided for @musicNoPlaylistsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a personal playlist or ask Aura.'**
+  String get musicNoPlaylistsMessage;
+
+  /// No description provided for @musicNoFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites'**
+  String get musicNoFavorites;
+
+  /// No description provided for @musicNoFavoritesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart tracks to build your favorites.'**
+  String get musicNoFavoritesMessage;
+
+  /// No description provided for @musicNoCreatorBgm.
+  ///
+  /// In en, this message translates to:
+  /// **'No creator BGM'**
+  String get musicNoCreatorBgm;
+
+  /// No description provided for @musicNoCreatorBgmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Royalty-free background music for streams.'**
+  String get musicNoCreatorBgmMessage;
+
+  /// No description provided for @musicCatalogWarming.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog warming up'**
+  String get musicCatalogWarming;
+
+  /// No description provided for @musicCatalogWarmingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Royalty-free tracks will appear here.'**
+  String get musicCatalogWarmingMessage;
+
+  /// No description provided for @musicNoTracksFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No tracks found'**
+  String get musicNoTracksFound;
+
+  /// No description provided for @musicNoTracksFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another title or artist.'**
+  String get musicNoTracksFoundMessage;
+
+  /// No description provided for @musicCreatePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Create playlist'**
+  String get musicCreatePlaylist;
+
+  /// No description provided for @musicPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'playing'**
+  String get musicPlaying;
+
+  /// No description provided for @musicPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'paused'**
+  String get musicPaused;
+
+  /// No description provided for @musicStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get musicStop;
+
+  /// No description provided for @musicRecentlyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Play something to fill recently played.'**
+  String get musicRecentlyEmpty;
 
   /// No description provided for @friendsSubtitle.
   ///

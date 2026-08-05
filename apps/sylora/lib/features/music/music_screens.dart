@@ -6,6 +6,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../core/api.dart';
 import '../../core/lumen_widgets.dart';
 import '../../design/sylora.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 
 @immutable
@@ -124,6 +125,30 @@ final class MusicHome {
   final List<MusicTrack> creatorBgm;
   final List<MusicPlaylist> aiPlaylists;
   final List<MusicPlaylist> personalPlaylists;
+
+  /// First playable track across catalog rails (for empty-state CTAs).
+  MusicTrack? get firstCatalogTrack {
+    for (final rail in <List<MusicTrack>>[
+      recentlyPlayed,
+      favorites,
+      royaltyFree,
+      creatorBgm,
+    ]) {
+      if (rail.isNotEmpty) {
+        return rail.first;
+      }
+    }
+    return null;
+  }
+
+  bool get isCatalogSparse =>
+      recentlyPlayed.isEmpty &&
+      favorites.isEmpty &&
+      royaltyFree.isEmpty &&
+      creatorBgm.isEmpty &&
+      moodPlaylists.isEmpty &&
+      aiPlaylists.isEmpty &&
+      personalPlaylists.isEmpty;
 }
 
 final class MusicRepository {
@@ -462,6 +487,7 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
     final home = ref.watch(musicHomeProvider);
     final player = ref.watch(musicPlayerProvider);
     final compact = MediaQuery.sizeOf(context).width < 720;
+    final l10n = AppLocalizations.of(context);
 
     return SyloraLivingScaffold(
       intensity: 0.9,
@@ -469,18 +495,34 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: SyloraTokens.glassStrong,
-          title: Text('Music', style: SyloraTokens.title(20)),
-          bottom: TabBar(
-            controller: _tabs,
-            isScrollable: true,
-            tabs: const <Tab>[
-              Tab(text: 'Home'),
-              Tab(text: 'Playlists'),
-              Tab(text: 'Favorites'),
-              Tab(text: 'Creator BGM'),
-              Tab(text: 'Aura AI'),
-            ],
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          title: Text(l10n.musicTitle, style: SyloraTokens.title(20)),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(52),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: SyloraGlass(
+                radius: SyloraTokens.radiusPill,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: TabBar(
+                  controller: _tabs,
+                  isScrollable: true,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  labelStyle: SyloraTokens.label(12),
+                  unselectedLabelStyle: SyloraTokens.label(12),
+                  tabs: <Tab>[
+                    Tab(text: l10n.musicTabHome),
+                    Tab(text: l10n.musicTabPlaylists),
+                    Tab(text: l10n.musicTabFavorites),
+                    Tab(text: l10n.musicTabCreatorBgm),
+                    Tab(text: l10n.musicTabAura),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
         body: Center(
@@ -517,25 +559,29 @@ final class _MusicScreenState extends ConsumerState<MusicScreen>
                             ...data.moodPlaylists,
                             ...data.aiPlaylists,
                           ],
-                          emptyTitle: 'No playlists yet',
-                          emptyMessage:
-                              'Create a personal playlist or ask Aura.',
+                          emptyTitle: l10n.musicNoPlaylists,
+                          emptyMessage: l10n.musicNoPlaylistsMessage,
                           onCreate: _createPlaylist,
                           onOpen: _openPlaylist,
+                          fallbackTrack: data.firstCatalogTrack,
+                          onPlayFallback: data.firstCatalogTrack == null
+                              ? null
+                              : () => _play(data.firstCatalogTrack!),
                         ),
                         _TrackList(
                           tracks: data.favorites,
-                          emptyTitle: 'No favorites',
-                          emptyMessage: 'Heart tracks to build your favorites.',
+                          emptyTitle: l10n.musicNoFavorites,
+                          emptyMessage: l10n.musicNoFavoritesMessage,
                           onPlay: _play,
+                          fallbackTrack: data.firstCatalogTrack,
                         ),
                         _TrackList(
                           tracks: data.creatorBgm,
-                          emptyTitle: 'No creator BGM',
-                          emptyMessage:
-                              'Royalty-free background music for streams.',
+                          emptyTitle: l10n.musicNoCreatorBgm,
+                          emptyMessage: l10n.musicNoCreatorBgmMessage,
                           onPlay: (t) => _play(t, contextLabel: 'creator_bgm'),
                           badge: 'BGM',
+                          fallbackTrack: data.firstCatalogTrack,
                         ),
                         _AuraMusicTab(
                           controller: _aiPrompt,
@@ -590,23 +636,53 @@ final class _MusicHomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final firstTrack = data.firstCatalogTrack;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: <Widget>[
         SyloraUniverseHero(
-          eyebrow: 'MUSIC',
-          title: 'Feel the room',
-          body:
-              'Personal playlists, mood sets, royalty-free creator BGM, and Aura-built mixes — one player across SYLORA.',
+          eyebrow: l10n.musicHeroEyebrow,
+          title: l10n.musicHeroTitle,
+          body: l10n.musicHeroBody,
           compactBreakpoint: 720,
+          trailing: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              SyloraPortalChip(
+                label: l10n.aiTalkNow,
+                icon: Icons.auto_awesome_rounded,
+                onTap: () => context.goNamed('ai'),
+              ),
+              if (firstTrack != null)
+                SyloraPortalChip(
+                  label: l10n.musicPlayFirst,
+                  icon: Icons.play_arrow_rounded,
+                  onTap: () => onPlay(firstTrack),
+                ),
+            ],
+          ),
         ),
+        if (data.isCatalogSparse) ...<Widget>[
+          const SizedBox(height: 18),
+          LumenEmptyView(
+            title: l10n.musicEmptyTitle,
+            message: l10n.musicEmptyMessage,
+            actionLabel: l10n.aiTalkNow,
+            onAction: () => context.goNamed('ai'),
+            secondaryLabel: firstTrack == null ? null : l10n.musicPlayFirst,
+            onSecondary: firstTrack == null ? null : () => onPlay(firstTrack),
+            icon: Icons.library_music_outlined,
+          ),
+        ],
         const SizedBox(height: 18),
         TextField(
           controller: searchController,
           textInputAction: TextInputAction.search,
           onSubmitted: (_) => onSearch(),
           decoration: InputDecoration(
-            hintText: 'Search tracks or artists',
+            hintText: l10n.musicSearchHint,
             prefixIcon: const Icon(Icons.search_rounded),
             suffixIcon: searching
                 ? const Padding(
@@ -617,7 +693,7 @@ final class _MusicHomeTab extends StatelessWidget {
                     ),
                   )
                 : IconButton(
-                    tooltip: 'Search catalog',
+                    tooltip: l10n.musicSearchHint,
                     onPressed: onSearch,
                     icon: const Icon(Icons.arrow_forward_rounded),
                   ),
@@ -634,65 +710,80 @@ final class _MusicHomeTab extends StatelessWidget {
           ),
         if (searchResults != null) ...<Widget>[
           const SizedBox(height: 10),
-          _SectionTitle('Search results'),
+          _SectionTitle(l10n.musicSearchHint),
           _TrackList(
             tracks: searchResults!,
-            emptyTitle: 'No tracks found',
-            emptyMessage: 'Try another title or artist.',
+            emptyTitle: l10n.musicNoTracksFound,
+            emptyMessage: l10n.musicNoTracksFoundMessage,
             onPlay: onPlay,
             onFavorite: onFavorite,
             shrinkWrap: true,
+            fallbackTrack: firstTrack,
           ),
         ],
-        _SectionTitle('Recently played'),
+        _SectionTitle(l10n.musicRecentlyPlayed),
         _HorizontalTracks(tracks: data.recentlyPlayed, onPlay: onPlay),
-        _SectionTitle('Mood playlists'),
+        _SectionTitle(l10n.musicMoodPlaylists),
         SizedBox(
           height: 132,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: data.moodPlaylists.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final playlist = data.moodPlaylists[index];
-              return InkWell(
-                borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
-                onTap: () => onOpenPlaylist(playlist),
-                child: SyloraGlass(
-                  radius: SyloraTokens.radiusLg,
-                  padding: const EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: 160,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Icon(Icons.graphic_eq_rounded, color: SyloraTokens.ion),
-                        const Spacer(),
-                        Text(playlist.title, style: SyloraTokens.title(15)),
-                        Text(
-                          '${playlist.trackCount} tracks',
-                          style: SyloraTokens.body(
-                            12,
-                            color: SyloraTokens.inkSoft,
+          child: data.moodPlaylists.isEmpty
+              ? Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.musicNoPlaylistsMessage,
+                    style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+                  ),
+                )
+              : ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: data.moodPlaylists.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final playlist = data.moodPlaylists[index];
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(
+                        SyloraTokens.radiusLg,
+                      ),
+                      onTap: () => onOpenPlaylist(playlist),
+                      child: SyloraGlass(
+                        radius: SyloraTokens.radiusLg,
+                        padding: const EdgeInsets.all(16),
+                        child: SizedBox(
+                          width: 160,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Icon(
+                                Icons.graphic_eq_rounded,
+                                color: SyloraTokens.ion,
+                              ),
+                              const Spacer(),
+                              Text(playlist.title, style: SyloraTokens.title(15)),
+                              Text(
+                                '${playlist.trackCount} tracks',
+                                style: SyloraTokens.body(
+                                  12,
+                                  color: SyloraTokens.inkSoft,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
         const SizedBox(height: 8),
-        _SectionTitle('Royalty-free'),
+        _SectionTitle(l10n.musicRoyaltyFree),
         _TrackList(
           tracks: data.royaltyFree,
-          emptyTitle: 'Catalog warming up',
-          emptyMessage: 'Royalty-free tracks will appear here.',
+          emptyTitle: l10n.musicCatalogWarming,
+          emptyMessage: l10n.musicCatalogWarmingMessage,
           onPlay: onPlay,
           onFavorite: onFavorite,
           shrinkWrap: true,
+          fallbackTrack: firstTrack,
         ),
       ],
     );
@@ -720,11 +811,12 @@ final class _HorizontalTracks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (tracks.isEmpty) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Text(
-          'Play something to fill recently played.',
+          l10n.musicRecentlyEmpty,
           style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
         ),
       );
@@ -795,6 +887,7 @@ final class _TrackList extends StatelessWidget {
     this.onFavorite,
     this.badge,
     this.shrinkWrap = false,
+    this.fallbackTrack,
   });
 
   final List<MusicTrack> tracks;
@@ -804,15 +897,21 @@ final class _TrackList extends StatelessWidget {
   final Future<void> Function(MusicTrack track)? onFavorite;
   final String? badge;
   final bool shrinkWrap;
+  final MusicTrack? fallbackTrack;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (tracks.isEmpty) {
       return LumenEmptyView(
         title: emptyTitle,
         message: emptyMessage,
-        actionLabel: 'Talk to Aura',
+        actionLabel: l10n.aiTalkNow,
         onAction: () => context.goNamed('ai'),
+        secondaryLabel: fallbackTrack == null ? null : l10n.musicPlayFirst,
+        onSecondary: fallbackTrack == null
+            ? null
+            : () => onPlay(fallbackTrack!),
         icon: Icons.library_music_outlined,
       );
     }
@@ -828,31 +927,51 @@ final class _TrackList extends StatelessWidget {
         final track = tracks[index];
         return SyloraStaggeredReveal(
           index: index,
-          child: ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
-            ),
-            tileColor: Colors.white.withValues(alpha: 0.55),
-            leading: CircleAvatar(
-              backgroundColor: SyloraTokens.petal.withValues(alpha: 0.25),
-              child: const Icon(Icons.music_note_rounded),
-            ),
-            title: Text(
-              track.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              [track.artistName, track.licenseLabel, ?badge].join(' · '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+          child: SyloraGlassTile(
+            onTap: () => onPlay(track),
+            child: Row(
               children: <Widget>[
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: SyloraTokens.petal.withValues(alpha: 0.25),
+                  ),
+                  child: const Icon(Icons.music_note_rounded),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        track.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SyloraTokens.title(15),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        [
+                          track.artistName,
+                          track.licenseLabel,
+                          ?badge,
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SyloraTokens.body(
+                          12,
+                          color: SyloraTokens.inkSoft,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 if (onFavorite != null)
                   IconButton(
-                    tooltip: 'Favorite',
+                    tooltip: l10n.musicTabFavorites,
                     onPressed: () => onFavorite!(track),
                     icon: const Icon(Icons.favorite_border_rounded),
                   ),
@@ -876,6 +995,8 @@ final class _PlaylistGrid extends StatelessWidget {
     required this.emptyMessage,
     required this.onCreate,
     required this.onOpen,
+    this.fallbackTrack,
+    this.onPlayFallback,
   });
 
   final List<MusicPlaylist> playlists;
@@ -883,15 +1004,22 @@ final class _PlaylistGrid extends StatelessWidget {
   final String emptyMessage;
   final VoidCallback onCreate;
   final Future<void> Function(MusicPlaylist playlist) onOpen;
+  final MusicTrack? fallbackTrack;
+  final VoidCallback? onPlayFallback;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (playlists.isEmpty) {
       return LumenEmptyView(
         title: emptyTitle,
         message: emptyMessage,
-        actionLabel: 'Create playlist',
-        onAction: onCreate,
+        actionLabel: l10n.aiTalkNow,
+        onAction: () => context.goNamed('ai'),
+        secondaryLabel: fallbackTrack == null
+            ? l10n.musicCreatePlaylist
+            : l10n.musicPlayFirst,
+        onSecondary: fallbackTrack == null ? onCreate : onPlayFallback,
         icon: Icons.queue_music_rounded,
       );
     }
@@ -1444,6 +1572,7 @@ final class _MiniPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final track = player.track!;
     final duration =
         player.duration ?? Duration(seconds: track.durationSeconds);
@@ -1453,42 +1582,69 @@ final class _MiniPlayer extends StatelessWidget {
             0.0,
             1.0,
           );
-    return Material(
-      color: SyloraTokens.glassStrong,
-      elevation: 8,
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            LinearProgressIndicator(value: progress),
-            ListTile(
-              leading: IconButton.filledTonal(
-                onPressed: player.toggle,
-                icon: Icon(
-                  player.playing
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: SyloraGlass(
+        radius: SyloraTokens.radiusLg,
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 3,
+                  backgroundColor: SyloraTokens.ion.withValues(alpha: 0.12),
+                  color: SyloraTokens.ion,
                 ),
               ),
-              title: Text(
-                track.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 8),
+              Row(
+                children: <Widget>[
+                  IconButton.filledTonal(
+                    onPressed: player.toggle,
+                    icon: Icon(
+                      player.playing
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          track.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SyloraTokens.title(14),
+                        ),
+                        Text(
+                          player.error ??
+                              '${track.artistName} · ${player.playing ? l10n.musicPlaying : l10n.musicPaused}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SyloraTokens.body(
+                            12,
+                            color: SyloraTokens.inkSoft,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l10n.musicStop,
+                    onPressed: player.stop,
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
               ),
-              subtitle: Text(
-                player.error ??
-                    '${track.artistName} · ${player.playing ? 'playing' : 'paused'}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: IconButton(
-                tooltip: 'Stop',
-                onPressed: player.stop,
-                icon: const Icon(Icons.close_rounded),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
