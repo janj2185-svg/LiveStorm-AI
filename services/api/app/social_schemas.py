@@ -416,6 +416,8 @@ class CommentResponse(ORMStrictSchema):
     created_at: datetime
     edited_at: datetime | None
     deleted_at: datetime | None
+    reaction_count: int = 0
+    viewer_reaction: ReactionValue | None = None
 
 
 class ReactionRequest(StrictSchema):

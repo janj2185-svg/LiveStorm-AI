@@ -1976,8 +1976,24 @@ async def get_recommendations(
     ]
 
 
-async def comment_response(db: AsyncSession, comment: Comment) -> CommentResponse:
+async def comment_response(
+    db: AsyncSession,
+    comment: Comment,
+    viewer_id: uuid.UUID,
+) -> CommentResponse:
     handle = await db.scalar(select(Profile.handle).where(Profile.user_id == comment.author_id))
+    reaction_count = await db.scalar(
+        select(func.count())
+        .select_from(Reaction)
+        .where(Reaction.target_type == "comment", Reaction.target_id == comment.id)
+    )
+    viewer_reaction = await db.scalar(
+        select(Reaction.value).where(
+            Reaction.user_id == viewer_id,
+            Reaction.target_type == "comment",
+            Reaction.target_id == comment.id,
+        )
+    )
     return CommentResponse(
         id=comment.id,
         post_id=comment.post_id,
@@ -1988,6 +2004,8 @@ async def comment_response(db: AsyncSession, comment: Comment) -> CommentRespons
         created_at=comment.created_at,
         edited_at=comment.edited_at,
         deleted_at=comment.deleted_at,
+        reaction_count=int(reaction_count or 0),
+        viewer_reaction=viewer_reaction,
     )
 
 
@@ -2008,7 +2026,7 @@ async def list_comments(
             .order_by(Comment.created_at.asc())
         )
     ).all()
-    return [await comment_response(db, comment) for comment in comments]
+    return [await comment_response(db, comment, auth.user.id) for comment in comments]
 
 
 @router.post(
@@ -2045,7 +2063,7 @@ async def create_comment(
         target_id=post.id,
     )
     await commit_and_refresh(db, comment)
-    return await comment_response(db, comment)
+    return await comment_response(db, comment, auth.user.id)
 
 
 @router.post(
@@ -2099,7 +2117,7 @@ async def create_reply(
         target_id=parent.id,
     )
     await commit_and_refresh(db, reply)
-    return await comment_response(db, reply)
+    return await comment_response(db, reply, auth.user.id)
 
 
 @router.patch("/comments/{comment_id}", response_model=CommentResponse)
@@ -2121,7 +2139,7 @@ async def update_comment(
     comment.body = payload.body
     comment.edited_at = utcnow()
     await commit_and_refresh(db, comment)
-    return await comment_response(db, comment)
+    return await comment_response(db, comment, auth.user.id)
 
 
 @router.delete("/comments/{comment_id}", response_model=MessageResponse)

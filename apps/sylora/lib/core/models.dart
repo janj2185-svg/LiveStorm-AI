@@ -295,6 +295,8 @@ final class CommentModel {
     required this.authorHandle,
     required this.body,
     required this.createdAt,
+    this.reactionCount = 0,
+    this.viewerReaction,
   });
 
   factory CommentModel.fromJson(JsonObject json) => CommentModel(
@@ -302,12 +304,16 @@ final class CommentModel {
     authorHandle: requireString(json, 'author_handle'),
     body: requireString(json, 'body'),
     createdAt: requireDateTime(json, 'created_at'),
+    reactionCount: requireInt(json, 'reaction_count'),
+    viewerReaction: optionalString(json, 'viewer_reaction'),
   );
 
   final String id;
   final String authorHandle;
   final String body;
   final DateTime createdAt;
+  final int reactionCount;
+  final String? viewerReaction;
 }
 
 @immutable

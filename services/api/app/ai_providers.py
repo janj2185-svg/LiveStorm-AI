@@ -594,17 +594,29 @@ class OpenAICompatibleProvider:
                     data = json.loads(encoded)
                     if isinstance(data.get("usage"), dict):
                         raw_usage = data["usage"]
-                    delta = data.get("choices", [{}])[0].get("delta", {})
+                    # OpenAI often sends a final usage-only chunk with choices: [].
+                    # data.get("choices", [{}]) still returns [] when the key exists.
+                    choices = data.get("choices")
+                    if not isinstance(choices, list) or not choices:
+                        continue
+                    first = choices[0] if isinstance(choices[0], dict) else {}
+                    delta = first.get("delta") or {}
+                    if not isinstance(delta, dict):
+                        delta = {}
                     text_delta = delta.get("content") or ""
                     if text_delta:
                         if not isinstance(text_delta, str):
                             raise TypeError
                         collected.append(text_delta)
                         yield ChatStreamEvent(text_delta=text_delta)
-                    for tool_call in delta.get("tool_calls", []):
+                    for tool_call in delta.get("tool_calls", []) or []:
+                        if not isinstance(tool_call, dict):
+                            continue
                         index = int(tool_call.get("index", 0))
                         current = tool_parts.setdefault(index, {"name": "", "arguments": ""})
                         function = tool_call.get("function", {})
+                        if not isinstance(function, dict):
+                            function = {}
                         current["name"] += str(function.get("name", ""))
                         current["arguments"] += str(function.get("arguments", ""))
         except (httpx.TimeoutException, httpx.NetworkError) as exc:

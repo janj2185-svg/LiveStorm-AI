@@ -1441,8 +1441,13 @@ final class DioAiRepository implements AiRepository {
     String conversationId,
     String content,
   ) async* {
-    // Prefer the SSE endpoint. On web adapters may buffer until completion;
-    // native Dio streams deliver deltas as they arrive from a live backend.
+    // Prefer the SSE endpoint. On stream protocol/provider errors, fall back
+    // to non-stream send so chat remains usable every day.
+    Future<AiChatStreamEvent> fallbackCompleted() async {
+      final message = await send(conversationId, content);
+      return AiChatStreamEvent.completed(message);
+    }
+
     try {
       final response = await _client.request(
         'ai/conversations/$conversationId/stream',
@@ -1459,21 +1464,39 @@ final class DioAiRepository implements AiRepository {
         throw StateError('AI stream did not return a byte stream.');
       }
       final pending = StringBuffer();
+      var completed = false;
       await for (final chunk in body.stream) {
         pending.write(utf8.decode(chunk, allowMalformed: true));
         final parsed = _consumeSse(pending);
         for (final event in parsed) {
+          if (event.isError) {
+            // SSE delivered an error event after possible deltas — recover.
+            yield await fallbackCompleted();
+            return;
+          }
+          if (event.isCompleted) {
+            completed = true;
+          }
           yield event;
         }
       }
       for (final event in _consumeSse(pending, flush: true)) {
+        if (event.isError) {
+          yield await fallbackCompleted();
+          return;
+        }
+        if (event.isCompleted) {
+          completed = true;
+        }
         yield event;
       }
+      if (!completed) {
+        // Stream ended without a completed frame — recover via /send.
+        yield await fallbackCompleted();
+      }
     } on Object catch (error) {
-      // Fail open to non-stream send so chat remains usable.
       try {
-        final message = await send(conversationId, content);
-        yield AiChatStreamEvent.completed(message);
+        yield await fallbackCompleted();
       } on Object {
         yield AiChatStreamEvent.error(error);
       }

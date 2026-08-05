@@ -4076,19 +4076,22 @@ final class LiveScreen extends ConsumerWidget {
                   style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
                 ),
                 children: <Widget>[
+                  Text(
+                    l10n.liveIntegrationsBody,
+                    style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+                  ),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: <Widget>[
-                      SyloraPortalChip(
-                        label: l10n.liveNativeReady,
-                        icon: Icons.check_circle_outline_rounded,
-                        onTap: () {},
+                      Chip(
+                        avatar: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                        label: Text(l10n.liveNativeReady),
                       ),
-                      SyloraPortalChip(
-                        label: l10n.liveTikTokBlocked,
-                        icon: Icons.lock_outline_rounded,
-                        onTap: () {},
+                      Chip(
+                        avatar: const Icon(Icons.lock_outline_rounded, size: 18),
+                        label: Text(l10n.liveTikTokBlocked),
                       ),
                     ],
                   ),
@@ -4932,37 +4935,16 @@ final class _LiveSessionScreenState extends ConsumerState<LiveSessionScreen> {
                       if (canStart)
                         SyloraPortalChip(
                           label: '3 · ${l10n.liveStepStart}',
-                          icon: Icons.play_arrow_rounded,
+                          icon: Icons.video_camera_front_outlined,
                           onTap: () async {
-                            try {
-                              final repo = ref.read(liveRepositoryProvider);
-                              if (session.state == 'draft') {
-                                setState(
-                                  () => _status = l10n.livePreflightRunning,
-                                );
-                                final result =
-                                    await repo.preflight(session.id);
-                                final ready = result['ready'] == true;
-                                if (!ready) {
-                                  setState(
-                                    () => _status =
-                                        l10n.livePreflightNeedsAttention,
-                                  );
-                                  ref.invalidate(
-                                    liveSessionProvider(widget.sessionId),
-                                  );
-                                  return;
-                                }
-                              }
-                              await repo.start(session.id);
-                              setState(
-                                () => _status = l10n.liveSessionStarted,
-                              );
-                              ref.invalidate(
-                                liveSessionProvider(widget.sessionId),
-                              );
-                            } on Object catch (error) {
-                              setState(() => _status = messageFor(error));
+                            // Do not mark the session live without a camera
+                            // publish path — send the host to Creator Studio.
+                            setState(
+                              () => _status =
+                                  'Open Creator Studio to preview camera, publish WHIP, then go live.',
+                            );
+                            if (context.mounted) {
+                              context.goNamed('creator-studio');
                             }
                           },
                         ),

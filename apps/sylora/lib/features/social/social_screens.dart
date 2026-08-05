@@ -858,12 +858,20 @@ final class PostCard extends ConsumerWidget {
                   : 'Remove reaction',
               onPressed: () async {
                 final repository = ref.read(socialRepositoryProvider);
-                if (post.viewerReaction == null) {
-                  await repository.react('post', post.id, 'like');
-                } else {
-                  await repository.removeReaction('post', post.id);
+                try {
+                  if (post.viewerReaction == null) {
+                    await repository.react('post', post.id, 'like');
+                  } else {
+                    await repository.removeReaction('post', post.id);
+                  }
+                  ref.invalidate(feedProvider);
+                } on Object catch (error) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(messageFor(error))),
+                    );
+                  }
                 }
-                ref.invalidate(feedProvider);
               },
               icon: Icon(
                 post.viewerReaction == null
@@ -999,6 +1007,57 @@ final class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         ListTile(
                           title: Text('@${comment.authorHandle}'),
                           subtitle: Text(comment.body),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Text(
+                                '${comment.reactionCount}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              IconButton(
+                                tooltip: comment.viewerReaction == null
+                                    ? 'Like comment'
+                                    : 'Remove like',
+                                onPressed: () async {
+                                  final repository =
+                                      ref.read(socialRepositoryProvider);
+                                  try {
+                                    if (comment.viewerReaction == null) {
+                                      await repository.react(
+                                        'comment',
+                                        comment.id,
+                                        'like',
+                                      );
+                                    } else {
+                                      await repository.removeReaction(
+                                        'comment',
+                                        comment.id,
+                                      );
+                                    }
+                                    ref.invalidate(
+                                      commentsProvider(widget.postId),
+                                    );
+                                  } on Object catch (error) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(messageFor(error)),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                icon: Icon(
+                                  comment.viewerReaction == null
+                                      ? Icons.favorite_border_rounded
+                                      : Icons.favorite_rounded,
+                                  color: comment.viewerReaction == null
+                                      ? null
+                                      : Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                     ],
                   ),
