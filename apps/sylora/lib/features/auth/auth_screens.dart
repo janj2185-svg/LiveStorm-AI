@@ -423,12 +423,10 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   Widget _chooser(AuthState auth) {
     final l10n = AppLocalizations.of(context);
     final methods = _methods;
-    // Product order: Google → Apple → Facebook → TikTok. Never GitHub.
+    // Product order: Google → Apple. TikTok/Facebook are Live integrations only.
     final social = <(String, String, IconData)>[
       if (methods.google) ('google', 'Google', Icons.g_mobiledata_rounded),
       if (methods.apple) ('apple', 'Apple', Icons.apple_rounded),
-      if (methods.facebook) ('facebook', 'Facebook', Icons.facebook_rounded),
-      if (methods.tiktok) ('tiktok', 'TikTok', Icons.music_note_rounded),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

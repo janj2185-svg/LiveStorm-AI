@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import 'sylora_aura.dart';
@@ -19,6 +20,13 @@ enum SyloraAuraContextPreset {
   settings,
   conferences,
 }
+
+/// How Aura occupies the UI.
+///
+/// - [hidden] — not rendered (default product state)
+/// - [summon] — tiny non-blocking orb; expands only on tap
+/// - [companion] — living conversation presence (AI chat / explicit activate)
+enum SyloraAuraPresenceMode { hidden, summon, companion }
 
 final Map<SyloraAuraContextPreset, AuraEmotion> _presetEmotions =
     <SyloraAuraContextPreset, AuraEmotion>{
@@ -60,24 +68,34 @@ final class SyloraAuraPresenceController extends ChangeNotifier {
     AuraEmotion emotion = AuraEmotion.greeting,
     String? tip,
     SyloraAuraContextPreset preset = SyloraAuraContextPreset.ai,
-  }) : this._(emotion: emotion, customTip: tip, preset: preset);
+    SyloraAuraPresenceMode mode = SyloraAuraPresenceMode.hidden,
+  }) : this._(
+          emotion: emotion,
+          customTip: tip,
+          preset: preset,
+          mode: mode,
+        );
 
   SyloraAuraPresenceController._({
     required this._emotion,
     required this._customTip,
     required this._preset,
+    required this._mode,
   });
 
   factory SyloraAuraPresenceController.forPreset(
-    SyloraAuraContextPreset preset,
-  ) =>
+    SyloraAuraContextPreset preset, {
+    SyloraAuraPresenceMode mode = SyloraAuraPresenceMode.hidden,
+  }) =>
       SyloraAuraPresenceController(
         preset: preset,
         emotion: _presetEmotions[preset] ?? AuraEmotion.greeting,
+        mode: mode,
       );
 
   AuraEmotion get emotion => _emotion;
   SyloraAuraContextPreset get preset => _preset;
+  SyloraAuraPresenceMode get mode => _mode;
 
   /// Localized tip for the current preset, or a one-off custom tip.
   String tipFor(AppLocalizations l10n) =>
@@ -89,6 +107,7 @@ final class SyloraAuraPresenceController extends ChangeNotifier {
   AuraEmotion _emotion;
   String? _customTip;
   SyloraAuraContextPreset _preset;
+  SyloraAuraPresenceMode _mode;
 
   void setPreset(SyloraAuraContextPreset preset) {
     update(
@@ -97,6 +116,18 @@ final class SyloraAuraPresenceController extends ChangeNotifier {
       preset: preset,
     );
   }
+
+  void setMode(SyloraAuraPresenceMode mode) {
+    if (_mode == mode) return;
+    _mode = mode;
+    notifyListeners();
+  }
+
+  void summon() => setMode(SyloraAuraPresenceMode.summon);
+
+  void openCompanion() => setMode(SyloraAuraPresenceMode.companion);
+
+  void dismiss() => setMode(SyloraAuraPresenceMode.hidden);
 
   void greet([String? tip]) =>
       update(emotion: AuraEmotion.greeting, tip: tip);
@@ -118,18 +149,22 @@ final class SyloraAuraPresenceController extends ChangeNotifier {
     String? tip,
     bool clearTip = false,
     SyloraAuraContextPreset? preset,
+    SyloraAuraPresenceMode? mode,
   }) {
     final nextEmotion = emotion ?? _emotion;
     final nextTip = clearTip ? null : (tip ?? _customTip);
     final nextPreset = preset ?? _preset;
+    final nextMode = mode ?? _mode;
     if (nextEmotion == _emotion &&
         nextTip == _customTip &&
-        nextPreset == _preset) {
+        nextPreset == _preset &&
+        nextMode == _mode) {
       return;
     }
     _emotion = nextEmotion;
     _customTip = nextTip;
     _preset = nextPreset;
+    _mode = nextMode;
     notifyListeners();
   }
 }
@@ -152,16 +187,20 @@ final class SyloraAuraPresence extends StatefulWidget {
     super.key,
     this.controller,
     this.preset = SyloraAuraContextPreset.ai,
+    this.mode = SyloraAuraPresenceMode.summon,
     this.alignment = Alignment.bottomRight,
-    this.margin = const EdgeInsets.fromLTRB(20, 20, 24, 28),
+    this.margin = const EdgeInsets.fromLTRB(16, 16, 18, 22),
     this.onAuraTap,
+    this.openAiOnCompanionTap = true,
   });
 
   final SyloraAuraPresenceController? controller;
   final SyloraAuraContextPreset preset;
+  final SyloraAuraPresenceMode mode;
   final Alignment alignment;
   final EdgeInsetsGeometry margin;
   final VoidCallback? onAuraTap;
+  final bool openAiOnCompanionTap;
 
   @override
   State<SyloraAuraPresence> createState() => _SyloraAuraPresenceState();
@@ -177,7 +216,13 @@ final class _SyloraAuraPresenceState extends State<SyloraAuraPresence> {
   void initState() {
     super.initState();
     if (widget.controller == null) {
-      _ownedController = SyloraAuraPresenceController.forPreset(widget.preset);
+      _ownedController = SyloraAuraPresenceController.forPreset(
+        widget.preset,
+        mode: widget.mode,
+      );
+    } else if (widget.controller!.mode == SyloraAuraPresenceMode.hidden &&
+        widget.mode != SyloraAuraPresenceMode.hidden) {
+      widget.controller!.setMode(widget.mode);
     }
   }
 
@@ -187,12 +232,18 @@ final class _SyloraAuraPresenceState extends State<SyloraAuraPresence> {
     if (widget.controller != oldWidget.controller) {
       _ownedController?.dispose();
       _ownedController = widget.controller == null
-          ? SyloraAuraPresenceController.forPreset(widget.preset)
+          ? SyloraAuraPresenceController.forPreset(
+              widget.preset,
+              mode: widget.mode,
+            )
           : null;
       return;
     }
     if (widget.controller == null && widget.preset != oldWidget.preset) {
       _ownedController?.setPreset(widget.preset);
+    }
+    if (widget.controller == null && widget.mode != oldWidget.mode) {
+      _ownedController?.setMode(widget.mode);
     }
   }
 
@@ -200,6 +251,22 @@ final class _SyloraAuraPresenceState extends State<SyloraAuraPresence> {
   void dispose() {
     _ownedController?.dispose();
     super.dispose();
+  }
+
+  void _handleTap() {
+    if (widget.onAuraTap != null) {
+      widget.onAuraTap!();
+      return;
+    }
+    final mode = _controller.mode;
+    if (mode == SyloraAuraPresenceMode.summon) {
+      _controller.openCompanion();
+      return;
+    }
+    if (mode == SyloraAuraPresenceMode.companion &&
+        widget.openAiOnCompanionTap) {
+      context.pushNamed('ai');
+    }
   }
 
   @override
@@ -213,12 +280,26 @@ final class _SyloraAuraPresenceState extends State<SyloraAuraPresence> {
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
+              final mode = _controller.mode;
+              if (mode == SyloraAuraPresenceMode.hidden) {
+                return const SizedBox.shrink();
+              }
               final l10n = AppLocalizations.of(context);
-              return _AuraPresenceCard(
+              if (mode == SyloraAuraPresenceMode.summon) {
+                return _AuraSummonOrb(
+                  emotion: _controller.emotion,
+                  reduceMotion: reduceMotion,
+                  semanticsLabel: l10n.auraSummonLabel,
+                  onTap: _handleTap,
+                );
+              }
+              return _AuraCompanionCard(
                 emotion: _controller.emotion,
                 tip: _controller.tipFor(l10n),
                 reduceMotion: reduceMotion,
-                onAuraTap: widget.onAuraTap,
+                dismissLabel: l10n.auraDismissLabel,
+                onAuraTap: _handleTap,
+                onDismiss: _controller.dismiss,
               );
             },
           ),
@@ -228,33 +309,115 @@ final class _SyloraAuraPresenceState extends State<SyloraAuraPresence> {
   }
 }
 
-final class _AuraPresenceCard extends StatelessWidget {
-  const _AuraPresenceCard({
+final class _AuraSummonOrb extends StatelessWidget {
+  const _AuraSummonOrb({
+    required this.emotion,
+    required this.reduceMotion,
+    required this.semanticsLabel,
+    required this.onTap,
+  });
+
+  final AuraEmotion emotion;
+  final bool reduceMotion;
+  final String semanticsLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final orb = Semantics(
+      button: true,
+      label: semanticsLabel,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Ink(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  SyloraTokens.champagneLight.withValues(alpha: 0.95),
+                  SyloraTokens.champagne.withValues(alpha: 0.88),
+                  SyloraTokens.softSkyDeep.withValues(alpha: 0.55),
+                ],
+              ),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: SyloraTokens.champagne.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.65),
+              ),
+            ),
+            child: Center(
+              child: SyloraAura(
+                size: 44,
+                emotion: emotion,
+                showLabel: false,
+                label: 'Aura',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (reduceMotion) return orb;
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: SyloraTokens.durMed,
+      curve: SyloraTokens.curveSnap,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.scale(
+          scale: 0.86 + (0.14 * value),
+          child: child,
+        ),
+      ),
+      child: orb,
+    );
+  }
+}
+
+final class _AuraCompanionCard extends StatelessWidget {
+  const _AuraCompanionCard({
     required this.emotion,
     required this.tip,
     required this.reduceMotion,
+    required this.dismissLabel,
     required this.onAuraTap,
+    required this.onDismiss,
   });
 
   final AuraEmotion emotion;
   final String tip;
   final bool reduceMotion;
-  final VoidCallback? onAuraTap;
+  final String dismissLabel;
+  final VoidCallback onAuraTap;
+  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
     final content = SizedBox(
-      width: 214,
+      width: 236,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.bottomRight,
         children: <Widget>[
           Positioned(
-            right: 82,
-            bottom: 24,
+            right: 88,
+            bottom: 28,
             child: IgnorePointer(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 150),
+                constraints: const BoxConstraints(maxWidth: 148),
                 child: SyloraGlass(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -273,16 +436,28 @@ final class _AuraPresenceCard extends StatelessWidget {
               ),
             ),
           ),
+          Positioned(
+            right: 0,
+            top: -4,
+            child: IconButton(
+              tooltip: dismissLabel,
+              visualDensity: VisualDensity.compact,
+              style: IconButton.styleFrom(
+                backgroundColor: SyloraTokens.glassStrong.withValues(alpha: 0.9),
+                foregroundColor: SyloraTokens.inkSoft,
+              ),
+              onPressed: onDismiss,
+              icon: const Icon(Icons.close_rounded, size: 18),
+            ),
+          ),
           RepaintBoundary(
             child: GestureDetector(
-              behavior: onAuraTap == null
-                  ? HitTestBehavior.deferToChild
-                  : HitTestBehavior.opaque,
+              behavior: HitTestBehavior.opaque,
               onTap: onAuraTap,
               child: Semantics(
-                button: onAuraTap != null,
-                label: 'Aura presence',
-                child: SyloraAura(size: 78, emotion: emotion, label: 'Aura'),
+                button: true,
+                label: 'Aura',
+                child: SyloraAura(size: 96, emotion: emotion, label: 'Aura'),
               ),
             ),
           ),
@@ -300,8 +475,11 @@ final class _AuraPresenceCard extends StatelessWidget {
       builder: (context, value, child) => Opacity(
         opacity: value,
         child: Transform.translate(
-          offset: Offset(0, (1 - value) * 10),
-          child: child,
+          offset: Offset(0, (1 - value) * 14),
+          child: Transform.scale(
+            scale: 0.94 + (0.06 * value),
+            child: child,
+          ),
         ),
       ),
       child: content,

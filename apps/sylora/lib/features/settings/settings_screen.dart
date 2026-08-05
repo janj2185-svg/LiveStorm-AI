@@ -73,7 +73,7 @@ final class SettingsScreen extends ConsumerWidget {
       title: l10n.navSettings,
       subtitle: l10n.settingsHeroBody,
       intensity: 0.9,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.settings,
       header: account.maybeWhen(
         data: (snapshot) => SyloraUniverseHero(

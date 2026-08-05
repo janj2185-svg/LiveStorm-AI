@@ -64,6 +64,20 @@ abstract final class SyloraLocales {
     }
     return options.first.label;
   }
+
+  /// Reads `lang` from hash query (`#/auth?lang=uk`) or path query.
+  static String? languageCodeFromUri(Uri uri) {
+    final direct = uri.queryParameters['lang'];
+    if (direct != null && direct.isNotEmpty) {
+      return direct;
+    }
+    final fragment = uri.fragment;
+    if (fragment.isEmpty) {
+      return null;
+    }
+    final normalized = fragment.startsWith('/') ? fragment : '/$fragment';
+    return Uri.tryParse('https://sylora.local$normalized')?.queryParameters['lang'];
+  }
 }
 
 final class LocaleController extends StateNotifier<Locale> {
@@ -86,6 +100,14 @@ final class LocaleController extends StateNotifier<Locale> {
   late final Future<SharedPreferences> _initialization;
 
   void _read(SharedPreferences preferences) {
+    final fromUri = SyloraLocales.languageCodeFromUri(Uri.base);
+    if (fromUri != null) {
+      final locale = SyloraLocales.fromLanguageCode(fromUri);
+      state = locale;
+      // Persist landing → app handoff so Settings stays in sync.
+      preferences.setString(SyloraLocales.storageKey, locale.languageCode);
+      return;
+    }
     state = SyloraLocales.fromLanguageCode(
       preferences.getString(SyloraLocales.storageKey),
     );

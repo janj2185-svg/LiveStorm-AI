@@ -566,5 +566,15 @@
   "auraTipLearning": "Вчуся разом із тобою — питайте що завгодно.",
   "auraTipCreator": "Твій творчий ритм — я підлаштуюсь.",
   "auraTipSettings": "Налаштуємо все зручно, без зайвого шуму.",
-  "auraTipDefault": "Я Aura — готова допомогти."
+  "auraTipDefault": "Я Aura — готова допомогти.",
+  "auraSummonLabel": "Викликати Aura",
+  "auraDismissLabel": "Сховати Aura",
+  "liveIntegrationsTitle": "Інтеграції Live",
+  "liveIntegrationsBody": "Підключай стрімінгові платформи, щоб Aura була співведучою. Нативний SYLORA Live уже готовий. TikTok LIVE відкриється після офіційного доступу провайдера.",
+  "liveNativeReady": "SYLORA Live — готово",
+  "liveTikTokBlocked": "TikTok LIVE — очікуємо доступ провайдера",
+  "liveDestinationsHint": "Напрямки з’являться після підключення офіційної інтеграції.",
+  "liveGuestInvitations": "Запрошення гостей",
+  "liveGuestInvitationsBody": "Прийми запрошення від хоста, опублікуй окремий WHIP-внесок, коли видадуть ключі, або надішли подарунок хосту.",
+  "liveNoGuestInvites": "Немає вхідних запрошень гостей. Запрошення від хоста з’являться тут."
 }

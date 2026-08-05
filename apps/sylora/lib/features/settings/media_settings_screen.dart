@@ -97,7 +97,7 @@ final class _MediaSettingsScreenState
       title: l10n.mediaSettingsTitle,
       subtitle: l10n.mediaSettingsSubtitle,
       intensity: 0.88,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.live,
       child: ListView(
         children: <Widget>[

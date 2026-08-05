@@ -445,6 +445,7 @@ final class LumenPage extends StatelessWidget {
     this.showAuraPresence = false,
     this.auraPresenceController,
     this.auraPresencePreset = SyloraAuraContextPreset.ai,
+    this.auraPresenceMode = SyloraAuraPresenceMode.hidden,
     this.intensity = 0.78,
     this.showOrbits = true,
     this.header,
@@ -461,6 +462,7 @@ final class LumenPage extends StatelessWidget {
   final bool showAuraPresence;
   final SyloraAuraPresenceController? auraPresenceController;
   final SyloraAuraContextPreset auraPresencePreset;
+  final SyloraAuraPresenceMode auraPresenceMode;
   final double intensity;
   final bool showOrbits;
   final Widget? header;
@@ -477,6 +479,7 @@ final class LumenPage extends StatelessWidget {
     showAuraPresence: showAuraPresence,
     auraPresenceController: auraPresenceController,
     auraPresencePreset: auraPresencePreset,
+    auraPresenceMode: auraPresenceMode,
     intensity: intensity,
     showOrbits: showOrbits,
     header: header,

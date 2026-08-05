@@ -582,5 +582,15 @@
   "auraTipLearning": "Learning with you — ask anything.",
   "auraTipCreator": "Your creative rhythm — I will adapt.",
   "auraTipSettings": "Let us set things up quietly, without noise.",
-  "auraTipDefault": "I am Aura — ready to help."
+  "auraTipDefault": "I am Aura — ready to help.",
+  "auraSummonLabel": "Summon Aura",
+  "auraDismissLabel": "Hide Aura",
+  "liveIntegrationsTitle": "Live integrations",
+  "liveIntegrationsBody": "Connect streaming platforms so Aura can co-host. Native SYLORA Live is ready. TikTok LIVE unlocks after official provider access.",
+  "liveNativeReady": "SYLORA Live — ready",
+  "liveTikTokBlocked": "TikTok LIVE — awaiting provider access",
+  "liveDestinationsHint": "Destinations appear after an official integration is connected.",
+  "liveGuestInvitations": "Guest invitations",
+  "liveGuestInvitationsBody": "Accept a real host invite, publish a separate WHIP contribution when credentials are issued, or send a gift to the host.",
+  "liveNoGuestInvites": "No incoming guest invitations. Host invites will appear here."
 }

@@ -23,7 +23,7 @@ final class BusinessScreen extends ConsumerWidget {
     title: 'Workspaces',
     subtitle:
         'Select a tenant before opening CRM, operations, documents, or finance.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.business,
     header: SyloraUniverseHero(
       eyebrow: 'BUSINESS',
@@ -161,7 +161,7 @@ final class _BusinessWorkspaceScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Workspace',
     subtitle: 'Tenant overview, permissions, and operational areas.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.business,
     maxContentWidth: 1120,
     actions: <Widget>[
@@ -415,7 +415,7 @@ final class _BusinessAreaScreenState extends ConsumerState<BusinessAreaScreen> {
   Widget build(BuildContext context) => LumenPage(
     title: _areaTitle(widget.area),
     subtitle: 'Persisted workspace records and actions for this area.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.business,
     maxContentWidth: 1120,
     actions: <Widget>[
@@ -1443,7 +1443,7 @@ final class _BusinessDocumentScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Business document',
     subtitle: 'Document versions, upload capability, and approvals.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.business,
     maxContentWidth: 1120,
     actions: <Widget>[

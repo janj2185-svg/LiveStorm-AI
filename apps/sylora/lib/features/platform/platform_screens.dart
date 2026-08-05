@@ -265,7 +265,7 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
       title: l10n.walletTitle,
       subtitle: l10n.walletSubtitle,
       intensity: 0.92,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.gifts,
       header: SyloraUniverseHero(
         eyebrow: l10n.walletHeroEyebrow,
@@ -1560,7 +1560,10 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
   @override
   void initState() {
     super.initState();
-    _aura = SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.ai);
+    _aura = SyloraAuraPresenceController.forPreset(
+      SyloraAuraContextPreset.ai,
+      mode: SyloraAuraPresenceMode.companion,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadPresence());
   }
 
@@ -1598,12 +1601,13 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
       title: l10n.aiTitle,
       subtitle: l10n.aiSubtitle,
       intensity: 0.94,
-      showAuraDock: true,
+      showAuraDock: false,
       auraEmotion: AuraEmotion.thinking,
       auraLabel: mood,
       showAuraPresence: true,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.ai,
+      auraPresenceMode: SyloraAuraPresenceMode.companion,
       header: SyloraUniverseHero(
         eyebrow: l10n.aiHeroEyebrow,
         title: 'Aura',
@@ -2360,7 +2364,10 @@ final class _AiConversationScreenState
   @override
   void initState() {
     super.initState();
-    _aura = SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.ai);
+    _aura = SyloraAuraPresenceController.forPreset(
+      SyloraAuraContextPreset.ai,
+      mode: SyloraAuraPresenceMode.companion,
+    );
     _messageFocus.addListener(_syncAuraForFocus);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadVoicePresence());
   }
@@ -2403,12 +2410,13 @@ final class _AiConversationScreenState
         title: _aiPurposeTitle(purpose),
         body: _aiPurposeSubtitle(purpose),
       ),
-      showAuraDock: true,
+      showAuraDock: false,
       auraEmotion: _sending ? AuraEmotion.thinking : AuraEmotion.listening,
       auraLabel: _sending ? 'Думаю…' : 'Слухаю',
       showAuraPresence: true,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.ai,
+      auraPresenceMode: SyloraAuraPresenceMode.companion,
       child: SizedBox(
         height: conversationHeight,
         child: Column(
@@ -3616,7 +3624,7 @@ final class LiveScreen extends ConsumerWidget {
       title: l10n.liveTitle,
       subtitle: l10n.liveSubtitle,
       intensity: 0.96,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.live,
       actions: <Widget>[
         IconButton(
@@ -3659,10 +3667,60 @@ final class LiveScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Guest invitations', style: SyloraTokens.title(20)),
+              SyloraStaggeredReveal(
+                index: index++,
+                child: SyloraGlass(
+                  padding: const EdgeInsets.all(SyloraTokens.space4),
+                  radius: SyloraTokens.radiusLg,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        l10n.liveIntegrationsTitle,
+                        style: SyloraTokens.title(20),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.liveIntegrationsBody,
+                        style: SyloraTokens.body(
+                          13,
+                          color: SyloraTokens.inkSoft,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: <Widget>[
+                          SyloraPortalChip(
+                            label: l10n.liveNativeReady,
+                            icon: Icons.check_circle_outline_rounded,
+                            onTap: () {},
+                          ),
+                          SyloraPortalChip(
+                            label: l10n.liveTikTokBlocked,
+                            icon: Icons.lock_outline_rounded,
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.liveDestinationsHint,
+                        style: SyloraTokens.body(
+                          12,
+                          color: SyloraTokens.inkMute,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(l10n.liveGuestInvitations, style: SyloraTokens.title(20)),
               const SizedBox(height: 6),
               Text(
-                'Accept a real host invite, publish a separate WHIP contribution when credentials are issued, or send a gift to the host.',
+                l10n.liveGuestInvitationsBody,
                 style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
               ),
               const SizedBox(height: 12),
@@ -3678,14 +3736,14 @@ final class LiveScreen extends ConsumerWidget {
               else if (snapshot.incomingInvites.isEmpty)
                 SyloraStaggeredReveal(
                   index: index++,
-                  child: const SyloraGlassTile(
+                  child: SyloraGlassTile(
                     child: Row(
                       children: <Widget>[
-                        Icon(Icons.mark_email_read_outlined),
-                        SizedBox(width: 12),
+                        const Icon(Icons.mark_email_read_outlined),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'No incoming guest invitations. Host invites will appear here.',
+                            l10n.liveNoGuestInvites,
                           ),
                         ),
                       ],

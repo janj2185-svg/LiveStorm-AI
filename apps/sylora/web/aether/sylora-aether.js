@@ -10,25 +10,49 @@
   const COPY = {
     uk: {
       signIn: 'Увійти',
-      kicker: 'Де AI зустрічає душу',
-      line: 'Твій світ у гармонії — жива присутність, творчий потік і Aura поруч.',
-      cta: 'Почати подорож',
-      auraLabel: 'Aura · супутниця',
-      auraAria: 'Aura — жива AI-супутниця',
+      kicker: 'Наступне покоління AI-екосистеми',
+      line: 'Живий ефір, творчість, бізнес і навчання — з Aura як співведучою.',
+      cta: 'Увійти у світ',
+      auraLabel: 'Aura · жива супутниця',
+      auraAria: 'Aura — жива AI-супутниця SYLORA',
       loading: 'Відкриваємо світ…',
+      launching: 'Запуск SYLORA…',
       enterError: 'Не вдалося завантажити. Перевірте мережу й спробуйте ще раз.',
       langLabel: 'Мова',
+      scrollHint: 'Гортай — відкрий екосистему',
+      chapterLiveTitle: 'Live',
+      chapterLiveBody: 'Ефір як серце SYLORA. Aura читає чат, відповідає, реагує на подарунки й звучить як справжня співведуча.',
+      chapterCreatorTitle: 'Творці',
+      chapterCreatorBody: 'Студія режисера: сцена, світло, гості й AI-кохост в одному склі.',
+      chapterBusinessTitle: 'Бізнес',
+      chapterBusinessBody: 'Робочий простір з пам\'яттю Aura — брифінги, клієнти, рішення без шуму.',
+      chapterEduTitle: 'Навчання',
+      chapterEduBody: 'Курси й наставництво з живою присутністю — питай, і Aura веде.',
+      chapterEcoTitle: 'Екосистема',
+      chapterEcoBody: 'Соцмережа, музика, маркет і подарунки — один преміальний візуальний світ.',
     },
     en: {
       signIn: 'Sign in',
-      kicker: 'Where AI meets soul',
-      line: 'Your world. In harmony — live presence, creative flow, and Aura by your side.',
-      cta: 'Begin your journey',
-      auraLabel: 'Aura · companion',
-      auraAria: 'Aura — living AI companion',
+      kicker: 'The next-generation AI ecosystem',
+      line: 'Live, create, build, and learn — with Aura as your living co-host.',
+      cta: 'Enter the world',
+      auraLabel: 'Aura · living companion',
+      auraAria: 'Aura — SYLORA living AI companion',
       loading: 'Opening your world…',
+      launching: 'Launching SYLORA…',
       enterError: 'Could not load. Check your network and try again.',
       langLabel: 'Language',
+      scrollHint: 'Scroll — meet the ecosystem',
+      chapterLiveTitle: 'Live',
+      chapterLiveBody: 'Live is the heart of SYLORA. Aura reads chat, answers, reacts to gifts, and co-hosts like a human.',
+      chapterCreatorTitle: 'Creators',
+      chapterCreatorBody: 'Director studio: scenes, light, guests, and an AI co-host inside one glass stage.',
+      chapterBusinessTitle: 'Business',
+      chapterBusinessBody: 'A workspace with Aura memory — briefs, clients, decisions without noise.',
+      chapterEduTitle: 'Education',
+      chapterEduBody: 'Courses and mentorship with living presence — ask, and Aura guides.',
+      chapterEcoTitle: 'Ecosystem',
+      chapterEcoBody: 'Social, music, market, and gifts — one premium visual world.',
     },
   };
 
@@ -74,7 +98,9 @@
   function setLang(lang) {
     state.lang = COPY[lang] ? lang : 'uk';
     try {
+      // Flutter SharedPreferences (web) reads flutter.<key>
       localStorage.setItem('locale.languageCode', state.lang);
+      localStorage.setItem('flutter.locale.languageCode', state.lang);
     } catch (_) { /* ignore */ }
     document.documentElement.lang = state.lang;
     applyCopy();
@@ -444,10 +470,12 @@
 
     // Free GPU immediately — landing canvas + CanvasKit together freezes mobile.
     stopAetherWorld();
-    setEnterStatus('Завантаження…');
+    setEnterStatus(t().loading);
 
     // Route BEFORE Flutter boots so Auth is the first Flutter route.
-    const target = create ? '#/auth?create=1' : '#/auth';
+    // Persist locale in the hash so Flutter LocaleController can sync.
+    const langQ = 'lang=' + encodeURIComponent(state.lang);
+    const target = create ? '#/auth?create=1&' + langQ : '#/auth?' + langQ;
     if (location.hash !== target) {
       location.hash = target;
     }
@@ -463,14 +491,17 @@
     } catch (_) { /* ignore */ }
 
     try {
-      setEnterStatus('Запуск SYLORA…');
+      setEnterStatus(t().launching);
       await flutterReady;
       // Re-assert auth route in case session-restore redirects raced.
       if (!/^#\/auth/.test(location.hash || '')) {
         location.hash = target;
       }
       if (window.SyloraApp && typeof window.SyloraApp.go === 'function') {
-        window.SyloraApp.go(create ? '/auth?create=1' : '/auth');
+        const path = create
+          ? '/auth?create=1&lang=' + encodeURIComponent(state.lang)
+          : '/auth?lang=' + encodeURIComponent(state.lang);
+        window.SyloraApp.go(path);
       }
       clearEnterStatus();
       hide();
@@ -515,6 +546,17 @@
     if (auraLabel) auraLabel.textContent = copy.auraLabel;
     const wrap = qs('.aether-aura-wrap');
     if (wrap) wrap.setAttribute('aria-label', copy.auraAria);
+    const hint = qs('[data-aether-scroll-hint]');
+    if (hint) hint.textContent = copy.scrollHint;
+    document.querySelectorAll('[data-aether-chapter]').forEach((el) => {
+      const key = el.getAttribute('data-aether-chapter');
+      const title = el.querySelector('[data-chapter-title]');
+      const body = el.querySelector('[data-chapter-body]');
+      const titleKey = 'chapter' + key + 'Title';
+      const bodyKey = 'chapter' + key + 'Body';
+      if (title && copy[titleKey]) title.textContent = copy[titleKey];
+      if (body && copy[bodyKey]) body.textContent = copy[bodyKey];
+    });
     document.querySelectorAll('[data-aether-lang]').forEach((btn) => {
       const active = btn.getAttribute('data-aether-lang') === state.lang;
       btn.classList.toggle('is-active', active);
@@ -522,11 +564,33 @@
     });
   }
 
+  function bindChapterReveal(root) {
+    const chapters = root.querySelectorAll('[data-aether-chapter]');
+    if (!chapters.length || state.reduced) {
+      chapters.forEach((el) => el.classList.add('is-visible'));
+      return;
+    }
+    if (!('IntersectionObserver' in window)) {
+      chapters.forEach((el) => el.classList.add('is-visible'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.28, rootMargin: '0px 0px -8% 0px' });
+    chapters.forEach((el) => io.observe(el));
+  }
+
   function mountHud(root) {
     const copy = t();
     root.innerHTML = `
       <canvas id="aether-canvas" aria-hidden="true"></canvas>
       <div class="aether-wave" aria-hidden="true"></div>
+      <div class="aether-beams" aria-hidden="true"></div>
       <div class="aether-veil" aria-hidden="true"></div>
       <div class="aether-scroll" data-aether-scroll>
         <div class="aether-hud">
@@ -544,16 +608,18 @@
             </div>
           </div>
           <section class="aether-hero">
-            <div>
+            <div class="aether-hero-copy">
               <p class="aether-kicker">${copy.kicker}</p>
               <h1 class="aether-brand">SYLORA</h1>
               <p class="aether-line">${copy.line}</p>
               <div class="aether-cta-wrap">
                 <button type="button" class="aether-portal" data-aether-enter><span>${copy.cta}</span></button>
               </div>
+              <p class="aether-scroll-hint" data-aether-scroll-hint>${copy.scrollHint}</p>
             </div>
             <div class="aether-aura-wrap is-greeting" data-emotion="greeting" aria-label="${copy.auraAria}">
               <div class="aether-aura-halo" aria-hidden="true"></div>
+              <div class="aether-aura-ring" aria-hidden="true"></div>
               <div class="aether-aura-stage" aria-hidden="true">
                 <img class="aether-aura-portrait" src="aether/assets/aura-companion.png" alt="" width="512" height="512" decoding="async" />
                 <span class="aether-aura-lids"></span>
@@ -561,6 +627,38 @@
               </div>
               <span class="aether-aura-label">${copy.auraLabel}</span>
             </div>
+          </section>
+          <section class="aether-chapters" aria-label="SYLORA">
+            <article class="aether-chapter" data-aether-chapter="Live">
+              <div class="aether-chapter-glow aether-chapter-glow--live" aria-hidden="true"></div>
+              <p class="aether-chapter-index">01</p>
+              <h2 data-chapter-title>${copy.chapterLiveTitle}</h2>
+              <p data-chapter-body>${copy.chapterLiveBody}</p>
+            </article>
+            <article class="aether-chapter" data-aether-chapter="Creator">
+              <div class="aether-chapter-glow aether-chapter-glow--creator" aria-hidden="true"></div>
+              <p class="aether-chapter-index">02</p>
+              <h2 data-chapter-title>${copy.chapterCreatorTitle}</h2>
+              <p data-chapter-body>${copy.chapterCreatorBody}</p>
+            </article>
+            <article class="aether-chapter" data-aether-chapter="Business">
+              <div class="aether-chapter-glow aether-chapter-glow--business" aria-hidden="true"></div>
+              <p class="aether-chapter-index">03</p>
+              <h2 data-chapter-title>${copy.chapterBusinessTitle}</h2>
+              <p data-chapter-body>${copy.chapterBusinessBody}</p>
+            </article>
+            <article class="aether-chapter" data-aether-chapter="Edu">
+              <div class="aether-chapter-glow aether-chapter-glow--edu" aria-hidden="true"></div>
+              <p class="aether-chapter-index">04</p>
+              <h2 data-chapter-title>${copy.chapterEduTitle}</h2>
+              <p data-chapter-body>${copy.chapterEduBody}</p>
+            </article>
+            <article class="aether-chapter aether-chapter--wide" data-aether-chapter="Eco">
+              <div class="aether-chapter-glow aether-chapter-glow--eco" aria-hidden="true"></div>
+              <p class="aether-chapter-index">05</p>
+              <h2 data-chapter-title>${copy.chapterEcoTitle}</h2>
+              <p data-chapter-body>${copy.chapterEcoBody}</p>
+            </article>
           </section>
         </div>
       </div>
@@ -571,6 +669,7 @@
       btn.addEventListener('click', () => setLang(btn.getAttribute('data-aether-lang')));
     });
     applyCopy();
+    bindChapterReveal(root);
   }
 
   function bindPointer(canvas, scrollEl) {

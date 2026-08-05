@@ -1503,4 +1503,38 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get auraTipDefault => 'Я Aura — готова допомогти.';
+
+  @override
+  String get auraSummonLabel => 'Викликати Aura';
+
+  @override
+  String get auraDismissLabel => 'Сховати Aura';
+
+  @override
+  String get liveIntegrationsTitle => 'Інтеграції Live';
+
+  @override
+  String get liveIntegrationsBody =>
+      'Підключай стрімінгові платформи, щоб Aura була співведучою. Нативний SYLORA Live уже готовий. TikTok LIVE відкриється після офіційного доступу провайдера.';
+
+  @override
+  String get liveNativeReady => 'SYLORA Live — готово';
+
+  @override
+  String get liveTikTokBlocked => 'TikTok LIVE — очікуємо доступ провайдера';
+
+  @override
+  String get liveDestinationsHint =>
+      'Напрямки з’являться після підключення офіційної інтеграції.';
+
+  @override
+  String get liveGuestInvitations => 'Запрошення гостей';
+
+  @override
+  String get liveGuestInvitationsBody =>
+      'Прийми запрошення від хоста, опублікуй окремий WHIP-внесок, коли видадуть ключі, або надішли подарунок хосту.';
+
+  @override
+  String get liveNoGuestInvites =>
+      'Немає вхідних запрошень гостей. Запрошення від хоста з’являться тут.';
 }

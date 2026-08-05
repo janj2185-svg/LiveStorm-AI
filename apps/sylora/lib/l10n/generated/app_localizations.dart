@@ -2911,6 +2911,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I am Aura — ready to help.'**
   String get auraTipDefault;
+
+  /// No description provided for @auraSummonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Summon Aura'**
+  String get auraSummonLabel;
+
+  /// No description provided for @auraDismissLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Aura'**
+  String get auraDismissLabel;
+
+  /// No description provided for @liveIntegrationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live integrations'**
+  String get liveIntegrationsTitle;
+
+  /// No description provided for @liveIntegrationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect streaming platforms so Aura can co-host. Native SYLORA Live is ready. TikTok LIVE unlocks after official provider access.'**
+  String get liveIntegrationsBody;
+
+  /// No description provided for @liveNativeReady.
+  ///
+  /// In en, this message translates to:
+  /// **'SYLORA Live — ready'**
+  String get liveNativeReady;
+
+  /// No description provided for @liveTikTokBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'TikTok LIVE — awaiting provider access'**
+  String get liveTikTokBlocked;
+
+  /// No description provided for @liveDestinationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Destinations appear after an official integration is connected.'**
+  String get liveDestinationsHint;
+
+  /// No description provided for @liveGuestInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest invitations'**
+  String get liveGuestInvitations;
+
+  /// No description provided for @liveGuestInvitationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept a real host invite, publish a separate WHIP contribution when credentials are issued, or send a gift to the host.'**
+  String get liveGuestInvitationsBody;
+
+  /// No description provided for @liveNoGuestInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'No incoming guest invitations. Host invites will appear here.'**
+  String get liveNoGuestInvites;
 }
 
 class _AppLocalizationsDelegate

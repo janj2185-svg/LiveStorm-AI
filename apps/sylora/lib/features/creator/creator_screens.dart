@@ -71,7 +71,7 @@ final class CreatorScreen extends ConsumerWidget {
       title: 'Creator',
       subtitle:
           'Publishing, audience, subscriptions, and commerce from the creator APIs.',
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.creator,
       child: LumenAsyncView<_CreatorSnapshot>(
         value: value,
@@ -879,7 +879,7 @@ final class _CreatorContentScreenState
     return LumenPage(
       title: 'Creator content',
       subtitle: 'Content versions, publishing lifecycle, assets, and access.',
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.creator,
       child: LumenAsyncView<ContentDetail>(
         value: value,

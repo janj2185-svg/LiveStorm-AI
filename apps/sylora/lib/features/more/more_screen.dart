@@ -160,7 +160,7 @@ final class MoreScreen extends ConsumerWidget {
       title: l10n.moreTitle,
       subtitle: l10n.moreSubtitle,
       intensity: 0.92,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       header: account.when(
         loading: () => const SizedBox(

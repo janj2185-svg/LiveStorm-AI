@@ -58,7 +58,7 @@ final class CreatorEarningsScreen extends ConsumerWidget {
       title: l10n.earningsTitle,
       subtitle: l10n.earningsSubtitle,
       intensity: 0.9,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.live,
       header: SyloraUniverseHero(
         eyebrow: l10n.earningsHeroEyebrow,

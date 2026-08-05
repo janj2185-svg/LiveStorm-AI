@@ -1493,4 +1493,38 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get auraTipDefault => 'I am Aura — ready to help.';
+
+  @override
+  String get auraSummonLabel => 'Summon Aura';
+
+  @override
+  String get auraDismissLabel => 'Hide Aura';
+
+  @override
+  String get liveIntegrationsTitle => 'Live integrations';
+
+  @override
+  String get liveIntegrationsBody =>
+      'Connect streaming platforms so Aura can co-host. Native SYLORA Live is ready. TikTok LIVE unlocks after official provider access.';
+
+  @override
+  String get liveNativeReady => 'SYLORA Live — ready';
+
+  @override
+  String get liveTikTokBlocked => 'TikTok LIVE — awaiting provider access';
+
+  @override
+  String get liveDestinationsHint =>
+      'Destinations appear after an official integration is connected.';
+
+  @override
+  String get liveGuestInvitations => 'Guest invitations';
+
+  @override
+  String get liveGuestInvitationsBody =>
+      'Accept a real host invite, publish a separate WHIP contribution when credentials are issued, or send a gift to the host.';
+
+  @override
+  String get liveNoGuestInvites =>
+      'No incoming guest invitations. Host invites will appear here.';
 }

@@ -23,6 +23,7 @@ final class SyloraModuleScaffold extends StatelessWidget {
     this.showAuraPresence = false,
     this.auraPresenceController,
     this.auraPresencePreset = SyloraAuraContextPreset.ai,
+    this.auraPresenceMode = SyloraAuraPresenceMode.hidden,
     this.maxContentWidth = 980,
     this.padding = const EdgeInsets.fromLTRB(20, 16, 20, 40),
     this.railPadding = const EdgeInsets.all(SyloraTokens.space5),
@@ -41,6 +42,7 @@ final class SyloraModuleScaffold extends StatelessWidget {
   final bool showAuraPresence;
   final SyloraAuraPresenceController? auraPresenceController;
   final SyloraAuraContextPreset auraPresencePreset;
+  final SyloraAuraPresenceMode auraPresenceMode;
   final double maxContentWidth;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry railPadding;
@@ -124,10 +126,12 @@ final class SyloraModuleScaffold extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (showAuraPresence)
+                if (showAuraPresence &&
+                    auraPresenceMode != SyloraAuraPresenceMode.hidden)
                   SyloraAuraPresence(
                     controller: auraPresenceController,
                     preset: auraPresencePreset,
+                    mode: auraPresenceMode,
                   ),
               ],
             );

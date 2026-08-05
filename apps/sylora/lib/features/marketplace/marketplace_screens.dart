@@ -58,7 +58,7 @@ final class MarketplaceScreen extends ConsumerWidget {
       subtitle:
           'The persisted catalog, cart, orders, entitlements, and seller APIs.',
       intensity: 0.9,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.marketplace,
       actions: <Widget>[
         if (seller)
@@ -780,7 +780,7 @@ final class _MarketplaceProductScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Product',
     subtitle: 'Catalog detail, cart entry, and verified reviews.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.marketplace,
     child:
         FutureBuilder<
@@ -971,7 +971,7 @@ final class MarketplaceOrderScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => LumenPage(
     title: 'Order detail',
     subtitle: 'Marketplace settlement and line item record.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.marketplace,
     child: FutureBuilder<MarketplaceOrder>(
       future: ref.read(marketplaceRepositoryProvider).order(orderId),
@@ -1091,7 +1091,7 @@ final class _MarketplaceSellerScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Seller workspace',
     subtitle: 'Store setup, seller products, sales, and service bookings.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.marketplace,
     maxContentWidth: 1180,
     child:
@@ -2453,7 +2453,7 @@ final class _MarketplaceBookingScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Service booking',
     subtitle: 'Booking status, scheduling, and seller-buyer messaging.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.marketplace,
     child: FutureBuilder<ServiceBooking>(
       future: _future,

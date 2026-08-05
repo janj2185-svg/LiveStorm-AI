@@ -277,7 +277,7 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
       subtitle: l10n.feedSubtitle,
       intensity: 1,
       showOrbits: !wide,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       showAuraDock: wide,
@@ -1024,7 +1024,7 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
       title: l10n.searchTitle,
       subtitle: l10n.searchSubtitle,
       intensity: 0.94,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       header: SyloraUniverseHero(
         eyebrow: l10n.searchHeroEyebrow,
@@ -1421,7 +1421,7 @@ final class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     return SyloraModuleScaffold(
       title: l10n.friendsTitle,
       subtitle: l10n.friendsSubtitle,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       actions: <Widget>[
         IconButton(
@@ -2383,7 +2383,7 @@ final class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
       title: l10n.communitiesTitle,
       subtitle: l10n.communitiesSubtitle,
       intensity: 0.92,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       maxContentWidth: 1120,
       actions: <Widget>[
@@ -2837,7 +2837,7 @@ final class PublicProfileScreen extends ConsumerWidget {
       title: '@$handle',
       subtitle: l10n.profileSubtitle,
       intensity: 0.9,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       child: LumenAsyncView<ProfileModel>(
         value: value,
@@ -3504,7 +3504,7 @@ final class ConversationsScreen extends ConsumerWidget {
       title: l10n.messagesTitle,
       subtitle: l10n.messagesSubtitle,
       intensity: 0.94,
-      showAuraPresence: true,
+      showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       actions: <Widget>[
         IconButton(

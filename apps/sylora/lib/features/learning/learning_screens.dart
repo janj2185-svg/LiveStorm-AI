@@ -40,7 +40,7 @@ final class LearningScreen extends ConsumerWidget {
     title: 'Learning',
     subtitle:
         'Published courses, real enrollment progress, quizzes, and certificates.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.learning,
     header: SyloraUniverseHero(
       eyebrow: 'EDUCATION',
@@ -361,7 +361,7 @@ final class _LearningCourseScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Course',
     subtitle: 'Course detail, curriculum, and enrollment entry point.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.learning,
     child: FutureBuilder<(Course, Curriculum)>(
       future: _future,
@@ -538,7 +538,7 @@ final class _LearningEnrollmentScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Enrollment',
     subtitle: 'Lesson progress, quizzes, and certificate issuance.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.learning,
     child: FutureBuilder<(Course, Curriculum, CursorPage<LessonProgress>, List<PublicQuiz>)>(
       future: _future,
@@ -856,7 +856,7 @@ final class _LearningLessonScreenState
   Widget build(BuildContext context) => LumenPage(
     title: 'Lesson',
     subtitle: 'Lesson content, heartbeat tracking, and completion controls.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.learning,
     child: FutureBuilder<Lesson>(
       future: _future,
@@ -1034,7 +1034,7 @@ final class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
   Widget build(BuildContext context) => LumenPage(
     title: 'Quiz',
     subtitle: 'Attempt lifecycle, answers, and scoring.',
-    showAuraPresence: true,
+    showAuraPresence: false,
     auraPresencePreset: SyloraAuraContextPreset.learning,
     child: FutureBuilder<PublicQuiz>(
       future: _future,

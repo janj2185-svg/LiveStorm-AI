@@ -43,9 +43,10 @@ def test_auth_methods_exclude_github_and_unconfigured_providers(
     assert "github" not in methods
 
 
-def test_auth_methods_enable_facebook_tiktok_on_public_test_stand(
+def test_auth_methods_never_expose_facebook_tiktok_login(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Owner mandate: TikTok/Facebook are Live integrations, not IdPs."""
     monkeypatch.delenv("OAUTH_FACEBOOK_CLIENT_ID", raising=False)
     monkeypatch.delenv("OAUTH_TIKTOK_CLIENT_ID", raising=False)
     settings = Settings(
@@ -60,12 +61,10 @@ def test_auth_methods_enable_facebook_tiktok_on_public_test_stand(
         test_stand_auto_verify_email=True,
     )
     methods = settings.auth_methods()
-    assert methods["facebook"] is True
-    assert methods["tiktok"] is True
+    assert methods["facebook"] is False
+    assert methods["tiktok"] is False
     assert methods["google"] is False
     assert methods["apple"] is False
-    assert settings.oauth_provider("facebook") is None
-    assert settings.oauth_provider("tiktok") is None
     assert settings.is_public_test_stand is True
 
 

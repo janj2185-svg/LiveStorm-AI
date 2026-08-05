@@ -69,7 +69,7 @@ final class _CreatorStudioScreenState
   bool _guestsBusy = false;
   bool _bgmBusy = false;
   bool _alertPlaceholderEnabled = true;
-  bool _auraDockEnabled = true;
+  bool _auraDockEnabled = false;
   String _guestRole = 'guest';
   String? _guestsStatus;
   String? _guestsLoadedForSession;
@@ -130,6 +130,9 @@ final class _CreatorStudioScreenState
       showAuraPresence: _auraDockEnabled,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.creatorStudio,
+      auraPresenceMode: _auraDockEnabled
+          ? SyloraAuraPresenceMode.companion
+          : SyloraAuraPresenceMode.hidden,
       header: SyloraUniverseHero(
         eyebrow: l10n.creatorStudioHeroEyebrow,
         title: l10n.creatorStudioTitle,

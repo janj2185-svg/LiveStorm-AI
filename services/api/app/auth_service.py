@@ -55,6 +55,27 @@ def client_context(request: Request, settings: Settings) -> tuple[str, str]:
     return ip_hash(client_ip, settings), user_agent
 
 
+def _slugify_handle_seed(display_name: str) -> str:
+    raw = "".join(ch.lower() if ch.isalnum() else "_" for ch in display_name.strip())
+    collapsed = "_".join(part for part in raw.split("_") if part)
+    if len(collapsed) < 3:
+        return "sylora"
+    return collapsed[:18]
+
+
+async def _allocate_stand_handle(
+    db: AsyncSession, display_name: str, user_id: uuid.UUID
+) -> str:
+    """Unique public handle for stand signups so Friends is not blocked."""
+    seed = _slugify_handle_seed(display_name)
+    for _ in range(12):
+        candidate = f"{seed}_{secrets.token_hex(2)}"
+        taken = await db.scalar(select(Profile.user_id).where(Profile.handle == candidate))
+        if taken is None:
+            return candidate
+    return f"u_{user_id.hex[:12]}"
+
+
 async def create_verification(db: AsyncSession, user: User, settings: Settings) -> None:
     now = utcnow()
     await db.execute(
@@ -121,6 +142,11 @@ async def register_user(
         creator_role = await db.scalar(select(Role).where(Role.name == "creator"))
         if creator_role is not None:
             db.add(UserRole(user_id=user.id, role_id=creator_role.id))
+        # Stand demo: auto public handle so Friends/social work immediately.
+        if user.profile is not None and user.profile.handle is None:
+            user.profile.handle = await _allocate_stand_handle(
+                db, payload.display_name, user.id
+            )
         add_audit_event(
             db,
             request,
@@ -128,7 +154,10 @@ async def register_user(
             "identity.email_auto_verified_test_stand",
             actor_user_id=user.id,
             target_user_id=user.id,
-            metadata={"stand_creator_granted": creator_role is not None},
+            metadata={
+                "stand_creator_granted": creator_role is not None,
+                "stand_handle": user.profile.handle if user.profile else None,
+            },
         )
     else:
         await create_verification(db, user, settings)
