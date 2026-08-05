@@ -18,6 +18,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
+from app.config import get_settings as load_settings
 from app.dependencies import (
     AuthContext,
     current_auth,
@@ -255,7 +256,7 @@ async def session_response(
 ) -> LiveSessionResponse:
     destinations = await session_destinations(db, record.id)
     replay = await latest_session_replay(db, record.id)
-    resolved = settings or get_settings()
+    resolved = settings or load_settings()
     playback = media_playback_url(resolved, record.ingest_path)
     whep = media_whep_url(resolved, record.ingest_path)
     watch_hls = f"{playback.rstrip('/')}/index.m3u8" if playback else None
