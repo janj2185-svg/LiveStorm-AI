@@ -323,6 +323,92 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nenhuma publicação publicada foi retornada. Publique algo ou siga pessoas para moldar seu feed.';
 
   @override
+  String get feedEmptyFindPeople => 'Find people';
+
+  @override
+  String get homeGreetingMorning => 'Good morning';
+
+  @override
+  String get homeGreetingAfternoon => 'Good afternoon';
+
+  @override
+  String get homeGreetingEvening => 'Good evening';
+
+  @override
+  String homeHeroLineNamed(String greeting, String name) {
+    return '$greeting, $name.';
+  }
+
+  @override
+  String homeHeroLine(String greeting) {
+    return '$greeting. Your world is listening.';
+  }
+
+  @override
+  String get homeDiscoverTitle => 'Discover';
+
+  @override
+  String get homeTalkToAura => 'Talk to Aura';
+
+  @override
+  String get homeGoLive => 'Go Live';
+
+  @override
+  String get aiTalkNow => 'Talk with Aura';
+
+  @override
+  String get aiContinueChat => 'Continue';
+
+  @override
+  String get aiStarterQuiet => 'Help me find calm clarity';
+
+  @override
+  String get aiStarterCreate => 'Help me create something beautiful';
+
+  @override
+  String get aiStarterLive => 'Be my co-host tonight';
+
+  @override
+  String get aiEmptyConversations => 'Aura is ready when you are';
+
+  @override
+  String get aiEmptyConversationsBody =>
+      'Start a conversation like you would with a trusted friend — she remembers what matters.';
+
+  @override
+  String get aiProviderUnavailable => 'Aura cannot reach her voice right now';
+
+  @override
+  String get aiProviderUnavailableBody =>
+      'We will not invent a reply. Check again in a moment.';
+
+  @override
+  String get liveYourStage => 'Your stage';
+
+  @override
+  String get liveYourStageBody =>
+      'Go live in one breath. Aura can co-host when you are ready.';
+
+  @override
+  String get liveBroadcastSetup => 'Broadcast setup';
+
+  @override
+  String get liveNoSessionsTitle => 'The stage is quiet';
+
+  @override
+  String get liveNoSessionsBody =>
+      'Create a session and step into the light — your audience is one tap away.';
+
+  @override
+  String get feedRecommendationsUnavailable => 'Recomendações indisponíveis';
+
+  @override
+  String get feedRecommended => 'Recomendado';
+
+  @override
+  String get feedRecommendationsEmpty => 'A API ainda não tem recomendações.';
+
+  @override
   String get feedCreatePost => 'Criar publicação';
 
   @override
@@ -334,15 +420,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get feedLoadingMoreReason =>
       'A próxima página do feed está carregando.';
-
-  @override
-  String get feedRecommended => 'Recomendado';
-
-  @override
-  String get feedRecommendationsUnavailable => 'Recomendações indisponíveis';
-
-  @override
-  String get feedRecommendationsEmpty => 'A API ainda não tem recomendações.';
 
   @override
   String get feedPostBodyLabel => 'Publicação em texto simples';
@@ -868,6 +945,9 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get aiHeroBody =>
       'Provider-backed intelligence with consent-first privacy.';
+
+  @override
+  String get aiAuraSettings => 'Aura settings';
 
   @override
   String get aiOnline => 'Aura online';

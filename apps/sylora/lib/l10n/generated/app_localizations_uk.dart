@@ -157,11 +157,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ми надішлемо одноразовий код на електронну пошту.';
 
   @override
-  String get authWelcomeEyebrow => 'Ласкаво просимо до екосистеми';
+  String get authWelcomeEyebrow => 'Увійди у свій AI-світ';
 
   @override
   String get authWelcomeBody =>
-      'Один вхід — у світ AI, Live, спільноти й творчості.';
+      'Aura чекає — Live, друзі, творчість і один спокійний вхід.';
 
   @override
   String get authOAuthOpenFailed => 'Не вдалося відкрити сторінку входу.';
@@ -315,11 +315,98 @@ class AppLocalizationsUk extends AppLocalizations {
       'Живий пульс SYLORA — пости, друзі й творчість в одному потоці.';
 
   @override
-  String get feedEmpty => 'У вашій стрічці тихо';
+  String get feedEmpty => 'Твій світ чекає';
 
   @override
   String get feedEmptyMessage =>
-      'Опублікованих дописів не повернено. Опублікуйте допис або підпишіться на людей, щоб налаштувати стрічку.';
+      'Поділись першим сигналом — або знайди людей, з якими тобі буде тепло.';
+
+  @override
+  String get feedEmptyFindPeople => 'Знайти людей';
+
+  @override
+  String get homeGreetingMorning => 'Доброго ранку';
+
+  @override
+  String get homeGreetingAfternoon => 'Добрий день';
+
+  @override
+  String get homeGreetingEvening => 'Добрий вечір';
+
+  @override
+  String homeHeroLineNamed(String greeting, String name) {
+    return '$greeting, $name.';
+  }
+
+  @override
+  String homeHeroLine(String greeting) {
+    return '$greeting. Твій світ слухає.';
+  }
+
+  @override
+  String get homeDiscoverTitle => 'Відкриття';
+
+  @override
+  String get homeTalkToAura => 'Поговорити з Aura';
+
+  @override
+  String get homeGoLive => 'В ефір';
+
+  @override
+  String get aiTalkNow => 'Поговорити з Aura';
+
+  @override
+  String get aiContinueChat => 'Продовжити';
+
+  @override
+  String get aiStarterQuiet => 'Допоможи знайти спокійну ясність';
+
+  @override
+  String get aiStarterCreate => 'Допоможи створити щось прекрасне';
+
+  @override
+  String get aiStarterLive => 'Будь моєю співведучою сьогодні';
+
+  @override
+  String get aiEmptyConversations => 'Aura готова, коли ти готовий';
+
+  @override
+  String get aiEmptyConversationsBody =>
+      'Почни розмову як з близькою людиною — вона пам’ятає важливе.';
+
+  @override
+  String get aiProviderUnavailable => 'Aura зараз не чує свій голос';
+
+  @override
+  String get aiProviderUnavailableBody =>
+      'Ми не вигадаємо відповідь. Спробуй ще раз за мить.';
+
+  @override
+  String get liveYourStage => 'Твоя сцена';
+
+  @override
+  String get liveYourStageBody =>
+      'Вийди в ефір одним подихом. Aura може бути співведучою.';
+
+  @override
+  String get liveBroadcastSetup => 'Налаштування ефіру';
+
+  @override
+  String get liveNoSessionsTitle => 'Сцена тиха';
+
+  @override
+  String get liveNoSessionsBody =>
+      'Створи сесію і вийди у світло — аудиторія за один дотик.';
+
+  @override
+  String get feedRecommendationsUnavailable => 'Рекомендації відпочивають';
+
+  @override
+  String get feedRecommended => 'Для тебе';
+
+  @override
+  String get feedRecommendationsEmpty =>
+      'Підпишись на людей — і тут з’явиться живий ритм.';
 
   @override
   String get feedCreatePost => 'Створити допис';
@@ -333,15 +420,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get feedLoadingMoreReason =>
       'Завантажується наступна сторінка стрічки.';
-
-  @override
-  String get feedRecommended => 'Рекомендоване';
-
-  @override
-  String get feedRecommendationsUnavailable => 'Рекомендації недоступні';
-
-  @override
-  String get feedRecommendationsEmpty => 'API ще не має рекомендацій.';
 
   @override
   String get feedPostBodyLabel => 'Текстовий допис';
@@ -853,17 +931,20 @@ class AppLocalizationsUk extends AppLocalizations {
       'Опублікуй READY-подарунки в Gift Studio, щоб заповнити каталог.';
 
   @override
-  String get aiTitle => 'AI';
+  String get aiTitle => 'Aura';
 
   @override
-  String get aiSubtitle => 'Розмови Aura, пам’ять, модерація та генерація.';
+  String get aiSubtitle => 'Жива супутниця по всьому SYLORA.';
 
   @override
-  String get aiHeroEyebrow => 'AURA';
+  String get aiHeroEyebrow => 'ЖИВА СУПУТНИЦЯ';
 
   @override
   String get aiHeroBody =>
-      'Інтелект від провайдера з приватністю на основі згоди.';
+      'Говори як з людиною. Aura слухає, пам’ятає і залишається поруч.';
+
+  @override
+  String get aiAuraSettings => 'Налаштування Aura';
 
   @override
   String get aiOnline => 'Aura онлайн';

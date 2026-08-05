@@ -10,6 +10,8 @@ abstract final class SyloraStates {
     required String actionLabel,
     required VoidCallback onAction,
     IconData icon = Icons.inbox_outlined,
+    String? secondaryLabel,
+    VoidCallback? onSecondary,
   }) =>
       _StateCard(
         icon: icon,
@@ -17,9 +19,11 @@ abstract final class SyloraStates {
         message: message,
         actionLabel: actionLabel,
         onAction: onAction,
+        secondaryLabel: secondaryLabel,
+        onSecondary: onSecondary,
       );
 
-  static Widget loading({String message = 'Loading your world…'}) => Center(
+  static Widget loading({String message = 'Opening SYLORA…'}) => Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 320),
           child: Column(
@@ -156,6 +160,8 @@ final class _StateCard extends StatelessWidget {
     required this.message,
     required this.actionLabel,
     required this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
     this.accent = SyloraTokens.champagneDeep,
   });
 
@@ -164,6 +170,8 @@ final class _StateCard extends StatelessWidget {
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
   final Color accent;
 
   @override
@@ -242,6 +250,34 @@ final class _StateCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (secondaryLabel != null && onSecondary != null) ...[
+                    const SizedBox(height: SyloraTokens.space2),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: onSecondary,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: SyloraTokens.inkSoft,
+                          side: BorderSide(
+                            color: SyloraTokens.ink.withValues(alpha: 0.12),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(SyloraTokens.radiusPill),
+                          ),
+                        ),
+                        child: Text(
+                          secondaryLabel!,
+                          style: SyloraTokens.body(
+                            14.5,
+                            color: SyloraTokens.inkSoft,
+                            weight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

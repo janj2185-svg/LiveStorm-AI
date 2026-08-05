@@ -236,6 +236,10 @@ final class SyloraTextField extends StatelessWidget {
     this.autofillHints,
     this.validator,
     this.onFieldSubmitted,
+    this.minLines,
+    this.maxLines = 1,
+    this.maxLength,
+    this.autofocus = false,
   });
 
   final TextEditingController controller;
@@ -248,6 +252,10 @@ final class SyloraTextField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final FormFieldValidator<String>? validator;
   final ValueChanged<String>? onFieldSubmitted;
+  final int? minLines;
+  final int? maxLines;
+  final int? maxLength;
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
@@ -259,10 +267,15 @@ final class SyloraTextField extends StatelessWidget {
       autofillHints: autofillHints,
       validator: validator,
       onFieldSubmitted: onFieldSubmitted,
+      minLines: minLines,
+      maxLines: obscureText ? 1 : maxLines,
+      maxLength: maxLength,
+      autofocus: autofocus,
       style: SyloraTokens.body(15, color: SyloraTokens.ink),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        alignLabelWithHint: (minLines ?? 1) > 1,
         prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, color: SyloraTokens.inkMute),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.86),

@@ -401,13 +401,13 @@ abstract class AppLocalizations {
   /// No description provided for @authWelcomeEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to the ecosystem'**
+  /// **'Enter your AI world'**
   String get authWelcomeEyebrow;
 
   /// No description provided for @authWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'One sign-in for AI, Live, community, and creativity.'**
+  /// **'Aura is waiting — Live, friends, creation, and one calm sign-in.'**
   String get authWelcomeBody;
 
   /// No description provided for @authOAuthOpenFailed.
@@ -707,14 +707,170 @@ abstract class AppLocalizations {
   /// No description provided for @feedEmpty.
   ///
   /// In en, this message translates to:
-  /// **'Your feed is quiet'**
+  /// **'Your world is waiting'**
   String get feedEmpty;
 
   /// No description provided for @feedEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'No published posts were returned. Publish a post or follow people to shape your feed.'**
+  /// **'Share a first signal, or find people whose energy matches yours.'**
   String get feedEmptyMessage;
+
+  /// No description provided for @feedEmptyFindPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Find people'**
+  String get feedEmptyFindPeople;
+
+  /// No description provided for @homeGreetingMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get homeGreetingMorning;
+
+  /// No description provided for @homeGreetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get homeGreetingAfternoon;
+
+  /// No description provided for @homeGreetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get homeGreetingEvening;
+
+  /// No description provided for @homeHeroLineNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'{greeting}, {name}.'**
+  String homeHeroLineNamed(String greeting, String name);
+
+  /// No description provided for @homeHeroLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{greeting}. Your world is listening.'**
+  String homeHeroLine(String greeting);
+
+  /// No description provided for @homeDiscoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get homeDiscoverTitle;
+
+  /// No description provided for @homeTalkToAura.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to Aura'**
+  String get homeTalkToAura;
+
+  /// No description provided for @homeGoLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Live'**
+  String get homeGoLive;
+
+  /// No description provided for @aiTalkNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk with Aura'**
+  String get aiTalkNow;
+
+  /// No description provided for @aiContinueChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get aiContinueChat;
+
+  /// No description provided for @aiStarterQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Help me find calm clarity'**
+  String get aiStarterQuiet;
+
+  /// No description provided for @aiStarterCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Help me create something beautiful'**
+  String get aiStarterCreate;
+
+  /// No description provided for @aiStarterLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Be my co-host tonight'**
+  String get aiStarterLive;
+
+  /// No description provided for @aiEmptyConversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura is ready when you are'**
+  String get aiEmptyConversations;
+
+  /// No description provided for @aiEmptyConversationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation like you would with a trusted friend — she remembers what matters.'**
+  String get aiEmptyConversationsBody;
+
+  /// No description provided for @aiProviderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura cannot reach her voice right now'**
+  String get aiProviderUnavailable;
+
+  /// No description provided for @aiProviderUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We will not invent a reply. Check again in a moment.'**
+  String get aiProviderUnavailableBody;
+
+  /// No description provided for @liveYourStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stage'**
+  String get liveYourStage;
+
+  /// No description provided for @liveYourStageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Go live in one breath. Aura can co-host when you are ready.'**
+  String get liveYourStageBody;
+
+  /// No description provided for @liveBroadcastSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast setup'**
+  String get liveBroadcastSetup;
+
+  /// No description provided for @liveNoSessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The stage is quiet'**
+  String get liveNoSessionsTitle;
+
+  /// No description provided for @liveNoSessionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a session and step into the light — your audience is one tap away.'**
+  String get liveNoSessionsBody;
+
+  /// No description provided for @feedRecommendationsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendations are resting'**
+  String get feedRecommendationsUnavailable;
+
+  /// No description provided for @feedRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get feedRecommended;
+
+  /// No description provided for @feedRecommendationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow people to shape what appears here.'**
+  String get feedRecommendationsEmpty;
 
   /// No description provided for @feedCreatePost.
   ///
@@ -739,24 +895,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The next feed page is loading.'**
   String get feedLoadingMoreReason;
-
-  /// No description provided for @feedRecommended.
-  ///
-  /// In en, this message translates to:
-  /// **'Recommended'**
-  String get feedRecommended;
-
-  /// No description provided for @feedRecommendationsUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Recommendations unavailable'**
-  String get feedRecommendationsUnavailable;
-
-  /// No description provided for @feedRecommendationsEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'The API has no recommendations yet.'**
-  String get feedRecommendationsEmpty;
 
   /// No description provided for @feedPostBodyLabel.
   ///
@@ -1733,26 +1871,32 @@ abstract class AppLocalizations {
   /// No description provided for @aiTitle.
   ///
   /// In en, this message translates to:
-  /// **'AI'**
+  /// **'Aura'**
   String get aiTitle;
 
   /// No description provided for @aiSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Aura conversations, memory, moderation, and generation.'**
+  /// **'Your living companion across SYLORA.'**
   String get aiSubtitle;
 
   /// No description provided for @aiHeroEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'AURA'**
+  /// **'LIVING COMPANION'**
   String get aiHeroEyebrow;
 
   /// No description provided for @aiHeroBody.
   ///
   /// In en, this message translates to:
-  /// **'Provider-backed intelligence with consent-first privacy.'**
+  /// **'Talk like a person. Aura listens, remembers, and stays with you.'**
   String get aiHeroBody;
+
+  /// No description provided for @aiAuraSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Aura settings'**
+  String get aiAuraSettings;
 
   /// No description provided for @aiOnline.
   ///

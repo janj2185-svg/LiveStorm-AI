@@ -127,6 +127,8 @@ final class LumenEmptyView extends StatelessWidget {
     required this.onAction,
     super.key,
     this.icon = Icons.inbox_outlined,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   final String title;
@@ -134,6 +136,8 @@ final class LumenEmptyView extends StatelessWidget {
   final String actionLabel;
   final VoidCallback onAction;
   final IconData icon;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) => SyloraStates.empty(
@@ -142,6 +146,8 @@ final class LumenEmptyView extends StatelessWidget {
     actionLabel: actionLabel,
     onAction: onAction,
     icon: icon,
+    secondaryLabel: secondaryLabel,
+    onSecondary: onSecondary,
   );
 }
 

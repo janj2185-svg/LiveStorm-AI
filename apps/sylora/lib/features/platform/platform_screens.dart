@@ -1592,17 +1592,17 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
     final value = ref.watch(aiProvider);
     _syncAura(value);
     final l10n = AppLocalizations.of(context);
-    final consentGranted = value.asData?.value.settings.consentGranted == true;
     final mood = _presence?['mood_label'] as String? ?? l10n.aiOnline;
     final personality =
         _presence?['personality'] as String? ??
         'Warm · Curious · Precise · Alive';
+    final firstName = personality.split('·').first.trim();
     return LumenPage(
-      title: l10n.aiTitle,
-      subtitle: l10n.aiSubtitle,
-      intensity: 0.94,
+      title: 'Aura',
+      subtitle: mood,
+      intensity: 0.96,
       showAuraDock: false,
-      auraEmotion: AuraEmotion.thinking,
+      auraEmotion: AuraEmotion.greeting,
       auraLabel: mood,
       showAuraPresence: true,
       auraPresenceController: _aura,
@@ -1611,35 +1611,18 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
       header: SyloraUniverseHero(
         eyebrow: l10n.aiHeroEyebrow,
         title: 'Aura',
-        body: '${l10n.aiHeroBody}\n$personality',
+        body: l10n.aiHeroBody,
         trailing: SyloraPortalChip(
           label: l10n.aiMemory,
           icon: Icons.psychology_alt_outlined,
           onTap: () => context.pushNamed('ai-memory'),
         ),
         metrics: <Widget>[
-          if (_presence != null && consentGranted)
-            SyloraMetricPill(
-              label: 'Memory',
-              value: '${_presence!['memory_count']}',
-              icon: Icons.memory_rounded,
-            ),
-          if (_presence != null && consentGranted)
-            SyloraMetricPill(
-              label: 'Voice',
-              value: _presence!['voice_output_ready'] == true
-                  ? 'Ready'
-                  : 'Offline',
-              icon: Icons.record_voice_over_rounded,
-            ),
-          if (_presence != null && consentGranted)
-            SyloraMetricPill(
-              label: 'Avatar',
-              value: _presence!['avatar_ready'] == true
-                  ? '${_presence!['avatar_job_status'] ?? 'Ready'}'
-                  : 'Offline',
-              icon: Icons.face_retouching_natural_rounded,
-            ),
+          SyloraMetricPill(
+            label: firstName.isEmpty ? 'Aura' : firstName,
+            value: mood,
+            icon: Icons.favorite_border_rounded,
+          ),
         ],
       ),
       actions: <Widget>[
@@ -1700,10 +1683,9 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
                 ),
                 const SizedBox(height: 16),
                 LumenEmptyView(
-                  title: 'AI provider unavailable',
-                  message:
-                      'The backend reports no available chat provider. SYLORA will not fabricate a response.',
-                  actionLabel: 'Check again',
+                  title: l10n.aiProviderUnavailable,
+                  message: l10n.aiProviderUnavailableBody,
+                  actionLabel: l10n.commonRetry,
                   onAction: () => ref.invalidate(aiProvider),
                   icon: Icons.auto_awesome_rounded,
                 ),
@@ -1714,68 +1696,96 @@ final class _AiScreenState extends ConsumerState<AiScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              const SizedBox(height: 0),
               SyloraStaggeredReveal(
                 index: index++,
-                child: _AuraPresencePanel(
-                  presence: _presence,
-                  error: _presenceError,
-                  avatarCapable:
-                      snapshot.providers.capabilities['avatar'] == true,
-                  avatarBusy: _avatarBusy,
-                  onRefresh: _loadPresence,
-                  onGenerateAvatar: () => _queueAvatar(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SyloraStaggeredReveal(
-                index: index++,
-                child: SyloraGlassTile(
-                  child: Row(
-                    children: <Widget>[
-                      SyloraPulseGlow(
-                        child: const Icon(
-                          Icons.data_usage_rounded,
-                          color: SyloraTokens.violet,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    SyloraButton(
+                      label: l10n.aiTalkNow,
+                      icon: Icons.auto_awesome_rounded,
+                      onPressed: () => _createConversation(context, ref),
+                    ),
+                    if (snapshot.conversations.items.isNotEmpty)
+                      SyloraButton(
+                        label: l10n.aiContinueChat,
+                        variant: SyloraButtonVariant.secondary,
+                        icon: Icons.forum_outlined,
+                        onPressed: () => context.pushNamed(
+                          'ai-conversation',
+                          pathParameters: <String, String>{
+                            'id': snapshot.conversations.items.first.id,
+                          },
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          '${snapshot.usage['total_units'] ?? 0} units this month',
-                          style: SyloraTokens.title(17),
-                        ),
-                      ),
-                      LumenBadge(
-                        label:
-                            '${snapshot.providers.providerNames.length} provider(s)',
-                      ),
-                    ],
-                  ),
+                    SyloraPortalChip(
+                      label: l10n.aiStarterQuiet,
+                      icon: Icons.spa_outlined,
+                      onTap: () => _createConversation(context, ref),
+                    ),
+                    SyloraPortalChip(
+                      label: l10n.aiStarterCreate,
+                      icon: Icons.brush_outlined,
+                      onTap: () => _createConversation(context, ref),
+                    ),
+                    SyloraPortalChip(
+                      label: l10n.aiStarterLive,
+                      icon: Icons.podcasts_rounded,
+                      onTap: () => _createConversation(context, ref),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Row(
+              const SizedBox(height: 18),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: Text(
+                  l10n.aiAuraSettings,
+                  style: SyloraTokens.title(16),
+                ),
                 children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      l10n.aiConversations,
-                      style: SyloraTokens.title(20),
+                  _AuraPresencePanel(
+                    presence: _presence,
+                    error: _presenceError,
+                    avatarCapable:
+                        snapshot.providers.capabilities['avatar'] == true,
+                    avatarBusy: _avatarBusy,
+                    onRefresh: _loadPresence,
+                    onGenerateAvatar: () => _queueAvatar(),
+                  ),
+                  const SizedBox(height: 12),
+                  SyloraGlassTile(
+                    child: Row(
+                      children: <Widget>[
+                        const Icon(
+                          Icons.data_usage_rounded,
+                          color: SyloraTokens.champagneDeep,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '${snapshot.usage['total_units'] ?? 0}',
+                            style: SyloraTokens.title(17),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  FilledButton.icon(
-                    onPressed: () => _createConversation(context, ref),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('New'),
-                  ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.aiConversations,
+                style: SyloraTokens.title(20),
               ),
               const SizedBox(height: 12),
               if (snapshot.conversations.items.isEmpty)
                 LumenEmptyView(
-                  title: 'No AI conversations',
-                  message:
-                      'The API returned no conversation history. Start one to send a provider-backed request.',
-                  actionLabel: 'New conversation',
+                  title: l10n.aiEmptyConversations,
+                  message: l10n.aiEmptyConversationsBody,
+                  actionLabel: l10n.aiTalkNow,
                   onAction: () => _createConversation(context, ref),
                   icon: Icons.auto_awesome_outlined,
                 )
@@ -3640,8 +3650,8 @@ final class LiveScreen extends ConsumerWidget {
       ],
       header: SyloraUniverseHero(
         eyebrow: l10n.liveHeroEyebrow,
-        title: l10n.liveTitle,
-        body: l10n.liveHeroBody,
+        title: l10n.liveYourStage,
+        body: l10n.liveYourStageBody,
         trailing: Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -3667,56 +3677,78 @@ final class LiveScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              SyloraStaggeredReveal(
-                index: index++,
-                child: SyloraGlass(
-                  padding: const EdgeInsets.all(SyloraTokens.space4),
-                  radius: SyloraTokens.radiusLg,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              Text(l10n.liveSessions, style: SyloraTokens.title(22)),
+              const SizedBox(height: 10),
+              if (snapshot.sessionsError != null)
+                SyloraGlassTile(
+                  child: Row(
                     children: <Widget>[
-                      Text(
-                        l10n.liveIntegrationsTitle,
-                        style: SyloraTokens.title(20),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.liveIntegrationsBody,
-                        style: SyloraTokens.body(
-                          13,
-                          color: SyloraTokens.inkSoft,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: <Widget>[
-                          SyloraPortalChip(
-                            label: l10n.liveNativeReady,
-                            icon: Icons.check_circle_outline_rounded,
-                            onTap: () {},
-                          ),
-                          SyloraPortalChip(
-                            label: l10n.liveTikTokBlocked,
-                            icon: Icons.lock_outline_rounded,
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.liveDestinationsHint,
-                        style: SyloraTokens.body(
-                          12,
-                          color: SyloraTokens.inkMute,
-                        ),
+                      const Icon(Icons.lock_outline_rounded),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(messageFor(snapshot.sessionsError!)),
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
+                )
+              else if (snapshot.sessions.isEmpty)
+                LumenEmptyView(
+                  title: l10n.liveNoSessionsTitle,
+                  message: l10n.liveNoSessionsBody,
+                  actionLabel: l10n.liveGoLive,
+                  onAction: () => _createSession(context, ref),
+                  secondaryLabel: l10n.liveOpenStudio,
+                  onSecondary: () => context.goNamed('creator-studio'),
+                  icon: Icons.sensors_outlined,
+                )
+              else
+                for (final session in snapshot.sessions)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SyloraStaggeredReveal(
+                      index: index++,
+                      child: SyloraGlassTile(
+                        onTap: () => context.pushNamed(
+                          'live-session',
+                          pathParameters: <String, String>{'id': session.id},
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            SyloraPulseGlow(
+                              color: SyloraTokens.petal,
+                              child: const Icon(
+                                Icons.sensors_rounded,
+                                color: SyloraTokens.petal,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    session.title,
+                                    style: SyloraTokens.title(16),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    session.state,
+                                    style: SyloraTokens.body(
+                                      13,
+                                      color: SyloraTokens.inkMute,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              const SizedBox(height: 24),
               Text(l10n.liveGuestInvitations, style: SyloraTokens.title(20)),
               const SizedBox(height: 6),
               Text(
@@ -3763,12 +3795,37 @@ final class LiveScreen extends ConsumerWidget {
                     ),
                   ),
               const SizedBox(height: 24),
-              Text(l10n.liveIntegrations, style: SyloraTokens.title(20)),
-              const SizedBox(height: 12),
-              SyloraStaggeredReveal(
-                index: index++,
-                child: const _TikTokLiveControlPanel(),
-              ),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: Text(
+                  l10n.liveBroadcastSetup,
+                  style: SyloraTokens.title(18),
+                ),
+                subtitle: Text(
+                  l10n.liveIntegrationsBody,
+                  style: SyloraTokens.body(13, color: SyloraTokens.inkSoft),
+                ),
+                children: <Widget>[
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: <Widget>[
+                      SyloraPortalChip(
+                        label: l10n.liveNativeReady,
+                        icon: Icons.check_circle_outline_rounded,
+                        onTap: () {},
+                      ),
+                      SyloraPortalChip(
+                        label: l10n.liveTikTokBlocked,
+                        icon: Icons.lock_outline_rounded,
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const _TikTokLiveControlPanel(),
+                  const SizedBox(height: 12),
+
               const SizedBox(height: 16),
               if (snapshot.integrationsError != null)
                 SyloraStaggeredReveal(
@@ -3874,79 +3931,8 @@ final class LiveScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-              const SizedBox(height: 24),
-              Text(l10n.liveSessions, style: SyloraTokens.title(20)),
-              const SizedBox(height: 12),
-              if (snapshot.sessionsError != null)
-                SyloraGlassTile(
-                  child: Row(
-                    children: <Widget>[
-                      const Icon(Icons.lock_outline_rounded),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Host session controls are unavailable for this account: '
-                          '${messageFor(snapshot.sessionsError!)}',
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else if (snapshot.sessions.isEmpty)
-                LumenEmptyView(
-                  title: l10n.liveNoSessions,
-                  message: l10n.liveNoSessionsMessage,
-                  actionLabel: l10n.liveCreateSession,
-                  onAction: () => _createSession(context, ref),
-                  icon: Icons.sensors_outlined,
-                )
-              else
-                for (final session in snapshot.sessions)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: SyloraStaggeredReveal(
-                      index: index++,
-                      child: SyloraGlassTile(
-                        onTap: () => context.pushNamed(
-                          'live-session',
-                          pathParameters: <String, String>{'id': session.id},
-                        ),
-                        child: Row(
-                          children: <Widget>[
-                            SyloraPulseGlow(
-                              color: SyloraTokens.petal,
-                              child: const Icon(
-                                Icons.sensors_rounded,
-                                color: SyloraTokens.petal,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    session.title,
-                                    style: SyloraTokens.title(16),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    session.state,
-                                    style: SyloraTokens.body(
-                                      13,
-                                      color: SyloraTokens.inkMute,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.chevron_right_rounded),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                ],
+              ),
             ],
           );
         },

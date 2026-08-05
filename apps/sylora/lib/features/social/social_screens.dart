@@ -14,6 +14,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../auth/auth.dart';
 import '../conferences/conference_screens.dart';
 import '../platform/repositories.dart';
+import '../settings/settings_screen.dart' show accountProvider;
 
 final feedProvider = FutureProvider.autoDispose<CursorPage<PostModel>>(
   (ref) => ref.watch(socialRepositoryProvider).feed(),
@@ -271,9 +272,11 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final feed = ref.watch(feedProvider);
+    final account = ref.watch(accountProvider);
     final wide = MediaQuery.sizeOf(context).width >= 1100;
+    final displayName = account.asData?.value.profile.displayName;
     return LumenPage(
-      title: 'SYLORA',
+      title: l10n.feedTitle,
       subtitle: l10n.feedSubtitle,
       intensity: 1,
       showOrbits: !wide,
@@ -300,7 +303,13 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           icon: const Icon(Icons.edit_outlined),
         ),
       ],
-      header: _HomeUniverseHero(onCompose: () => _showComposer(context, ref)),
+      header: _HomeUniverseHero(
+        displayName: displayName,
+        onCompose: () => _showComposer(context, ref),
+        onAura: () => context.goNamed('ai'),
+        onLive: () => context.goNamed('live'),
+        onDiscover: () => context.goNamed('friends'),
+      ),
       child: LumenAsyncView<CursorPage<PostModel>>(
         value: feed,
         onRetry: () => ref.invalidate(feedProvider),
@@ -311,18 +320,31 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           }
           final posts = <PostModel>[...page.items, ..._additionalPosts];
           if (posts.isEmpty) {
-            return LumenEmptyView(
-              title: l10n.feedEmpty,
-              message: l10n.feedEmptyMessage,
-              actionLabel: l10n.feedCreatePost,
-              onAction: () => _showComposer(context, ref),
-              icon: Icons.auto_awesome_outlined,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                LumenEmptyView(
+                  title: l10n.feedEmpty,
+                  message: l10n.feedEmptyMessage,
+                  actionLabel: l10n.feedCreatePost,
+                  onAction: () => _showComposer(context, ref),
+                  secondaryLabel: l10n.feedEmptyFindPeople,
+                  onSecondary: () => context.goNamed('friends'),
+                  icon: Icons.auto_awesome_outlined,
+                ),
+                const SizedBox(height: 20),
+                const _HomeDiscoverRail(),
+              ],
             );
           }
           return Column(
             children: <Widget>[
+              if (!wide) ...<Widget>[
+                const _HomeDiscoverRail(),
+                const SizedBox(height: 18),
+              ],
               for (var i = 0; i < posts.length; i++) ...<Widget>[
-                _StaggeredReveal(
+                SyloraStaggeredReveal(
                   index: i,
                   child: PostCard(post: posts[i]),
                 ),
@@ -373,63 +395,77 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
     var publish = true;
     final saved = await showDialog<bool>(
       context: context,
+      barrierColor: SyloraTokens.ink.withValues(alpha: 0.28),
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(l10n.feedCreatePost),
-          content: SizedBox(
-            width: 520,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  controller: body,
-                  autofocus: true,
-                  minLines: 4,
-                  maxLines: 10,
-                  maxLength: 20000,
-                  decoration: InputDecoration(
-                    labelText: l10n.feedPostBodyLabel,
-                    alignLabelWithHint: true,
+        builder: (context, setLocal) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: SyloraGlass(
+              radius: SyloraTokens.radiusXl,
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(l10n.feedCreatePost, style: SyloraTokens.display(28)),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.homeComposeHint,
+                    style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
                   ),
-                ),
-                SwitchListTile(
-                  value: publish,
-                  onChanged: (value) => setState(() => publish = value),
-                  title: Text(
-                    publish ? l10n.feedPublishNow : l10n.feedSaveDraft,
+                  const SizedBox(height: 16),
+                  SyloraTextField(
+                    controller: body,
+                    label: l10n.feedPostBodyLabel,
+                    minLines: 4,
+                    maxLines: 10,
+                    autofocus: true,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: publish,
+                    onChanged: (value) => setLocal(() => publish = value),
+                    title: Text(
+                      publish ? l10n.feedPublishNow : l10n.feedSaveDraft,
+                      style: SyloraTokens.body(14, weight: FontWeight.w600),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SyloraButton(
+                    label: publish ? l10n.feedPublish : l10n.feedSaveDraft,
+                    onPressed: () async {
+                      if (body.text.trim().isEmpty) {
+                        return;
+                      }
+                      try {
+                        await ref
+                            .read(socialRepositoryProvider)
+                            .createPost(body.text.trim(), publish: publish);
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext, true);
+                        }
+                      } on Object catch (error) {
+                        if (dialogContext.mounted) {
+                          ScaffoldMessenger.of(dialogContext).showSnackBar(
+                            SnackBar(content: Text(messageFor(error))),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  SyloraButton(
+                    label: l10n.commonCancel,
+                    variant: SyloraButtonVariant.secondary,
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                  ),
+                ],
+              ),
             ),
           ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (body.text.trim().isEmpty) {
-                  return;
-                }
-                try {
-                  await ref
-                      .read(socialRepositoryProvider)
-                      .createPost(body.text.trim(), publish: publish);
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext, true);
-                  }
-                } on Object catch (error) {
-                  if (dialogContext.mounted) {
-                    ScaffoldMessenger.of(
-                      dialogContext,
-                    ).showSnackBar(SnackBar(content: Text(messageFor(error))));
-                  }
-                }
-              },
-              child: Text(publish ? l10n.feedPublish : l10n.feedSaveDraft),
-            ),
-          ],
         ),
       ),
     );
@@ -457,11 +493,14 @@ final class RecommendationsPanel extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       child: LumenSurface(
         child: value.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => SyloraStates.loading(message: l10n.feedLoadingPosts),
           error: (error, stackTrace) => Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(l10n.feedRecommendationsUnavailable),
+              Text(
+                l10n.feedRecommendationsUnavailable,
+                style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+              ),
               TextButton(
                 onPressed: () => ref.invalidate(recommendationsProvider),
                 child: Text(l10n.commonRetry),
@@ -473,7 +512,7 @@ final class RecommendationsPanel extends ConsumerWidget {
             children: <Widget>[
               Text(
                 l10n.feedRecommended,
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: SyloraTokens.title(20),
               ),
               const SizedBox(height: 16),
               if (posts.isEmpty)
@@ -504,56 +543,89 @@ final class RecommendationsPanel extends ConsumerWidget {
   }
 }
 
-final class _HomeUniverseHero extends StatelessWidget {
-  const _HomeUniverseHero({required this.onCompose});
+final class _HomeUniverseHero extends ConsumerWidget {
+  const _HomeUniverseHero({
+    required this.onCompose,
+    required this.onAura,
+    required this.onLive,
+    required this.onDiscover,
+    this.displayName,
+  });
 
   final VoidCallback onCompose;
+  final VoidCallback onAura;
+  final VoidCallback onLive;
+  final VoidCallback onDiscover;
+  final String? displayName;
 
-  String _greeting() {
+  String _greeting(AppLocalizations l10n) {
     final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Good morning';
-    }
-    if (hour < 18) {
-      return 'Good afternoon';
-    }
-    return 'Good evening';
+    if (hour < 12) return l10n.homeGreetingMorning;
+    if (hour < 18) return l10n.homeGreetingAfternoon;
+    return l10n.homeGreetingEvening;
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final compact = MediaQuery.sizeOf(context).width < 720;
+    final greeting = _greeting(l10n);
+    final name = displayName?.trim();
+    final line = (name != null && name.isNotEmpty)
+        ? l10n.homeHeroLineNamed(greeting, name.split(' ').first)
+        : l10n.homeHeroLine(greeting);
     return SyloraGlass(
       radius: SyloraTokens.radiusXl,
       padding: EdgeInsets.fromLTRB(
         compact ? 18 : 28,
-        compact ? 22 : 30,
-        compact ? 18 : 28,
         compact ? 20 : 26,
+        compact ? 18 : 28,
+        compact ? 18 : 24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Text(
-            'SYLORA',
-            style: SyloraTokens.display(
-              compact ? 36 : 48,
-              color: SyloraTokens.ink,
-            ),
+            l10n.homeHeroEyebrow,
+            style: SyloraTokens.label(11, color: SyloraTokens.champagneDeep),
           ),
           const SizedBox(height: 8),
           Text(
-            '${_greeting()}. Your journey · beautifully in sync.',
+            line,
+            style: SyloraTokens.display(compact ? 30 : 38),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.homeHeroBody,
             style: SyloraTokens.body(
-              compact ? 15 : 17,
+              compact ? 14.5 : 16,
               color: SyloraTokens.inkSoft,
               weight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 20),
-          const _MomentsTray(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              SyloraPortalChip(
+                label: l10n.homeTalkToAura,
+                icon: Icons.auto_awesome_rounded,
+                onTap: onAura,
+              ),
+              SyloraPortalChip(
+                label: l10n.homeGoLive,
+                icon: Icons.podcasts_rounded,
+                onTap: onLive,
+              ),
+              SyloraPortalChip(
+                label: l10n.feedEmptyFindPeople,
+                icon: Icons.group_outlined,
+                onTap: onDiscover,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Material(
             color: Colors.transparent,
             child: InkWell(
@@ -576,10 +648,7 @@ final class _HomeUniverseHero extends StatelessWidget {
                   ),
                   child: Row(
                     children: <Widget>[
-                      Icon(
-                        Icons.edit_outlined,
-                        color: SyloraTokens.ink,
-                      ),
+                      const Icon(Icons.edit_outlined, color: SyloraTokens.ink),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -611,147 +680,89 @@ final class _HomeUniverseHero extends StatelessWidget {
   }
 }
 
-/// FINAL-02 Moments rail — placeholder avatars until Stories API ships.
-final class _MomentsTray extends StatelessWidget {
-  const _MomentsTray();
-
-  static const _moments = <(String, String)>[
-    ('You', 'Add'),
-    ('Liora', 'Live'),
-    ('Kairo', 'Now'),
-    ('Sera', '2h'),
-    ('Elara', '5h'),
-  ];
+final class _HomeDiscoverRail extends ConsumerWidget {
+  const _HomeDiscoverRail();
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Moments',
-          style: SyloraTokens.label(11, color: SyloraTokens.champagneDeep),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 92,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _moments.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final (name, badge) = _moments[index];
-              final isAdd = index == 0;
-              return SizedBox(
-                width: 68,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: isAdd
-                            ? null
-                            : const LinearGradient(
-                                colors: [
-                                  SyloraTokens.champagneLight,
-                                  SyloraTokens.champagneDeep,
-                                  SyloraTokens.softSkyDeep,
-                                ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final value = ref.watch(recommendationsProvider);
+    return value.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stackTrace) => const SizedBox.shrink(),
+      data: (posts) {
+        if (posts.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              l10n.homeDiscoverTitle,
+              style: SyloraTokens.label(11, color: SyloraTokens.champagneDeep),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 118,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: posts.take(8).length,
+                separatorBuilder: (context, index) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final post = posts[index];
+                  return SizedBox(
+                    width: 200,
+                    child: SyloraGlassTile(
+                      onTap: () => context.pushNamed(
+                        'post',
+                        pathParameters: <String, String>{'id': post.id},
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            '@${post.authorHandle}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: SyloraTokens.body(
+                              13,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Expanded(
+                            child: Text(
+                              post.body,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: SyloraTokens.body(
+                                13,
+                                color: SyloraTokens.inkSoft,
                               ),
-                        color: isAdd
-                            ? SyloraTokens.glassFrost.withValues(alpha: 0.9)
-                            : null,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          width: 2,
-                        ),
-                        boxShadow: SyloraTokens.glow(
-                          SyloraTokens.champagne,
-                          blur: 14,
-                          opacity: 0.22,
-                        ),
-                      ),
-                      child: Center(
-                        child: isAdd
-                            ? Icon(
-                                Icons.add_rounded,
-                                color: SyloraTokens.champagneDeep,
-                              )
-                            : Text(
-                                name.characters.first,
-                                style: SyloraTokens.body(
-                                  18,
-                                  color: SyloraTokens.ink,
-                                  weight: FontWeight.w600,
-                                ),
-                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SyloraTokens.body(
-                        11,
-                        color: SyloraTokens.ink,
-                        weight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      badge,
-                      style: SyloraTokens.label(
-                        9,
-                        color: SyloraTokens.inkMute,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-String? refAuthHandle(BuildContext context) {
-  // Lightweight greeting without forcing ConsumerWidget on the hero.
-  return null;
-}
-
-final class _StaggeredReveal extends StatelessWidget {
-  const _StaggeredReveal({required this.index, required this.child});
-
-  final int index;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) {
-      return child;
-    }
-    final delayMs = (index.clamp(0, 8) * 55);
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: Duration(milliseconds: 520 + delayMs),
-      curve: SyloraTokens.curveSnap,
-      builder: (context, value, child) {
-        final t = Curves.easeOutCubic.transform(value);
-        return Opacity(
-          opacity: t,
-          child: Transform.translate(
-            offset: Offset(0, (1 - t) * 18),
-            child: child,
-          ),
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
-      child: child,
     );
   }
+}
+
+String _relativeTime(DateTime when, AppLocalizations l10n) {
+  final local = when.toLocal();
+  final delta = DateTime.now().difference(local);
+  if (delta.inMinutes < 1) return 'now';
+  if (delta.inHours < 1) return '${delta.inMinutes}m';
+  if (delta.inDays < 1) return '${delta.inHours}h';
+  if (delta.inDays < 7) return '${delta.inDays}d';
+  return DateFormat.MMMd().format(local);
 }
 
 final class PostCard extends ConsumerWidget {
@@ -808,9 +819,7 @@ final class PostCard extends ConsumerWidget {
                       style: SyloraTokens.title(17),
                     ),
                     Text(
-                      DateFormat.yMMMd().add_jm().format(
-                        post.createdAt.toLocal(),
-                      ),
+                      _relativeTime(post.createdAt, AppLocalizations.of(context)),
                       style: SyloraTokens.body(
                         12.5,
                         color: SyloraTokens.inkMute,
@@ -820,7 +829,8 @@ final class PostCard extends ConsumerWidget {
                 ),
               ),
             ),
-            LumenBadge(label: post.rawLifecycle),
+            if (post.lifecycle != PostLifecycle.published)
+              LumenBadge(label: post.rawLifecycle),
             if (ref.watch(authControllerProvider).user?.id != post.authorId)
               IconButton(
                 tooltip: 'Report post',
@@ -835,11 +845,12 @@ final class PostCard extends ConsumerWidget {
               ),
           ],
         ),
-        const SizedBox(height: 16),
-        Text(post.body, style: SyloraTokens.body(16, color: SyloraTokens.ink)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
+        Text(post.body, style: SyloraTokens.body(16.5, color: SyloraTokens.ink, weight: FontWeight.w500)),
+        const SizedBox(height: 14),
         Wrap(
-          spacing: 4,
+          spacing: 2,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: <Widget>[
             IconButton(
               tooltip: post.viewerReaction == null
@@ -858,8 +869,16 @@ final class PostCard extends ConsumerWidget {
                 post.viewerReaction == null
                     ? Icons.favorite_border_rounded
                     : Icons.favorite_rounded,
+                color: post.viewerReaction == null
+                    ? SyloraTokens.inkSoft
+                    : SyloraTokens.softCoralDeep,
               ),
             ),
+            Text(
+              '${post.reactionCount}',
+              style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
+            ),
+            const SizedBox(width: 6),
             TextButton.icon(
               onPressed: () => context.pushNamed(
                 'post',
