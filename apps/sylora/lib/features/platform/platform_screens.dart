@@ -3901,6 +3901,19 @@ final class LiveScreen extends ConsumerWidget {
     WidgetRef ref,
   ) async {
     final l10n = AppLocalizations.of(context);
+    // Stand shortcut: unlock creator if the API rejects live:manage.
+    Future<bool> ensureCreator() async {
+      try {
+        await ref
+            .read(apiClientProvider)
+            .request('test-stand/assume-role/creator', method: 'POST');
+        await ref.read(authControllerProvider.notifier).refreshMe();
+        return true;
+      } on Object {
+        return false;
+      }
+    }
+
     final title = TextEditingController();
     final session = await showDialog<LiveSessionModel>(
       context: context,
@@ -3929,10 +3942,35 @@ final class LiveScreen extends ConsumerWidget {
                   Navigator.pop(dialogContext, value);
                 }
               } on Object catch (error) {
+                final message = messageFor(error);
+                final denied =
+                    message.toLowerCase().contains('permission') ||
+                    message.toLowerCase().contains('forbidden');
+                if (denied) {
+                  final unlocked = await ensureCreator();
+                  if (unlocked) {
+                    try {
+                      final value = await ref
+                          .read(liveRepositoryProvider)
+                          .createSession(title.text.trim());
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext, value);
+                      }
+                      return;
+                    } on Object catch (retryError) {
+                      if (dialogContext.mounted) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(content: Text(messageFor(retryError))),
+                        );
+                      }
+                      return;
+                    }
+                  }
+                }
                 if (dialogContext.mounted) {
                   ScaffoldMessenger.of(
                     dialogContext,
-                  ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+                  ).showSnackBar(SnackBar(content: Text(message)));
                 }
               }
             },

@@ -117,6 +117,10 @@ async def register_user(
         now = utcnow()
         user.email_verified_at = now
         user.status = UserStatus.active
+        # Stand demo: every new account can host Live without a separate role switch.
+        creator_role = await db.scalar(select(Role).where(Role.name == "creator"))
+        if creator_role is not None:
+            db.add(UserRole(user_id=user.id, role_id=creator_role.id))
         add_audit_event(
             db,
             request,
@@ -124,6 +128,7 @@ async def register_user(
             "identity.email_auto_verified_test_stand",
             actor_user_id=user.id,
             target_user_id=user.id,
+            metadata={"stand_creator_granted": creator_role is not None},
         )
     else:
         await create_verification(db, user, settings)
