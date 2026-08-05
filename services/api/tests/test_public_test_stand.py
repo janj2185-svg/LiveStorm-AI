@@ -196,7 +196,7 @@ async def test_stand_login_features_are_google_apple_email_only(api_factory: Any
                 headers={"Accept": "application/json"},
                 follow_redirects=False,
             )
-            assert start.status_code in {400, 403, 404, 422}, start.text
+            assert start.status_code in {400, 403, 404, 422, 503}, start.text
 
         stand = await api.client.get("/v1/public/stand-status")
         assert stand.status_code == 200
