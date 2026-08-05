@@ -13,6 +13,7 @@ from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.gift_models import (
     GiftAsset,
@@ -233,12 +234,24 @@ WELCOME_POSTS = (
 )
 
 
+async def _load_user_with_profile(db: AsyncSession, *, email: str | None = None, user_id: uuid.UUID | None = None) -> User | None:
+    """Async-safe user load — never touch lazy profile/settings without selectinload."""
+    stmt = select(User).options(selectinload(User.profile), selectinload(User.settings))
+    if user_id is not None:
+        stmt = stmt.where(User.id == user_id)
+    elif email is not None:
+        stmt = stmt.where(User.email == email)
+    else:
+        return None
+    return await db.scalar(stmt)
+
+
 async def ensure_welcome_world(db: AsyncSession) -> dict[str, Any]:
     """Idempotent public feed so Home is never a dead planet on the stand."""
     from app.models import AccountSettings, Profile
     from app.social_models import Post, PostKind, PostLifecycle, PostVisibility
 
-    user = await db.scalar(select(User).where(User.email == WELCOME_EMAIL))
+    user = await _load_user_with_profile(db, email=WELCOME_EMAIL)
     if user is None:
         user = User(
             email=WELCOME_EMAIL,
@@ -253,6 +266,9 @@ async def ensure_welcome_world(db: AsyncSession) -> dict[str, Any]:
         role = await db.scalar(select(Role).where(Role.name == "creator"))
         if role is not None:
             db.add(UserRole(user_id=user.id, role_id=role.id))
+        # Re-load with relationships for safe access after flush.
+        user = await _load_user_with_profile(db, email=WELCOME_EMAIL)
+        assert user is not None
     else:
         if user.profile is None:
             user.profile = Profile(display_name="Aura", handle=WELCOME_HANDLE, locale="uk")
@@ -381,9 +397,9 @@ async def _ensure_demo_creators(db: AsyncSession) -> dict[str, Any]:
     for n, handle, display_name, bio in DEMO_CREATORS:
         email = f"creator.{n}@sylora.stand.local"
         user_id = _stand_uuid(f"creator:{n}")
-        user = await db.get(User, user_id)
+        user = await _load_user_with_profile(db, user_id=user_id)
         if user is None:
-            user = await db.scalar(select(User).where(User.email == email))
+            user = await _load_user_with_profile(db, email=email)
         if user is None:
             handle_taken = await db.scalar(select(Profile).where(Profile.handle == handle))
             if handle_taken is not None:
@@ -406,6 +422,8 @@ async def _ensure_demo_creators(db: AsyncSession) -> dict[str, Any]:
             db.add(user)
             await db.flush()
             await _ensure_creator_role(db, user.id)
+            user = await _load_user_with_profile(db, user_id=user_id)
+            assert user is not None
             created += 1
         else:
             if user.profile is None:
@@ -786,11 +804,11 @@ async def ensure_living_platform(db: AsyncSession) -> dict[str, Any]:
     """Idempotently seed creators, posts, learning, marketplace, business, music."""
     from app.models import AccountSettings, Profile
 
-    # Aura must exist as the living feed anchor.
-    aura = await db.scalar(select(User).where(User.email == WELCOME_EMAIL))
+    # Aura must exist as the living feed anchor (always selectinload profile/settings).
+    aura = await _load_user_with_profile(db, email=WELCOME_EMAIL)
     if aura is None:
         welcome = await ensure_welcome_world(db)
-        aura = await db.get(User, uuid.UUID(welcome["author_id"]))
+        aura = await _load_user_with_profile(db, user_id=uuid.UUID(welcome["author_id"]))
     if aura is None:
         raise RuntimeError("Aura welcome user missing after ensure_welcome_world")
 
