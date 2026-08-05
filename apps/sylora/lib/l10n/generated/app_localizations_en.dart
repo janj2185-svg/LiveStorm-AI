@@ -12,11 +12,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'SYLORA';
 
   @override
-  String get appTagline => 'Create. Connect. Go live.';
+  String get appTagline => 'Where AI meets soul';
 
   @override
   String get appDescription =>
-      'A social platform for community, gifts, AI, and live moments.';
+      'Your world. In harmony — live presence, creative flow, and Aura by your side.';
 
   @override
   String get navHome => 'Home';
@@ -82,7 +82,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authCreateAccount => 'Create account';
 
   @override
-  String get authContinue => 'Continue';
+  String get authContinue => 'Begin your journey';
 
   @override
   String get authContinueWithPhone => 'Continue with phone';

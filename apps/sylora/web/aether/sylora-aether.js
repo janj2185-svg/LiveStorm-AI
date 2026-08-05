@@ -1,14 +1,9 @@
 /**
- * SYLORA Lumen v5 — light living AI ecosystem shell.
- * Canvas world: particles, waves, logo bloom, orbits, companion robot.
+ * SYLORA Lumen — FINAL champagne-glass living landing.
+ * Canvas world: warm particles, soft parallax, human Aura companion.
  */
 (function () {
   'use strict';
-
-  const NODES = [
-    'AI', 'Live', 'Community', 'Business',
-    'Education', 'Marketplace', 'Gifts', 'Creator Tools',
-  ];
 
   const EMOTIONS = ['idle', 'greeting', 'listening', 'thinking', 'speaking', 'amused', 'focused'];
 
@@ -124,10 +119,10 @@
   }
 
   function colorFor(hue, alpha) {
-    if (hue < 0.28) return `rgba(56,183,255,${alpha})`;
-    if (hue < 0.5) return `rgba(46,217,194,${alpha})`;
-    if (hue < 0.75) return `rgba(123,108,255,${alpha})`;
-    return `rgba(255,107,203,${alpha})`;
+    if (hue < 0.3) return `rgba(230,200,139,${alpha})`;
+    if (hue < 0.55) return `rgba(142,184,216,${alpha})`;
+    if (hue < 0.78) return `rgba(245,222,179,${alpha})`;
+    return `rgba(255,143,122,${alpha})`;
   }
 
   function drawWaves(ctx, t) {
@@ -137,10 +132,10 @@
     for (let i = 0; i < 3; i += 1) {
       const y = h * (0.25 + i * 0.22) + Math.sin(t * 0.35 + i) * 18;
       const grad = ctx.createLinearGradient(0, y - 40, w, y + 40);
-      grad.addColorStop(0, 'rgba(56,183,255,0)');
-      grad.addColorStop(0.35, `rgba(123,108,255,${0.05 + i * 0.015})`);
-      grad.addColorStop(0.65, `rgba(46,217,194,${0.045 + i * 0.012})`);
-      grad.addColorStop(1, 'rgba(255,107,203,0)');
+      grad.addColorStop(0, 'rgba(230,200,139,0)');
+      grad.addColorStop(0.35, `rgba(201,164,92,${0.05 + i * 0.015})`);
+      grad.addColorStop(0.65, `rgba(142,184,216,${0.045 + i * 0.012})`);
+      grad.addColorStop(1, 'rgba(255,143,122,0)');
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -205,147 +200,6 @@
     setEmotion(cycle === 'greeting' ? 'idle' : cycle, 3800 + Math.random() * 1200);
   }
 
-  function drawRobot(ctx, canvas, t, now) {
-    const robotCanvas = qs('#aether-robot');
-    if (!robotCanvas) return;
-    const rctx = robotCanvas.getContext('2d');
-    if (!rctx) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = robotCanvas.clientWidth || 140;
-    const h = robotCanvas.clientHeight || 140;
-    if (robotCanvas.width !== Math.floor(w * dpr) || robotCanvas.height !== Math.floor(h * dpr)) {
-      robotCanvas.width = Math.floor(w * dpr);
-      robotCanvas.height = Math.floor(h * dpr);
-    }
-    rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    rctx.clearRect(0, 0, w, h);
-
-    updateEmotion(now);
-    if (now > state.blinkAt) {
-      state.lid = 1;
-      state.blinkAt = now + 2200 + Math.random() * 2800;
-    }
-    state.lid *= 0.78;
-
-    const emo = state.emotion;
-    const bob = Math.sin(t * 1.4) * 2.2;
-    const listen = emo === 'listening' ? Math.sin(t * 6) * 1.5 : 0;
-    const think = emo === 'thinking' ? Math.sin(t * 2.2) * 3 : 0;
-    const speak = emo === 'speaking' ? (0.5 + 0.5 * Math.sin(t * 10)) : 0;
-    const amused = emo === 'amused' ? 1 : 0;
-    const greet = emo === 'greeting' ? Math.sin(Math.min(1, (state.emotionUntil - now) / 1000) * Math.PI) : 0;
-
-    state.headYaw += ((state.pointer.x * 8 + listen) - state.headYaw) * 0.06;
-    state.headPitch += ((-state.pointer.y * 5 + think * 0.2 + bob * 0.15) - state.headPitch) * 0.06;
-
-    const cx = w * 0.5 + state.headYaw;
-    const cy = h * 0.52 + state.headPitch + bob;
-
-    // Soft body glow
-    const glow = rctx.createRadialGradient(cx, cy, 8, cx, cy, w * 0.48);
-    glow.addColorStop(0, 'rgba(255,255,255,0.95)');
-    glow.addColorStop(0.45, 'rgba(220,236,255,0.55)');
-    glow.addColorStop(1, 'rgba(123,108,255,0)');
-    rctx.fillStyle = glow;
-    rctx.beginPath();
-    rctx.arc(cx, cy, w * 0.48, 0, Math.PI * 2);
-    rctx.fill();
-
-    // Neck
-    rctx.fillStyle = 'rgba(210,224,255,0.85)';
-    rctx.fillRect(cx - 10, cy + 28, 20, 18);
-
-    // Head shell
-    rctx.save();
-    rctx.translate(cx, cy);
-    rctx.rotate(state.headYaw * 0.01);
-    const headGrad = rctx.createLinearGradient(-40, -44, 40, 48);
-    headGrad.addColorStop(0, '#ffffff');
-    headGrad.addColorStop(0.55, '#eef4ff');
-    headGrad.addColorStop(1, '#d7e4ff');
-    rctx.fillStyle = headGrad;
-    rctx.strokeStyle = 'rgba(123,108,255,0.22)';
-    rctx.lineWidth = 1.5;
-    roundRect(rctx, -36, -42, 72, 78, 28);
-    rctx.fill();
-    rctx.stroke();
-
-    // Face plate
-    rctx.fillStyle = '#12182f';
-    roundRect(rctx, -26, -18, 52, 34, 14);
-    rctx.fill();
-
-    // Eyes
-    const eyeOpen = Math.max(0.12, 1 - state.lid);
-    const eyeY = -2 + (emo === 'focused' ? -1.5 : 0);
-    const eyeSpread = 11;
-    const eyeW = 7 + (emo === 'listening' ? 1.2 : 0);
-    const eyeH = 9 * eyeOpen * (amused ? 0.75 : 1);
-    const pupilShift = state.headYaw * 0.15;
-
-    [[-eyeSpread, eyeY], [eyeSpread, eyeY]].forEach(([ex, ey], idx) => {
-      const eg = rctx.createRadialGradient(ex + pupilShift, ey, 0.5, ex, ey, eyeW);
-      eg.addColorStop(0, '#dffffa');
-      eg.addColorStop(0.35, '#38b7ff');
-      eg.addColorStop(1, '#7b6cff');
-      rctx.fillStyle = eg;
-      rctx.beginPath();
-      rctx.ellipse(ex + pupilShift, ey, eyeW, eyeH, 0, 0, Math.PI * 2);
-      rctx.fill();
-      if (amused) {
-        rctx.strokeStyle = 'rgba(255,255,255,0.55)';
-        rctx.lineWidth = 1.2;
-        rctx.beginPath();
-        rctx.arc(ex, ey + 2, 5, 0.15, Math.PI - 0.15);
-        rctx.stroke();
-      }
-      if (idx === 0 && greet > 0.2) {
-        // tiny sparkle wink during greeting
-        rctx.fillStyle = `rgba(255,255,255,${0.35 * greet})`;
-        rctx.beginPath();
-        rctx.arc(ex + 4, ey - 4, 1.4, 0, Math.PI * 2);
-        rctx.fill();
-      }
-    });
-
-    // Mouth / speaker
-    rctx.fillStyle = 'rgba(56,183,255,0.85)';
-    const mouthW = 8 + speak * 7;
-    const mouthH = 2 + speak * 5 + amused * 2;
-    roundRect(rctx, -mouthW / 2, 22, mouthW, mouthH, 3);
-    rctx.fill();
-
-    // Antenna
-    rctx.strokeStyle = 'rgba(123,108,255,0.55)';
-    rctx.lineWidth = 2;
-    rctx.beginPath();
-    rctx.moveTo(0, -42);
-    rctx.quadraticCurveTo(8, -58 - greet * 4, 14, -66 - Math.sin(t * 3) * 2);
-    rctx.stroke();
-    rctx.fillStyle = emo === 'thinking' ? '#ff6bcb' : '#38b7ff';
-    rctx.beginPath();
-    rctx.arc(14, -66 - Math.sin(t * 3) * 2, 3.2 + speak, 0, Math.PI * 2);
-    rctx.fill();
-
-    // Cheek light
-    rctx.fillStyle = 'rgba(255,107,203,0.18)';
-    rctx.beginPath();
-    rctx.ellipse(-22, 10, 5, 3, 0, 0, Math.PI * 2);
-    rctx.ellipse(22, 10, 5, 3, 0, 0, Math.PI * 2);
-    rctx.fill();
-    rctx.restore();
-  }
-
-  function roundRect(ctx, x, y, w, h, r) {
-    const rr = Math.min(r, w / 2, h / 2);
-    ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
-    ctx.closePath();
-  }
 
   function frame(now) {
     if (!state.running) return;
@@ -377,15 +231,14 @@
       state.height * 0.42,
       Math.min(state.width, state.height) * 0.55,
     );
-    g.addColorStop(0, 'rgba(255,255,255,0.75)');
-    g.addColorStop(0.35, 'rgba(232,240,255,0.35)');
-    g.addColorStop(1, 'rgba(243,247,255,0)');
+    g.addColorStop(0, 'rgba(255,252,248,0.78)');
+    g.addColorStop(0.35, 'rgba(230,200,139,0.22)');
+    g.addColorStop(1, 'rgba(255,247,238,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, state.width, state.height);
 
     if (!state.reduced) drawWaves(ctx, t);
     drawParticles(ctx, t);
-    drawRobot(ctx, canvas, t, now);
 
     // parallax glow layer
     const glow = qs('.aether-wave');
@@ -563,22 +416,6 @@
     }
   }
 
-  function observeSpace(root) {
-    const space = qs('[data-aether-space]', root);
-    if (!space || !('IntersectionObserver' in window)) {
-      if (space) space.classList.add('is-in');
-      return;
-    }
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting) {
-          en.target.classList.add('is-in');
-          io.disconnect();
-        }
-      });
-    }, { threshold: 0.2 });
-    io.observe(space);
-  }
 
   function mountHud(root) {
     root.innerHTML = `
@@ -596,46 +433,24 @@
           </div>
           <section class="aether-hero">
             <div>
-              <p class="aether-kicker">Єдина AI-екосистема</p>
+              <p class="aether-kicker">Where AI meets soul</p>
               <h1 class="aether-brand">SYLORA</h1>
-              <p class="aether-line">Створюйте, спілкуйтеся й розвивайте бізнес у живому цифровому просторі — AI, Live, спільнота і творчість разом.</p>
+              <p class="aether-line">Your world. In harmony — live presence, creative flow, and Aura by your side.</p>
               <div class="aether-cta-wrap">
-                <button type="button" class="aether-portal" data-aether-enter><span>Почати</span></button>
-              </div>
-              <div class="aether-space" data-aether-space aria-label="Ecosystem">
-                <p class="aether-orbit-caption">Модулі екосистеми</p>
-                <div class="aether-constellation" data-aether-nodes></div>
+                <button type="button" class="aether-portal" data-aether-enter><span>Begin your journey</span></button>
               </div>
             </div>
-            <div class="aether-robot-wrap" aria-label="SYLORA AI companion">
-              <div class="aether-robot-halo" aria-hidden="true"></div>
-              <canvas id="aether-robot" aria-hidden="true"></canvas>
-              <span class="aether-robot-label">Aura · AI companion</span>
+            <div class="aether-aura-wrap" aria-label="Aura — AI companion">
+              <div class="aether-aura-halo" aria-hidden="true"></div>
+              <img class="aether-aura-portrait" src="aether/assets/aura-companion.png" alt="" width="512" height="512" decoding="async" />
+              <span class="aether-aura-label">Aura · companion</span>
             </div>
           </section>
         </div>
       </div>
     `;
-    const nodes = qs('[data-aether-nodes]', root);
-    NODES.forEach((name, i) => {
-      const el = document.createElement('span');
-      el.className = 'aether-star';
-      el.textContent = name;
-      el.style.transitionDelay = `${0.05 + i * 0.05}s`;
-      nodes.appendChild(el);
-    });
     qs('[data-aether-enter]', root).addEventListener('click', () => enterApp(true));
     qs('[data-aether-signin]', root).addEventListener('click', () => enterApp(false));
-    observeSpace(root);
-
-    // Living constellation highlight
-    setInterval(() => {
-      const stars = root.querySelectorAll('.aether-star');
-      if (!stars.length) return;
-      stars.forEach((s) => s.classList.remove('is-hot'));
-      state.hotNode = (state.hotNode + 1) % stars.length;
-      stars[state.hotNode].classList.add('is-hot');
-    }, 1400);
   }
 
   function bindPointer(canvas, scrollEl) {

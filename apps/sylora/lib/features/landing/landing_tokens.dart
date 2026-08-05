@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../design/sylora_tokens.dart';
 
-/// Landing / auth façade over the shared SYLORA Lumen tokens.
+/// Landing / auth façade over the shared SYLORA champagne-glass tokens.
 abstract final class LandingTokens {
   static const voidDeep = SyloraTokens.night;
   static const voidMid = SyloraTokens.nightSoft;
-  static const ion = SyloraTokens.ion;
-  static const petal = SyloraTokens.petal;
-  static const violet = SyloraTokens.violet;
-  static const ember = SyloraTokens.dawn;
-  static const mist = SyloraTokens.mist;
+  static const ion = SyloraTokens.softSkyDeep;
+  static const petal = SyloraTokens.softCoral;
+  static const violet = SyloraTokens.champagneDeep;
+  static const ember = SyloraTokens.champagne;
+  static const mist = SyloraTokens.softSky;
   static const ink = SyloraTokens.ink;
   static const inkDim = SyloraTokens.inkSoft;
   static const glass = SyloraTokens.glass;
@@ -19,10 +19,10 @@ abstract final class LandingTokens {
   static const canvas = SyloraTokens.canvas;
   static const mistBg = SyloraTokens.canvasSoft;
   static const pearl = SyloraTokens.pearl;
-  static const champagne = SyloraTokens.violet;
-  static const amberLight = SyloraTokens.dawn;
-  static const roseGold = SyloraTokens.petal;
-  static const softClay = SyloraTokens.mist;
+  static const champagne = SyloraTokens.champagne;
+  static const amberLight = SyloraTokens.champagneLight;
+  static const roseGold = SyloraTokens.softCoral;
+  static const softClay = SyloraTokens.canvasSoft;
   static const inkSoft = SyloraTokens.inkSoft;
   static const glassFill = SyloraTokens.glass;
 

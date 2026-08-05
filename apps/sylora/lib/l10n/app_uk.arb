@@ -4,8 +4,8 @@
   "@appTitle": {
     "description": "Назва продукту в інтерфейсі застосунку."
   },
-  "appTagline": "Твори. Спілкуйся. Ефір.",
-  "appDescription": "Соціальна платформа для спільноти, подарунків, AI та живих моментів.",
+  "appTagline": "Де AI зустрічає душу",
+  "appDescription": "Твій світ у гармонії — жива присутність, творчий потік і Aura поруч.",
   "navHome": "Головна",
   "navFeed": "Стрічка",
   "navLive": "Ефір",
@@ -27,7 +27,7 @@
   "authBack": "Назад",
   "authBackToWorld": "Назад до світу",
   "authCreateAccount": "Створити акаунт",
-  "authContinue": "Продовжити",
+  "authContinue": "Почати подорож",
   "authContinueWithPhone": "Продовжити з телефоном",
   "authContinueWithEmailOtp": "Увійти кодом на пошту",
   "authContinueWithProvider": "Продовжити з {provider}",

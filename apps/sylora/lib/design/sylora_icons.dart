@@ -73,14 +73,14 @@ final class SyloraMark extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: const SweepGradient(
           colors: [
-            SyloraTokens.ion,
-            SyloraTokens.violet,
-            SyloraTokens.petal,
-            SyloraTokens.aqua,
-            SyloraTokens.ion,
+            SyloraTokens.champagneLight,
+            SyloraTokens.champagne,
+            SyloraTokens.champagneDeep,
+            SyloraTokens.softSkyDeep,
+            SyloraTokens.champagneLight,
           ],
         ),
-        boxShadow: SyloraTokens.glow(SyloraTokens.violet, blur: size * 0.55, opacity: 0.28),
+        boxShadow: SyloraTokens.glow(SyloraTokens.champagne, blur: size * 0.55, opacity: 0.28),
       ),
       child: Center(
         child: Container(
@@ -88,7 +88,7 @@ final class SyloraMark extends StatelessWidget {
           height: size * 0.38,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
+            color: Color(0xFFFFF7EE),
           ),
         ),
       ),

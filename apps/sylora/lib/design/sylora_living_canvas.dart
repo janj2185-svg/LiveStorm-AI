@@ -179,11 +179,11 @@ final class _LivingPainter extends CustomPainter {
   final bool webLite;
 
   static const _palette = <Color>[
-    SyloraTokens.ion,
-    SyloraTokens.violet,
-    SyloraTokens.petal,
+    SyloraTokens.champagne,
+    SyloraTokens.softSkyDeep,
+    SyloraTokens.softCoral,
     SyloraTokens.aqua,
-    SyloraTokens.mist,
+    SyloraTokens.softSky,
   ];
 
   @override
@@ -196,16 +196,16 @@ final class _LivingPainter extends CustomPainter {
         ((pointer?.dy ?? size.height * 0.42) - size.height * 0.42) * 0.02;
     final scale = math.min(size.width, size.height);
 
-    // Soft luminous blobs
+    // Soft luminous blobs — warm ivory / champagne / soft sky
     final blobs = <(Offset, Color, double)>[
-      (Offset(size.width * 0.18, size.height * 0.2), SyloraTokens.ion, 0.34),
-      (Offset(size.width * 0.82, size.height * 0.18), SyloraTokens.petal, 0.28),
+      (Offset(size.width * 0.18, size.height * 0.2), SyloraTokens.champagne, 0.34),
+      (Offset(size.width * 0.82, size.height * 0.18), SyloraTokens.softCoral, 0.24),
       (
         Offset(size.width * 0.55, size.height * 0.78),
-        SyloraTokens.violet,
+        SyloraTokens.softSkyDeep,
         0.36,
       ),
-      (Offset(size.width * 0.25, size.height * 0.72), SyloraTokens.aqua, 0.22),
+      (Offset(size.width * 0.25, size.height * 0.72), SyloraTokens.champagneLight, 0.22),
     ];
     for (var i = 0; i < blobs.length; i++) {
       final (origin, color, radiusFactor) = blobs[i];
@@ -246,7 +246,7 @@ final class _LivingPainter extends CustomPainter {
               Offset(size.width, y + 40),
               // CanvasKit dart:ui gradients are safest with exactly two stops.
               [
-                SyloraTokens.violet.withValues(alpha: 0.04 * intensity),
+                SyloraTokens.champagne.withValues(alpha: 0.05 * intensity),
                 SyloraTokens.aqua.withValues(alpha: 0.02 * intensity),
               ],
             ),
@@ -290,7 +290,7 @@ final class _LivingPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1
-            ..color = SyloraTokens.violet.withValues(alpha: 0.08 + r * 0.02),
+            ..color = SyloraTokens.champagne.withValues(alpha: 0.08 + r * 0.02),
         );
       }
     }

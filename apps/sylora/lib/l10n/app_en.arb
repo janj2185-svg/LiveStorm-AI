@@ -4,8 +4,8 @@
   "@appTitle": {
     "description": "Product name shown in app chrome and window titles."
   },
-  "appTagline": "Create. Connect. Go live.",
-  "appDescription": "A social platform for community, gifts, AI, and live moments.",
+  "appTagline": "Where AI meets soul",
+  "appDescription": "Your world. In harmony — live presence, creative flow, and Aura by your side.",
   "navHome": "Home",
   "navFeed": "Feed",
   "navLive": "Live",
@@ -27,7 +27,7 @@
   "authBack": "Back",
   "authBackToWorld": "Back to the world",
   "authCreateAccount": "Create account",
-  "authContinue": "Continue",
+  "authContinue": "Begin your journey",
   "authContinueWithPhone": "Continue with phone",
   "authContinueWithEmailOtp": "Log in with an email code",
   "authContinueWithProvider": "Continue with {provider}",

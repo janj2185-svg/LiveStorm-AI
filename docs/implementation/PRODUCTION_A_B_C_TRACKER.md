@@ -6,10 +6,10 @@ Branch: `cursor/sylora-production-platform-fc9f`
 
 ## Non-negotiables
 
-- Home / Aether landing HTML: **do not redesign**
+- Home / Aether landing: **match approved FINAL champagne-glass boards** (owner override 2026-08-05 — previous “do not redesign” lock lifted)
 - TikTok / Kick / Facebook Live: **never fake** — real integration or honest blocked
 - Payments: real Stripe path; sandbox only for CI / non-production
-- Light futuristic Lumen DS across product modules
+- Light champagne-glass Lumen DS across product modules (FINAL-01)
 - Manual audit before claiming launch-ready
 
 ## Wave A (Controlled Production) — largely landed

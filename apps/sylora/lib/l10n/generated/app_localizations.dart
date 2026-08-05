@@ -125,13 +125,13 @@ abstract class AppLocalizations {
   /// No description provided for @appTagline.
   ///
   /// In en, this message translates to:
-  /// **'Create. Connect. Go live.'**
+  /// **'Where AI meets soul'**
   String get appTagline;
 
   /// No description provided for @appDescription.
   ///
   /// In en, this message translates to:
-  /// **'A social platform for community, gifts, AI, and live moments.'**
+  /// **'Your world. In harmony — live presence, creative flow, and Aura by your side.'**
   String get appDescription;
 
   /// No description provided for @navHome.
@@ -263,7 +263,7 @@ abstract class AppLocalizations {
   /// No description provided for @authContinue.
   ///
   /// In en, this message translates to:
-  /// **'Continue'**
+  /// **'Begin your journey'**
   String get authContinue;
 
   /// No description provided for @authContinueWithPhone.

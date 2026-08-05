@@ -12,11 +12,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appTitle => 'SYLORA';
 
   @override
-  String get appTagline => 'Твори. Спілкуйся. Ефір.';
+  String get appTagline => 'Де AI зустрічає душу';
 
   @override
   String get appDescription =>
-      'Соціальна платформа для спільноти, подарунків, AI та живих моментів.';
+      'Твій світ у гармонії — жива присутність, творчий потік і Aura поруч.';
 
   @override
   String get navHome => 'Головна';
@@ -82,7 +82,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get authCreateAccount => 'Створити акаунт';
 
   @override
-  String get authContinue => 'Продовжити';
+  String get authContinue => 'Почати подорож';
 
   @override
   String get authContinueWithPhone => 'Продовжити з телефоном';

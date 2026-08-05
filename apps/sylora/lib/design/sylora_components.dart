@@ -73,14 +73,14 @@ final class _SyloraButtonState extends State<SyloraButton> {
                     style: SyloraTokens.body(
                       15,
                       color: widget.variant == SyloraButtonVariant.primary
-                          ? Colors.white
+                          ? SyloraTokens.ink
                           : SyloraTokens.ink,
                       weight: FontWeight.w600,
                     ),
                     child: IconTheme(
                       data: IconThemeData(
                         color: widget.variant == SyloraButtonVariant.primary
-                            ? Colors.white
+                            ? SyloraTokens.ink
                             : SyloraTokens.ink,
                       ),
                       child: child,
@@ -104,14 +104,18 @@ final class _SyloraButtonState extends State<SyloraButton> {
           borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
           gradient: LinearGradient(
             colors: enabled
-                ? const [SyloraTokens.ion, SyloraTokens.petal]
+                ? const [
+                    SyloraTokens.champagneLight,
+                    SyloraTokens.champagne,
+                    SyloraTokens.champagneDeep,
+                  ]
                 : [
-                    SyloraTokens.violet.withValues(alpha: 0.35),
-                    SyloraTokens.violet.withValues(alpha: 0.25),
+                    SyloraTokens.champagne.withValues(alpha: 0.35),
+                    SyloraTokens.champagneDeep.withValues(alpha: 0.25),
                   ],
           ),
           boxShadow: enabled
-              ? SyloraTokens.glow(SyloraTokens.violet, blur: 22, opacity: 0.28)
+              ? SyloraTokens.glow(SyloraTokens.champagne, blur: 22, opacity: 0.32)
               : null,
         );
       case SyloraButtonVariant.secondary:
@@ -270,7 +274,7 @@ final class SyloraTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
-          borderSide: const BorderSide(color: SyloraTokens.violet, width: 1.6),
+          borderSide: const BorderSide(color: SyloraTokens.champagneDeep, width: 1.6),
         ),
       ),
     );
@@ -326,16 +330,17 @@ final class SyloraChip extends StatelessWidget {
       selected: selected,
       onSelected: onSelected,
       showCheckmark: false,
-      selectedColor: SyloraTokens.violet.withValues(alpha: 0.16),
+      selectedColor: SyloraTokens.champagne.withValues(alpha: 0.22),
+      checkmarkColor: SyloraTokens.champagneDeep,
       backgroundColor: Colors.white.withValues(alpha: 0.7),
       side: BorderSide(
         color: selected
-            ? SyloraTokens.violet.withValues(alpha: 0.45)
-            : SyloraTokens.ink.withValues(alpha: 0.1),
+            ? SyloraTokens.champagneDeep.withValues(alpha: 0.55)
+            : SyloraTokens.ink.withValues(alpha: 0.12),
       ),
       labelStyle: SyloraTokens.body(
         13,
-        color: selected ? SyloraTokens.violet : SyloraTokens.inkSoft,
+        color: selected ? SyloraTokens.champagneDeep : SyloraTokens.inkSoft,
         weight: FontWeight.w600,
       ),
       shape: RoundedRectangleBorder(

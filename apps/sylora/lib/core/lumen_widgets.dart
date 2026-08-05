@@ -408,7 +408,7 @@ final class _SyloraIslandDock extends StatelessWidget {
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: SyloraTokens.ion.withValues(alpha: 0.12),
+            color: SyloraTokens.champagne.withValues(alpha: 0.16),
             blurRadius: 36,
             offset: const Offset(0, 4),
           ),
@@ -418,12 +418,12 @@ final class _SyloraIslandDock extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         child: NavigationBarTheme(
           data: NavigationBarThemeData(
-            indicatorColor: SyloraTokens.ion.withValues(alpha: 0.16),
+            indicatorColor: SyloraTokens.champagne.withValues(alpha: 0.22),
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               final selected = states.contains(WidgetState.selected);
               return SyloraTokens.body(
                 10.5,
-                color: selected ? SyloraTokens.ion : Colors.transparent,
+                color: selected ? SyloraTokens.champagneDeep : Colors.transparent,
                 weight: FontWeight.w600,
               );
             }),
@@ -433,7 +433,7 @@ final class _SyloraIslandDock extends StatelessWidget {
             backgroundColor: Colors.transparent,
             elevation: 0,
             overlayColor: WidgetStatePropertyAll(
-              SyloraTokens.ion.withValues(alpha: 0.08),
+              SyloraTokens.champagne.withValues(alpha: 0.1),
             ),
             labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
             selectedIndex: selectedIndex,
@@ -445,7 +445,7 @@ final class _SyloraIslandDock extends StatelessWidget {
                   selectedIcon: Icon(
                     destination.selectedIcon,
                     size: 26,
-                    color: SyloraTokens.ion,
+                    color: SyloraTokens.champagneDeep,
                   ),
                   label: destination.label,
                 ),

@@ -86,28 +86,28 @@ final visualSettingsProvider =
     );
 
 abstract final class LumenColors {
-  // SYLORA Lumen — light cosmic product surfaces
-  static const porcelainCanvas = Color(0xFFF3F7FF);
-  static const porcelainSurface = Color(0xFFFAFCFF);
-  static const porcelainHover = Color(0xFFEAF1FF);
-  static const porcelainBorder = Color(0xFFD5DEF5);
-  static const porcelainMuted = Color(0xFF4A5378);
-  static const porcelainInk = Color(0xFF161B33);
+  // SYLORA Lumen — FINAL champagne-glass product surfaces
+  static const porcelainCanvas = Color(0xFFFFF7EE); // Warm Ivory
+  static const porcelainSurface = Color(0xFFFFFCF8);
+  static const porcelainHover = Color(0xFFF6EADF);
+  static const porcelainBorder = Color(0xFFE2D4C2);
+  static const porcelainMuted = Color(0xFF4A5560);
+  static const porcelainInk = Color(0xFF0F1720); // Deep Ink
 
-  static const darkCanvas = Color(0xFF0E1430);
-  static const darkSurface = Color(0xFF1A2348);
-  static const darkRaised = Color(0xFF243058);
-  static const darkBorder = Color(0xFF3D4A78);
-  static const darkMuted = Color(0xFFB8C4FF);
-  static const darkInk = Color(0xFFFAFCFF);
+  static const darkCanvas = Color(0xFF0F1720);
+  static const darkSurface = Color(0xFF1A2430);
+  static const darkRaised = Color(0xFF243040);
+  static const darkBorder = Color(0xFF3D4A5A);
+  static const darkMuted = Color(0xFFDCEEFF);
+  static const darkInk = Color(0xFFFFFCF8);
 
-  static const aether = Color(0xFF2A9FD9);
-  static const aetherBright = Color(0xFF38B7FF);
-  static const pulse = Color(0xFF7B6CFF);
-  static const bloom = Color(0xFFFF6BCB);
-  static const verdigris = Color(0xFF2ED9C2);
-  static const solar = Color(0xFFFFD0E8);
-  static const rose = Color(0xFFE85A8C);
+  static const aether = Color(0xFFC9A45C); // Champagne deep (primary)
+  static const aetherBright = Color(0xFFE6C88B);
+  static const pulse = Color(0xFF8EB8D8); // Soft sky deep
+  static const bloom = Color(0xFFFF8F7A); // Soft coral
+  static const verdigris = Color(0xFF7EC8B8);
+  static const solar = Color(0xFFF5DEB3);
+  static const rose = Color(0xFFE56B58);
 }
 
 abstract final class LumenTheme {
@@ -131,9 +131,9 @@ abstract final class LumenTheme {
     final colorScheme = ColorScheme(
       brightness: brightness,
       primary: dark ? LumenColors.aetherBright : LumenColors.aether,
-      onPrimary: dark ? LumenColors.darkCanvas : Colors.white,
+      onPrimary: dark ? LumenColors.darkCanvas : LumenColors.porcelainInk,
       secondary: LumenColors.pulse,
-      onSecondary: Colors.white,
+      onSecondary: LumenColors.porcelainInk,
       error: dark ? const Color(0xFFFF8E86) : LumenColors.rose,
       onError: dark ? LumenColors.darkCanvas : Colors.white,
       surface: surface,
@@ -297,15 +297,15 @@ final class SyloraLogo extends StatelessWidget {
         gradient: const SweepGradient(
           colors: [
             LumenColors.aetherBright,
+            LumenColors.solar,
+            LumenColors.aether,
             LumenColors.pulse,
-            LumenColors.bloom,
-            LumenColors.verdigris,
             LumenColors.aetherBright,
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: LumenColors.pulse.withValues(alpha: 0.28),
+            color: LumenColors.aether.withValues(alpha: 0.28),
             blurRadius: size * 0.55,
           ),
         ],
@@ -316,7 +316,7 @@ final class SyloraLogo extends StatelessWidget {
           height: size * 0.38,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
+            color: Color(0xFFFFF7EE),
           ),
         ),
       ),
