@@ -1906,4 +1906,275 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get liveSessionCreatedNext =>
       'Session ready — open Studio, run preflight, then Start.';
+
+  @override
+  String get profileSubtitleOwn =>
+      'Your presence, wallet, and tools — without duplicate shortcuts.';
+
+  @override
+  String get profileHeroEyebrow => 'YOU';
+
+  @override
+  String get profileHeroBody =>
+      'Your presence on Sylora — friends, wallet, and tools in one place.';
+
+  @override
+  String get profileEmptyBio => 'Add a short bio so people know you.';
+
+  @override
+  String get profileTools => 'TOOLS';
+
+  @override
+  String get profileOpenFriends => 'Open friends';
+
+  @override
+  String get standRoleTitle => 'Test stand · go-live role';
+
+  @override
+  String standRoleBody(String roles) {
+    return 'Pick creator or streamer before hosting. Current: $roles';
+  }
+
+  @override
+  String get standRoleNone => 'none';
+
+  @override
+  String standRoleSwitching(String role) {
+    return 'Switching to $role…';
+  }
+
+  @override
+  String standRoleSet(String role) {
+    return 'Role set to $role. Live tools unlocked.';
+  }
+
+  @override
+  String get roleCreator => 'Creator';
+
+  @override
+  String get roleStreamer => 'Streamer';
+
+  @override
+  String get roleViewer => 'Viewer';
+
+  @override
+  String get roleUser => 'User';
+
+  @override
+  String get settingsSectionAccount => 'Account';
+
+  @override
+  String get settingsSectionPrivacy => 'Privacy';
+
+  @override
+  String get settingsSectionNotifications => 'Notifications';
+
+  @override
+  String get settingsSectionSecurity => 'Security';
+
+  @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionLanguage => 'Language';
+
+  @override
+  String get settingsSectionAccessibility => 'Accessibility';
+
+  @override
+  String get settingsSectionDevices => 'Devices';
+
+  @override
+  String get settingsSectionLive => 'Live';
+
+  @override
+  String get settingsSectionSafety => 'Safety';
+
+  @override
+  String get settingsPushConfigured => 'Configured';
+
+  @override
+  String get settingsPushNotConfigured => 'Not configured';
+
+  @override
+  String get settingsPushConfiguredBody =>
+      'Push delivery is configured for this app build.';
+
+  @override
+  String get settingsPushUnavailableBody =>
+      'Push is unavailable in this build. In-app notifications still work.';
+
+  @override
+  String get settingsSafetyTitle => 'Safety center';
+
+  @override
+  String get settingsSafetyProtected => 'Protected';
+
+  @override
+  String get settingsSafetyBody =>
+      'Report harmful posts from the post menu, or report an account from its profile. Reports go to the moderation queue and the reported person does not see your identity.';
+
+  @override
+  String get settingsSafetyReportingTitle => 'Reporting is available';
+
+  @override
+  String get settingsSafetyReportingBody =>
+      'Choose a reason and add optional context for reviewers.';
+
+  @override
+  String get settingsSafetyAppealsTitle => 'Appeals are coming later';
+
+  @override
+  String get settingsSafetyAppealsBody =>
+      'Appeal submissions are not stored by the current API, so SYLORA does not show a form or claim an appeal was filed.';
+
+  @override
+  String get settingsSafetyEmergency =>
+      'If someone is in immediate danger, contact local emergency services. In-app reports are not an emergency channel.';
+
+  @override
+  String get settingsLiveBody =>
+      'Camera, microphone, and broadcast tools for going live.';
+
+  @override
+  String get settingsOpenMedia => 'Camera & audio';
+
+  @override
+  String get settingsOpenStudio => 'Creator Studio';
+
+  @override
+  String get settingsHandle => 'Handle';
+
+  @override
+  String get settingsDisplayName => 'Display name';
+
+  @override
+  String get settingsBio => 'Bio';
+
+  @override
+  String get settingsLocale => 'Locale';
+
+  @override
+  String get settingsTimezone => 'Timezone';
+
+  @override
+  String get settingsProfileRequired =>
+      'Display name, locale, and timezone are required.';
+
+  @override
+  String get settingsSessionsTitle => 'Sessions';
+
+  @override
+  String get settingsSignOutAll => 'Sign out all';
+
+  @override
+  String get settingsNoSessionsTitle => 'No sessions';
+
+  @override
+  String get settingsNoSessionsBody => 'No account sessions were returned.';
+
+  @override
+  String get settingsSessionRevoked => 'Revoked';
+
+  @override
+  String get settingsSessionCurrent => 'Current session';
+
+  @override
+  String get settingsSessionActive => 'Active';
+
+  @override
+  String get settingsRevokeSession => 'Revoke session';
+
+  @override
+  String get settingsTotpTitle => 'Authenticator app';
+
+  @override
+  String get settingsTotpSetupTitle => 'Set up authenticator';
+
+  @override
+  String get settingsTotpSetupBody =>
+      'Generate a secret, add it to your authenticator, then confirm a six-digit code.';
+
+  @override
+  String get settingsTotpGenerate => 'Generate setup secret';
+
+  @override
+  String get settingsTotpSecret => 'Secret';
+
+  @override
+  String get settingsTotpUri => 'Provisioning URI';
+
+  @override
+  String get settingsTotpCode => 'Six-digit code';
+
+  @override
+  String get settingsTotpConfirm => 'Confirm authenticator';
+
+  @override
+  String get settingsTotpRecoveryTitle => 'Recovery codes — save these now';
+
+  @override
+  String get settingsTotpDisableTitle => 'Disable authenticator';
+
+  @override
+  String get settingsTotpPassword => 'Password (if required)';
+
+  @override
+  String get settingsTotpOrRecovery => 'Authenticator or recovery code';
+
+  @override
+  String get settingsTotpDisableAction => 'Disable and revoke sessions';
+
+  @override
+  String get settingsTotpEnterSix => 'Enter a six-digit code.';
+
+  @override
+  String get settingsTotpEnabled => 'Authenticator enabled.';
+
+  @override
+  String get settingsTotpEnterRecovery =>
+      'Enter an authenticator or recovery code.';
+
+  @override
+  String get errorPermissionDenied =>
+      'You do not have access to this yet. On the test stand, unlock the creator role from Profile, or open Creator Studio when you are ready to go live.';
+
+  @override
+  String get errorOffline => 'You are offline. Connect and try again.';
+
+  @override
+  String get errorUnexpectedResponse =>
+      'The server returned an unexpected response.';
+
+  @override
+  String get errorRequestFailed => 'The request could not be completed.';
+
+  @override
+  String get errorSecureStorage =>
+      'Secure storage is unavailable on this device.';
+
+  @override
+  String get errorNotFound => 'This item could not be found.';
+
+  @override
+  String get errorUnauthorized => 'Please sign in again to continue.';
+
+  @override
+  String get livePermissionSessions =>
+      'Live sessions are not available for your account yet. Unlock creator access on the test stand from Profile, or open Studio when you are ready to host.';
+
+  @override
+  String get livePermissionIntegrations =>
+      'Broadcast integrations are not available for this account yet.';
+
+  @override
+  String get liveGuestInvitesLoadError => 'Guest invitations could not load.';
+
+  @override
+  String get liveSessionsLoadError =>
+      'Live sessions could not be loaded right now. Try again in a moment.';
+
+  @override
+  String get liveIntegrationsLoadError =>
+      'Broadcast setup could not be loaded right now.';
 }

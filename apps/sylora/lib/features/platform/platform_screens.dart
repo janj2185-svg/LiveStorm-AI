@@ -3844,6 +3844,37 @@ final class _AiJobsScreenState extends ConsumerState<AiJobsScreen> {
   }
 }
 
+String _liveFriendlyError(
+  AppLocalizations l10n,
+  Object error, {
+  bool sessions = false,
+  bool integrations = false,
+}) {
+  final raw = messageFor(error).toLowerCase();
+  final denied =
+      (error is ApiProblem &&
+          (error.code.toLowerCase().contains('permission') ||
+              error.status == 403)) ||
+      raw.contains('permission') ||
+      raw.contains('forbidden');
+  if (denied) {
+    if (sessions) {
+      return l10n.livePermissionSessions;
+    }
+    if (integrations) {
+      return l10n.livePermissionIntegrations;
+    }
+    return l10n.errorPermissionDenied;
+  }
+  if (sessions) {
+    return l10n.liveSessionsLoadError;
+  }
+  if (integrations) {
+    return l10n.liveIntegrationsLoadError;
+  }
+  return l10n.errorRequestFailed;
+}
+
 final class LiveScreen extends ConsumerWidget {
   const LiveScreen({super.key});
 
@@ -3902,12 +3933,42 @@ final class LiveScreen extends ConsumerWidget {
               const SizedBox(height: 10),
               if (snapshot.sessionsError != null)
                 SyloraGlassTile(
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
-                      const Icon(Icons.lock_outline_rounded),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(messageFor(snapshot.sessionsError!)),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          const Icon(Icons.info_outline_rounded),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _liveFriendlyError(
+                                l10n,
+                                snapshot.sessionsError!,
+                                sessions: true,
+                              ),
+                              softWrap: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: <Widget>[
+                          SyloraPortalChip(
+                            label: l10n.liveOpenStudio,
+                            icon: Icons.video_camera_front_outlined,
+                            onTap: () => context.goNamed('creator-studio'),
+                          ),
+                          SyloraPortalChip(
+                            label: l10n.navProfile,
+                            icon: Icons.person_outline_rounded,
+                            onTap: () => context.goNamed('more'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -4031,7 +4092,7 @@ final class LiveScreen extends ConsumerWidget {
                   index: index++,
                   child: _StatusPanel(
                     message:
-                        'Guest invitations could not load: ${messageFor(snapshot.incomingInvitesError!)}',
+                        '${l10n.liveGuestInvitesLoadError} ${_liveFriendlyError(l10n, snapshot.incomingInvitesError!)}',
                     error: true,
                   ),
                 )
@@ -4113,7 +4174,11 @@ final class LiveScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            messageFor(snapshot.integrationsError!),
+                            _liveFriendlyError(
+                              l10n,
+                              snapshot.integrationsError!,
+                              integrations: true,
+                            ),
                             softWrap: true,
                           ),
                         ),
@@ -4259,10 +4324,11 @@ final class LiveScreen extends ConsumerWidget {
                   Navigator.pop(dialogContext, value);
                 }
               } on Object catch (error) {
-                final message = messageFor(error);
+                final message = localizedMessageFor(dialogContext, error);
                 final denied =
-                    message.toLowerCase().contains('permission') ||
-                    message.toLowerCase().contains('forbidden');
+                    message == l10n.errorPermissionDenied ||
+                    messageFor(error).toLowerCase().contains('permission') ||
+                    messageFor(error).toLowerCase().contains('forbidden');
                 if (denied) {
                   final unlocked = await ensureCreator();
                   if (unlocked) {
@@ -4277,7 +4343,11 @@ final class LiveScreen extends ConsumerWidget {
                     } on Object catch (retryError) {
                       if (dialogContext.mounted) {
                         ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          SnackBar(content: Text(messageFor(retryError))),
+                          SnackBar(
+                            content: Text(
+                              localizedMessageFor(dialogContext, retryError),
+                            ),
+                          ),
                         );
                       }
                       return;

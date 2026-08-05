@@ -3649,6 +3649,498 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Session ready — open Studio, run preflight, then Start.'**
   String get liveSessionCreatedNext;
+
+  /// No description provided for @profileSubtitleOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your presence, wallet, and tools — without duplicate shortcuts.'**
+  String get profileSubtitleOwn;
+
+  /// No description provided for @profileHeroEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get profileHeroEyebrow;
+
+  /// No description provided for @profileHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your presence on Sylora — friends, wallet, and tools in one place.'**
+  String get profileHeroBody;
+
+  /// No description provided for @profileEmptyBio.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short bio so people know you.'**
+  String get profileEmptyBio;
+
+  /// No description provided for @profileTools.
+  ///
+  /// In en, this message translates to:
+  /// **'TOOLS'**
+  String get profileTools;
+
+  /// No description provided for @profileOpenFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Open friends'**
+  String get profileOpenFriends;
+
+  /// No description provided for @standRoleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test stand · go-live role'**
+  String get standRoleTitle;
+
+  /// No description provided for @standRoleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick creator or streamer before hosting. Current: {roles}'**
+  String standRoleBody(String roles);
+
+  /// No description provided for @standRoleNone.
+  ///
+  /// In en, this message translates to:
+  /// **'none'**
+  String get standRoleNone;
+
+  /// No description provided for @standRoleSwitching.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching to {role}…'**
+  String standRoleSwitching(String role);
+
+  /// No description provided for @standRoleSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Role set to {role}. Live tools unlocked.'**
+  String standRoleSet(String role);
+
+  /// No description provided for @roleCreator.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator'**
+  String get roleCreator;
+
+  /// No description provided for @roleStreamer.
+  ///
+  /// In en, this message translates to:
+  /// **'Streamer'**
+  String get roleStreamer;
+
+  /// No description provided for @roleViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewer'**
+  String get roleViewer;
+
+  /// No description provided for @roleUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get roleUser;
+
+  /// No description provided for @settingsSectionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get settingsSectionAccount;
+
+  /// No description provided for @settingsSectionPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsSectionPrivacy;
+
+  /// No description provided for @settingsSectionNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsSectionNotifications;
+
+  /// No description provided for @settingsSectionSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get settingsSectionSecurity;
+
+  /// No description provided for @settingsSectionAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsSectionAppearance;
+
+  /// No description provided for @settingsSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsSectionLanguage;
+
+  /// No description provided for @settingsSectionAccessibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessibility'**
+  String get settingsSectionAccessibility;
+
+  /// No description provided for @settingsSectionDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get settingsSectionDevices;
+
+  /// No description provided for @settingsSectionLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get settingsSectionLive;
+
+  /// No description provided for @settingsSectionSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety'**
+  String get settingsSectionSafety;
+
+  /// No description provided for @settingsPushConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Configured'**
+  String get settingsPushConfigured;
+
+  /// No description provided for @settingsPushNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get settingsPushNotConfigured;
+
+  /// No description provided for @settingsPushConfiguredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Push delivery is configured for this app build.'**
+  String get settingsPushConfiguredBody;
+
+  /// No description provided for @settingsPushUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Push is unavailable in this build. In-app notifications still work.'**
+  String get settingsPushUnavailableBody;
+
+  /// No description provided for @settingsSafetyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety center'**
+  String get settingsSafetyTitle;
+
+  /// No description provided for @settingsSafetyProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected'**
+  String get settingsSafetyProtected;
+
+  /// No description provided for @settingsSafetyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Report harmful posts from the post menu, or report an account from its profile. Reports go to the moderation queue and the reported person does not see your identity.'**
+  String get settingsSafetyBody;
+
+  /// No description provided for @settingsSafetyReportingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporting is available'**
+  String get settingsSafetyReportingTitle;
+
+  /// No description provided for @settingsSafetyReportingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a reason and add optional context for reviewers.'**
+  String get settingsSafetyReportingBody;
+
+  /// No description provided for @settingsSafetyAppealsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appeals are coming later'**
+  String get settingsSafetyAppealsTitle;
+
+  /// No description provided for @settingsSafetyAppealsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Appeal submissions are not stored by the current API, so SYLORA does not show a form or claim an appeal was filed.'**
+  String get settingsSafetyAppealsBody;
+
+  /// No description provided for @settingsSafetyEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'If someone is in immediate danger, contact local emergency services. In-app reports are not an emergency channel.'**
+  String get settingsSafetyEmergency;
+
+  /// No description provided for @settingsLiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera, microphone, and broadcast tools for going live.'**
+  String get settingsLiveBody;
+
+  /// No description provided for @settingsOpenMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera & audio'**
+  String get settingsOpenMedia;
+
+  /// No description provided for @settingsOpenStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator Studio'**
+  String get settingsOpenStudio;
+
+  /// No description provided for @settingsHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Handle'**
+  String get settingsHandle;
+
+  /// No description provided for @settingsDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get settingsDisplayName;
+
+  /// No description provided for @settingsBio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get settingsBio;
+
+  /// No description provided for @settingsLocale.
+  ///
+  /// In en, this message translates to:
+  /// **'Locale'**
+  String get settingsLocale;
+
+  /// No description provided for @settingsTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone'**
+  String get settingsTimezone;
+
+  /// No description provided for @settingsProfileRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name, locale, and timezone are required.'**
+  String get settingsProfileRequired;
+
+  /// No description provided for @settingsSessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get settingsSessionsTitle;
+
+  /// No description provided for @settingsSignOutAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out all'**
+  String get settingsSignOutAll;
+
+  /// No description provided for @settingsNoSessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions'**
+  String get settingsNoSessionsTitle;
+
+  /// No description provided for @settingsNoSessionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No account sessions were returned.'**
+  String get settingsNoSessionsBody;
+
+  /// No description provided for @settingsSessionRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get settingsSessionRevoked;
+
+  /// No description provided for @settingsSessionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current session'**
+  String get settingsSessionCurrent;
+
+  /// No description provided for @settingsSessionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get settingsSessionActive;
+
+  /// No description provided for @settingsRevokeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke session'**
+  String get settingsRevokeSession;
+
+  /// No description provided for @settingsTotpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator app'**
+  String get settingsTotpTitle;
+
+  /// No description provided for @settingsTotpSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up authenticator'**
+  String get settingsTotpSetupTitle;
+
+  /// No description provided for @settingsTotpSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a secret, add it to your authenticator, then confirm a six-digit code.'**
+  String get settingsTotpSetupBody;
+
+  /// No description provided for @settingsTotpGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate setup secret'**
+  String get settingsTotpGenerate;
+
+  /// No description provided for @settingsTotpSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret'**
+  String get settingsTotpSecret;
+
+  /// No description provided for @settingsTotpUri.
+  ///
+  /// In en, this message translates to:
+  /// **'Provisioning URI'**
+  String get settingsTotpUri;
+
+  /// No description provided for @settingsTotpCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Six-digit code'**
+  String get settingsTotpCode;
+
+  /// No description provided for @settingsTotpConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm authenticator'**
+  String get settingsTotpConfirm;
+
+  /// No description provided for @settingsTotpRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery codes — save these now'**
+  String get settingsTotpRecoveryTitle;
+
+  /// No description provided for @settingsTotpDisableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable authenticator'**
+  String get settingsTotpDisableTitle;
+
+  /// No description provided for @settingsTotpPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password (if required)'**
+  String get settingsTotpPassword;
+
+  /// No description provided for @settingsTotpOrRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator or recovery code'**
+  String get settingsTotpOrRecovery;
+
+  /// No description provided for @settingsTotpDisableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable and revoke sessions'**
+  String get settingsTotpDisableAction;
+
+  /// No description provided for @settingsTotpEnterSix.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a six-digit code.'**
+  String get settingsTotpEnterSix;
+
+  /// No description provided for @settingsTotpEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator enabled.'**
+  String get settingsTotpEnabled;
+
+  /// No description provided for @settingsTotpEnterRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an authenticator or recovery code.'**
+  String get settingsTotpEnterRecovery;
+
+  /// No description provided for @errorPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have access to this yet. On the test stand, unlock the creator role from Profile, or open Creator Studio when you are ready to go live.'**
+  String get errorPermissionDenied;
+
+  /// No description provided for @errorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline. Connect and try again.'**
+  String get errorOffline;
+
+  /// No description provided for @errorUnexpectedResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an unexpected response.'**
+  String get errorUnexpectedResponse;
+
+  /// No description provided for @errorRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The request could not be completed.'**
+  String get errorRequestFailed;
+
+  /// No description provided for @errorSecureStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure storage is unavailable on this device.'**
+  String get errorSecureStorage;
+
+  /// No description provided for @errorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This item could not be found.'**
+  String get errorNotFound;
+
+  /// No description provided for @errorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in again to continue.'**
+  String get errorUnauthorized;
+
+  /// No description provided for @livePermissionSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Live sessions are not available for your account yet. Unlock creator access on the test stand from Profile, or open Studio when you are ready to host.'**
+  String get livePermissionSessions;
+
+  /// No description provided for @livePermissionIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast integrations are not available for this account yet.'**
+  String get livePermissionIntegrations;
+
+  /// No description provided for @liveGuestInvitesLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest invitations could not load.'**
+  String get liveGuestInvitesLoadError;
+
+  /// No description provided for @liveSessionsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Live sessions could not be loaded right now. Try again in a moment.'**
+  String get liveSessionsLoadError;
+
+  /// No description provided for @liveIntegrationsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast setup could not be loaded right now.'**
+  String get liveIntegrationsLoadError;
 }
 
 class _AppLocalizationsDelegate

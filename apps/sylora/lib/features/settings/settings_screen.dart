@@ -69,376 +69,368 @@ final class SettingsScreen extends ConsumerWidget {
     final nativePushAvailable = ref
         .read(pushServiceProvider.notifier)
         .nativePushAvailable;
+    var sectionIndex = 0;
+
+    Widget section({
+      required String title,
+      required List<Widget> children,
+    }) {
+      final tile = SyloraStaggeredReveal(
+        index: sectionIndex++,
+        child: SyloraGlassTile(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(title, style: SyloraTokens.title(18)),
+              const SizedBox(height: 12),
+              ...children,
+            ],
+          ),
+        ),
+      );
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: tile,
+      );
+    }
+
     return LumenPage(
       title: l10n.navSettings,
       subtitle: l10n.settingsHeroBody,
       intensity: 0.9,
       showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.settings,
-      header: account.maybeWhen(
-        data: (snapshot) => SyloraUniverseHero(
-          eyebrow: l10n.settingsHeroEyebrow,
-          title: snapshot.profile.displayName,
-          body: snapshot.profile.handle == null
-              ? l10n.settingsHeroBody
-              : '@${snapshot.profile.handle} · ${l10n.settingsHeroBody}',
-          trailing: Row(
-            children: <Widget>[
-              SyloraAvatarOrb(
-                label: snapshot.profile.displayName,
-                imageUrl: snapshot.profile.avatarUrl,
-                size: 56,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SyloraPortalChip(
-                  label: l10n.settingsEditProfile,
-                  icon: Icons.edit_outlined,
-                  onTap: () => _editProfile(context, ref, snapshot.profile),
-                ),
-              ),
-            ],
-          ),
+      child: account.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => LumenErrorView(
+          error: error,
+          onRetry: () => ref.invalidate(accountProvider),
         ),
-        orElse: () => SyloraUniverseHero(
-          eyebrow: l10n.settingsHeroEyebrow,
-          title: l10n.navSettings,
-          body: l10n.settingsHeroBody,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          account.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) => LumenErrorView(
-              error: error,
-              onRetry: () => ref.invalidate(accountProvider),
-            ),
-            data: (snapshot) => Column(
+        data: (snapshot) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            section(
+              title: l10n.settingsSectionAccount,
               children: <Widget>[
-                SyloraStaggeredReveal(
-                  index: 0,
-                  child: SyloraGlassTile(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        Text(
-                          l10n.settingsProfile,
-                          style: SyloraTokens.title(18),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: <Widget>[
-                            SyloraAvatarOrb(
-                              label: snapshot.profile.displayName,
-                              imageUrl: snapshot.profile.avatarUrl,
-                              size: 56,
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    snapshot.profile.displayName,
-                                    style: SyloraTokens.title(17),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    snapshot.profile.handle == null
-                                        ? l10n.settingsNoPublicHandle
-                                        : '@${snapshot.profile.handle}',
-                                    style: SyloraTokens.body(
-                                      13,
-                                      color: SyloraTokens.inkMute,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SyloraButton(
-                              label: l10n.settingsEditProfile,
-                              variant: SyloraButtonVariant.secondary,
-                              expanded: false,
-                              onPressed: () =>
-                                  _editProfile(context, ref, snapshot.profile),
-                            ),
-                          ],
-                        ),
-                      ],
+                Row(
+                  children: <Widget>[
+                    SyloraAvatarOrb(
+                      label: snapshot.profile.displayName,
+                      imageUrl: snapshot.profile.avatarUrl,
+                      size: 56,
                     ),
-                  ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            snapshot.profile.displayName,
+                            style: SyloraTokens.title(17),
+                            maxLines: 2,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            snapshot.profile.handle == null
+                                ? l10n.settingsNoPublicHandle
+                                : '@${snapshot.profile.handle}',
+                            style: SyloraTokens.body(
+                              13,
+                              color: SyloraTokens.inkMute,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                SyloraStaggeredReveal(
-                  index: 1,
-                  child: SyloraGlassTile(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          l10n.settingsAccountPrivacy,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.settingsProductEmails),
-                          value: snapshot.settings.productEmails,
-                          onChanged: (value) => _updateAccount(
-                            ref,
-                            <String, dynamic>{'product_emails': value},
-                          ),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.settingsMarketingEmails),
-                          value: snapshot.settings.marketingEmails,
-                          onChanged: (value) => _updateAccount(
-                            ref,
-                            <String, dynamic>{'marketing_emails': value},
-                          ),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.settingsSecurityEmails),
-                          subtitle: Text(l10n.settingsSecurityEmailDescription),
-                          value: snapshot.settings.securityEmails,
-                          onChanged: (value) => _updateAccount(
-                            ref,
-                            <String, dynamic>{'security_emails': value},
-                          ),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            nativePushAvailable
-                                ? '${l10n.settingsNotifications} · Configured'
-                                : '${l10n.settingsNotifications} · Not configured',
-                          ),
-                          subtitle: Text(
-                            nativePushAvailable
-                                ? 'Push delivery is configured for this app build. '
-                                      '${l10n.settingsNotificationsDescription}'
-                                : 'Push is unavailable in this app build because '
-                                      'no FCM token provider is packaged. In-app '
-                                      'notifications remain available.',
-                          ),
-                          value: notificationsEnabled,
-                          onChanged: nativePushAvailable
-                              ? (value) => unawaited(
-                                  _setNotifications(context, ref, value),
-                                )
-                              : null,
-                        ),
-                        DropdownButtonFormField<String>(
-                          initialValue: snapshot.settings.profileVisibility,
-                          decoration: InputDecoration(
-                            labelText: l10n.settingsProfileVisibility,
-                          ),
-                          items: <DropdownMenuItem<String>>[
-                            DropdownMenuItem(
-                              value: 'public',
-                              child: Text(l10n.settingsProfilePublic),
-                            ),
-                            DropdownMenuItem(
-                              value: 'private',
-                              child: Text(l10n.settingsProfilePrivate),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              _updateAccount(ref, <String, dynamic>{
-                                'profile_visibility': value,
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: 14),
+                    Align(
+                  alignment: Alignment.centerLeft,
+                  child: SyloraButton(
+                    label: l10n.settingsEditProfile,
+                    variant: SyloraButtonVariant.secondary,
+                    expanded: false,
+                    icon: Icons.edit_outlined,
+                    onPressed: () =>
+                        showEditProfileDialog(context, ref, snapshot.profile),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          SyloraStaggeredReveal(
-            index: 2,
-            child: SyloraGlassTile(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    l10n.settingsDisplayAccessibility,
-                    style: SyloraTokens.title(18),
+            section(
+              title: l10n.settingsSectionPrivacy,
+              children: <Widget>[
+                DropdownButtonFormField<String>(
+                  initialValue: snapshot.settings.profileVisibility,
+                  decoration: InputDecoration(
+                    labelText: l10n.settingsProfileVisibility,
                   ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<Locale>(
-                    initialValue: locale,
-                    decoration: InputDecoration(
-                      labelText: l10n.settingsLanguage,
-                      helperText: l10n.settingsLanguageDescription,
+                  items: <DropdownMenuItem<String>>[
+                    DropdownMenuItem(
+                      value: 'public',
+                      child: Text(l10n.settingsProfilePublic),
                     ),
-                    items: <DropdownMenuItem<Locale>>[
-                      for (final option in SyloraLocales.options)
-                        DropdownMenuItem<Locale>(
-                          value: option.locale,
-                          child: Text(_localeLabel(l10n, option.locale)),
-                        ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref
-                            .read(localeControllerProvider.notifier)
-                            .setLocale(value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<LumenThemeMode>(
-                    initialValue: visual.themeMode,
-                    decoration: InputDecoration(labelText: l10n.settingsTheme),
-                    items: <DropdownMenuItem<LumenThemeMode>>[
-                      DropdownMenuItem(
-                        value: LumenThemeMode.light,
-                        child: Text(l10n.settingsThemeLight),
-                      ),
-                      DropdownMenuItem(
-                        value: LumenThemeMode.dark,
-                        child: Text(l10n.settingsThemeDark),
-                      ),
-                      DropdownMenuItem(
-                        value: LumenThemeMode.system,
-                        child: Text(l10n.settingsThemeSystem),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref
-                            .read(visualSettingsProvider.notifier)
-                            .update(visual.copyWith(themeMode: value));
-                      }
-                    },
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.settingsHighContrast),
-                    value: visual.highContrast,
-                    onChanged: (value) => ref
-                        .read(visualSettingsProvider.notifier)
-                        .update(visual.copyWith(highContrast: value)),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.settingsReducedMotion),
-                    value: visual.reducedMotion,
-                    onChanged: (value) => ref
-                        .read(visualSettingsProvider.notifier)
-                        .update(visual.copyWith(reducedMotion: value)),
-                  ),
-                  Text(
-                    l10n.settingsTextScale(visual.textScale.toStringAsFixed(1)),
-                  ),
-                  Slider(
-                    value: visual.textScale,
-                    min: 0.8,
-                    max: 2,
-                    divisions: 6,
-                    label: '${visual.textScale.toStringAsFixed(1)}×',
-                    onChanged: (value) => ref
-                        .read(visualSettingsProvider.notifier)
-                        .update(visual.copyWith(textScale: value)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SyloraStaggeredReveal(
-            index: 3,
-            child: SyloraGlassTile(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Text(l10n.settingsSecurity, style: SyloraTokens.title(18)),
-                  const SizedBox(height: 12),
-                  LumenSecondaryButton(
-                    label: l10n.settingsSessions,
-                    icon: Icons.devices_outlined,
-                    onPressed: () => context.pushNamed('sessions'),
-                  ),
-                  const SizedBox(height: 8),
-                  LumenSecondaryButton(
-                    label: l10n.settingsAuthenticatorApp,
-                    icon: Icons.security_outlined,
-                    onPressed: () => context.pushNamed('totp'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SyloraStaggeredReveal(
-            index: 4,
-            child: SyloraGlassTile(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      const Icon(Icons.health_and_safety_outlined),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Safety center',
-                          style: SyloraTokens.title(18),
-                        ),
-                      ),
-                      const LumenBadge(label: 'Protected'),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Report harmful posts from the post menu, or report an '
-                    'account from its profile. Reports go to the moderation '
-                    'queue and the reported person does not see your identity.',
-                  ),
-                  const SizedBox(height: 12),
-                  const ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.flag_outlined),
-                    title: Text('Reporting is available'),
-                    subtitle: Text(
-                      'Choose a reason and add optional context for reviewers.',
+                    DropdownMenuItem(
+                      value: 'private',
+                      child: Text(l10n.settingsProfilePrivate),
                     ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      _updateAccount(ref, <String, dynamic>{
+                        'profile_visibility': value,
+                      });
+                    }
+                  },
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsProductEmails),
+                  value: snapshot.settings.productEmails,
+                  onChanged: (value) => _updateAccount(
+                    ref,
+                    <String, dynamic>{'product_emails': value},
                   ),
-                  const ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.gavel_outlined),
-                    title: Text('Appeals are coming later'),
-                    subtitle: Text(
-                      'Appeal submissions are not stored by the current API, '
-                      'so SYLORA does not show a form or claim an appeal was filed.',
-                    ),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsMarketingEmails),
+                  value: snapshot.settings.marketingEmails,
+                  onChanged: (value) => _updateAccount(
+                    ref,
+                    <String, dynamic>{'marketing_emails': value},
                   ),
-                  Text(
-                    'If someone is in immediate danger, contact local emergency '
-                    'services. In-app reports are not an emergency channel.',
-                    style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          LumenPrimaryButton(
-            label: l10n.settingsSignOut,
-            icon: Icons.logout_rounded,
-            onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-          ),
-        ],
+            section(
+              title: l10n.settingsSectionNotifications,
+              children: <Widget>[
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    '${l10n.settingsNotifications} · ${nativePushAvailable ? l10n.settingsPushConfigured : l10n.settingsPushNotConfigured}',
+                  ),
+                  subtitle: Text(
+                    nativePushAvailable
+                        ? '${l10n.settingsPushConfiguredBody} ${l10n.settingsNotificationsDescription}'
+                        : l10n.settingsPushUnavailableBody,
+                    softWrap: true,
+                  ),
+                  value: notificationsEnabled,
+                  onChanged: nativePushAvailable
+                      ? (value) => unawaited(
+                          _setNotifications(context, ref, value),
+                        )
+                      : null,
+                ),
+              ],
+            ),
+            section(
+              title: l10n.settingsSectionSecurity,
+              children: <Widget>[
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsSecurityEmails),
+                  subtitle: Text(l10n.settingsSecurityEmailDescription),
+                  value: snapshot.settings.securityEmails,
+                  onChanged: (value) => _updateAccount(
+                    ref,
+                    <String, dynamic>{'security_emails': value},
+                  ),
+                ),
+                const SizedBox(height: 8),
+                LumenSecondaryButton(
+                  label: l10n.settingsAuthenticatorApp,
+                  icon: Icons.security_outlined,
+                  onPressed: () => context.pushNamed('totp'),
+                ),
+              ],
+            ),
+            section(
+              title: l10n.settingsSectionAppearance,
+              children: <Widget>[
+                DropdownButtonFormField<LumenThemeMode>(
+                  initialValue: visual.themeMode,
+                  decoration: InputDecoration(labelText: l10n.settingsTheme),
+                  items: <DropdownMenuItem<LumenThemeMode>>[
+                    DropdownMenuItem(
+                      value: LumenThemeMode.light,
+                      child: Text(l10n.settingsThemeLight),
+                    ),
+                    DropdownMenuItem(
+                      value: LumenThemeMode.dark,
+                      child: Text(l10n.settingsThemeDark),
+                    ),
+                    DropdownMenuItem(
+                      value: LumenThemeMode.system,
+                      child: Text(l10n.settingsThemeSystem),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      ref
+                          .read(visualSettingsProvider.notifier)
+                          .update(visual.copyWith(themeMode: value));
+                    }
+                  },
+                ),
+              ],
+            ),
+            section(
+              title: l10n.settingsSectionLanguage,
+              children: <Widget>[
+                DropdownButtonFormField<Locale>(
+                  initialValue: locale,
+                  decoration: InputDecoration(
+                    labelText: l10n.settingsLanguage,
+                    helperText: l10n.settingsLanguageDescription,
+                  ),
+                  items: <DropdownMenuItem<Locale>>[
+                    for (final option in SyloraLocales.options)
+                      DropdownMenuItem<Locale>(
+                        value: option.locale,
+                        child: Text(_localeLabel(l10n, option.locale)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      ref
+                          .read(localeControllerProvider.notifier)
+                          .setLocale(value);
+                    }
+                  },
+                ),
+              ],
+            ),
+            section(
+              title: l10n.settingsSectionAccessibility,
+              children: <Widget>[
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsHighContrast),
+                  value: visual.highContrast,
+                  onChanged: (value) => ref
+                      .read(visualSettingsProvider.notifier)
+                      .update(visual.copyWith(highContrast: value)),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.settingsReducedMotion),
+                  value: visual.reducedMotion,
+                  onChanged: (value) => ref
+                      .read(visualSettingsProvider.notifier)
+                      .update(visual.copyWith(reducedMotion: value)),
+                ),
+                Text(
+                  l10n.settingsTextScale(visual.textScale.toStringAsFixed(1)),
+                ),
+                Slider(
+                  value: visual.textScale,
+                  min: 0.8,
+                  max: 2,
+                  divisions: 6,
+                  label: '${visual.textScale.toStringAsFixed(1)}×',
+                  onChanged: (value) => ref
+                      .read(visualSettingsProvider.notifier)
+                      .update(visual.copyWith(textScale: value)),
+                ),
+              ],
+            ),
+            section(
+              title: l10n.settingsSectionDevices,
+              children: <Widget>[
+                LumenSecondaryButton(
+                  label: l10n.settingsSessions,
+                  icon: Icons.devices_outlined,
+                  onPressed: () => context.pushNamed('sessions'),
+                ),
+              ],
+            ),
+            section(
+              title: l10n.settingsSectionLive,
+              children: <Widget>[
+                Text(
+                  l10n.settingsLiveBody,
+                  style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    LumenSecondaryButton(
+                      label: l10n.settingsOpenMedia,
+                      icon: Icons.tune_rounded,
+                      onPressed: () => context.goNamed('media-settings'),
+                    ),
+                    LumenSecondaryButton(
+                      label: l10n.settingsOpenStudio,
+                      icon: Icons.video_camera_front_outlined,
+                      onPressed: () => context.goNamed('creator-studio'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            section(
+              title: l10n.settingsSafetyTitle,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    const Icon(Icons.health_and_safety_outlined),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.settingsSectionSafety,
+                        style: SyloraTokens.title(16),
+                        softWrap: true,
+                      ),
+                    ),
+                    LumenBadge(label: l10n.settingsSafetyProtected),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(l10n.settingsSafetyBody, softWrap: true),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.flag_outlined),
+                  title: Text(l10n.settingsSafetyReportingTitle),
+                  subtitle: Text(
+                    l10n.settingsSafetyReportingBody,
+                    softWrap: true,
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.gavel_outlined),
+                  title: Text(l10n.settingsSafetyAppealsTitle),
+                  subtitle: Text(
+                    l10n.settingsSafetyAppealsBody,
+                    softWrap: true,
+                  ),
+                ),
+                Text(
+                  l10n.settingsSafetyEmergency,
+                  style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
+                  softWrap: true,
+                ),
+              ],
+            ),
+            LumenPrimaryButton(
+              label: l10n.settingsSignOut,
+              icon: Icons.logout_rounded,
+              onPressed: () =>
+                  ref.read(authControllerProvider.notifier).logout(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -457,115 +449,116 @@ final class SettingsScreen extends ConsumerWidget {
       await ref.read(pushServiceProvider.notifier).setEnabled(enabled);
     } on Object catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(messageFor(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(localizedMessageFor(context, error))),
+        );
       }
     }
   }
+}
 
-  static Future<void> _editProfile(
-    BuildContext context,
-    WidgetRef ref,
-    ProfileModel profile,
-  ) async {
-    final handle = TextEditingController(text: profile.handle);
-    final displayName = TextEditingController(text: profile.displayName);
-    final bio = TextEditingController(text: profile.bio);
-    final locale = TextEditingController(text: profile.locale);
-    final timezone = TextEditingController(text: profile.timezone);
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Edit profile'),
-        content: SizedBox(
-          width: 540,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  controller: handle,
-                  maxLength: 30,
-                  decoration: const InputDecoration(labelText: 'Handle'),
+Future<void> showEditProfileDialog(
+  BuildContext context,
+  WidgetRef ref,
+  ProfileModel profile,
+) async {
+  final l10n = AppLocalizations.of(context);
+  final handle = TextEditingController(text: profile.handle);
+  final displayName = TextEditingController(text: profile.displayName);
+  final bio = TextEditingController(text: profile.bio);
+  final locale = TextEditingController(text: profile.locale);
+  final timezone = TextEditingController(text: profile.timezone);
+  final maxWidth = MediaQuery.sizeOf(context).width;
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.settingsEditProfile),
+      content: SizedBox(
+        width: maxWidth < 560 ? maxWidth - 48 : 540,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: handle,
+                maxLength: 30,
+                decoration: InputDecoration(labelText: l10n.settingsHandle),
+              ),
+              TextField(
+                controller: displayName,
+                maxLength: 100,
+                decoration: InputDecoration(
+                  labelText: l10n.settingsDisplayName,
                 ),
-                TextField(
-                  controller: displayName,
-                  maxLength: 100,
-                  decoration: const InputDecoration(labelText: 'Display name'),
-                ),
-                TextField(
-                  controller: bio,
-                  maxLength: 2000,
-                  minLines: 2,
-                  maxLines: 6,
-                  decoration: const InputDecoration(labelText: 'Bio'),
-                ),
-                TextField(
-                  controller: locale,
-                  decoration: const InputDecoration(labelText: 'Locale'),
-                ),
-                TextField(
-                  controller: timezone,
-                  decoration: const InputDecoration(labelText: 'Timezone'),
-                ),
-              ],
-            ),
+              ),
+              TextField(
+                controller: bio,
+                maxLength: 2000,
+                minLines: 2,
+                maxLines: 6,
+                decoration: InputDecoration(labelText: l10n.settingsBio),
+              ),
+              TextField(
+                controller: locale,
+                decoration: InputDecoration(labelText: l10n.settingsLocale),
+              ),
+              TextField(
+                controller: timezone,
+                decoration: InputDecoration(labelText: l10n.settingsTimezone),
+              ),
+            ],
           ),
         ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (displayName.text.trim().isEmpty ||
-                  locale.text.trim().isEmpty ||
-                  timezone.text.trim().isEmpty) {
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: () async {
+            if (displayName.text.trim().isEmpty ||
+                locale.text.trim().isEmpty ||
+                timezone.text.trim().isEmpty) {
+              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                SnackBar(content: Text(l10n.settingsProfileRequired)),
+              );
+              return;
+            }
+            try {
+              final patch = <String, dynamic>{
+                'display_name': displayName.text.trim(),
+                'bio': bio.text.trim().isEmpty ? null : bio.text.trim(),
+                'locale': locale.text.trim(),
+                'timezone': timezone.text.trim(),
+                if (handle.text.trim().isNotEmpty) 'handle': handle.text.trim(),
+              };
+              await ref.read(accountRepositoryProvider).updateProfile(patch);
+              ref.invalidate(accountProvider);
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext);
+              }
+            } on Object catch (error) {
+              if (dialogContext.mounted) {
                 ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Display name, locale, and timezone are required.',
-                    ),
+                  SnackBar(
+                    content: Text(localizedMessageFor(dialogContext, error)),
                   ),
                 );
-                return;
               }
-              try {
-                final patch = <String, dynamic>{
-                  'display_name': displayName.text.trim(),
-                  'bio': bio.text.trim().isEmpty ? null : bio.text.trim(),
-                  'locale': locale.text.trim(),
-                  'timezone': timezone.text.trim(),
-                  if (handle.text.trim().isNotEmpty)
-                    'handle': handle.text.trim(),
-                };
-                await ref.read(accountRepositoryProvider).updateProfile(patch);
-                ref.invalidate(accountProvider);
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext);
-                }
-              } on Object catch (error) {
-                if (dialogContext.mounted) {
-                  ScaffoldMessenger.of(
-                    dialogContext,
-                  ).showSnackBar(SnackBar(content: Text(messageFor(error))));
-                }
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    handle.dispose();
-    displayName.dispose();
-    bio.dispose();
-    locale.dispose();
-    timezone.dispose();
-  }
+            }
+          },
+          child: Text(l10n.commonSave),
+        ),
+      ],
+    ),
+  );
+  await Future<void>.delayed(const Duration(milliseconds: 200));
+  handle.dispose();
+  displayName.dispose();
+  bio.dispose();
+  locale.dispose();
+  timezone.dispose();
 }
 
 final class SessionsScreen extends ConsumerWidget {
@@ -573,16 +566,17 @@ final class SessionsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final value = ref.watch(sessionsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sessions'),
+        title: Text(l10n.settingsSessionsTitle),
         actions: <Widget>[
           TextButton(
             onPressed: () async {
               await ref.read(authControllerProvider.notifier).logoutAll();
             },
-            child: const Text('Sign out all'),
+            child: Text(l10n.settingsSignOutAll),
           ),
         ],
       ),
@@ -591,9 +585,9 @@ final class SessionsScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(sessionsProvider),
         data: (sessions) => sessions.isEmpty
             ? LumenEmptyView(
-                title: 'No sessions',
-                message: 'The API returned no account sessions.',
-                actionLabel: 'Refresh',
+                title: l10n.settingsNoSessionsTitle,
+                message: l10n.settingsNoSessionsBody,
+                actionLabel: l10n.commonRefresh,
                 onAction: () => ref.invalidate(sessionsProvider),
                 icon: Icons.devices_outlined,
               )
@@ -609,18 +603,23 @@ final class SessionsScreen extends ConsumerWidget {
                             ? Icons.devices_rounded
                             : Icons.devices_outlined,
                       ),
-                      title: Text(session.deviceLabel),
+                      title: Text(
+                        session.deviceLabel,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                      ),
                       subtitle: Text(
                         session.revoked
-                            ? 'Revoked'
+                            ? l10n.settingsSessionRevoked
                             : session.current
-                            ? 'Current session'
-                            : 'Active',
+                            ? l10n.settingsSessionCurrent
+                            : l10n.settingsSessionActive,
                       ),
                       trailing: session.revoked
                           ? null
                           : IconButton(
-                              tooltip: 'Revoke session',
+                              tooltip: l10n.settingsRevokeSession,
                               onPressed: () async {
                                 await ref
                                     .read(authRepositoryProvider)
@@ -666,110 +665,111 @@ final class _TotpScreenState extends ConsumerState<TotpScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Authenticator app')),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
-      children: <Widget>[
-        LumenSurface(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                'Set up TOTP',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Generate a secret, add it to your authenticator, then confirm a six-digit code.',
-              ),
-              const SizedBox(height: 16),
-              LumenPrimaryButton(
-                label: 'Generate setup secret',
-                icon: Icons.key_rounded,
-                onPressed: _beginSetup,
-              ),
-              if (_setup != null) ...<Widget>[
-                const SizedBox(height: 16),
-                const Text('Secret'),
-                SelectableText(
-                  requireString(_setup!, 'secret'),
-                  style: const TextStyle(fontFamily: 'monospace'),
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.settingsTotpTitle)),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: <Widget>[
+          LumenSurface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  l10n.settingsTotpSetupTitle,
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
-                const Text('Provisioning URI'),
-                SelectableText(requireString(_setup!, 'provisioning_uri')),
+                Text(l10n.settingsTotpSetupBody, softWrap: true),
+                const SizedBox(height: 16),
+                LumenPrimaryButton(
+                  label: l10n.settingsTotpGenerate,
+                  icon: Icons.key_rounded,
+                  onPressed: _beginSetup,
+                ),
+                if (_setup != null) ...<Widget>[
+                  const SizedBox(height: 16),
+                  Text(l10n.settingsTotpSecret),
+                  SelectableText(
+                    requireString(_setup!, 'secret'),
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(l10n.settingsTotpUri),
+                  SelectableText(requireString(_setup!, 'provisioning_uri')),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _code,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: l10n.settingsTotpCode,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  LumenPrimaryButton(
+                    label: l10n.settingsTotpConfirm,
+                    icon: Icons.verified_user_outlined,
+                    onPressed: _confirm,
+                  ),
+                ],
+                if (_recoveryCodes != null) ...<Widget>[
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.settingsTotpRecoveryTitle,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  for (final code in _recoveryCodes!)
+                    SelectableText(
+                      code,
+                      style: const TextStyle(fontFamily: 'monospace'),
+                    ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          LumenSurface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  l10n.settingsTotpDisableTitle,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _password,
+                  obscureText: true,
+                  autofillHints: const <String>[AutofillHints.password],
+                  decoration: InputDecoration(
+                    labelText: l10n.settingsTotpPassword,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _code,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Six-digit code',
+                  decoration: InputDecoration(
+                    labelText: l10n.settingsTotpOrRecovery,
                   ),
                 ),
                 const SizedBox(height: 12),
-                LumenPrimaryButton(
-                  label: 'Confirm authenticator',
-                  icon: Icons.verified_user_outlined,
-                  onPressed: _confirm,
+                LumenSecondaryButton(
+                  label: l10n.settingsTotpDisableAction,
+                  icon: Icons.no_accounts_outlined,
+                  onPressed: _disable,
                 ),
               ],
-              if (_recoveryCodes != null) ...<Widget>[
-                const SizedBox(height: 16),
-                Text(
-                  'Recovery codes — save these now',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                for (final code in _recoveryCodes!)
-                  SelectableText(
-                    code,
-                    style: const TextStyle(fontFamily: 'monospace'),
-                  ),
-              ],
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        LumenSurface(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                'Disable TOTP',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _password,
-                obscureText: true,
-                autofillHints: const <String>[AutofillHints.password],
-                decoration: const InputDecoration(
-                  labelText: 'Password (if required)',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _code,
-                decoration: const InputDecoration(
-                  labelText: 'Authenticator or recovery code',
-                ),
-              ),
-              const SizedBox(height: 12),
-              LumenSecondaryButton(
-                label: 'Disable and revoke sessions',
-                icon: Icons.no_accounts_outlined,
-                onPressed: _disable,
-              ),
-            ],
-          ),
-        ),
-        if (_message != null) ...<Widget>[
-          const SizedBox(height: 12),
-          Text(_message!),
+          if (_message != null) ...<Widget>[
+            const SizedBox(height: 12),
+            Text(_message!, softWrap: true),
+          ],
         ],
-      ],
-    ),
-  );
+      ),
+    );
+  }
 
   Future<void> _beginSetup() async {
     try {
@@ -779,13 +779,14 @@ final class _TotpScreenState extends ConsumerState<TotpScreen> {
         _message = null;
       });
     } on Object catch (error) {
-      setState(() => _message = messageFor(error));
+      setState(() => _message = localizedMessageFor(context, error));
     }
   }
 
   Future<void> _confirm() async {
+    final l10n = AppLocalizations.of(context);
     if (!RegExp(r'^\d{6}$').hasMatch(_code.text.trim())) {
-      setState(() => _message = 'Enter a six-digit code.');
+      setState(() => _message = l10n.settingsTotpEnterSix);
       return;
     }
     try {
@@ -794,16 +795,17 @@ final class _TotpScreenState extends ConsumerState<TotpScreen> {
           .confirmTotp(_code.text.trim());
       setState(() {
         _recoveryCodes = codes;
-        _message = 'TOTP enabled.';
+        _message = l10n.settingsTotpEnabled;
       });
     } on Object catch (error) {
-      setState(() => _message = messageFor(error));
+      setState(() => _message = localizedMessageFor(context, error));
     }
   }
 
   Future<void> _disable() async {
+    final l10n = AppLocalizations.of(context);
     if (_code.text.trim().length < 6) {
-      setState(() => _message = 'Enter an authenticator or recovery code.');
+      setState(() => _message = l10n.settingsTotpEnterRecovery);
       return;
     }
     try {
@@ -815,7 +817,7 @@ final class _TotpScreenState extends ConsumerState<TotpScreen> {
           );
       ref.read(authControllerProvider.notifier).expire();
     } on Object catch (error) {
-      setState(() => _message = messageFor(error));
+      setState(() => _message = localizedMessageFor(context, error));
     }
   }
 }

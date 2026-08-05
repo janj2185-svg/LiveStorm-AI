@@ -79,38 +79,43 @@ final class SyloraMetricPill extends StatelessWidget {
   final IconData icon;
 
   @override
-  Widget build(BuildContext context) => SyloraGlass(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    radius: SyloraTokens.radiusMd,
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Icon(icon, color: SyloraTokens.violet, size: 18),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                value,
-                style: SyloraTokens.title(18),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                label,
-                style: SyloraTokens.body(12, color: SyloraTokens.inkMute),
-                maxLines: 2,
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+  Widget build(BuildContext context) {
+    final maxLabelWidth = MediaQuery.sizeOf(context).width < 420 ? 120.0 : 160.0;
+    return SyloraGlass(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      radius: SyloraTokens.radiusMd,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, color: SyloraTokens.violet, size: 18),
+          const SizedBox(width: 10),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxLabelWidth),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  value,
+                  style: SyloraTokens.title(18),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                ),
+                Text(
+                  label,
+                  style: SyloraTokens.body(12, color: SyloraTokens.inkMute),
+                  maxLines: 2,
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 final class SyloraPortalChip extends StatefulWidget {
@@ -166,7 +171,10 @@ final class _SyloraPortalChipState extends State<SyloraPortalChip> {
                   children: <Widget>[
                     Icon(widget.icon, size: 16, color: SyloraTokens.violet),
                     const SizedBox(width: 8),
-                    Flexible(
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.sizeOf(context).width * 0.42,
+                      ),
                       child: Text(
                         widget.label,
                         style: SyloraTokens.body(
@@ -255,6 +263,9 @@ final class SyloraUniverseHero extends StatelessWidget {
               color: SyloraTokens.inkSoft,
               weight: FontWeight.w500,
             ),
+            softWrap: true,
+            maxLines: compact ? 4 : 5,
+            overflow: TextOverflow.ellipsis,
           ),
           if (trailing != null) ...<Widget>[
             const SizedBox(height: 20),

@@ -1914,4 +1914,276 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get liveSessionCreatedNext =>
       'Сесія готова — відкрий Studio, пройди перевірку, потім Старт.';
+
+  @override
+  String get profileSubtitleOwn =>
+      'Твоя присутність, гаманець і інструменти — без зайвих дублів.';
+
+  @override
+  String get profileHeroEyebrow => 'ТИ';
+
+  @override
+  String get profileHeroBody =>
+      'Твоя присутність у Sylora — друзі, гаманець і інструменти в одному місці.';
+
+  @override
+  String get profileEmptyBio => 'Додай короткий опис, щоб люди тебе впізнали.';
+
+  @override
+  String get profileTools => 'ІНСТРУМЕНТИ';
+
+  @override
+  String get profileOpenFriends => 'Відкрити друзів';
+
+  @override
+  String get standRoleTitle => 'Тестовий стенд · роль для ефіру';
+
+  @override
+  String standRoleBody(String roles) {
+    return 'Обери автора або стрімера перед виходом в ефір. Зараз: $roles';
+  }
+
+  @override
+  String get standRoleNone => 'немає';
+
+  @override
+  String standRoleSwitching(String role) {
+    return 'Перемикаємо на «$role»…';
+  }
+
+  @override
+  String standRoleSet(String role) {
+    return 'Роль «$role» встановлено. Інструменти ефіру відкрито.';
+  }
+
+  @override
+  String get roleCreator => 'Автор';
+
+  @override
+  String get roleStreamer => 'Стрімер';
+
+  @override
+  String get roleViewer => 'Глядач';
+
+  @override
+  String get roleUser => 'Користувач';
+
+  @override
+  String get settingsSectionAccount => 'Обліковий запис';
+
+  @override
+  String get settingsSectionPrivacy => 'Приватність';
+
+  @override
+  String get settingsSectionNotifications => 'Сповіщення';
+
+  @override
+  String get settingsSectionSecurity => 'Безпека';
+
+  @override
+  String get settingsSectionAppearance => 'Зовнішній вигляд';
+
+  @override
+  String get settingsSectionLanguage => 'Мова';
+
+  @override
+  String get settingsSectionAccessibility => 'Доступність';
+
+  @override
+  String get settingsSectionDevices => 'Пристрої';
+
+  @override
+  String get settingsSectionLive => 'Ефір';
+
+  @override
+  String get settingsSectionSafety => 'Безпека спільноти';
+
+  @override
+  String get settingsPushConfigured => 'Налаштовано';
+
+  @override
+  String get settingsPushNotConfigured => 'Не налаштовано';
+
+  @override
+  String get settingsPushConfiguredBody =>
+      'Push-доставка налаштована для цієї збірки.';
+
+  @override
+  String get settingsPushUnavailableBody =>
+      'Push недоступний у цій збірці. Сповіщення в застосунку працюють.';
+
+  @override
+  String get settingsSafetyTitle => 'Центр безпеки';
+
+  @override
+  String get settingsSafetyProtected => 'Захищено';
+
+  @override
+  String get settingsSafetyBody =>
+      'Повідомляй про шкідливі дописи з меню допису або про акаунт зі сторінки профілю. Скарги потрапляють у чергу модерації — особа, на яку скаржаться, не бачить тебе.';
+
+  @override
+  String get settingsSafetyReportingTitle => 'Скарги доступні';
+
+  @override
+  String get settingsSafetyReportingBody =>
+      'Обери причину й за потреби додай контекст для модераторів.';
+
+  @override
+  String get settingsSafetyAppealsTitle => 'Апеляції з’являться пізніше';
+
+  @override
+  String get settingsSafetyAppealsBody =>
+      'Поточне API ще не зберігає апеляції, тому Sylora не показує форму й не стверджує, що апеляцію подано.';
+
+  @override
+  String get settingsSafetyEmergency =>
+      'Якщо хтось у безпосередній небезпеці — звернись до місцевих служб екстреної допомоги. Скарги в застосунку не є каналом екстреної допомоги.';
+
+  @override
+  String get settingsLiveBody =>
+      'Камера, мікрофон і інструменти трансляції для виходу в ефір.';
+
+  @override
+  String get settingsOpenMedia => 'Камера і звук';
+
+  @override
+  String get settingsOpenStudio => 'Студія автора';
+
+  @override
+  String get settingsHandle => 'Нікнейм';
+
+  @override
+  String get settingsDisplayName => 'Ім’я для показу';
+
+  @override
+  String get settingsBio => 'Про себе';
+
+  @override
+  String get settingsLocale => 'Локаль';
+
+  @override
+  String get settingsTimezone => 'Часовий пояс';
+
+  @override
+  String get settingsProfileRequired =>
+      'Ім’я, локаль і часовий пояс обов’язкові.';
+
+  @override
+  String get settingsSessionsTitle => 'Сесії';
+
+  @override
+  String get settingsSignOutAll => 'Вийти всюди';
+
+  @override
+  String get settingsNoSessionsTitle => 'Немає сесій';
+
+  @override
+  String get settingsNoSessionsBody => 'Список сесій акаунта порожній.';
+
+  @override
+  String get settingsSessionRevoked => 'Відкликано';
+
+  @override
+  String get settingsSessionCurrent => 'Поточна сесія';
+
+  @override
+  String get settingsSessionActive => 'Активна';
+
+  @override
+  String get settingsRevokeSession => 'Відкликати сесію';
+
+  @override
+  String get settingsTotpTitle => 'Застосунок-автентифікатор';
+
+  @override
+  String get settingsTotpSetupTitle => 'Налаштувати автентифікатор';
+
+  @override
+  String get settingsTotpSetupBody =>
+      'Згенеруй секрет, додай його в автентифікатор і підтвердь шестизначний код.';
+
+  @override
+  String get settingsTotpGenerate => 'Згенерувати секрет';
+
+  @override
+  String get settingsTotpSecret => 'Секрет';
+
+  @override
+  String get settingsTotpUri => 'URI для налаштування';
+
+  @override
+  String get settingsTotpCode => 'Шестизначний код';
+
+  @override
+  String get settingsTotpConfirm => 'Підтвердити автентифікатор';
+
+  @override
+  String get settingsTotpRecoveryTitle => 'Коди відновлення — збережи їх зараз';
+
+  @override
+  String get settingsTotpDisableTitle => 'Вимкнути автентифікатор';
+
+  @override
+  String get settingsTotpPassword => 'Пароль (якщо потрібен)';
+
+  @override
+  String get settingsTotpOrRecovery => 'Код автентифікатора або відновлення';
+
+  @override
+  String get settingsTotpDisableAction => 'Вимкнути й відкликати сесії';
+
+  @override
+  String get settingsTotpEnterSix => 'Введи шестизначний код.';
+
+  @override
+  String get settingsTotpEnabled => 'Автентифікатор увімкнено.';
+
+  @override
+  String get settingsTotpEnterRecovery =>
+      'Введи код автентифікатора або відновлення.';
+
+  @override
+  String get errorPermissionDenied =>
+      'Поки що немає доступу. На тестовому стенді відкрий роль автора в Профілі або Студію, коли будеш готовий вийти в ефір.';
+
+  @override
+  String get errorOffline => 'Немає мережі. Підключись і спробуй знову.';
+
+  @override
+  String get errorUnexpectedResponse =>
+      'Сервер повернув неочікувану відповідь.';
+
+  @override
+  String get errorRequestFailed => 'Запит не вдалося виконати.';
+
+  @override
+  String get errorSecureStorage =>
+      'Захищене сховище на цьому пристрої недоступне.';
+
+  @override
+  String get errorNotFound => 'Цей елемент не знайдено.';
+
+  @override
+  String get errorUnauthorized => 'Увійди знову, щоб продовжити.';
+
+  @override
+  String get livePermissionSessions =>
+      'Ефірні сесії для твого акаунта ще недоступні. Відкрий роль автора на тестовому стенді в Профілі або Студію, коли будеш готовий вести ефір.';
+
+  @override
+  String get livePermissionIntegrations =>
+      'Інтеграції трансляції для цього акаунта ще недоступні.';
+
+  @override
+  String get liveGuestInvitesLoadError =>
+      'Не вдалося завантажити запрошення гостей.';
+
+  @override
+  String get liveSessionsLoadError =>
+      'Зараз не вдалося завантажити ефірні сесії. Спробуй трохи згодом.';
+
+  @override
+  String get liveIntegrationsLoadError =>
+      'Зараз не вдалося завантажити налаштування трансляції.';
 }

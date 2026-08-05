@@ -15,19 +15,14 @@ import '../social/social_screens.dart';
 enum MoreEntryKind {
   communities,
   learning,
-  wallet,
   earnings,
   giftShop,
-  music,
-  ai,
-  live,
   conferences,
   creatorStudio,
   creator,
   workspace,
   admin,
   mediaSettings,
-  settings,
 }
 
 @immutable
@@ -45,6 +40,7 @@ final class MoreEntry {
   final Set<String> roles;
 }
 
+/// Tools that are not already in the compact shell or primary profile actions.
 const _entries = <MoreEntry>[
   MoreEntry(
     kind: MoreEntryKind.communities,
@@ -57,11 +53,6 @@ const _entries = <MoreEntry>[
     icon: Icons.school_outlined,
   ),
   MoreEntry(
-    kind: MoreEntryKind.wallet,
-    routeName: 'wallet',
-    icon: Icons.account_balance_wallet_outlined,
-  ),
-  MoreEntry(
     kind: MoreEntryKind.earnings,
     routeName: 'earnings',
     icon: Icons.insights_outlined,
@@ -71,21 +62,6 @@ const _entries = <MoreEntry>[
     kind: MoreEntryKind.giftShop,
     routeName: 'gifts',
     icon: Icons.storefront_outlined,
-  ),
-  MoreEntry(
-    kind: MoreEntryKind.music,
-    routeName: 'music',
-    icon: Icons.library_music_outlined,
-  ),
-  MoreEntry(
-    kind: MoreEntryKind.ai,
-    routeName: 'ai',
-    icon: Icons.auto_awesome_outlined,
-  ),
-  MoreEntry(
-    kind: MoreEntryKind.live,
-    routeName: 'live',
-    icon: Icons.sensors_outlined,
   ),
   MoreEntry(
     kind: MoreEntryKind.conferences,
@@ -121,11 +97,6 @@ const _entries = <MoreEntry>[
     routeName: 'media-settings',
     icon: Icons.tune_rounded,
   ),
-  MoreEntry(
-    kind: MoreEntryKind.settings,
-    routeName: 'settings',
-    icon: Icons.settings_outlined,
-  ),
 ];
 
 List<MoreEntry> moreEntriesForRoles(Iterable<String> roles) {
@@ -155,23 +126,41 @@ final class MoreScreen extends ConsumerWidget {
       tablet: 3,
       desktop: 4,
     );
+    final narrow = width < 720;
 
     return LumenPage(
-      title: l10n.moreTitle,
-      subtitle: l10n.moreSubtitle,
+      title: l10n.navProfile,
+      subtitle: l10n.profileSubtitleOwn,
       intensity: 0.92,
       showAuraPresence: false,
       auraPresencePreset: SyloraAuraContextPreset.feed,
+      actions: <Widget>[
+        IconButton(
+          tooltip: l10n.moreSettings,
+          onPressed: () => context.goNamed('settings'),
+          icon: const Icon(Icons.settings_outlined),
+        ),
+      ],
       header: account.when(
         loading: () => const SizedBox(
-          height: 120,
+          height: 140,
           child: Center(child: CircularProgressIndicator()),
         ),
         error: (_, _) => SyloraUniverseHero(
-          eyebrow: l10n.moreHeroEyebrow,
+          eyebrow: l10n.profileHeroEyebrow,
           title: l10n.navProfile,
-          body: l10n.moreHeroBody,
-          trailing: _QuickActionRow(l10n: l10n),
+          body: l10n.profileHeroBody,
+          trailing: _ProfileActions(
+            l10n: l10n,
+            onEditProfile: () {
+              final snapshot = ref.read(accountProvider).asData?.value;
+              if (snapshot != null) {
+                unawaited(showEditProfileDialog(context, ref, snapshot.profile));
+              } else {
+                context.goNamed('settings');
+              }
+            },
+          ),
         ),
         data: (snapshot) {
           final friendCount = friends.maybeWhen(
@@ -183,21 +172,69 @@ final class MoreScreen extends ConsumerWidget {
                 value.friends.where((friend) => friend.online).length,
             orElse: () => 0,
           );
+          final handle = snapshot.profile.handle;
+          final bio = snapshot.profile.bio?.trim();
           return SyloraUniverseHero(
-            eyebrow: l10n.moreHeroEyebrow,
+            eyebrow: l10n.profileHeroEyebrow,
             title: snapshot.profile.displayName,
-            body: snapshot.profile.handle == null
-                ? l10n.moreHeroBody
-                : '@${snapshot.profile.handle} · ${l10n.moreHeroBody}',
-            trailing: Row(
+            body: handle == null
+                ? (bio == null || bio.isEmpty ? l10n.profileEmptyBio : bio)
+                : '@$handle',
+            trailing: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                SyloraAvatarOrb(
-                  label: snapshot.profile.displayName,
-                  imageUrl: snapshot.profile.avatarUrl,
-                  size: 64,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    SyloraAvatarOrb(
+                      label: snapshot.profile.displayName,
+                      imageUrl: snapshot.profile.avatarUrl,
+                      size: narrow ? 72 : 88,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          if (handle != null &&
+                              bio != null &&
+                              bio.isNotEmpty) ...<Widget>[
+                            Text(
+                              bio,
+                              style: SyloraTokens.body(
+                                14,
+                                color: SyloraTokens.inkSoft,
+                              ),
+                              maxLines: 3,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 10),
+                          ] else if (handle == null) ...<Widget>[
+                            Text(
+                              l10n.settingsNoPublicHandle,
+                              style: SyloraTokens.body(
+                                13,
+                                color: SyloraTokens.inkMute,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          _ProfileActions(
+                            l10n: l10n,
+                            onEditProfile: () => unawaited(
+                              showEditProfileDialog(
+                                context,
+                                ref,
+                                snapshot.profile,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(child: _QuickActionRow(l10n: l10n)),
               ],
             ),
             metrics: <Widget>[
@@ -211,12 +248,12 @@ final class MoreScreen extends ConsumerWidget {
                 value: '$onlineCount',
                 icon: Icons.bolt_rounded,
               ),
-              SyloraMetricPill(
-                label: l10n.walletShortLabel,
-                value: '◈',
-                icon: Icons.account_balance_wallet_rounded,
-              ),
             ],
+            footer: TextButton.icon(
+              onPressed: () => context.goNamed('friends'),
+              icon: const Icon(Icons.people_outline_rounded, size: 18),
+              label: Text(l10n.profileOpenFriends),
+            ),
           );
         },
       ),
@@ -225,21 +262,22 @@ final class MoreScreen extends ConsumerWidget {
         children: <Widget>[
           const _TestStandRolePanel(),
           Text(
-            l10n.moreQuickActions,
+            l10n.profileTools,
             style: SyloraTokens.label(11, color: SyloraTokens.ion),
           ),
           const SizedBox(height: SyloraTokens.space3),
           LayoutBuilder(
             builder: (context, constraints) {
+              final gap = 12.0;
               final tileWidth =
-                  (constraints.maxWidth - (columns - 1) * 14) / columns;
+                  (constraints.maxWidth - (columns - 1) * gap) / columns;
               return Wrap(
-                spacing: 14,
-                runSpacing: 14,
+                spacing: gap,
+                runSpacing: gap,
                 children: <Widget>[
                   for (var i = 0; i < entries.length; i++)
                     SizedBox(
-                      width: tileWidth.clamp(140, 420),
+                      width: tileWidth.clamp(132, 420),
                       child: SyloraStaggeredReveal(
                         index: i,
                         child: _MoreModuleTile(
@@ -259,10 +297,11 @@ final class MoreScreen extends ConsumerWidget {
   }
 }
 
-final class _QuickActionRow extends StatelessWidget {
-  const _QuickActionRow({required this.l10n});
+final class _ProfileActions extends StatelessWidget {
+  const _ProfileActions({required this.l10n, required this.onEditProfile});
 
   final AppLocalizations l10n;
+  final VoidCallback onEditProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -271,29 +310,14 @@ final class _QuickActionRow extends StatelessWidget {
       runSpacing: 8,
       children: <Widget>[
         SyloraPortalChip(
-          label: l10n.moreGoLive,
-          icon: Icons.podcasts_rounded,
-          onTap: () => context.goNamed('live'),
+          label: l10n.moreEditProfile,
+          icon: Icons.edit_outlined,
+          onTap: onEditProfile,
         ),
         SyloraPortalChip(
           label: l10n.moreOpenWallet,
           icon: Icons.account_balance_wallet_outlined,
           onTap: () => context.goNamed('wallet'),
-        ),
-        SyloraPortalChip(
-          label: l10n.moreEditProfile,
-          icon: Icons.person_outline_rounded,
-          onTap: () => context.goNamed('settings'),
-        ),
-        SyloraPortalChip(
-          label: l10n.aiShortLabel,
-          icon: Icons.auto_awesome_rounded,
-          onTap: () => context.goNamed('ai'),
-        ),
-        SyloraPortalChip(
-          label: l10n.navMusic,
-          icon: Icons.library_music_rounded,
-          onTap: () => context.goNamed('music'),
         ),
         SyloraPortalChip(
           label: l10n.notificationsTitle,
@@ -364,9 +388,9 @@ final class _MoreModuleTileState extends State<_MoreModuleTile> {
                       : SyloraTokens.softElevation,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(18),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
                   child: SizedBox(
-                    height: 110,
+                    height: 96,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
@@ -374,14 +398,14 @@ final class _MoreModuleTileState extends State<_MoreModuleTile> {
                           color: SyloraTokens.violet,
                           child: Icon(
                             widget.entry.icon,
-                            size: 30,
+                            size: 26,
                             color: SyloraTokens.violet,
                           ),
                         ),
                         const Spacer(),
                         Text(
                           widget.label,
-                          style: SyloraTokens.title(17),
+                          style: SyloraTokens.title(15),
                           maxLines: 2,
                           softWrap: true,
                           overflow: TextOverflow.ellipsis,
@@ -402,19 +426,14 @@ final class _MoreModuleTileState extends State<_MoreModuleTile> {
 String _entryLabel(AppLocalizations l10n, MoreEntryKind kind) => switch (kind) {
   MoreEntryKind.communities => l10n.moreCommunities,
   MoreEntryKind.learning => l10n.moreLearning,
-  MoreEntryKind.wallet => l10n.walletShortLabel,
   MoreEntryKind.earnings => l10n.moreEarnings,
   MoreEntryKind.giftShop => l10n.moreGiftShop,
-  MoreEntryKind.music => l10n.navMusic,
-  MoreEntryKind.ai => l10n.aiShortLabel,
-  MoreEntryKind.live => l10n.liveShortLabel,
   MoreEntryKind.conferences => l10n.moreConferences,
   MoreEntryKind.creatorStudio => l10n.moreCreatorStudio,
   MoreEntryKind.creator => l10n.moreCreator,
   MoreEntryKind.workspace => l10n.moreWorkspace,
   MoreEntryKind.admin => l10n.moreAdmin,
   MoreEntryKind.mediaSettings => l10n.moreMediaSettings,
-  MoreEntryKind.settings => l10n.moreSettings,
 };
 
 final class _TestStandRolePanel extends ConsumerStatefulWidget {
@@ -468,10 +487,19 @@ final class _TestStandRolePanelState
     }
   }
 
+  String _roleLabel(AppLocalizations l10n, String role) => switch (role) {
+    'creator' => l10n.roleCreator,
+    'streamer' => l10n.roleStreamer,
+    'viewer' => l10n.roleViewer,
+    'user' => l10n.roleUser,
+    _ => role,
+  };
+
   Future<void> _assume(String role) async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _busy = true;
-      _status = 'Switching to $role…';
+      _status = l10n.standRoleSwitching(_roleLabel(l10n, role));
     });
     try {
       await ref
@@ -479,11 +507,13 @@ final class _TestStandRolePanelState
           .request('test-stand/assume-role/$role', method: 'POST');
       await ref.read(authControllerProvider.notifier).refreshMe();
       if (mounted) {
-        setState(() => _status = 'Role set to $role. Live tools unlocked.');
+        setState(
+          () => _status = l10n.standRoleSet(_roleLabel(l10n, role)),
+        );
       }
     } on Object catch (error) {
       if (mounted) {
-        setState(() => _status = messageFor(error));
+        setState(() => _status = localizedMessageFor(context, error));
       }
     } finally {
       if (mounted) {
@@ -497,43 +527,49 @@ final class _TestStandRolePanelState
     if (_loading || !_standEnabled) {
       return const SizedBox.shrink();
     }
+    final l10n = AppLocalizations.of(context);
     final roles =
         ref.watch(authControllerProvider).user?.roles ?? const <String>[];
+    final current = roles.isEmpty
+        ? l10n.standRoleNone
+        : roles.map((role) => _roleLabel(l10n, role)).join(', ');
     return Padding(
       padding: const EdgeInsets.only(bottom: SyloraTokens.space5),
       child: SyloraGlass(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Text(
-              'Public stand · go-live role',
-              style: SyloraTokens.title(16),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Pick creator or streamer before hosting. Current: ${roles.isEmpty ? 'none' : roles.join(', ')}',
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: EdgeInsets.zero,
+            initiallyExpanded: false,
+            title: Text(l10n.standRoleTitle, style: SyloraTokens.title(16)),
+            subtitle: Text(
+              l10n.standRoleBody(current),
               style: SyloraTokens.body(13, color: SyloraTokens.inkMute),
+              softWrap: true,
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                for (final role in _roles)
-                  LumenSecondaryButton(
-                    label: role,
-                    icon: role == 'creator' || role == 'streamer'
-                        ? Icons.podcasts_rounded
-                        : Icons.person_outline_rounded,
-                    onPressed: _busy ? null : () => _assume(role),
-                  ),
-              ],
-            ),
-            if (_status != null) ...<Widget>[
+            children: <Widget>[
               const SizedBox(height: 8),
-              Text(_status!, style: SyloraTokens.body(12)),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  for (final role in _roles)
+                    LumenSecondaryButton(
+                      label: _roleLabel(l10n, role),
+                      icon: role == 'creator' || role == 'streamer'
+                          ? Icons.podcasts_rounded
+                          : Icons.person_outline_rounded,
+                      onPressed: _busy ? null : () => _assume(role),
+                    ),
+                ],
+              ),
+              if (_status != null) ...<Widget>[
+                const SizedBox(height: 8),
+                Text(_status!, style: SyloraTokens.body(12), softWrap: true),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

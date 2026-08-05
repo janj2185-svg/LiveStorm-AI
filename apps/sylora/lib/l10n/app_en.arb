@@ -723,5 +723,111 @@
   "livePreflightNeedsAttention": "Preflight reported checks that need attention.",
   "livePreflightRunning": "Running preflight before start…",
   "liveSessionStarted": "Live session started.",
-  "liveSessionCreatedNext": "Session ready — open Studio, run preflight, then Start."
+  "liveSessionCreatedNext": "Session ready — open Studio, run preflight, then Start.",
+  "profileSubtitleOwn": "Your presence, wallet, and tools — without duplicate shortcuts.",
+  "profileHeroEyebrow": "YOU",
+  "profileHeroBody": "Your presence on Sylora — friends, wallet, and tools in one place.",
+  "profileEmptyBio": "Add a short bio so people know you.",
+  "profileTools": "TOOLS",
+  "profileOpenFriends": "Open friends",
+  "standRoleTitle": "Test stand · go-live role",
+  "standRoleBody": "Pick creator or streamer before hosting. Current: {roles}",
+  "@standRoleBody": {
+    "placeholders": {
+      "roles": {
+        "type": "String",
+        "example": "creator"
+      }
+    }
+  },
+  "standRoleNone": "none",
+  "standRoleSwitching": "Switching to {role}…",
+  "@standRoleSwitching": {
+    "placeholders": {
+      "role": {
+        "type": "String",
+        "example": "creator"
+      }
+    }
+  },
+  "standRoleSet": "Role set to {role}. Live tools unlocked.",
+  "@standRoleSet": {
+    "placeholders": {
+      "role": {
+        "type": "String",
+        "example": "creator"
+      }
+    }
+  },
+  "roleCreator": "Creator",
+  "roleStreamer": "Streamer",
+  "roleViewer": "Viewer",
+  "roleUser": "User",
+  "settingsSectionAccount": "Account",
+  "settingsSectionPrivacy": "Privacy",
+  "settingsSectionNotifications": "Notifications",
+  "settingsSectionSecurity": "Security",
+  "settingsSectionAppearance": "Appearance",
+  "settingsSectionLanguage": "Language",
+  "settingsSectionAccessibility": "Accessibility",
+  "settingsSectionDevices": "Devices",
+  "settingsSectionLive": "Live",
+  "settingsSectionSafety": "Safety",
+  "settingsPushConfigured": "Configured",
+  "settingsPushNotConfigured": "Not configured",
+  "settingsPushConfiguredBody": "Push delivery is configured for this app build.",
+  "settingsPushUnavailableBody": "Push is unavailable in this build. In-app notifications still work.",
+  "settingsSafetyTitle": "Safety center",
+  "settingsSafetyProtected": "Protected",
+  "settingsSafetyBody": "Report harmful posts from the post menu, or report an account from its profile. Reports go to the moderation queue and the reported person does not see your identity.",
+  "settingsSafetyReportingTitle": "Reporting is available",
+  "settingsSafetyReportingBody": "Choose a reason and add optional context for reviewers.",
+  "settingsSafetyAppealsTitle": "Appeals are coming later",
+  "settingsSafetyAppealsBody": "Appeal submissions are not stored by the current API, so SYLORA does not show a form or claim an appeal was filed.",
+  "settingsSafetyEmergency": "If someone is in immediate danger, contact local emergency services. In-app reports are not an emergency channel.",
+  "settingsLiveBody": "Camera, microphone, and broadcast tools for going live.",
+  "settingsOpenMedia": "Camera & audio",
+  "settingsOpenStudio": "Creator Studio",
+  "settingsHandle": "Handle",
+  "settingsDisplayName": "Display name",
+  "settingsBio": "Bio",
+  "settingsLocale": "Locale",
+  "settingsTimezone": "Timezone",
+  "settingsProfileRequired": "Display name, locale, and timezone are required.",
+  "settingsSessionsTitle": "Sessions",
+  "settingsSignOutAll": "Sign out all",
+  "settingsNoSessionsTitle": "No sessions",
+  "settingsNoSessionsBody": "No account sessions were returned.",
+  "settingsSessionRevoked": "Revoked",
+  "settingsSessionCurrent": "Current session",
+  "settingsSessionActive": "Active",
+  "settingsRevokeSession": "Revoke session",
+  "settingsTotpTitle": "Authenticator app",
+  "settingsTotpSetupTitle": "Set up authenticator",
+  "settingsTotpSetupBody": "Generate a secret, add it to your authenticator, then confirm a six-digit code.",
+  "settingsTotpGenerate": "Generate setup secret",
+  "settingsTotpSecret": "Secret",
+  "settingsTotpUri": "Provisioning URI",
+  "settingsTotpCode": "Six-digit code",
+  "settingsTotpConfirm": "Confirm authenticator",
+  "settingsTotpRecoveryTitle": "Recovery codes — save these now",
+  "settingsTotpDisableTitle": "Disable authenticator",
+  "settingsTotpPassword": "Password (if required)",
+  "settingsTotpOrRecovery": "Authenticator or recovery code",
+  "settingsTotpDisableAction": "Disable and revoke sessions",
+  "settingsTotpEnterSix": "Enter a six-digit code.",
+  "settingsTotpEnabled": "Authenticator enabled.",
+  "settingsTotpEnterRecovery": "Enter an authenticator or recovery code.",
+  "errorPermissionDenied": "You do not have access to this yet. On the test stand, unlock the creator role from Profile, or open Creator Studio when you are ready to go live.",
+  "errorOffline": "You are offline. Connect and try again.",
+  "errorUnexpectedResponse": "The server returned an unexpected response.",
+  "errorRequestFailed": "The request could not be completed.",
+  "errorSecureStorage": "Secure storage is unavailable on this device.",
+  "errorNotFound": "This item could not be found.",
+  "errorUnauthorized": "Please sign in again to continue.",
+  "livePermissionSessions": "Live sessions are not available for your account yet. Unlock creator access on the test stand from Profile, or open Studio when you are ready to host.",
+  "livePermissionIntegrations": "Broadcast integrations are not available for this account yet.",
+  "liveGuestInvitesLoadError": "Guest invitations could not load.",
+  "liveSessionsLoadError": "Live sessions could not be loaded right now. Try again in a moment.",
+  "liveIntegrationsLoadError": "Broadcast setup could not be loaded right now."
 }

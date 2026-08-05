@@ -1,12 +1,13 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api.dart';
 import '../../core/config.dart';
 import '../../core/models.dart';
 import '../../core/push_service.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 @immutable
 final class AuthMethods {
@@ -796,6 +797,61 @@ String messageFor(Object error) {
     }
   }
   return 'The request could not be completed.';
+}
+
+/// Maps API / network errors to the active UI language.
+String localizedMessageFor(BuildContext context, Object error) {
+  final l10n = AppLocalizations.of(context);
+  if (error is ApiProblem) {
+    final code = error.code.toLowerCase();
+    final detail = error.detail.toLowerCase();
+    if (code.contains('permission') ||
+        detail.contains('permission') ||
+        detail.contains('forbidden') ||
+        error.status == 403) {
+      return l10n.errorPermissionDenied;
+    }
+    if (code == 'not_found' || error.status == 404) {
+      return l10n.errorNotFound;
+    }
+    if (error.status == 401 || code.contains('unauthorized')) {
+      return l10n.errorUnauthorized;
+    }
+    // Prefer never showing raw English API detail when a Ukrainian UI is active.
+    if (Localizations.localeOf(context).languageCode != 'en' &&
+        _looksEnglish(error.detail)) {
+      return l10n.errorRequestFailed;
+    }
+    return error.detail;
+  }
+  if (error is OfflineException) {
+    return l10n.errorOffline;
+  }
+  if (error is FormatException) {
+    return l10n.errorUnexpectedResponse;
+  }
+  final detail = error.toString().trim();
+  if (detail.contains('Keyring') ||
+      detail.contains('secure storage') ||
+      detail.contains('libsecret')) {
+    return l10n.errorSecureStorage;
+  }
+  return l10n.errorRequestFailed;
+}
+
+bool _looksEnglish(String text) {
+  final lower = text.toLowerCase();
+  if (lower.contains('you do not') ||
+      lower.contains('permission') ||
+      lower.contains('not configured') ||
+      lower.contains('could not') ||
+      lower.contains('forbidden') ||
+      lower.contains('unauthorized')) {
+    return true;
+  }
+  final hasLatin = RegExp(r'[A-Za-z]').hasMatch(text);
+  final hasCyrillic = RegExp(r'[\u0400-\u04FF]').hasMatch(text);
+  return hasLatin && !hasCyrillic;
 }
 
 String? validateEmail(String? value) {
