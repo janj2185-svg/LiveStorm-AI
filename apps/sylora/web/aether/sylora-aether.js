@@ -71,6 +71,8 @@
     raf: 0,
     flutterPromise: null,
     preloadScheduled: false,
+    flutterEntrypoint: null,
+    flutterStamp: null,
     hotNode: -1,
     listenersBound: false,
     emotion: 'greeting',
@@ -395,23 +397,49 @@
     cancelAnimationFrame(state.raf);
   }
 
+  async function resolveFlutterEntrypoint() {
+    if (state.flutterEntrypoint) return state.flutterEntrypoint;
+    let entry = 'main.dart.js';
+    let stamp = String(Date.now());
+    try {
+      const res = await fetch('version.json?v=' + stamp, { cache: 'no-store' });
+      if (res.ok) {
+        const meta = await res.json();
+        if (meta && typeof meta.entrypoint === 'string' && meta.entrypoint) {
+          entry = meta.entrypoint;
+        }
+        if (meta && meta.build_number) stamp = String(meta.build_number);
+      }
+    } catch (_) {
+      /* fall back to main.dart.js */
+    }
+    state.flutterEntrypoint = entry;
+    state.flutterStamp = stamp;
+    return entry;
+  }
+
   function prefetchFlutterAssets() {
     if (state.preloadScheduled) return;
     state.preloadScheduled = true;
-    // Preload app JS only — CanvasKit comes from gstatic CDN after bootstrap.
-    // Do NOT runApp under the living landing (that froze phones).
-    const assets = [
-      { href: 'main.dart.js', rel: 'preload', as: 'script' },
-      { href: 'flutter_bootstrap.js', rel: 'preload', as: 'script' },
-    ];
-    assets.forEach(({ href, rel, as }) => {
-      if (document.querySelector(`link[data-sylora-prefetch="${href}"]`)) return;
-      const link = document.createElement('link');
-      link.rel = rel;
-      link.as = as;
-      link.href = href;
-      link.setAttribute('data-sylora-prefetch', href);
-      document.head.appendChild(link);
+    // Resolve hashed entrypoint so Cloudflare/SW cannot keep a stale soul build.
+    resolveFlutterEntrypoint().then((entry) => {
+      const assets = [
+        { href: entry, rel: 'preload', as: 'script' },
+        {
+          href: 'flutter_bootstrap.js?v=' + (state.flutterStamp || '1'),
+          rel: 'preload',
+          as: 'script',
+        },
+      ];
+      assets.forEach(({ href, rel, as }) => {
+        if (document.querySelector(`link[data-sylora-prefetch="${href}"]`)) return;
+        const link = document.createElement('link');
+        link.rel = rel;
+        link.as = as;
+        link.href = href;
+        link.setAttribute('data-sylora-prefetch', href);
+        document.head.appendChild(link);
+      });
     });
   }
 
@@ -422,7 +450,7 @@
     }
 
     armFlutterFrameListener();
-    state.flutterPromise = new Promise((resolve, reject) => {
+    state.flutterPromise = resolveFlutterEntrypoint().then((entry) => new Promise((resolve, reject) => {
       let settled = false;
       const succeed = () => {
         if (settled) return;
@@ -439,11 +467,22 @@
 
       window.addEventListener('flutter-first-frame', succeed, { once: true });
 
+      // Point Flutter's buildConfig at the stamped entrypoint before bootstrap runs.
+      window._flutter = window._flutter || {};
+      window._flutter.buildConfig = {
+        engineRevision: (window._flutter.buildConfig && window._flutter.buildConfig.engineRevision) || '',
+        builds: [{
+          compileTarget: 'dart2js',
+          renderer: 'canvaskit',
+          mainJsPath: entry,
+        }],
+      };
+
       // flutter_bootstrap.js already calls loader.load() once.
       // Calling load() again deadlocks CanvasKit on many devices.
       if (!document.querySelector('script[data-sylora-flutter]')) {
         const script = document.createElement('script');
-        script.src = 'flutter_bootstrap.js';
+        script.src = 'flutter_bootstrap.js?v=' + (state.flutterStamp || '1');
         script.async = true;
         script.setAttribute('data-sylora-flutter', '1');
         script.onerror = () => fail(new Error('flutter_bootstrap failed'));
@@ -457,7 +496,7 @@
         }
         fail(new Error('Flutter startup timed out'));
       }, 22000);
-    });
+    }));
     return state.flutterPromise;
   }
 
@@ -738,7 +777,7 @@
     if (!document.querySelector('link[data-sylora-aether-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'aether/sylora-aether.css?v=qw4';
+      link.href = 'aether/sylora-aether.css?v=qw5';
       link.setAttribute('data-sylora-aether-css', '1');
       document.head.appendChild(link);
     }
