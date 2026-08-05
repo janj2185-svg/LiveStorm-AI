@@ -133,15 +133,11 @@ body.sylora-aether-active #sylora-aether { display: block; }
   width: clamp(1.7rem, 5vw, 2.15rem);
   height: clamp(1.7rem, 5vw, 2.15rem);
   flex: 0 0 auto;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 247, 238, 0.95) 0%, rgba(255, 247, 238, 0.2) 55%, transparent 70%),
-    radial-gradient(circle at 50% 50%, #fff7ee 0%, #e6c88b 100%);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.7),
-    0 8px 22px rgba(201, 164, 92, 0.28);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   display: grid;
   place-items: center;
 }
@@ -340,12 +336,12 @@ body.sylora-aether-active #sylora-aether { display: block; }
   color: var(--ink);
   font: inherit;
   font-family: var(--font-body);
-  font-weight: 700;
-  font-size: clamp(0.88rem, 2.5vw, 0.98rem);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 650;
+  font-size: clamp(0.92rem, 2.5vw, 1.02rem);
+  letter-spacing: 0.02em;
+  text-transform: none;
   padding: 0.95rem 1.7rem;
-  border-radius: 999px;
+  border-radius: 1.15rem;
   background: linear-gradient(105deg, var(--champagne-light), var(--champagne) 48%, var(--champagne-deep));
   box-shadow:
     0 12px 28px rgba(201, 164, 92, 0.3),
