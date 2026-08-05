@@ -1,6 +1,6 @@
 /**
- * SYLORA Lumen — FINAL champagne-glass living landing.
- * Canvas world: warm particles, soft parallax, human Aura companion.
+ * SYLORA Lumen — brand-first champagne-glass living landing.
+ * Canvas world: warm particles, soft parallax, Infinity Core mark.
  */
 (function () {
   'use strict';
@@ -10,47 +10,45 @@
   const COPY = {
     uk: {
       signIn: 'Увійти',
-      kicker: 'Наступне покоління AI-екосистеми',
-      line: 'Живий ефір, творчість, бізнес і навчання — з Aura як співведучою.',
+      kicker: 'Наступне покоління цифрового світу',
+      line: 'Живий ефір, творчість, звʼязок і інтелект — одна преміальна платформа.',
       cta: 'Увійти у світ',
-      auraLabel: 'Aura · жива супутниця',
-      auraAria: 'Aura — жива AI-супутниця SYLORA',
+      markAria: 'Символ SYLORA — нескінченність, інтелект і цифровий всесвіт',
       loading: 'Відкриваємо світ…',
       launching: 'Запуск SYLORA…',
       enterError: 'Не вдалося завантажити. Перевірте мережу й спробуйте ще раз.',
       langLabel: 'Мова',
       scrollHint: 'Гортай — відкрий екосистему',
-      chapterLiveTitle: 'Live',
-      chapterLiveBody: 'Ефір як серце SYLORA. Aura читає чат, відповідає, реагує на подарунки й звучить як справжня співведуча.',
+      chapterLiveTitle: 'Ефір',
+      chapterLiveBody: 'Ефір — серце SYLORA. Сцена, аудиторія й жива присутність в одному потоці.',
       chapterCreatorTitle: 'Творці',
-      chapterCreatorBody: 'Студія режисера: сцена, світло, гості й AI-кохост в одному склі.',
+      chapterCreatorBody: 'Студія режисера: сцена, світло, гості й інструменти в одному склі.',
       chapterBusinessTitle: 'Бізнес',
-      chapterBusinessBody: 'Робочий простір з пам\'яттю Aura — брифінги, клієнти, рішення без шуму.',
+      chapterBusinessBody: 'Робочий простір з памʼяттю — брифінги, клієнти, рішення без шуму.',
       chapterEduTitle: 'Навчання',
-      chapterEduBody: 'Курси й наставництво з живою присутністю — питай, і Aura веде.',
+      chapterEduBody: 'Курси й наставництво з живою присутністю — питай і рухайся далі.',
       chapterEcoTitle: 'Екосистема',
-      chapterEcoBody: 'Соцмережа, музика, маркет і подарунки — один преміальний візуальний світ.',
+      chapterEcoBody: 'Спільнота, музика, маркет і подарунки — один преміальний візуальний світ.',
     },
     en: {
       signIn: 'Sign in',
-      kicker: 'The next-generation AI ecosystem',
-      line: 'Live, create, build, and learn — with Aura as your living co-host.',
+      kicker: 'The next-generation digital world',
+      line: 'Live, create, connect, and think — one premium platform.',
       cta: 'Enter the world',
-      auraLabel: 'Aura · living companion',
-      auraAria: 'Aura — SYLORA living AI companion',
+      markAria: 'SYLORA mark — infinity, intellect, and the digital universe',
       loading: 'Opening your world…',
       launching: 'Launching SYLORA…',
       enterError: 'Could not load. Check your network and try again.',
       langLabel: 'Language',
       scrollHint: 'Scroll — meet the ecosystem',
       chapterLiveTitle: 'Live',
-      chapterLiveBody: 'Live is the heart of SYLORA. Aura reads chat, answers, reacts to gifts, and co-hosts like a human.',
+      chapterLiveBody: 'Live is the heart of SYLORA. Stage, audience, and living presence in one stream.',
       chapterCreatorTitle: 'Creators',
-      chapterCreatorBody: 'Director studio: scenes, light, guests, and an AI co-host inside one glass stage.',
+      chapterCreatorBody: 'Director studio: scenes, light, guests, and tools inside one glass stage.',
       chapterBusinessTitle: 'Business',
-      chapterBusinessBody: 'A workspace with Aura memory — briefs, clients, decisions without noise.',
+      chapterBusinessBody: 'A workspace with memory — briefs, clients, decisions without noise.',
       chapterEduTitle: 'Education',
-      chapterEduBody: 'Courses and mentorship with living presence — ask, and Aura guides.',
+      chapterEduBody: 'Courses and mentorship with living presence — ask, and move forward.',
       chapterEcoTitle: 'Ecosystem',
       chapterEcoBody: 'Social, music, market, and gifts — one premium visual world.',
     },
@@ -581,10 +579,8 @@
     const enterBtn = qs('[data-aether-enter]');
     const cta = qs('[data-aether-enter] span');
     if (cta && enterBtn && !enterBtn.disabled) cta.textContent = copy.cta;
-    const auraLabel = qs('.aether-aura-label');
-    if (auraLabel) auraLabel.textContent = copy.auraLabel;
-    const wrap = qs('.aether-aura-wrap');
-    if (wrap) wrap.setAttribute('aria-label', copy.auraAria);
+    const sigil = qs('.aether-sigil');
+    if (sigil) sigil.setAttribute('aria-label', copy.markAria);
     const hint = qs('[data-aether-scroll-hint]');
     if (hint) hint.textContent = copy.scrollHint;
     document.querySelectorAll('[data-aether-chapter]').forEach((el) => {
@@ -635,7 +631,23 @@
         <div class="aether-hud">
           <div class="aether-top">
             <div class="aether-brand-lockup">
-              <span class="aether-mark" aria-hidden="true"></span>
+              <span class="aether-mark" aria-hidden="true">
+                <svg viewBox="0 0 128 128" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="navRibbon" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#F5DEB3"/>
+                      <stop offset="50%" stop-color="#E6C88B"/>
+                      <stop offset="100%" stop-color="#8EB8D8"/>
+                    </linearGradient>
+                  </defs>
+                  <g transform="translate(64 64)">
+                    <path d="M0,0 C10,-15 28,-15 28,0 C28,15 10,15 0,0 C-10,-15 -28,-15 -28,0 C-28,15 -10,15 0,0"
+                      fill="none" stroke="url(#navRibbon)" stroke-width="5" stroke-linecap="round"/>
+                  </g>
+                  <circle cx="64" cy="64" r="9" fill="#E6C88B"/>
+                  <circle cx="64" cy="64" r="4" fill="#FFF7EE"/>
+                </svg>
+              </span>
               <span class="aether-brand-mini">SYLORA</span>
             </div>
             <div class="aether-top-actions">
@@ -647,6 +659,49 @@
             </div>
           </div>
           <section class="aether-hero">
+            <div class="aether-sigil" aria-label="${copy.markAria}" role="img">
+              <span class="aether-sigil-wave aether-sigil-wave--a" aria-hidden="true"></span>
+              <span class="aether-sigil-wave aether-sigil-wave--b" aria-hidden="true"></span>
+              <span class="aether-sigil-wave aether-sigil-wave--c" aria-hidden="true"></span>
+              <span class="aether-sigil-orbit" aria-hidden="true"></span>
+              <span class="aether-sigil-spin" aria-hidden="true">
+                <svg class="aether-sigil-svg" viewBox="0 0 128 128" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="sigilRibbon" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#F5DEB3"/>
+                      <stop offset="35%" stop-color="#E6C88B"/>
+                      <stop offset="68%" stop-color="#C9A45C"/>
+                      <stop offset="100%" stop-color="#8EB8D8"/>
+                    </linearGradient>
+                    <radialGradient id="sigilCore" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#FFFFFF"/>
+                      <stop offset="45%" stop-color="#FFF7EE"/>
+                      <stop offset="100%" stop-color="#E6C88B"/>
+                    </radialGradient>
+                  </defs>
+                  <g class="aether-sigil-ribbon" transform="translate(64 64)">
+                    <path d="M0,0 C12,-18 34,-18 34,0 C34,18 12,18 0,0 C-12,-18 -34,-18 -34,0 C-34,18 -12,18 0,0"
+                      fill="none" stroke="url(#sigilRibbon)" stroke-width="4.4" stroke-linecap="round"/>
+                  </g>
+                  <g class="aether-sigil-nodes" fill="#C9A45C">
+                    <circle cx="30" cy="64" r="2.3"/>
+                    <circle cx="98" cy="64" r="2.3"/>
+                    <circle cx="48" cy="48" r="1.6"/>
+                    <circle cx="80" cy="80" r="1.6"/>
+                    <circle cx="48" cy="80" r="1.4"/>
+                    <circle cx="80" cy="48" r="1.4"/>
+                  </g>
+                  <circle class="aether-sigil-core-glow" cx="64" cy="64" r="16" fill="#E6C88B" opacity="0.28"/>
+                  <circle class="aether-sigil-core" cx="64" cy="64" r="11" fill="url(#sigilCore)"/>
+                  <circle cx="64" cy="64" r="5" fill="#FFFFFF"/>
+                </svg>
+              </span>
+              <span class="aether-sigil-particle aether-sigil-particle--1" aria-hidden="true"></span>
+              <span class="aether-sigil-particle aether-sigil-particle--2" aria-hidden="true"></span>
+              <span class="aether-sigil-particle aether-sigil-particle--3" aria-hidden="true"></span>
+              <span class="aether-sigil-particle aether-sigil-particle--4" aria-hidden="true"></span>
+              <span class="aether-sigil-particle aether-sigil-particle--5" aria-hidden="true"></span>
+            </div>
             <div class="aether-hero-copy">
               <p class="aether-kicker">${copy.kicker}</p>
               <h1 class="aether-brand">SYLORA</h1>
@@ -655,16 +710,6 @@
                 <button type="button" class="aether-portal" data-aether-enter><span>${copy.cta}</span></button>
               </div>
               <p class="aether-scroll-hint" data-aether-scroll-hint>${copy.scrollHint}</p>
-            </div>
-            <div class="aether-aura-wrap is-greeting" data-emotion="greeting" aria-label="${copy.auraAria}">
-              <div class="aether-aura-halo" aria-hidden="true"></div>
-              <div class="aether-aura-ring" aria-hidden="true"></div>
-              <div class="aether-aura-stage" aria-hidden="true">
-                <img class="aether-aura-portrait" src="aether/assets/aura-companion.png" alt="" width="512" height="512" decoding="async" />
-                <span class="aether-aura-lids"></span>
-                <span class="aether-aura-breath"></span>
-              </div>
-              <span class="aether-aura-label">${copy.auraLabel}</span>
             </div>
           </section>
           <section class="aether-chapters" aria-label="SYLORA">
@@ -777,7 +822,7 @@
     if (!document.querySelector('link[data-sylora-aether-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'aether/sylora-aether.css?v=qw9';
+      link.href = 'aether/sylora-aether.css?v=qw10';
       link.setAttribute('data-sylora-aether-css', '1');
       document.head.appendChild(link);
     }

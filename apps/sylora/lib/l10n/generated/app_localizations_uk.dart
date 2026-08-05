@@ -16,7 +16,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Твій світ у гармонії — жива присутність, творчий потік і Aura поруч.';
+      'SYLORA — наступне покоління цифрового світу. Ефір, творчість, звʼязок і інтелект.';
 
   @override
   String get navHome => 'Головна';
@@ -161,7 +161,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get authWelcomeBody =>
-      'Aura чекає — Live, друзі, творчість і один спокійний вхід.';
+      'Один спокійний вхід до ефіру, друзів, творчості та твого світу.';
 
   @override
   String get authOAuthOpenFailed => 'Не вдалося відкрити сторінку входу.';

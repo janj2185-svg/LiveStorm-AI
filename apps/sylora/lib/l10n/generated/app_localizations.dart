@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDescription.
   ///
   /// In en, this message translates to:
-  /// **'Your world. In harmony — live presence, creative flow, and Aura by your side.'**
+  /// **'SYLORA — the next-generation digital world. Live, create, connect, and think.'**
   String get appDescription;
 
   /// No description provided for @navHome.
@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @authWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'Aura is waiting — Live, friends, creation, and one calm sign-in.'**
+  /// **'One calm sign-in to Live, friends, creation, and your world.'**
   String get authWelcomeBody;
 
   /// No description provided for @authOAuthOpenFailed.

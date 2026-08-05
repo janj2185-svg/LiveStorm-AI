@@ -5,7 +5,7 @@
     "description": "Product name shown in app chrome and window titles."
   },
   "appTagline": "Where AI meets soul",
-  "appDescription": "Your world. In harmony — live presence, creative flow, and Aura by your side.",
+  "appDescription": "SYLORA — the next-generation digital world. Live, create, connect, and think.",
   "navHome": "Home",
   "navFeed": "Feed",
   "navLive": "Live",
@@ -69,7 +69,7 @@
   "authSmsInstruction": "We will send a one-time code by SMS.",
   "authEmailOtpInstruction": "We will send a one-time code to your email.",
   "authWelcomeEyebrow": "Enter your AI world",
-  "authWelcomeBody": "Aura is waiting — Live, friends, creation, and one calm sign-in.",
+  "authWelcomeBody": "One calm sign-in to Live, friends, creation, and your world.",
   "authOAuthOpenFailed": "Could not open the sign-in page.",
   "authOAuthProviderUnavailable": "This provider is unavailable. Try another sign-in method.",
   "authMobileSocialPending": "Social sign-in in mobile builds will appear after deep-link setup.",

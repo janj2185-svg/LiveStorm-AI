@@ -16,7 +16,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Your world. In harmony — live presence, creative flow, and Aura by your side.';
+      'SYLORA — the next-generation digital world. Live, create, connect, and think.';
 
   @override
   String get navHome => 'Home';
@@ -161,7 +161,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authWelcomeBody =>
-      'Aura is waiting — Live, friends, creation, and one calm sign-in.';
+      'One calm sign-in to Live, friends, creation, and your world.';
 
   @override
   String get authOAuthOpenFailed => 'Could not open the sign-in page.';

@@ -135,22 +135,21 @@ body.sylora-aether-active #sylora-aether { display: block; }
   flex: 0 0 auto;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 35% 30%, #fff 0%, #fff7ee 42%, transparent 43%),
-    conic-gradient(from 210deg, #f5deb3, #e6c88b, #c9a45c, #8eb8d8, #f5deb3);
+    radial-gradient(circle at 50% 50%, rgba(255, 247, 238, 0.95) 0%, rgba(255, 247, 238, 0.2) 55%, transparent 70%),
+    radial-gradient(circle at 50% 50%, #fff7ee 0%, #e6c88b 100%);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.7),
     0 8px 22px rgba(201, 164, 92, 0.28);
   position: relative;
   overflow: hidden;
+  display: grid;
+  place-items: center;
 }
 
-.aether-mark::after {
-  content: "";
-  position: absolute;
-  inset: 28%;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, #fff7ee 70%, #e6c88b 100%);
-  box-shadow: 0 0 12px rgba(230, 200, 139, 0.45);
+.aether-mark svg {
+  width: 86%;
+  height: 86%;
+  display: block;
 }
 
 .aether-brand-mini {
@@ -197,7 +196,7 @@ body.sylora-aether-active #sylora-aether { display: block; }
   align-content: center;
   justify-items: center;
   text-align: center;
-  gap: clamp(1.25rem, 3.5vh, 2rem);
+  gap: clamp(1.1rem, 3vh, 1.75rem);
   padding: clamp(0.5rem, 2vh, 1.5rem) 0 clamp(1.5rem, 4vh, 2.5rem);
   width: 100%;
   max-width: 100%;
@@ -207,11 +206,105 @@ body.sylora-aether-active #sylora-aether { display: block; }
 .aether-brand,
 .aether-line,
 .aether-cta-wrap,
-.aether-aura-wrap {
+.aether-sigil {
   opacity: 0;
-  transform: translateY(18px);
   max-width: 100%;
 }
+
+.aether-kicker,
+.aether-brand,
+.aether-line,
+.aether-cta-wrap {
+  transform: translateY(18px);
+}
+
+/* Living Infinity Core — hero brand mark */
+.aether-sigil {
+  position: relative;
+  width: min(17rem, 72vw);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+  filter: drop-shadow(0 18px 40px rgba(201, 164, 92, 0.28));
+}
+
+.aether-sigil-wave {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 1px solid rgba(230, 200, 139, 0.35);
+  pointer-events: none;
+}
+
+.aether-sigil-wave--a { animation: sigilWave 4.8s ease-out infinite; }
+.aether-sigil-wave--b { animation: sigilWave 4.8s 1.6s ease-out infinite; }
+.aether-sigil-wave--c { animation: sigilWave 4.8s 3.2s ease-out infinite; }
+
+.aether-sigil-orbit {
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px dashed rgba(142, 184, 216, 0.45);
+  animation: sigilOrbit 18s linear infinite;
+  pointer-events: none;
+}
+
+.aether-sigil-spin {
+  position: relative;
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 247, 238, 0.55) 42%, rgba(230, 200, 139, 0.18) 70%, transparent 78%);
+  display: grid;
+  place-items: center;
+  animation: sigilSpin 22s linear infinite;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 24px rgba(230, 200, 139, 0.18);
+}
+
+.aether-sigil-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.aether-sigil-ribbon {
+  transform-origin: 0 0;
+  animation: sigilRibbonPulse 5.4s ease-in-out infinite;
+}
+
+.aether-sigil-core {
+  transform-origin: 64px 64px;
+  animation: sigilCoreBreath 3.2s ease-in-out infinite;
+}
+
+.aether-sigil-core-glow {
+  transform-origin: 64px 64px;
+  animation: sigilCoreGlow 3.2s ease-in-out infinite;
+}
+
+.aether-sigil-particle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin: -0.21rem 0 0 -0.21rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(230, 200, 139, 0.85);
+  pointer-events: none;
+}
+
+.aether-sigil-particle--1 { animation: sigilParticle 7s linear infinite; }
+.aether-sigil-particle--2 { animation: sigilParticle 9s -2s linear infinite; }
+.aether-sigil-particle--3 { animation: sigilParticle 8s -4s linear infinite; }
+.aether-sigil-particle--4 { animation: sigilParticle 10s -1s linear infinite; }
+.aether-sigil-particle--5 { animation: sigilParticle 11s -5s linear infinite; }
 
 .aether-kicker {
   margin: 0 0 0.65rem;
@@ -453,21 +546,21 @@ body.sylora-aether-active #sylora-aether { display: block; }
 }
 
 .aether-revealed .aether-top { animation: rise 0.9s 0.05s var(--ease) forwards; }
-.aether-revealed .aether-kicker { animation: rise 0.95s 0.12s var(--ease) forwards; }
+.aether-revealed .aether-sigil {
+  animation:
+    sigilFade 1.05s 0.1s var(--ease) forwards,
+    sigilFloatY 6.2s 1.2s ease-in-out infinite;
+}
+.aether-revealed .aether-kicker { animation: rise 0.95s 0.22s var(--ease) forwards; }
 .aether-revealed .aether-brand {
   animation:
-    rise 1s 0.18s var(--ease) forwards,
-    brandBreathe 5.2s 1.1s ease-in-out infinite;
+    rise 1s 0.3s var(--ease) forwards,
+    brandBreathe 5.2s 1.2s ease-in-out infinite;
 }
-.aether-revealed .aether-line { animation: rise 1s 0.3s var(--ease) forwards; }
-.aether-revealed .aether-cta-wrap { animation: rise 1s 0.42s var(--ease) forwards; }
-.aether-revealed .aether-aura-wrap {
-  animation:
-    rise 1s 0.28s var(--ease) forwards,
-    auraFloat 5.8s 1.1s ease-in-out infinite;
-}
+.aether-revealed .aether-line { animation: rise 1s 0.4s var(--ease) forwards; }
+.aether-revealed .aether-cta-wrap { animation: rise 1s 0.5s var(--ease) forwards; }
 .aether-revealed .aether-portal {
-  animation: portalHeartbeat 3s 1.3s ease-in-out infinite;
+  animation: portalHeartbeat 3s 1.4s ease-in-out infinite;
 }
 
 @keyframes rise {
@@ -483,14 +576,51 @@ body.sylora-aether-active #sylora-aether { display: block; }
   }
 }
 
-@keyframes auraFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+@keyframes sigilFade {
+  to { opacity: 1; }
 }
 
-@keyframes auraBreath {
-  0%, 100% { transform: scale(0.96); opacity: 0.45; }
-  50% { transform: scale(1.08); opacity: 0.85; }
+@keyframes sigilFloatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes sigilSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sigilOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes sigilWave {
+  0% { transform: scale(0.72); opacity: 0.55; }
+  70% { opacity: 0.12; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+@keyframes sigilRibbonPulse {
+  0%, 100% { opacity: 0.88; }
+  50% { opacity: 1; }
+}
+
+@keyframes sigilCoreBreath {
+  0%, 100% { transform: scale(0.94); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes sigilCoreGlow {
+  0%, 100% { transform: scale(0.9); opacity: 0.18; }
+  50% { transform: scale(1.25); opacity: 0.4; }
+}
+
+@keyframes sigilParticle {
+  0% { transform: rotate(0deg) translateX(min(7.2rem, 34vw)) scale(0.7); opacity: 0; }
+  12% { opacity: 0.95; }
+  55% { opacity: 0.7; }
+  100% { transform: rotate(360deg) translateX(min(7.2rem, 34vw)) scale(1); opacity: 0; }
 }
 
 @keyframes portalHeartbeat {
@@ -513,25 +643,19 @@ body.sylora-aether-active #sylora-aether { display: block; }
   to { transform: translate3d(2%, 2%, 0) scale(1.04); }
 }
 
-@keyframes haloPulse {
-  0%, 100% { opacity: 0.7; transform: scale(0.96); }
-  50% { opacity: 1; transform: scale(1.06); }
-}
-
 @media (min-width: 900px) {
   .aether-hero {
-    grid-template-columns: minmax(0, 1.05fr) minmax(16rem, 0.85fr);
-    align-items: center;
-    text-align: left;
-    justify-items: start;
-    gap: 2.5rem;
+    grid-template-columns: 1fr;
+    align-content: center;
+    text-align: center;
+    justify-items: center;
+    gap: 1.6rem;
   }
-  .aether-line { margin-left: 0; margin-right: 0; }
-  .aether-cta-wrap { justify-content: flex-start; }
-  .aether-aura-wrap {
-    justify-self: end;
-    width: min(22rem, 34vw);
+  .aether-sigil {
+    width: min(20rem, 34vw);
   }
+  .aether-line { margin-left: auto; margin-right: auto; }
+  .aether-cta-wrap { justify-content: center; }
 }
 
 @media (max-width: 360px) {
@@ -541,6 +665,30 @@ body.sylora-aether-active #sylora-aether { display: block; }
   }
   .aether-cta-wrap { flex-direction: column; }
   .aether-portal { width: 100%; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aether-sigil-wave,
+  .aether-sigil-orbit,
+  .aether-sigil-spin,
+  .aether-sigil-ribbon,
+  .aether-sigil-core,
+  .aether-sigil-core-glow,
+  .aether-sigil-particle,
+  .aether-revealed .aether-sigil,
+  .aether-revealed .aether-brand,
+  .aether-revealed .aether-portal {
+    animation: none !important;
+  }
+  .aether-sigil,
+  .aether-kicker,
+  .aether-brand,
+  .aether-line,
+  .aether-cta-wrap,
+  .aether-top {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .aether-loading {

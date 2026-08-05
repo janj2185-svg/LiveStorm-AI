@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../design/sylora_icons.dart';
+
 enum LumenThemeMode { system, light, dark }
 
 @immutable
@@ -286,41 +288,6 @@ final class SyloraLogo extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: 'SYLORA',
-    image: true,
-    child: Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const SweepGradient(
-          colors: [
-            LumenColors.aetherBright,
-            LumenColors.solar,
-            LumenColors.aether,
-            LumenColors.pulse,
-            LumenColors.aetherBright,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: LumenColors.aether.withValues(alpha: 0.28),
-            blurRadius: size * 0.55,
-          ),
-        ],
-      ),
-      child: Center(
-        child: Container(
-          width: size * 0.38,
-          height: size * 0.38,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFFFFF7EE),
-          ),
-        ),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => SyloraMark(size: size, animated: true);
 }
 
