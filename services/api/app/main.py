@@ -49,6 +49,7 @@ from app.platform_service import (
     UnconfiguredCertificateRenderer,
     UnconfiguredContentProcessor,
 )
+from app.progression_service import seed_achievements
 from app.routers import (
     admin,
     admin_ai,
@@ -67,7 +68,10 @@ from app.routers import (
     live,
     marketplace,
     messaging,
+    music,
     oauth,
+    progression,
+    search,
     social,
     test_stand,
     users,
@@ -142,6 +146,7 @@ def create_app(
             await seed_rbac(session)
             await seed_platform_accounts(session)
             await seed_ai_tool_definitions(session)
+            await seed_achievements(session)
             if ai_provider_registry is None:
                 await resolved_ai_registry.refresh_from_database(session, resolved_settings)
             if resolved_settings.is_public_test_stand or os.environ.get(
@@ -207,6 +212,9 @@ def create_app(
                 "name": "Learning",
                 "description": "Courses, progress, quizzes, and verifiable certificates",
             },
+            {"name": "Music", "description": "Tracks, playlists, and saved music"},
+            {"name": "Progression", "description": "Levels, XP, and achievements"},
+            {"name": "Search", "description": "Authenticated cross-platform discovery"},
             {"name": "Administration", "description": "Server-enforced RBAC"},
             {"name": "Operations", "description": "Health and telemetry"},
         ],
@@ -268,8 +276,11 @@ def create_app(
     app.include_router(admin_operations.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin_ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(ai.router, prefix=resolved_settings.api_prefix)
+    app.include_router(search.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
     app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
+    app.include_router(music.router, prefix=resolved_settings.api_prefix)
+    app.include_router(progression.router, prefix=resolved_settings.api_prefix)
     app.include_router(ledger.router, prefix=resolved_settings.api_prefix)
     app.include_router(live.router, prefix=resolved_settings.api_prefix)
     app.include_router(live.admin_router, prefix=resolved_settings.api_prefix)

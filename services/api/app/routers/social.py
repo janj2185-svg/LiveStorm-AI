@@ -62,6 +62,8 @@ from app.social_schemas import (
     CommunityPatch,
     CommunityResponse,
     CommunitySearchResponse,
+    FriendRequestResponse,
+    FriendResponse,
     MembershipResponse,
     MembershipRolePatch,
     ModerationDecisionRequest,
@@ -71,6 +73,7 @@ from app.social_schemas import (
     NotificationResponse,
     PollVoteRequest,
     PollVoteResponse,
+    PendingFriendRequestsResponse,
     PostCreate,
     PostPageResponse,
     PostPatch,
@@ -427,6 +430,89 @@ async def cancel_follow_request(
     request_record.responded_at = utcnow()
     await db.commit()
     return MessageResponse(status="cancelled")
+
+
+@router.get("/friends", response_model=list[FriendResponse])
+async def list_friends(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> list[FriendResponse]:
+    friendships = list(
+        (
+            await db.scalars(
+                select(Friendship)
+                .where(
+                    Friendship.status == RelationStatus.accepted,
+                    or_(
+                        Friendship.user_low_id == auth.user.id,
+                        Friendship.user_high_id == auth.user.id,
+                    ),
+                )
+                .order_by(Friendship.responded_at.desc(), Friendship.id.desc())
+            )
+        ).all()
+    )
+    results: list[FriendResponse] = []
+    for friendship in friendships:
+        friend_id = (
+            friendship.user_high_id
+            if friendship.user_low_id == auth.user.id
+            else friendship.user_low_id
+        )
+        profile = await db.get(Profile, friend_id)
+        if profile is None or profile.handle is None:
+            continue
+        results.append(
+            FriendResponse(
+                friendship_id=friendship.id,
+                friend=await public_profile_response(db, auth.user.id, profile),
+                friends_since=friendship.responded_at or friendship.created_at,
+            )
+        )
+    return results
+
+
+@router.get("/friend-requests", response_model=PendingFriendRequestsResponse)
+async def list_friend_requests(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> PendingFriendRequestsResponse:
+    friendships = list(
+        (
+            await db.scalars(
+                select(Friendship)
+                .where(
+                    Friendship.status == RelationStatus.pending,
+                    or_(
+                        Friendship.user_low_id == auth.user.id,
+                        Friendship.user_high_id == auth.user.id,
+                    ),
+                )
+                .order_by(Friendship.created_at.desc(), Friendship.id.desc())
+            )
+        ).all()
+    )
+    incoming: list[FriendRequestResponse] = []
+    outgoing: list[FriendRequestResponse] = []
+    for friendship in friendships:
+        other_id = (
+            friendship.user_high_id
+            if friendship.user_low_id == auth.user.id
+            else friendship.user_low_id
+        )
+        profile = await db.get(Profile, other_id)
+        if profile is None or profile.handle is None:
+            continue
+        item = FriendRequestResponse(
+            friendship_id=friendship.id,
+            profile=await public_profile_response(db, auth.user.id, profile),
+            created_at=friendship.created_at,
+        )
+        if friendship.requested_by_id == auth.user.id:
+            outgoing.append(item)
+        else:
+            incoming.append(item)
+    return PendingFriendRequestsResponse(incoming=incoming, outgoing=outgoing)
 
 
 @router.post("/friends/{handle}", response_model=RelationResponse)

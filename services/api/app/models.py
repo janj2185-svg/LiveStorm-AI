@@ -307,5 +307,7 @@ from app import business_models as _business_models  # noqa: E402, F401
 from app import gift_models as _gift_models  # noqa: E402, F401
 from app import ledger_models as _ledger_models  # noqa: E402, F401
 from app import live_models as _live_models  # noqa: E402, F401
+from app import music_models as _music_models  # noqa: E402, F401
 from app import platform_models as _platform_models  # noqa: E402, F401
+from app import progression_models as _progression_models  # noqa: E402, F401
 from app import social_models as _social_models  # noqa: E402, F401

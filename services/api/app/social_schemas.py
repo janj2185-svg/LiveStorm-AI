@@ -129,6 +129,23 @@ class RelationResponse(StrictSchema):
     target_handle: str
 
 
+class FriendResponse(StrictSchema):
+    friendship_id: uuid.UUID
+    friend: PublicProfileResponse
+    friends_since: datetime
+
+
+class FriendRequestResponse(StrictSchema):
+    friendship_id: uuid.UUID
+    profile: PublicProfileResponse
+    created_at: datetime
+
+
+class PendingFriendRequestsResponse(StrictSchema):
+    incoming: list[FriendRequestResponse]
+    outgoing: list[FriendRequestResponse]
+
+
 class CommunityCreate(StrictSchema):
     slug: str = Field(min_length=3, max_length=64)
     name: str = Field(min_length=1, max_length=100)
