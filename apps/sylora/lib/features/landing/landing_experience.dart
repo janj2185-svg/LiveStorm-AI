@@ -139,17 +139,13 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                     children: [
                       Row(
                         children: [
-                          SyloraMark(size: 28, animated: true),
+                          const SyloraMark(size: 28, animated: true),
                           const SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              'SYLORA',
-                              overflow: TextOverflow.ellipsis,
-                              style: LandingTokens.body(
-                                13,
-                                color: LandingTokens.ink,
-                                weight: FontWeight.w700,
-                              ).copyWith(letterSpacing: 3),
+                          const Flexible(
+                            child: SyloraWordmark(
+                              fontSize: 13,
+                              letterSpacing: 3.2,
+                              weight: FontWeight.w600,
                             ),
                           ),
                           TextButton(
@@ -168,14 +164,10 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                       const Spacer(),
                       SyloraMark(size: markSize, animated: true),
                       const SizedBox(height: 22),
-                      Text(
-                        'SYLORA',
-                        textAlign: TextAlign.center,
-                        style: LandingTokens.body(
-                          13,
-                          color: LandingTokens.ink,
-                          weight: FontWeight.w700,
-                        ).copyWith(letterSpacing: 4.2),
+                      const SyloraWordmark(
+                        fontSize: 22,
+                        letterSpacing: 8,
+                        weight: FontWeight.w500,
                       ),
                       const SizedBox(height: 10),
                       Text(

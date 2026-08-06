@@ -67,18 +67,8 @@ final class _WelcomeScreenState extends State<WelcomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     const Spacer(flex: 2),
-                    const SyloraLogo(size: 88),
-                    const SizedBox(height: 28),
-                    Text(
-                      l10n.appTitle,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        // Instrument Serif ships only Regular — never request heavier weights on CanvasKit.
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
+                    const SyloraLogo(size: 88, showWordmark: true, wordmarkSize: 26),
+                    const SizedBox(height: 18),
                     Text(
                       l10n.appTagline,
                       textAlign: TextAlign.center,
@@ -326,25 +316,15 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SyloraAura(
-          size: compact ? 88 : 132,
-          emotion: AuraEmotion.greeting,
-          label: l10n.auraCompanionLabel,
-          // Static Aura on web so Auth form wins the first frame.
-          animate: !kIsWeb,
-        ),
-        SizedBox(height: compact ? 10 : 18),
-        Text(
-          l10n.authWelcomeEyebrow,
-          textAlign: TextAlign.center,
-          style: SyloraTokens.body(
-            14,
-            color: SyloraTokens.violet,
-            weight: FontWeight.w600,
-          ),
+        SyloraMark(size: compact ? 88 : 132, animated: true),
+        SizedBox(height: compact ? 12 : 20),
+        SyloraWordmark(
+          fontSize: compact ? 22 : 28,
+          letterSpacing: compact ? 7 : 9,
+          weight: FontWeight.w500,
         ),
         if (!compact) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             l10n.authWelcomeBody,
             textAlign: TextAlign.center,
@@ -1108,10 +1088,12 @@ final class _AuthUtilityScreenState extends ConsumerState<AuthUtilityScreen> {
                       ),
                     ),
                   ),
-                  Text(
-                    AppLocalizations.of(context).appTitle,
-                    textAlign: TextAlign.center,
-                    style: LandingTokens.display(28).copyWith(letterSpacing: 6),
+                  const Center(
+                    child: SyloraWordmark(
+                      fontSize: 22,
+                      letterSpacing: 7,
+                      weight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(

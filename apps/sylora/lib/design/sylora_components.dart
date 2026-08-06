@@ -364,7 +364,7 @@ final class SyloraBrandLockup extends StatelessWidget {
   const SyloraBrandLockup({
     super.key,
     this.size = 28,
-    this.title = 'SYLORA',
+    this.title = SyloraWordmark.text,
   });
 
   final double size;
@@ -378,11 +378,17 @@ final class SyloraBrandLockup extends StatelessWidget {
         SyloraMark(size: size, animated: true),
         SizedBox(width: size * 0.35),
         Flexible(
-          child: Text(
-            title,
-            overflow: TextOverflow.ellipsis,
-            style: SyloraTokens.title(size * 0.55).copyWith(letterSpacing: 2.4),
-          ),
+          child: title == SyloraWordmark.text
+              ? SyloraWordmark(
+                  fontSize: size * 0.55,
+                  letterSpacing: size * 0.22,
+                  weight: FontWeight.w600,
+                )
+              : Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: SyloraTokens.title(size * 0.55).copyWith(letterSpacing: 2.4),
+                ),
         ),
       ],
     );

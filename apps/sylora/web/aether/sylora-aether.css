@@ -156,11 +156,13 @@ body.sylora-aether-active #sylora-aether { display: block; }
 
 .aether-brand-mini {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: clamp(1.15rem, 3vw, 1.45rem);
-  letter-spacing: 0.08em;
+  font-weight: 500;
+  font-size: clamp(0.95rem, 2.6vw, 1.15rem);
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
   color: var(--ink);
   white-space: nowrap;
+  text-transform: none;
 }
 
 .aether-link {
@@ -260,13 +262,21 @@ body.sylora-aether-active #sylora-aether { display: block; }
 
 .aether-gate-arc--l {
   transform-box: fill-box;
-  transform-origin: 70% 50%;
-  animation: gateArcPulse 4.8s ease-in-out infinite, gateArcOpenL 6.4s ease-in-out infinite;
+  transform-origin: 50% 50%;
+  animation: gateArcPulse 4.8s ease-in-out infinite, ribbonShimmer 6.4s ease-in-out infinite;
 }
 .aether-gate-arc--r {
   transform-box: fill-box;
-  transform-origin: 30% 50%;
-  animation: gateArcPulse 4.8s 0.6s ease-in-out infinite, gateArcOpenR 6.4s ease-in-out infinite;
+  transform-origin: 50% 50%;
+  animation: gateArcPulse 4.8s 0.6s ease-in-out infinite;
+}
+
+.aether-ribbon--gold {
+  animation: ribbonGoldBreath 5.2s ease-in-out infinite;
+}
+
+.aether-ribbon--cyan {
+  filter: drop-shadow(0 0 6px rgba(94, 200, 255, 0.35));
 }
 
 .aether-gate-fil {
@@ -318,12 +328,12 @@ body.sylora-aether-active #sylora-aether { display: block; }
 .aether-wordmark {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(0.92rem, 2.6vw, 1.15rem);
-  font-weight: 600;
-  letter-spacing: 0.48em;
-  text-indent: 0.48em;
-  color: var(--ink-soft);
-  text-transform: uppercase;
+  font-size: clamp(1.35rem, 4.2vw, 1.85rem);
+  font-weight: 500;
+  letter-spacing: 0.52em;
+  text-indent: 0.52em;
+  color: var(--ink);
+  text-transform: none;
 }
 
 .aether-kicker,
@@ -487,14 +497,24 @@ body.sylora-aether-active #sylora-aether { display: block; }
   50% { opacity: 1; }
 }
 
+@keyframes ribbonShimmer {
+  0%, 100% { opacity: 0.94; }
+  50% { opacity: 1; }
+}
+
+@keyframes ribbonGoldBreath {
+  0%, 100% { opacity: 0.86; }
+  50% { opacity: 1; }
+}
+
 @keyframes gateArcOpenL {
   0%, 100% { transform: translateX(0) scale(1); }
-  50% { transform: translateX(-1.6%) scale(1.015, 1); }
+  50% { transform: translateX(-1.2%) scale(1.01, 1); }
 }
 
 @keyframes gateArcOpenR {
   0%, 100% { transform: translateX(0) scale(1); }
-  50% { transform: translateX(1.6%) scale(1.015, 1); }
+  50% { transform: translateX(1.2%) scale(1.01, 1); }
 }
 
 @keyframes gateFilamentGlow {

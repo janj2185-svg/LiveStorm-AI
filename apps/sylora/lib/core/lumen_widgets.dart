@@ -316,7 +316,11 @@ final class LumenResponsiveShell extends StatelessWidget {
                   children: <Widget>[
                     SyloraLogo(size: 36),
                     SizedBox(width: 12),
-                    Text('SYLORA'),
+                    SyloraWordmark(
+                      fontSize: 14,
+                      letterSpacing: 3.6,
+                      weight: FontWeight.w600,
+                    ),
                   ],
                 )
               : const SyloraLogo(size: 36),

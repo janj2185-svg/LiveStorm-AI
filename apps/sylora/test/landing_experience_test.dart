@@ -17,7 +17,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('SYLORA'), findsWidgets);
+    expect(find.text('S Y L O R Λ'), findsWidgets);
     expect(find.text('Увійти'), findsWidgets);
     expect(find.text('Створити акаунт'), findsOneWidget);
     expect(find.text('Google'), findsNothing);

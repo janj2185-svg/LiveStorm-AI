@@ -283,11 +283,34 @@ abstract final class LumenTheme {
 }
 
 final class SyloraLogo extends StatelessWidget {
-  const SyloraLogo({super.key, this.size = 42});
+  const SyloraLogo({
+    super.key,
+    this.size = 42,
+    this.showWordmark = false,
+    this.wordmarkSize,
+    this.wordmarkColor,
+  });
 
   final double size;
+  final bool showWordmark;
+  final double? wordmarkSize;
+  final Color? wordmarkColor;
 
   @override
-  Widget build(BuildContext context) => SyloraMark(size: size, animated: true);
+  Widget build(BuildContext context) {
+    final mark = SyloraMark(size: size, animated: true);
+    if (!showWordmark) return mark;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        mark,
+        SizedBox(height: size * 0.18),
+        SyloraWordmark(
+          fontSize: wordmarkSize ?? size * 0.28,
+          color: wordmarkColor,
+        ),
+      ],
+    );
+  }
 }
 
