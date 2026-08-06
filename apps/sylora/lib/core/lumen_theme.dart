@@ -107,6 +107,14 @@ abstract final class LumenColors {
   static const verdigris = Color(0xFF247B51);
   static const solar = Color(0xFF8A6512);
   static const rose = Color(0xFFB4453D);
+
+  /// Light-first accent metals and sky for product chrome.
+  static const gold = Color(0xFFC9A227);
+  static const goldSoft = Color(0xFFF0D9A0);
+  static const sky = Color(0xFF7EB8D4);
+  static const skyMist = Color(0xFFB8E4F5);
+  static const pearl = Color(0xFFFFFEFB);
+  static const pearlWash = Color(0xFFF8F4FF);
 }
 
 abstract final class LumenTheme {

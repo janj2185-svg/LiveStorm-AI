@@ -72,7 +72,9 @@ final communityProvider = FutureProvider.autoDispose
     });
 
 final class FeedScreen extends ConsumerStatefulWidget {
-  const FeedScreen({super.key});
+  const FeedScreen({super.key, this.openComposer = false});
+
+  final bool openComposer;
 
   @override
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
@@ -83,6 +85,20 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
   String? _nextCursor;
   bool _paginationInitialized = false;
   bool _loadingMore = false;
+  var _composerOpened = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.openComposer && !_composerOpened) {
+      _composerOpened = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showComposer(context, ref);
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -504,7 +520,8 @@ final class SearchScreen extends ConsumerStatefulWidget {
 final class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _query = TextEditingController();
   final _searchFocus = FocusNode();
-  Future<SocialSearchBundle>? _results;
+  Future<Object>? _results;
+  var _usedGlobal = false;
 
   @override
   void dispose() {
@@ -516,7 +533,7 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) => LumenPage(
     title: 'Search',
-    subtitle: 'Search current users, posts, and communities.',
+    subtitle: 'Global SYLORA search across users, posts, gifts, products, and more.',
     child: Column(
       children: <Widget>[
         SearchBar(
@@ -544,7 +561,7 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
             icon: Icons.travel_explore_rounded,
           )
         else
-          FutureBuilder<SocialSearchBundle>(
+          FutureBuilder<Object>(
             future: _results,
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
@@ -557,75 +574,177 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
                 return LumenErrorView(error: snapshot.error!, onRetry: _search);
               }
               final data = snapshot.requireData;
-              if (data.users.isEmpty &&
-                  data.posts.isEmpty &&
-                  data.communities.isEmpty) {
-                return LumenEmptyView(
-                  title: 'No results',
-                  message:
-                      'The API returned no users, posts, or communities for this query.',
-                  actionLabel: 'Edit search',
-                  onAction: _searchFocus.requestFocus,
-                  icon: Icons.search_off_rounded,
-                );
+              if (data is GlobalSearchBundle) {
+                return _globalResults(context, data);
               }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  if (data.users.isNotEmpty) ...<Widget>[
-                    Text(
-                      'People',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    for (final user in data.users)
-                      ListTile(
-                        title: Text(user.displayName),
-                        subtitle: Text('@${user.handle}'),
-                        onTap: () => context.pushNamed(
-                          'public-profile',
-                          pathParameters: <String, String>{
-                            'handle': user.handle!,
-                          },
-                        ),
-                      ),
-                  ],
-                  if (data.posts.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Posts',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    for (final post in data.posts) ...<Widget>[
-                      PostCard(post: post),
-                      const SizedBox(height: 12),
-                    ],
-                  ],
-                  if (data.communities.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Communities',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    for (final community in data.communities)
-                      ListTile(
-                        title: Text(community.label),
-                        subtitle: Text(community.description ?? ''),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => context.pushNamed(
-                          'community',
-                          pathParameters: <String, String>{
-                            'slug': requireString(community.raw, 'slug'),
-                          },
-                        ),
-                      ),
-                  ],
-                ],
-              );
+              final social = data as SocialSearchBundle;
+              return _socialResults(context, social);
             },
           ),
       ],
     ),
   );
+
+  Widget _globalResults(BuildContext context, GlobalSearchBundle data) {
+    if (data.sections.every((section) => section.items.isEmpty)) {
+      return LumenEmptyView(
+        title: 'No results',
+        message: 'The global search API returned no sections for this query.',
+        actionLabel: 'Edit search',
+        onAction: _searchFocus.requestFocus,
+        icon: Icons.search_off_rounded,
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        for (final section in data.sections) ...<Widget>[
+          Text(
+            _sectionTitle(section.type),
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          for (final hit in section.items)
+            ListTile(
+              title: Text(hit.title),
+              subtitle: Text(
+                [
+                  if (hit.handle != null) '@${hit.handle}',
+                  if (hit.subtitle != null && hit.subtitle!.isNotEmpty)
+                    hit.subtitle!,
+                ].join(' · '),
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => _openHit(context, section.type, hit),
+            ),
+          const SizedBox(height: 12),
+        ],
+        if (_usedGlobal)
+          TextButton(
+            onPressed: _searchSocialFallback,
+            child: const Text('Also search social index'),
+          ),
+      ],
+    );
+  }
+
+  Widget _socialResults(BuildContext context, SocialSearchBundle data) {
+    if (data.users.isEmpty && data.posts.isEmpty && data.communities.isEmpty) {
+      return LumenEmptyView(
+        title: 'No results',
+        message:
+            'The API returned no users, posts, or communities for this query.',
+        actionLabel: 'Edit search',
+        onAction: _searchFocus.requestFocus,
+        icon: Icons.search_off_rounded,
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        if (data.users.isNotEmpty) ...<Widget>[
+          Text('People', style: Theme.of(context).textTheme.headlineSmall),
+          for (final user in data.users)
+            ListTile(
+              title: Text(user.displayName),
+              subtitle: Text(user.handle == null ? '' : '@${user.handle}'),
+              onTap: user.handle == null
+                  ? null
+                  : () => context.pushNamed(
+                      'public-profile',
+                      pathParameters: <String, String>{'handle': user.handle!},
+                    ),
+            ),
+        ],
+        if (data.posts.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 16),
+          Text('Posts', style: Theme.of(context).textTheme.headlineSmall),
+          for (final post in data.posts) ...<Widget>[
+            PostCard(post: post),
+            const SizedBox(height: 12),
+          ],
+        ],
+        if (data.communities.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 16),
+          Text(
+            'Communities',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          for (final community in data.communities)
+            ListTile(
+              title: Text(community.label),
+              subtitle: Text(community.description ?? ''),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.pushNamed(
+                'community',
+                pathParameters: <String, String>{
+                  'slug': requireString(community.raw, 'slug'),
+                },
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  String _sectionTitle(String type) => switch (type) {
+    'users' => 'People',
+    'posts' => 'Posts',
+    'communities' => 'Communities',
+    'gifts' => 'Gifts',
+    'products' => 'Products',
+    'courses' => 'Courses',
+    'live_sessions' => 'Live',
+    'music' => 'Music',
+    _ => type,
+  };
+
+  void _openHit(BuildContext context, String type, GlobalSearchHit hit) {
+    switch (type) {
+      case 'users':
+        if (hit.handle != null) {
+          context.pushNamed(
+            'public-profile',
+            pathParameters: <String, String>{'handle': hit.handle!},
+          );
+        }
+      case 'posts':
+        context.pushNamed(
+          'post',
+          pathParameters: <String, String>{'id': hit.id},
+        );
+      case 'communities':
+        if (hit.slug != null) {
+          context.pushNamed(
+            'community',
+            pathParameters: <String, String>{'slug': hit.slug!},
+          );
+        }
+      case 'gifts':
+        if (hit.slug != null) {
+          context.pushNamed(
+            'gift-detail',
+            pathParameters: <String, String>{'slug': hit.slug!},
+          );
+        }
+      case 'products':
+        context.pushNamed(
+          'marketplace-product',
+          pathParameters: <String, String>{'id': hit.id},
+        );
+      case 'courses':
+        context.pushNamed(
+          'learning-course',
+          pathParameters: <String, String>{'id': hit.id},
+        );
+      case 'live_sessions':
+        context.pushNamed(
+          'live-session',
+          pathParameters: <String, String>{'id': hit.id},
+        );
+      default:
+        break;
+    }
+  }
 
   void _search() {
     final query = _query.text.trim();
@@ -636,6 +755,16 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
       return;
     }
     setState(() {
+      _usedGlobal = true;
+      _results = ref.read(socialRepositoryProvider).globalSearch(query);
+    });
+  }
+
+  void _searchSocialFallback() {
+    final query = _query.text.trim();
+    if (query.length < 2) return;
+    setState(() {
+      _usedGlobal = false;
       _results = ref.read(socialRepositoryProvider).search(query);
     });
   }

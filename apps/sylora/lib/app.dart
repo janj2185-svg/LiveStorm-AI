@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/living_atmosphere.dart';
+import 'core/locale.dart';
 import 'core/lumen_theme.dart';
 import 'core/lumen_widgets.dart';
 import 'features/admin/admin_screens.dart';
@@ -9,6 +11,7 @@ import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
 import 'features/creator/creator_screens.dart';
+import 'features/ecosystem/ecosystem_screens.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
 import 'features/more/more_screen.dart';
@@ -22,11 +25,17 @@ const _homeDestination = ShellDestination(
   selectedIcon: Icons.home_rounded,
   path: '/home',
 );
-const _searchDestination = ShellDestination(
-  label: 'Search',
-  icon: Icons.search_outlined,
-  selectedIcon: Icons.search_rounded,
-  path: '/search',
+const _liveDestination = ShellDestination(
+  label: 'Live',
+  icon: Icons.sensors_outlined,
+  selectedIcon: Icons.sensors_rounded,
+  path: '/live',
+);
+const _auraDestination = ShellDestination(
+  label: 'Aura',
+  icon: Icons.auto_awesome_outlined,
+  selectedIcon: Icons.auto_awesome_rounded,
+  path: '/ai',
 );
 const _messagesDestination = ShellDestination(
   label: 'Messages',
@@ -34,23 +43,71 @@ const _messagesDestination = ShellDestination(
   selectedIcon: Icons.chat_bubble_rounded,
   path: '/messages',
 );
+const _friendsDestination = ShellDestination(
+  label: 'Friends',
+  icon: Icons.people_outline_rounded,
+  selectedIcon: Icons.people_rounded,
+  path: '/friends',
+);
 const _marketplaceDestination = ShellDestination(
   label: 'Market',
   icon: Icons.storefront_outlined,
   selectedIcon: Icons.storefront_rounded,
   path: '/marketplace',
 );
+const _learningDestination = ShellDestination(
+  label: 'Learning',
+  icon: Icons.school_outlined,
+  selectedIcon: Icons.school_rounded,
+  path: '/learning',
+);
+const _businessDestination = ShellDestination(
+  label: 'Business',
+  icon: Icons.business_outlined,
+  selectedIcon: Icons.business_rounded,
+  path: '/business',
+);
+const _musicDestination = ShellDestination(
+  label: 'Music',
+  icon: Icons.library_music_outlined,
+  selectedIcon: Icons.library_music_rounded,
+  path: '/music',
+);
 const _creatorDestination = ShellDestination(
-  label: 'Creator',
+  label: 'Creator Studio',
   icon: Icons.edit_note_outlined,
   selectedIcon: Icons.edit_note_rounded,
   path: '/creator',
 );
-const _businessDestination = ShellDestination(
-  label: 'Workspace',
-  icon: Icons.business_outlined,
-  selectedIcon: Icons.business_rounded,
-  path: '/business',
+const _giftsDestination = ShellDestination(
+  label: 'Gift Shop',
+  icon: Icons.card_giftcard_outlined,
+  selectedIcon: Icons.card_giftcard_rounded,
+  path: '/gifts',
+);
+const _walletDestination = ShellDestination(
+  label: 'Wallet',
+  icon: Icons.account_balance_wallet_outlined,
+  selectedIcon: Icons.account_balance_wallet_rounded,
+  path: '/wallet',
+);
+const _analyticsDestination = ShellDestination(
+  label: 'Analytics',
+  icon: Icons.insights_outlined,
+  selectedIcon: Icons.insights_rounded,
+  path: '/analytics',
+);
+const _profileDestination = ShellDestination(
+  label: 'Profile',
+  icon: Icons.person_outline_rounded,
+  selectedIcon: Icons.person_rounded,
+  path: '/profile',
+);
+const _settingsDestination = ShellDestination(
+  label: 'Settings',
+  icon: Icons.settings_outlined,
+  selectedIcon: Icons.settings_rounded,
+  path: '/settings',
 );
 const _adminDestination = ShellDestination(
   label: 'Admin',
@@ -65,27 +122,37 @@ const _moreDestination = ShellDestination(
   path: '/more',
 );
 
+const _desktopDestinations = <ShellDestination>[
+  _homeDestination,
+  _liveDestination,
+  _auraDestination,
+  _messagesDestination,
+  _friendsDestination,
+  _marketplaceDestination,
+  _learningDestination,
+  _businessDestination,
+  _musicDestination,
+  _creatorDestination,
+  _giftsDestination,
+  _walletDestination,
+  _analyticsDestination,
+  _profileDestination,
+  _settingsDestination,
+];
+
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
-  _searchDestination,
+  _liveDestination,
+  _auraDestination,
   _messagesDestination,
-  _marketplaceDestination,
   _moreDestination,
 ];
 
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   final roleSet = roles.toSet();
   return <ShellDestination>[
-    _homeDestination,
-    _searchDestination,
-    _messagesDestination,
-    _marketplaceDestination,
-    if (roleSet.contains('creator') || roleSet.contains('admin'))
-      _creatorDestination,
-    if (roleSet.contains('business') || roleSet.contains('admin'))
-      _businessDestination,
+    ..._desktopDestinations,
     if (roleSet.contains('admin')) _adminDestination,
-    _moreDestination,
   ];
 }
 
@@ -130,8 +197,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         name: 'auth',
-        pageBuilder: (context, state) =>
-            _page(state, const AuthScreen(), reducedMotion),
+        pageBuilder: (context, state) => _page(
+          state,
+          AuthScreen(
+            initialCreateAccount:
+                state.uri.queryParameters['create'] == '1' ||
+                state.uri.queryParameters['mode'] == 'register',
+          ),
+          reducedMotion,
+        ),
       ),
       GoRoute(
         path: '/mfa',
@@ -180,6 +254,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             onCompactDestinationSelected: (value) =>
                 context.go(_compactDestinations[value].path),
             contextPanel: index == 0 ? const RecommendationsPanel() : null,
+            auraSheetBuilder: (sheetContext) => const AuraSheet(),
+            onCreate: () => context.go('/home?create=1'),
             body: child,
           );
         },
@@ -187,8 +263,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/home',
             name: 'home',
-            pageBuilder: (context, state) =>
-                _page(state, const FeedScreen(), reducedMotion),
+            pageBuilder: (context, state) => _page(
+              state,
+              FeedScreen(
+                openComposer: state.uri.queryParameters['create'] == '1',
+              ),
+              reducedMotion,
+            ),
           ),
           GoRoute(
             path: '/search',
@@ -261,6 +342,30 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'live',
             pageBuilder: (context, state) =>
                 _page(state, const LiveScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/friends',
+            name: 'friends',
+            pageBuilder: (context, state) =>
+                _page(state, const FriendsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/music',
+            name: 'music',
+            pageBuilder: (context, state) =>
+                _page(state, const MusicScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/analytics',
+            name: 'analytics',
+            pageBuilder: (context, state) =>
+                _page(state, const AnalyticsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            pageBuilder: (context, state) =>
+                _page(state, const ProfileScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/settings',
@@ -563,6 +668,7 @@ final class SyloraApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final visual = ref.watch(visualSettingsProvider);
+    final locale = ref.watch(localeControllerProvider);
     final router = ref.watch(routerProvider);
     final mode = switch (visual.themeMode) {
       LumenThemeMode.system => ThemeMode.system,
@@ -575,35 +681,85 @@ final class SyloraApp extends ConsumerWidget {
       themeMode: mode,
       theme: LumenTheme.light(highContrast: visual.highContrast),
       darkTheme: LumenTheme.dark(highContrast: visual.highContrast),
+      locale: locale.materialLocale,
+      supportedLocales: <Locale>[
+        for (final code in supportedLocaleCodes) Locale(code),
+      ],
       routerConfig: router,
       builder: (context, child) {
         final media = MediaQuery.of(context);
-        return MediaQuery(
-          data: media.copyWith(
-            textScaler: TextScaler.linear(visual.textScale),
-            disableAnimations: visual.reducedMotion,
-            highContrast: visual.highContrast,
+        return Directionality(
+          textDirection: locale.textDirection,
+          child: MediaQuery(
+            data: media.copyWith(
+              textScaler: TextScaler.linear(visual.textScale),
+              disableAnimations: visual.reducedMotion,
+              highContrast: visual.highContrast,
+            ),
+            child: child!,
           ),
-          child: child!,
         );
       },
     );
   }
 }
 
-final class _SplashScreen extends StatelessWidget {
+final class _SplashScreen extends ConsumerStatefulWidget {
   const _SplashScreen();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          SyloraLogo(size: 72),
-          SizedBox(height: 20),
-          CircularProgressIndicator(),
-        ],
+  ConsumerState<_SplashScreen> createState() => _SplashScreenState();
+}
+
+final class _SplashScreenState extends ConsumerState<_SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _orbit;
+
+  @override
+  void initState() {
+    super.initState();
+    _orbit = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _orbit.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: LivingAtmosphere(
+      intensity: 0.7,
+      child: Center(
+        child: AnimatedBuilder(
+          animation: _orbit,
+          builder: (context, child) {
+            final t = Curves.easeOutCubic.transform(_orbit.value);
+            return Transform.scale(
+              scale: 0.82 + (t * 0.18),
+              child: Opacity(opacity: 0.55 + (t * 0.45), child: child),
+            );
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              LivingSyloraLogo(size: 96, pulse: true),
+              SizedBox(height: 20),
+              Text(
+                'SYLORA',
+                style: TextStyle(
+                  fontFamily: 'Instrument Serif',
+                  fontSize: 28,
+                  letterSpacing: 3,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     ),
   );

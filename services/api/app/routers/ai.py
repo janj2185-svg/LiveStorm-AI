@@ -1101,7 +1101,7 @@ async def aura_pulse(
         actions.append(
             AuraSuggestedAction(
                 label="Review notifications",
-                route="/v1/social/notifications",
+                route="/notifications",
                 reason="Unread notifications are waiting.",
             )
         )
@@ -1109,7 +1109,7 @@ async def aura_pulse(
         actions.append(
             AuraSuggestedAction(
                 label="Respond to friend requests",
-                route="/v1/social/friend-requests",
+                route="/friends",
                 reason="Pending friend requests need a response.",
             )
         )
@@ -1117,7 +1117,7 @@ async def aura_pulse(
         actions.append(
             AuraSuggestedAction(
                 label="Join a live session",
-                route="/v1/live/sessions",
+                route="/live",
                 reason="Someone you follow is live.",
             )
         )
@@ -1125,15 +1125,22 @@ async def aura_pulse(
         actions.append(
             AuraSuggestedAction(
                 label="Continue learning",
-                route="/v1/learning/enrollments",
+                route="/learning",
                 reason="Pick up an enrolled course.",
             )
         )
     actions.append(
         AuraSuggestedAction(
             label="Open wallet",
-            route="/v1/wallet/balance",
+            route="/wallet",
             reason="Check your spendable credits.",
+        )
+    )
+    actions.append(
+        AuraSuggestedAction(
+            label="Talk with Aura",
+            route="/ai",
+            reason="Open the Aura workspace for deeper help.",
         )
     )
 

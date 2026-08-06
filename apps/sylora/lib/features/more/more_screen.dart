@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/locale.dart';
 import '../../core/lumen_widgets.dart';
 import '../auth/auth.dart';
 
@@ -22,9 +23,31 @@ final class MoreEntry {
 
 const _entries = <MoreEntry>[
   MoreEntry(
-    label: 'Learning',
-    routeName: 'learning',
-    icon: Icons.school_outlined,
+    label: 'Friends',
+    routeName: 'friends',
+    icon: Icons.people_outline_rounded,
+  ),
+  MoreEntry(
+    label: 'Music',
+    routeName: 'music',
+    icon: Icons.library_music_outlined,
+  ),
+  MoreEntry(
+    label: 'Analytics',
+    routeName: 'analytics',
+    icon: Icons.insights_outlined,
+  ),
+  MoreEntry(
+    label: 'Profile',
+    routeName: 'profile',
+    icon: Icons.person_outline_rounded,
+  ),
+  MoreEntry(label: 'Aura', routeName: 'ai', icon: Icons.auto_awesome_outlined),
+  MoreEntry(label: 'Live', routeName: 'live', icon: Icons.sensors_outlined),
+  MoreEntry(
+    label: 'Gift Shop',
+    routeName: 'gifts',
+    icon: Icons.card_giftcard_outlined,
   ),
   MoreEntry(
     label: 'Wallet',
@@ -32,23 +55,19 @@ const _entries = <MoreEntry>[
     icon: Icons.account_balance_wallet_outlined,
   ),
   MoreEntry(
-    label: 'Gifts',
-    routeName: 'gifts',
-    icon: Icons.card_giftcard_outlined,
-  ),
-  MoreEntry(label: 'AI', routeName: 'ai', icon: Icons.auto_awesome_outlined),
-  MoreEntry(label: 'Live', routeName: 'live', icon: Icons.sensors_outlined),
-  MoreEntry(
-    label: 'Creator',
-    routeName: 'creator',
-    icon: Icons.edit_note_rounded,
-    roles: <String>{'creator', 'admin'},
+    label: 'Learning',
+    routeName: 'learning',
+    icon: Icons.school_outlined,
   ),
   MoreEntry(
-    label: 'Workspace',
+    label: 'Business',
     routeName: 'business',
     icon: Icons.business_outlined,
-    roles: <String>{'business', 'admin'},
+  ),
+  MoreEntry(
+    label: 'Creator Studio',
+    routeName: 'creator',
+    icon: Icons.edit_note_rounded,
   ),
   MoreEntry(
     label: 'Administration',
@@ -79,11 +98,12 @@ final class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final roles =
         ref.watch(authControllerProvider).user?.roles ?? const <String>[];
+    final strings = ref.watch(localeControllerProvider);
     final entries = moreEntriesForRoles(roles);
     return LumenPage(
-      title: 'More',
+      title: strings.t('More'),
       subtitle:
-          'Account tools and role-aware workspaces that do not fit compact navigation.',
+          'Friends, Music, Analytics, Profile, Aura, Live, Gift Shop, Wallet, Learning, Business, Creator Studio, and Settings.',
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -112,7 +132,7 @@ final class MoreScreen extends ConsumerWidget {
                     ),
                     const Spacer(),
                     Text(
-                      entry.label,
+                      strings.t(entry.label),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],

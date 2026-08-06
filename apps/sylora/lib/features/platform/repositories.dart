@@ -106,6 +106,224 @@ final class SocialSearchBundle {
   final List<NamedResource> communities;
 }
 
+@immutable
+final class GlobalSearchHit {
+  const GlobalSearchHit({
+    required this.id,
+    required this.title,
+    this.subtitle,
+    this.handle,
+    this.slug,
+    this.extra = const <String, dynamic>{},
+  });
+
+  factory GlobalSearchHit.fromJson(JsonObject json) => GlobalSearchHit(
+    id: requireString(json, 'id'),
+    title: requireString(json, 'title'),
+    subtitle: optionalString(json, 'subtitle'),
+    handle: optionalString(json, 'handle'),
+    slug: optionalString(json, 'slug'),
+    extra: json['extra'] is Map
+        ? Map<String, dynamic>.from(json['extra'] as Map)
+        : const <String, dynamic>{},
+  );
+
+  final String id;
+  final String title;
+  final String? subtitle;
+  final String? handle;
+  final String? slug;
+  final JsonObject extra;
+}
+
+@immutable
+final class GlobalSearchSection {
+  const GlobalSearchSection({required this.type, required this.items});
+
+  factory GlobalSearchSection.fromJson(JsonObject json) => GlobalSearchSection(
+    type: requireString(json, 'type'),
+    items: requireList(json, 'items')
+        .map(
+          (value) =>
+              GlobalSearchHit.fromJson(requireObject(value, 'search hit')),
+        )
+        .toList(growable: false),
+  );
+
+  final String type;
+  final List<GlobalSearchHit> items;
+}
+
+@immutable
+final class GlobalSearchBundle {
+  const GlobalSearchBundle({required this.query, required this.sections});
+
+  factory GlobalSearchBundle.fromJson(JsonObject json) => GlobalSearchBundle(
+    query: requireString(json, 'query'),
+    sections: requireList(json, 'sections')
+        .map(
+          (value) => GlobalSearchSection.fromJson(
+            requireObject(value, 'search section'),
+          ),
+        )
+        .toList(growable: false),
+  );
+
+  final String query;
+  final List<GlobalSearchSection> sections;
+}
+
+@immutable
+final class ProfileProgress {
+  const ProfileProgress({
+    required this.xp,
+    required this.level,
+    required this.xpToNext,
+    required this.achievementsEarned,
+    required this.achievementsAvailable,
+  });
+
+  factory ProfileProgress.fromJson(JsonObject json) => ProfileProgress(
+    xp: requireInt(json, 'xp'),
+    level: requireInt(json, 'level'),
+    xpToNext: requireInt(json, 'xp_to_next'),
+    achievementsEarned: requireList(json, 'achievements_earned')
+        .map(
+          (value) => NamedResource(
+            id: requireString(requireObject(value, 'achievement'), 'code'),
+            label: requireString(requireObject(value, 'achievement'), 'name'),
+            description: optionalString(
+              requireObject(value, 'achievement'),
+              'description',
+            ),
+            status: optionalString(
+              requireObject(value, 'achievement'),
+              'earned_at',
+            ),
+            raw: requireObject(value, 'achievement'),
+          ),
+        )
+        .toList(growable: false),
+    achievementsAvailable: requireList(json, 'achievements_available')
+        .map(
+          (value) => NamedResource(
+            id: requireString(requireObject(value, 'achievement'), 'code'),
+            label: requireString(requireObject(value, 'achievement'), 'name'),
+            description: optionalString(
+              requireObject(value, 'achievement'),
+              'description',
+            ),
+            raw: requireObject(value, 'achievement'),
+          ),
+        )
+        .toList(growable: false),
+  );
+
+  final int xp;
+  final int level;
+  final int xpToNext;
+  final List<NamedResource> achievementsEarned;
+  final List<NamedResource> achievementsAvailable;
+}
+
+@immutable
+final class AuraStatus {
+  const AuraStatus({
+    required this.name,
+    required this.tagline,
+    required this.persona,
+    required this.capabilities,
+    required this.providersConfigured,
+  });
+
+  factory AuraStatus.fromJson(JsonObject json) {
+    final caps = requireObject(json, 'capabilities');
+    return AuraStatus(
+      name: requireString(json, 'name'),
+      tagline: requireString(json, 'tagline'),
+      persona: requireString(json, 'persona'),
+      capabilities: <String, bool>{
+        for (final entry in caps.entries)
+          if (entry.value is bool) entry.key: entry.value as bool,
+      },
+      providersConfigured: requireInt(json, 'providers_configured'),
+    );
+  }
+
+  final String name;
+  final String tagline;
+  final String persona;
+  final Map<String, bool> capabilities;
+  final int providersConfigured;
+}
+
+@immutable
+final class AuraSuggestedAction {
+  const AuraSuggestedAction({
+    required this.label,
+    required this.route,
+    required this.reason,
+  });
+
+  factory AuraSuggestedAction.fromJson(JsonObject json) => AuraSuggestedAction(
+    label: requireString(json, 'label'),
+    route: requireString(json, 'route'),
+    reason: requireString(json, 'reason'),
+  );
+
+  final String label;
+  final String route;
+  final String reason;
+}
+
+@immutable
+final class AuraPulse {
+  const AuraPulse({
+    required this.name,
+    required this.tagline,
+    required this.pulseText,
+    required this.suggestedActions,
+    required this.llmEnriched,
+    this.counts = const <String, int>{},
+  });
+
+  factory AuraPulse.fromJson(JsonObject json) {
+    final countsRaw = json['counts'];
+    final counts = <String, int>{};
+    if (countsRaw is Map) {
+      for (final entry in countsRaw.entries) {
+        final value = entry.value;
+        if (value is int) {
+          counts[entry.key.toString()] = value;
+        } else if (value is num) {
+          counts[entry.key.toString()] = value.toInt();
+        }
+      }
+    }
+    return AuraPulse(
+      name: requireString(json, 'name'),
+      tagline: requireString(json, 'tagline'),
+      pulseText: requireString(json, 'pulse_text'),
+      suggestedActions: requireList(json, 'suggested_actions')
+          .map(
+            (value) => AuraSuggestedAction.fromJson(
+              requireObject(value, 'suggested action'),
+            ),
+          )
+          .toList(growable: false),
+      llmEnriched: json['llm_enriched'] == true,
+      counts: counts,
+    );
+  }
+
+  final String name;
+  final String tagline;
+  final String pulseText;
+  final List<AuraSuggestedAction> suggestedActions;
+  final bool llmEnriched;
+  final Map<String, int> counts;
+}
+
 abstract interface class SocialRepository {
   Future<CursorPage<PostModel>> feed({
     String mode = 'chronological',
@@ -125,9 +343,17 @@ abstract interface class SocialRepository {
   Future<String> follow(String handle);
   Future<void> unfollow(String handle);
   Future<String> friend(String handle);
+  Future<List<ProfileModel>> friends();
+  Future<List<ProfileModel>> friendRequests();
+  Future<void> acceptFriendRequest(String friendshipId);
+  Future<void> rejectFriendRequest(String friendshipId);
   Future<void> block(String handle, bool value);
   Future<void> mute(String handle, bool value);
   Future<SocialSearchBundle> search(String query);
+  Future<GlobalSearchBundle> globalSearch(String query, {int limit = 8});
+  Future<ProfileProgress> profileProgress();
+  Future<AuraStatus> auraStatus();
+  Future<AuraPulse> auraPulse();
   Future<NamedResource> community(String slug);
   Future<String> joinCommunity(String slug);
   Future<void> leaveCommunity(String slug);
@@ -291,6 +517,47 @@ final class DioSocialRepository implements SocialRepository {
   }
 
   @override
+  Future<List<ProfileModel>> friends() async {
+    final response = await _client.request('social/friends');
+    final json = requireObject(response.data, 'friends');
+    return requireList(json, 'items')
+        .map(
+          (value) =>
+              ProfileModel.fromPublicJson(requireObject(value, 'friend')),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<ProfileModel>> friendRequests() async {
+    final response = await _client.request('social/friend-requests');
+    final json = requireObject(response.data, 'friend requests');
+    return requireList(json, 'items')
+        .map(
+          (value) => ProfileModel.fromPublicJson(
+            requireObject(value, 'friend request'),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> acceptFriendRequest(String friendshipId) async {
+    await _client.request(
+      'social/friend-requests/$friendshipId/accept',
+      method: 'POST',
+    );
+  }
+
+  @override
+  Future<void> rejectFriendRequest(String friendshipId) async {
+    await _client.request(
+      'social/friend-requests/$friendshipId/reject',
+      method: 'POST',
+    );
+  }
+
+  @override
   Future<void> block(String handle, bool value) async {
     await _client.request(
       'social/blocks/$handle',
@@ -347,6 +614,37 @@ final class DioSocialRepository implements SocialRepository {
           )
           .toList(growable: false),
     );
+  }
+
+  @override
+  Future<GlobalSearchBundle> globalSearch(String query, {int limit = 8}) async {
+    final response = await _client.request(
+      'search',
+      queryParameters: <String, dynamic>{'q': query, 'limit': limit},
+    );
+    return GlobalSearchBundle.fromJson(
+      requireObject(response.data, 'global search'),
+    );
+  }
+
+  @override
+  Future<ProfileProgress> profileProgress() async {
+    final response = await _client.request('profile/progress');
+    return ProfileProgress.fromJson(
+      requireObject(response.data, 'profile progress'),
+    );
+  }
+
+  @override
+  Future<AuraStatus> auraStatus() async {
+    final response = await _client.request('ai/aura/status');
+    return AuraStatus.fromJson(requireObject(response.data, 'aura status'));
+  }
+
+  @override
+  Future<AuraPulse> auraPulse() async {
+    final response = await _client.request('ai/aura/pulse', method: 'POST');
+    return AuraPulse.fromJson(requireObject(response.data, 'aura pulse'));
   }
 
   @override

@@ -437,6 +437,85 @@ async def cancel_follow_request(
     return MessageResponse(status="cancelled")
 
 
+@router.get("/friends", response_model=UserSearchResponse)
+async def list_friends(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> UserSearchResponse:
+    """Return accepted friends for the authenticated user."""
+    rows = (
+        await db.scalars(
+            select(Friendship).where(
+                Friendship.status == RelationStatus.accepted,
+                or_(
+                    Friendship.user_low_id == auth.user.id,
+                    Friendship.user_high_id == auth.user.id,
+                ),
+            )
+        )
+    ).all()
+    other_ids = [
+        row.user_high_id if row.user_low_id == auth.user.id else row.user_low_id for row in rows
+    ]
+    if not other_ids:
+        return UserSearchResponse(items=[], page=1, has_more=False)
+    profiles = (
+        await db.scalars(
+            select(Profile)
+            .join(User, User.id == Profile.user_id)
+            .where(
+                Profile.user_id.in_(other_ids),
+                User.status == UserStatus.active,
+                User.deleted_at.is_(None),
+            )
+            .order_by(Profile.display_name.asc(), Profile.handle.asc())
+        )
+    ).all()
+    items = [
+        await public_profile_response(db, profile, viewer_id=auth.user.id) for profile in profiles
+    ]
+    return UserSearchResponse(items=items, page=1, has_more=False)
+
+
+@router.get("/friend-requests", response_model=UserSearchResponse)
+async def list_friend_requests(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> UserSearchResponse:
+    """Return pending friend requests addressed to the authenticated user."""
+    rows = (
+        await db.scalars(
+            select(Friendship).where(
+                Friendship.status == RelationStatus.pending,
+                Friendship.requested_by_id != auth.user.id,
+                or_(
+                    Friendship.user_low_id == auth.user.id,
+                    Friendship.user_high_id == auth.user.id,
+                ),
+            )
+        )
+    ).all()
+    requester_ids = [row.requested_by_id for row in rows]
+    if not requester_ids:
+        return UserSearchResponse(items=[], page=1, has_more=False)
+    profiles = (
+        await db.scalars(
+            select(Profile)
+            .join(User, User.id == Profile.user_id)
+            .where(
+                Profile.user_id.in_(requester_ids),
+                User.status == UserStatus.active,
+                User.deleted_at.is_(None),
+            )
+            .order_by(Profile.display_name.asc())
+        )
+    ).all()
+    items = [
+        await public_profile_response(db, profile, viewer_id=auth.user.id) for profile in profiles
+    ]
+    return UserSearchResponse(items=items, page=1, has_more=False)
+
+
 @router.post("/friends/{handle}", response_model=RelationResponse)
 async def request_friendship(
     handle: str,

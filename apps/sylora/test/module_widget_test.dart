@@ -12,7 +12,7 @@ import 'package:sylora/features/marketplace/marketplace_screens.dart';
 import 'package:sylora/features/more/more_screen.dart';
 
 void main() {
-  testWidgets('More navigation exposes workspaces only for matching roles', (
+  testWidgets('More navigation exposes admin only for matching roles', (
     tester,
   ) async {
     final adminController = AuthController(
@@ -34,8 +34,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Creator'), findsOneWidget);
-    expect(find.text('Workspace'), findsOneWidget);
+    expect(find.text('Creator Studio'), findsOneWidget);
+    expect(find.text('Business'), findsOneWidget);
+    expect(find.text('Friends'), findsOneWidget);
     expect(find.text('Administration'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox());
@@ -59,10 +60,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Creator'), findsNothing);
-    expect(find.text('Workspace'), findsNothing);
+    expect(find.text('Creator Studio'), findsOneWidget);
+    expect(find.text('Business'), findsOneWidget);
     expect(find.text('Administration'), findsNothing);
     expect(find.text('Learning'), findsOneWidget);
+    expect(find.text('Gift Shop'), findsOneWidget);
   });
 
   testWidgets('marketplace checkout surfaces provider unavailable exactly', (

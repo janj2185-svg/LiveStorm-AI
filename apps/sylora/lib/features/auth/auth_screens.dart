@@ -4,48 +4,162 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/living_atmosphere.dart';
+import '../../core/locale.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import 'auth.dart';
 
-final class WelcomeScreen extends StatelessWidget {
+final class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              children: <Widget>[
-                const SyloraLogo(size: 92),
-                const SizedBox(height: 28),
-                Text(
-                  'A brighter place to create together.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall,
+  ConsumerState<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+final class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
+  final _capabilitiesKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = ref.watch(localeControllerProvider);
+    return Scaffold(
+      body: LivingAtmosphere(
+        intensity: 0.85,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Column(
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: strings.code,
+                          borderRadius: BorderRadius.circular(12),
+                          items: <DropdownMenuItem<String>>[
+                            for (final code in supportedLocaleCodes)
+                              DropdownMenuItem(
+                                value: code,
+                                child: Text(LocaleCatalog.displayName(code)),
+                              ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              ref
+                                  .read(localeControllerProvider.notifier)
+                                  .setCode(value);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const LivingSyloraLogo(size: 120, pulse: true),
+                    const SizedBox(height: 20),
+                    Text(
+                      'SYLORA',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(letterSpacing: 4, height: 1),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      strings.t('slogan'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      strings.t('capabilities'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 28),
+                    Wrap(
+                      key: _capabilitiesKey,
+                      alignment: WrapAlignment.center,
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: <Widget>[
+                        for (final key in <String>[
+                          'cap_live',
+                          'cap_ai',
+                          'cap_social',
+                          'cap_market',
+                          'cap_learn',
+                          'cap_business',
+                        ])
+                          LumenBadge(
+                            label: strings.t(key),
+                            color: LumenColors.aether,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    GlassPanel(
+                      radius: 22,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          LumenPrimaryButton(
+                            label: strings.t('login'),
+                            icon: Icons.login_rounded,
+                            onPressed: () => context.goNamed('auth'),
+                          ),
+                          const SizedBox(height: 12),
+                          LumenSecondaryButton(
+                            label: strings.t('create_account'),
+                            icon: Icons.person_add_alt_1_rounded,
+                            onPressed: () => context.go(
+                              '/auth?create=1',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () {
+                              final target = _capabilitiesKey.currentContext;
+                              if (target != null) {
+                                Scrollable.ensureVisible(
+                                  target,
+                                  duration: const Duration(milliseconds: 420),
+                                  curve: Curves.easeOutCubic,
+                                );
+                              } else {
+                                showDialog<void>(
+                                  context: context,
+                                  builder: (dialogContext) => AlertDialog(
+                                    title: Text(strings.t('learn_more')),
+                                    content: Text(strings.t('capabilities')),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
+                            child: Text(strings.t('learn_more')),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Your community, conversations, gifts, AI tools, and live control plane—connected to your SYLORA account.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 32),
-                LumenPrimaryButton(
-                  label: 'Continue',
-                  onPressed: () => context.goNamed('auth'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 final class AuthScreen extends ConsumerStatefulWidget {

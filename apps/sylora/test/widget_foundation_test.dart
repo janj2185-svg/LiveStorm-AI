@@ -53,7 +53,7 @@ void main() {
     expect(find.text('The email or password is incorrect.'), findsOneWidget);
   });
 
-  testWidgets('responsive shell switches bottom navigation to rail', (
+  testWidgets('responsive shell switches bottom navigation to side rail', (
     tester,
   ) async {
     const destinations = <ShellDestination>[
@@ -64,32 +64,40 @@ void main() {
         path: '/home',
       ),
       ShellDestination(
-        label: 'Search',
-        icon: Icons.search_outlined,
-        selectedIcon: Icons.search,
-        path: '/search',
+        label: 'Live',
+        icon: Icons.sensors_outlined,
+        selectedIcon: Icons.sensors,
+        path: '/live',
       ),
     ];
-    Widget shell() => _material(
-      LumenResponsiveShell(
-        destinations: destinations,
-        selectedIndex: 0,
-        onDestinationSelected: (_) {},
-        body: const Text('Body'),
-        contextPanel: const Text('Context'),
+    Widget shell() => ProviderScope(
+      child: MaterialApp(
+        theme: LumenTheme.light(),
+        home: LumenResponsiveShell(
+          destinations: destinations,
+          selectedIndex: 0,
+          onDestinationSelected: (_) {},
+          compactDestinations: destinations,
+          compactSelectedIndex: 0,
+          onCompactDestinationSelected: (_) {},
+          body: const Text('Body'),
+          contextPanel: const Text('Context'),
+        ),
       ),
     );
 
-    await tester.binding.setSurfaceSize(const Size(600, 800));
+    await tester.binding.setSurfaceSize(const Size(500, 800));
     await tester.pumpWidget(shell());
     expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(NavigationRail), findsNothing);
+    expect(find.text('Body'), findsOneWidget);
 
     await tester.binding.setSurfaceSize(const Size(1300, 800));
     await tester.pumpWidget(shell());
     await tester.pump();
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.text('Home'), findsWidgets);
     expect(find.text('Context'), findsOneWidget);
+    expect(find.text('SYLORA'), findsWidgets);
     await tester.binding.setSurfaceSize(null);
   });
 
