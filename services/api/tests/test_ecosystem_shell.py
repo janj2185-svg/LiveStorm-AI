@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 from sqlalchemy import select
 
 from app.progress_models import UserAchievement, UserProgress
@@ -114,6 +116,7 @@ async def test_stories_create_feed_view_delete(api) -> None:
     assert story["media_url"].startswith("https://")
     assert story["caption"] == "Morning light"
     story_id = story["id"]
+    story_uuid = uuid.UUID(story_id)
 
     insecure = await api.client.post(
         "/v1/social/stories",
@@ -139,7 +142,7 @@ async def test_stories_create_feed_view_delete(api) -> None:
 
     async with api.app.state.session_factory() as session:
         view = await session.scalar(
-            select(StoryView).where(StoryView.story_id == story_id)
+            select(StoryView).where(StoryView.story_id == story_uuid)
         )
         assert view is not None
 
@@ -158,7 +161,7 @@ async def test_stories_create_feed_view_delete(api) -> None:
     )
 
     async with api.app.state.session_factory() as session:
-        story_row = await session.get(Story, story_id)
+        story_row = await session.get(Story, story_uuid)
         assert story_row is not None
         assert story_row.deleted_at is not None
 
