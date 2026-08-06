@@ -10,7 +10,7 @@ abstract final class SyloraTokens {
   static const canvasSoft = Color(0xFFEBEEF5);
   static const canvasElevated = Color(0xFFFBFCFF);
   static const pearl = Color(0xFFFBFCFF);
-  static const milk = Color(0xFFFFFFF8);
+  static const milk = Color(0xFFFBFCFF);
   static const glassFrost = Color(0xE6FFFFFF);
   static const glass = Color(0x8CFFFFFF);
   static const glassStrong = Color(0xC7FFFFFF);

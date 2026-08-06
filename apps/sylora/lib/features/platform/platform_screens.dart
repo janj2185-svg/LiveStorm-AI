@@ -1364,25 +1364,25 @@ final class GiftDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final value = ref.watch(giftProvider(slug));
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.giftsDetailTitle)),
-      body: value.when(
+    return LumenPage(
+      title: l10n.giftsDetailTitle,
+      child: value.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => LumenErrorView(
           error: error,
           onRetry: () => ref.invalidate(giftProvider(slug)),
         ),
         data: (gift) => ListView(
-          padding: const EdgeInsets.all(20),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           children: <Widget>[
-            LumenSurface(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
                   const Icon(
                     Icons.card_giftcard_rounded,
                     size: 64,
-                    color: LumenColors.bloom,
+                    color: LumenColors.aetherBright,
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -1437,8 +1437,7 @@ final class GiftDetailScreen extends ConsumerWidget {
                       }
                     },
                   ),
-                ],
-              ),
+              ],
             ),
           ],
         ),

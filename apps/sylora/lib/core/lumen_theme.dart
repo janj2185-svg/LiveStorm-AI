@@ -214,8 +214,10 @@ abstract final class LumenTheme {
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(44, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          backgroundColor: LumenColors.aether,
+          foregroundColor: LumenColors.porcelainInk,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(20),
           ),
           elevation: 0,
         ),
@@ -225,7 +227,7 @@ abstract final class LumenTheme {
           minimumSize: const Size(44, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(20),
           ),
           side: BorderSide(color: border),
         ),
@@ -250,21 +252,27 @@ abstract final class LumenTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: dark
-              ? BorderSide(color: border.withValues(alpha: 0.6))
-              : BorderSide.none,
+          side: BorderSide(color: border.withValues(alpha: dark ? 0.6 : 0.35)),
         ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: canvas.withValues(alpha: 0.92),
+        foregroundColor: ink,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleTextStyle: _sans(17, 23, FontWeight.w600, ink),
       ),
     );
   }
 
   static TextStyle _display(double size, double height, Color color) =>
       TextStyle(
-        fontFamily: 'Instrument Serif',
+        fontFamily: 'Instrument Sans',
         fontSize: size,
         height: height / size,
-        fontWeight: FontWeight.w400,
-        letterSpacing: -0.012 * size,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.02 * size,
         color: color,
       );
 

@@ -6,10 +6,10 @@ import 'sylora_components.dart';
 import 'sylora_living_canvas.dart';
 import 'sylora_tokens.dart';
 
-/// Product-module shell for authenticated SYLORA pages.
+/// Product-module shell for authenticated SYLORA pages (Ethereal SSOT).
 ///
-/// Keeps routes visually inside the Lumen world while giving feature modules a
-/// predictable glass content rail, safe-area handling, and optional Aura dock.
+/// Glass content rail, living canvas, safe-area handling, optional Aura dock
+/// (hidden/minimized by default — never covers the module).
 final class SyloraModuleScaffold extends StatelessWidget {
   const SyloraModuleScaffold({
     required this.title,

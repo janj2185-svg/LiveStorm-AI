@@ -966,10 +966,13 @@ final class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   Widget build(BuildContext context) {
     final post = ref.watch(postProvider(widget.postId));
     final comments = ref.watch(commentsProvider(widget.postId));
-    return Scaffold(
-      appBar: AppBar(title: const Text('Post')),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+    final locale = Localizations.localeOf(context).languageCode;
+    final isUk = locale == 'uk';
+    return LumenPage(
+      title: isUk ? 'Допис' : 'Post',
+      child: ListView(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         children: <Widget>[
           post.when(
             data: (value) => PostCard(post: value),
@@ -980,7 +983,7 @@ final class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Comments', style: Theme.of(context).textTheme.headlineMedium),
+          Text(isUk ? 'Коментарі' : 'Comments', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -990,12 +993,12 @@ final class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   controller: _comment,
                   minLines: 1,
                   maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'Add a comment'),
+                  decoration: InputDecoration(labelText: isUk ? 'Додати коментар' : 'Add a comment'),
                 ),
               ),
               const SizedBox(width: 8),
               IconButton.filled(
-                tooltip: 'Send comment',
+                tooltip: isUk ? 'Надіслати' : 'Send comment',
                 onPressed: () async {
                   final body = _comment.text.trim();
                   if (body.isEmpty) {
@@ -1016,7 +1019,7 @@ final class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           comments.when(
             data: (items) => items.isEmpty
                 ? Text(
-                    'No comments were returned.',
+                    isUk ? 'Коментарів ще немає.' : 'No comments were returned.',
                     style: Theme.of(context).textTheme.bodySmall,
                   )
                 : Column(

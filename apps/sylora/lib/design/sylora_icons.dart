@@ -46,12 +46,13 @@ final class SyloraGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? (active ? SyloraTokens.violet : SyloraTokens.inkSoft);
+    final glow = SyloraTokens.moduleGlow('home');
+    final c = color ?? (active ? SyloraTokens.goldDeep : SyloraTokens.inkSoft);
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: active
-            ? SyloraTokens.glow(SyloraTokens.violet, blur: 14, opacity: 0.28)
+            ? SyloraTokens.glow(glow, blur: 14, opacity: 0.28)
             : null,
       ),
       child: Icon(icon, size: size, color: c),

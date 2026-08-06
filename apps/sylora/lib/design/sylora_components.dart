@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'sylora_icons.dart';
@@ -145,16 +148,27 @@ final class SyloraGlass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    final panel = DecoratedBox(
       decoration: BoxDecoration(
-        color: SyloraTokens.glass,
+        color: SyloraTokens.glassStrong,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
-        boxShadow: SyloraTokens.softElevation,
+        border: Border.all(color: SyloraTokens.glassStroke),
+        boxShadow: SyloraTokens.glassElevation,
       ),
-      child: ClipRRect(
+      child: Padding(padding: padding, child: child),
+    );
+    // Backdrop blur is the Ethereal glass signature; keep web light to avoid jank.
+    if (kIsWeb) {
+      return ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: Padding(padding: padding, child: child),
+        child: panel,
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+        child: panel,
       ),
     );
   }

@@ -181,9 +181,9 @@ final class _LivingPainter extends CustomPainter {
   final bool webLite;
 
   static const _palette = <Color>[
-    SyloraTokens.champagne,
-    SyloraTokens.softSkyDeep,
-    SyloraTokens.softCoral,
+    SyloraTokens.gold,
+    SyloraTokens.cyan,
+    SyloraTokens.violet,
     SyloraTokens.aqua,
     SyloraTokens.softSky,
   ];
@@ -198,16 +198,16 @@ final class _LivingPainter extends CustomPainter {
         ((pointer?.dy ?? size.height * 0.42) - size.height * 0.42) * 0.02;
     final scale = math.min(size.width, size.height);
 
-    // Soft luminous blobs — warm ivory / champagne / soft sky
+    // Soft luminous blobs — Ethereal cyan / violet / gold energy
     final blobs = <(Offset, Color, double)>[
-      (Offset(size.width * 0.18, size.height * 0.2), SyloraTokens.champagne, 0.34),
-      (Offset(size.width * 0.82, size.height * 0.18), SyloraTokens.softCoral, 0.24),
+      (Offset(size.width * 0.18, size.height * 0.2), SyloraTokens.cyan, 0.34),
+      (Offset(size.width * 0.82, size.height * 0.18), SyloraTokens.violet, 0.24),
       (
         Offset(size.width * 0.55, size.height * 0.78),
-        SyloraTokens.softSkyDeep,
+        SyloraTokens.gold,
         0.36,
       ),
-      (Offset(size.width * 0.25, size.height * 0.72), SyloraTokens.champagneLight, 0.22),
+      (Offset(size.width * 0.25, size.height * 0.72), SyloraTokens.goldLight, 0.22),
     ];
     for (var i = 0; i < blobs.length; i++) {
       final (origin, color, radiusFactor) = blobs[i];
@@ -248,8 +248,8 @@ final class _LivingPainter extends CustomPainter {
               Offset(size.width, y + 40),
               // CanvasKit dart:ui gradients are safest with exactly two stops.
               [
-                SyloraTokens.champagne.withValues(alpha: 0.05 * intensity),
-                SyloraTokens.aqua.withValues(alpha: 0.02 * intensity),
+                SyloraTokens.cyan.withValues(alpha: 0.06 * intensity),
+                SyloraTokens.gold.withValues(alpha: 0.02 * intensity),
               ],
             ),
         );

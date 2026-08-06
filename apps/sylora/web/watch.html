@@ -7,50 +7,62 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
   <style>
     :root {
-      --ink: #1c1712;
-      --cream: #f7f1e8;
-      --champagne: #c4a574;
-      --glass: rgba(255, 252, 246, 0.72);
+      --ink: #121826;
+      --ink-soft: #5b6574;
+      --canvas: #f4f6fa;
+      --gold: #e6c88b;
+      --gold-deep: #c9a45c;
+      --cyan: #5ec8ff;
+      --glass: rgba(255, 255, 255, 0.55);
+      --stroke: rgba(255, 255, 255, 0.72);
+      --font: "Instrument Sans", "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      font-family: var(--font);
       color: var(--ink);
       background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(196, 165, 116, 0.35), transparent 55%),
-        radial-gradient(900px 500px at 100% 0%, rgba(88, 72, 52, 0.18), transparent 50%),
-        linear-gradient(165deg, #fbf7f0 0%, #ebe2d4 48%, #e4d8c6 100%);
+        radial-gradient(70% 55% at 18% 12%, rgba(94, 200, 255, 0.22), transparent 62%),
+        radial-gradient(60% 50% at 88% 10%, rgba(139, 124, 255, 0.14), transparent 58%),
+        radial-gradient(80% 55% at 50% 95%, rgba(230, 200, 139, 0.16), transparent 55%),
+        linear-gradient(165deg, #fbfcff 0%, #f4f6fa 40%, #e8f4ff 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 24px 16px 48px;
     }
     .brand {
-      font-size: clamp(2rem, 6vw, 3.2rem);
-      letter-spacing: 0.18em;
-      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       margin: 8px 0 4px;
+      font-size: clamp(1.1rem, 3vw, 1.35rem);
+      letter-spacing: 0.28em;
+      font-weight: 600;
+      text-indent: 0.28em;
     }
+    .brand svg { width: 36px; height: 36px; }
     .sub {
-      opacity: 0.7;
+      color: var(--ink-soft);
       margin-bottom: 20px;
       font-size: 0.95rem;
     }
     .stage {
       width: min(960px, 100%);
       background: var(--glass);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(196, 165, 116, 0.35);
-      border-radius: 18px;
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--stroke);
+      border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 24px 60px rgba(28, 23, 18, 0.12);
+      box-shadow: 0 18px 48px rgba(18, 24, 38, 0.08), 0 0 40px rgba(94, 200, 255, 0.12);
     }
     video {
       width: 100%;
       aspect-ratio: 16 / 9;
-      background: #0f0d0b;
+      background: #0f1720;
       display: block;
     }
     .meta {
@@ -61,30 +73,54 @@
       align-items: center;
       justify-content: space-between;
     }
-    .status { font-size: 0.9rem; opacity: 0.8; }
+    .status {
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(94, 200, 255, 0.8);
+    }
     .btn {
       appearance: none;
       border: 0;
-      border-radius: 999px;
+      border-radius: 20px;
       padding: 10px 18px;
-      background: linear-gradient(135deg, #c4a574, #a8895a);
-      color: #1c1712;
+      background: linear-gradient(135deg, #f5deb3, #e6c88b 48%, #c9a45c);
+      color: var(--ink);
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       font-family: inherit;
+      box-shadow: 0 10px 24px rgba(201, 164, 92, 0.28);
     }
-    .err { color: #8b2e2e; padding: 12px 18px; }
+    .err { color: #ff6b6b; padding: 12px 18px; }
   </style>
 </head>
 <body>
-  <div class="brand">SYLORA</div>
-  <div class="sub">Live watch</div>
+  <div class="brand">
+    <svg viewBox="0 0 240 240" aria-hidden="true">
+      <defs>
+        <linearGradient id="s" x1="40" y1="40" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#5EC8FF"/><stop offset=".45" stop-color="#8B7CFF"/><stop offset="1" stop-color="#E6C88B"/>
+        </linearGradient>
+      </defs>
+      <circle cx="120" cy="120" r="96" fill="url(#s)" opacity=".18"/>
+      <path d="M155 78c-8-18-48-28-62-8-12 17 6 32 28 40 26 10 44 22 36 46-7 22-42 30-64 12"
+        stroke="url(#s)" stroke-width="18" stroke-linecap="round" fill="none"/>
+    </svg>
+    SYLORA
+  </div>
+  <div class="sub">Ефір · перегляд</div>
   <div class="stage">
     <video id="player" controls playsinline autoplay muted></video>
     <div class="meta">
-      <div class="status" id="status">Connecting…</div>
-      <a class="btn" href="https://getsylora.com/">Open SYLORA</a>
+      <div class="status" id="status"><span class="live-dot" aria-hidden="true"></span>Підключення…</div>
+      <a class="btn" href="https://getsylora.com/">Відкрити SYLORA</a>
     </div>
     <div class="err" id="err" hidden></div>
   </div>
@@ -95,17 +131,20 @@
       const statusEl = document.getElementById("status");
       const errEl = document.getElementById("err");
       const video = document.getElementById("player");
+      function setStatus(text) {
+        statusEl.innerHTML = '<span class="live-dot" aria-hidden="true"></span>' + text;
+      }
       if (!src) {
-        statusEl.textContent = "Missing stream link";
+        setStatus("Немає посилання на ефір");
         errEl.hidden = false;
-        errEl.textContent = "Open a share link from Creator Studio, or pass ?src= to an HLS URL.";
+        errEl.textContent = "Відкрийте посилання зі Студії творця або додайте ?src= до HLS URL.";
         return;
       }
-      statusEl.textContent = "Loading stream…";
+      setStatus("Завантаження ефіру…");
       if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = src;
         video.addEventListener("loadedmetadata", function () {
-          statusEl.textContent = "Live";
+          setStatus("У ефірі");
           video.play().catch(function () {});
         });
         return;
@@ -115,21 +154,21 @@
         hls.loadSource(src);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          statusEl.textContent = "Live";
+          setStatus("У ефірі");
           video.play().catch(function () {});
         });
         hls.on(Hls.Events.ERROR, function (_e, data) {
           if (data.fatal) {
-            statusEl.textContent = "Stream unavailable";
+            setStatus("Ефір недоступний");
             errEl.hidden = false;
-            errEl.textContent = "Waiting for the host to go live, or the link expired.";
+            errEl.textContent = "Очікуємо, доки ведучий вийде в ефір, або посилання застаріло.";
           }
         });
         return;
       }
-      statusEl.textContent = "Unsupported browser";
+      setStatus("Браузер не підтримується");
       errEl.hidden = false;
-      errEl.textContent = "Use Safari, Chrome, or Edge to watch this stream.";
+      errEl.textContent = "Використайте Safari, Chrome або Edge.";
     })();
   </script>
 </body>

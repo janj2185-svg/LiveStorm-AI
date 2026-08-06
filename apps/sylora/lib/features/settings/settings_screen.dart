@@ -568,19 +568,17 @@ final class SessionsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final value = ref.watch(sessionsProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsSessionsTitle),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () async {
-              await ref.read(authControllerProvider.notifier).logoutAll();
-            },
-            child: Text(l10n.settingsSignOutAll),
-          ),
-        ],
-      ),
-      body: LumenAsyncView<List<SessionModel>>(
+    return LumenPage(
+      title: l10n.settingsSessionsTitle,
+      actions: <Widget>[
+        TextButton(
+          onPressed: () async {
+            await ref.read(authControllerProvider.notifier).logoutAll();
+          },
+          child: Text(l10n.settingsSignOutAll),
+        ),
+      ],
+      child: LumenAsyncView<List<SessionModel>>(
         value: value,
         onRetry: () => ref.invalidate(sessionsProvider),
         data: (sessions) => sessions.isEmpty
@@ -667,10 +665,11 @@ final class _TotpScreenState extends ConsumerState<TotpScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsTotpTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+    return LumenPage(
+      title: l10n.settingsTotpTitle,
+      child: ListView(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         children: <Widget>[
           LumenSurface(
             child: Column(
