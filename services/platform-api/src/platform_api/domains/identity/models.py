@@ -15,6 +15,12 @@ class UserStatus(str, enum.Enum):
     DELETED = "deleted"
 
 
+class SystemRole(str, enum.Enum):
+    USER = "user"
+    MODERATOR = "moderator"
+    ADMIN = "admin"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -24,6 +30,11 @@ class User(Base):
     status: Mapped[UserStatus] = mapped_column(
         Enum(UserStatus, name="user_status", native_enum=False),
         default=UserStatus.ACTIVE,
+        nullable=False,
+    )
+    system_role: Mapped[SystemRole] = mapped_column(
+        Enum(SystemRole, name="system_role", native_enum=False),
+        default=SystemRole.USER,
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -72,6 +83,19 @@ class Session(Base):
 
 class EmailVerificationToken(Base):
     __tablename__ = "email_verification_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(

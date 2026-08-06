@@ -5,9 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from platform_api.core.exceptions import unauthorized
+from platform_api.core.exceptions import forbidden, unauthorized
 from platform_api.core.security import decode_access_token
-from platform_api.domains.identity.models import User, UserStatus
+from platform_api.domains.identity.models import SystemRole, User, UserStatus
 from platform_api.domains.profile.models import Profile
 from platform_api.domains.profile.schemas import ProfileUpdateRequest
 from platform_api.infrastructure.database import get_db
@@ -45,6 +45,12 @@ async def get_current_user(
     if session is None or session.revoked_at is not None:
         raise unauthorized("Session expired")
 
+    return user
+
+
+async def require_admin(user: User = Depends(get_current_user)) -> User:
+    if user.system_role not in (SystemRole.ADMIN, SystemRole.MODERATOR):
+        raise forbidden("Admin access required")
     return user
 
 

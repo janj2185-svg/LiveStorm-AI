@@ -19,7 +19,29 @@ class Settings(BaseSettings):
     jwt_access_ttl_seconds: int = 900
     jwt_refresh_ttl_seconds: int = 60 * 60 * 24 * 30
 
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://localhost:3001"
+
+    # Email — required in production for outbound mail
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str = "noreply@sylora.app"
+    smtp_use_tls: bool = True
+
+    # Media storage — local for dev, S3 for production
+    media_storage: str = Field(default="local", pattern="^(local|s3)$")
+    media_local_path: str = "storage/media"
+    media_public_base_url: str = "http://localhost:8080/v1/media/files"
+
+    s3_endpoint: str | None = None
+    s3_bucket: str | None = None
+    s3_access_key: str | None = None
+    s3_secret_key: str | None = None
+    s3_region: str = "auto"
+
+    # Bootstrap admin email (gets admin role on register)
+    admin_bootstrap_email: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -29,6 +51,14 @@ class Settings(BaseSettings):
     @property
     def database_url_str(self) -> str:
         return str(self.database_url)
+
+    @property
+    def smtp_configured(self) -> bool:
+        return bool(self.smtp_host and self.smtp_from)
+
+    @property
+    def s3_configured(self) -> bool:
+        return bool(self.s3_bucket and self.s3_access_key and self.s3_secret_key)
 
 
 @lru_cache

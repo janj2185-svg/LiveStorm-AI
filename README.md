@@ -45,9 +45,11 @@ legacy/               Archived previous iteration (do not extend)
 
 **Phase 0** — Foundation: API health, DB extensions, design system, i18n shell (UK/PL/EN), dev infrastructure.
 
-**Phase 1** — Auth, profiles, posts, feed, reactions, comments, follow, notifications, search.
+**Phase 1** — Auth, profiles, social feed, notifications, admin, password reset, media upload, clips foundation.
 
-**Next** — Admin shell, password reset, WebSocket notifications, media uploads (Phase 1 completion).
+**Phase 2 (started)** — Video processing worker, Creator Dashboard, long-form video hub.
+
+**Next** — Creator Dashboard UI, FFmpeg pipeline hardening, WebSocket client polish, mobile responsive clips player.
 
 ## Principles
 

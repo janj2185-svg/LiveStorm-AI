@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from platform_api.domains.identity.models import User
 from platform_api.domains.notifications.models import Notification, NotificationType
 from platform_api.domains.profile.models import Profile
+from platform_api.infrastructure.redis import publish_notification_event
 
 
 class NotificationService:
@@ -15,7 +16,7 @@ class NotificationService:
     async def notify_follow(self, *, recipient_id: UUID, actor_id: UUID, entity_id: UUID) -> None:
         if recipient_id == actor_id:
             return
-        await self._create(
+        notification = await self._create(
             user_id=recipient_id,
             actor_id=actor_id,
             type=NotificationType.FOLLOW,
@@ -23,6 +24,9 @@ class NotificationService:
             entity_id=entity_id,
             payload={},
         )
+        actor = await self.db.scalar(select(Profile).where(Profile.user_id == actor_id))
+        if actor:
+            await self.emit_realtime(notification, actor)
 
     async def notify_reaction(
         self,
@@ -34,7 +38,7 @@ class NotificationService:
     ) -> None:
         if recipient_id == actor_id:
             return
-        await self._create(
+        notification = await self._create(
             user_id=recipient_id,
             actor_id=actor_id,
             type=NotificationType.REACTION,
@@ -42,6 +46,9 @@ class NotificationService:
             entity_id=post_id,
             payload={"kind": kind},
         )
+        actor = await self.db.scalar(select(Profile).where(Profile.user_id == actor_id))
+        if actor:
+            await self.emit_realtime(notification, actor)
 
     async def notify_comment(
         self,
@@ -54,7 +61,7 @@ class NotificationService:
     ) -> None:
         if recipient_id == actor_id:
             return
-        await self._create(
+        notification = await self._create(
             user_id=recipient_id,
             actor_id=actor_id,
             type=NotificationType.COMMENT,
@@ -62,6 +69,9 @@ class NotificationService:
             entity_id=post_id,
             payload={"comment_id": str(comment_id), "preview": preview[:120]},
         )
+        actor = await self.db.scalar(select(Profile).where(Profile.user_id == actor_id))
+        if actor:
+            await self.emit_realtime(notification, actor)
 
     async def _create(
         self,
@@ -72,16 +82,35 @@ class NotificationService:
         entity_type: str,
         entity_id: UUID,
         payload: dict,
-    ) -> None:
-        self.db.add(
-            Notification(
-                user_id=user_id,
-                actor_id=actor_id,
-                type=type,
-                entity_type=entity_type,
-                entity_id=entity_id,
-                payload=payload,
-            )
+    ) -> Notification:
+        notification = Notification(
+            user_id=user_id,
+            actor_id=actor_id,
+            type=type,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            payload=payload,
+        )
+        self.db.add(notification)
+        await self.db.flush()
+        return notification
+
+    async def emit_realtime(self, notification: Notification, actor: Profile) -> None:
+        await publish_notification_event(
+            str(notification.user_id),
+            {
+                "id": str(notification.id),
+                "type": notification.type.value,
+                "entity_type": notification.entity_type,
+                "entity_id": str(notification.entity_id),
+                "payload": notification.payload,
+                "created_at": notification.created_at.isoformat(),
+                "actor": {
+                    "id": str(actor.user_id),
+                    "handle": actor.handle,
+                    "display_name": actor.display_name,
+                },
+            },
         )
 
     async def list_for_user(self, user_id: UUID, *, limit: int = 30) -> tuple[list[dict], int]:

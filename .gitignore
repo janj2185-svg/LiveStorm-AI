@@ -24,6 +24,7 @@ services/api/build/
 design/captures/
 dump.rdb
 .sylora-local/
+storage/
 *.pid
 
 # Gift library intermediate render frames (keep final mp4/gif/glb)

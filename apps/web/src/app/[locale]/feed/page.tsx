@@ -5,7 +5,7 @@ import { FeedView } from '@/components/FeedView';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher';
 import { LogoutButton } from '@/components/LogoutButton';
 import { NotificationBell } from '@/components/NotificationBell';
-import { getSessionUser } from '@/lib/session';
+import { getAccessToken, getSessionUser } from '@/lib/session';
 
 export default async function FeedPage({
   params,
@@ -17,6 +17,7 @@ export default async function FeedPage({
   const t = await getTranslations('feed');
   const tHome = await getTranslations('home');
   const user = await getSessionUser();
+  const accessToken = await getAccessToken();
   if (!user) redirect(`/${locale}/auth/login`);
 
   return (
@@ -26,7 +27,10 @@ export default async function FeedPage({
           SYLORA
         </Link>
         <div className="topbar-actions">
-          <NotificationBell label={t('notifications')} />
+        <Link href={`/${locale}/clips`} className="btn btn-glass">
+          {t('clipsLink')}
+        </Link>
+          <NotificationBell label={t('notifications')} accessToken={accessToken} />
           <LocaleSwitcher />
           <LogoutButton label={tHome('logout')} />
         </div>

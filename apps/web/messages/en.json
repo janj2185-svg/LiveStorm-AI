@@ -64,6 +64,11 @@
     "follow": "Follow",
     "commentPlaceholder": "Write a comment…",
     "submitComment": "Reply",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "clipsLink": "Clips"
+  },
+  "clips": {
+    "upload": "Upload clip",
+    "empty": "No clips yet. Upload the first SYLORA Clip."
   }
 }

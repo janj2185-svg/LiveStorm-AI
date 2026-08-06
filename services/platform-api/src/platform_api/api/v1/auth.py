@@ -5,9 +5,11 @@ from platform_api.api.deps import get_current_user
 from platform_api.domains.identity.models import User
 from platform_api.domains.identity.schemas import (
     AuthResponse,
+    ForgotPasswordRequest,
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
+    ResetPasswordRequest,
     TokenResponse,
     UserPublic,
     VerifyEmailRequest,
@@ -73,6 +75,25 @@ async def logout(payload: RefreshRequest, db: AsyncSession = Depends(get_db)) ->
 async def verify_email(payload: VerifyEmailRequest, db: AsyncSession = Depends(get_db)) -> UserPublic:
     service = AuthService(db)
     return await service.verify_email(payload.token)
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    service = AuthService(db)
+    dev_token = await service.forgot_password(payload.email)
+    response: dict = {"status": "ok", "message": "If the email exists, a reset link was sent."}
+    if dev_token:
+        response["dev_reset_token"] = dev_token
+    return response
+
+
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_password(payload: ResetPasswordRequest, db: AsyncSession = Depends(get_db)) -> None:
+    service = AuthService(db)
+    await service.reset_password(payload.token, payload.password)
 
 
 @router.get("/me", response_model=UserPublic)

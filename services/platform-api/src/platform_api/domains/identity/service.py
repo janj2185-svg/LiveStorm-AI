@@ -18,12 +18,15 @@ from platform_api.core.security import (
 )
 from platform_api.domains.identity.models import (
     EmailVerificationToken,
+    PasswordResetToken,
     Session,
+    SystemRole,
     User,
     UserCredential,
     UserStatus,
 )
 from platform_api.domains.identity.schemas import AuthResponse, RegisterRequest, TokenResponse, UserPublic
+from platform_api.infrastructure.email import send_email
 from platform_api.domains.profile.models import Profile
 
 HANDLE_PATTERN = re.compile(r"^[a-z][a-z0-9_]{2,31}$")
@@ -54,6 +57,8 @@ class AuthService:
             raise conflict("handle_taken", "Handle is already taken")
 
         user = User(email=email, status=UserStatus.ACTIVE)
+        if self.settings.admin_bootstrap_email and email == self.settings.admin_bootstrap_email.lower():
+            user.system_role = SystemRole.ADMIN
         credential = UserCredential(user=user, password_hash=hash_password(payload.password))
         profile = Profile(
             user=user,
@@ -163,6 +168,53 @@ class AuthService:
         record.used_at = datetime.now(UTC)
         await self.db.commit()
         return self._to_user_public(user, user.profile)
+
+    async def forgot_password(self, email: str) -> str | None:
+        """Returns dev reset token in development when email is sent/logged."""
+        normalized = email.lower().strip()
+        user = await self.db.scalar(select(User).where(User.email == normalized))
+        if user is None:
+            return None
+
+        token = secrets.token_urlsafe(32)
+        self.db.add(
+            PasswordResetToken(
+                user_id=user.id,
+                token_hash=hash_token(token),
+                expires_at=datetime.now(UTC) + timedelta(hours=1),
+            )
+        )
+        await self.db.commit()
+
+        reset_url = f"http://localhost:3000/en/auth/reset?token={token}"
+        await send_email(
+            to=user.email,
+            subject="SYLORA — Password reset",
+            body_text=f"Reset your password: {reset_url}\n\nThis link expires in 1 hour.",
+        )
+        return token if self.settings.app_env == "development" else None
+
+    async def reset_password(self, token: str, new_password: str) -> None:
+        token_hash = hash_token(token)
+        result = await self.db.execute(
+            select(PasswordResetToken)
+            .where(
+                PasswordResetToken.token_hash == token_hash,
+                PasswordResetToken.used_at.is_(None),
+            )
+            .with_for_update()
+        )
+        record = result.scalar_one_or_none()
+        if record is None or record.expires_at < datetime.now(UTC):
+            raise bad_request("invalid_token", "Invalid or expired reset token")
+
+        user = await self.db.get(User, record.user_id, options=[selectinload(User.credential)])
+        if user is None or user.credential is None:
+            raise bad_request("invalid_token", "Invalid or expired reset token")
+
+        user.credential.password_hash = hash_password(new_password)
+        record.used_at = datetime.now(UTC)
+        await self.db.commit()
 
     async def _create_session(
         self,

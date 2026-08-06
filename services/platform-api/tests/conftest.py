@@ -30,7 +30,8 @@ def clean_tables() -> None:
     conn.autocommit = True
     with conn.cursor() as cur:
         cur.execute(
-            "TRUNCATE TABLE notifications, reactions, comments, posts, blocks, follows, "
+            "TRUNCATE TABLE audit_logs, video_jobs, media_assets, password_reset_tokens, "
+            "notifications, reactions, comments, posts, blocks, follows, "
             "email_verification_tokens, sessions, user_credentials, profiles, users "
             "RESTART IDENTITY CASCADE"
         )

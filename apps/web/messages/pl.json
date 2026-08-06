@@ -64,6 +64,11 @@
     "follow": "Obserwuj",
     "commentPlaceholder": "Napisz komentarz…",
     "submitComment": "Odpowiedz",
-    "notifications": "Powiadomienia"
+    "notifications": "Powiadomienia",
+    "clipsLink": "Klipy"
+  },
+  "clips": {
+    "upload": "Prześlij klip",
+    "empty": "Brak klipów. Prześlij pierwszy SYLORA Clip."
   }
 }

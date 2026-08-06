@@ -64,6 +64,11 @@
     "follow": "Підписатися",
     "commentPlaceholder": "Напишіть коментар…",
     "submitComment": "Відповісти",
-    "notifications": "Сповіщення"
+    "notifications": "Сповіщення",
+    "clipsLink": "Кліпи"
+  },
+  "clips": {
+    "upload": "Завантажити кліп",
+    "empty": "Поки немає кліпів. Завантаж перший SYLORA Clip."
   }
 }
