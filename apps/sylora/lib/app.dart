@@ -27,6 +27,7 @@ import 'features/platform/platform_screens.dart';
 import 'features/settings/media_settings_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/social/social_screens.dart';
+import 'features/social/user_analytics_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 
 const _homeDestination = ShellDestination(
@@ -95,6 +96,18 @@ const _walletDestination = ShellDestination(
   selectedIcon: Icons.account_balance_wallet_rounded,
   path: '/wallet',
 );
+const _giftsDestination = ShellDestination(
+  label: 'Gift Shop',
+  icon: Icons.card_giftcard_outlined,
+  selectedIcon: Icons.card_giftcard_rounded,
+  path: '/gifts',
+);
+const _analyticsDestination = ShellDestination(
+  label: 'Analytics',
+  icon: Icons.insights_outlined,
+  selectedIcon: Icons.insights_rounded,
+  path: '/analytics',
+);
 const _settingsDestination = ShellDestination(
   label: 'Settings',
   icon: Icons.tune_outlined,
@@ -113,6 +126,14 @@ const _moreDestination = ShellDestination(
   selectedIcon: Icons.apps_rounded,
   path: '/more',
 );
+/// Desktop/tablet rail "Profile" entry — same route as [_moreDestination]
+/// (More screen is the Profile hub), labeled distinctly for the wide rail.
+const _profileDestination = ShellDestination(
+  label: 'Profile',
+  icon: Icons.person_outline_rounded,
+  selectedIcon: Icons.person_rounded,
+  path: '/more',
+);
 
 /// Phone island — Home · Live · Create · Messages · More (Ethereal Product Map)
 const _compactDestinations = <ShellDestination>[
@@ -123,17 +144,11 @@ const _compactDestinations = <ShellDestination>[
   _moreDestination,
 ];
 
-/// Desktop/tablet rail — Ethereal Product Map order
+/// Desktop/tablet rail — Ethereal Product Map order.
+///
+/// Business and Creator Studio are always visible (access is enforced by
+/// [canAccessRoleRoute] on navigation, not by hiding the destination).
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
-  final roleSet = roles.toSet();
-  final showStudio =
-      roleSet.contains('creator') ||
-      roleSet.contains('admin') ||
-      roleSet.contains('owner');
-  final showBusiness =
-      roleSet.contains('business') ||
-      roleSet.contains('admin') ||
-      roleSet.contains('owner');
   return <ShellDestination>[
     _homeDestination,
     _liveDestination,
@@ -142,12 +157,14 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
     _friendsDestination,
     _marketplaceDestination,
     _learningDestination,
-    if (showBusiness) _businessDestination,
+    _businessDestination,
     _musicDestination,
-    if (showStudio) _studioDestination,
+    _studioDestination,
+    _giftsDestination,
     _walletDestination,
+    _analyticsDestination,
+    _profileDestination,
     _settingsDestination,
-    _moreDestination,
   ];
 }
 
@@ -371,6 +388,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 _page(state, const WalletScreen(), reducedMotion),
           ),
           GoRoute(
+            path: '/analytics',
+            name: 'analytics',
+            pageBuilder: (context, state) =>
+                _page(state, const UserAnalyticsScreen(), reducedMotion),
+          ),
+          GoRoute(
             path: '/earnings',
             name: 'earnings',
             pageBuilder: (context, state) =>
@@ -476,6 +499,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'gift-authoring',
         pageBuilder: (context, state) =>
             _page(state, const GiftAuthoringScreen(), reducedMotion),
+      ),
+      GoRoute(
+        path: '/stories/:id',
+        name: 'story-viewer',
+        pageBuilder: (context, state) => _page(
+          state,
+          StoryViewerScreen(storyId: state.pathParameters['id']!),
+          reducedMotion,
+        ),
       ),
       GoRoute(
         path: '/ai/conversations/:id',
@@ -762,9 +794,15 @@ String _localizedDestinationLabel(
       '/business' => l10n.navWorkspace,
       '/admin' => l10n.navAdmin,
       '/wallet' => l10n.walletTitle,
+      '/gifts' => l10n.navGifts,
+      '/analytics' => l10n.navAnalytics,
       '/settings' => l10n.navSettings,
       '/compose' => l10n.feedCreatePost,
-      '/more' => fallback == 'Me' ? l10n.navMe : l10n.navMore,
+      '/more' => switch (fallback) {
+        'Profile' => l10n.navProfile,
+        'Me' => l10n.navMe,
+        _ => l10n.navMore,
+      },
       _ => fallback.isEmpty ? l10n.navMore : fallback,
     };
 
@@ -822,25 +860,57 @@ final class _SyloraAppState extends ConsumerState<SyloraApp> {
   }
 }
 
+/// Living splash — animated SyloraMark + wordmark fade over the Ethereal
+/// world canvas. Respects [MediaQuery.disableAnimations] for a static frame.
 final class _SplashScreen extends StatelessWidget {
   const _SplashScreen();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          SyloraLogo(
-            size: 88,
-            showWordmark: true,
-            showUnified: false,
-            wordmarkSize: 16,
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return SyloraLivingScaffold(
+      intensity: 0.9,
+      animate: !reduceMotion,
+      child: Center(
+        child: _SplashIntroReveal(
+          reduceMotion: reduceMotion,
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              SyloraMark(size: 96, hero: true),
+              SizedBox(height: 22),
+              SyloraWordmark(fontSize: 22, showUnified: true, unifiedSize: 10),
+            ],
           ),
-          SizedBox(height: 24),
-          CircularProgressIndicator(),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
+}
+
+final class _SplashIntroReveal extends StatelessWidget {
+  const _SplashIntroReveal({required this.child, required this.reduceMotion});
+
+  final Widget child;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    if (reduceMotion) {
+      return child;
+    }
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: SyloraTokens.durScene,
+      curve: SyloraTokens.curveSnap,
+      builder: (context, value, child) {
+        final curved = Curves.easeOutCubic.transform(value);
+        return Opacity(
+          opacity: curved,
+          child: Transform.scale(scale: 0.92 + (0.08 * curved), child: child),
+        );
+      },
+      child: child,
+    );
+  }
 }
