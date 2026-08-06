@@ -813,5 +813,56 @@
   "livePermissionIntegrations": "Інтеграції трансляції для цього акаунта ще недоступні.",
   "liveGuestInvitesLoadError": "Не вдалося завантажити запрошення гостей.",
   "liveSessionsLoadError": "Зараз не вдалося завантажити ефірні сесії. Спробуй трохи згодом.",
-  "liveIntegrationsLoadError": "Зараз не вдалося завантажити налаштування трансляції."
+  "liveIntegrationsLoadError": "Зараз не вдалося завантажити налаштування трансляції.",
+  "navAnalytics": "Аналітика",
+  "momentsTitle": "Моменти",
+  "momentsAdd": "Додати момент",
+  "momentsEmptyHint": "Поділись моментом, який живе 24 години.",
+  "momentsCreateTitle": "Новий момент",
+  "momentsCreateHint": "Що відбувається зараз?",
+  "momentsShare": "Поділитися моментом",
+  "momentsViewerClose": "Закрити",
+  "momentsUnavailable": "Зараз не вдалося завантажити моменти.",
+  "progressLevel": "Рівень {level}",
+  "@progressLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "progressXp": "{xp} XP",
+  "@progressXp": {
+    "placeholders": {
+      "xp": {
+        "type": "int",
+        "example": "1200"
+      }
+    }
+  },
+  "progressXpToNext": "{xp} XP до наступного рівня",
+  "@progressXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "int",
+        "example": "300"
+      }
+    }
+  },
+  "progressStreak": "Серія {days} днів",
+  "@progressStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "analyticsTitle": "Твоя аналітика",
+  "analyticsSubtitle": "XP, досягнення та активність у SYLORA.",
+  "analyticsAchievements": "Досягнення",
+  "analyticsActivity": "Активність",
+  "analyticsNoAchievements": "Ще немає досягнень — продовжуй досліджувати SYLORA.",
+  "analyticsUnavailable": "Зараз не вдалося завантажити аналітику."
 }

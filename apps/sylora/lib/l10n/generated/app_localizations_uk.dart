@@ -2186,4 +2186,70 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get liveIntegrationsLoadError =>
       'Зараз не вдалося завантажити налаштування трансляції.';
+
+  @override
+  String get navAnalytics => 'Аналітика';
+
+  @override
+  String get momentsTitle => 'Моменти';
+
+  @override
+  String get momentsAdd => 'Додати момент';
+
+  @override
+  String get momentsEmptyHint => 'Поділись моментом, який живе 24 години.';
+
+  @override
+  String get momentsCreateTitle => 'Новий момент';
+
+  @override
+  String get momentsCreateHint => 'Що відбувається зараз?';
+
+  @override
+  String get momentsShare => 'Поділитися моментом';
+
+  @override
+  String get momentsViewerClose => 'Закрити';
+
+  @override
+  String get momentsUnavailable => 'Зараз не вдалося завантажити моменти.';
+
+  @override
+  String progressLevel(int level) {
+    return 'Рівень $level';
+  }
+
+  @override
+  String progressXp(int xp) {
+    return '$xp XP';
+  }
+
+  @override
+  String progressXpToNext(int xp) {
+    return '$xp XP до наступного рівня';
+  }
+
+  @override
+  String progressStreak(int days) {
+    return 'Серія $days днів';
+  }
+
+  @override
+  String get analyticsTitle => 'Твоя аналітика';
+
+  @override
+  String get analyticsSubtitle => 'XP, досягнення та активність у SYLORA.';
+
+  @override
+  String get analyticsAchievements => 'Досягнення';
+
+  @override
+  String get analyticsActivity => 'Активність';
+
+  @override
+  String get analyticsNoAchievements =>
+      'Ще немає досягнень — продовжуй досліджувати SYLORA.';
+
+  @override
+  String get analyticsUnavailable => 'Зараз не вдалося завантажити аналітику.';
 }

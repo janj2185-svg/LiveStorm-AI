@@ -829,5 +829,56 @@
   "livePermissionIntegrations": "Broadcast integrations are not available for this account yet.",
   "liveGuestInvitesLoadError": "Guest invitations could not load.",
   "liveSessionsLoadError": "Live sessions could not be loaded right now. Try again in a moment.",
-  "liveIntegrationsLoadError": "Broadcast setup could not be loaded right now."
+  "liveIntegrationsLoadError": "Broadcast setup could not be loaded right now.",
+  "navAnalytics": "Analytics",
+  "momentsTitle": "Moments",
+  "momentsAdd": "Add moment",
+  "momentsEmptyHint": "Share a moment that lives for 24 hours.",
+  "momentsCreateTitle": "New moment",
+  "momentsCreateHint": "What is happening right now?",
+  "momentsShare": "Share moment",
+  "momentsViewerClose": "Close",
+  "momentsUnavailable": "Moments could not be loaded right now.",
+  "progressLevel": "Level {level}",
+  "@progressLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "progressXp": "{xp} XP",
+  "@progressXp": {
+    "placeholders": {
+      "xp": {
+        "type": "int",
+        "example": "1200"
+      }
+    }
+  },
+  "progressXpToNext": "{xp} XP to next level",
+  "@progressXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "int",
+        "example": "300"
+      }
+    }
+  },
+  "progressStreak": "{days}-day streak",
+  "@progressStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "analyticsTitle": "Your analytics",
+  "analyticsSubtitle": "XP, achievements, and activity across SYLORA.",
+  "analyticsAchievements": "Achievements",
+  "analyticsActivity": "Activity",
+  "analyticsNoAchievements": "No achievements yet — keep exploring SYLORA.",
+  "analyticsUnavailable": "Analytics could not be loaded right now."
 }

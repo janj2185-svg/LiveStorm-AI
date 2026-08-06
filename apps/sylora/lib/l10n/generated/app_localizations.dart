@@ -4141,6 +4141,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Broadcast setup could not be loaded right now.'**
   String get liveIntegrationsLoadError;
+
+  /// No description provided for @navAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get navAnalytics;
+
+  /// No description provided for @momentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moments'**
+  String get momentsTitle;
+
+  /// No description provided for @momentsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add moment'**
+  String get momentsAdd;
+
+  /// No description provided for @momentsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a moment that lives for 24 hours.'**
+  String get momentsEmptyHint;
+
+  /// No description provided for @momentsCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New moment'**
+  String get momentsCreateTitle;
+
+  /// No description provided for @momentsCreateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What is happening right now?'**
+  String get momentsCreateHint;
+
+  /// No description provided for @momentsShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share moment'**
+  String get momentsShare;
+
+  /// No description provided for @momentsViewerClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get momentsViewerClose;
+
+  /// No description provided for @momentsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Moments could not be loaded right now.'**
+  String get momentsUnavailable;
+
+  /// No description provided for @progressLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String progressLevel(int level);
+
+  /// No description provided for @progressXp.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP'**
+  String progressXp(int xp);
+
+  /// No description provided for @progressXpToNext.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP to next level'**
+  String progressXpToNext(int xp);
+
+  /// No description provided for @progressStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day streak'**
+  String progressStreak(int days);
+
+  /// No description provided for @analyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your analytics'**
+  String get analyticsTitle;
+
+  /// No description provided for @analyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'XP, achievements, and activity across SYLORA.'**
+  String get analyticsSubtitle;
+
+  /// No description provided for @analyticsAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get analyticsAchievements;
+
+  /// No description provided for @analyticsActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get analyticsActivity;
+
+  /// No description provided for @analyticsNoAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'No achievements yet — keep exploring SYLORA.'**
+  String get analyticsNoAchievements;
+
+  /// No description provided for @analyticsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics could not be loaded right now.'**
+  String get analyticsUnavailable;
 }
 
 class _AppLocalizationsDelegate

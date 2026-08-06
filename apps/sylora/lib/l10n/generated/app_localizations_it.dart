@@ -2194,4 +2194,71 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get liveIntegrationsLoadError =>
       'Broadcast setup could not be loaded right now.';
+
+  @override
+  String get navAnalytics => 'Analytics';
+
+  @override
+  String get momentsTitle => 'Moments';
+
+  @override
+  String get momentsAdd => 'Add moment';
+
+  @override
+  String get momentsEmptyHint => 'Share a moment that lives for 24 hours.';
+
+  @override
+  String get momentsCreateTitle => 'New moment';
+
+  @override
+  String get momentsCreateHint => 'What is happening right now?';
+
+  @override
+  String get momentsShare => 'Share moment';
+
+  @override
+  String get momentsViewerClose => 'Close';
+
+  @override
+  String get momentsUnavailable => 'Moments could not be loaded right now.';
+
+  @override
+  String progressLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String progressXp(int xp) {
+    return '$xp XP';
+  }
+
+  @override
+  String progressXpToNext(int xp) {
+    return '$xp XP to next level';
+  }
+
+  @override
+  String progressStreak(int days) {
+    return '$days-day streak';
+  }
+
+  @override
+  String get analyticsTitle => 'Your analytics';
+
+  @override
+  String get analyticsSubtitle =>
+      'XP, achievements, and activity across SYLORA.';
+
+  @override
+  String get analyticsAchievements => 'Achievements';
+
+  @override
+  String get analyticsActivity => 'Activity';
+
+  @override
+  String get analyticsNoAchievements =>
+      'No achievements yet — keep exploring SYLORA.';
+
+  @override
+  String get analyticsUnavailable => 'Analytics could not be loaded right now.';
 }
