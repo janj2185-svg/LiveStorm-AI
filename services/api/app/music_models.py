@@ -28,9 +28,7 @@ class MusicTrackStatus(enum.StrEnum):
 
 class MusicTrack(Base):
     __tablename__ = "music_tracks"
-    __table_args__ = (
-        CheckConstraint("duration_ms > 0", name="ck_music_tracks_positive_duration"),
-    )
+    __table_args__ = (CheckConstraint("duration_ms > 0", name="ck_music_tracks_positive_duration"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     creator_user_id: Mapped[uuid.UUID] = mapped_column(
@@ -94,9 +92,7 @@ class PlaylistTrack(Base):
 
 class MusicLibraryItem(Base):
     __tablename__ = "music_library_items"
-    __table_args__ = (
-        UniqueConstraint("user_id", "track_id", name="uq_music_library_item"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "track_id", name="uq_music_library_item"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(

@@ -24,9 +24,7 @@ from app.security import utcnow
 from app.social_service import apply_cursor, decode_cursor, encode_cursor
 
 
-async def owned_track(
-    db: AsyncSession, track_id: uuid.UUID, user_id: uuid.UUID
-) -> MusicTrack:
+async def owned_track(db: AsyncSession, track_id: uuid.UUID, user_id: uuid.UUID) -> MusicTrack:
     track = await db.scalar(
         select(MusicTrack).where(
             MusicTrack.id == track_id,
@@ -38,9 +36,7 @@ async def owned_track(
     return track
 
 
-async def visible_track(
-    db: AsyncSession, track_id: uuid.UUID, user_id: uuid.UUID
-) -> MusicTrack:
+async def visible_track(db: AsyncSession, track_id: uuid.UUID, user_id: uuid.UUID) -> MusicTrack:
     track = await db.scalar(
         select(MusicTrack).where(
             MusicTrack.id == track_id,
@@ -134,9 +130,7 @@ async def owned_playlist(
     return playlist
 
 
-async def playlist_response(
-    db: AsyncSession, playlist: MusicPlaylist
-) -> MusicPlaylistResponse:
+async def playlist_response(db: AsyncSession, playlist: MusicPlaylist) -> MusicPlaylistResponse:
     rows = (
         await db.execute(
             select(PlaylistTrack, MusicTrack)

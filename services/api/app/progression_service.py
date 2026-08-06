@@ -73,9 +73,7 @@ async def seed_achievements(session: AsyncSession) -> None:
     await session.commit()
 
 
-async def get_or_create_progression(
-    session: AsyncSession, user_id: uuid.UUID
-) -> UserProgression:
+async def get_or_create_progression(session: AsyncSession, user_id: uuid.UUID) -> UserProgression:
     progression = await session.get(UserProgression, user_id)
     if progression is None:
         progression = UserProgression(user_id=user_id, level=1, xp=0)
@@ -97,9 +95,7 @@ async def award_xp(
     if not normalized_reason or len(normalized_reason) > 160:
         raise ValueError("XP award reason must contain 1-160 characters")
     progression = await session.scalar(
-        select(UserProgression)
-        .where(UserProgression.user_id == user_id)
-        .with_for_update()
+        select(UserProgression).where(UserProgression.user_id == user_id).with_for_update()
     )
     if progression is None:
         progression = UserProgression(user_id=user_id, level=1, xp=0)
@@ -118,9 +114,7 @@ async def award_xp(
     return progression
 
 
-async def progression_response(
-    session: AsyncSession, user_id: uuid.UUID
-) -> ProgressionResponse:
+async def progression_response(session: AsyncSession, user_id: uuid.UUID) -> ProgressionResponse:
     progression = await get_or_create_progression(session, user_id)
     rows = (
         await session.execute(

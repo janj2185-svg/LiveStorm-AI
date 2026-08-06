@@ -6,7 +6,6 @@ Create Date: 2026-08-06
 """
 
 from alembic import op
-
 from app.models import Base
 
 revision = "20260806_0008_music_progression"

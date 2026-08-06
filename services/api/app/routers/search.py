@@ -343,13 +343,10 @@ async def global_search(
 
     return GlobalSearchResponse(
         query=query,
-        users=[
-            await public_profile_response(db, auth.user.id, profile) for profile in profiles
-        ],
+        users=[await public_profile_response(db, auth.user.id, profile) for profile in profiles],
         posts=[await post_response(db, auth.user.id, post) for post in posts],
         communities=[
-            await community_response(db, community, auth.user.id)
-            for community in communities
+            await community_response(db, community, auth.user.id) for community in communities
         ],
         gifts=[
             GiftSearchItem(
@@ -396,9 +393,7 @@ async def global_search(
             for session in live_sessions
             if session.owner_user_id is not None
         ],
-        music_tracks=[
-            MusicTrackResponse.model_validate(track) for track in music_tracks
-        ],
+        music_tracks=[MusicTrackResponse.model_validate(track) for track in music_tracks],
         documents=[
             DocumentSearchItem(
                 id=document.id,

@@ -29,8 +29,6 @@ async def list_achievements(
 ) -> list[Achievement]:
     return list(
         (
-            await db.scalars(
-                select(Achievement).order_by(Achievement.created_at, Achievement.code)
-            )
+            await db.scalars(select(Achievement).order_by(Achievement.created_at, Achievement.code))
         ).all()
     )
