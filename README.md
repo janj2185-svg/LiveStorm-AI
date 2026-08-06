@@ -15,6 +15,7 @@ specification and gallery under `src/` and `docs/design/`.
 
 ```text
 apps/sylora/             Flutter app: Android, iOS, Web, Windows, macOS, Linux
+apps/admin/              Next.js operations console (React admin)
 apps/gift-studio/        Browser gift authoring and Three.js preview
 packages/gift-runtime/   Strict gift manifest and rendering runtime
 services/api/            FastAPI, PostgreSQL, Redis and Celery application
