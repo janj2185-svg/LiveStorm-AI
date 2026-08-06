@@ -17,40 +17,61 @@ depends_on = None
 
 
 def upgrade() -> None:
+    connection = op.get_bind()
+    inspector = sa.inspect(connection)
+    user_columns = {column["name"] for column in inspector.get_columns("users")}
+    user_indexes = {index["name"] for index in inspector.get_indexes("users")}
+    tables = set(inspector.get_table_names())
+
     with op.batch_alter_table("users") as batch:
         batch.alter_column("email", existing_type=sa.String(length=320), nullable=True)
-        batch.add_column(sa.Column("phone_e164", sa.String(length=20), nullable=True))
-        batch.add_column(sa.Column("phone_verified_at", sa.DateTime(timezone=True), nullable=True))
-    op.create_index("ix_users_phone_e164", "users", ["phone_e164"], unique=True)
+        if "phone_e164" not in user_columns:
+            batch.add_column(sa.Column("phone_e164", sa.String(length=20), nullable=True))
+        if "phone_verified_at" not in user_columns:
+            batch.add_column(
+                sa.Column("phone_verified_at", sa.DateTime(timezone=True), nullable=True)
+            )
+    if "ix_users_phone_e164" not in user_indexes:
+        op.create_index("ix_users_phone_e164", "users", ["phone_e164"], unique=True)
 
     with op.batch_alter_table("oauth_identities") as batch:
         batch.alter_column(
             "provider_email", existing_type=sa.String(length=320), nullable=True
         )
 
-    op.create_table(
-        "auth_otp_challenges",
-        sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("channel", sa.String(length=16), nullable=False),
-        sa.Column("destination", sa.String(length=320), nullable=False),
-        sa.Column("code_hash", sa.String(length=64), nullable=False),
-        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("attempts", sa.Integer(), nullable=False),
-        sa.Column("max_attempts", sa.Integer(), nullable=False),
-        sa.Column("consumed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("last_sent_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("ip_hash", sa.String(length=64), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("ix_auth_otp_challenges_channel", "auth_otp_challenges", ["channel"])
-    op.create_index("ix_auth_otp_challenges_destination", "auth_otp_challenges", ["destination"])
-    op.create_index("ix_auth_otp_challenges_expires_at", "auth_otp_challenges", ["expires_at"])
-    op.create_index(
-        "ix_auth_otp_destination_channel",
-        "auth_otp_challenges",
-        ["destination", "channel"],
-    )
+    if "auth_otp_challenges" not in tables:
+        op.create_table(
+            "auth_otp_challenges",
+            sa.Column("id", sa.Uuid(), nullable=False),
+            sa.Column("channel", sa.String(length=16), nullable=False),
+            sa.Column("destination", sa.String(length=320), nullable=False),
+            sa.Column("code_hash", sa.String(length=64), nullable=False),
+            sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+            sa.Column("attempts", sa.Integer(), nullable=False),
+            sa.Column("max_attempts", sa.Integer(), nullable=False),
+            sa.Column("consumed_at", sa.DateTime(timezone=True), nullable=True),
+            sa.Column("last_sent_at", sa.DateTime(timezone=True), nullable=False),
+            sa.Column("ip_hash", sa.String(length=64), nullable=True),
+            sa.Column(
+                "created_at",
+                sa.DateTime(timezone=True),
+                server_default=sa.text("now()"),
+                nullable=False,
+            ),
+            sa.PrimaryKeyConstraint("id"),
+        )
+        op.create_index("ix_auth_otp_challenges_channel", "auth_otp_challenges", ["channel"])
+        op.create_index(
+            "ix_auth_otp_challenges_destination", "auth_otp_challenges", ["destination"]
+        )
+        op.create_index(
+            "ix_auth_otp_challenges_expires_at", "auth_otp_challenges", ["expires_at"]
+        )
+        op.create_index(
+            "ix_auth_otp_destination_channel",
+            "auth_otp_challenges",
+            ["destination", "channel"],
+        )
 
 
 def downgrade() -> None:

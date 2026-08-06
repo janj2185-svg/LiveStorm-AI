@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/locale_controller.dart';
 import '../../core/lumen_theme.dart';
 import '../../design/sylora_components.dart';
 import '../../design/sylora_icons.dart';
@@ -182,6 +183,32 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                         filled: false,
                         onPressed: () => _goAuth(create: true),
                       ),
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () => context.goNamed(
+                          'auth',
+                          queryParameters: const {'learn': '1'},
+                        ),
+                        child: Text(
+                          'Дізнатися більше',
+                          style: LandingTokens.body(
+                            13,
+                            color: SyloraTokens.inkSoft,
+                            weight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: <Widget>[
+                          for (final option in SyloraLocales.options)
+                            _LandingLangChip(
+                              code: option.locale.languageCode.toUpperCase(),
+                              languageCode: option.locale.languageCode,
+                            ),
+                        ],
+                      ),
                       const Spacer(),
                       const SizedBox(height: 8),
                     ],
@@ -203,6 +230,54 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
     setState(() {
       _pointer = Offset((local.dx - cx) / scale, (local.dy - cy) / (scale * 0.95));
     });
+  }
+}
+
+final class _LandingLangChip extends ConsumerWidget {
+  const _LandingLangChip({
+    required this.code,
+    required this.languageCode,
+  });
+
+  final String code;
+  final String languageCode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active =
+        ref.watch(localeControllerProvider).languageCode == languageCode;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+        onTap: () => ref
+            .read(localeControllerProvider.notifier)
+            .setLocale(Locale(languageCode)),
+        child: AnimatedContainer(
+          duration: SyloraTokens.durFast,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+            color: active
+                ? SyloraTokens.gold.withValues(alpha: 0.28)
+                : Colors.white.withValues(alpha: 0.45),
+            border: Border.all(
+              color: active
+                  ? SyloraTokens.goldDeep.withValues(alpha: 0.55)
+                  : Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          child: Text(
+            code,
+            style: LandingTokens.body(
+              11,
+              color: SyloraTokens.ink,
+              weight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
