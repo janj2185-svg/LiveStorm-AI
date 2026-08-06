@@ -908,6 +908,195 @@ final class LiveSessionModel {
 }
 
 @immutable
+final class StoryItemModel {
+  const StoryItemModel({
+    required this.id,
+    required this.kind,
+    this.mediaUrl,
+    this.body,
+  });
+
+  factory StoryItemModel.fromJson(JsonObject json) => StoryItemModel(
+    id: requireString(json, 'id'),
+    kind: optionalString(json, 'media_kind') ?? 'text',
+    mediaUrl: optionalString(json, 'media_url'),
+    body: optionalString(json, 'body'),
+  );
+
+  final String id;
+  final String kind;
+  final String? mediaUrl;
+  final String? body;
+}
+
+/// A 24-hour "moment" — matches `StoryResponse` from `GET stories/feed`
+/// (one or more ordered [StoryItemModel] slides per story).
+@immutable
+final class StoryModel {
+  const StoryModel({
+    required this.id,
+    required this.authorId,
+    required this.authorHandle,
+    required this.authorDisplayName,
+    required this.viewed,
+    required this.createdAt,
+    this.avatarUrl,
+    this.expiresAt,
+    this.items = const <StoryItemModel>[],
+  });
+
+  factory StoryModel.fromJson(JsonObject json) {
+    final author = requireObject(json['author'], 'story author');
+    return StoryModel(
+      id: requireString(json, 'id'),
+      authorId: requireString(author, 'user_id'),
+      authorHandle: requireString(author, 'handle'),
+      authorDisplayName: requireString(author, 'display_name'),
+      avatarUrl: optionalString(author, 'avatar_url'),
+      viewed: requireBool(json, 'viewed'),
+      createdAt: requireDateTime(json, 'created_at'),
+      expiresAt: optionalDateTime(json, 'expires_at'),
+      items: json['items'] is List
+          ? (json['items'] as List<dynamic>)
+              .whereType<Map<dynamic, dynamic>>()
+              .map(
+                (value) => StoryItemModel.fromJson(
+                  Map<String, dynamic>.from(value),
+                ),
+              )
+              .toList(growable: false)
+          : const <StoryItemModel>[],
+    );
+  }
+
+  final String id;
+  final String authorId;
+  final String authorHandle;
+  final String authorDisplayName;
+  final String? avatarUrl;
+  final bool viewed;
+  final DateTime createdAt;
+  final DateTime? expiresAt;
+  final List<StoryItemModel> items;
+
+  /// First slide's caption — used by the minimal moment viewer.
+  String? get primaryBody => items.isEmpty ? null : items.first.body;
+}
+
+@immutable
+final class ProgressAchievementModel {
+  const ProgressAchievementModel({
+    required this.id,
+    required this.label,
+    this.description,
+    this.earned = false,
+  });
+
+  factory ProgressAchievementModel.fromJson(JsonObject json) {
+    final id = optionalString(json, 'code') ?? optionalString(json, 'id') ?? '';
+    return ProgressAchievementModel(
+      id: id,
+      label: optionalString(json, 'title') ??
+          optionalString(json, 'label') ??
+          optionalString(json, 'name') ??
+          (id.isEmpty ? 'Achievement' : id),
+      description: optionalString(json, 'description'),
+      earned: json['unlocked'] == true || json['earned'] == true,
+    );
+  }
+
+  final String id;
+  final String label;
+  final String? description;
+  final bool earned;
+}
+
+@immutable
+final class ProgressModel {
+  const ProgressModel({
+    required this.level,
+    required this.xp,
+    this.xpToNextLevel,
+    this.achievements = const <ProgressAchievementModel>[],
+  });
+
+  factory ProgressModel.fromJson(JsonObject json) => ProgressModel(
+    level: json['level'] is int ? json['level'] as int : 1,
+    xp: json['xp'] is int
+        ? json['xp'] as int
+        : (json['xp_total'] is int ? json['xp_total'] as int : 0),
+    xpToNextLevel: json['xp_to_next'] is int
+        ? json['xp_to_next'] as int
+        : (json['xp_to_next_level'] is int
+              ? json['xp_to_next_level'] as int
+              : (json['next_level_xp'] is int
+                    ? json['next_level_xp'] as int
+                    : null)),
+    achievements: json['achievements'] is List
+        ? (json['achievements'] as List<dynamic>)
+            .whereType<Map<dynamic, dynamic>>()
+            .map(
+              (value) => ProgressAchievementModel.fromJson(
+                Map<String, dynamic>.from(value),
+              ),
+            )
+            .toList(growable: false)
+        : const <ProgressAchievementModel>[],
+  );
+
+  final int level;
+  final int xp;
+  final int? xpToNextLevel;
+  final List<ProgressAchievementModel> achievements;
+
+  /// Progress toward the next level, clamped to [0, 1]. `xpToNextLevel` is
+  /// the remaining XP the API reports (SYLORA's fixed 500 XP-per-level
+  /// curve); `null` means max level reached.
+  static const int _xpPerLevel = 500;
+
+  double get levelProgress {
+    final remaining = xpToNextLevel;
+    if (remaining == null) {
+      return 1;
+    }
+    final used = (_xpPerLevel - remaining).clamp(0, _xpPerLevel);
+    return (used / _xpPerLevel).toDouble();
+  }
+}
+
+@immutable
+final class ActivityStatsModel {
+  const ActivityStatsModel({
+    this.counts = const <String, int>{},
+    this.streakDays = 0,
+  });
+
+  factory ActivityStatsModel.fromJson(JsonObject json) {
+    final counts = <String, int>{};
+    for (final entry in json.entries) {
+      if (entry.value is int && entry.key != 'streak_days') {
+        counts[entry.key] = entry.value as int;
+      }
+    }
+    final nested = json['counts'];
+    if (nested is Map) {
+      for (final entry in nested.entries) {
+        if (entry.value is int) {
+          counts[entry.key.toString()] = entry.value as int;
+        }
+      }
+    }
+    return ActivityStatsModel(
+      counts: counts,
+      streakDays: json['streak_days'] is int ? json['streak_days'] as int : 0,
+    );
+  }
+
+  final Map<String, int> counts;
+  final int streakDays;
+}
+
+@immutable
 final class LiveGuestInviteModel {
   const LiveGuestInviteModel({
     required this.id,

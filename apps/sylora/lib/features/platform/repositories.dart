@@ -138,6 +138,8 @@ abstract interface class AccountRepository {
   Future<ProfileModel> updateProfile(JsonObject patch);
   Future<AccountSettingsModel> settings();
   Future<AccountSettingsModel> updateSettings(JsonObject patch);
+  Future<ActivityStatsModel> activityStats();
+  Future<ProgressModel> progress();
 }
 
 final class DioAccountRepository implements AccountRepository {
@@ -179,6 +181,20 @@ final class DioAccountRepository implements AccountRepository {
     return AccountSettingsModel.fromJson(
       requireObject(response.data, 'account settings'),
     );
+  }
+
+  @override
+  Future<ActivityStatsModel> activityStats() async {
+    final response = await _client.request('me/activity-stats');
+    return ActivityStatsModel.fromJson(
+      requireObject(response.data, 'activity stats'),
+    );
+  }
+
+  @override
+  Future<ProgressModel> progress() async {
+    final response = await _client.request('me/progress');
+    return ProgressModel.fromJson(requireObject(response.data, 'progress'));
   }
 }
 
@@ -246,6 +262,9 @@ abstract interface class SocialRepository {
   Future<void> readNotification(String id);
   Future<void> readAllNotifications();
   Future<void> muteNotificationType(String type, bool muted);
+  Future<List<StoryModel>> storiesFeed();
+  Future<StoryModel> createStory(String body, {String kind = 'text'});
+  Future<void> viewStory(String id);
 }
 
 final class DioSocialRepository implements SocialRepository {
@@ -648,6 +667,35 @@ final class DioSocialRepository implements SocialRepository {
       method: 'PUT',
       data: <String, dynamic>{'muted': muted},
     );
+  }
+
+  @override
+  Future<List<StoryModel>> storiesFeed() async {
+    final response = await _client.request('stories/feed');
+    final json = requireObject(response.data, 'stories feed');
+    return requireList(json, 'items')
+        .map((value) => StoryModel.fromJson(requireObject(value, 'story')))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<StoryModel> createStory(String body, {String kind = 'text'}) async {
+    final response = await _client.request(
+      'stories',
+      method: 'POST',
+      data: <String, dynamic>{
+        'visibility': 'friends',
+        'items': <Object>[
+          <String, dynamic>{'media_kind': kind, 'body': body},
+        ],
+      },
+    );
+    return StoryModel.fromJson(requireObject(response.data, 'story'));
+  }
+
+  @override
+  Future<void> viewStory(String id) async {
+    await _client.request('stories/$id/view', method: 'POST');
   }
 }
 
