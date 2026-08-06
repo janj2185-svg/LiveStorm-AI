@@ -6,6 +6,7 @@ import 'api.dart';
 import 'l10n/sylora_localizations.dart';
 import 'lumen_effects.dart';
 import 'lumen_theme.dart';
+import '../features/auth/auth.dart';
 import 'shell_navigation.dart';
 
 final class LumenSurface extends StatelessWidget {
@@ -388,6 +389,12 @@ final class LumenResponsiveShell extends ConsumerWidget {
                       label: Text(item.label(locale)),
                     ),
                 ],
+                trailing: expanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: SyloraLevelCard(locale: locale),
+                      )
+                    : null,
               ),
               VerticalDivider(
                 width: 1,
@@ -406,6 +413,64 @@ final class LumenResponsiveShell extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+final class SyloraLevelCard extends ConsumerWidget {
+  const SyloraLevelCard({required this.locale, super.key});
+
+  final SyloraLocale locale;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(authControllerProvider).user?.id ?? 'guest';
+    final level = _levelForUser(userId);
+    final xp = _xpForUser(userId);
+    final progress = (xp % 1000) / 1000;
+    return LumenVellum(
+      padding: const EdgeInsets.all(14),
+      radius: 16,
+      sigma: 12,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            '${SyloraStrings.t(locale, 'level')} $level',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: 120,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor:
+                    LumenColors.porcelainBorder.withValues(alpha: 0.4),
+                color: LumenColors.aether,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '$xp XP',
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ],
+      ),
+    );
+  }
+
+  static int _levelForUser(String id) {
+    final hash = id.codeUnits.fold<int>(0, (a, b) => a + b);
+    return (hash % 40) + 1;
+  }
+
+  static int _xpForUser(String id) {
+    final hash = id.codeUnits.fold<int>(0, (a, b) => a + b * 3);
+    return (hash % 9000) + 1200;
   }
 }
 

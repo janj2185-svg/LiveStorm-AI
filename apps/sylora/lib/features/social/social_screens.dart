@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api.dart';
+import '../../core/l10n/sylora_localizations.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
 import '../../core/realtime.dart';
 import '../auth/auth.dart';
 import '../platform/repositories.dart';
+import 'friends_screen.dart';
 
 final feedProvider = FutureProvider.autoDispose<CursorPage<PostModel>>(
   (ref) => ref.watch(socialRepositoryProvider).feed(),
@@ -952,9 +954,11 @@ final class ConversationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
     final value = ref.watch(conversationsProvider);
+    final friends = ref.watch(friendsProvider);
     return LumenPage(
-      title: 'Messages',
+      title: SyloraStrings.t(locale, 'nav_messages'),
       actions: <Widget>[
         IconButton(
           tooltip: 'New conversation',
@@ -962,67 +966,115 @@ final class ConversationsScreen extends ConsumerWidget {
           icon: const Icon(Icons.add_comment_outlined),
         ),
       ],
-      child: LumenAsyncView<List<ConversationModel>>(
-        value: value,
-        onRetry: () => ref.invalidate(conversationsProvider),
-        data: (items) => items.isEmpty
-            ? LumenEmptyView(
-                title: 'No conversations',
-                message:
-                    'No conversation history was returned. Start one with a public handle.',
-                actionLabel: 'New conversation',
-                onAction: () => _createConversation(context, ref),
-                icon: Icons.forum_outlined,
-              )
-            : Column(
-                children: <Widget>[
-                  for (final conversation in items)
-                    Card(
-                      child: ListTile(
-                        leading: const CircleAvatar(
-                          child: Icon(Icons.person_outline),
-                        ),
-                        title: Text(
-                          'Conversation ${conversation.id.substring(0, 8)}',
-                        ),
-                        subtitle: Text(conversation.state),
-                        trailing: conversation.state == 'request'
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  IconButton(
-                                    tooltip: 'Decline message request',
-                                    onPressed: () async {
-                                      await ref
-                                          .read(messagingRepositoryProvider)
-                                          .declineRequest(conversation.id);
-                                      ref.invalidate(conversationsProvider);
-                                    },
-                                    icon: const Icon(Icons.close_rounded),
-                                  ),
-                                  IconButton.filledTonal(
-                                    tooltip: 'Accept message request',
-                                    onPressed: () async {
-                                      await ref
-                                          .read(messagingRepositoryProvider)
-                                          .acceptRequest(conversation.id);
-                                      ref.invalidate(conversationsProvider);
-                                    },
-                                    icon: const Icon(Icons.check_rounded),
-                                  ),
-                                ],
-                              )
-                            : const Icon(Icons.chevron_right_rounded),
-                        onTap: () => context.pushNamed(
-                          'conversation',
-                          pathParameters: <String, String>{
-                            'id': conversation.id,
-                          },
-                        ),
-                      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          friends.when(
+            data: (items) => items.isEmpty
+                ? const SizedBox.shrink()
+                : SizedBox(
+                    height: 96,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.only(bottom: 16),
+                      itemCount: items.length.clamp(0, 12),
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        final friend = items[index];
+                        return Column(
+                          children: <Widget>[
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primaryContainer,
+                              child: Text(
+                                friend.displayName.isNotEmpty
+                                    ? friend.displayName[0].toUpperCase()
+                                    : '?',
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: 64,
+                              child: Text(
+                                friend.displayName.split(' ').first,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                ],
-              ),
+                  ),
+            loading: () => const SizedBox(height: 8),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          LumenAsyncView<List<ConversationModel>>(
+            value: value,
+            onRetry: () => ref.invalidate(conversationsProvider),
+            data: (items) => items.isEmpty
+                ? LumenEmptyView(
+                    title: 'No conversations',
+                    message:
+                        'No conversation history was returned. Start one with a public handle.',
+                    actionLabel: 'New conversation',
+                    onAction: () => _createConversation(context, ref),
+                    icon: Icons.forum_outlined,
+                  )
+                : Column(
+                    children: <Widget>[
+                      for (final conversation in items)
+                        Card(
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              child: Icon(Icons.person_outline),
+                            ),
+                            title: Text(
+                              'Conversation ${conversation.id.substring(0, 8)}',
+                            ),
+                            subtitle: Text(conversation.state),
+                            trailing: conversation.state == 'request'
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      IconButton(
+                                        tooltip: 'Decline message request',
+                                        onPressed: () async {
+                                          await ref
+                                              .read(messagingRepositoryProvider)
+                                              .declineRequest(conversation.id);
+                                          ref.invalidate(conversationsProvider);
+                                        },
+                                        icon: const Icon(Icons.close_rounded),
+                                      ),
+                                      IconButton.filledTonal(
+                                        tooltip: 'Accept message request',
+                                        onPressed: () async {
+                                          await ref
+                                              .read(messagingRepositoryProvider)
+                                              .acceptRequest(conversation.id);
+                                          ref.invalidate(conversationsProvider);
+                                        },
+                                        icon: const Icon(Icons.check_rounded),
+                                      ),
+                                    ],
+                                  )
+                                : const Icon(Icons.chevron_right_rounded),
+                            onTap: () => context.pushNamed(
+                              'conversation',
+                              pathParameters: <String, String>{
+                                'id': conversation.id,
+                              },
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }

@@ -61,9 +61,22 @@ abstract final class SyloraStrings {
     return table[key] ?? _tables[SyloraLocale.en]![key] ?? key;
   }
 
+  static String greeting(SyloraLocale locale, String name) {
+    final hour = DateTime.now().hour;
+    final period = hour < 12
+        ? 'morning'
+        : hour < 18
+        ? 'afternoon'
+        : 'evening';
+    final template = t(locale, 'greeting_$period');
+    final display = name.trim().isEmpty ? t(locale, 'friend') : name.split(' ').first;
+    return template.replaceAll('{name}', display);
+  }
+
   static const _tables = <SyloraLocale, Map<String, String>>{
     SyloraLocale.en: <String, String>{
       'app_name': 'SYLORA',
+      'brand_motto': 'ONE WORLD. INFINITE CREATION.',
       'tagline': 'A brighter place to create together.',
       'tagline_long':
           'Live, social, learning and income — one luminous ecosystem.',
@@ -107,9 +120,34 @@ abstract final class SyloraStrings {
       'prop_rooms': 'Rooms, not threads',
       'prop_rooms_body':
           'Spaces with real moderation and a timeline nobody quietly reorders.',
+      'greeting_morning': 'Good morning, {name}!',
+      'greeting_afternoon': 'Good afternoon, {name}!',
+      'greeting_evening': 'Good evening, {name}!',
+      'friend': 'friend',
+      'home_subtitle': 'Your luminous creator command center.',
+      'home_modules': 'Explore SYLORA',
+      'popular_live': 'Popular LIVE',
+      'see_all': 'See all',
+      'home_feed': 'Your feed',
+      'write_post': 'Write post',
+      'feed_empty_title': 'Your feed is quiet',
+      'feed_empty_message':
+          'Publish a post or follow people to shape your feed.',
+      'online': 'Online',
+      'aura_home_hint': 'Your AI co-host — grounded in your data.',
+      'talk': 'Talk',
+      'pillar_ai': 'AI',
+      'pillar_live': 'Live Streams',
+      'pillar_creator': 'Creator Economy',
+      'pillar_world': 'Infinite World',
+      'level': 'Level',
+      'gifts_tab_popular': 'Popular',
+      'gifts_tab_inventory': 'Inventory',
+      'gifts_tab_events': 'Events',
     },
     SyloraLocale.uk: <String, String>{
       'app_name': 'SYLORA',
+      'brand_motto': 'ОДИН СВІТ. БЕЗМЕЖНЕ ТВОРЕННЯ.',
       'tagline': 'Світліше місце, щоб творити разом.',
       'tagline_long':
           'Ефіри, соцмережа, навчання та дохід — одна сяюча екосистема.',
@@ -153,6 +191,30 @@ abstract final class SyloraStrings {
       'prop_rooms': 'Кімнати, не треди',
       'prop_rooms_body':
           'Простори з модерацією та хронологією, яку ніхто не переставляє.',
+      'greeting_morning': 'Доброго ранку, {name}!',
+      'greeting_afternoon': 'Добрий день, {name}!',
+      'greeting_evening': 'Добрий вечір, {name}!',
+      'friend': 'друже',
+      'home_subtitle': 'Ваш сяючий центр керування для творців.',
+      'home_modules': 'Дослідити SYLORA',
+      'popular_live': 'Популярні LIVE',
+      'see_all': 'Дивитись усі',
+      'home_feed': 'Ваша стрічка',
+      'write_post': 'Написати пост',
+      'feed_empty_title': 'Стрічка порожня',
+      'feed_empty_message':
+          'Опублікуйте пост або підпишіться на людей, щоб наповнити стрічку.',
+      'online': 'Онлайн',
+      'aura_home_hint': 'Ваш AI співведучий — на основі ваших даних.',
+      'talk': 'Говорити',
+      'pillar_ai': 'AI',
+      'pillar_live': 'Live ефіри',
+      'pillar_creator': 'Економіка творців',
+      'pillar_world': 'Безмежний світ',
+      'level': 'Рівень',
+      'gifts_tab_popular': 'Популярні',
+      'gifts_tab_inventory': 'Інвентар',
+      'gifts_tab_events': 'Події',
     },
     SyloraLocale.de: <String, String>{
       'app_name': 'SYLORA',

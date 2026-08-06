@@ -361,6 +361,152 @@ final class _AnimatedLogoPainter extends CustomPainter {
       oldDelegate.dark != dark;
 }
 
+/// Premium golden-ring logo from the SYLORA brand reference.
+final class SpectralRingLogo extends StatefulWidget {
+  const SpectralRingLogo({
+    super.key,
+    this.size = 120,
+    this.reducedMotion = false,
+    this.intro = false,
+  });
+
+  final double size;
+  final bool reducedMotion;
+  final bool intro;
+
+  @override
+  State<SpectralRingLogo> createState() => _SpectralRingLogoState();
+}
+
+final class _SpectralRingLogoState extends State<SpectralRingLogo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    );
+    if (!widget.reducedMotion) {
+      _controller.repeat();
+    }
+    if (widget.intro) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _controller,
+    builder: (context, child) => CustomPaint(
+      size: Size.square(widget.size),
+      painter: _SpectralRingPainter(
+        phase: _controller.value,
+        intro: widget.intro ? _controller.value.clamp(0.0, 1.0) : 1,
+      ),
+    ),
+  );
+}
+
+final class _SpectralRingPainter extends CustomPainter {
+  const _SpectralRingPainter({required this.phase, required this.intro});
+
+  final double phase;
+  final double intro;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.shortestSide * 0.38;
+
+    final outerGlow = Paint()
+      ..shader = RadialGradient(
+        colors: <Color>[
+          const Color(0xFFE8C96A).withValues(alpha: 0.35 * intro),
+          const Color(0xFF42C6D5).withValues(alpha: 0.12 * intro),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius * 1.8));
+    canvas.drawCircle(center, radius * 1.8, outerGlow);
+
+    for (var i = 0; i < 3; i++) {
+      final trailAngle = phase * math.pi * 2 + i * 2.1;
+      final trailCenter = center +
+          Offset(
+            math.cos(trailAngle) * radius * 1.15,
+            math.sin(trailAngle) * radius * 1.15,
+          );
+      canvas.drawCircle(
+        trailCenter,
+        4,
+        Paint()
+          ..color = const Color(0xFF42C6D5).withValues(alpha: 0.5 * intro),
+      );
+    }
+
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.shortestSide * 0.06
+      ..shader = SweepGradient(
+        colors: const <Color>[
+          Color(0xFFE8C96A),
+          Color(0xFFF5E6A8),
+          Color(0xFF42C6D5),
+          Color(0xFF9D8BE8),
+          Color(0xFFE8C96A),
+        ],
+        transform: GradientRotation(phase * math.pi * 2),
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, ringPaint);
+
+    final innerGlow = Paint()
+      ..shader = RadialGradient(
+        colors: <Color>[
+          Colors.white.withValues(alpha: 0.9 * intro),
+          const Color(0xFF42C6D5).withValues(alpha: 0.25 * intro),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius * 0.7));
+    canvas.drawCircle(center, radius * 0.7, innerGlow);
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: 'S',
+        style: TextStyle(
+          fontFamily: 'Instrument Serif',
+          fontSize: size.shortestSide * 0.34,
+          fontWeight: FontWeight.w600,
+          foreground: Paint()
+            ..shader = LinearGradient(
+              colors: const <Color>[
+                Color(0xFFE8C96A),
+                Color(0xFF42C6D5),
+                Color(0xFF9D8BE8),
+              ],
+            ).createShader(Rect.fromCircle(center: center, radius: radius * 0.5)),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    textPainter.paint(
+      canvas,
+      center - Offset(textPainter.width / 2, textPainter.height / 2 - 2),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SpectralRingPainter oldDelegate) =>
+      oldDelegate.phase != phase || oldDelegate.intro != intro;
+}
+
 /// Ripple effect for interactive surfaces.
 final class LumenRipple extends StatefulWidget {
   const LumenRipple({

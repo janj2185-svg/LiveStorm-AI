@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api.dart';
+import '../../core/l10n/sylora_localizations.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import '../../core/models.dart';
@@ -455,19 +456,34 @@ final class _GiftsScreenState extends ConsumerState<GiftsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
     final catalog = ref.watch(giftCatalogProvider);
     final inventory = ref.watch(giftInventoryProvider);
     final events = ref.watch(giftEventsProvider);
+    final wallet = ref.watch(walletProvider);
+    final balanceLabel = wallet.maybeWhen(
+      data: (snapshot) => '${snapshot.balance.spendableMinor}',
+      orElse: () => '—',
+    );
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Gifts'),
-          bottom: const TabBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(SyloraStrings.t(locale, 'nav_gifts')),
+              Text(
+                '💰 $balanceLabel',
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+            ],
+          ),
+          bottom: TabBar(
             tabs: <Tab>[
-              Tab(text: 'Catalog'),
-              Tab(text: 'Inventory'),
-              Tab(text: 'Events'),
+              Tab(text: SyloraStrings.t(locale, 'gifts_tab_popular')),
+              Tab(text: SyloraStrings.t(locale, 'gifts_tab_inventory')),
+              Tab(text: SyloraStrings.t(locale, 'gifts_tab_events')),
             ],
           ),
           actions: <Widget>[

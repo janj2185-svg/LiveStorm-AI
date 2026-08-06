@@ -15,6 +15,7 @@ import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
 import 'features/creator/analytics_screen.dart';
 import 'features/creator/creator_screens.dart';
+import 'features/home/home_dashboard_screen.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
 import 'features/more/more_screen.dart';
@@ -142,7 +143,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/home',
             name: 'home',
             pageBuilder: (context, state) =>
-                _page(state, const FeedScreen(), reducedMotion),
+                _page(state, const HomeDashboardScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/search',

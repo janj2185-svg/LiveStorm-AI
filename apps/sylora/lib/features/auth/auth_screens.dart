@@ -37,44 +37,45 @@ final class WelcomeScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    AnimatedSyloraLogo(
-                      size: 92,
+                    SpectralRingLogo(
+                      size: 140,
                       intro: true,
                       reducedMotion: reducedMotion,
                     ),
-                    const SizedBox(height: 28),
-                    LumenBadge(
-                      label: 'Creator OS · 2.0',
-                      color: LumenColors.pulse,
-                    ),
                     const SizedBox(height: 20),
                     Text(
-                      SyloraStrings.t(locale, 'tagline_long'),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displaySmall,
+                      SyloraStrings.t(locale, 'app_name'),
+                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                        letterSpacing: 4,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     Text(
-                      SyloraStrings.t(locale, 'welcome_lede'),
+                      SyloraStrings.t(locale, 'brand_motto'),
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: LumenColors.solar,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
                     Wrap(
                       alignment: WrapAlignment.center,
                       spacing: 12,
                       runSpacing: 12,
                       children: <Widget>[
-                        LumenPrimaryButton(
+                        _GoldButton(
+                          label: SyloraStrings.t(locale, 'sign_in'),
+                          onPressed: () => context.goNamed('auth'),
+                        ),
+                        LumenSecondaryButton(
                           label: SyloraStrings.t(locale, 'create_account'),
                           onPressed: () => context.goNamed(
                             'auth',
                             queryParameters: <String, String>{'create': '1'},
                           ),
-                        ),
-                        LumenSecondaryButton(
-                          label: SyloraStrings.t(locale, 'sign_in'),
-                          onPressed: () => context.goNamed('auth'),
                         ),
                       ],
                     ),
@@ -84,7 +85,9 @@ final class WelcomeScreen extends ConsumerWidget {
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 40),
+                    _FeaturePillars(locale: locale),
+                    const SizedBox(height: 24),
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final columns = constraints.maxWidth > 720 ? 2 : 1;
@@ -129,6 +132,86 @@ final class WelcomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+final class _GoldButton extends StatelessWidget {
+  const _GoldButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(999),
+      gradient: const LinearGradient(
+        colors: <Color>[Color(0xFFE8C96A), Color(0xFFC9A227)],
+      ),
+      boxShadow: <BoxShadow>[
+        BoxShadow(
+          color: const Color(0xFFE8C96A).withValues(alpha: 0.4),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
+        ),
+      ],
+    ),
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        foregroundColor: const Color(0xFF3D2E00),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      ),
+      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+    ),
+  );
+}
+
+final class _FeaturePillars extends StatelessWidget {
+  const _FeaturePillars({required this.locale});
+
+  final SyloraLocale locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final pillars = <_Pillar>[
+      _Pillar(Icons.auto_awesome_rounded, SyloraStrings.t(locale, 'pillar_ai')),
+      _Pillar(Icons.sensors_rounded, SyloraStrings.t(locale, 'pillar_live')),
+      _Pillar(Icons.payments_rounded, SyloraStrings.t(locale, 'pillar_creator')),
+      _Pillar(Icons.public_rounded, SyloraStrings.t(locale, 'pillar_world')),
+    ];
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 16,
+      runSpacing: 12,
+      children: pillars
+          .map(
+            (pillar) => LumenVellum(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              radius: 16,
+              sigma: 12,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(pillar.icon, size: 20, color: LumenColors.aether),
+                  const SizedBox(width: 8),
+                  Text(pillar.label),
+                ],
+              ),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+}
+
+@immutable
+final class _Pillar {
+  const _Pillar(this.icon, this.label);
+  final IconData icon;
+  final String label;
 }
 
 final class _ValueProp extends StatelessWidget {
