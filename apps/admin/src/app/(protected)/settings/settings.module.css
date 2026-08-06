@@ -1,0 +1,30 @@
+.envTags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.envTag {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(56, 182, 232, 0.14);
+  color: var(--sky-deep);
+  font-weight: 600;
+}
+
+.rollout {
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+
+.valuePreview {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}

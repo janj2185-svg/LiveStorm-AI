@@ -1,0 +1,231 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+}
+
+.rail {
+  width: 264px;
+  flex-shrink: 0;
+  padding: 1.5rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.railInner {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-ambient);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.4rem 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.4rem 1.3rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1rem;
+}
+
+.mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold-bright), var(--violet));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: #fff;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 18px -8px rgba(138, 111, 224, 0.55);
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandTitle {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.brandSub {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.link:hover {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink);
+}
+
+.linkActive {
+  background: linear-gradient(135deg, rgba(228, 197, 101, 0.28), rgba(183, 164, 242, 0.28));
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.linkIcon {
+  width: 18px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.footer {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0 0.2rem;
+}
+
+.identityEmail {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identityRole {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  text-transform: capitalize;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 1.5rem 1.75rem 3rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pageDescription {
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  margin-top: 0.2rem;
+}
+
+.mobileTopbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.mobileBar {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.mobileNav {
+  display: none;
+}
+
+@media (max-width: 920px) {
+  .rail {
+    display: none;
+  }
+
+  .mobileTopbar {
+    display: block;
+  }
+
+  .mobileNav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.75rem 1.25rem 0;
+  }
+
+  .mobileNavLink {
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--line);
+  }
+
+  .mobileNavLinkActive {
+    background: linear-gradient(135deg, var(--gold-bright), var(--violet));
+    color: #fff;
+    border-color: transparent;
+  }
+
+  .main {
+    padding: 1.1rem 1.1rem 2.5rem;
+  }
+}

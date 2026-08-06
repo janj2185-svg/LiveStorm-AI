@@ -1,0 +1,68 @@
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.1rem;
+}
+
+.envSelect {
+  min-width: 180px;
+}
+
+.providerMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.providerName {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.providerDescription {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+  max-width: 22rem;
+}
+
+.readinessGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.listTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 0 0 0.5rem;
+}
+
+.pillList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pillList li {
+  font-size: 0.84rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--line);
+}
+
+.blocking li {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-color: transparent;
+}
+
+.warning li {
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-color: transparent;
+}

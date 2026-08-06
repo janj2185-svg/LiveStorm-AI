@@ -1,0 +1,48 @@
+.toolbar {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+}
+
+.statusSelect {
+  min-width: 160px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.emailCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.handle {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+}
+
+.roleTags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.roleTag {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(138, 111, 224, 0.12);
+  color: var(--violet-deep);
+  font-weight: 600;
+}

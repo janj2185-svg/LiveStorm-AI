@@ -1,0 +1,79 @@
+.base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.base:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none !important;
+}
+
+.base:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.base:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.gold {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: #3a2d05;
+  box-shadow: 0 12px 24px -10px rgba(201, 162, 39, 0.55);
+}
+
+.gold:not(:disabled):hover {
+  box-shadow: 0 16px 30px -10px rgba(201, 162, 39, 0.65);
+}
+
+.ghost {
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.ghost:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: rgba(209, 72, 63, 0.25);
+}
+
+.danger:not(:disabled):hover {
+  background: rgba(209, 72, 63, 0.18);
+}
+
+.subtle {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: transparent;
+  padding: 0.4rem 0.7rem;
+}
+
+.subtle:not(:disabled):hover {
+  color: var(--ink);
+  background: rgba(35, 34, 43, 0.05);
+}
+
+.small {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.fullWidth {
+  width: 100%;
+}

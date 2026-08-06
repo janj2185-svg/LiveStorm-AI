@@ -1,0 +1,90 @@
+:root {
+  --pearl: #faf8f4;
+  --pearl-deep: #f1ecdf;
+  --white: #ffffff;
+  --gold: #c9a227;
+  --gold-bright: #e4c565;
+  --gold-ink: #6b551a;
+  --sky: #7fd4f0;
+  --sky-deep: #38b6e8;
+  --violet: #b7a4f2;
+  --violet-deep: #8a6fe0;
+  --ink: #23222b;
+  --ink-soft: #6b6a76;
+  --ink-faint: #9795a3;
+  --line: rgba(35, 34, 43, 0.08);
+  --line-strong: rgba(35, 34, 43, 0.14);
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --shadow-ambient: 0 30px 80px -35px rgba(138, 111, 224, 0.35), 0 10px 30px -15px rgba(56, 182, 232, 0.2);
+  --shadow-soft: 0 12px 30px -18px rgba(35, 34, 43, 0.22);
+  --success: #1f9d55;
+  --success-bg: rgba(31, 157, 85, 0.12);
+  --danger: #d1483f;
+  --danger-bg: rgba(209, 72, 63, 0.1);
+  --warning: #c2871c;
+  --warning-bg: rgba(194, 135, 28, 0.12);
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at 12% -10%, rgba(183, 164, 242, 0.28), transparent 45%),
+    radial-gradient(circle at 92% 8%, rgba(127, 212, 240, 0.28), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(228, 197, 101, 0.16), transparent 55%),
+    linear-gradient(180deg, var(--pearl) 0%, var(--pearl-deep) 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: rgba(201, 162, 39, 0.28);
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+::placeholder {
+  color: var(--ink-faint);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

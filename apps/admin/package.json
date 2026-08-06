@@ -1,0 +1,29 @@
+{
+  "name": "@sylora/admin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SYLORA Admin Console — operations, trust & safety, and platform configuration.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.5.22",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "15.5.22",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

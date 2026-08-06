@@ -1,0 +1,135 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.orbGold {
+  width: 320px;
+  height: 320px;
+  background: var(--gold-bright);
+  top: -80px;
+  right: -60px;
+}
+
+.orbViolet {
+  width: 380px;
+  height: 380px;
+  background: var(--violet);
+  bottom: -100px;
+  left: -100px;
+}
+
+.orbSky {
+  width: 260px;
+  height: 260px;
+  background: var(--sky);
+  bottom: 10%;
+  right: 8%;
+}
+
+.panel {
+  width: 100%;
+  max-width: 25.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.6rem;
+  justify-content: center;
+}
+
+.mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold-bright), var(--violet));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: #fff;
+  font-size: 1.3rem;
+  box-shadow: 0 10px 24px -10px rgba(138, 111, 224, 0.6);
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandTitle {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.02em;
+}
+
+.brandSub {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.35rem;
+}
+
+.subheading {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0 0 1.6rem;
+}
+
+.errorBanner {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.footerNote {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  margin-top: 1.4rem;
+  line-height: 1.5;
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--violet-deep);
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}

@@ -1,0 +1,60 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+
+.value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  font-family: var(--font-serif);
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.accent {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.gold {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: #3a2d05;
+}
+
+.violet {
+  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+  color: #fff;
+}
+
+.sky {
+  background: linear-gradient(135deg, var(--sky), var(--sky-deep));
+  color: #063241;
+}
+
+.sub {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}

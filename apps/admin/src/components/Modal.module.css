@@ -1,0 +1,43 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 34, 43, 0.35);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 100;
+}
+
+.panel {
+  width: 100%;
+  max-width: 30rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+}
+
+.description {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+.errorText {
+  color: var(--danger);
+  font-size: 0.82rem;
+  margin-top: 0.6rem;
+}

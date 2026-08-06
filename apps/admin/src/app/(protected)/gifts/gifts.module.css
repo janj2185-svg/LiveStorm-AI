@@ -1,0 +1,54 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.formTitle {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+
+.formDescription {
+  margin: 0 0 1rem;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.resultBanner {
+  margin-top: 0.9rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.success {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.errorBanner {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.notice {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+
+.noticeIcon {
+  font-size: 1.1rem;
+}
+
+.noticeText {
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
