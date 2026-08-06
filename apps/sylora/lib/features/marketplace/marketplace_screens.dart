@@ -58,7 +58,8 @@ final class MarketplaceScreen extends ConsumerWidget {
       subtitle:
           'The persisted catalog, cart, orders, entitlements, and seller APIs.',
       intensity: 0.9,
-      showAuraPresence: false,
+      showAuraPresence: true,
+      auraPresenceMode: SyloraAuraPresenceMode.summon,
       auraPresencePreset: SyloraAuraContextPreset.marketplace,
       actions: <Widget>[
         if (seller)

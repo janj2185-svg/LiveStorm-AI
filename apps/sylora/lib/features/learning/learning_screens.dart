@@ -40,7 +40,8 @@ final class LearningScreen extends ConsumerWidget {
     title: 'Learning',
     subtitle:
         'Published courses, real enrollment progress, quizzes, and certificates.',
-    showAuraPresence: false,
+    showAuraPresence: true,
+    auraPresenceMode: SyloraAuraPresenceMode.summon,
     auraPresencePreset: SyloraAuraContextPreset.learning,
     header: SyloraUniverseHero(
       eyebrow: 'EDUCATION',

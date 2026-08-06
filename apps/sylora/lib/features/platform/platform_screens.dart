@@ -269,7 +269,8 @@ final class _WalletScreenState extends ConsumerState<WalletScreen> {
       title: l10n.walletTitle,
       subtitle: l10n.walletSubtitle,
       intensity: 0.92,
-      showAuraPresence: false,
+      showAuraPresence: true,
+      auraPresenceMode: SyloraAuraPresenceMode.summon,
       auraPresencePreset: SyloraAuraContextPreset.gifts,
       header: SyloraUniverseHero(
         eyebrow: l10n.walletHeroEyebrow,
