@@ -241,4 +241,8 @@ async def test_aura_status_and_pulse(api) -> None:
     assert counts["active_live_sessions_following"] >= 0
     assert counts["learning_enrollments"] >= 0
     assert isinstance(pulse_body["suggested_actions"], list)
-    assert any(action["route"].startswith("/v1/") for action in pulse_body["suggested_actions"])
+    assert pulse_body["suggested_actions"], "Aura pulse must suggest at least one action"
+    assert any(
+        action["route"].startswith("/") and not action["route"].startswith("/v1/")
+        for action in pulse_body["suggested_actions"]
+    )
