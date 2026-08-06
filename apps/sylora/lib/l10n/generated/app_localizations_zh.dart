@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'SYLORA';
+  String get appTitle => 'SYLORA UNIFIED';
 
   @override
   String get appTagline => '创作。连接。开启直播。';

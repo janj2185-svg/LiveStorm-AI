@@ -9,7 +9,7 @@ class AppLocalizationsPl extends AppLocalizations {
   AppLocalizationsPl([String locale = 'pl']) : super(locale);
 
   @override
-  String get appTitle => 'SYLORA';
+  String get appTitle => 'SYLORA UNIFIED';
 
   @override
   String get appTagline => 'Twórz. Łącz. Nadawaj na żywo.';

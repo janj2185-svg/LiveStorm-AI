@@ -9,7 +9,7 @@ class AppLocalizationsUk extends AppLocalizations {
   AppLocalizationsUk([String locale = 'uk']) : super(locale);
 
   @override
-  String get appTitle => 'SYLORA';
+  String get appTitle => 'SYLORA UNIFIED';
 
   @override
   String get appTagline => 'Де AI зустрічає душу';

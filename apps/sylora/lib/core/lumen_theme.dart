@@ -287,12 +287,14 @@ final class SyloraLogo extends StatelessWidget {
     super.key,
     this.size = 42,
     this.showWordmark = false,
+    this.showUnified = false,
     this.wordmarkSize,
     this.wordmarkColor,
   });
 
   final double size;
   final bool showWordmark;
+  final bool showUnified;
   final double? wordmarkSize;
   final Color? wordmarkColor;
 
@@ -304,10 +306,11 @@ final class SyloraLogo extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         mark,
-        SizedBox(height: size * 0.18),
+        SizedBox(height: size * 0.14),
         SyloraWordmark(
           fontSize: wordmarkSize ?? size * 0.28,
           color: wordmarkColor,
+          showUnified: showUnified,
         ),
       ],
     );

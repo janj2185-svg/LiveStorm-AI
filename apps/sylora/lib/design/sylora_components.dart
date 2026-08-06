@@ -364,31 +364,30 @@ final class SyloraBrandLockup extends StatelessWidget {
   const SyloraBrandLockup({
     super.key,
     this.size = 28,
-    this.title = SyloraWordmark.text,
+    this.showUnified = true,
+    this.animated = true,
   });
 
   final double size;
-  final String title;
+  final bool showUnified;
+  final bool animated;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SyloraMark(size: size, animated: true),
-        SizedBox(width: size * 0.35),
+        SyloraMark(size: size, animated: animated),
+        SizedBox(width: size * 0.28),
         Flexible(
-          child: title == SyloraWordmark.text
-              ? SyloraWordmark(
-                  fontSize: size * 0.55,
-                  letterSpacing: size * 0.22,
-                  weight: FontWeight.w600,
-                )
-              : Text(
-                  title,
-                  overflow: TextOverflow.ellipsis,
-                  style: SyloraTokens.title(size * 0.55).copyWith(letterSpacing: 2.4),
-                ),
+          child: SyloraWordmark(
+            fontSize: size * 0.48,
+            letterSpacing: size * 0.2,
+            weight: FontWeight.w600,
+            showUnified: showUnified,
+            unifiedSize: size * 0.22,
+            center: false,
+          ),
         ),
       ],
     );

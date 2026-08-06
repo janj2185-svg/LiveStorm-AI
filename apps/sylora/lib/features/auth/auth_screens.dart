@@ -67,7 +67,12 @@ final class _WelcomeScreenState extends State<WelcomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     const Spacer(flex: 2),
-                    const SyloraLogo(size: 88, showWordmark: true, wordmarkSize: 26),
+                    const SyloraLogo(
+                      size: 96,
+                      showWordmark: true,
+                      showUnified: true,
+                      wordmarkSize: 22,
+                    ),
                     const SizedBox(height: 18),
                     Text(
                       l10n.appTagline,
@@ -318,10 +323,9 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       children: [
         SyloraMark(size: compact ? 88 : 132, animated: true),
         SizedBox(height: compact ? 12 : 20),
-        SyloraWordmark(
-          fontSize: compact ? 22 : 28,
-          letterSpacing: compact ? 7 : 9,
-          weight: FontWeight.w500,
+        SyloraHeroWordmark(
+          unifiedSize: compact ? 14 : 18,
+          syloraSize: compact ? 22 : 28,
         ),
         if (!compact) ...[
           const SizedBox(height: 10),
@@ -341,7 +345,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          const Center(child: SyloraBrandLockup(size: 30)),
+          const Center(child: SyloraBrandLockup(size: 34, showUnified: true)),
           const SizedBox(height: 12),
           Text(
             _pane == _AuthPane.chooser

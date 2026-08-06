@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/lumen_theme.dart';
+import '../../design/sylora_components.dart';
 import '../../design/sylora_icons.dart';
 import '../../design/sylora_tokens.dart';
 import 'aether_bridge.dart' if (dart.library.html) 'aether_bridge_web.dart' as aether_bridge;
@@ -139,14 +140,8 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                     children: [
                       Row(
                         children: [
-                          const SyloraMark(size: 28, animated: true),
-                          const SizedBox(width: 10),
-                          const Flexible(
-                            child: SyloraWordmark(
-                              fontSize: 13,
-                              letterSpacing: 3.2,
-                              weight: FontWeight.w600,
-                            ),
+                          const Expanded(
+                            child: SyloraBrandLockup(size: 30, showUnified: true),
                           ),
                           TextButton(
                             onPressed: () => _goAuth(create: false),
@@ -163,32 +158,33 @@ final class _LandingExperienceState extends ConsumerState<LandingExperience>
                       ),
                       const Spacer(),
                       SyloraMark(size: markSize, animated: true),
-                      const SizedBox(height: 22),
-                      const SyloraWordmark(
-                        fontSize: 22,
-                        letterSpacing: 8,
-                        weight: FontWeight.w500,
+                      const SizedBox(height: 20),
+                      const SyloraHeroWordmark(unifiedSize: 16, syloraSize: 26),
+                      const SizedBox(height: 14),
+                      Container(
+                        width: 72,
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              SyloraTokens.ink.withValues(alpha: 0.28),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       Text(
-                        'ONE WORLD. INFINITE CREATION.',
+                        'ONE SPACE. ALL YOU.\nBOUNDLESS POSSIBILITIES.',
                         textAlign: TextAlign.center,
                         style: LandingTokens.body(
                           11,
-                          color: SyloraTokens.goldDeep,
+                          color: LandingTokens.inkSoft,
                           weight: FontWeight.w600,
-                        ).copyWith(letterSpacing: 2.2),
+                        ).copyWith(letterSpacing: 2.0, height: 1.55),
                       ),
-                      const SizedBox(height: 14),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: Text(
-                          'Живий ефір, творчість, звʼязок і інтелект — одна преміальна платформа.',
-                          textAlign: TextAlign.center,
-                          style: LandingTokens.body(15),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
                       _AetherButton(
                         label: 'Увійти',
                         filled: true,
@@ -253,20 +249,28 @@ final class _AetherButtonState extends State<_AetherButton> {
         curve: SyloraTokens.curveSoft,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(SyloraTokens.radiusCta),
-            gradient: widget.filled ? SyloraTokens.primaryCtaGradient : null,
-            color: widget.filled ? null : SyloraTokens.glassStrong,
+            borderRadius: BorderRadius.circular(999),
+            gradient: widget.filled
+                ? const LinearGradient(
+                    colors: [
+                      Color(0xFF5B8DEF),
+                      Color(0xFF7B6CFF),
+                      Color(0xFF9B7CFF),
+                    ],
+                  )
+                : null,
+            color: widget.filled ? null : Colors.white.withValues(alpha: 0.72),
             border: widget.filled
                 ? null
-                : Border.all(color: SyloraTokens.glassStroke),
+                : Border.all(color: SyloraTokens.gold.withValues(alpha: 0.55)),
             boxShadow: widget.filled
-                ? SyloraTokens.glow(SyloraTokens.gold, blur: 22, opacity: 0.3)
+                ? SyloraTokens.glow(const Color(0xFF7B6CFF), blur: 22, opacity: 0.35)
                 : SyloraTokens.glassElevation,
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(SyloraTokens.radiusCta),
+              borderRadius: BorderRadius.circular(999),
               onTap: widget.onPressed,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
@@ -275,7 +279,7 @@ final class _AetherButtonState extends State<_AetherButton> {
                   textAlign: TextAlign.center,
                   style: LandingTokens.body(
                     14,
-                    color: SyloraTokens.ink,
+                    color: widget.filled ? Colors.white : SyloraTokens.goldDeep,
                     weight: FontWeight.w600,
                   ),
                 ),

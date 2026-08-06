@@ -1,6 +1,6 @@
 {
   "@@locale": "es",
-  "appTitle": "SYLORA",
+  "appTitle": "SYLORA UNIFIED",
   "@appTitle": {
     "description": "Nombre del producto mostrado en la interfaz de la app y en los títulos de ventana."
   },

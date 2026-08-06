@@ -1,70 +1,113 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="SYLORA">
-  <!-- SYLORA Ethereal — twin-ribbon Liquid S (cyan + gold) -->
+  <!-- SYLORA UNIFIED — Liquid S in glowing orb (founder lock) -->
   <defs>
-    <linearGradient id="ribbonGold" x1="28" y1="18" x2="104" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFF4D2"/>
-      <stop offset="35%" stop-color="#F5DEB3"/>
-      <stop offset="70%" stop-color="#E6C88B"/>
-      <stop offset="100%" stop-color="#C9A45C"/>
-    </linearGradient>
-    <linearGradient id="ribbonCyan" x1="22" y1="14" x2="100" y2="108" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#E8FBFF"/>
-      <stop offset="30%" stop-color="#A8E4FF"/>
-      <stop offset="65%" stop-color="#5EC8FF"/>
-      <stop offset="100%" stop-color="#1A8FB5"/>
-    </linearGradient>
-    <radialGradient id="sigilOrb" cx="50%" cy="48%" r="52%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.78"/>
-      <stop offset="32%" stop-color="#5EC8FF" stop-opacity="0.26"/>
-      <stop offset="58%" stop-color="#8B7CFF" stop-opacity="0.12"/>
+    <radialGradient id="orbAura" cx="50%" cy="48%" r="55%">
+      <stop offset="0%" stop-color="#B8C8FF" stop-opacity="0.45"/>
+      <stop offset="40%" stop-color="#8B7CFF" stop-opacity="0.18"/>
+      <stop offset="75%" stop-color="#5EC8FF" stop-opacity="0.08"/>
       <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
     </radialGradient>
-    <filter id="sigilGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="2.6"/>
+    <radialGradient id="orbGlass" cx="38%" cy="34%" r="62%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#E8EEFF" stop-opacity="0.82"/>
+      <stop offset="70%" stop-color="#D4DCFF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#C5B8FF" stop-opacity="0.32"/>
+    </radialGradient>
+    <radialGradient id="nebulaA" cx="42%" cy="40%" r="40%">
+      <stop offset="0%" stop-color="#9BB6FF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#9BB6FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebulaB" cx="62%" cy="58%" r="38%">
+      <stop offset="0%" stop-color="#B39CFF" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#B39CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebulaC" cx="48%" cy="68%" r="32%">
+      <stop offset="0%" stop-color="#E6C88B" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sigilPearl" x1="36" y1="24" x2="98" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EAF6FF"/>
+      <stop offset="28%" stop-color="#7EC8FF"/>
+      <stop offset="52%" stop-color="#9B8CFF"/>
+      <stop offset="78%" stop-color="#E6C88B"/>
+      <stop offset="100%" stop-color="#FFF0D2"/>
+    </linearGradient>
+    <linearGradient id="sigilEdge" x1="30" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.65"/>
+    </linearGradient>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2"/>
     </filter>
-    <filter id="ribbonSoft" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="0.8"/>
-    </filter>
+    <clipPath id="orbClip">
+      <circle cx="64" cy="64" r="46"/>
+    </clipPath>
   </defs>
-  <circle cx="64" cy="64" r="54" fill="url(#sigilOrb)"/>
-  <!-- Gold ribbon (rear) -->
+
+  <circle cx="64" cy="64" r="60" fill="url(#orbAura)"/>
+  <circle cx="64" cy="64" r="48" fill="url(#orbGlass)"/>
+  <g clip-path="url(#orbClip)">
+    <circle cx="52" cy="50" r="28" fill="url(#nebulaA)"/>
+    <circle cx="78" cy="72" r="26" fill="url(#nebulaB)"/>
+    <circle cx="60" cy="84" r="22" fill="url(#nebulaC)"/>
+  </g>
+  <circle cx="64" cy="64" r="48" stroke="url(#sigilEdge)" stroke-width="1.6" fill="none" opacity="0.85"/>
+
+  <!-- Floating droplets -->
+  <circle cx="28" cy="36" r="4.2" fill="#FFFFFF" opacity="0.75"/>
+  <circle cx="102" cy="34" r="3.2" fill="#E8EEFF" opacity="0.8"/>
+  <circle cx="22" cy="78" r="2.6" fill="#C5B8FF" opacity="0.7"/>
+  <circle cx="108" cy="74" r="3.6" fill="#FFFFFF" opacity="0.72"/>
+  <circle cx="34" cy="98" r="2.2" fill="#B8C8FF" opacity="0.65"/>
+  <circle cx="98" cy="100" r="2.8" fill="#FFF0D2" opacity="0.7"/>
+
+  <!-- Liquid S (filled pearlescent) -->
   <path
-    d="M90 30 C108 28 114 50 94 58 C70 68 42 66 40 86 C38 108 68 118 96 108"
-    stroke="#C9A45C"
-    stroke-width="15"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    opacity="0.22"
-    filter="url(#sigilGlow)"/>
+    d="M89.6 28.2
+       C110.1 23.0 115.2 46.1 94.7 53.8
+       C71.7 62.7 48.6 64.0 46.1 76.8
+       C43.5 94.7 66.6 102.4 89.6 97.3
+       C102.4 94.7 107.5 84.5 99.8 81.9
+       C84.5 78.1 66.6 81.9 66.6 74.2
+       C66.6 64.0 87.0 61.4 99.8 51.2
+       C115.2 38.4 105.0 23.0 81.9 25.6
+       C61.4 28.2 51.2 41.0 53.8 48.6
+       C56.3 56.3 43.5 61.4 38.4 51.2
+       C30.7 35.8 46.1 20.5 71.7 20.5
+       C79.4 20.5 85.8 23.0 89.6 28.2 Z"
+    fill="#8B9CFF"
+    opacity="0.28"
+    filter="url(#softGlow)"/>
   <path
-    d="M90 30 C108 28 114 50 94 58 C70 68 42 66 40 86 C38 108 68 118 96 108"
-    stroke="url(#ribbonGold)"
-    stroke-width="11.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"/>
-  <!-- Cyan ribbon (front, intertwined offset) -->
+    d="M89.6 28.2
+       C110.1 23.0 115.2 46.1 94.7 53.8
+       C71.7 62.7 48.6 64.0 46.1 76.8
+       C43.5 94.7 66.6 102.4 89.6 97.3
+       C102.4 94.7 107.5 84.5 99.8 81.9
+       C84.5 78.1 66.6 81.9 66.6 74.2
+       C66.6 64.0 87.0 61.4 99.8 51.2
+       C115.2 38.4 105.0 23.0 81.9 25.6
+       C61.4 28.2 51.2 41.0 53.8 48.6
+       C56.3 56.3 43.5 61.4 38.4 51.2
+       C30.7 35.8 46.1 20.5 71.7 20.5
+       C79.4 20.5 85.8 23.0 89.6 28.2 Z"
+    fill="url(#sigilPearl)"/>
   <path
-    d="M84 26 C64 14 34 18 32 40 C30 58 54 62 68 66 C86 70 100 76 98 90 C96 108 66 114 42 100"
-    stroke="#5EC8FF"
-    stroke-width="14"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    opacity="0.2"
-    filter="url(#sigilGlow)"/>
-  <path
-    d="M84 26 C64 14 34 18 32 40 C30 58 54 62 68 66 C86 70 100 76 98 90 C96 108 66 114 42 100"
-    stroke="url(#ribbonCyan)"
-    stroke-width="10.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"/>
-  <path
-    d="M84 26 C64 14 34 18 32 40 C30 58 54 62 68 66 C86 70 100 76 98 90 C96 108 66 114 42 100"
-    stroke="#FFFFFF"
-    stroke-width="3"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    opacity="0.55"
-    filter="url(#ribbonSoft)"/>
-  <circle cx="78" cy="30" r="3.2" fill="#FFFFFF" opacity="0.9"/>
-  <circle cx="48" cy="86" r="2.4" fill="#F5DEB3" opacity="0.85"/>
+    d="M89.6 28.2
+       C110.1 23.0 115.2 46.1 94.7 53.8
+       C71.7 62.7 48.6 64.0 46.1 76.8
+       C43.5 94.7 66.6 102.4 89.6 97.3
+       C102.4 94.7 107.5 84.5 99.8 81.9
+       C84.5 78.1 66.6 81.9 66.6 74.2
+       C66.6 64.0 87.0 61.4 99.8 51.2
+       C115.2 38.4 105.0 23.0 81.9 25.6
+       C61.4 28.2 51.2 41.0 53.8 48.6
+       C56.3 56.3 43.5 61.4 38.4 51.2
+       C30.7 35.8 46.1 20.5 71.7 20.5
+       C79.4 20.5 85.8 23.0 89.6 28.2 Z"
+    fill="none"
+    stroke="url(#sigilEdge)"
+    stroke-width="2.2"/>
+  <circle cx="78" cy="36" r="3.5" fill="#FFFFFF" opacity="0.9"/>
 </svg>

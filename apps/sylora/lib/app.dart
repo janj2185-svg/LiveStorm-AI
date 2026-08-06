@@ -831,7 +831,12 @@ final class _SplashScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          SyloraLogo(size: 72, showWordmark: true, wordmarkSize: 18),
+          SyloraLogo(
+            size: 72,
+            showWordmark: true,
+            showUnified: true,
+            wordmarkSize: 16,
+          ),
           SizedBox(height: 24),
           CircularProgressIndicator(),
         ],

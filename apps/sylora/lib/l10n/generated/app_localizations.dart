@@ -119,7 +119,7 @@ abstract class AppLocalizations {
   /// Product name shown in app chrome and window titles.
   ///
   /// In en, this message translates to:
-  /// **'SYLORA'**
+  /// **'SYLORA UNIFIED'**
   String get appTitle;
 
   /// No description provided for @appTagline.
