@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "title": "SYLORA — Jeden świat. Nieskończone tworzenie.",
+    "description": "Ekosystem cyfrowy AI-first dla twórców, społeczności i biznesu."
+  },
+  "nav": {
+    "signIn": "Zaloguj się",
+    "createAccount": "Utwórz konto",
+    "learnMore": "Dowiedz się więcej"
+  },
+  "hero": {
+    "motto": "JEDEN ŚWIAT. NIESKOŃCZONE TWORZENIE.",
+    "headline": "Nowa klasa platformy dla twórców, społeczności i pracy z AI.",
+    "subhead": "Sieć społecznościowa, wideo, transmisje na żywo, edukacja i ekonomia twórców — jeden spójny ekosystem gotowy do skalowania.",
+    "ctaPrimary": "Utwórz konto",
+    "ctaSecondary": "Zaloguj się"
+  },
+  "pillars": {
+    "ai": "Asystent AI",
+    "live": "Transmisje LIVE",
+    "creator": "Ekonomia twórców",
+    "world": "Społeczność globalna"
+  },
+  "status": {
+    "apiLabel": "Status API",
+    "checking": "Sprawdzanie…",
+    "online": "Online",
+    "offline": "Niedostępne"
+  },
+  "footer": {
+    "phase": "Faza 0 — fundament. Trwa budowa produkcyjna."
+  }
+}

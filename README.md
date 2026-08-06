@@ -1,149 +1,55 @@
-# SYLORA
+# SYLORA Platform (v2)
 
-**Owner local testing:** see [`OWNER_TESTING_GUIDE.md`](OWNER_TESTING_GUIDE.md) — preferred `docker compose up --build` or `./start-local.sh --host`.
+**AI-first digital ecosystem** — greenfield production build.
 
-# SYLORA
+> The previous codebase (`apps/sylora`, `services/api`, etc.) is **legacy** and not the foundation for this project. See [`legacy/README.md`](legacy/README.md).
 
-SYLORA is a multi-platform creator ecosystem with a Flutter client, FastAPI
-backend, social network, creator commerce, AI Brain, AI Live Hub, gift runtime,
-OBS companion and production infrastructure.
-
-The light-first Lumen design system remains available as an independent visual
-specification and gallery under `src/` and `docs/design/`.
-
-## Repository
-
-```text
-apps/sylora/             Flutter app: Android, iOS, Web, Windows, macOS, Linux
-apps/gift-studio/        Browser gift authoring and Three.js preview
-packages/gift-runtime/   Strict gift manifest and rendering runtime
-services/api/            FastAPI, PostgreSQL, Redis and Celery application
-services/companion/      Localhost-only OBS WebSocket 5.x companion
-infrastructure/          Compose, Kubernetes, monitoring, backups and media plane
-src/                     Lumen design system and 38-screen reference gallery
-docs/                    Design, implementation and production documentation
-```
-
-## Implemented platform capabilities
-
-- Registration, email verification, login, rotating JWT sessions, password
-  reset, OAuth/OIDC, TOTP 2FA, profiles and RBAC.
-- Social graph, private follow requests, friendships, blocks/mutes,
-  communities/channels, posts, comments, reactions, bookmarks, reposts,
-  notifications, moderation, direct messages and durable realtime replay.
-- Immutable double-entry credit ledger, wallet, gift catalog/inventory,
-  purchases, sends, refunds, versioned manifests, verified assets and
-  author-review-publish separation.
-- Provider-neutral AI conversations, citations, consent, encrypted memory,
-  quotas, usage accounting, approved tools, translation/moderation boundaries
-  and multimodal job orchestration.
-- AI Live Hub with capability-verified YouTube, Twitch, Discord, OBS and
-  MediaMTX adapters; normalized events, rules, moderation, personas, games,
-  reconnects and replay.
-- Creator accounts, content lifecycle, subscriptions and analytics.
-- Marketplace stores, products, carts, orders, credit checkout, entitlements,
-  downloads, service bookings, reviews and refunds.
-- Courses, curriculum, enrollments, progress, quizzes and verifiable
-  certificates.
-- Multi-tenant workspaces, teams, CRM, tasks, calendar, documents, budgets,
-  expenses, invoices, reports, feature flags and admin/security dashboards.
-- RTMP, HLS, WHIP/WHEP WebRTC, SRT, TURN, recording upload, Prometheus and
-  Grafana infrastructure.
-
-## Run the backend
-
-The local infrastructure requires explicit secrets; copy the example first.
+## Quick start
 
 ```bash
-cp infrastructure/.env.example infrastructure/.env
-# Fill every value marked as required.
-docker compose \
-  --env-file infrastructure/.env \
-  -f infrastructure/compose/compose.yml up --build
-```
-
-API documentation is exposed at `http://localhost:8000/docs`. Detailed backend
-configuration and endpoints are in `services/api/README.md`.
-
-## Run Flutter
-
-Flutter 3.44.7 is the supported SDK.
-
-```bash
-cd apps/sylora
-flutter pub get
-flutter run -d chrome \
-  --dart-define=SYLORA_API_BASE_URL=http://localhost:8000
-```
-
-Production builds require an HTTPS API origin. Android release signing, Apple
-signing/provisioning and platform secure-storage requirements are documented in
-`apps/sylora/README.md`.
-
-## Run Gift Studio
-
-```bash
-cd packages/gift-runtime
-npm ci
-npm run build
-
-cd ../../apps/gift-studio
-npm ci
-npm run dev
-```
-
-Gift Studio keeps its bearer token in memory, uploads assets through real
-presigned S3 grants and follows the draft → assets → strict manifest → review →
-publish workflow. No gift assets are bundled.
-
-## Run the OBS companion
-
-```bash
-cd services/companion
-python3 -m pip install -e '.[dev]'
-python3 -m sylora_companion run
-```
-
-The companion binds to loopback by default and controls OBS only through the
-official WebSocket 5.x protocol. See `services/companion/README.md`.
-
-## Design gallery
-
-```bash
+cp .env.example .env
+docker compose -f infrastructure/dev/docker-compose.yml up -d
 pnpm install
-pnpm dev
+cd services/platform-api && python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
+alembic upgrade head
+uvicorn platform_api.main:app --reload --port 8080
+# separate terminal:
+cd apps/web && pnpm dev
 ```
 
-`pnpm build` regenerates tokens, enforces all contrast assertions, typechecks
-and builds the gallery. Edit authoritative TypeScript tokens under
-`src/design-system/tokens/`; generated CSS and Figma exports must not be edited
-directly.
+- Web: http://localhost:3000
+- API docs: http://localhost:8080/docs
 
-## Verification
+## Structure
 
-```bash
-pnpm test
-pnpm build
-pnpm test:backend
-
-cd apps/sylora && flutter analyze && flutter test
-cd packages/gift-runtime && npm test && npm run build
-cd apps/gift-studio && npm test && npm run build
-cd services/companion && python3 -m pytest
+```
+apps/web              Production web client (Next.js 15)
+apps/admin            Admin console (Phase 1)
+services/platform-api Backend modular monolith (FastAPI)
+packages/ui           Design system tokens + global styles
+docs/platform/        Architecture, security, roadmap
+infrastructure/dev/   Docker Compose for local dev
+legacy/               Archived previous iteration (do not extend)
 ```
 
-CI additionally compiles Flutter Web/Linux/Android, iOS/macOS without signing
-and Windows.
+## Documentation
 
-## External capability boundaries
+| Doc | Path |
+|-----|------|
+| Product | [docs/platform/PRODUCT.md](docs/platform/PRODUCT.md) |
+| Architecture | [docs/platform/ARCHITECTURE.md](docs/platform/ARCHITECTURE.md) |
+| Setup | [docs/platform/SETUP.md](docs/platform/SETUP.md) |
+| Roadmap | [docs/platform/ROADMAP.md](docs/platform/ROADMAP.md) |
 
-The repository does not contain production credentials, licensed CGI assets,
-payment processor configuration, email delivery credentials, cloud S3
-credentials, Apple/Google signing keys or platform review approvals.
+## Phase status
 
-Unconfigured payment, storage, AI, transcoding, PDF, e-signature and external
-platform capabilities fail explicitly; they never return simulated success.
-TikTok, Kick, Facebook and Instagram Live remain unavailable until approved
-official APIs and scopes are supplied. AAA gift content requires authored and
-licensed Blender/Unity/Unreal assets plus real device QA; the runtime and editor
-do not imply that such an asset library is bundled.
+**Phase 0** — Foundation: API health, DB extensions, design system, i18n shell (UK/PL/EN), dev infrastructure.
+
+**Next: Phase 1** — Auth, profile, posts, feed, notifications (first vertical E2E flow).
+
+## Principles
+
+- No fake APIs or simulated readiness
+- Modular monolith → extract services when justified
+- Web-first (Next.js); native clients in Phase 7
+- Immutable ledger for all financial operations (Phase 4)

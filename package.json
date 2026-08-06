@@ -1,37 +1,15 @@
 {
-  "name": "sylora",
+  "name": "sylora-platform",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@11.18.0+sha512.33d83c77da82f49fba836925c6f1b841181ec3132b670639bd012f7075f5c7cf634c5f870147c19aae7478fac01df09d8892e880454896edd23ee9b33757563c",
-  "type": "module",
+  "packageManager": "pnpm@11.18.0",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "pnpm tokens && tsc -b && vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "typecheck": "tsc -b",
-    "tokens": "tsx scripts/build-tokens.ts",
-    "test": "vitest run",
-    "test:backend": "cd services/api && python3 -m pytest -q",
-    "test:flutter": "cd apps/sylora && flutter test",
-    "test:watch": "vitest",
-    "capture": "tsx scripts/capture.ts",
-    "verify": "pnpm test && pnpm build && pnpm test:backend"
-  },
-  "dependencies": {
-    "@fontsource-variable/instrument-sans": "^5.3.0",
-    "@fontsource-variable/jetbrains-mono": "^5.3.0",
-    "@fontsource/instrument-serif": "^5.3.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
-    "tsx": "^4.23.1",
-    "typescript": "^7.0.2",
-    "vite": "^8.1.5",
-    "vitest": "^4.1.10"
-  },
-  "description": "SYLORA multi-platform creator ecosystem: Flutter client, FastAPI backend, realtime media plane and Lumen design system."
+    "dev:web": "pnpm --filter @sylora/web dev",
+    "build:web": "pnpm --filter @sylora/web build",
+    "test:web": "pnpm --filter @sylora/web test",
+    "test:ui": "pnpm --filter @sylora/ui test",
+    "test:platform": "pnpm test:ui && pnpm test:web",
+    "lint:web": "pnpm --filter @sylora/web lint",
+    "verify:phase0": "./scripts/verify-phase0.sh"
+  }
 }

@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 3rem;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  font-size: 0.9rem;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hero {
+  text-align: center;
+  padding: 2rem 0 3rem;
+}
+
+.motto {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  color: var(--sy-gold);
+  font-weight: 600;
+}
+
+.headline {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  line-height: 1.15;
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.subhead {
+  max-width: 640px;
+  margin: 0 auto 2rem;
+  color: var(--sy-ink-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.btn {
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #f0d78c, #d4a843);
+  color: #3d2e00;
+  box-shadow: 0 0 32px rgba(212, 168, 67, 0.35);
+}
+
+.btn-glass {
+  background: var(--sy-surface-glass);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: var(--sy-ink);
+}
+
+.phase-note {
+  font-size: 0.8rem;
+  color: var(--sy-ink-muted);
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding-bottom: 3rem;
+}
+
+.pillar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  font-weight: 500;
+}
+
+.pillar-icon {
+  font-size: 1.25rem;
+  color: var(--sy-aether);
+}
+
+.status {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot--ok {
+  background: var(--sy-success, #2a8f5e);
+}
+
+.status-dot--err {
+  background: var(--sy-danger, #d64545);
+}
+
+.locale-switcher select {
+  background: transparent;
+  border: 1px solid var(--sy-border);
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}

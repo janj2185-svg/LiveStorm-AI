@@ -1,0 +1,45 @@
+name: Platform CI
+
+on:
+  push:
+    branches: [main, 'cursor/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/platform-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e ".[dev]"
+        env:
+          DATABASE_URL: postgresql://sylora:sylora@localhost:5432/sylora
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
+      - run: ruff check src tests
+      - run: pytest -q
+        env:
+          DATABASE_URL: postgresql://sylora:sylora@localhost:5432/sylora
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm --filter @sylora/ui test
+      - run: pnpm --filter @sylora/web build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
