@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC
+from datetime import UTC, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -19,6 +19,7 @@ from app.dependencies import (
 )
 from app.errors import APIError
 from app.models import AccountSettings, Profile, User, UserStatus
+from app.progress_service import award_xp, grant_achievement
 from app.rate_limit import rate_limit
 from app.schemas import MessageResponse
 from app.security import utcnow
@@ -49,6 +50,8 @@ from app.social_models import (
     RelationStatus,
     ReportStatus,
     Repost,
+    Story,
+    StoryView,
 )
 from app.social_schemas import (
     SLUG_PATTERN,
@@ -84,6 +87,11 @@ from app.social_schemas import (
     ReportCreate,
     ReportPageResponse,
     ReportResponse,
+    StoryAuthorGroup,
+    StoryCreate,
+    StoryFeedResponse,
+    StoryItemResponse,
+    StoryViewResponse,
     UserSearchResponse,
 )
 from app.social_service import (
@@ -517,6 +525,10 @@ async def accept_friendship(
         target_type="friendship",
         target_id=friendship.id,
     )
+    await award_xp(db, auth.user.id, 25, reason="friend_accept")
+    await grant_achievement(db, auth.user.id, "first_friend")
+    await award_xp(db, friendship.requested_by_id, 25, reason="friend_accept")
+    await grant_achievement(db, friendship.requested_by_id, "first_friend")
     await commit_and_refresh(db, friendship)
     return RelationResponse(
         id=friendship.id,
@@ -1332,6 +1344,9 @@ async def create_post(
                     closes_at=payload.poll.closes_at,
                 )
             )
+    if payload.lifecycle == PostLifecycle.published:
+        await award_xp(db, auth.user.id, 25, reason="post_publish")
+        await grant_achievement(db, auth.user.id, "first_post")
     await db.commit()
     await db.refresh(post)
     return await post_response(db, auth.user.id, post)
@@ -1405,6 +1420,8 @@ async def publish_post(
         )
     post.lifecycle = PostLifecycle.published
     post.published_at = utcnow()
+    await award_xp(db, auth.user.id, 25, reason="post_publish")
+    await grant_achievement(db, auth.user.id, "first_post")
     await db.commit()
     await db.refresh(post)
     return await post_response(db, auth.user.id, post)
@@ -1424,6 +1441,181 @@ async def delete_post(
     post.body = ""
     post.media_references = []
     post.link_url = None
+    await db.commit()
+    return MessageResponse(status="deleted")
+
+
+@router.post("/stories", response_model=StoryItemResponse, status_code=status.HTTP_201_CREATED)
+async def create_story(
+    payload: StoryCreate,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> StoryItemResponse:
+    await require_handle(db, auth.user.id)
+    now = utcnow()
+    story = Story(
+        author_id=auth.user.id,
+        media_url=payload.media_url,
+        caption=payload.caption,
+        created_at=now,
+        expires_at=now + timedelta(hours=24),
+    )
+    db.add(story)
+    await db.flush()
+    await award_xp(db, auth.user.id, 15, reason="story_create")
+    await grant_achievement(db, auth.user.id, "first_story")
+    await db.commit()
+    await db.refresh(story)
+    return StoryItemResponse(
+        id=story.id,
+        author_id=story.author_id,
+        media_url=story.media_url,
+        caption=story.caption,
+        created_at=story.created_at,
+        expires_at=story.expires_at,
+        viewed_by_viewer=False,
+    )
+
+
+@router.get("/stories", response_model=StoryFeedResponse)
+async def stories_feed(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> StoryFeedResponse:
+    now = utcnow()
+    friend_low = select(Friendship.user_high_id).where(
+        Friendship.user_low_id == auth.user.id,
+        Friendship.status == RelationStatus.accepted,
+    )
+    friend_high = select(Friendship.user_low_id).where(
+        Friendship.user_high_id == auth.user.id,
+        Friendship.status == RelationStatus.accepted,
+    )
+    following = select(Follow.followed_id).where(Follow.follower_id == auth.user.id)
+    author_ids = (
+        await db.scalars(
+            select(User.id).where(
+                or_(
+                    User.id == auth.user.id,
+                    User.id.in_(friend_low),
+                    User.id.in_(friend_high),
+                    User.id.in_(following),
+                ),
+                User.status == UserStatus.active,
+                User.deleted_at.is_(None),
+            )
+        )
+    ).all()
+    if not author_ids:
+        return StoryFeedResponse(groups=[])
+
+    stories = (
+        await db.scalars(
+            select(Story)
+            .where(
+                Story.author_id.in_(author_ids),
+                Story.deleted_at.is_(None),
+                Story.expires_at > now,
+                not_blocked_condition(auth.user.id, Story.author_id),
+            )
+            .order_by(Story.author_id.asc(), Story.created_at.desc())
+        )
+    ).all()
+    if not stories:
+        return StoryFeedResponse(groups=[])
+
+    story_ids = [story.id for story in stories]
+    viewed_ids = set(
+        await db.scalars(
+            select(StoryView.story_id).where(
+                StoryView.viewer_id == auth.user.id,
+                StoryView.story_id.in_(story_ids),
+            )
+        )
+    )
+    author_profiles = {
+        profile.user_id: profile
+        for profile in (
+            await db.scalars(
+                select(Profile).where(
+                    Profile.user_id.in_({story.author_id for story in stories})
+                )
+            )
+        ).all()
+    }
+    groups_map: dict[uuid.UUID, StoryAuthorGroup] = {}
+    for story in stories:
+        group = groups_map.get(story.author_id)
+        if group is None:
+            profile = author_profiles.get(story.author_id)
+            group = StoryAuthorGroup(
+                author_id=story.author_id,
+                author_handle=profile.handle if profile else None,
+                author_display_name=profile.display_name if profile else None,
+                stories=[],
+            )
+            groups_map[story.author_id] = group
+        group.stories.append(
+            StoryItemResponse(
+                id=story.id,
+                author_id=story.author_id,
+                media_url=story.media_url,
+                caption=story.caption,
+                created_at=story.created_at,
+                expires_at=story.expires_at,
+                viewed_by_viewer=story.id in viewed_ids,
+            )
+        )
+    return StoryFeedResponse(groups=list(groups_map.values()))
+
+
+@router.post("/stories/{story_id}/view", response_model=StoryViewResponse)
+async def view_story(
+    story_id: uuid.UUID,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> StoryViewResponse:
+    now = utcnow()
+    story = await db.scalar(
+        select(Story).where(
+            Story.id == story_id,
+            Story.deleted_at.is_(None),
+            Story.expires_at > now,
+        )
+    )
+    if story is None:
+        raise APIError(404, "story_not_found", "Story not found", "The story does not exist.")
+    await ensure_not_blocked(db, auth.user.id, story.author_id)
+    existing = await db.scalar(
+        select(StoryView).where(
+            StoryView.story_id == story.id,
+            StoryView.viewer_id == auth.user.id,
+        )
+    )
+    if existing is None:
+        existing = StoryView(story_id=story.id, viewer_id=auth.user.id, viewed_at=now)
+        db.add(existing)
+        await db.commit()
+        await db.refresh(existing)
+    return StoryViewResponse(story_id=story.id, viewed_at=existing.viewed_at)
+
+
+@router.delete("/stories/{story_id}", response_model=MessageResponse)
+async def delete_story(
+    story_id: uuid.UUID,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> MessageResponse:
+    story = await db.scalar(
+        select(Story).where(
+            Story.id == story_id,
+            Story.author_id == auth.user.id,
+            Story.deleted_at.is_(None),
+        )
+    )
+    if story is None:
+        raise APIError(404, "story_not_found", "Story not found", "The story does not exist.")
+    story.deleted_at = utcnow()
     await db.commit()
     return MessageResponse(status="deleted")
 

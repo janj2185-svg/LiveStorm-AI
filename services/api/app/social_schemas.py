@@ -528,6 +528,49 @@ class ConversationResponse(ORMStrictSchema):
     participants: list[ConversationParticipantResponse] = Field(default_factory=list)
 
 
+def validate_https_url(value: str) -> str:
+    parsed = urlparse(value)
+    if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
+        raise ValueError("media_url must be an HTTPS URL")
+    return value
+
+
+class StoryCreate(StrictSchema):
+    media_url: str = Field(min_length=8, max_length=2048)
+    caption: str | None = Field(default=None, max_length=500)
+
+    _https_media = field_validator("media_url")(validate_https_url)
+    _plain_caption = field_validator("caption")(
+        lambda value: validate_plain_text(value) if value else value
+    )
+
+
+class StoryItemResponse(ORMStrictSchema):
+    id: uuid.UUID
+    author_id: uuid.UUID
+    media_url: str
+    caption: str | None
+    created_at: datetime
+    expires_at: datetime
+    viewed_by_viewer: bool = False
+
+
+class StoryAuthorGroup(StrictSchema):
+    author_id: uuid.UUID
+    author_handle: str | None = None
+    author_display_name: str | None = None
+    stories: list[StoryItemResponse]
+
+
+class StoryFeedResponse(StrictSchema):
+    groups: list[StoryAuthorGroup]
+
+
+class StoryViewResponse(StrictSchema):
+    story_id: uuid.UUID
+    viewed_at: datetime
+
+
 class MessageCreate(StrictSchema):
     body: str = Field(min_length=1, max_length=10_000)
     attachment_url: str | None = Field(default=None, max_length=2048)

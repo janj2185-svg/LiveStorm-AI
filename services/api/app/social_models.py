@@ -592,7 +592,39 @@ def reject_moderation_action_mutation(*_: object) -> None:
     raise ValueError("moderation actions are append-only")
 
 
+class Story(Base):
+    __tablename__ = "stories"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    author_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    media_url: Mapped[str] = mapped_column(String(2048))
+    caption: Mapped[str | None] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class StoryView(Base):
+    __tablename__ = "story_views"
+    __table_args__ = (UniqueConstraint("story_id", "viewer_id", name="uq_story_views_viewer"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    story_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("stories.id", ondelete="CASCADE"), index=True
+    )
+    viewer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    viewed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 Index("ix_follows_followed_follower", Follow.followed_id, Follow.follower_id)
+Index("ix_stories_author_expires", Story.author_id, Story.expires_at)
+Index("ix_stories_expires_active", Story.expires_at, Story.deleted_at)
 Index(
     "ix_friendships_users_status",
     Friendship.user_low_id,

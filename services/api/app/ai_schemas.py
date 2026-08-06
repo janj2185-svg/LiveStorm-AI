@@ -635,3 +635,43 @@ class ToolActionResponse(StrictSchema):
     proposal: AIToolProposalResponse
     execution_id: uuid.UUID | None = None
     output: dict[str, Any] | None = None
+
+
+class AuraCapabilityFlags(StrictSchema):
+    chat_available: bool
+    image_available: bool
+    translation_available: bool
+    moderation_available: bool
+    embeddings_available: bool
+    voice_available: bool
+
+
+class AuraStatusResponse(StrictSchema):
+    name: str = "Aura"
+    tagline: str = "A light-first presence for your SYLORA day"
+    persona: str = "Aura is SYLORA's calm companion — presence, not pressure."
+    capabilities: AuraCapabilityFlags
+    providers_configured: int
+
+
+class AuraSuggestedAction(StrictSchema):
+    label: str
+    route: str
+    reason: str
+
+
+class AuraPulseCounts(StrictSchema):
+    unread_notifications: int
+    pending_friend_requests: int
+    wallet_spendable_minor: int
+    active_live_sessions_following: int
+    learning_enrollments: int
+
+
+class AuraPulseResponse(StrictSchema):
+    name: str = "Aura"
+    tagline: str = "A light-first presence for your SYLORA day"
+    pulse_text: str
+    counts: AuraPulseCounts
+    suggested_actions: list[AuraSuggestedAction]
+    llm_enriched: bool = False

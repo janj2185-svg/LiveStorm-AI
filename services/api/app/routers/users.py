@@ -28,6 +28,8 @@ from app.models import (
     UserStatus,
 )
 from app.platform_service import scrub_platform_user_records
+from app.progress_schemas import ProgressResponse
+from app.progress_service import get_progress_response
 from app.schemas import (
     AccountSettingsPatch,
     AccountSettingsResponse,
@@ -86,6 +88,16 @@ async def get_own_profile(
     db: AsyncSession = Depends(get_session),
 ) -> Profile:
     return await profile_for(db, auth.user.id)
+
+
+@router.get("/profile/progress", response_model=ProgressResponse)
+async def get_own_progress(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> ProgressResponse:
+    response = await get_progress_response(db, auth.user.id)
+    await db.commit()
+    return response
 
 
 @router.patch("/profile", response_model=ProfileResponse)

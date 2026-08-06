@@ -8,7 +8,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Query, Request, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai_models import (
@@ -42,6 +42,11 @@ from app.ai_schemas import (
     AIUsagePage,
     AIUsageResponse,
     AIUsageSummary,
+    AuraPulseCounts,
+    AuraPulseResponse,
+    AuraCapabilityFlags,
+    AuraStatusResponse,
+    AuraSuggestedAction,
     ModerationRequest,
     ModerationResponse,
     ProviderStatusItem,
@@ -958,4 +963,192 @@ async def events(
         stream(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.get("/aura/status", response_model=AuraStatusResponse)
+async def aura_status(
+    request: Request,
+    _: AuthContext = Depends(current_auth),
+) -> AuraStatusResponse:
+    registry = _registry(request)
+    capability_status = registry.capability_status()
+    return AuraStatusResponse(
+        name="Aura",
+        tagline="A light-first presence for your SYLORA day",
+        persona="Aura is SYLORA's calm companion — presence, not pressure.",
+        capabilities=AuraCapabilityFlags(
+            chat_available=bool(capability_status.get(AICapability.chat)),
+            image_available=bool(capability_status.get(AICapability.image)),
+            translation_available=bool(capability_status.get(AICapability.translation)),
+            moderation_available=bool(capability_status.get(AICapability.moderation)),
+            embeddings_available=bool(capability_status.get(AICapability.embeddings)),
+            voice_available=bool(capability_status.get(AICapability.voice)),
+        ),
+        providers_configured=len(registry.providers()),
+    )
+
+
+@router.post("/aura/pulse", response_model=AuraPulseResponse)
+async def aura_pulse(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> AuraPulseResponse:
+    from app.ledger_models import LedgerAccountType
+    from app.ledger_service import account_balance, user_account
+    from app.live_models import LiveSession, LiveSessionState
+    from app.platform_models import Enrollment, EnrollmentStatus
+    from app.social_models import Follow, Friendship, Notification, RelationStatus
+
+    unread_notifications = int(
+        await db.scalar(
+            select(func.count())
+            .select_from(Notification)
+            .where(
+                Notification.user_id == auth.user.id,
+                Notification.read_at.is_(None),
+                Notification.muted_at.is_(None),
+            )
+        )
+        or 0
+    )
+    pending_friend_requests = int(
+        await db.scalar(
+            select(func.count())
+            .select_from(Friendship)
+            .where(
+                Friendship.status == RelationStatus.pending,
+                Friendship.requested_by_id != auth.user.id,
+                or_(
+                    Friendship.user_low_id == auth.user.id,
+                    Friendship.user_high_id == auth.user.id,
+                ),
+            )
+        )
+        or 0
+    )
+    wallet = await user_account(db, auth.user.id, LedgerAccountType.user_wallet)
+    wallet_spendable = await account_balance(db, wallet)
+
+    following_ids = select(Follow.followed_id).where(Follow.follower_id == auth.user.id)
+    friend_low = select(Friendship.user_high_id).where(
+        Friendship.user_low_id == auth.user.id,
+        Friendship.status == RelationStatus.accepted,
+    )
+    friend_high = select(Friendship.user_low_id).where(
+        Friendship.user_high_id == auth.user.id,
+        Friendship.status == RelationStatus.accepted,
+    )
+    active_live = int(
+        await db.scalar(
+            select(func.count())
+            .select_from(LiveSession)
+            .where(
+                LiveSession.state == LiveSessionState.live,
+                LiveSession.owner_user_id.is_not(None),
+                or_(
+                    LiveSession.owner_user_id.in_(following_ids),
+                    LiveSession.owner_user_id.in_(friend_low),
+                    LiveSession.owner_user_id.in_(friend_high),
+                ),
+            )
+        )
+        or 0
+    )
+    enrollments = int(
+        await db.scalar(
+            select(func.count())
+            .select_from(Enrollment)
+            .where(
+                Enrollment.user_id == auth.user.id,
+                Enrollment.status.in_(
+                    [EnrollmentStatus.active, EnrollmentStatus.pending, EnrollmentStatus.completed]
+                ),
+            )
+        )
+        or 0
+    )
+
+    parts: list[str] = ["Aura checked your light."]
+    if unread_notifications:
+        parts.append(
+            f"You have {unread_notifications} unread notification"
+            f"{'s' if unread_notifications != 1 else ''}."
+        )
+    else:
+        parts.append("Your notification space is clear.")
+    if pending_friend_requests:
+        parts.append(
+            f"{pending_friend_requests} friend request"
+            f"{'s' if pending_friend_requests != 1 else ''} await your reply."
+        )
+    parts.append(f"Wallet spendable balance is {wallet_spendable} credits.")
+    if active_live:
+        parts.append(
+            f"{active_live} live session{'s' if active_live != 1 else ''} from people you follow "
+            "are active now."
+        )
+    if enrollments:
+        parts.append(
+            f"You are enrolled in {enrollments} learning path"
+            f"{'s' if enrollments != 1 else ''}."
+        )
+    else:
+        parts.append("No active learning enrollments yet.")
+
+    actions: list[AuraSuggestedAction] = []
+    if unread_notifications:
+        actions.append(
+            AuraSuggestedAction(
+                label="Review notifications",
+                route="/v1/social/notifications",
+                reason="Unread notifications are waiting.",
+            )
+        )
+    if pending_friend_requests:
+        actions.append(
+            AuraSuggestedAction(
+                label="Respond to friend requests",
+                route="/v1/social/friend-requests",
+                reason="Pending friend requests need a response.",
+            )
+        )
+    if active_live:
+        actions.append(
+            AuraSuggestedAction(
+                label="Join a live session",
+                route="/v1/live/sessions",
+                reason="Someone you follow is live.",
+            )
+        )
+    if enrollments:
+        actions.append(
+            AuraSuggestedAction(
+                label="Continue learning",
+                route="/v1/learning/enrollments",
+                reason="Pick up an enrolled course.",
+            )
+        )
+    actions.append(
+        AuraSuggestedAction(
+            label="Open wallet",
+            route="/v1/wallet/balance",
+            reason="Check your spendable credits.",
+        )
+    )
+
+    await db.commit()
+    return AuraPulseResponse(
+        name="Aura",
+        tagline="A light-first presence for your SYLORA day",
+        pulse_text=" ".join(parts),
+        counts=AuraPulseCounts(
+            unread_notifications=unread_notifications,
+            pending_friend_requests=pending_friend_requests,
+            wallet_spendable_minor=wallet_spendable,
+            active_live_sessions_following=active_live,
+            learning_enrollments=enrollments,
+        ),
+        suggested_actions=actions,
+        llm_enriched=False,
     )
