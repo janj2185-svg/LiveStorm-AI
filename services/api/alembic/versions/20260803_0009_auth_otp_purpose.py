@@ -17,21 +17,38 @@ depends_on = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("auth_otp_challenges") as batch:
-        batch.add_column(
-            sa.Column(
-                "purpose",
-                sa.String(length=32),
-                nullable=False,
-                server_default="login",
+    # Fresh installs may already have purpose via Base.metadata.create_all.
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {
+        column["name"] for column in inspector.get_columns("auth_otp_challenges")
+    }
+    indexes = {
+        index["name"] for index in inspector.get_indexes("auth_otp_challenges")
+    }
+
+    if "purpose" not in columns:
+        with op.batch_alter_table("auth_otp_challenges") as batch:
+            batch.add_column(
+                sa.Column(
+                    "purpose",
+                    sa.String(length=32),
+                    nullable=False,
+                    server_default="login",
+                )
             )
+    if "ix_auth_otp_challenges_purpose" not in indexes:
+        op.create_index(
+            "ix_auth_otp_challenges_purpose",
+            "auth_otp_challenges",
+            ["purpose"],
         )
-    op.create_index("ix_auth_otp_challenges_purpose", "auth_otp_challenges", ["purpose"])
-    op.create_index(
-        "ix_auth_otp_destination_channel_purpose",
-        "auth_otp_challenges",
-        ["destination", "channel", "purpose"],
-    )
+    if "ix_auth_otp_destination_channel_purpose" not in indexes:
+        op.create_index(
+            "ix_auth_otp_destination_channel_purpose",
+            "auth_otp_challenges",
+            ["destination", "channel", "purpose"],
+        )
 
 
 def downgrade() -> None:

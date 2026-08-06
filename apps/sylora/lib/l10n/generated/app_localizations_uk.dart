@@ -2186,4 +2186,40 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get liveIntegrationsLoadError =>
       'Зараз не вдалося завантажити налаштування трансляції.';
+
+  @override
+  String get navAnalytics => 'Аналітика';
+
+  @override
+  String get analyticsSubtitle =>
+      'Аудиторія, контент, подарунки та дохід у вашій присутності SYLORA.';
+
+  @override
+  String get analyticsEmptyTitle => 'Аналітика оживає разом із творчістю';
+
+  @override
+  String get analyticsEmptyBody =>
+      'Відкрийте Creator або Studio, щоб публікувати, виходити в Live і розблокувати живі метрики.';
+
+  @override
+  String get analyticsHeroTitle => 'Ваш живий сигнал';
+
+  @override
+  String get analyticsHeroBody =>
+      'Цифри з creator API — контент, аудиторія, подарунки та дохід в одному місці.';
+
+  @override
+  String get analyticsContent => 'Контент';
+
+  @override
+  String get analyticsPublished => 'Опубліковано';
+
+  @override
+  String get analyticsFollowers => 'Підписники';
+
+  @override
+  String get analyticsSubscriptions => 'Підписки';
+
+  @override
+  String get analyticsNextActions => 'Наступні кроки';
 }

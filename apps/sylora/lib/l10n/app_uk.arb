@@ -135,14 +135,20 @@
   "homeHeroLineNamed": "{greeting}, {name}.",
   "@homeHeroLineNamed": {
     "placeholders": {
-      "greeting": {"type": "String"},
-      "name": {"type": "String"}
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
   "homeHeroLine": "{greeting}. Твій світ слухає.",
   "@homeHeroLine": {
     "placeholders": {
-      "greeting": {"type": "String"}
+      "greeting": {
+        "type": "String"
+      }
     }
   },
   "homeDiscoverTitle": "Відкриття",
@@ -654,7 +660,7 @@
   "communitiesChannels": "Канали",
   "communitiesNoChannelsTitle": "Немає видимих каналів",
   "communitiesNoChannelsMessage": "У цій спільноті немає видимих каналів.",
-"navMusic": "Музика",
+  "navMusic": "Музика",
   "navAura": "Aura",
   "navStudio": "Студія",
   "navLearn": "Навчання",
@@ -813,5 +819,16 @@
   "livePermissionIntegrations": "Інтеграції трансляції для цього акаунта ще недоступні.",
   "liveGuestInvitesLoadError": "Не вдалося завантажити запрошення гостей.",
   "liveSessionsLoadError": "Зараз не вдалося завантажити ефірні сесії. Спробуй трохи згодом.",
-  "liveIntegrationsLoadError": "Зараз не вдалося завантажити налаштування трансляції."
+  "liveIntegrationsLoadError": "Зараз не вдалося завантажити налаштування трансляції.",
+  "navAnalytics": "Аналітика",
+  "analyticsSubtitle": "Аудиторія, контент, подарунки та дохід у вашій присутності SYLORA.",
+  "analyticsEmptyTitle": "Аналітика оживає разом із творчістю",
+  "analyticsEmptyBody": "Відкрийте Creator або Studio, щоб публікувати, виходити в Live і розблокувати живі метрики.",
+  "analyticsHeroTitle": "Ваш живий сигнал",
+  "analyticsHeroBody": "Цифри з creator API — контент, аудиторія, подарунки та дохід в одному місці.",
+  "analyticsContent": "Контент",
+  "analyticsPublished": "Опубліковано",
+  "analyticsFollowers": "Підписники",
+  "analyticsSubscriptions": "Підписки",
+  "analyticsNextActions": "Наступні кроки"
 }

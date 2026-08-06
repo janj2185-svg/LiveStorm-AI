@@ -128,14 +128,20 @@
   "homeHeroLineNamed": "{greeting}, {name}.",
   "@homeHeroLineNamed": {
     "placeholders": {
-      "greeting": {"type": "String"},
-      "name": {"type": "String"}
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
   "homeHeroLine": "{greeting}. Your world is listening.",
   "@homeHeroLine": {
     "placeholders": {
-      "greeting": {"type": "String"}
+      "greeting": {
+        "type": "String"
+      }
     }
   },
   "homeDiscoverTitle": "Discover",
@@ -670,7 +676,7 @@
   "communitiesChannels": "Channels",
   "communitiesNoChannelsTitle": "No visible channels",
   "communitiesNoChannelsMessage": "No channels are visible in this community.",
-"navMusic": "Music",
+  "navMusic": "Music",
   "navAura": "Aura",
   "navStudio": "Studio",
   "navLearn": "Learn",
@@ -829,5 +835,16 @@
   "livePermissionIntegrations": "Broadcast integrations are not available for this account yet.",
   "liveGuestInvitesLoadError": "Guest invitations could not load.",
   "liveSessionsLoadError": "Live sessions could not be loaded right now. Try again in a moment.",
-  "liveIntegrationsLoadError": "Broadcast setup could not be loaded right now."
+  "liveIntegrationsLoadError": "Broadcast setup could not be loaded right now.",
+  "navAnalytics": "Analytics",
+  "analyticsSubtitle": "Audience, content, gifts, and earnings across your SYLORA presence.",
+  "analyticsEmptyTitle": "Your analytics awaken with creation",
+  "analyticsEmptyBody": "Open Creator or Studio to publish, go Live, and unlock living metrics for this account.",
+  "analyticsHeroTitle": "Your living signal",
+  "analyticsHeroBody": "These numbers come from the creator APIs — content, audience, gifts, and earnings in one place.",
+  "analyticsContent": "Content",
+  "analyticsPublished": "Published",
+  "analyticsFollowers": "Followers",
+  "analyticsSubscriptions": "Subscriptions",
+  "analyticsNextActions": "Next actions"
 }

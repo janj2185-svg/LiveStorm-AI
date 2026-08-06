@@ -4141,6 +4141,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Broadcast setup could not be loaded right now.'**
   String get liveIntegrationsLoadError;
+
+  /// No description provided for @navAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get navAnalytics;
+
+  /// No description provided for @analyticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audience, content, gifts, and earnings across your SYLORA presence.'**
+  String get analyticsSubtitle;
+
+  /// No description provided for @analyticsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your analytics awaken with creation'**
+  String get analyticsEmptyTitle;
+
+  /// No description provided for @analyticsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Creator or Studio to publish, go Live, and unlock living metrics for this account.'**
+  String get analyticsEmptyBody;
+
+  /// No description provided for @analyticsHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your living signal'**
+  String get analyticsHeroTitle;
+
+  /// No description provided for @analyticsHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'These numbers come from the creator APIs — content, audience, gifts, and earnings in one place.'**
+  String get analyticsHeroBody;
+
+  /// No description provided for @analyticsContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get analyticsContent;
+
+  /// No description provided for @analyticsPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get analyticsPublished;
+
+  /// No description provided for @analyticsFollowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Followers'**
+  String get analyticsFollowers;
+
+  /// No description provided for @analyticsSubscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
+  String get analyticsSubscriptions;
+
+  /// No description provided for @analyticsNextActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Next actions'**
+  String get analyticsNextActions;
 }
 
 class _AppLocalizationsDelegate

@@ -12,6 +12,7 @@ import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
 import 'features/conferences/conference_screens.dart';
+import 'features/creator/analytics_screen.dart';
 import 'features/creator/creator_screens.dart';
 import 'features/creator/earnings_screen.dart';
 import 'features/creator_studio/creator_studio_screen.dart';
@@ -89,11 +90,29 @@ const _studioDestination = ShellDestination(
   selectedIcon: Icons.movie_creation_rounded,
   path: '/creator-studio',
 );
+const _giftsDestination = ShellDestination(
+  label: 'Gifts',
+  icon: Icons.card_giftcard_outlined,
+  selectedIcon: Icons.card_giftcard_rounded,
+  path: '/gifts',
+);
 const _walletDestination = ShellDestination(
   label: 'Wallet',
   icon: Icons.account_balance_wallet_outlined,
   selectedIcon: Icons.account_balance_wallet_rounded,
   path: '/wallet',
+);
+const _analyticsDestination = ShellDestination(
+  label: 'Analytics',
+  icon: Icons.insights_outlined,
+  selectedIcon: Icons.insights_rounded,
+  path: '/analytics',
+);
+const _profileDestination = ShellDestination(
+  label: 'Profile',
+  icon: Icons.person_outline_rounded,
+  selectedIcon: Icons.person_rounded,
+  path: '/more',
 );
 const _settingsDestination = ShellDestination(
   label: 'Settings',
@@ -107,34 +126,20 @@ const _createDestination = ShellDestination(
   selectedIcon: Icons.add_circle_rounded,
   path: '/compose',
 );
-const _moreDestination = ShellDestination(
-  label: 'More',
-  icon: Icons.apps_outlined,
-  selectedIcon: Icons.apps_rounded,
-  path: '/more',
-);
-
-/// Phone island — Home · Live · Create · Messages · More (Ethereal Product Map)
+/// Phone island — Home · Live · Create · Messages · Profile
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
   _liveDestination,
   _createDestination,
   _messagesDestination,
-  _moreDestination,
+  _profileDestination,
 ];
 
-/// Desktop/tablet rail — Ethereal Product Map order
+/// Desktop/tablet rail — full SYLORA ecosystem IA (owner brief)
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
-  final roleSet = roles.toSet();
-  final showStudio =
-      roleSet.contains('creator') ||
-      roleSet.contains('admin') ||
-      roleSet.contains('owner');
-  final showBusiness =
-      roleSet.contains('business') ||
-      roleSet.contains('admin') ||
-      roleSet.contains('owner');
-  return <ShellDestination>[
+  // Every ecosystem module stays visible. Role gates only protect admin /
+  // seller mutation surfaces; Studio & Business screens handle onboarding.
+  return const <ShellDestination>[
     _homeDestination,
     _liveDestination,
     _aiDestination,
@@ -142,12 +147,14 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
     _friendsDestination,
     _marketplaceDestination,
     _learningDestination,
-    if (showBusiness) _businessDestination,
+    _businessDestination,
     _musicDestination,
-    if (showStudio) _studioDestination,
+    _studioDestination,
+    _giftsDestination,
     _walletDestination,
+    _analyticsDestination,
+    _profileDestination,
     _settingsDestination,
-    _moreDestination,
   ];
 }
 
@@ -158,19 +165,7 @@ bool canAccessRoleRoute(Iterable<String> roles, String path) {
         roleSet.contains('admin') ||
         roleSet.contains('owner');
   }
-  if (path == '/creator' ||
-      path.startsWith('/creator/') ||
-      path == '/creator-studio' ||
-      path.startsWith('/creator-studio/')) {
-    return roleSet.contains('creator') ||
-        roleSet.contains('admin') ||
-        roleSet.contains('owner');
-  }
-  if (path == '/business' || path.startsWith('/business/')) {
-    return roleSet.contains('business') ||
-        roleSet.contains('admin') ||
-        roleSet.contains('owner');
-  }
+  // Creator Studio / Business are always navigable; screens show enable CTAs.
   if (path == '/admin' || path.startsWith('/admin/')) {
     return roleSet.contains('admin') || roleSet.contains('owner');
   }
@@ -369,6 +364,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'wallet',
             pageBuilder: (context, state) =>
                 _page(state, const WalletScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/analytics',
+            name: 'analytics',
+            pageBuilder: (context, state) =>
+                _page(state, const AnalyticsScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/earnings',
@@ -762,9 +763,11 @@ String _localizedDestinationLabel(
       '/business' => l10n.navWorkspace,
       '/admin' => l10n.navAdmin,
       '/wallet' => l10n.walletTitle,
+      '/gifts' => l10n.moreGiftShop,
+      '/analytics' => l10n.navAnalytics,
       '/settings' => l10n.navSettings,
       '/compose' => l10n.feedCreatePost,
-      '/more' => fallback == 'Me' ? l10n.navMe : l10n.navMore,
+      '/more' => l10n.navProfile,
       _ => fallback.isEmpty ? l10n.navMore : fallback,
     };
 

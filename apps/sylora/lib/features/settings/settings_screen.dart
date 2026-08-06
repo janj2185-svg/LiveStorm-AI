@@ -469,89 +469,78 @@ Future<void> showEditProfileDialog(
   final locale = TextEditingController(text: profile.locale);
   final timezone = TextEditingController(text: profile.timezone);
   final maxWidth = MediaQuery.sizeOf(context).width;
-  await showDialog<void>(
+  await showSyloraDialog<void>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(l10n.settingsEditProfile),
-      content: SizedBox(
-        width: maxWidth < 560 ? maxWidth - 48 : 540,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: handle,
-                maxLength: 30,
-                decoration: InputDecoration(labelText: l10n.settingsHandle),
+    title: l10n.settingsEditProfile,
+    body: SizedBox(
+      width: maxWidth < 560 ? maxWidth - 48 : 540,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextField(
+              controller: handle,
+              maxLength: 30,
+              decoration: InputDecoration(labelText: l10n.settingsHandle),
+            ),
+            TextField(
+              controller: displayName,
+              maxLength: 100,
+              decoration: InputDecoration(
+                labelText: l10n.settingsDisplayName,
               ),
-              TextField(
-                controller: displayName,
-                maxLength: 100,
-                decoration: InputDecoration(
-                  labelText: l10n.settingsDisplayName,
-                ),
-              ),
-              TextField(
-                controller: bio,
-                maxLength: 2000,
-                minLines: 2,
-                maxLines: 6,
-                decoration: InputDecoration(labelText: l10n.settingsBio),
-              ),
-              TextField(
-                controller: locale,
-                decoration: InputDecoration(labelText: l10n.settingsLocale),
-              ),
-              TextField(
-                controller: timezone,
-                decoration: InputDecoration(labelText: l10n.settingsTimezone),
-              ),
-            ],
-          ),
+            ),
+            TextField(
+              controller: bio,
+              maxLength: 2000,
+              minLines: 2,
+              maxLines: 6,
+              decoration: InputDecoration(labelText: l10n.settingsBio),
+            ),
+            TextField(
+              controller: locale,
+              decoration: InputDecoration(labelText: l10n.settingsLocale),
+            ),
+            TextField(
+              controller: timezone,
+              decoration: InputDecoration(labelText: l10n.settingsTimezone),
+            ),
+          ],
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: Text(l10n.commonCancel),
-        ),
-        FilledButton(
-          onPressed: () async {
-            if (displayName.text.trim().isEmpty ||
-                locale.text.trim().isEmpty ||
-                timezone.text.trim().isEmpty) {
-              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                SnackBar(content: Text(l10n.settingsProfileRequired)),
-              );
-              return;
-            }
-            try {
-              final patch = <String, dynamic>{
-                'display_name': displayName.text.trim(),
-                'bio': bio.text.trim().isEmpty ? null : bio.text.trim(),
-                'locale': locale.text.trim(),
-                'timezone': timezone.text.trim(),
-                if (handle.text.trim().isNotEmpty) 'handle': handle.text.trim(),
-              };
-              await ref.read(accountRepositoryProvider).updateProfile(patch);
-              ref.invalidate(accountProvider);
-              if (dialogContext.mounted) {
-                Navigator.pop(dialogContext);
-              }
-            } on Object catch (error) {
-              if (dialogContext.mounted) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  SnackBar(
-                    content: Text(localizedMessageFor(dialogContext, error)),
-                  ),
-                );
-              }
-            }
-          },
-          child: Text(l10n.commonSave),
-        ),
-      ],
     ),
+    secondaryLabel: l10n.commonCancel,
+    primaryLabel: l10n.commonSave,
+    onPrimary: () async {
+      if (displayName.text.trim().isEmpty ||
+          locale.text.trim().isEmpty ||
+          timezone.text.trim().isEmpty) {
+        showSyloraNotice(context, l10n.settingsProfileRequired, error: true);
+        return;
+      }
+      try {
+        final patch = <String, dynamic>{
+          'display_name': displayName.text.trim(),
+          'bio': bio.text.trim().isEmpty ? null : bio.text.trim(),
+          'locale': locale.text.trim(),
+          'timezone': timezone.text.trim(),
+          if (handle.text.trim().isNotEmpty) 'handle': handle.text.trim(),
+        };
+        await ref.read(accountRepositoryProvider).updateProfile(patch);
+        ref.invalidate(accountProvider);
+        if (context.mounted) {
+          Navigator.pop(context);
+        }
+      } on Object catch (error) {
+        if (context.mounted) {
+          showSyloraNotice(
+            context,
+            localizedMessageFor(context, error),
+            error: true,
+          );
+        }
+      }
+    },
   );
   await Future<void>.delayed(const Duration(milliseconds: 200));
   handle.dispose();

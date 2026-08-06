@@ -527,7 +527,7 @@
   "communitiesChannels": "Channels",
   "communitiesNoChannelsTitle": "No visible channels",
   "communitiesNoChannelsMessage": "No channels are visible in this community.",
-"navMusic": "Music",
+  "navMusic": "Music",
   "navAura": "Aura",
   "navStudio": "Studio",
   "navLearn": "Learn",
@@ -548,5 +548,16 @@
   "auraTipLearning": "Learning with you — ask anything.",
   "auraTipCreator": "Your creative rhythm — I will adapt.",
   "auraTipSettings": "Let us set things up quietly, without noise.",
-  "auraTipDefault": "I am Aura — ready to help."
+  "auraTipDefault": "I am Aura — ready to help.",
+  "navAnalytics": "Analytics",
+  "analyticsSubtitle": "Audience, content, gifts, and earnings across your SYLORA presence.",
+  "analyticsEmptyTitle": "Your analytics awaken with creation",
+  "analyticsEmptyBody": "Open Creator or Studio to publish, go Live, and unlock living metrics for this account.",
+  "analyticsHeroTitle": "Your living signal",
+  "analyticsHeroBody": "These numbers come from the creator APIs — content, audience, gifts, and earnings in one place.",
+  "analyticsContent": "Content",
+  "analyticsPublished": "Published",
+  "analyticsFollowers": "Followers",
+  "analyticsSubscriptions": "Subscriptions",
+  "analyticsNextActions": "Next actions"
 }

@@ -2198,4 +2198,40 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get liveIntegrationsLoadError =>
       'Broadcast setup could not be loaded right now.';
+
+  @override
+  String get navAnalytics => 'Analytics';
+
+  @override
+  String get analyticsSubtitle =>
+      'Audience, content, gifts, and earnings across your SYLORA presence.';
+
+  @override
+  String get analyticsEmptyTitle => 'Your analytics awaken with creation';
+
+  @override
+  String get analyticsEmptyBody =>
+      'Open Creator or Studio to publish, go Live, and unlock living metrics for this account.';
+
+  @override
+  String get analyticsHeroTitle => 'Your living signal';
+
+  @override
+  String get analyticsHeroBody =>
+      'These numbers come from the creator APIs — content, audience, gifts, and earnings in one place.';
+
+  @override
+  String get analyticsContent => 'Content';
+
+  @override
+  String get analyticsPublished => 'Published';
+
+  @override
+  String get analyticsFollowers => 'Followers';
+
+  @override
+  String get analyticsSubscriptions => 'Subscriptions';
+
+  @override
+  String get analyticsNextActions => 'Next actions';
 }

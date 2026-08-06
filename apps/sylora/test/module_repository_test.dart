@@ -254,7 +254,7 @@ void main() {
     },
   );
 
-  test('admin and role-specific route guards deny unprivileged users', () {
+  test('admin route guards deny unprivileged users; studio stays open', () {
     expect(canAccessRoleRoute(const <String>['user'], '/admin'), isFalse);
     expect(
       canAccessRoleRoute(const <String>['business'], '/admin/users/user-id'),
@@ -264,14 +264,17 @@ void main() {
       canAccessRoleRoute(const <String>['admin'], '/admin/users/user-id'),
       isTrue,
     );
+    // Studio / Business / Creator remain navigable for onboarding CTAs.
     expect(
-      canAccessRoleRoute(const <String>['creator'], '/creator/content/item-id'),
+      canAccessRoleRoute(const <String>['user'], '/creator/content/item-id'),
       isTrue,
     );
     expect(
-      canAccessRoleRoute(const <String>['user'], '/creator/content/item-id'),
-      isFalse,
+      canAccessRoleRoute(const <String>['user'], '/creator-studio'),
+      isTrue,
     );
+    expect(canAccessRoleRoute(const <String>['user'], '/business'), isTrue);
+    expect(canAccessRoleRoute(const <String>['user'], '/analytics'), isTrue);
   });
 }
 

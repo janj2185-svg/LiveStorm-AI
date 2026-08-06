@@ -152,3 +152,31 @@ Future<T?> showSyloraSheet<T>({
     },
   );
 }
+
+/// Soft glass notice — replaces Material SnackBar on primary product paths.
+void showSyloraNotice(
+  BuildContext context,
+  String message, {
+  bool error = false,
+}) {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: error
+          ? SyloraTokens.danger.withValues(alpha: 0.92)
+          : SyloraTokens.ink.withValues(alpha: 0.88),
+      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+      ),
+      content: Text(
+        message,
+        style: SyloraTokens.body(14, color: SyloraTokens.inkInverse),
+      ),
+    ),
+  );
+}

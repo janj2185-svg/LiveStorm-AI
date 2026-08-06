@@ -18,16 +18,26 @@ depends_on = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("ai_conversations") as batch:
-        batch.add_column(
-            sa.Column(
-                "purpose",
-                sa.String(length=32),
-                nullable=False,
-                server_default="general",
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {column["name"] for column in inspector.get_columns("ai_conversations")}
+    indexes = {index["name"] for index in inspector.get_indexes("ai_conversations")}
+
+    if "purpose" not in columns:
+        with op.batch_alter_table("ai_conversations") as batch:
+            batch.add_column(
+                sa.Column(
+                    "purpose",
+                    sa.String(length=32),
+                    nullable=False,
+                    server_default="general",
+                )
             )
-        )
-        batch.create_index("ix_ai_conversations_purpose", ["purpose"], unique=False)
+    if "ix_ai_conversations_purpose" not in indexes:
+        with op.batch_alter_table("ai_conversations") as batch:
+            batch.create_index(
+                "ix_ai_conversations_purpose", ["purpose"], unique=False
+            )
 
 
 def downgrade() -> None:
