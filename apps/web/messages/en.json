@@ -51,6 +51,19 @@
     "logout": "Sign out",
     "emailVerified": "Email verified",
     "emailUnverified": "Email not verified yet",
-    "phaseNote": "Posts, feed, and notifications arrive in the next Phase 1 slice."
+    "phaseNote": "Posts, feed, and notifications are live."
+  },
+  "feed": {
+    "title": "Your feed",
+    "subtitle": "Welcome back, {name}",
+    "composePlaceholder": "Share something with SYLORA…",
+    "publish": "Publish",
+    "empty": "No posts yet — follow creators or publish your first post",
+    "like": "Like",
+    "comment": "Comment",
+    "follow": "Follow",
+    "commentPlaceholder": "Write a comment…",
+    "submitComment": "Reply",
+    "notifications": "Notifications"
   }
 }

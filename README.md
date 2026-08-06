@@ -45,7 +45,9 @@ legacy/               Archived previous iteration (do not extend)
 
 **Phase 0** — Foundation: API health, DB extensions, design system, i18n shell (UK/PL/EN), dev infrastructure.
 
-**Next: Phase 1** — Auth, profile, posts, feed, notifications (first vertical E2E flow).
+**Phase 1** — Auth, profiles, posts, feed, reactions, comments, follow, notifications, search.
+
+**Next** — Admin shell, password reset, WebSocket notifications, media uploads (Phase 1 completion).
 
 ## Principles
 

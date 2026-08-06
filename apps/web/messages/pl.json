@@ -51,6 +51,19 @@
     "logout": "Wyloguj",
     "emailVerified": "Email zweryfikowany",
     "emailUnverified": "Email jeszcze niezweryfikowany",
-    "phaseNote": "Posty, feed i powiadomienia — w kolejnym kroku Fazy 1."
+    "phaseNote": "Posty, feed i powiadomienia działają."
+  },
+  "feed": {
+    "title": "Twój feed",
+    "subtitle": "Witaj ponownie, {name}",
+    "composePlaceholder": "Podziel się czymś z SYLORA…",
+    "publish": "Opublikuj",
+    "empty": "Brak postów — obserwuj twórców lub opublikuj pierwszy post",
+    "like": "Lubię to",
+    "comment": "Komentarz",
+    "follow": "Obserwuj",
+    "commentPlaceholder": "Napisz komentarz…",
+    "submitComment": "Odpowiedz",
+    "notifications": "Powiadomienia"
   }
 }

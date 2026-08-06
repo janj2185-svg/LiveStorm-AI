@@ -30,8 +30,9 @@ def clean_tables() -> None:
     conn.autocommit = True
     with conn.cursor() as cur:
         cur.execute(
-            "TRUNCATE TABLE email_verification_tokens, sessions, user_credentials, "
-            "profiles, users RESTART IDENTITY CASCADE"
+            "TRUNCATE TABLE notifications, reactions, comments, posts, blocks, follows, "
+            "email_verification_tokens, sessions, user_credentials, profiles, users "
+            "RESTART IDENTITY CASCADE"
         )
     conn.close()
 

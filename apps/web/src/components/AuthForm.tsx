@@ -54,7 +54,7 @@ export function AuthForm({ mode, locale, labels, switchHref }: AuthFormProps) {
             : labels.errorGeneric;
         throw new Error(message);
       }
-      router.push(`/${locale}/home`);
+      router.push(`/${locale}/feed`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : labels.errorGeneric);
