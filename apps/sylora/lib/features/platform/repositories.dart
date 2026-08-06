@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -99,11 +98,34 @@ final class SocialSearchBundle {
     required this.users,
     required this.posts,
     required this.communities,
+    this.gifts = const <SearchHit>[],
+    this.products = const <SearchHit>[],
+    this.courses = const <SearchHit>[],
+    this.liveSessions = const <SearchHit>[],
+    this.musicTracks = const <SearchHit>[],
+    this.documents = const <SearchHit>[],
   });
 
   final List<ProfileModel> users;
   final List<PostModel> posts;
   final List<NamedResource> communities;
+  final List<SearchHit> gifts;
+  final List<SearchHit> products;
+  final List<SearchHit> courses;
+  final List<SearchHit> liveSessions;
+  final List<SearchHit> musicTracks;
+  final List<SearchHit> documents;
+
+  bool get isEmpty =>
+      users.isEmpty &&
+      posts.isEmpty &&
+      communities.isEmpty &&
+      gifts.isEmpty &&
+      products.isEmpty &&
+      courses.isEmpty &&
+      liveSessions.isEmpty &&
+      musicTracks.isEmpty &&
+      documents.isEmpty;
 }
 
 abstract interface class SocialRepository {
@@ -128,6 +150,10 @@ abstract interface class SocialRepository {
   Future<void> block(String handle, bool value);
   Future<void> mute(String handle, bool value);
   Future<SocialSearchBundle> search(String query);
+  Future<List<FriendModel>> friends();
+  Future<FriendRequestsModel> friendRequests();
+  Future<void> acceptFriendRequest(String friendshipId);
+  Future<void> rejectFriendRequest(String friendshipId);
   Future<NamedResource> community(String slug);
   Future<String> joinCommunity(String slug);
   Future<void> leaveCommunity(String slug);
@@ -308,44 +334,161 @@ final class DioSocialRepository implements SocialRepository {
 
   @override
   Future<SocialSearchBundle> search(String query) async {
-    final responses = await Future.wait<Response<dynamic>>([
-      _client.request(
-        'social/search/users',
-        queryParameters: <String, dynamic>{'q': query},
-      ),
-      _client.request(
-        'social/search/posts',
-        queryParameters: <String, dynamic>{'q': query},
-      ),
-      _client.request(
-        'social/search/communities',
-        queryParameters: <String, dynamic>{'q': query},
-      ),
-    ]);
-    final users = requireObject(responses[0].data, 'user search');
-    final posts = requireObject(responses[1].data, 'post search');
-    final communities = requireObject(responses[2].data, 'community search');
+    final response = await _client.request(
+      'search',
+      queryParameters: <String, dynamic>{'q': query},
+    );
+    final json = requireObject(response.data, 'global search');
+    SearchHit giftHit(Object? value) {
+      final item = requireObject(value, 'gift search item');
+      return SearchHit(
+        id: requireString(item, 'id'),
+        title: requireString(item, 'name'),
+        subtitle:
+            '${requireString(item, 'tier')} · ${requireInt(item, 'price_minor')}',
+        kind: 'gift',
+        routeName: 'gift-detail',
+        pathParameters: <String, String>{'slug': requireString(item, 'slug')},
+      );
+    }
+
+    SearchHit productHit(Object? value) {
+      final item = requireObject(value, 'product search item');
+      return SearchHit(
+        id: requireString(item, 'id'),
+        title: requireString(item, 'title'),
+        subtitle: requireString(item, 'category'),
+        kind: 'product',
+        routeName: 'marketplace-product',
+        pathParameters: <String, String>{'id': requireString(item, 'id')},
+      );
+    }
+
+    SearchHit courseHit(Object? value) {
+      final item = requireObject(value, 'course search item');
+      return SearchHit(
+        id: requireString(item, 'id'),
+        title: requireString(item, 'title'),
+        subtitle: requireString(item, 'category'),
+        kind: 'course',
+        routeName: 'learning-course',
+        pathParameters: <String, String>{'id': requireString(item, 'id')},
+      );
+    }
+
+    SearchHit liveHit(Object? value) {
+      final item = requireObject(value, 'live search item');
+      return SearchHit(
+        id: requireString(item, 'id'),
+        title: requireString(item, 'title'),
+        subtitle: requireString(item, 'state'),
+        kind: 'live',
+        routeName: 'live-session',
+        pathParameters: <String, String>{'id': requireString(item, 'id')},
+      );
+    }
+
+    SearchHit musicHit(Object? value) {
+      final item = requireObject(value, 'music search item');
+      return SearchHit(
+        id: requireString(item, 'id'),
+        title: requireString(item, 'title'),
+        subtitle: requireString(item, 'artist_name'),
+        kind: 'music',
+        routeName: 'music',
+      );
+    }
+
+    SearchHit documentHit(Object? value) {
+      final item = requireObject(value, 'document search item');
+      return SearchHit(
+        id: requireString(item, 'id'),
+        title: requireString(item, 'title'),
+        subtitle: requireString(item, 'state'),
+        kind: 'document',
+        routeName: 'business-document',
+        pathParameters: <String, String>{
+          'workspaceId': requireString(item, 'workspace_id'),
+          'documentId': requireString(item, 'id'),
+        },
+      );
+    }
+
     return SocialSearchBundle(
-      users: requireList(users, 'items')
+      users: requireList(json, 'users')
           .map(
             (value) => ProfileModel.fromPublicJson(
               requireObject(value, 'searched profile'),
             ),
           )
           .toList(growable: false),
-      posts: requireList(posts, 'items')
+      posts: requireList(json, 'posts')
           .map(
             (value) =>
                 PostModel.fromJson(requireObject(value, 'searched post')),
           )
           .toList(growable: false),
-      communities: requireList(communities, 'items')
+      communities: requireList(json, 'communities')
           .map(
             (value) => NamedResource.fromJson(
               requireObject(value, 'searched community'),
+              labelKey: 'name',
             ),
           )
           .toList(growable: false),
+      gifts: requireList(json, 'gifts').map(giftHit).toList(growable: false),
+      products: requireList(
+        json,
+        'marketplace_products',
+      ).map(productHit).toList(growable: false),
+      courses: requireList(
+        json,
+        'courses',
+      ).map(courseHit).toList(growable: false),
+      liveSessions: requireList(
+        json,
+        'live_sessions',
+      ).map(liveHit).toList(growable: false),
+      musicTracks: requireList(
+        json,
+        'music_tracks',
+      ).map(musicHit).toList(growable: false),
+      documents: requireList(
+        json,
+        'documents',
+      ).map(documentHit).toList(growable: false),
+    );
+  }
+
+  @override
+  Future<List<FriendModel>> friends() async {
+    final response = await _client.request('social/friends');
+    return _array(response.data, 'friends')
+        .map(FriendModel.fromJson)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<FriendRequestsModel> friendRequests() async {
+    final response = await _client.request('social/friend-requests');
+    return FriendRequestsModel.fromJson(
+      requireObject(response.data, 'friend requests'),
+    );
+  }
+
+  @override
+  Future<void> acceptFriendRequest(String friendshipId) async {
+    await _client.request(
+      'social/friend-requests/$friendshipId/accept',
+      method: 'POST',
+    );
+  }
+
+  @override
+  Future<void> rejectFriendRequest(String friendshipId) async {
+    await _client.request(
+      'social/friend-requests/$friendshipId/reject',
+      method: 'POST',
     );
   }
 
@@ -1678,4 +1821,129 @@ final liveRepositoryProvider = Provider<LiveRepository>(
     ref.watch(appConfigProvider),
     ref.watch(tokenStoreProvider),
   ),
+);
+
+abstract interface class MusicRepository {
+  Future<List<MusicTrackModel>> tracks({String? query, String? genre});
+  Future<MusicTrackModel> createTrack({
+    required String title,
+    required String artistName,
+    required String genre,
+    required int durationMs,
+  });
+  Future<MusicTrackModel> publishTrack(String trackId);
+  Future<List<MusicTrackModel>> library();
+  Future<void> saveToLibrary(String trackId);
+  Future<void> removeFromLibrary(String trackId);
+}
+
+final class DioMusicRepository implements MusicRepository {
+  const DioMusicRepository(this._client);
+
+  final ApiClient _client;
+
+  @override
+  Future<List<MusicTrackModel>> tracks({String? query, String? genre}) async {
+    final response = await _client.request(
+      'music/tracks',
+      queryParameters: <String, dynamic>{'q': query, 'genre': genre},
+    );
+    final json = requireObject(response.data, 'music tracks');
+    return requireList(json, 'items')
+        .map(
+          (value) =>
+              MusicTrackModel.fromJson(requireObject(value, 'music track')),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<MusicTrackModel> createTrack({
+    required String title,
+    required String artistName,
+    required String genre,
+    required int durationMs,
+  }) async {
+    final response = await _client.request(
+      'music/tracks',
+      method: 'POST',
+      data: <String, dynamic>{
+        'title': title,
+        'artist_name': artistName,
+        'genre': genre,
+        'duration_ms': durationMs,
+      },
+    );
+    return MusicTrackModel.fromJson(
+      requireObject(response.data, 'created music track'),
+    );
+  }
+
+  @override
+  Future<MusicTrackModel> publishTrack(String trackId) async {
+    final response = await _client.request(
+      'music/tracks/$trackId/publish',
+      method: 'POST',
+    );
+    return MusicTrackModel.fromJson(
+      requireObject(response.data, 'published music track'),
+    );
+  }
+
+  @override
+  Future<List<MusicTrackModel>> library() async {
+    final response = await _client.request('music/library');
+    final json = requireObject(response.data, 'music library');
+    return requireList(json, 'items')
+        .map(
+          (value) => MusicTrackModel.fromJson(
+            requireObject(value, 'library music track'),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> saveToLibrary(String trackId) async {
+    await _client.request('music/library/$trackId', method: 'POST');
+  }
+
+  @override
+  Future<void> removeFromLibrary(String trackId) async {
+    await _client.request('music/library/$trackId', method: 'DELETE');
+  }
+}
+
+abstract interface class ProgressionRepository {
+  Future<ProgressionModel> me();
+  Future<List<AchievementModel>> achievements();
+}
+
+final class DioProgressionRepository implements ProgressionRepository {
+  const DioProgressionRepository(this._client);
+
+  final ApiClient _client;
+
+  @override
+  Future<ProgressionModel> me() async {
+    final response = await _client.request('progression/me');
+    return ProgressionModel.fromJson(
+      requireObject(response.data, 'progression'),
+    );
+  }
+
+  @override
+  Future<List<AchievementModel>> achievements() async {
+    final response = await _client.request('progression/achievements');
+    return _array(response.data, 'achievements')
+        .map(AchievementModel.fromJson)
+        .toList(growable: false);
+  }
+}
+
+final musicRepositoryProvider = Provider<MusicRepository>(
+  (ref) => DioMusicRepository(ref.watch(apiClientProvider)),
+);
+final progressionRepositoryProvider = Provider<ProgressionRepository>(
+  (ref) => DioProgressionRepository(ref.watch(apiClientProvider)),
 );

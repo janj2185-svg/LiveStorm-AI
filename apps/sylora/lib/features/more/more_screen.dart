@@ -22,9 +22,24 @@ final class MoreEntry {
 
 const _entries = <MoreEntry>[
   MoreEntry(
+    label: 'Search',
+    routeName: 'search',
+    icon: Icons.search_rounded,
+  ),
+  MoreEntry(
+    label: 'Friends',
+    routeName: 'friends',
+    icon: Icons.group_outlined,
+  ),
+  MoreEntry(
     label: 'Learning',
     routeName: 'learning',
     icon: Icons.school_outlined,
+  ),
+  MoreEntry(
+    label: 'Music',
+    routeName: 'music',
+    icon: Icons.music_note_outlined,
   ),
   MoreEntry(
     label: 'Wallet',
@@ -32,20 +47,34 @@ const _entries = <MoreEntry>[
     icon: Icons.account_balance_wallet_outlined,
   ),
   MoreEntry(
-    label: 'Gifts',
+    label: 'Gift Shop',
     routeName: 'gifts',
     icon: Icons.card_giftcard_outlined,
   ),
-  MoreEntry(label: 'AI', routeName: 'ai', icon: Icons.auto_awesome_outlined),
+  MoreEntry(
+    label: 'Aura',
+    routeName: 'ai',
+    icon: Icons.auto_awesome_outlined,
+  ),
   MoreEntry(label: 'Live', routeName: 'live', icon: Icons.sensors_outlined),
   MoreEntry(
-    label: 'Creator',
+    label: 'Analytics',
+    routeName: 'analytics',
+    icon: Icons.insights_outlined,
+  ),
+  MoreEntry(
+    label: 'Profile',
+    routeName: 'profile',
+    icon: Icons.person_outline_rounded,
+  ),
+  MoreEntry(
+    label: 'Creator Studio',
     routeName: 'creator',
-    icon: Icons.edit_note_rounded,
+    icon: Icons.movie_creation_outlined,
     roles: <String>{'creator', 'admin'},
   ),
   MoreEntry(
-    label: 'Workspace',
+    label: 'Business',
     routeName: 'business',
     icon: Icons.business_outlined,
     roles: <String>{'business', 'admin'},
@@ -83,7 +112,7 @@ final class MoreScreen extends ConsumerWidget {
     return LumenPage(
       title: 'More',
       subtitle:
-          'Account tools and role-aware workspaces that do not fit compact navigation.',
+          'Every SYLORA module in one place — optimized for phone and tablet.',
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),

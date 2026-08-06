@@ -15,6 +15,7 @@ specification and gallery under `src/` and `docs/design/`.
 
 ```text
 apps/sylora/             Flutter app: Android, iOS, Web, Windows, macOS, Linux
+apps/admin/              React + Next.js admin console (API-backed)
 apps/gift-studio/        Browser gift authoring and Three.js preview
 packages/gift-runtime/   Strict gift manifest and rendering runtime
 services/api/            FastAPI, PostgreSQL, Redis and Celery application
@@ -64,6 +65,18 @@ docker compose \
 
 API documentation is exposed at `http://localhost:8000/docs`. Detailed backend
 configuration and endpoints are in `services/api/README.md`.
+
+## Run Admin (Next.js)
+
+```bash
+cd apps/admin
+npm ci
+npm run dev
+```
+
+Admin authenticates against the FastAPI `/v1/auth/*` and `/v1/admin/*`
+endpoints. Set `NEXT_PUBLIC_SYLORA_API_BASE_URL` when the API is not on
+`http://localhost:8000`.
 
 ## Run Flutter
 

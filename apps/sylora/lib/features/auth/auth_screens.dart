@@ -4,48 +4,188 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/locale.dart';
+import '../../core/lumen_motion.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import 'auth.dart';
 
-final class WelcomeScreen extends StatelessWidget {
+final class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
+  static const _capabilities = <(IconData, String, String)>[
+    (Icons.sensors_rounded, 'Live', 'Streams, gifts, OBS, WebRTC'),
+    (Icons.auto_awesome_rounded, 'Aura', 'AI that speaks, creates, remembers'),
+    (Icons.groups_rounded, 'Social', 'Feed, friends, communities'),
+    (Icons.school_outlined, 'Learning', 'Courses and certificates'),
+    (Icons.storefront_outlined, 'Market', 'Goods, services, subscriptions'),
+    (Icons.business_outlined, 'Business', 'CRM, docs, finance'),
+    (Icons.card_giftcard_rounded, 'Gifts', 'Cinematic gift runtime'),
+    (Icons.music_note_outlined, 'Music', 'Tracks and creator libraries'),
+  ];
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              children: <Widget>[
-                const SyloraLogo(size: 92),
-                const SizedBox(height: 28),
-                Text(
-                  'A brighter place to create together.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Your community, conversations, gifts, AI tools, and live control plane—connected to your SYLORA account.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 32),
-                LumenPrimaryButton(
-                  label: 'Continue',
-                  onPressed: () => context.goNamed('auth'),
-                ),
-              ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeControllerProvider);
+    final hints = PlatformChromeHints.of(context);
+    return LivingBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: hints.contentMaxWidth ?? 920,
+              ),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 48),
+                children: <Widget>[
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: PopupMenuButton<String>(
+                      tooltip: locale.t('language'),
+                      initialValue: locale.code,
+                      onSelected: (code) => ref
+                          .read(localeControllerProvider.notifier)
+                          .setLocale(code),
+                      itemBuilder: (context) => <PopupMenuEntry<String>>[
+                        for (final entry
+                            in SyloraLocaleCatalog.supported.entries)
+                          PopupMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                      ],
+                      child: GlassPanel(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        radius: 14,
+                        blur: 12,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            const Icon(Icons.language_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text(SyloraLocaleCatalog.labelFor(locale.code)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Center(
+                    child: AnimatedSyloraLogo(
+                      size: 108,
+                      state: LogoMotionState.thinking,
+                      showWordmark: true,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    locale.t('slogan'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontFamily: 'Instrument Serif',
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    locale.t('tagline'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 32),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: <Widget>[
+                      SizedBox(
+                        width: hints.formFactor == SyloraFormFactor.phone
+                            ? double.infinity
+                            : 220,
+                        child: LumenPrimaryButton(
+                          label: locale.t('sign_in'),
+                          icon: Icons.login_rounded,
+                          onPressed: () => context.goNamed('auth'),
+                        ),
+                      ),
+                      SizedBox(
+                        width: hints.formFactor == SyloraFormFactor.phone
+                            ? double.infinity
+                            : 220,
+                        child: LumenSecondaryButton(
+                          label: locale.t('create_account'),
+                          icon: Icons.person_add_alt_1_rounded,
+                          onPressed: () => context.go('/auth?create=1'),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => context.goNamed('learn-more'),
+                        child: Text(locale.t('learn_more')),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  Text(
+                    locale.t('capabilities'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 18),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final columns = constraints.maxWidth >= 840
+                          ? 4
+                          : constraints.maxWidth >= 560
+                          ? 2
+                          : 1;
+                      return GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: columns,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: columns == 1 ? 3.2 : 1.35,
+                        children: <Widget>[
+                          for (final item in _capabilities)
+                            GlassPanel(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Icon(item.$1, color: LumenColors.aether),
+                                  const Spacer(),
+                                  Text(
+                                    item.$2,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    item.$3,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 final class AuthScreen extends ConsumerStatefulWidget {
@@ -88,70 +228,77 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: LumenSurface(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: SyloraLogo(size: 54),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      'Welcome to SYLORA',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                    const SizedBox(height: 20),
-                    TabBar(
-                      controller: _tabs,
-                      tabs: const <Tab>[
-                        Tab(text: 'Sign in'),
-                        Tab(text: 'Create account'),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    AnimatedBuilder(
-                      animation: _tabs,
-                      builder: (context, child) => _tabs.index == 0
-                          ? _signInForm(auth)
-                          : _registerForm(auth),
-                    ),
-                    if (auth.error != null) ...<Widget>[
-                      const SizedBox(height: 14),
-                      _MessageBanner(message: auth.error!, error: true),
-                    ],
-                    if (auth.notice != null) ...<Widget>[
-                      const SizedBox(height: 14),
-                      _MessageBanner(message: auth.notice!),
-                    ],
-                    const SizedBox(height: 24),
-                    const _DividerLabel(label: 'or continue with'),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: <Widget>[
-                        _oauthButton('google'),
-                        _oauthButton('apple'),
-                        _oauthButton('github'),
-                      ],
-                    ),
-                    if (!kIsWeb) ...<Widget>[
-                      const SizedBox(height: 12),
-                      Text(
-                        'OAuth is disabled in this native build because an app deep-link callback has not been configured. Email sign-in remains available.',
-                        style: Theme.of(context).textTheme.bodySmall,
+    return LivingBackground(
+      intensity: 0.85,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: GlassPanel(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: AnimatedSyloraLogo(
+                          size: 54,
+                          state: LogoMotionState.listening,
+                        ),
                       ),
+                      const SizedBox(height: 18),
+                      Text(
+                        'Welcome to SYLORA',
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                      const SizedBox(height: 20),
+                      TabBar(
+                        controller: _tabs,
+                        tabs: const <Tab>[
+                          Tab(text: 'Sign in'),
+                          Tab(text: 'Create account'),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      AnimatedBuilder(
+                        animation: _tabs,
+                        builder: (context, child) => _tabs.index == 0
+                            ? _signInForm(auth)
+                            : _registerForm(auth),
+                      ),
+                      if (auth.error != null) ...<Widget>[
+                        const SizedBox(height: 14),
+                        _MessageBanner(message: auth.error!, error: true),
+                      ],
+                      if (auth.notice != null) ...<Widget>[
+                        const SizedBox(height: 14),
+                        _MessageBanner(message: auth.notice!),
+                      ],
+                      const SizedBox(height: 24),
+                      const _DividerLabel(label: 'or continue with'),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: <Widget>[
+                          _oauthButton('google'),
+                          _oauthButton('apple'),
+                          _oauthButton('github'),
+                        ],
+                      ),
+                      if (!kIsWeb) ...<Widget>[
+                        const SizedBox(height: 12),
+                        Text(
+                          'OAuth is disabled in this native build because an app deep-link callback has not been configured. Email sign-in remains available.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),

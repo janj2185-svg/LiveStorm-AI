@@ -646,3 +646,176 @@ final class LiveSessionModel {
   final String? streamKeyOnce;
   final List<LiveDestinationModel> destinations;
 }
+
+@immutable
+final class FriendModel {
+  const FriendModel({
+    required this.friendshipId,
+    required this.friend,
+    required this.friendsSince,
+  });
+
+  factory FriendModel.fromJson(JsonObject json) => FriendModel(
+    friendshipId: requireString(json, 'friendship_id'),
+    friend: ProfileModel.fromPublicJson(
+      requireObject(json['friend'], 'friend'),
+    ),
+    friendsSince: requireString(json, 'friends_since'),
+  );
+
+  final String friendshipId;
+  final ProfileModel friend;
+  final String friendsSince;
+}
+
+@immutable
+final class FriendRequestModel {
+  const FriendRequestModel({
+    required this.friendshipId,
+    required this.profile,
+    required this.createdAt,
+  });
+
+  factory FriendRequestModel.fromJson(JsonObject json) => FriendRequestModel(
+    friendshipId: requireString(json, 'friendship_id'),
+    profile: ProfileModel.fromPublicJson(
+      requireObject(json['profile'], 'friend request profile'),
+    ),
+    createdAt: requireString(json, 'created_at'),
+  );
+
+  final String friendshipId;
+  final ProfileModel profile;
+  final String createdAt;
+}
+
+@immutable
+final class FriendRequestsModel {
+  const FriendRequestsModel({
+    required this.incoming,
+    required this.outgoing,
+  });
+
+  factory FriendRequestsModel.fromJson(JsonObject json) => FriendRequestsModel(
+    incoming: requireList(json, 'incoming')
+        .map(
+          (value) => FriendRequestModel.fromJson(
+            requireObject(value, 'incoming friend request'),
+          ),
+        )
+        .toList(growable: false),
+    outgoing: requireList(json, 'outgoing')
+        .map(
+          (value) => FriendRequestModel.fromJson(
+            requireObject(value, 'outgoing friend request'),
+          ),
+        )
+        .toList(growable: false),
+  );
+
+  final List<FriendRequestModel> incoming;
+  final List<FriendRequestModel> outgoing;
+}
+
+@immutable
+final class MusicTrackModel {
+  const MusicTrackModel({
+    required this.id,
+    required this.title,
+    required this.artistName,
+    required this.genre,
+    required this.durationMs,
+    required this.status,
+  });
+
+  factory MusicTrackModel.fromJson(JsonObject json) => MusicTrackModel(
+    id: requireString(json, 'id'),
+    title: requireString(json, 'title'),
+    artistName: requireString(json, 'artist_name'),
+    genre: requireString(json, 'genre'),
+    durationMs: requireInt(json, 'duration_ms'),
+    status: requireString(json, 'status'),
+  );
+
+  final String id;
+  final String title;
+  final String artistName;
+  final String genre;
+  final int durationMs;
+  final String status;
+}
+
+@immutable
+final class AchievementModel {
+  const AchievementModel({
+    required this.id,
+    required this.code,
+    required this.name,
+    required this.description,
+    required this.xpReward,
+    this.unlockedAt,
+  });
+
+  factory AchievementModel.fromJson(JsonObject json) => AchievementModel(
+    id: requireString(json, 'id'),
+    code: requireString(json, 'code'),
+    name: requireString(json, 'name'),
+    description: requireString(json, 'description'),
+    xpReward: requireInt(json, 'xp_reward'),
+    unlockedAt: optionalString(json, 'unlocked_at'),
+  );
+
+  final String id;
+  final String code;
+  final String name;
+  final String description;
+  final int xpReward;
+  final String? unlockedAt;
+}
+
+@immutable
+final class ProgressionModel {
+  const ProgressionModel({
+    required this.level,
+    required this.xp,
+    required this.xpToNext,
+    required this.achievements,
+  });
+
+  factory ProgressionModel.fromJson(JsonObject json) => ProgressionModel(
+    level: requireInt(json, 'level'),
+    xp: requireInt(json, 'xp'),
+    xpToNext: requireInt(json, 'xp_to_next'),
+    achievements: requireList(json, 'achievements')
+        .map(
+          (value) => AchievementModel.fromJson(
+            requireObject(value, 'achievement'),
+          ),
+        )
+        .toList(growable: false),
+  );
+
+  final int level;
+  final int xp;
+  final int xpToNext;
+  final List<AchievementModel> achievements;
+}
+
+@immutable
+final class SearchHit {
+  const SearchHit({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.kind,
+    this.routeName,
+    this.pathParameters = const <String, String>{},
+  });
+
+  final String id;
+  final String title;
+  final String subtitle;
+  final String kind;
+  final String? routeName;
+  final Map<String, String> pathParameters;
+}

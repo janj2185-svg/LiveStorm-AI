@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/lumen_motion.dart';
 import 'core/lumen_theme.dart';
 import 'core/lumen_widgets.dart';
 import 'features/admin/admin_screens.dart';
+import 'features/aura/aura_overlay.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
 import 'features/creator/creator_screens.dart';
+import 'features/ecosystem/ecosystem_screens.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
 import 'features/more/more_screen.dart';
@@ -22,11 +25,17 @@ const _homeDestination = ShellDestination(
   selectedIcon: Icons.home_rounded,
   path: '/home',
 );
-const _searchDestination = ShellDestination(
-  label: 'Search',
-  icon: Icons.search_outlined,
-  selectedIcon: Icons.search_rounded,
-  path: '/search',
+const _liveDestination = ShellDestination(
+  label: 'Live',
+  icon: Icons.sensors_outlined,
+  selectedIcon: Icons.sensors_rounded,
+  path: '/live',
+);
+const _auraDestination = ShellDestination(
+  label: 'Aura',
+  icon: Icons.auto_awesome_outlined,
+  selectedIcon: Icons.auto_awesome_rounded,
+  path: '/ai',
 );
 const _messagesDestination = ShellDestination(
   label: 'Messages',
@@ -34,23 +43,71 @@ const _messagesDestination = ShellDestination(
   selectedIcon: Icons.chat_bubble_rounded,
   path: '/messages',
 );
+const _friendsDestination = ShellDestination(
+  label: 'Friends',
+  icon: Icons.group_outlined,
+  selectedIcon: Icons.group_rounded,
+  path: '/friends',
+);
 const _marketplaceDestination = ShellDestination(
   label: 'Market',
   icon: Icons.storefront_outlined,
   selectedIcon: Icons.storefront_rounded,
   path: '/marketplace',
 );
-const _creatorDestination = ShellDestination(
-  label: 'Creator',
-  icon: Icons.edit_note_outlined,
-  selectedIcon: Icons.edit_note_rounded,
-  path: '/creator',
+const _learningDestination = ShellDestination(
+  label: 'Learning',
+  icon: Icons.school_outlined,
+  selectedIcon: Icons.school_rounded,
+  path: '/learning',
 );
 const _businessDestination = ShellDestination(
-  label: 'Workspace',
+  label: 'Business',
   icon: Icons.business_outlined,
   selectedIcon: Icons.business_rounded,
   path: '/business',
+);
+const _musicDestination = ShellDestination(
+  label: 'Music',
+  icon: Icons.music_note_outlined,
+  selectedIcon: Icons.music_note_rounded,
+  path: '/music',
+);
+const _creatorDestination = ShellDestination(
+  label: 'Creator Studio',
+  icon: Icons.movie_creation_outlined,
+  selectedIcon: Icons.movie_creation_rounded,
+  path: '/creator',
+);
+const _giftsDestination = ShellDestination(
+  label: 'Gift Shop',
+  icon: Icons.card_giftcard_outlined,
+  selectedIcon: Icons.card_giftcard_rounded,
+  path: '/gifts',
+);
+const _walletDestination = ShellDestination(
+  label: 'Wallet',
+  icon: Icons.account_balance_wallet_outlined,
+  selectedIcon: Icons.account_balance_wallet_rounded,
+  path: '/wallet',
+);
+const _analyticsDestination = ShellDestination(
+  label: 'Analytics',
+  icon: Icons.insights_outlined,
+  selectedIcon: Icons.insights_rounded,
+  path: '/analytics',
+);
+const _profileDestination = ShellDestination(
+  label: 'Profile',
+  icon: Icons.person_outline_rounded,
+  selectedIcon: Icons.person_rounded,
+  path: '/profile',
+);
+const _settingsDestination = ShellDestination(
+  label: 'Settings',
+  icon: Icons.settings_outlined,
+  selectedIcon: Icons.settings_rounded,
+  path: '/settings',
 );
 const _adminDestination = ShellDestination(
   label: 'Admin',
@@ -64,12 +121,18 @@ const _moreDestination = ShellDestination(
   selectedIcon: Icons.apps_rounded,
   path: '/more',
 );
+const _searchDestination = ShellDestination(
+  label: 'Search',
+  icon: Icons.search_outlined,
+  selectedIcon: Icons.search_rounded,
+  path: '/search',
+);
 
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
-  _searchDestination,
+  _liveDestination,
+  _auraDestination,
   _messagesDestination,
-  _marketplaceDestination,
   _moreDestination,
 ];
 
@@ -78,12 +141,22 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   return <ShellDestination>[
     _homeDestination,
     _searchDestination,
+    _liveDestination,
+    _auraDestination,
     _messagesDestination,
+    _friendsDestination,
     _marketplaceDestination,
-    if (roleSet.contains('creator') || roleSet.contains('admin'))
-      _creatorDestination,
+    _learningDestination,
     if (roleSet.contains('business') || roleSet.contains('admin'))
       _businessDestination,
+    _musicDestination,
+    if (roleSet.contains('creator') || roleSet.contains('admin'))
+      _creatorDestination,
+    _giftsDestination,
+    _walletDestination,
+    _analyticsDestination,
+    _profileDestination,
+    _settingsDestination,
     if (roleSet.contains('admin')) _adminDestination,
     _moreDestination,
   ];
@@ -130,8 +203,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         name: 'auth',
+        pageBuilder: (context, state) => _page(
+          state,
+          AuthScreen(
+            initialCreateAccount: state.uri.queryParameters['create'] == '1',
+          ),
+          reducedMotion,
+        ),
+      ),
+      GoRoute(
+        path: '/learn-more',
+        name: 'learn-more',
         pageBuilder: (context, state) =>
-            _page(state, const AuthScreen(), reducedMotion),
+            _page(state, const LearnMoreScreen(), reducedMotion),
       ),
       GoRoute(
         path: '/mfa',
@@ -170,6 +254,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             state.uri.path,
             _compactDestinations,
           );
+          final hints = PlatformChromeHints.of(context);
           return LumenResponsiveShell(
             destinations: destinations,
             selectedIndex: index,
@@ -179,6 +264,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             compactSelectedIndex: compactIndex,
             onCompactDestinationSelected: (value) =>
                 context.go(_compactDestinations[value].path),
+            topBar: EcosystemTopBar(height: hints.topBarHeight),
+            floatingActionButton: const AuraFab(),
             contextPanel: index == 0 ? const RecommendationsPanel() : null,
             body: child,
           );
@@ -203,6 +290,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 _page(state, const ConversationsScreen(), reducedMotion),
           ),
           GoRoute(
+            path: '/friends',
+            name: 'friends',
+            pageBuilder: (context, state) =>
+                _page(state, const FriendsScreen(), reducedMotion),
+          ),
+          GoRoute(
             path: '/marketplace',
             name: 'marketplace',
             pageBuilder: (context, state) =>
@@ -213,6 +306,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'learning',
             pageBuilder: (context, state) =>
                 _page(state, const LearningScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/music',
+            name: 'music',
+            pageBuilder: (context, state) =>
+                _page(state, const MusicScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/analytics',
+            name: 'analytics',
+            pageBuilder: (context, state) =>
+                _page(state, const AnalyticsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            pageBuilder: (context, state) =>
+                _page(state, const ProfileHubScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/creator',
@@ -508,6 +619,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/auth',
         '/verify-email',
         '/reset-password',
+        '/learn-more',
       }.contains(location);
       return switch (auth.status) {
         AuthStatus.checking => location == '/splash' ? null : '/splash',
@@ -595,15 +707,26 @@ final class _SplashScreen extends StatelessWidget {
   const _SplashScreen();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          SyloraLogo(size: 72),
-          SizedBox(height: 20),
-          CircularProgressIndicator(),
-        ],
+  Widget build(BuildContext context) => const LivingBackground(
+    child: Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            AnimatedSyloraLogo(
+              size: 96,
+              state: LogoMotionState.thinking,
+              showWordmark: true,
+            ),
+            SizedBox(height: 28),
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.4),
+            ),
+          ],
+        ),
       ),
     ),
   );

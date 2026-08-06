@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api.dart';
+import 'lumen_motion.dart';
 import 'lumen_theme.dart';
 
 final class LumenSurface extends StatelessWidget {
@@ -283,6 +284,8 @@ final class LumenResponsiveShell extends StatelessWidget {
     this.compactSelectedIndex,
     this.onCompactDestinationSelected,
     this.contextPanel,
+    this.topBar,
+    this.floatingActionButton,
   });
 
   final Widget body;
@@ -293,79 +296,190 @@ final class LumenResponsiveShell extends StatelessWidget {
   final int? compactSelectedIndex;
   final ValueChanged<int>? onCompactDestinationSelected;
   final Widget? contextPanel;
+  final PreferredSizeWidget? topBar;
+  final Widget? floatingActionButton;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      if (width < 768) {
-        final mobileDestinations = compactDestinations ?? destinations;
-        final mobileIndex = compactSelectedIndex ?? selectedIndex;
-        return Scaffold(
-          body: body,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: mobileIndex.clamp(0, mobileDestinations.length - 1),
-            onDestinationSelected:
-                onCompactDestinationSelected ?? onDestinationSelected,
-            destinations: <NavigationDestination>[
-              for (final destination in mobileDestinations)
-                NavigationDestination(
-                  icon: Icon(destination.icon),
-                  selectedIcon: Icon(destination.selectedIcon),
-                  label: destination.label,
-                ),
-            ],
-          ),
-        );
-      }
-      final expanded = width >= 1280;
-      return Scaffold(
-        body: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            NavigationRail(
-              extended: expanded,
-              selectedIndex: selectedIndex,
-              onDestinationSelected: onDestinationSelected,
-              leading: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: expanded
-                    ? const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          SyloraLogo(),
-                          SizedBox(width: 12),
-                          Text('SYLORA'),
-                        ],
-                      )
-                    : const SyloraLogo(),
+  Widget build(BuildContext context) {
+    final hints = PlatformChromeHints.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        if (width < 768) {
+          final mobileDestinations = compactDestinations ?? destinations;
+          final mobileIndex = compactSelectedIndex ?? selectedIndex;
+          return Scaffold(
+            appBar: topBar,
+            body: body,
+            floatingActionButton: floatingActionButton,
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: mobileIndex.clamp(
+                0,
+                mobileDestinations.length - 1,
               ),
-              destinations: <NavigationRailDestination>[
-                for (final destination in destinations)
-                  NavigationRailDestination(
+              onDestinationSelected:
+                  onCompactDestinationSelected ?? onDestinationSelected,
+              destinations: <NavigationDestination>[
+                for (final destination in mobileDestinations)
+                  NavigationDestination(
                     icon: Icon(destination.icon),
                     selectedIcon: Icon(destination.selectedIcon),
-                    label: Text(destination.label),
+                    label: destination.label,
                   ),
               ],
             ),
-            VerticalDivider(
-              width: 1,
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            Expanded(child: body),
-            if (expanded && contextPanel != null) ...<Widget>[
+          );
+        }
+        final expanded =
+            width >= 1280 || hints.railExtendedPreferred;
+        final safeIndex = selectedIndex.clamp(0, destinations.length - 1);
+        return Scaffold(
+          floatingActionButton: floatingActionButton,
+          body: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              SizedBox(
+                width: expanded ? 248 : 88,
+                child: Material(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Column(
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+                        child: expanded
+                            ? const Row(
+                                children: <Widget>[
+                                  AnimatedSyloraLogo(
+                                    size: 36,
+                                    state: LogoMotionState.rest,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'SYLORA',
+                                    style: TextStyle(
+                                      fontFamily: 'Instrument Serif',
+                                      fontSize: 22,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const AnimatedSyloraLogo(
+                                size: 36,
+                                state: LogoMotionState.rest,
+                              ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: destinations.length,
+                          itemBuilder: (context, index) {
+                            final destination = destinations[index];
+                            final selected = index == safeIndex;
+                            final color = selected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 2,
+                              ),
+                              child: RippleInk(
+                                borderRadius: 14,
+                                onTap: () => onDestinationSelected(index),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: expanded ? 14 : 0,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? LumenColors.aether.withValues(
+                                            alpha: 0.1,
+                                          )
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: expanded
+                                      ? Row(
+                                          children: <Widget>[
+                                            Icon(
+                                              selected
+                                                  ? destination.selectedIcon
+                                                  : destination.icon,
+                                              color: color,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                destination.label,
+                                                style: TextStyle(
+                                                  color: color,
+                                                  fontWeight: selected
+                                                      ? FontWeight.w600
+                                                      : FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : Column(
+                                          children: <Widget>[
+                                            Icon(
+                                              selected
+                                                  ? destination.selectedIcon
+                                                  : destination.icon,
+                                              color: color,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              destination.label,
+                                              textAlign: TextAlign.center,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: color,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               VerticalDivider(
                 width: 1,
                 color: Theme.of(context).colorScheme.outlineVariant,
               ),
-              SizedBox(width: 340, child: contextPanel),
+              Expanded(
+                child: Column(
+                  children: <Widget>[
+                    ?topBar,
+                    Expanded(child: body),
+                  ],
+                ),
+              ),
+              if (expanded && contextPanel != null) ...<Widget>[
+                VerticalDivider(
+                  width: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+                SizedBox(width: 340, child: contextPanel),
+              ],
             ],
-          ],
-        ),
-      );
-    },
-  );
+          ),
+        );
+      },
+    );
+  }
 }
 
 final class LumenPage extends StatelessWidget {

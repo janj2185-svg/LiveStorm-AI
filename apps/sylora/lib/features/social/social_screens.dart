@@ -516,7 +516,8 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) => LumenPage(
     title: 'Search',
-    subtitle: 'Search current users, posts, and communities.',
+    subtitle:
+        'People, posts, communities, live, gifts, courses, products, music, and documents.',
     child: Column(
       children: <Widget>[
         SearchBar(
@@ -557,18 +558,44 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
                 return LumenErrorView(error: snapshot.error!, onRetry: _search);
               }
               final data = snapshot.requireData;
-              if (data.users.isEmpty &&
-                  data.posts.isEmpty &&
-                  data.communities.isEmpty) {
+              if (data.isEmpty) {
                 return LumenEmptyView(
                   title: 'No results',
                   message:
-                      'The API returned no users, posts, or communities for this query.',
+                      'The API returned no matches across people, media, commerce, or documents.',
                   actionLabel: 'Edit search',
                   onAction: _searchFocus.requestFocus,
                   icon: Icons.search_off_rounded,
                 );
               }
+              Widget hits(String title, List<SearchHit> items) {
+                if (items.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const SizedBox(height: 16),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    for (final item in items)
+                      ListTile(
+                        title: Text(item.title),
+                        subtitle: Text('${item.kind} · ${item.subtitle}'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: item.routeName == null
+                            ? null
+                            : () => context.pushNamed(
+                                item.routeName!,
+                                pathParameters: item.pathParameters,
+                              ),
+                      ),
+                  ],
+                );
+              }
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -619,6 +646,12 @@ final class _SearchScreenState extends ConsumerState<SearchScreen> {
                         ),
                       ),
                   ],
+                  hits('Live', data.liveSessions),
+                  hits('Gifts', data.gifts),
+                  hits('Products', data.products),
+                  hits('Courses', data.courses),
+                  hits('Music', data.musicTracks),
+                  hits('Documents', data.documents),
                 ],
               );
             },

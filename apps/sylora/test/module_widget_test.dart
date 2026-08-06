@@ -34,8 +34,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Creator'), findsOneWidget);
-    expect(find.text('Workspace'), findsOneWidget);
+    expect(find.text('Creator Studio'), findsOneWidget);
+    expect(find.text('Business'), findsOneWidget);
     expect(find.text('Administration'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox());
@@ -59,8 +59,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Creator'), findsNothing);
-    expect(find.text('Workspace'), findsNothing);
+    expect(find.text('Creator Studio'), findsNothing);
+    expect(find.text('Business'), findsNothing);
     expect(find.text('Administration'), findsNothing);
     expect(find.text('Learning'), findsOneWidget);
   });
@@ -151,7 +151,10 @@ void main() {
 
 Widget _material(Widget home) => MaterialApp(
   theme: LumenTheme.light(),
-  home: Scaffold(body: home),
+  home: MediaQuery(
+    data: const MediaQueryData(disableAnimations: true),
+    child: Scaffold(body: home),
+  ),
 );
 
 final class _RoleAuthRepository implements AuthRepository {

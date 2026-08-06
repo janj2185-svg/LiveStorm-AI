@@ -88,7 +88,9 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1300, 800));
     await tester.pumpWidget(shell());
     await tester.pump();
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.text('SYLORA'), findsOneWidget);
+    expect(find.text('Home'), findsWidgets);
     expect(find.text('Context'), findsOneWidget);
     await tester.binding.setSurfaceSize(null);
   });
@@ -243,5 +245,8 @@ void main() {
 
 Widget _material(Widget home) => MaterialApp(
   theme: LumenTheme.light(),
-  home: Scaffold(body: home),
+  home: MediaQuery(
+    data: const MediaQueryData(disableAnimations: true),
+    child: Scaffold(body: home),
+  ),
 );
