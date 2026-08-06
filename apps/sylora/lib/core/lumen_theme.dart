@@ -88,28 +88,28 @@ final visualSettingsProvider =
     );
 
 abstract final class LumenColors {
-  // SYLORA Lumen — FINAL champagne-glass product surfaces
-  static const porcelainCanvas = Color(0xFFFFF7EE); // Warm Ivory
-  static const porcelainSurface = Color(0xFFFFFCF8);
-  static const porcelainHover = Color(0xFFF6EADF);
-  static const porcelainBorder = Color(0xFFE2D4C2);
-  static const porcelainMuted = Color(0xFF4A5560);
-  static const porcelainInk = Color(0xFF0F1720); // Deep Ink
+  // SYLORA Ethereal — cool porcelain · gold · cyan · violet accents
+  static const porcelainCanvas = Color(0xFFF4F6FA);
+  static const porcelainSurface = Color(0xFFFBFCFF);
+  static const porcelainHover = Color(0xFFEBEEF5);
+  static const porcelainBorder = Color(0xFFD5DBE6);
+  static const porcelainMuted = Color(0xFF5B6574);
+  static const porcelainInk = Color(0xFF121826);
 
   static const darkCanvas = Color(0xFF0F1720);
   static const darkSurface = Color(0xFF1A2430);
   static const darkRaised = Color(0xFF243040);
   static const darkBorder = Color(0xFF3D4A5A);
   static const darkMuted = Color(0xFFDCEEFF);
-  static const darkInk = Color(0xFFFFFCF8);
+  static const darkInk = Color(0xFFFBFCFF);
 
-  static const aether = Color(0xFFC9A45C); // Champagne deep (primary)
+  static const aether = Color(0xFFC9A45C); // Gold deep (primary CTA)
   static const aetherBright = Color(0xFFE6C88B);
-  static const pulse = Color(0xFF8EB8D8); // Soft sky deep
-  static const bloom = Color(0xFFFF8F7A); // Soft coral
-  static const verdigris = Color(0xFF7EC8B8);
+  static const pulse = Color(0xFF5EC8FF); // Cyan energy
+  static const bloom = Color(0xFF8B7CFF); // Violet accent
+  static const verdigris = Color(0xFF6ED6C5);
   static const solar = Color(0xFFF5DEB3);
-  static const rose = Color(0xFFE56B58);
+  static const rose = Color(0xFFFF6B6B);
 }
 
 abstract final class LumenTheme {

@@ -58,7 +58,7 @@ final class SyloraGlyph extends StatelessWidget {
   }
 }
 
-/// Lumen Gate — living brand mark (twin crescents + filament + diamond core).
+/// Liquid S Sigil — living Ethereal brand mark.
 final class SyloraMark extends StatefulWidget {
   const SyloraMark({
     super.key,
@@ -82,7 +82,7 @@ final class _SyloraMarkState extends State<SyloraMark>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 6800),
+      duration: SyloraTokens.durSigil,
     );
     if (widget.animated) {
       _start();
@@ -129,7 +129,7 @@ final class _SyloraMarkState extends State<SyloraMark>
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, _) => CustomPaint(
-            painter: _LumenGatePainter(
+            painter: _LiquidSPainter(
               t: widget.animated ? _controller.value : 0.22,
               living: widget.animated,
             ),
@@ -140,8 +140,8 @@ final class _SyloraMarkState extends State<SyloraMark>
   }
 }
 
-final class _LumenGatePainter extends CustomPainter {
-  const _LumenGatePainter({required this.t, required this.living});
+final class _LiquidSPainter extends CustomPainter {
+  const _LiquidSPainter({required this.t, required this.living});
 
   final double t;
   final bool living;
@@ -154,248 +154,132 @@ final class _LumenGatePainter extends CustomPainter {
     canvas.translate(ox, oy);
 
     final breath = living ? 0.5 + 0.5 * math.sin(t * math.pi * 2) : 0.55;
-    final pulse = living ? 0.5 + 0.5 * math.sin(t * math.pi * 4) : 0.5;
-    final gate = living ? 0.5 + 0.5 * math.sin(t * math.pi * 2 * 0.72) : 0.5;
-    final open = living ? 1 + 0.028 * gate : 1.0;
+    final shimmer = living ? 0.5 + 0.5 * math.sin(t * math.pi * 2 * 1.35) : 0.5;
+    final c = Offset(s * 0.5, s * 0.5);
 
-    // Soft light wash behind the gate.
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(s * 0.5, s * 0.5),
-        width: s * (0.72 + 0.06 * breath),
-        height: s * (0.88 + 0.04 * breath),
-      ),
-      Paint()
-        ..color = SyloraTokens.champagne.withValues(alpha: 0.1 + 0.08 * breath)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.08),
-    );
-
-    // Expanding light waves (elegant, not busy).
-    if (living) {
-      for (var i = 0; i < 2; i++) {
-        final phase = (t + i * 0.45) % 1.0;
-        final w = s * (0.34 + phase * 0.36);
-        final h = s * (0.42 + phase * 0.4);
-        canvas.drawOval(
-          Rect.fromCenter(
-            center: Offset(s * 0.5, s * 0.5),
-            width: w,
-            height: h,
-          ),
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = s * 0.01
-            ..color = SyloraTokens.champagne.withValues(alpha: (1 - phase) * 0.22),
-        );
-      }
-    }
-
-    canvas.save();
-    canvas.translate(s * 0.5, s * 0.5);
-    canvas.scale(open, 1);
-    canvas.translate(-s * 0.5, -s * 0.5);
-
-    final left = _leftArc(s);
-    final right = _rightArc(s);
-
-    // Soft outer stroke
-    final soft = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = s * 0.07
-      ..strokeCap = StrokeCap.round
-      ..color = SyloraTokens.champagne.withValues(alpha: 0.22)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.025);
-    canvas.drawPath(left, soft);
-    canvas.drawPath(right, soft);
-
-    final leftPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = s * 0.032
-      ..strokeCap = StrokeCap.round
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: const [
-          SyloraTokens.champagneLight,
-          SyloraTokens.champagne,
-          SyloraTokens.softSkyDeep,
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, s, s));
-    final rightPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = s * 0.032
-      ..strokeCap = StrokeCap.round
-      ..shader = LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: const [
-          SyloraTokens.softSky,
-          SyloraTokens.champagne,
-          SyloraTokens.champagneDeep,
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, s, s));
-    canvas.drawPath(left, leftPaint);
-    canvas.drawPath(right, rightPaint);
-    canvas.restore();
-
-    // Vertical filament with traveling energy.
-    final filament = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = s * 0.02
-      ..strokeCap = StrokeCap.round
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          SyloraTokens.softSkyDeep,
-          SyloraTokens.champagneLight,
-          Colors.white,
-          SyloraTokens.champagne,
-          SyloraTokens.champagneDeep,
-        ],
-        stops: const [0, 0.35, 0.5, 0.72, 1],
-      ).createShader(Rect.fromLTWH(s * 0.48, s * 0.12, s * 0.04, s * 0.76));
-    canvas.drawLine(
-      Offset(s * 0.5, s * 0.14),
-      Offset(s * 0.5, s * 0.86),
-      filament,
-    );
-    canvas.drawLine(
-      Offset(s * 0.5, s * 0.22),
-      Offset(s * 0.5, s * 0.78),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s * 0.007
-        ..strokeCap = StrokeCap.round
-        ..color = Colors.white.withValues(alpha: 0.7 + 0.2 * pulse),
-    );
-
-    // Traveling spark along filament.
-    if (living) {
-      final y = s * (0.2 + 0.6 * ((t * 1.15) % 1.0));
-      canvas.drawCircle(
-        Offset(s * 0.5, y),
-        s * 0.018,
-        Paint()
-          ..color = Colors.white
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.02),
-      );
-    }
-
-    // Diamond nucleus.
-    final core = s * (0.078 + 0.012 * breath);
-    final diamond = Path()
-      ..moveTo(s * 0.5, s * 0.5 - core)
-      ..lineTo(s * 0.5 + core * 0.72, s * 0.5)
-      ..lineTo(s * 0.5, s * 0.5 + core)
-      ..lineTo(s * 0.5 - core * 0.72, s * 0.5)
-      ..close();
-    canvas.drawPath(
-      diamond,
-      Paint()
-        ..color = SyloraTokens.champagne.withValues(alpha: 0.28 + 0.18 * breath)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.04),
-    );
-    canvas.drawPath(
-      diamond,
+    // Energy orb wash.
+    canvas.drawCircle(
+      c,
+      s * (0.42 + 0.04 * breath),
       Paint()
         ..shader = RadialGradient(
           colors: [
-            Colors.white,
-            SyloraTokens.champagneLight,
-            SyloraTokens.champagne,
+            Colors.white.withValues(alpha: 0.55 + 0.2 * breath),
+            SyloraTokens.cyan.withValues(alpha: 0.18 + 0.1 * breath),
+            SyloraTokens.violet.withValues(alpha: 0.12),
+            SyloraTokens.gold.withValues(alpha: 0.08),
+            Colors.transparent,
           ],
-        ).createShader(
-          Rect.fromCircle(center: Offset(s * 0.5, s * 0.5), radius: core),
-        ),
-    );
-    final inner = core * 0.38;
-    canvas.drawPath(
-      Path()
-        ..moveTo(s * 0.5, s * 0.5 - inner)
-        ..lineTo(s * 0.5 + inner * 0.7, s * 0.5)
-        ..lineTo(s * 0.5, s * 0.5 + inner)
-        ..lineTo(s * 0.5 - inner * 0.7, s * 0.5)
-        ..close(),
-      Paint()..color = Colors.white,
+          stops: const [0, 0.28, 0.5, 0.72, 1],
+        ).createShader(Rect.fromCircle(center: c, radius: s * 0.5)),
     );
 
-    // Endpoint nodes.
-    final nodes = <Offset>[
-      Offset(s * 0.36, s * 0.17),
-      Offset(s * 0.64, s * 0.156),
-      Offset(s * 0.41, s * 0.84),
-      Offset(s * 0.59, s * 0.86),
-    ];
-    for (final n in nodes) {
-      canvas.drawCircle(
-        n,
-        s * 0.016,
-        Paint()..color = SyloraTokens.champagneLight.withValues(alpha: 0.9),
-      );
+    // Soft expanding energy rings.
+    if (living) {
+      for (var i = 0; i < 2; i++) {
+        final phase = (t + i * 0.5) % 1.0;
+        canvas.drawCircle(
+          c,
+          s * (0.22 + phase * 0.28),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = s * 0.008
+            ..color = Color.lerp(
+              SyloraTokens.cyan,
+              SyloraTokens.gold,
+              phase,
+            )!
+                .withValues(alpha: (1 - phase) * 0.28),
+        );
+      }
     }
 
-    // Orbiting motes (sparse).
+    // Liquid S path (readable at favicon size).
+    final sigil = _liquidS(s);
+    final soft = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.12
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = SyloraTokens.violet.withValues(alpha: 0.22 + 0.1 * breath)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.035);
+    canvas.drawPath(sigil, soft);
+
+    final shift = living ? shimmer * 0.15 : 0.0;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.085
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..shader = LinearGradient(
+        begin: Alignment(-1 + shift, -1),
+        end: Alignment(1 + shift, 1),
+        colors: const [
+          SyloraTokens.cyan,
+          SyloraTokens.violet,
+          SyloraTokens.gold,
+          SyloraTokens.goldLight,
+        ],
+        stops: const [0, 0.35, 0.7, 1],
+      ).createShader(Rect.fromLTWH(0, 0, s, s));
+    canvas.drawPath(sigil, paint);
+
+    // Inner highlight filament along S.
+    canvas.drawPath(
+      sigil,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.028
+        ..strokeCap = StrokeCap.round
+        ..color = Colors.white.withValues(alpha: 0.55 + 0.25 * shimmer),
+    );
+
+    // Core spark at the S mid bend.
+    final spark = Offset(s * 0.5, s * 0.5);
+    canvas.drawCircle(
+      spark,
+      s * (0.035 + 0.01 * breath),
+      Paint()
+        ..color = Colors.white
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.02),
+    );
+    canvas.drawCircle(
+      spark,
+      s * 0.02,
+      Paint()..color = Colors.white.withValues(alpha: 0.95),
+    );
+
+    // Orbiting energy motes.
     if (living) {
-      for (var i = 0; i < 4; i++) {
-        final a = t * math.pi * 2 * (0.7 + i * 0.08) + i * 1.4;
-        final rx = s * (0.28 + 0.04 * math.sin(t * 6 + i));
-        final ry = s * (0.36 + 0.03 * math.cos(t * 5 + i));
-        final p = Offset(s * 0.5 + math.cos(a) * rx, s * 0.5 + math.sin(a) * ry);
+      for (var i = 0; i < 5; i++) {
+        final a = t * math.pi * 2 * (0.65 + i * 0.07) + i * 1.15;
+        final rx = s * (0.3 + 0.05 * math.sin(t * 5 + i));
+        final ry = s * (0.34 + 0.04 * math.cos(t * 4 + i));
+        final p = Offset(c.dx + math.cos(a) * rx, c.dy + math.sin(a) * ry);
+        final hue = i.isEven ? SyloraTokens.cyan : SyloraTokens.gold;
         canvas.drawCircle(
           p,
-          s * 0.009,
+          s * 0.012,
           Paint()
-            ..color = Colors.white.withValues(alpha: 0.45 + 0.35 * breath)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.008),
+            ..color = hue.withValues(alpha: 0.4 + 0.4 * breath)
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.01),
         );
       }
     }
   }
 
-  Path _leftArc(double s) {
+  /// Calligraphic S — open, liquid, asymmetric (not a circle/hex/star).
+  Path _liquidS(double s) {
     return Path()
-      ..moveTo(s * 0.36, s * 0.17)
-      ..cubicTo(
-        s * 0.22,
-        s * 0.28,
-        s * 0.17,
-        s * 0.42,
-        s * 0.19,
-        s * 0.52,
-      )
-      ..cubicTo(
-        s * 0.2,
-        s * 0.64,
-        s * 0.28,
-        s * 0.76,
-        s * 0.41,
-        s * 0.84,
-      );
-  }
-
-  Path _rightArc(double s) {
-    return Path()
-      ..moveTo(s * 0.64, s * 0.156)
-      ..cubicTo(
-        s * 0.78,
-        s * 0.27,
-        s * 0.83,
-        s * 0.41,
-        s * 0.81,
-        s * 0.52,
-      )
-      ..cubicTo(
-        s * 0.8,
-        s * 0.66,
-        s * 0.7,
-        s * 0.78,
-        s * 0.59,
-        s * 0.86,
-      );
+      ..moveTo(s * 0.68, s * 0.22)
+      ..cubicTo(s * 0.52, s * 0.12, s * 0.28, s * 0.16, s * 0.26, s * 0.32)
+      ..cubicTo(s * 0.24, s * 0.46, s * 0.42, s * 0.48, s * 0.52, s * 0.5)
+      ..cubicTo(s * 0.66, s * 0.53, s * 0.78, s * 0.58, s * 0.76, s * 0.7)
+      ..cubicTo(s * 0.74, s * 0.86, s * 0.5, s * 0.9, s * 0.32, s * 0.8);
   }
 
   @override
-  bool shouldRepaint(covariant _LumenGatePainter oldDelegate) =>
+  bool shouldRepaint(covariant _LiquidSPainter oldDelegate) =>
       oldDelegate.t != t || oldDelegate.living != living;
 }
+

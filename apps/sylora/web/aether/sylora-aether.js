@@ -1,6 +1,6 @@
 /**
- * SYLORA Aether — brand-first champagne-glass landing.
- * Hero: animated Lumen Gate mark. Canvas: warm particles + soft parallax.
+ * SYLORA Aether — Ethereal brand-first landing.
+ * Hero: animated Liquid S Sigil. Canvas: energy particles + soft parallax.
  */
 (function () {
   'use strict';
@@ -8,10 +8,11 @@
   const COPY = {
     uk: {
       signIn: 'Увійти',
-      kicker: 'Наступне покоління цифрового світу',
+      kicker: 'ONE WORLD. INFINITE CREATION.',
       line: 'Живий ефір, творчість, звʼязок і інтелект — одна преміальна платформа.',
-      cta: 'Увійти у світ',
-      markAria: 'Символ SYLORA — Lumen Gate',
+      cta: 'Увійти',
+      ctaSecondary: 'Створити акаунт',
+      markAria: 'Символ SYLORA — Liquid S',
       loading: 'Відкриваємо світ…',
       launching: 'Запуск SYLORA…',
       enterError: 'Не вдалося завантажити. Перевірте мережу й спробуйте ще раз.',
@@ -30,10 +31,11 @@
     },
     en: {
       signIn: 'Sign in',
-      kicker: 'The next-generation digital world',
+      kicker: 'ONE WORLD. INFINITE CREATION.',
       line: 'Live, create, connect, and think — one premium platform.',
-      cta: 'Enter the world',
-      markAria: 'SYLORA mark — Lumen Gate',
+      cta: 'Sign in',
+      ctaSecondary: 'Create account',
+      markAria: 'SYLORA mark — Liquid S',
       loading: 'Opening your world…',
       launching: 'Launching SYLORA…',
       enterError: 'Could not load. Check your network and try again.',
@@ -517,13 +519,18 @@
 
   function applyCopy() {
     const copy = t();
-    const signIn = qs('[data-aether-signin]');
-    if (signIn) signIn.textContent = copy.signIn;
+    document.querySelectorAll('[data-aether-signin]').forEach((el) => {
+      const span = el.querySelector('span');
+      if (span) span.textContent = copy.cta;
+      else el.textContent = copy.signIn;
+    });
     const line = qs('.aether-line');
     if (line) line.textContent = copy.line;
+    const tagline = qs('.aether-tagline');
+    if (tagline) tagline.textContent = copy.kicker;
     const enterBtn = qs('[data-aether-enter]');
     const cta = qs('[data-aether-enter] span');
-    if (cta && enterBtn && !enterBtn.disabled) cta.textContent = copy.cta;
+    if (cta && enterBtn && !enterBtn.disabled) cta.textContent = copy.ctaSecondary;
     const sigil = qs('.aether-sigil');
     if (sigil) sigil.setAttribute('aria-label', copy.markAria);
     document.querySelectorAll('[data-aether-chapter]').forEach((el) => {
@@ -577,21 +584,13 @@
               <span class="aether-mark" aria-hidden="true">
                 <svg viewBox="0 0 128 128" fill="none" aria-hidden="true">
                   <defs>
-                    <linearGradient id="navFil" x1="64" y1="18" x2="64" y2="110" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#8EB8D8"/><stop offset="50%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C9A45C"/>
-                    </linearGradient>
-                    <linearGradient id="navL" x1="20" y1="24" x2="58" y2="104" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#F5DEB3"/><stop offset="100%" stop-color="#8EB8D8"/>
-                    </linearGradient>
-                    <linearGradient id="navR" x1="108" y1="24" x2="70" y2="104" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#DCEEFF"/><stop offset="100%" stop-color="#C9A45C"/>
+                    <linearGradient id="navMetal" x1="24" y1="20" x2="104" y2="108" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stop-color="#5EC8FF"/><stop offset="35%" stop-color="#8B7CFF"/>
+                      <stop offset="70%" stop-color="#E6C88B"/><stop offset="100%" stop-color="#F5DEB3"/>
                     </linearGradient>
                   </defs>
-                  <path d="M46 22 C28 36 22 54 24 66 C26 82 36 98 52 108" stroke="url(#navL)" stroke-width="6" stroke-linecap="round"/>
-                  <path d="M82 20 C100 34 106 52 104 66 C102 84 90 100 76 110" stroke="url(#navR)" stroke-width="6" stroke-linecap="round"/>
-                  <path d="M64 22 L64 106" stroke="url(#navFil)" stroke-width="2.2" stroke-linecap="round"/>
-                  <path d="M64 54 L71 64 L64 74 L57 64 Z" fill="#E6C88B"/>
-                  <path d="M64 58 L68 64 L64 70 L60 64 Z" fill="#FFFFFF"/>
+                  <path d="M86 28 C66 16 36 20 34 40 C32 56 54 60 66 64 C82 68 96 74 94 88 C92 106 64 112 42 100" stroke="url(#navMetal)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="64" cy="64" r="3.5" fill="#FFFFFF"/>
                 </svg>
               </span>
               <span class="aether-brand-mini">SYLORA</span>
@@ -611,52 +610,27 @@
               <span class="aether-sigil-aura" aria-hidden="true"></span>
               <svg class="aether-sigil-svg" viewBox="0 0 128 128" fill="none" aria-hidden="true">
                 <defs>
-                  <linearGradient id="heroFil" x1="64" y1="18" x2="64" y2="110" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#8EB8D8"/>
-                    <stop offset="42%" stop-color="#F5DEB3"/>
-                    <stop offset="58%" stop-color="#FFFFFF"/>
-                    <stop offset="78%" stop-color="#E6C88B"/>
-                    <stop offset="100%" stop-color="#C9A45C"/>
+                  <linearGradient id="heroMetal" x1="24" y1="20" x2="104" y2="108" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#5EC8FF"/>
+                    <stop offset="35%" stop-color="#8B7CFF"/>
+                    <stop offset="70%" stop-color="#E6C88B"/>
+                    <stop offset="100%" stop-color="#F5DEB3"/>
                   </linearGradient>
-                  <linearGradient id="heroL" x1="20" y1="24" x2="58" y2="104" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#F5DEB3"/>
-                    <stop offset="55%" stop-color="#E6C88B"/>
-                    <stop offset="100%" stop-color="#8EB8D8"/>
-                  </linearGradient>
-                  <linearGradient id="heroR" x1="108" y1="24" x2="70" y2="104" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#DCEEFF"/>
-                    <stop offset="45%" stop-color="#E6C88B"/>
-                    <stop offset="100%" stop-color="#C9A45C"/>
-                  </linearGradient>
-                  <radialGradient id="heroCore" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#FFFFFF"/>
-                    <stop offset="55%" stop-color="#FFF7EE"/>
-                    <stop offset="100%" stop-color="#E6C88B"/>
+                  <radialGradient id="heroOrb" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+                    <stop offset="35%" stop-color="#5EC8FF" stop-opacity="0.28"/>
+                    <stop offset="65%" stop-color="#8B7CFF" stop-opacity="0.16"/>
+                    <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
                   </radialGradient>
                   <filter id="heroGlow" x="-80%" y="-80%" width="260%" height="260%">
                     <feGaussianBlur stdDeviation="2.2"/>
                   </filter>
                 </defs>
-                <path class="aether-gate-arc aether-gate-arc--l" d="M46 22 C28 36 22 54 24 66 C26 82 36 98 52 108" stroke="url(#heroL)" stroke-width="7.2" stroke-linecap="round" opacity="0.35"/>
-                <path class="aether-gate-arc aether-gate-arc--l" d="M46 22 C28 36 22 54 24 66 C26 82 36 98 52 108" stroke="url(#heroL)" stroke-width="3.5" stroke-linecap="round"/>
-                <path class="aether-gate-arc aether-gate-arc--r" d="M82 20 C100 34 106 52 104 66 C102 84 90 100 76 110" stroke="url(#heroR)" stroke-width="7.2" stroke-linecap="round" opacity="0.35"/>
-                <path class="aether-gate-arc aether-gate-arc--r" d="M82 20 C100 34 106 52 104 66 C102 84 90 100 76 110" stroke="url(#heroR)" stroke-width="3.5" stroke-linecap="round"/>
-                <path class="aether-gate-fil" d="M64 18 L64 110" stroke="url(#heroFil)" stroke-width="2.4" stroke-linecap="round"/>
-                <path d="M64 28 L64 100" stroke="#FFFFFF" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
-                <circle class="aether-gate-spark" cx="64" cy="64" r="2.2" fill="#FFFFFF"/>
-                <g transform="translate(64 64)">
-                  <g class="aether-gate-core" filter="url(#heroGlow)">
-                    <path d="M0,-14 L10,0 L0,14 L-10,0 Z" fill="#E6C88B" opacity="0.35"/>
-                  </g>
-                  <g class="aether-gate-core">
-                    <path d="M0,-10.5 L7.5,0 L0,10.5 L-7.5,0 Z" fill="url(#heroCore)"/>
-                    <path d="M0,-4.4 L3.1,0 L0,4.4 L-3.1,0 Z" fill="#FFFFFF"/>
-                  </g>
-                </g>
-                <circle cx="46" cy="22" r="2.1" fill="#F5DEB3"/>
-                <circle cx="82" cy="20" r="2.1" fill="#DCEEFF"/>
-                <circle cx="52" cy="108" r="1.8" fill="#C9A45C"/>
-                <circle cx="76" cy="110" r="1.8" fill="#8EB8D8"/>
+                <circle class="aether-gate-core" cx="64" cy="64" r="52" fill="url(#heroOrb)"/>
+                <path class="aether-gate-fil" d="M86 28 C66 16 36 20 34 40 C32 56 54 60 66 64 C82 68 96 74 94 88 C92 106 64 112 42 100" stroke="#8B7CFF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" opacity="0.28" filter="url(#heroGlow)"/>
+                <path class="aether-gate-arc aether-gate-arc--l" d="M86 28 C66 16 36 20 34 40 C32 56 54 60 66 64 C82 68 96 74 94 88 C92 106 64 112 42 100" stroke="url(#heroMetal)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M86 28 C66 16 36 20 34 40 C32 56 54 60 66 64 C82 68 96 74 94 88 C92 106 64 112 42 100" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+                <circle class="aether-gate-spark" cx="64" cy="64" r="4.5" fill="#FFFFFF"/>
               </svg>
               <span class="aether-sigil-particle aether-sigil-particle--1" aria-hidden="true"></span>
               <span class="aether-sigil-particle aether-sigil-particle--2" aria-hidden="true"></span>
@@ -666,8 +640,10 @@
             <div class="aether-hero-copy">
               <p class="aether-wordmark">SYLORA</p>
               <p class="aether-line">${copy.line}</p>
+              <p class="aether-tagline">${copy.kicker}</p>
               <div class="aether-cta-wrap">
-                <button type="button" class="aether-portal" data-aether-enter><span>${copy.cta}</span></button>
+                <button type="button" class="aether-portal" data-aether-signin><span>${copy.cta}</span></button>
+                <button type="button" class="aether-portal aether-portal--glass" data-aether-enter><span>${copy.ctaSecondary}</span></button>
               </div>
             </div>
           </section>
@@ -779,7 +755,7 @@
     if (!document.querySelector('link[data-sylora-aether-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'aether/sylora-aether.css?v=qw12';
+      link.href = 'aether/sylora-aether.css?v=eth1';
       link.setAttribute('data-sylora-aether-css', '1');
       document.head.appendChild(link);
     }

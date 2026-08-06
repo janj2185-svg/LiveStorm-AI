@@ -65,7 +65,7 @@ final class _SyloraButtonState extends State<SyloraButton> {
           color: Colors.transparent,
           child: InkWell(
             onTap: enabled ? widget.onPressed : null,
-            borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+            borderRadius: BorderRadius.circular(SyloraTokens.radiusCta),
             child: Ink(
               height: 52,
               decoration: _decoration(enabled),
@@ -75,17 +75,11 @@ final class _SyloraButtonState extends State<SyloraButton> {
                   child: DefaultTextStyle(
                     style: SyloraTokens.body(
                       15,
-                      color: widget.variant == SyloraButtonVariant.primary
-                          ? SyloraTokens.ink
-                          : SyloraTokens.ink,
+                      color: SyloraTokens.ink,
                       weight: FontWeight.w600,
                     ),
                     child: IconTheme(
-                      data: IconThemeData(
-                        color: widget.variant == SyloraButtonVariant.primary
-                            ? SyloraTokens.ink
-                            : SyloraTokens.ink,
-                      ),
+                      data: const IconThemeData(color: SyloraTokens.ink),
                       child: child,
                     ),
                   ),
@@ -104,33 +98,33 @@ final class _SyloraButtonState extends State<SyloraButton> {
     switch (widget.variant) {
       case SyloraButtonVariant.primary:
         return BoxDecoration(
-          borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+          borderRadius: BorderRadius.circular(SyloraTokens.radiusCta),
           gradient: LinearGradient(
             colors: enabled
                 ? const [
-                    SyloraTokens.champagneLight,
-                    SyloraTokens.champagne,
-                    SyloraTokens.champagneDeep,
+                    SyloraTokens.goldLight,
+                    SyloraTokens.gold,
+                    SyloraTokens.goldDeep,
                   ]
                 : [
-                    SyloraTokens.champagne.withValues(alpha: 0.35),
-                    SyloraTokens.champagneDeep.withValues(alpha: 0.25),
+                    SyloraTokens.gold.withValues(alpha: 0.35),
+                    SyloraTokens.goldDeep.withValues(alpha: 0.25),
                   ],
           ),
           boxShadow: enabled
-              ? SyloraTokens.glow(SyloraTokens.champagne, blur: 22, opacity: 0.32)
+              ? SyloraTokens.glow(SyloraTokens.gold, blur: 22, opacity: 0.32)
               : null,
         );
       case SyloraButtonVariant.secondary:
         return BoxDecoration(
-          borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
-          color: Colors.white.withValues(alpha: 0.72),
-          border: Border.all(color: SyloraTokens.ink.withValues(alpha: 0.12)),
-          boxShadow: SyloraTokens.softElevation,
+          borderRadius: BorderRadius.circular(SyloraTokens.radiusCta),
+          color: SyloraTokens.glassStrong,
+          border: Border.all(color: SyloraTokens.glassStroke),
+          boxShadow: SyloraTokens.glassElevation,
         );
       case SyloraButtonVariant.ghost:
         return BoxDecoration(
-          borderRadius: BorderRadius.circular(SyloraTokens.radiusPill),
+          borderRadius: BorderRadius.circular(SyloraTokens.radiusCta),
           color: Colors.transparent,
         );
     }

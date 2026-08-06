@@ -1,102 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="SYLORA">
-  <!--
-    SYLORA — Lumen Gate
-    Proprietary mark: twin crescents + vertical filament + diamond nucleus.
-    Not a circle, star, hexagon, or infinity. Works small/large, light/dark.
-  -->
+  <!-- SYLORA Ethereal — Liquid S Sigil -->
   <defs>
-    <linearGradient id="lgFilament" x1="64" y1="18" x2="64" y2="110" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#8EB8D8"/>
-      <stop offset="42%" stop-color="#F5DEB3"/>
-      <stop offset="58%" stop-color="#FFFFFF"/>
-      <stop offset="78%" stop-color="#E6C88B"/>
-      <stop offset="100%" stop-color="#C9A45C"/>
+    <linearGradient id="sigilMetal" x1="24" y1="20" x2="104" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5EC8FF"/>
+      <stop offset="35%" stop-color="#8B7CFF"/>
+      <stop offset="70%" stop-color="#E6C88B"/>
+      <stop offset="100%" stop-color="#F5DEB3"/>
     </linearGradient>
-    <linearGradient id="lgArcL" x1="20" y1="24" x2="58" y2="104" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#F5DEB3"/>
-      <stop offset="55%" stop-color="#E6C88B"/>
-      <stop offset="100%" stop-color="#8EB8D8"/>
-    </linearGradient>
-    <linearGradient id="lgArcR" x1="108" y1="24" x2="70" y2="104" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#DCEEFF"/>
-      <stop offset="45%" stop-color="#E6C88B"/>
-      <stop offset="100%" stop-color="#C9A45C"/>
-    </linearGradient>
-    <radialGradient id="lgCore" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="55%" stop-color="#FFF7EE"/>
-      <stop offset="100%" stop-color="#E6C88B"/>
+    <radialGradient id="sigilOrb" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="35%" stop-color="#5EC8FF" stop-opacity="0.28"/>
+      <stop offset="65%" stop-color="#8B7CFF" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
     </radialGradient>
-    <filter id="lgSoft" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="1.1"/>
-    </filter>
-    <filter id="lgGlow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="2.2"/>
+    <filter id="sigilGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.4"/>
     </filter>
   </defs>
-
-  <!-- Left crescent (human / presence) — open, asymmetric -->
+  <circle cx="64" cy="64" r="52" fill="url(#sigilOrb)"/>
   <path
-    d="M46 22
-       C28 36 22 54 24 66
-       C26 82 36 98 52 108"
-    stroke="url(#lgArcL)"
-    stroke-width="7.5"
+    d="M86 28
+       C66 16 36 20 34 40
+       C32 56 54 60 66 64
+       C82 68 96 74 94 88
+       C92 106 64 112 42 100"
+    stroke="#8B7CFF"
+    stroke-width="14"
     stroke-linecap="round"
-    opacity="0.92"
-    filter="url(#lgSoft)"/>
+    stroke-linejoin="round"
+    opacity="0.28"
+    filter="url(#sigilGlow)"/>
   <path
-    d="M46 22
-       C28 36 22 54 24 66
-       C26 82 36 98 52 108"
-    stroke="url(#lgArcL)"
-    stroke-width="3.6"
-    stroke-linecap="round"/>
-
-  <!-- Right crescent (AI / cosmos) — offset for tension -->
-  <path
-    d="M82 20
-       C100 34 106 52 104 66
-       C102 84 90 100 76 110"
-    stroke="url(#lgArcR)"
-    stroke-width="7.5"
+    d="M86 28
+       C66 16 36 20 34 40
+       C32 56 54 60 66 64
+       C82 68 96 74 94 88
+       C92 106 64 112 42 100"
+    stroke="url(#sigilMetal)"
+    stroke-width="10"
     stroke-linecap="round"
-    opacity="0.88"
-    filter="url(#lgSoft)"/>
+    stroke-linejoin="round"/>
   <path
-    d="M82 20
-       C100 34 106 52 104 66
-       C102 84 90 100 76 110"
-    stroke="url(#lgArcR)"
-    stroke-width="3.6"
-    stroke-linecap="round"/>
-
-  <!-- Vertical filament (energy / intellect) -->
-  <path
-    d="M64 18 L64 110"
-    stroke="url(#lgFilament)"
-    stroke-width="2.4"
-    stroke-linecap="round"
-    opacity="0.95"/>
-  <path
-    d="M64 28 L64 100"
+    d="M86 28
+       C66 16 36 20 34 40
+       C32 56 54 60 66 64
+       C82 68 96 74 94 88
+       C92 106 64 112 42 100"
     stroke="#FFFFFF"
-    stroke-width="0.9"
+    stroke-width="3.2"
     stroke-linecap="round"
-    opacity="0.75"/>
-
-  <!-- Diamond nucleus — living core (not a circle) -->
-  <g transform="translate(64 64)" filter="url(#lgGlow)">
-    <path d="M0,-13 L9,0 L0,13 L-9,0 Z" fill="#E6C88B" opacity="0.35"/>
-  </g>
-  <g transform="translate(64 64)">
-    <path d="M0,-10 L7.2,0 L0,10 L-7.2,0 Z" fill="url(#lgCore)"/>
-    <path d="M0,-4.2 L3,0 L0,4.2 L-3,0 Z" fill="#FFFFFF"/>
-  </g>
-
-  <!-- Connection nodes (tiny, readable at favicon) -->
-  <circle cx="46" cy="22" r="2.1" fill="#F5DEB3"/>
-  <circle cx="82" cy="20" r="2.1" fill="#DCEEFF"/>
-  <circle cx="52" cy="108" r="1.8" fill="#C9A45C"/>
-  <circle cx="76" cy="110" r="1.8" fill="#8EB8D8"/>
+    stroke-linejoin="round"
+    opacity="0.55"/>
+  <circle cx="64" cy="64" r="4.5" fill="#FFFFFF"/>
 </svg>

@@ -102,10 +102,10 @@ final class AetherPainter extends CustomPainter {
   final bool reducedMotion;
 
   static const _palette = <Color>[
-    Color(0xFFE6C88B), // champagne
-    Color(0xFF8EB8D8), // soft sky deep
-    Color(0xFFFF8F7A), // soft coral
-    Color(0xFFF5DEB3), // champagne light
+    Color(0xFFE6C88B), // gold
+    Color(0xFF5EC8FF), // cyan
+    Color(0xFF8B7CFF), // violet
+    Color(0xFFF5DEB3), // gold light
     Color(0xFFDCEEFF), // soft sky
   ];
 
@@ -116,16 +116,17 @@ final class AetherPainter extends CustomPainter {
     final scale = math.min(size.width, size.height) * 0.38;
     final paint = Paint()..blendMode = BlendMode.srcOver;
 
-    // Soft luminous core for warm ivory canvas
+    // Soft luminous core for Ethereal porcelain canvas
     final wave = Paint()
       ..shader = ui.Gradient.radial(
         Offset(cx, cy),
         scale * 1.8,
         const [
           Color(0x66FFFFFF),
-          Color(0x33E6C88B),
-          Color(0x00FFF7EE),
+          Color(0x335EC8FF),
+          Color(0x00F4F6FA),
         ],
+        const [0.0, 0.45, 1.0],
       );
     canvas.drawCircle(Offset(cx, cy), scale * 1.8, wave);
 

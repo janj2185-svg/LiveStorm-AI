@@ -259,8 +259,26 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
   String? _nextCursor;
   bool _paginationInitialized = false;
   bool _loadingMore = false;
+  bool _composeArmed = false;
   late final SyloraAuraPresenceController _aura =
       SyloraAuraPresenceController.forPreset(SyloraAuraContextPreset.feed);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_composeArmed) return;
+    final compose = GoRouterState.of(context).uri.queryParameters['compose'];
+    if (compose == '1') {
+      _composeArmed = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await _showComposer(context, ref);
+        if (mounted && GoRouterState.of(context).uri.queryParameters['compose'] == '1') {
+          context.goNamed('home');
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {

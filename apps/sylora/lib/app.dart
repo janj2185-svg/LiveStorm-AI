@@ -41,12 +41,6 @@ const _liveDestination = ShellDestination(
   selectedIcon: Icons.sensors_rounded,
   path: '/live',
 );
-const _searchDestination = ShellDestination(
-  label: 'Search',
-  icon: Icons.search_outlined,
-  selectedIcon: Icons.search_rounded,
-  path: '/search',
-);
 const _friendsDestination = ShellDestination(
   label: 'Friends',
   icon: Icons.group_outlined,
@@ -95,29 +89,41 @@ const _studioDestination = ShellDestination(
   selectedIcon: Icons.movie_creation_rounded,
   path: '/creator-studio',
 );
+const _walletDestination = ShellDestination(
+  label: 'Wallet',
+  icon: Icons.account_balance_wallet_outlined,
+  selectedIcon: Icons.account_balance_wallet_rounded,
+  path: '/wallet',
+);
+const _settingsDestination = ShellDestination(
+  label: 'Settings',
+  icon: Icons.tune_outlined,
+  selectedIcon: Icons.tune_rounded,
+  path: '/settings',
+);
+const _createDestination = ShellDestination(
+  label: 'Create',
+  icon: Icons.add_circle_outline_rounded,
+  selectedIcon: Icons.add_circle_rounded,
+  path: '/compose',
+);
 const _moreDestination = ShellDestination(
   label: 'More',
   icon: Icons.apps_outlined,
   selectedIcon: Icons.apps_rounded,
   path: '/more',
 );
-const _meDestination = ShellDestination(
-  label: 'Me',
-  icon: Icons.person_outline_rounded,
-  selectedIcon: Icons.person_rounded,
-  path: '/more',
-);
 
-/// Phone island — Home · Live · Aura · Messages · Me (soul spine)
+/// Phone island — Home · Live · Create · Messages · More (Ethereal Product Map)
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
   _liveDestination,
-  _aiDestination,
+  _createDestination,
   _messagesDestination,
-  _meDestination,
+  _moreDestination,
 ];
 
-/// Desktop/tablet cinema rail — Aura elevated next to Live
+/// Desktop/tablet rail — Ethereal Product Map order
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   final roleSet = roles.toSet();
   final showStudio =
@@ -132,12 +138,15 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
     _homeDestination,
     _liveDestination,
     _aiDestination,
-    _friendsDestination,
     _messagesDestination,
+    _friendsDestination,
+    _marketplaceDestination,
+    _learningDestination,
+    if (showBusiness) _businessDestination,
     _musicDestination,
     if (showStudio) _studioDestination,
-    _marketplaceDestination,
-    if (showBusiness) _businessDestination else _learningDestination,
+    _walletDestination,
+    _settingsDestination,
     _moreDestination,
   ];
 }
@@ -270,8 +279,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 context.go(localizedDestinations[value].path),
             compactDestinations: localizedCompactDestinations,
             compactSelectedIndex: compactIndex,
-            onCompactDestinationSelected: (value) =>
-                context.go(localizedCompactDestinations[value].path),
+            onCompactDestinationSelected: (value) {
+              final dest = localizedCompactDestinations[value];
+              if (dest.path == '/compose') {
+                context.go('/home?compose=1');
+                return;
+              }
+              context.go(dest.path);
+            },
             contextPanel: index == 0 ? const RecommendationsPanel() : null,
             body: child,
           );
@@ -694,10 +709,11 @@ Page<void> _page(GoRouterState state, Widget child, bool reducedMotion) {
 }
 
 int _destinationIndex(String path, List<ShellDestination> destinations) {
-  var index = destinations.indexWhere(
-    (destination) =>
-        path == destination.path || path.startsWith('${destination.path}/'),
-  );
+  var index = destinations.indexWhere((destination) {
+    if (destination.path == '/compose') return false;
+    return path == destination.path ||
+        path.startsWith('${destination.path}/');
+  });
   if (index < 0) {
     index = destinations.indexWhere(
       (destination) => destination.path == '/more',
@@ -745,6 +761,9 @@ String _localizedDestinationLabel(
       '/creator-studio' => l10n.navStudio,
       '/business' => l10n.navWorkspace,
       '/admin' => l10n.navAdmin,
+      '/wallet' => l10n.walletTitle,
+      '/settings' => l10n.navSettings,
+      '/compose' => l10n.feedCreatePost,
       '/more' => fallback == 'Me' ? l10n.navMe : l10n.navMore,
       _ => fallback.isEmpty ? l10n.navMore : fallback,
     };

@@ -291,36 +291,36 @@ final class LumenResponsiveShell extends StatelessWidget {
                 ),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: SyloraTokens.ion.withValues(alpha: 0.06),
-                    blurRadius: 28,
-                    offset: const Offset(4, 0),
-                  ),
-                ],
-              ),
-              child: NavigationRail(
-                backgroundColor: Colors.transparent,
-                extended: expanded,
-                minWidth: compactRail ? 76 : 68,
-                groupAlignment: -1,
-                scrollable: true,
-                selectedIndex: selectedIndex.clamp(0, destinations.length - 1),
-                onDestinationSelected: onDestinationSelected,
-                labelType: expanded
-                    ? NavigationRailLabelType.none
-                    : NavigationRailLabelType.selected,
-                leading: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: expanded
-                      ? const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            SyloraLogo(),
-                            SizedBox(width: 12),
-                            Text('SYLORA'),
-                          ],
-                        )
-                      : const SyloraLogo(),
-                ),
+            color: SyloraTokens.cyan.withValues(alpha: 0.08),
+            blurRadius: 28,
+            offset: const Offset(4, 0),
+          ),
+        ],
+      ),
+      child: NavigationRail(
+        backgroundColor: Colors.transparent,
+        extended: expanded,
+        minWidth: compactRail ? 76 : 68,
+        groupAlignment: -1,
+        scrollable: true,
+        selectedIndex: selectedIndex.clamp(0, destinations.length - 1),
+        onDestinationSelected: onDestinationSelected,
+        labelType: expanded
+            ? NavigationRailLabelType.none
+            : NavigationRailLabelType.selected,
+        leading: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: expanded
+              ? const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    SyloraLogo(size: 36),
+                    SizedBox(width: 12),
+                    Text('SYLORA'),
+                  ],
+                )
+              : const SyloraLogo(size: 36),
+        ),
                 destinations: <NavigationRailDestination>[
                   for (final destination in destinations)
                     NavigationRailDestination(
@@ -389,7 +389,7 @@ final class _SyloraIslandDock extends StatelessWidget {
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: SyloraTokens.champagne.withValues(alpha: 0.16),
+            color: SyloraTokens.gold.withValues(alpha: 0.14),
             blurRadius: 36,
             offset: const Offset(0, 4),
           ),
@@ -399,12 +399,12 @@ final class _SyloraIslandDock extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         child: NavigationBarTheme(
           data: NavigationBarThemeData(
-            indicatorColor: SyloraTokens.champagne.withValues(alpha: 0.22),
+            indicatorColor: SyloraTokens.gold.withValues(alpha: 0.22),
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               final selected = states.contains(WidgetState.selected);
               return SyloraTokens.body(
                 10.5,
-                color: selected ? SyloraTokens.champagneDeep : Colors.transparent,
+                color: selected ? SyloraTokens.goldDeep : Colors.transparent,
                 weight: FontWeight.w600,
               );
             }),
@@ -414,7 +414,7 @@ final class _SyloraIslandDock extends StatelessWidget {
             backgroundColor: Colors.transparent,
             elevation: 0,
             overlayColor: WidgetStatePropertyAll(
-              SyloraTokens.champagne.withValues(alpha: 0.1),
+              SyloraTokens.gold.withValues(alpha: 0.1),
             ),
             labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
             selectedIndex: selectedIndex,
@@ -426,7 +426,7 @@ final class _SyloraIslandDock extends StatelessWidget {
                   selectedIcon: Icon(
                     destination.selectedIcon,
                     size: 26,
-                    color: SyloraTokens.champagneDeep,
+                    color: SyloraTokens.goldDeep,
                   ),
                   label: destination.label,
                 ),
