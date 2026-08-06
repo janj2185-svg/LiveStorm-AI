@@ -8,16 +8,19 @@
   const COPY = {
     uk: {
       signIn: 'Увійти',
-      kicker: 'ONE SPACE. ALL YOU.\nBOUNDLESS POSSIBILITIES.',
-      line: '',
+      kicker: 'ТЕХНОЛОГІЇ. ГАРМОНІЯ. МАЙБУТНЄ.',
+      line: 'Живий ефір, творчість, звʼязок і інтелект — одна преміальна платформа.',
       cta: 'Увійти',
       ctaSecondary: 'Створити акаунт',
-      markAria: 'Символ SYLORA UNIFIED — Liquid S',
+      markAria: 'Символ SYLORA — Liquid S у скляній сфері',
       loading: 'Відкриваємо світ…',
       launching: 'Запуск SYLORA…',
       enterError: 'Не вдалося завантажити. Перевірте мережу й спробуйте ще раз.',
       langLabel: 'Мова',
       scrollHint: 'Гортай — відкрий екосистему',
+      featProtect: 'Захист даних',
+      featFast: 'Швидкий доступ',
+      featInnovate: 'Інноваційні рішення',
       chapterLiveTitle: 'Ефір',
       chapterLiveBody: 'Ефір — серце SYLORA. Сцена, аудиторія й жива присутність в одному потоці.',
       chapterCreatorTitle: 'Творці',
@@ -31,16 +34,19 @@
     },
     en: {
       signIn: 'Sign in',
-      kicker: 'ONE SPACE. ALL YOU.\nBOUNDLESS POSSIBILITIES.',
-      line: '',
+      kicker: 'ONE WORLD. INFINITE CREATION.',
+      line: 'Live, create, connect, and think — one premium platform.',
       cta: 'Sign in',
       ctaSecondary: 'Create account',
-      markAria: 'SYLORA UNIFIED mark — Liquid S',
+      markAria: 'SYLORA mark — Liquid S in glass sphere',
       loading: 'Opening your world…',
       launching: 'Launching SYLORA…',
       enterError: 'Could not load. Check your network and try again.',
       langLabel: 'Language',
       scrollHint: 'Scroll — meet the ecosystem',
+      featProtect: 'Data protection',
+      featFast: 'Quick access',
+      featInnovate: 'Innovative solutions',
       chapterLiveTitle: 'Live',
       chapterLiveBody: 'Live is the heart of SYLORA. Stage, audience, and living presence in one stream.',
       chapterCreatorTitle: 'Creators',
@@ -53,51 +59,6 @@
       chapterEcoBody: 'Social, music, market, and gifts — one premium visual world.',
     },
   };
-
-  const SIGIL_PATH =
-    'M89.6 28.2 C110.1 23.0 115.2 46.1 94.7 53.8 C71.7 62.7 48.6 64.0 46.1 76.8 C43.5 94.7 66.6 102.4 89.6 97.3 C102.4 94.7 107.5 84.5 99.8 81.9 C84.5 78.1 66.6 81.9 66.6 74.2 C66.6 64.0 87.0 61.4 99.8 51.2 C115.2 38.4 105.0 23.0 81.9 25.6 C61.4 28.2 51.2 41.0 53.8 48.6 C56.3 56.3 43.5 61.4 38.4 51.2 C30.7 35.8 46.1 20.5 71.7 20.5 C79.4 20.5 85.8 23.0 89.6 28.2 Z';
-
-  function markSvg(prefix) {
-    return `
-      <svg viewBox="0 0 128 128" fill="none" aria-hidden="true">
-        <defs>
-          <radialGradient id="${prefix}Aura" cx="50%" cy="48%" r="55%">
-            <stop offset="0%" stop-color="#B8C8FF" stop-opacity="0.45"/>
-            <stop offset="40%" stop-color="#8B7CFF" stop-opacity="0.18"/>
-            <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
-          </radialGradient>
-          <radialGradient id="${prefix}Glass" cx="38%" cy="34%" r="62%">
-            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-            <stop offset="35%" stop-color="#E8EEFF" stop-opacity="0.82"/>
-            <stop offset="70%" stop-color="#D4DCFF" stop-opacity="0.55"/>
-            <stop offset="100%" stop-color="#C5B8FF" stop-opacity="0.32"/>
-          </radialGradient>
-          <linearGradient id="${prefix}Pearl" x1="36" y1="24" x2="98" y2="108" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#EAF6FF"/>
-            <stop offset="28%" stop-color="#7EC8FF"/>
-            <stop offset="52%" stop-color="#9B8CFF"/>
-            <stop offset="78%" stop-color="#E6C88B"/>
-            <stop offset="100%" stop-color="#FFF0D2"/>
-          </linearGradient>
-          <clipPath id="${prefix}Clip"><circle cx="64" cy="64" r="46"/></clipPath>
-        </defs>
-        <circle class="aether-gate-core" cx="64" cy="64" r="60" fill="url(#${prefix}Aura)"/>
-        <circle cx="64" cy="64" r="48" fill="url(#${prefix}Glass)"/>
-        <g clip-path="url(#${prefix}Clip)">
-          <circle cx="52" cy="50" r="28" fill="#9BB6FF" opacity="0.4"/>
-          <circle cx="78" cy="72" r="26" fill="#B39CFF" opacity="0.32"/>
-          <circle cx="60" cy="84" r="20" fill="#E6C88B" opacity="0.2"/>
-        </g>
-        <circle class="aether-droplet" cx="28" cy="36" r="4.2" fill="#FFFFFF" opacity="0.75"/>
-        <circle class="aether-droplet" cx="102" cy="34" r="3.2" fill="#E8EEFF" opacity="0.8"/>
-        <circle class="aether-droplet" cx="22" cy="78" r="2.6" fill="#C5B8FF" opacity="0.7"/>
-        <circle class="aether-droplet" cx="108" cy="74" r="3.6" fill="#FFFFFF" opacity="0.72"/>
-        <circle class="aether-droplet" cx="34" cy="98" r="2.2" fill="#B8C8FF" opacity="0.65"/>
-        <circle class="aether-droplet" cx="98" cy="100" r="2.8" fill="#FFF0D2" opacity="0.7"/>
-        <path class="aether-sigil-s" d="${SIGIL_PATH}" fill="url(#${prefix}Pearl)"/>
-        <circle class="aether-gate-spark" cx="78" cy="36" r="3.5" fill="#FFFFFF" opacity="0.9"/>
-      </svg>`;
-  }
 
   const state = {
     running: false,
@@ -564,18 +525,24 @@
 
   function applyCopy() {
     const copy = t();
-    document.querySelectorAll('[data-aether-signin]').forEach((el) => {
-      const label = el.querySelector('span:not([class])') || el.querySelector('span:nth-child(2)');
-      if (label) label.textContent = copy.cta;
-      else if (!el.classList.contains('aether-portal')) el.textContent = copy.signIn;
-    });
     const tagline = qs('.aether-tagline');
     if (tagline) tagline.textContent = copy.kicker;
     const enterBtn = qs('[data-aether-enter]');
     if (enterBtn && !enterBtn.disabled) {
-      const label = enterBtn.querySelector('span:not([class])') || enterBtn.querySelector('span:nth-child(2)');
+      const label = enterBtn.querySelector('span');
       if (label) label.textContent = copy.ctaSecondary;
     }
+    document.querySelectorAll('[data-aether-signin]').forEach((el) => {
+      const label = el.querySelector('span');
+      if (label) label.textContent = copy.cta;
+      else if (!el.classList.contains('aether-portal')) el.textContent = copy.signIn;
+    });
+    const fp = qs('[data-feat-protect]');
+    if (fp) fp.textContent = copy.featProtect;
+    const ff = qs('[data-feat-fast]');
+    if (ff) ff.textContent = copy.featFast;
+    const fi = qs('[data-feat-innovate]');
+    if (fi) fi.textContent = copy.featInnovate;
     const sigil = qs('.aether-sigil');
     if (sigil) sigil.setAttribute('aria-label', copy.markAria);
     document.querySelectorAll('[data-aether-chapter]').forEach((el) => {
@@ -626,49 +593,54 @@
         <div class="aether-hud">
           <div class="aether-top">
             <div class="aether-brand-lockup">
-              <span class="aether-mark" aria-hidden="true">${markSvg('nav')}</span>
+              <span class="aether-mark" aria-hidden="true">
+                <img src="brand/sylora-sigil-mini.png" alt="" width="36" height="36" decoding="async"/>
+              </span>
               <span class="aether-brand-text">
                 <span class="aether-brand-mini">S Y L O R Λ</span>
-                <span class="aether-brand-unified">UNIFIED</span>
               </span>
             </div>
             <div class="aether-top-actions">
-              <button type="button" class="aether-menu" aria-label="Menu" data-aether-menu>
-                <span></span><span></span><span></span>
-              </button>
               <div class="aether-lang" role="group" aria-label="${copy.langLabel}">
                 <button type="button" class="aether-lang-btn" data-aether-lang="uk">UK</button>
                 <button type="button" class="aether-lang-btn" data-aether-lang="en">EN</button>
               </div>
+              <button type="button" class="aether-link" data-aether-signin>${copy.signIn}</button>
             </div>
           </div>
           <section class="aether-hero">
             <div class="aether-sigil" aria-label="${copy.markAria}" role="img">
-              <span class="aether-sigil-wave aether-sigil-wave--a" aria-hidden="true"></span>
-              <span class="aether-sigil-wave aether-sigil-wave--b" aria-hidden="true"></span>
               <span class="aether-sigil-aura" aria-hidden="true"></span>
-              <div class="aether-sigil-svg">${markSvg('hero')}</div>
+              <img class="aether-sigil-plate" src="brand/sylora-sigil-hero.png" alt="" width="720" height="720" decoding="async"/>
               <span class="aether-sigil-particle aether-sigil-particle--1" aria-hidden="true"></span>
               <span class="aether-sigil-particle aether-sigil-particle--2" aria-hidden="true"></span>
               <span class="aether-sigil-particle aether-sigil-particle--3" aria-hidden="true"></span>
               <span class="aether-sigil-particle aether-sigil-particle--4" aria-hidden="true"></span>
             </div>
             <div class="aether-hero-copy">
-              <p class="aether-unified">UNIFIED</p>
               <p class="aether-wordmark">S Y L O R Λ</p>
-              <div class="aether-rule" aria-hidden="true"><span></span></div>
               <p class="aether-tagline">${copy.kicker}</p>
               <div class="aether-cta-wrap">
-                <button type="button" class="aether-portal aether-portal--violet" data-aether-signin>
-                  <span class="aether-portal-ico aether-portal-ico--user" aria-hidden="true"></span>
+                <button type="button" class="aether-portal aether-portal--gold" data-aether-signin>
                   <span>${copy.cta}</span>
-                  <span class="aether-portal-chev" aria-hidden="true"></span>
                 </button>
                 <button type="button" class="aether-portal aether-portal--glass" data-aether-enter>
-                  <span class="aether-portal-ico aether-portal-ico--plus" aria-hidden="true"></span>
                   <span>${copy.ctaSecondary}</span>
-                  <span class="aether-portal-chev" aria-hidden="true"></span>
                 </button>
+              </div>
+              <div class="aether-feat-strip" aria-label="SYLORA">
+                <div class="aether-feat">
+                  <span class="aether-feat-ico aether-feat-ico--shield" aria-hidden="true"></span>
+                  <span data-feat-protect>${copy.featProtect}</span>
+                </div>
+                <div class="aether-feat">
+                  <span class="aether-feat-ico aether-feat-ico--bolt" aria-hidden="true"></span>
+                  <span data-feat-fast>${copy.featFast}</span>
+                </div>
+                <div class="aether-feat">
+                  <span class="aether-feat-ico aether-feat-ico--nodes" aria-hidden="true"></span>
+                  <span data-feat-innovate>${copy.featInnovate}</span>
+                </div>
               </div>
             </div>
           </section>
@@ -780,7 +752,7 @@
     if (!document.querySelector('link[data-sylora-aether-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'aether/sylora-aether.css?v=eth3';
+      link.href = 'aether/sylora-aether.css?v=eth4';
       link.setAttribute('data-sylora-aether-css', '1');
       document.head.appendChild(link);
     }

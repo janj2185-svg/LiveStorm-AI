@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -59,19 +58,23 @@ final class SyloraGlyph extends StatelessWidget {
   }
 }
 
-/// Founder-locked Liquid S — pearlescent S inside a glowing orb with soft droplets.
-/// Matches SYLORA UNIFIED screenshots exactly.
+/// Founder-locked Liquid S — approved Ethereal mockup raster (batch-01 / core).
+/// Light breath + shimmer only; geometry is the approved asset, not a redraw.
 class SyloraMark extends StatefulWidget {
   const SyloraMark({
     super.key,
     this.size = 48,
     this.animated = true,
-    this.showOrb = true,
+    this.hero = false,
   });
 
   final double size;
   final bool animated;
-  final bool showOrb;
+  /// Use full hero plate (orb + orbits + particles baked in).
+  final bool hero;
+
+  static const heroAsset = 'assets/brand/sylora-sigil-hero.png';
+  static const miniAsset = 'assets/brand/sylora-sigil-mini.png';
 
   @override
   State<SyloraMark> createState() => _SyloraMarkState();
@@ -91,14 +94,14 @@ class _SyloraMarkState extends State<SyloraMark>
     if (widget.animated) {
       _start();
     } else {
-      _controller.value = 0.18;
+      _controller.value = 0.2;
     }
   }
 
   void _start() {
     if (WidgetsBinding
         .instance.platformDispatcher.accessibilityFeatures.disableAnimations) {
-      _controller.value = 0.28;
+      _controller.value = 0.25;
       return;
     }
     _controller.repeat();
@@ -112,7 +115,7 @@ class _SyloraMarkState extends State<SyloraMark>
     } else if (!widget.animated && _controller.isAnimating) {
       _controller
         ..stop()
-        ..value = 0.18;
+        ..value = 0.2;
     }
   }
 
@@ -124,6 +127,9 @@ class _SyloraMarkState extends State<SyloraMark>
 
   @override
   Widget build(BuildContext context) {
+    final asset = widget.hero || widget.size >= 96
+        ? SyloraMark.heroAsset
+        : SyloraMark.miniAsset;
     return Semantics(
       label: 'SYLORA',
       image: true,
@@ -132,15 +138,43 @@ class _SyloraMarkState extends State<SyloraMark>
         height: widget.size,
         child: AnimatedBuilder(
           animation: _controller,
-          builder: (context, _) {
-            return CustomPaint(
-              size: Size.square(widget.size),
-              painter: _LiquidSPainter(
-                phase: widget.animated ? _controller.value : 0.18,
-                showOrb: widget.showOrb,
+          builder: (context, child) {
+            final t = widget.animated ? _controller.value : 0.2;
+            final breath = 1 + 0.018 * math.sin(t * math.pi * 2);
+            final glow = 0.22 + 0.10 * ((math.sin(t * math.pi * 2) + 1) / 2);
+            return Transform.scale(
+              scale: breath,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF9BB6FF).withValues(alpha: glow),
+                      blurRadius: widget.size * 0.28,
+                      spreadRadius: widget.size * 0.02,
+                    ),
+                    BoxShadow(
+                      color: SyloraTokens.gold.withValues(alpha: glow * 0.55),
+                      blurRadius: widget.size * 0.18,
+                    ),
+                  ],
+                ),
+                child: child,
               ),
             );
           },
+          child: Image.asset(
+            asset,
+            width: widget.size,
+            height: widget.size,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            errorBuilder: (_, __, ___) => Icon(
+              Icons.auto_awesome,
+              size: widget.size * 0.45,
+              color: SyloraTokens.cyan,
+            ),
+          ),
         ),
       ),
     );
@@ -168,15 +202,13 @@ class SyloraWordmark extends StatelessWidget {
   final double? unifiedSize;
   final bool center;
 
-  /// Screenshot lock: Latin A rendered as Greek capital lambda (no crossbar).
   static const String text = 'S Y L O R Λ';
   static const String unified = 'UNIFIED';
-  static const String lockupLine = 'S Y L O R Λ';
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final ink = color ?? scheme.onSurface.withValues(alpha: 0.88);
+    final ink = color ?? scheme.onSurface.withValues(alpha: 0.92);
     final mark = Text(
       text,
       textAlign: center ? TextAlign.center : TextAlign.start,
@@ -207,7 +239,7 @@ class SyloraWordmark extends StatelessWidget {
             fontSize: unifiedSize ?? fontSize * 0.42,
             fontWeight: FontWeight.w500,
             letterSpacing: (unifiedSize ?? fontSize * 0.42) * 0.55,
-            color: ink.withValues(alpha: 0.72),
+            color: SyloraTokens.goldDeep.withValues(alpha: 0.9),
             height: 1,
           ),
         ),
@@ -216,279 +248,25 @@ class SyloraWordmark extends StatelessWidget {
   }
 }
 
-/// Hero stack from founder screens: UNIFIED over SYLORΛ.
+/// Hero stack — wordmark only (sigil is separate, matching batch-01 comps).
 class SyloraHeroWordmark extends StatelessWidget {
   const SyloraHeroWordmark({
     super.key,
-    this.unifiedSize = 18,
     this.syloraSize = 28,
     this.color,
   });
 
-  final double unifiedSize;
   final double syloraSize;
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final ink = color ?? SyloraTokens.ink.withValues(alpha: 0.9);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ShaderMask(
-          blendMode: BlendMode.srcIn,
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [
-              Color(0xFF5B8DEF),
-              Color(0xFF8B7CFF),
-              Color(0xFFB08CFF),
-            ],
-          ).createShader(bounds),
-          child: Text(
-            SyloraWordmark.unified,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Instrument Sans',
-              fontSize: unifiedSize,
-              fontWeight: FontWeight.w700,
-              letterSpacing: unifiedSize * 0.55,
-              height: 1.1,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        SizedBox(height: syloraSize * 0.22),
-        SyloraWordmark(
-          fontSize: syloraSize,
-          letterSpacing: syloraSize * 0.48,
-          weight: FontWeight.w600,
-          color: ink,
-        ),
-      ],
+    return SyloraWordmark(
+      fontSize: syloraSize,
+      letterSpacing: syloraSize * 0.48,
+      weight: FontWeight.w600,
+      color: color ?? SyloraTokens.ink.withValues(alpha: 0.92),
     );
-  }
-}
-
-class _LiquidSPainter extends CustomPainter {
-  _LiquidSPainter({required this.phase, required this.showOrb});
-
-  final double phase;
-  final bool showOrb;
-
-  /// Filled pearlescent S — twin-ribbon silhouette as a closed glyph.
-  static Path _sigilS(double s) {
-    final path = Path();
-    // Outer contour of liquid S (readable, rounded terminals).
-    path.moveTo(s * 0.70, s * 0.22);
-    path.cubicTo(s * 0.86, s * 0.18, s * 0.90, s * 0.36, s * 0.74, s * 0.42);
-    path.cubicTo(s * 0.56, s * 0.49, s * 0.38, s * 0.50, s * 0.36, s * 0.60);
-    path.cubicTo(s * 0.34, s * 0.74, s * 0.52, s * 0.80, s * 0.70, s * 0.76);
-    path.cubicTo(s * 0.80, s * 0.74, s * 0.84, s * 0.66, s * 0.78, s * 0.64);
-    path.cubicTo(s * 0.66, s * 0.61, s * 0.52, s * 0.64, s * 0.52, s * 0.58);
-    path.cubicTo(s * 0.52, s * 0.50, s * 0.68, s * 0.48, s * 0.78, s * 0.40);
-    path.cubicTo(s * 0.90, s * 0.30, s * 0.82, s * 0.18, s * 0.64, s * 0.20);
-    path.cubicTo(s * 0.48, s * 0.22, s * 0.40, s * 0.32, s * 0.42, s * 0.38);
-    path.cubicTo(s * 0.44, s * 0.44, s * 0.34, s * 0.48, s * 0.30, s * 0.40);
-    path.cubicTo(s * 0.24, s * 0.28, s * 0.36, s * 0.16, s * 0.56, s * 0.16);
-    path.cubicTo(s * 0.62, s * 0.16, s * 0.67, s * 0.18, s * 0.70, s * 0.22);
-    path.close();
-    return path;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final s = size.shortestSide;
-    final ox = (size.width - s) / 2;
-    final oy = (size.height - s) / 2;
-    canvas.translate(ox, oy);
-
-    final c = Offset(s * 0.5, s * 0.5);
-    final shimmer = (math.sin(phase * math.pi * 2) + 1) / 2;
-    final pulse = 0.90 + 0.10 * math.sin(phase * math.pi * 2);
-    final spin = phase * math.pi * 2;
-
-    if (showOrb) {
-      // Outer soft aura
-      canvas.drawCircle(
-        c,
-        s * 0.48 * pulse,
-        Paint()
-          ..shader = ui.Gradient.radial(
-            c,
-            s * 0.5,
-            [
-              const Color(0xFFB8C8FF).withValues(alpha: 0.35 * pulse),
-              SyloraTokens.violet.withValues(alpha: 0.12),
-              SyloraTokens.cyan.withValues(alpha: 0.06),
-              Colors.transparent,
-            ],
-            const [0.0, 0.4, 0.7, 1.0],
-          ),
-      );
-
-      // Glass orb body
-      canvas.drawCircle(
-        c,
-        s * 0.38,
-        Paint()
-          ..shader = ui.Gradient.radial(
-            Offset(s * 0.42, s * 0.38),
-            s * 0.42,
-            [
-              Colors.white.withValues(alpha: 0.92),
-              const Color(0xFFE8EEFF).withValues(alpha: 0.78),
-              const Color(0xFFD4DCFF).withValues(alpha: 0.55),
-              const Color(0xFFC5B8FF).withValues(alpha: 0.28),
-            ],
-            const [0.0, 0.35, 0.7, 1.0],
-          ),
-      );
-
-      // Nebula swirl inside orb
-      canvas.save();
-      canvas.clipPath(Path()..addOval(Rect.fromCircle(center: c, radius: s * 0.36)));
-      for (var i = 0; i < 3; i++) {
-        final a = spin * (0.35 + i * 0.12) + i * 1.7;
-        final p = Offset(
-          c.dx + math.cos(a) * s * (0.08 + i * 0.04),
-          c.dy + math.sin(a * 1.1) * s * (0.06 + i * 0.03),
-        );
-        canvas.drawCircle(
-          p,
-          s * (0.16 - i * 0.03),
-          Paint()
-            ..shader = ui.Gradient.radial(
-              p,
-              s * 0.18,
-              [
-                [
-                  const Color(0xFF9BB6FF),
-                  const Color(0xFFB39CFF),
-                  const Color(0xFFE6C88B),
-                ][i]
-                    .withValues(alpha: 0.28 + 0.1 * shimmer),
-                Colors.transparent,
-              ],
-            )
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.04),
-        );
-      }
-      canvas.restore();
-
-      // Orb rim
-      canvas.drawCircle(
-        c,
-        s * 0.38,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = s * 0.012
-          ..shader = ui.Gradient.linear(
-            Offset(s * 0.2, s * 0.15),
-            Offset(s * 0.85, s * 0.9),
-            [
-              Colors.white.withValues(alpha: 0.95),
-              const Color(0xFFA8B8FF).withValues(alpha: 0.55),
-              Colors.white.withValues(alpha: 0.35),
-            ],
-          ),
-      );
-
-      // Floating droplets around orb
-      final droplets = <(double, double, double)>[
-        (0.18, 0.28, 0.028),
-        (0.82, 0.26, 0.022),
-        (0.14, 0.62, 0.018),
-        (0.86, 0.58, 0.024),
-        (0.22, 0.78, 0.016),
-        (0.78, 0.80, 0.020),
-        (0.50, 0.10, 0.014),
-        (0.58, 0.90, 0.015),
-      ];
-      for (var i = 0; i < droplets.length; i++) {
-        final (dx, dy, r) = droplets[i];
-        final bob = math.sin(spin + i * 0.9) * s * 0.008;
-        final p = Offset(s * dx, s * dy + bob);
-        canvas.drawCircle(
-          p,
-          s * r,
-          Paint()
-            ..shader = ui.Gradient.radial(
-              Offset(p.dx - s * r * 0.3, p.dy - s * r * 0.3),
-              s * r * 1.2,
-              [
-                Colors.white.withValues(alpha: 0.95),
-                const Color(0xFFB8C8FF).withValues(alpha: 0.55),
-                const Color(0xFF8B7CFF).withValues(alpha: 0.2),
-              ],
-            ),
-        );
-        canvas.drawCircle(
-          Offset(p.dx - s * r * 0.25, p.dy - s * r * 0.3),
-          s * r * 0.28,
-          Paint()..color = Colors.white.withValues(alpha: 0.85),
-        );
-      }
-    }
-
-    final sigil = _sigilS(s);
-
-    // Soft bloom under S
-    canvas.drawPath(
-      sigil,
-      Paint()
-        ..color = const Color(0xFF8B9CFF).withValues(alpha: 0.28)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.05),
-    );
-
-    // Pearlescent body — cyan → violet → gold
-    canvas.drawPath(
-      sigil,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          Offset(s * 0.28, s * 0.18),
-          Offset(s * 0.78, s * 0.86),
-          [
-            const Color(0xFFEAF6FF),
-            const Color(0xFF7EC8FF),
-            const Color(0xFF9B8CFF),
-            const Color(0xFFE6C88B),
-            const Color(0xFFFFF0D2),
-          ],
-          const [0.0, 0.28, 0.52, 0.78, 1.0],
-        ),
-    );
-
-    // Twin-ribbon highlight edge (lighter inner filament)
-    canvas.drawPath(
-      sigil,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s * 0.018
-        ..shader = ui.Gradient.linear(
-          Offset(s * (0.15 + 0.4 * shimmer), s * 0.12),
-          Offset(s * (0.6 + 0.3 * shimmer), s * 0.8),
-          [
-            Colors.white.withValues(alpha: 0.9),
-            Colors.white.withValues(alpha: 0.15),
-            Colors.white.withValues(alpha: 0.55),
-          ],
-          const [0.0, 0.45, 1.0],
-        ),
-    );
-
-    // Specular spark on upper curve
-    canvas.drawCircle(
-      Offset(s * 0.62, s * 0.28),
-      s * 0.03,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.7 + 0.25 * shimmer)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, s * 0.01),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _LiquidSPainter oldDelegate) {
-    return oldDelegate.phase != phase || oldDelegate.showOrb != showOrb;
   }
 }
 

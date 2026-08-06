@@ -259,15 +259,27 @@ body.sylora-aether-active #sylora-aether { display: block; }
   transform: translateY(18px);
 }
 
-/* Lumen Gate — hero brand mark (not text) */
+/* Lumen Gate — hero brand mark (approved mockup plate) */
 .aether-sigil {
   position: relative;
-  width: min(26rem, 82vw);
+  width: min(22rem, 78vw);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
   margin: 0 auto;
-  filter: drop-shadow(0 28px 56px rgba(201, 164, 92, 0.38));
+  filter: drop-shadow(0 24px 48px rgba(139, 156, 255, 0.28))
+    drop-shadow(0 12px 28px rgba(230, 200, 139, 0.22));
+}
+
+.aether-sigil-plate {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  animation: sigilBreath 6.2s ease-in-out infinite;
+  will-change: transform;
 }
 
 .aether-sigil-wave {
@@ -283,56 +295,18 @@ body.sylora-aether-active #sylora-aether { display: block; }
 
 .aether-sigil-aura {
   position: absolute;
-  inset: 16%;
+  inset: 12%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 247, 238, 0.78) 0%, rgba(230, 200, 139, 0.22) 46%, transparent 72%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.72) 0%, rgba(158, 182, 255, 0.22) 42%, transparent 72%);
   animation: sigilAuraBreath 4.2s ease-in-out infinite;
   pointer-events: none;
 }
 
-.aether-sigil-svg {
-  position: relative;
-  z-index: 1;
-  width: 82%;
-  height: 82%;
-  display: block;
-  overflow: visible;
-}
-.aether-sigil-svg svg {
+.aether-mark img {
   width: 100%;
   height: 100%;
   display: block;
-  overflow: visible;
-}
-
-.aether-sigil-s {
-  filter: drop-shadow(0 8px 18px rgba(139, 124, 255, 0.28));
-  animation: ribbonShimmer 5.8s ease-in-out infinite;
-}
-
-.aether-droplet {
-  animation: dropletBob 5.2s ease-in-out infinite;
-}
-.aether-droplet:nth-child(odd) { animation-delay: -1.4s; }
-.aether-droplet:nth-child(3n) { animation-delay: -2.6s; }
-
-.aether-gate-arc--l {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-  animation: gateArcPulse 4.8s ease-in-out infinite, ribbonShimmer 6.4s ease-in-out infinite;
-}
-.aether-gate-arc--r {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-  animation: gateArcPulse 4.8s 0.6s ease-in-out infinite;
-}
-
-.aether-ribbon--gold {
-  animation: ribbonGoldBreath 5.2s ease-in-out infinite;
-}
-
-.aether-ribbon--cyan {
-  filter: drop-shadow(0 0 6px rgba(94, 200, 255, 0.35));
+  object-fit: contain;
 }
 
 .aether-gate-fil {
@@ -367,7 +341,7 @@ body.sylora-aether-active #sylora-aether { display: block; }
 .aether-wordmark {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.55rem, 5vw, 2.1rem);
+  font-size: clamp(1.45rem, 4.6vw, 1.95rem);
   font-weight: 600;
   letter-spacing: 0.48em;
   text-indent: 0.48em;
@@ -375,47 +349,10 @@ body.sylora-aether-active #sylora-aether { display: block; }
   text-transform: none;
 }
 
-.aether-unified {
-  margin: 0 0 0.45rem;
-  font-family: var(--font-display);
-  font-size: clamp(0.85rem, 2.4vw, 1.05rem);
-  font-weight: 700;
-  letter-spacing: 0.55em;
-  text-indent: 0.55em;
-  background: linear-gradient(90deg, #5b8def, #8b7cff 55%, #b08cff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  opacity: 0;
-  transform: translateY(18px);
-}
-.aether-revealed .aether-unified { animation: rise 1s 0.3s var(--ease) forwards; }
-
-.aether-rule {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  margin: 0.85rem auto 0;
-  width: min(12rem, 55vw);
-  opacity: 0;
-  transform: translateY(12px);
-}
-.aether-revealed .aether-rule { animation: rise 1s 0.42s var(--ease) forwards; }
-.aether-rule::before,
-.aether-rule::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(18, 24, 38, 0.22), transparent);
-}
-.aether-rule span {
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 50%;
-  background: var(--gold-deep, #c9a45c);
-  box-shadow: 0 0 8px rgba(201, 164, 92, 0.45);
-}
+.aether-unified,
+.aether-rule,
+.aether-brand-unified,
+.aether-menu { display: none !important; }
 
 .aether-kicker,
 .aether-brand,
@@ -426,63 +363,142 @@ body.sylora-aether-active #sylora-aether { display: block; }
   margin: 0.85rem 0 0;
   font-size: clamp(0.68rem, 1.7vw, 0.78rem);
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--gold-deep);
   white-space: pre-line;
-  line-height: 1.65;
+  line-height: 1.55;
   opacity: 0;
   transform: translateY(18px);
 }
-.aether-revealed .aether-tagline { animation: rise 1s 0.46s var(--ease) forwards; }
+.aether-revealed .aether-tagline { animation: rise 1s 0.42s var(--ease) forwards; }
+
+.aether-feat-strip {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0.35rem;
+  width: min(22rem, 100%);
+  margin: 1.35rem auto 0;
+  padding: 0.85rem 0.75rem;
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 14px 36px rgba(18, 24, 38, 0.06);
+  opacity: 0;
+  transform: translateY(16px);
+}
+.aether-revealed .aether-feat-strip { animation: rise 1s 0.62s var(--ease) forwards; }
+.aether-feat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.aether-feat-ico {
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201, 164, 92, 0.55);
+  position: relative;
+  box-shadow: 0 0 12px rgba(94, 200, 255, 0.25);
+}
+.aether-feat-ico--shield::before {
+  content: '';
+  position: absolute;
+  inset: 22% 28% 18%;
+  border: 1.5px solid var(--gold-deep);
+  border-radius: 40% 40% 45% 45%;
+}
+.aether-feat-ico--bolt::before {
+  content: '';
+  position: absolute;
+  left: 42%;
+  top: 22%;
+  width: 0.42rem;
+  height: 0.72rem;
+  background: var(--gold-deep);
+  clip-path: polygon(45% 0, 100% 0, 55% 48%, 100% 48%, 0 100%, 42% 52%, 0 52%);
+}
+.aether-feat-ico--nodes::before,
+.aether-feat-ico--nodes::after {
+  content: '';
+  position: absolute;
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0.45rem 0.35rem 0 var(--gold-deep), -0.4rem 0.4rem 0 var(--violet);
+  left: 36%;
+  top: 28%;
+}
 
 .aether-cta-wrap {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
   gap: 0.75rem;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   width: 100%;
   max-width: min(22rem, 100%);
-  margin-top: 0.35rem;
+  margin-top: 1.1rem;
+}
+@media (min-width: 900px) {
+  .aether-cta-wrap {
+    flex-direction: row;
+    max-width: min(28rem, 100%);
+  }
+  .aether-feat-strip { display: none; }
 }
 
 .aether-portal {
   position: relative;
   appearance: none;
-  border: 0;
+  border: 1px solid rgba(255, 255, 255, 0.72);
   cursor: pointer;
-  color: #fff;
+  color: var(--ink);
   font: inherit;
   font-family: var(--font-body);
   font-weight: 650;
   font-size: clamp(0.92rem, 2.5vw, 1.02rem);
   letter-spacing: 0.02em;
   text-transform: none;
-  padding: 0.95rem 1.35rem;
-  border-radius: 999px;
+  padding: 0.95rem 1.7rem;
+  border-radius: var(--radius-cta);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.65rem;
-  background: linear-gradient(105deg, #5b8def, #7b6cff 48%, #9b7cff);
+  background: linear-gradient(180deg, #f8e7c2 0%, #e6c88b 48%, #c9a45c 100%);
   box-shadow:
-    0 12px 28px rgba(91, 108, 255, 0.32),
-    0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+    0 14px 32px rgba(201, 164, 92, 0.38),
+    0 0 28px rgba(230, 200, 139, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -1px 0 rgba(201, 164, 92, 0.25);
   transition: transform 0.3s var(--ease), box-shadow 0.3s ease;
   flex: 1 1 auto;
   min-width: min(12rem, 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .aether-portal::before {
   content: "";
   position: absolute;
-  inset: -2px;
+  inset: -3px;
   border-radius: inherit;
-  background: linear-gradient(120deg, rgba(91, 141, 239, 0.55), rgba(155, 124, 255, 0.4));
+  background: linear-gradient(120deg, rgba(245, 222, 179, 0.7), rgba(201, 164, 92, 0.35));
   z-index: -1;
-  filter: blur(12px);
-  opacity: 0.55;
+  filter: blur(14px);
+  opacity: 0.65;
   transition: opacity 0.3s ease;
 }
 
@@ -490,90 +506,36 @@ body.sylora-aether-active #sylora-aether { display: block; }
 .aether-portal:focus-visible {
   transform: translateY(-2px) scale(1.02);
   box-shadow:
-    0 16px 36px rgba(91, 108, 255, 0.38),
-    0 0 24px rgba(139, 124, 255, 0.35);
+    0 18px 40px rgba(201, 164, 92, 0.45),
+    0 0 32px rgba(230, 200, 139, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   outline: none;
 }
 
 .aether-portal:hover::before,
-.aether-portal:focus-visible::before { opacity: 0.9; }
+.aether-portal:focus-visible::before { opacity: 0.95; }
 
 .aether-portal:active { transform: translateY(0) scale(0.99); }
 
-.aether-portal--violet {
-  background: linear-gradient(105deg, #5b8def, #7b6cff 48%, #9b7cff);
+.aether-portal--gold {
+  background: linear-gradient(180deg, #f8e7c2 0%, #e6c88b 48%, #c9a45c 100%);
 }
 
 .aether-portal--glass {
-  background: rgba(255, 255, 255, 0.72) !important;
-  border: 1px solid rgba(201, 164, 92, 0.55);
-  box-shadow: 0 12px 28px rgba(18, 24, 38, 0.06) !important;
-  color: #c9a45c;
+  background: rgba(255, 255, 255, 0.48) !important;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 14px 32px rgba(18, 24, 38, 0.08),
+    0 0 24px rgba(94, 200, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  color: var(--ink);
 }
 .aether-portal--glass::before {
-  background: linear-gradient(120deg, rgba(255,255,255,0.4), rgba(230,200,139,0.25));
+  background: linear-gradient(120deg, rgba(255,255,255,0.55), rgba(158, 200, 255, 0.28));
 }
 
-.aether-portal-ico {
-  width: 1.05rem;
-  height: 1.05rem;
-  flex: 0 0 auto;
-  border: 1.5px solid currentColor;
-  border-radius: 50%;
-  position: relative;
-  opacity: 0.9;
-}
-.aether-portal-ico--user::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 28%;
-  width: 0.28rem;
-  height: 0.28rem;
-  margin-left: -0.14rem;
-  border-radius: 50%;
-  background: currentColor;
-}
-.aether-portal-ico--user::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 18%;
-  width: 0.55rem;
-  height: 0.32rem;
-  margin-left: -0.275rem;
-  border-radius: 0.3rem 0.3rem 0 0;
-  background: currentColor;
-}
-.aether-portal-ico--plus {
-  border-radius: 0.35rem;
-}
-.aether-portal-ico--plus::before,
-.aether-portal-ico--plus::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  background: currentColor;
-  transform: translate(-50%, -50%);
-}
-.aether-portal-ico--plus::before {
-  width: 0.55rem;
-  height: 1.5px;
-}
-.aether-portal-ico--plus::after {
-  width: 1.5px;
-  height: 0.55rem;
-}
-.aether-portal-chev {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-right: 1.6px solid currentColor;
-  border-top: 1.6px solid currentColor;
-  transform: rotate(45deg);
-  opacity: 0.85;
-  margin-left: auto;
-}
+.aether-portal-ico,
+.aether-portal-chev { display: none; }
 
 .aether-top-actions {
   display: flex;
@@ -637,6 +599,11 @@ body.sylora-aether-active #sylora-aether { display: block; }
 @keyframes sigilAuraBreath {
   0%, 100% { transform: scale(0.92); opacity: 0.55; }
   50% { transform: scale(1.08); opacity: 0.95; }
+}
+
+@keyframes sigilBreath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
 }
 
 @keyframes gateArcPulse {

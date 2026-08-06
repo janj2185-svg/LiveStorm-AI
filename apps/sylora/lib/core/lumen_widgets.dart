@@ -311,7 +311,7 @@ final class LumenResponsiveShell extends StatelessWidget {
         leading: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14),
           child: expanded
-              ? const SyloraBrandLockup(size: 34, showUnified: true)
+              ? const SyloraBrandLockup(size: 34, showUnified: false)
               : const SyloraLogo(size: 36),
         ),
                 destinations: <NavigationRailDestination>[

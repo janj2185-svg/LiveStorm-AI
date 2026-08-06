@@ -300,7 +300,7 @@ final class SyloraLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mark = SyloraMark(size: size, animated: true);
+    final mark = SyloraMark(size: size, animated: true, hero: size >= 72);
     if (!showWordmark) return mark;
     return Column(
       mainAxisSize: MainAxisSize.min,

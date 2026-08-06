@@ -68,9 +68,9 @@ final class _WelcomeScreenState extends State<WelcomeScreen>
                   children: <Widget>[
                     const Spacer(flex: 2),
                     const SyloraLogo(
-                      size: 96,
+                      size: 120,
                       showWordmark: true,
-                      showUnified: true,
+                      showUnified: false,
                       wordmarkSize: 22,
                     ),
                     const SizedBox(height: 18),
@@ -321,12 +321,9 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SyloraMark(size: compact ? 88 : 132, animated: true),
+        SyloraMark(size: compact ? 96 : 140, animated: true, hero: true),
         SizedBox(height: compact ? 12 : 20),
-        SyloraHeroWordmark(
-          unifiedSize: compact ? 14 : 18,
-          syloraSize: compact ? 22 : 28,
-        ),
+        SyloraHeroWordmark(syloraSize: compact ? 22 : 28),
         if (!compact) ...[
           const SizedBox(height: 10),
           Text(
@@ -345,7 +342,7 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          const Center(child: SyloraBrandLockup(size: 34, showUnified: true)),
+          const Center(child: SyloraBrandLockup(size: 34, showUnified: false)),
           const SizedBox(height: 12),
           Text(
             _pane == _AuthPane.chooser
