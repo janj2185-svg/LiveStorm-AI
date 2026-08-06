@@ -1,11 +1,11 @@
 {
-    "name": "SYLORA",
+    "name": "SYLORA UNIFIED",
     "short_name": "SYLORA",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFF7EE",
-    "theme_color": "#C9A45C",
-    "description": "SYLORA — the next-generation digital world.",
+    "background_color": "#F4F6FA",
+    "theme_color": "#8B7CFF",
+    "description": "SYLORA UNIFIED — one space. All you. Boundless possibilities.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
