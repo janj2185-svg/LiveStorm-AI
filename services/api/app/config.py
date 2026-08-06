@@ -92,6 +92,7 @@ class Settings(BaseSettings):
     auth_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
     social_rate_window_seconds: int = Field(default=60, ge=10, le=3600)
     post_rate_limit: int = Field(default=10, ge=1, le=1000)
+    story_rate_limit: int = Field(default=10, ge=1, le=1000)
     comment_rate_limit: int = Field(default=30, ge=1, le=2000)
     message_rate_limit: int = Field(default=60, ge=1, le=5000)
     reaction_rate_limit: int = Field(default=120, ge=1, le=10_000)

@@ -42,6 +42,7 @@ from app.middleware import (
     RequestContextMiddleware,
     SecurityHeadersMiddleware,
 )
+from app.owner_config_service import effective_settings, load_all_into_runtime
 from app.payments import PaymentProvider, configured_payment_provider
 from app.platform_service import (
     CertificateRenderer,
@@ -49,8 +50,8 @@ from app.platform_service import (
     UnconfiguredCertificateRenderer,
     UnconfiguredContentProcessor,
 )
+from app.progress_service import seed_default_achievements
 from app.push_service import PushDispatcher, configured_push_dispatcher
-from app.owner_config_service import effective_settings, load_all_into_runtime
 from app.routers import (
     admin,
     admin_ai,
@@ -73,8 +74,10 @@ from app.routers import (
     messaging,
     music,
     oauth,
+    progress,
     push,
     social,
+    stories,
     test_stand,
     trust_safety,
     users,
@@ -150,6 +153,7 @@ def create_app(
             await seed_rbac(session)
             await seed_platform_accounts(session)
             await seed_ai_tool_definitions(session)
+            await seed_default_achievements(session)
             await load_all_into_runtime(session, resolved_settings)
             application.state.settings = effective_settings(resolved_settings)
             application.state.payment_provider = (
@@ -231,6 +235,8 @@ def create_app(
             {"name": "OAuth", "description": "Configured OIDC provider flows"},
             {"name": "Profiles", "description": "Owned and RBAC-managed user data"},
             {"name": "Social", "description": "First-party social graph and content"},
+            {"name": "Stories", "description": "Ephemeral 24-hour moments and views"},
+            {"name": "Progress", "description": "User XP, levels, achievements, and activity"},
             {"name": "Messaging", "description": "Persisted direct and community messaging"},
             {"name": "Wallet", "description": "Immutable double-entry credit ledger"},
             {"name": "Payments", "description": "Configured external payment boundary"},
@@ -332,6 +338,8 @@ def create_app(
     app.include_router(admin_ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
+    app.include_router(stories.router, prefix=resolved_settings.api_prefix)
+    app.include_router(progress.router, prefix=resolved_settings.api_prefix)
     app.include_router(trust_safety.router, prefix=resolved_settings.api_prefix)
     app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
     app.include_router(push.router, prefix=resolved_settings.api_prefix)
