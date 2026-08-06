@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import 'sylora_aura.dart';
 import 'sylora_aura_presence.dart';
 import 'sylora_components.dart';
@@ -30,6 +32,7 @@ final class SyloraModuleScaffold extends StatelessWidget {
     this.intensity = 0.78,
     this.showOrbits = true,
     this.header,
+    this.showGlobalChrome = true,
   });
 
   final String title;
@@ -50,10 +53,74 @@ final class SyloraModuleScaffold extends StatelessWidget {
   final bool showOrbits;
   /// Optional hero block rendered above the glass content rail.
   final Widget? header;
+  /// Global top chrome — search / create / notifications / messages /
+  /// wallet / profile — appended after page-local actions.
+  final bool showGlobalChrome;
+
+  /// Aura should never be fully absent once summoned into a page — `hidden`
+  /// with [showAuraPresence] true is promoted to a non-blocking summon orb.
+  SyloraAuraPresenceMode get _effectiveAuraPresenceMode {
+    if (!showAuraPresence) {
+      return SyloraAuraPresenceMode.hidden;
+    }
+    return auraPresenceMode == SyloraAuraPresenceMode.hidden
+        ? SyloraAuraPresenceMode.summon
+        : auraPresenceMode;
+  }
+
+  List<Widget> _resolvedActions(BuildContext context) {
+    if (!showGlobalChrome) {
+      return actions;
+    }
+    // Guard against hosts (e.g. isolated widget tests) that mount this
+    // scaffold under a bare MaterialApp without the generated localization
+    // delegate registered — fall back to plain tooltips instead of crashing.
+    final l10n = Localizations.of<AppLocalizations>(
+      context,
+      AppLocalizations,
+    );
+    return <Widget>[
+      ...actions,
+      IconButton(
+        tooltip: l10n?.navSearch ?? 'Search',
+        onPressed: () => context.goNamed('search'),
+        icon: const Icon(Icons.search_rounded),
+      ),
+      IconButton(
+        tooltip: l10n?.feedCreatePost ?? 'Create',
+        onPressed: () => context.goNamed(
+          'home',
+          queryParameters: const <String, String>{'compose': '1'},
+        ),
+        icon: const Icon(Icons.add_circle_outline_rounded),
+      ),
+      IconButton(
+        tooltip: l10n?.settingsNotifications ?? 'Notifications',
+        onPressed: () => context.pushNamed('notifications'),
+        icon: const Icon(Icons.notifications_outlined),
+      ),
+      IconButton(
+        tooltip: l10n?.navMessages ?? 'Messages',
+        onPressed: () => context.goNamed('messages'),
+        icon: const Icon(Icons.chat_bubble_outline_rounded),
+      ),
+      IconButton(
+        tooltip: l10n?.walletTitle ?? 'Wallet',
+        onPressed: () => context.goNamed('wallet'),
+        icon: const Icon(Icons.account_balance_wallet_outlined),
+      ),
+      IconButton(
+        tooltip: l10n?.navProfile ?? 'Profile',
+        onPressed: () => context.goNamed('more'),
+        icon: const Icon(Icons.person_outline_rounded),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final effectiveAuraMode = _effectiveAuraPresenceMode;
     return SyloraLivingScaffold(
       safe: false,
       intensity: intensity,
@@ -85,7 +152,7 @@ final class SyloraModuleScaffold extends StatelessWidget {
                                   _ModuleHeader(
                                     title: title,
                                     subtitle: subtitle,
-                                    actions: actions,
+                                    actions: _resolvedActions(context),
                                     compact: compact,
                                   ),
                                   if (header != null) ...<Widget>[
@@ -126,12 +193,11 @@ final class SyloraModuleScaffold extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (showAuraPresence &&
-                    auraPresenceMode != SyloraAuraPresenceMode.hidden)
+                if (showAuraPresence)
                   SyloraAuraPresence(
                     controller: auraPresenceController,
                     preset: auraPresencePreset,
-                    mode: auraPresenceMode,
+                    mode: effectiveAuraMode,
                   ),
               ],
             );
