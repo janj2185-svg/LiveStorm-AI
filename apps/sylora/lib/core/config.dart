@@ -10,9 +10,13 @@ final class AppConfig {
       'SYLORA_API_BASE_URL',
       defaultValue: 'http://localhost:8000',
     );
+    const allowHttp = bool.fromEnvironment(
+      'SYLORA_ALLOW_HTTP_API',
+      defaultValue: false,
+    );
     return AppConfig(
       apiBaseUri: Uri.parse(raw),
-      production: production ?? kReleaseMode,
+      production: production ?? (kReleaseMode && !allowHttp),
     );
   }
 
