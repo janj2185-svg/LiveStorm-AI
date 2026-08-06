@@ -522,6 +522,21 @@ report simulated success. The API does not claim that any real external
 payment, media processing job, PDF rendering job, or S3 operation was verified
 without deployment credentials and a configured real adapter.
 
+## Music, global search, and progression
+
+Migration `20260806_0008_music_progression` adds creator-owned music tracks,
+user-owned playlists, saved-track libraries, XP progression, and achievements.
+Tracks are intentionally not seeded with synthetic owners or fake audio:
+creators and administrators create real track metadata through
+`POST /v1/music/tracks`, then publish it through
+`POST /v1/music/tracks/{track_id}/publish`.
+
+Authenticated music browsing and libraries are available under `/v1/music`.
+`GET /v1/search` searches the visible portions of social, gift, marketplace,
+learning, live, music, and business-document data. Progression is available
+through `/v1/progression/me` and `/v1/progression/achievements`; the achievement
+catalog is seeded idempotently during application startup.
+
 ## Business workspaces and platform administration
 
 Migration `20260731_0007_business_admin` adds tenant workspaces, memberships,
