@@ -48,6 +48,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navSearch => '搜索';
 
   @override
+  String get navNotifications => '通知';
+
+  @override
   String get navMarket => '市场';
 
   @override
@@ -1742,6 +1745,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get navMe => 'Me';
+
+  @override
+  String get navBusiness => '商业';
+
+  @override
+  String get navGiftShop => '礼品店';
+
+  @override
+  String get navWallet => '钱包';
+
+  @override
+  String get navAnalytics => '分析';
 
   @override
   String get moreCommunities => 'Communities';

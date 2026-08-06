@@ -48,6 +48,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get navSearch => '검색';
 
   @override
+  String get navNotifications => '알림';
+
+  @override
   String get navMarket => '마켓';
 
   @override
@@ -1746,6 +1749,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get navMe => 'Me';
+
+  @override
+  String get navBusiness => '비즈니스';
+
+  @override
+  String get navGiftShop => '선물 상점';
+
+  @override
+  String get navWallet => '지갑';
+
+  @override
+  String get navAnalytics => '분석';
 
   @override
   String get moreCommunities => 'Communities';

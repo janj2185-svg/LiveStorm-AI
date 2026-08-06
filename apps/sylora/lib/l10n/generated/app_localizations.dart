@@ -194,6 +194,12 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get navSearch;
 
+  /// No description provided for @navNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get navNotifications;
+
   /// No description provided for @navMarket.
   ///
   /// In en, this message translates to:
@@ -3355,6 +3361,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Me'**
   String get navMe;
+
+  /// No description provided for @navBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get navBusiness;
+
+  /// No description provided for @navGiftShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift Shop'**
+  String get navGiftShop;
+
+  /// No description provided for @navWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get navWallet;
+
+  /// No description provided for @navAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get navAnalytics;
 
   /// No description provided for @moreCommunities.
   ///

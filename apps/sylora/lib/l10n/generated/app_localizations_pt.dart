@@ -49,6 +49,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get navSearch => 'Buscar';
 
   @override
+  String get navNotifications => 'Notificações';
+
+  @override
   String get navMarket => 'Mercado';
 
   @override
@@ -1759,6 +1762,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get navMe => 'Me';
+
+  @override
+  String get navBusiness => 'Negócios';
+
+  @override
+  String get navGiftShop => 'Loja de presentes';
+
+  @override
+  String get navWallet => 'Carteira';
+
+  @override
+  String get navAnalytics => 'Analítica';
 
   @override
   String get moreCommunities => 'Communities';

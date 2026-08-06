@@ -331,6 +331,7 @@ class _LiquidSPainter extends CustomPainter {
               SyloraTokens.gold.withValues(alpha: alpha * 0.9),
               SyloraTokens.cyan.withValues(alpha: alpha * 0.6),
             ],
+            const [0.0, 0.5, 1.0],
           ),
       );
       canvas.restore();

@@ -268,10 +268,10 @@ abstract final class LumenTheme {
 
   static TextStyle _display(double size, double height, Color color) =>
       TextStyle(
-        fontFamily: 'Instrument Sans',
+        fontFamily: 'Instrument Serif',
         fontSize: size,
         height: height / size,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w400,
         letterSpacing: -0.02 * size,
         color: color,
       );

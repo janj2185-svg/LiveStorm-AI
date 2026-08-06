@@ -89,11 +89,29 @@ const _studioDestination = ShellDestination(
   selectedIcon: Icons.movie_creation_rounded,
   path: '/creator-studio',
 );
+const _giftShopDestination = ShellDestination(
+  label: 'Gift Shop',
+  icon: Icons.card_giftcard_outlined,
+  selectedIcon: Icons.card_giftcard_rounded,
+  path: '/gifts',
+);
 const _walletDestination = ShellDestination(
   label: 'Wallet',
   icon: Icons.account_balance_wallet_outlined,
   selectedIcon: Icons.account_balance_wallet_rounded,
   path: '/wallet',
+);
+const _analyticsDestination = ShellDestination(
+  label: 'Analytics',
+  icon: Icons.insights_outlined,
+  selectedIcon: Icons.insights_rounded,
+  path: '/analytics',
+);
+const _profileDestination = ShellDestination(
+  label: 'Profile',
+  icon: Icons.person_outline_rounded,
+  selectedIcon: Icons.person_rounded,
+  path: '/more',
 );
 const _settingsDestination = ShellDestination(
   label: 'Settings',
@@ -107,23 +125,17 @@ const _createDestination = ShellDestination(
   selectedIcon: Icons.add_circle_rounded,
   path: '/compose',
 );
-const _moreDestination = ShellDestination(
-  label: 'More',
-  icon: Icons.apps_outlined,
-  selectedIcon: Icons.apps_rounded,
-  path: '/more',
-);
 
-/// Phone island — Home · Live · Create · Messages · More (Ethereal Product Map)
+/// Phone island — Home · Live · Create · Messages · Profile (platform UX)
 const _compactDestinations = <ShellDestination>[
   _homeDestination,
   _liveDestination,
   _createDestination,
   _messagesDestination,
-  _moreDestination,
+  _profileDestination,
 ];
 
-/// Desktop/tablet rail — Ethereal Product Map order
+/// Desktop/tablet rail — full ecosystem order (owner IA)
 List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
   final roleSet = roles.toSet();
   final showStudio =
@@ -134,6 +146,11 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
       roleSet.contains('business') ||
       roleSet.contains('admin') ||
       roleSet.contains('owner');
+  final showAnalytics =
+      roleSet.contains('creator') ||
+      roleSet.contains('admin') ||
+      roleSet.contains('owner') ||
+      roleSet.contains('business');
   return <ShellDestination>[
     _homeDestination,
     _liveDestination,
@@ -145,9 +162,11 @@ List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
     if (showBusiness) _businessDestination,
     _musicDestination,
     if (showStudio) _studioDestination,
+    _giftShopDestination,
     _walletDestination,
+    if (showAnalytics) _analyticsDestination,
+    _profileDestination,
     _settingsDestination,
-    _moreDestination,
   ];
 }
 
@@ -373,6 +392,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/earnings',
             name: 'earnings',
+            pageBuilder: (context, state) =>
+                _page(state, const CreatorEarningsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/analytics',
+            name: 'analytics',
             pageBuilder: (context, state) =>
                 _page(state, const CreatorEarningsScreen(), reducedMotion),
           ),
@@ -716,7 +741,8 @@ int _destinationIndex(String path, List<ShellDestination> destinations) {
   });
   if (index < 0) {
     index = destinations.indexWhere(
-      (destination) => destination.path == '/more',
+      (destination) =>
+          destination.path == '/more' || destination.label == 'Profile',
     );
   }
   return index < 0 ? 0 : index;
@@ -759,12 +785,18 @@ String _localizedDestinationLabel(
       '/learning' => l10n.navLearn,
       '/creator' => l10n.navCreator,
       '/creator-studio' => l10n.navStudio,
-      '/business' => l10n.navWorkspace,
+      '/business' => l10n.navBusiness,
       '/admin' => l10n.navAdmin,
-      '/wallet' => l10n.walletTitle,
+      '/gifts' => l10n.navGiftShop,
+      '/wallet' => l10n.navWallet,
+      '/analytics' => l10n.navAnalytics,
       '/settings' => l10n.navSettings,
       '/compose' => l10n.feedCreatePost,
-      '/more' => fallback == 'Me' ? l10n.navMe : l10n.navMore,
+      '/more' => fallback == 'Me' ||
+              fallback == 'Profile' ||
+              fallback == l10n.navProfile
+          ? l10n.navProfile
+          : l10n.navMore,
       _ => fallback.isEmpty ? l10n.navMore : fallback,
     };
 

@@ -65,6 +65,18 @@ docker compose \
 API documentation is exposed at `http://localhost:8000/docs`. Detailed backend
 configuration and endpoints are in `services/api/README.md`.
 
+## Run Admin (Next.js)
+
+```bash
+cd apps/admin
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+Open `http://localhost:4317` and sign in with an owner/admin account
+(e.g. `owner@sylora.dev` / `OwnerTest!2026Local` after seeding).
+
 ## Run Flutter
 
 Flutter 3.44.7 is the supported SDK.

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../design/sylora.dart';
+import '../l10n/generated/app_localizations.dart';
 import 'api.dart';
 import 'lumen_theme.dart';
 
@@ -254,10 +256,15 @@ final class LumenResponsiveShell extends StatelessWidget {
       if (width < SyloraBreakpoints.phone) {
         final mobileDestinations = compactDestinations ?? destinations;
         final mobileIndex = compactSelectedIndex ?? selectedIndex;
-        // A4 Shorts: floating island dock, icons first (label only when selected).
+        // Phone: island dock + compact top chrome (search / alerts / Aura).
         return Scaffold(
           backgroundColor: Colors.transparent,
-          body: body,
+          body: Column(
+            children: <Widget>[
+              const _SyloraShellTopBar(compact: true),
+              Expanded(child: body),
+            ],
+          ),
           extendBody: true,
           bottomNavigationBar: SafeArea(
             minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
@@ -275,7 +282,7 @@ final class LumenResponsiveShell extends StatelessWidget {
       }
       final expanded = SyloraBreakpoints.isWide(width);
       final compactRail = width < SyloraBreakpoints.desktop;
-      // A4 Cinema: thin icon rail; labels only on wide desktop.
+      // Tablet/Desktop: cinema rail + full top chrome.
       return Scaffold(
         backgroundColor: Colors.transparent,
         body: Row(
@@ -291,29 +298,29 @@ final class LumenResponsiveShell extends StatelessWidget {
                 ),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-            color: SyloraTokens.cyan.withValues(alpha: 0.08),
-            blurRadius: 28,
-            offset: const Offset(4, 0),
-          ),
-        ],
-      ),
-      child: NavigationRail(
-        backgroundColor: Colors.transparent,
-        extended: expanded,
-        minWidth: compactRail ? 76 : 68,
-        groupAlignment: -1,
-        scrollable: true,
-        selectedIndex: selectedIndex.clamp(0, destinations.length - 1),
-        onDestinationSelected: onDestinationSelected,
-        labelType: expanded
-            ? NavigationRailLabelType.none
-            : NavigationRailLabelType.selected,
-        leading: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          child: expanded
-              ? const SyloraBrandLockup(size: 34, showUnified: false)
-              : const SyloraLogo(size: 36),
-        ),
+                    color: SyloraTokens.cyan.withValues(alpha: 0.08),
+                    blurRadius: 28,
+                    offset: const Offset(4, 0),
+                  ),
+                ],
+              ),
+              child: NavigationRail(
+                backgroundColor: Colors.transparent,
+                extended: expanded,
+                minWidth: compactRail ? 76 : 68,
+                groupAlignment: -1,
+                scrollable: true,
+                selectedIndex: selectedIndex.clamp(0, destinations.length - 1),
+                onDestinationSelected: onDestinationSelected,
+                labelType: expanded
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.selected,
+                leading: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: expanded
+                      ? const SyloraBrandLockup(size: 34, showUnified: false)
+                      : const SyloraLogo(size: 36),
+                ),
                 destinations: <NavigationRailDestination>[
                   for (final destination in destinations)
                     NavigationRailDestination(
@@ -335,7 +342,14 @@ final class LumenResponsiveShell extends StatelessWidget {
                 ],
               ),
             ),
-            Expanded(child: body),
+            Expanded(
+              child: Column(
+                children: <Widget>[
+                  const _SyloraShellTopBar(compact: false),
+                  Expanded(child: body),
+                ],
+              ),
+            ),
             if (expanded && contextPanel != null) ...<Widget>[
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -354,6 +368,145 @@ final class LumenResponsiveShell extends StatelessWidget {
       );
     },
   );
+}
+
+/// Global shell chrome: Search · Create · Notifications · Chat · Wallet · Profile.
+final class _SyloraShellTopBar extends StatelessWidget {
+  const _SyloraShellTopBar({required this.compact});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final router = GoRouter.maybeOf(context);
+    void goNamed(String name) {
+      router?.goNamed(name);
+    }
+
+    void go(String location) {
+      router?.go(location);
+    }
+
+    Widget action({
+      required String tooltip,
+      required IconData icon,
+      required VoidCallback onPressed,
+    }) => IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon, size: compact ? 22 : 24),
+    );
+
+    return Material(
+      color: Colors.transparent,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: SyloraTokens.glassStrong.withValues(alpha: 0.88),
+          border: Border(
+            bottom: BorderSide(color: Colors.white.withValues(alpha: 0.55)),
+          ),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: SyloraTokens.gold.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              compact ? 12 : 18,
+              6,
+              compact ? 8 : 14,
+              6,
+            ),
+            child: Row(
+              children: <Widget>[
+                if (!compact) ...<Widget>[
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () => goNamed('search'),
+                      child: Container(
+                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.75),
+                          ),
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              Icons.search_rounded,
+                              color: SyloraTokens.inkSoft,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.navSearch,
+                                style: SyloraTokens.body(
+                                  14,
+                                  color: SyloraTokens.inkMute,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ] else
+                  action(
+                    tooltip: l10n.navSearch,
+                    icon: Icons.search_rounded,
+                    onPressed: () => goNamed('search'),
+                  ),
+                action(
+                  tooltip: l10n.feedCreatePost,
+                  icon: Icons.add_circle_outline_rounded,
+                  onPressed: () => go('/home?compose=1'),
+                ),
+                action(
+                  tooltip: l10n.navNotifications,
+                  icon: Icons.notifications_none_rounded,
+                  onPressed: () => goNamed('notifications'),
+                ),
+                action(
+                  tooltip: l10n.navMessages,
+                  icon: Icons.chat_bubble_outline_rounded,
+                  onPressed: () => goNamed('messages'),
+                ),
+                if (!compact)
+                  action(
+                    tooltip: l10n.navWallet,
+                    icon: Icons.account_balance_wallet_outlined,
+                    onPressed: () => goNamed('wallet'),
+                  ),
+                action(
+                  tooltip: l10n.navAura,
+                  icon: Icons.auto_awesome_outlined,
+                  onPressed: () => goNamed('ai'),
+                ),
+                action(
+                  tooltip: l10n.navProfile,
+                  icon: Icons.person_outline_rounded,
+                  onPressed: () => goNamed('more'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// A4 phone dock — frosted island, soft pulse on selection, no label clutter.

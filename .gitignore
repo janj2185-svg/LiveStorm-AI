@@ -27,3 +27,8 @@ dump.rdb
 
 # Gift library intermediate render frames (keep final mp4/gif/glb)
 artifacts/gift-library/**/_frames/
+
+# Next.js admin
+apps/admin/.next/
+apps/admin/node_modules/
+apps/admin/.env.local

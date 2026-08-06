@@ -49,6 +49,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get navSearch => 'Пошук';
 
   @override
+  String get navNotifications => 'Сповіщення';
+
+  @override
   String get navMarket => 'Маркет';
 
   @override
@@ -1754,6 +1757,18 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get navMe => 'Я';
+
+  @override
+  String get navBusiness => 'Бізнес';
+
+  @override
+  String get navGiftShop => 'Магазин подарунків';
+
+  @override
+  String get navWallet => 'Гаманець';
+
+  @override
+  String get navAnalytics => 'Аналітика';
 
   @override
   String get moreCommunities => 'Спільноти';

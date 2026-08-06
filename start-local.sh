@@ -93,7 +93,13 @@ redis-cli ping >/dev/null 2>&1 || {
 echo "Running migrations..."
 (
   cd services/api
-  .venv/bin/alembic upgrade head
+  # Foundation revision materializes the current SQLAlchemy metadata via create_all.
+  # Stamp head afterward so additive revisions that already exist in models are skipped.
+  if .venv/bin/alembic upgrade 20260731_0001; then
+    .venv/bin/alembic stamp head
+  else
+    .venv/bin/alembic upgrade head || echo "WARN: migrate via: docker compose exec api alembic upgrade head"
+  fi
 )
 
 echo "Starting MediaMTX (local live ingest)..."
