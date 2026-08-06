@@ -255,32 +255,28 @@ final class _AuthScreenState extends ConsumerState<AuthScreen>
       data: ThemeData(
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
-          primary: SyloraTokens.violet,
-          secondary: SyloraTokens.ion,
+          primary: SyloraTokens.goldDeep,
+          secondary: SyloraTokens.cyan,
           surface: SyloraTokens.pearl,
           onSurface: SyloraTokens.ink,
         ),
         scaffoldBackgroundColor: SyloraTokens.canvas,
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.86),
+          fillColor: SyloraTokens.glassStrong,
           labelStyle: SyloraTokens.body(13),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
-            borderSide: BorderSide(
-              color: SyloraTokens.ink.withValues(alpha: 0.1),
-            ),
+            borderSide: const BorderSide(color: SyloraTokens.glassStroke),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
-            borderSide: BorderSide(
-              color: SyloraTokens.ink.withValues(alpha: 0.1),
-            ),
+            borderSide: const BorderSide(color: SyloraTokens.glassStroke),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(SyloraTokens.radiusMd),
             borderSide: const BorderSide(
-              color: SyloraTokens.violet,
+              color: SyloraTokens.cyan,
               width: 1.6,
             ),
           ),
