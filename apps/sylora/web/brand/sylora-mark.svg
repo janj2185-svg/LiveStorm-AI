@@ -1,113 +1,142 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="SYLORA">
-  <!-- SYLORA UNIFIED — Liquid S in glowing orb (founder lock) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" role="img" aria-label="SYLORA Liquid S">
   <defs>
-    <radialGradient id="orbAura" cx="50%" cy="48%" r="55%">
-      <stop offset="0%" stop-color="#B8C8FF" stop-opacity="0.45"/>
-      <stop offset="40%" stop-color="#8B7CFF" stop-opacity="0.18"/>
-      <stop offset="75%" stop-color="#5EC8FF" stop-opacity="0.08"/>
+    <radialGradient id="orbFill" cx="42%" cy="36%" r="58%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.72"/>
+      <stop offset="38%" stop-color="#E8EEFF" stop-opacity="0.38"/>
+      <stop offset="68%" stop-color="#C8D4FF" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#B8C8FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="42%" stop-color="#9BB6FF" stop-opacity="0.22"/>
+      <stop offset="72%" stop-color="#E6C88B" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="orbGlass" cx="38%" cy="34%" r="62%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="35%" stop-color="#E8EEFF" stop-opacity="0.82"/>
-      <stop offset="70%" stop-color="#D4DCFF" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#C5B8FF" stop-opacity="0.32"/>
-    </radialGradient>
-    <radialGradient id="nebulaA" cx="42%" cy="40%" r="40%">
-      <stop offset="0%" stop-color="#9BB6FF" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#9BB6FF" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="nebulaB" cx="62%" cy="58%" r="38%">
-      <stop offset="0%" stop-color="#B39CFF" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#B39CFF" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="nebulaC" cx="48%" cy="68%" r="32%">
-      <stop offset="0%" stop-color="#E6C88B" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="sigilPearl" x1="36" y1="24" x2="98" y2="108" gradientUnits="userSpaceOnUse">
+    <linearGradient id="sBody" x1="70" y1="48" x2="176" y2="196" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#EAF6FF"/>
-      <stop offset="28%" stop-color="#7EC8FF"/>
-      <stop offset="52%" stop-color="#9B8CFF"/>
-      <stop offset="78%" stop-color="#E6C88B"/>
+      <stop offset="22%" stop-color="#7EC8FF"/>
+      <stop offset="48%" stop-color="#8B7CFF"/>
+      <stop offset="72%" stop-color="#E6C88B"/>
       <stop offset="100%" stop-color="#FFF0D2"/>
     </linearGradient>
-    <linearGradient id="sigilEdge" x1="30" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+    <linearGradient id="sHighlight" x1="60" y1="40" x2="180" y2="180" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.65"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="70%" stop-color="#FFF4D2" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.2"/>
     </linearGradient>
-    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="2.2"/>
+    <linearGradient id="orbitStroke" x1="40" y1="40" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="45%" stop-color="#E6C88B" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#5EC8FF" stop-opacity="0.55"/>
+    </linearGradient>
+    <filter id="sGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
-    <clipPath id="orbClip">
-      <circle cx="64" cy="64" r="46"/>
-    </clipPath>
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
   </defs>
 
-  <circle cx="64" cy="64" r="60" fill="url(#orbAura)"/>
-  <circle cx="64" cy="64" r="48" fill="url(#orbGlass)"/>
-  <g clip-path="url(#orbClip)">
-    <circle cx="52" cy="50" r="28" fill="url(#nebulaA)"/>
-    <circle cx="78" cy="72" r="26" fill="url(#nebulaB)"/>
-    <circle cx="60" cy="84" r="22" fill="url(#nebulaC)"/>
+  <!-- Outer aura -->
+  <circle cx="120" cy="120" r="112" fill="url(#orbAura)"/>
+
+  <!-- Glass orb -->
+  <circle cx="120" cy="120" r="86" fill="url(#orbFill)"/>
+  <circle cx="120" cy="120" r="86" stroke="rgba(255,255,255,0.72)" stroke-width="1.4" opacity="0.85"/>
+
+  <!-- Orbital rings (angled ellipses) -->
+  <g class="sylora-orbits" opacity="0.9">
+    <ellipse cx="120" cy="120" rx="78" ry="52" stroke="url(#orbitStroke)" stroke-width="1.15" transform="rotate(-28 120 120)" opacity="0.75"/>
+    <ellipse cx="120" cy="120" rx="72" ry="48" stroke="url(#orbitStroke)" stroke-width="0.9" transform="rotate(18 120 120)" opacity="0.55"/>
+    <ellipse cx="120" cy="120" rx="66" ry="58" stroke="#E6C88B" stroke-width="0.7" transform="rotate(-62 120 120)" opacity="0.45"/>
   </g>
-  <circle cx="64" cy="64" r="48" stroke="url(#sigilEdge)" stroke-width="1.6" fill="none" opacity="0.85"/>
 
-  <!-- Floating droplets -->
-  <circle cx="28" cy="36" r="4.2" fill="#FFFFFF" opacity="0.75"/>
-  <circle cx="102" cy="34" r="3.2" fill="#E8EEFF" opacity="0.8"/>
-  <circle cx="22" cy="78" r="2.6" fill="#C5B8FF" opacity="0.7"/>
-  <circle cx="108" cy="74" r="3.6" fill="#FFFFFF" opacity="0.72"/>
-  <circle cx="34" cy="98" r="2.2" fill="#B8C8FF" opacity="0.65"/>
-  <circle cx="98" cy="100" r="2.8" fill="#FFF0D2" opacity="0.7"/>
-
-  <!-- Liquid S (filled pearlescent) -->
+  <!-- Soft bloom under S -->
   <path
-    d="M89.6 28.2
-       C110.1 23.0 115.2 46.1 94.7 53.8
-       C71.7 62.7 48.6 64.0 46.1 76.8
-       C43.5 94.7 66.6 102.4 89.6 97.3
-       C102.4 94.7 107.5 84.5 99.8 81.9
-       C84.5 78.1 66.6 81.9 66.6 74.2
-       C66.6 64.0 87.0 61.4 99.8 51.2
-       C115.2 38.4 105.0 23.0 81.9 25.6
-       C61.4 28.2 51.2 41.0 53.8 48.6
-       C56.3 56.3 43.5 61.4 38.4 51.2
-       C30.7 35.8 46.1 20.5 71.7 20.5
-       C79.4 20.5 85.8 23.0 89.6 28.2 Z"
+    d="M152 58
+       C176 52 188 78 168 92
+       C142 110 98 112 94 138
+       C90 168 122 184 156 172
+       C174 166 182 148 168 142
+       C146 134 122 142 122 128
+       C122 108 150 102 168 86
+       C186 70 172 48 146 52
+       C122 56 108 74 112 86
+       C116 98 98 106 90 90
+       C80 68 104 46 132 46
+       C140 46 147 50 152 58 Z"
     fill="#8B9CFF"
-    opacity="0.28"
-    filter="url(#softGlow)"/>
+    opacity="0.22"
+    filter="url(#sGlow)"/>
+
+  <!-- Liquid S body (tubular ribbon silhouette) -->
   <path
-    d="M89.6 28.2
-       C110.1 23.0 115.2 46.1 94.7 53.8
-       C71.7 62.7 48.6 64.0 46.1 76.8
-       C43.5 94.7 66.6 102.4 89.6 97.3
-       C102.4 94.7 107.5 84.5 99.8 81.9
-       C84.5 78.1 66.6 81.9 66.6 74.2
-       C66.6 64.0 87.0 61.4 99.8 51.2
-       C115.2 38.4 105.0 23.0 81.9 25.6
-       C61.4 28.2 51.2 41.0 53.8 48.6
-       C56.3 56.3 43.5 61.4 38.4 51.2
-       C30.7 35.8 46.1 20.5 71.7 20.5
-       C79.4 20.5 85.8 23.0 89.6 28.2 Z"
-    fill="url(#sigilPearl)"/>
+    class="sylora-s-body"
+    d="M152 58
+       C176 52 188 78 168 92
+       C142 110 98 112 94 138
+       C90 168 122 184 156 172
+       C174 166 182 148 168 142
+       C146 134 122 142 122 128
+       C122 108 150 102 168 86
+       C186 70 172 48 146 52
+       C122 56 108 74 112 86
+       C116 98 98 106 90 90
+       C80 68 104 46 132 46
+       C140 46 147 50 152 58 Z"
+    fill="url(#sBody)"
+    filter="url(#sGlow)"/>
+
+  <!-- Specular filament -->
   <path
-    d="M89.6 28.2
-       C110.1 23.0 115.2 46.1 94.7 53.8
-       C71.7 62.7 48.6 64.0 46.1 76.8
-       C43.5 94.7 66.6 102.4 89.6 97.3
-       C102.4 94.7 107.5 84.5 99.8 81.9
-       C84.5 78.1 66.6 81.9 66.6 74.2
-       C66.6 64.0 87.0 61.4 99.8 51.2
-       C115.2 38.4 105.0 23.0 81.9 25.6
-       C61.4 28.2 51.2 41.0 53.8 48.6
-       C56.3 56.3 43.5 61.4 38.4 51.2
-       C30.7 35.8 46.1 20.5 71.7 20.5
-       C79.4 20.5 85.8 23.0 89.6 28.2 Z"
+    d="M152 58
+       C176 52 188 78 168 92
+       C142 110 98 112 94 138
+       C90 168 122 184 156 172
+       C174 166 182 148 168 142
+       C146 134 122 142 122 128
+       C122 108 150 102 168 86
+       C186 70 172 48 146 52
+       C122 56 108 74 112 86
+       C116 98 98 106 90 90
+       C80 68 104 46 132 46
+       C140 46 147 50 152 58 Z"
     fill="none"
-    stroke="url(#sigilEdge)"
-    stroke-width="2.2"/>
-  <circle cx="78" cy="36" r="3.5" fill="#FFFFFF" opacity="0.9"/>
+    stroke="url(#sHighlight)"
+    stroke-width="2.4"
+    opacity="0.85"/>
+
+  <!-- Twin-ribbon accent stroke (readable S curve) -->
+  <path
+    class="sylora-s-ribbon"
+    d="M158 62 C178 58 184 84 160 96 C128 112 96 114 94 140 C92 168 124 180 152 170"
+    stroke="url(#sHighlight)"
+    stroke-width="3.2"
+    stroke-linecap="round"
+    opacity="0.55"
+    filter="url(#softBlur)"/>
+
+  <!-- Specular sparks -->
+  <circle cx="148" cy="64" r="4.2" fill="#FFFFFF" opacity="0.92"/>
+  <circle cx="102" cy="148" r="2.8" fill="#FFF0D2" opacity="0.8"/>
+  <circle cx="160" cy="158" r="2.2" fill="#FFFFFF" opacity="0.7"/>
+
+  <!-- Floating particles / bubbles -->
+  <g class="sylora-particles">
+    <circle cx="64" cy="78" r="3.2" fill="#FFFFFF" opacity="0.72"/>
+    <circle cx="178" cy="70" r="2.4" fill="#E8EEFF" opacity="0.75"/>
+    <circle cx="52" cy="132" r="2.1" fill="#C5B8FF" opacity="0.65"/>
+    <circle cx="186" cy="128" r="3" fill="#FFFFFF" opacity="0.7"/>
+    <circle cx="72" cy="172" r="1.8" fill="#B8C8FF" opacity="0.6"/>
+    <circle cx="170" cy="178" r="2.3" fill="#FFF0D2" opacity="0.7"/>
+    <circle cx="120" cy="46" r="1.6" fill="#FFFFFF" opacity="0.65"/>
+    <circle cx="132" cy="196" r="1.9" fill="#E6C88B" opacity="0.55"/>
+    <circle cx="48" cy="100" r="1.4" fill="#5EC8FF" opacity="0.5"/>
+    <circle cx="192" cy="100" r="1.5" fill="#8B7CFF" opacity="0.45"/>
+  </g>
 </svg>

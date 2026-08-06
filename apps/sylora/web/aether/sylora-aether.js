@@ -582,6 +582,79 @@
     chapters.forEach((el) => io.observe(el));
   }
 
+  function markSvg(prefix, compact) {
+    const size = compact ? 40 : 240;
+    return `
+      <svg class="aether-mark-svg${compact ? ' aether-mark-svg--mini' : ''}" viewBox="0 0 240 240" width="${size}" height="${size}" fill="none" aria-hidden="true">
+        <defs>
+          <radialGradient id="${prefix}Aura" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+            <stop offset="42%" stop-color="#9BB6FF" stop-opacity="0.22"/>
+            <stop offset="72%" stop-color="#E6C88B" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#E6C88B" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="${prefix}Orb" cx="42%" cy="36%" r="58%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.72"/>
+            <stop offset="38%" stop-color="#E8EEFF" stop-opacity="0.38"/>
+            <stop offset="68%" stop-color="#C8D4FF" stop-opacity="0.16"/>
+            <stop offset="100%" stop-color="#B8C8FF" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="${prefix}Body" x1="70" y1="48" x2="176" y2="196" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#EAF6FF"/>
+            <stop offset="22%" stop-color="#7EC8FF"/>
+            <stop offset="48%" stop-color="#8B7CFF"/>
+            <stop offset="72%" stop-color="#E6C88B"/>
+            <stop offset="100%" stop-color="#FFF0D2"/>
+          </linearGradient>
+          <linearGradient id="${prefix}Hi" x1="60" y1="40" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+            <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+            <stop offset="70%" stop-color="#FFF4D2" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.2"/>
+          </linearGradient>
+          <linearGradient id="${prefix}Orbit" x1="40" y1="40" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+            <stop offset="45%" stop-color="#E6C88B" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#5EC8FF" stop-opacity="0.55"/>
+          </linearGradient>
+          <filter id="${prefix}Glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="3.2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle class="aether-gate-core" cx="120" cy="120" r="112" fill="url(#${prefix}Aura)"/>
+        <circle cx="120" cy="120" r="86" fill="url(#${prefix}Orb)"/>
+        <circle cx="120" cy="120" r="86" stroke="rgba(255,255,255,0.72)" stroke-width="1.4" opacity="0.85"/>
+        <g class="aether-orbits">
+          <ellipse class="aether-orbit aether-orbit--a" cx="120" cy="120" rx="78" ry="52" stroke="url(#${prefix}Orbit)" stroke-width="1.15" opacity="0.75">
+            <animateTransform attributeName="transform" type="rotate" from="-28 120 120" to="332 120 120" dur="18s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse class="aether-orbit aether-orbit--b" cx="120" cy="120" rx="72" ry="48" stroke="url(#${prefix}Orbit)" stroke-width="0.9" opacity="0.55">
+            <animateTransform attributeName="transform" type="rotate" from="18 120 120" to="-342 120 120" dur="24s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse class="aether-orbit aether-orbit--c" cx="120" cy="120" rx="66" ry="58" stroke="#E6C88B" stroke-width="0.7" opacity="0.45">
+            <animateTransform attributeName="transform" type="rotate" from="-62 120 120" to="298 120 120" dur="30s" repeatCount="indefinite"/>
+          </ellipse>
+        </g>
+        <path fill="#8B9CFF" opacity="0.22" filter="url(#${prefix}Glow)" d="M152 58 C176 52 188 78 168 92 C142 110 98 112 94 138 C90 168 122 184 156 172 C174 166 182 148 168 142 C146 134 122 142 122 128 C122 108 150 102 168 86 C186 70 172 48 146 52 C122 56 108 74 112 86 C116 98 98 106 90 90 C80 68 104 46 132 46 C140 46 147 50 152 58 Z"/>
+        <path class="aether-s-body" fill="url(#${prefix}Body)" filter="url(#${prefix}Glow)" d="M152 58 C176 52 188 78 168 92 C142 110 98 112 94 138 C90 168 122 184 156 172 C174 166 182 148 168 142 C146 134 122 142 122 128 C122 108 150 102 168 86 C186 70 172 48 146 52 C122 56 108 74 112 86 C116 98 98 106 90 90 C80 68 104 46 132 46 C140 46 147 50 152 58 Z"/>
+        <path fill="none" stroke="url(#${prefix}Hi)" stroke-width="2.4" opacity="0.85" d="M152 58 C176 52 188 78 168 92 C142 110 98 112 94 138 C90 168 122 184 156 172 C174 166 182 148 168 142 C146 134 122 142 122 128 C122 108 150 102 168 86 C186 70 172 48 146 52 C122 56 108 74 112 86 C116 98 98 106 90 90 C80 68 104 46 132 46 C140 46 147 50 152 58 Z"/>
+        <path class="aether-s-ribbon" d="M158 62 C178 58 184 84 160 96 C128 112 96 114 94 140 C92 168 124 180 152 170" stroke="url(#${prefix}Hi)" stroke-width="3.2" stroke-linecap="round" opacity="0.55"/>
+        <circle class="aether-gate-spark" cx="148" cy="64" r="4.2" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="102" cy="148" r="2.8" fill="#FFF0D2" opacity="0.8"/>
+        <g class="aether-bubbles">
+          <circle class="aether-bubble" cx="64" cy="78" r="3.2" fill="#FFFFFF" opacity="0.72"/>
+          <circle class="aether-bubble" cx="178" cy="70" r="2.4" fill="#E8EEFF" opacity="0.75"/>
+          <circle class="aether-bubble" cx="52" cy="132" r="2.1" fill="#C5B8FF" opacity="0.65"/>
+          <circle class="aether-bubble" cx="186" cy="128" r="3" fill="#FFFFFF" opacity="0.7"/>
+          <circle class="aether-bubble" cx="72" cy="172" r="1.8" fill="#B8C8FF" opacity="0.6"/>
+          <circle class="aether-bubble" cx="170" cy="178" r="2.3" fill="#FFF0D2" opacity="0.7"/>
+          <circle class="aether-bubble" cx="120" cy="46" r="1.6" fill="#FFFFFF" opacity="0.65"/>
+          <circle class="aether-bubble" cx="132" cy="196" r="1.9" fill="#E6C88B" opacity="0.55"/>
+        </g>
+      </svg>`;
+  }
+
   function mountHud(root) {
     const copy = t();
     root.innerHTML = `
@@ -593,9 +666,7 @@
         <div class="aether-hud">
           <div class="aether-top">
             <div class="aether-brand-lockup">
-              <span class="aether-mark" aria-hidden="true">
-                <img src="brand/sylora-sigil-mini.png" alt="" width="36" height="36" decoding="async"/>
-              </span>
+              <span class="aether-mark" aria-hidden="true">${markSvg('nav', true)}</span>
               <span class="aether-brand-text">
                 <span class="aether-brand-mini">S Y L O R Λ</span>
               </span>
@@ -611,7 +682,7 @@
           <section class="aether-hero">
             <div class="aether-sigil" aria-label="${copy.markAria}" role="img">
               <span class="aether-sigil-aura" aria-hidden="true"></span>
-              <img class="aether-sigil-plate" src="brand/sylora-sigil-hero.png" alt="" width="720" height="720" decoding="async"/>
+              <div class="aether-sigil-svg">${markSvg('hero', false)}</div>
               <span class="aether-sigil-particle aether-sigil-particle--1" aria-hidden="true"></span>
               <span class="aether-sigil-particle aether-sigil-particle--2" aria-hidden="true"></span>
               <span class="aether-sigil-particle aether-sigil-particle--3" aria-hidden="true"></span>
@@ -752,7 +823,7 @@
     if (!document.querySelector('link[data-sylora-aether-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'aether/sylora-aether.css?v=eth4';
+      link.href = 'aether/sylora-aether.css?v=eth5';
       link.setAttribute('data-sylora-aether-css', '1');
       document.head.appendChild(link);
     }

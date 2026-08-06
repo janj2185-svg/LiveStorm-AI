@@ -259,7 +259,7 @@ body.sylora-aether-active #sylora-aether { display: block; }
   transform: translateY(18px);
 }
 
-/* Lumen Gate — hero brand mark (approved mockup plate) */
+/* Hero brand mark — coded SVG Liquid S (no raster plates) */
 .aether-sigil {
   position: relative;
   width: min(22rem, 78vw);
@@ -271,27 +271,32 @@ body.sylora-aether-active #sylora-aether { display: block; }
     drop-shadow(0 12px 28px rgba(230, 200, 139, 0.22));
 }
 
-.aether-sigil-plate {
+.aether-sigil-svg {
   position: relative;
   z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  display: grid;
+  place-items: center;
+}
+.aether-sigil-svg .aether-mark-svg {
+  width: 100%;
+  height: 100%;
   display: block;
+  overflow: visible;
   animation: sigilBreath 6.2s ease-in-out infinite;
   will-change: transform;
 }
 
-.aether-sigil-wave {
-  position: absolute;
-  inset: 4%;
-  border-radius: 50%;
-  border: 1px solid rgba(230, 200, 139, 0.28);
-  pointer-events: none;
-}
+.aether-orbit--a,
+.aether-orbit--b,
+.aether-orbit--c { /* spin via SVG animateTransform */ }
 
-.aether-sigil-wave--a { animation: sigilWave 5.6s ease-out infinite; }
-.aether-sigil-wave--b { animation: sigilWave 5.6s 2.4s ease-out infinite; }
+.aether-bubble { animation: dropletBob 5.2s ease-in-out infinite; }
+.aether-bubble:nth-child(odd) { animation-delay: -1.6s; }
+.aether-bubble:nth-child(3n) { animation-delay: -2.8s; }
+
+.aether-s-body { animation: ribbonShimmer 5.8s ease-in-out infinite; }
 
 .aether-sigil-aura {
   position: absolute;
@@ -302,11 +307,10 @@ body.sylora-aether-active #sylora-aether { display: block; }
   pointer-events: none;
 }
 
-.aether-mark img {
+.aether-mark .aether-mark-svg {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: contain;
 }
 
 .aether-gate-fil {
@@ -604,6 +608,11 @@ body.sylora-aether-active #sylora-aether { display: block; }
 @keyframes sigilBreath {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.025); }
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes gateArcPulse {
