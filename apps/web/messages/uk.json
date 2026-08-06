@@ -28,6 +28,29 @@
     "offline": "Недоступно"
   },
   "footer": {
-    "phase": "Фаза 0 — фундамент. Production-розробка триває."
+    "phase": "Фаза 1 — авторизація та профілі працюють. Далі — стрічка."
+  },
+  "auth": {
+    "registerTitle": "Створіть акаунт SYLORA",
+    "loginTitle": "З поверненням",
+    "email": "Email",
+    "password": "Пароль",
+    "handle": "Ім'я користувача",
+    "displayName": "Відображуване ім'я",
+    "registerSubmit": "Створити акаунт",
+    "loginSubmit": "Увійти",
+    "submitting": "Зачекайте…",
+    "hasAccount": "Вже є акаунт?",
+    "noAccount": "Вперше в SYLORA?",
+    "signIn": "Увійти",
+    "createAccount": "Створити акаунт",
+    "errorGeneric": "Щось пішло не так. Спробуйте ще раз."
+  },
+  "home": {
+    "welcome": "Ваш дім у SYLORA",
+    "logout": "Вийти",
+    "emailVerified": "Email підтверджено",
+    "emailUnverified": "Email ще не підтверджено",
+    "phaseNote": "Пости, стрічка та сповіщення — у наступному слайсі Фази 1."
   }
 }

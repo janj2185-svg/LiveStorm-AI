@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { SpectralLogo } from '@/components/SpectralLogo';
 import { ApiStatus } from '@/components/ApiStatus';
@@ -38,12 +39,12 @@ export default async function HomePage({
         </h1>
         <p className="subhead">{t('hero.subhead')}</p>
         <div className="cta-row">
-          <button type="button" className="btn btn-gold" disabled title="Phase 1">
+          <Link href={`/${locale}/auth/register`} className="btn btn-gold">
             {t('hero.ctaPrimary')}
-          </button>
-          <button type="button" className="btn btn-glass" disabled title="Phase 1">
+          </Link>
+          <Link href={`/${locale}/auth/login`} className="btn btn-glass">
             {t('hero.ctaSecondary')}
-          </button>
+          </Link>
         </div>
         <p className="phase-note">{t('footer.phase')}</p>
       </section>

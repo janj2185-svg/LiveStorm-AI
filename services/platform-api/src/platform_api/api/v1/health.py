@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from platform_api.infrastructure.database import SessionLocal
+from platform_api.infrastructure.database import get_session_factory
 from platform_api.infrastructure.redis import ping_redis
 
 router = APIRouter(tags=["health"])
@@ -17,7 +17,8 @@ async def health() -> dict[str, str]:
 async def ready() -> JSONResponse:
     checks: dict[str, str] = {}
     try:
-        async with SessionLocal() as session:
+        session_factory = get_session_factory()
+        async with session_factory() as session:
             await session.execute(text("SELECT 1"))
         checks["database"] = "ok"
     except Exception as exc:  # noqa: BLE001 — readiness must report failure

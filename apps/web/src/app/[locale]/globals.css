@@ -145,3 +145,95 @@
   padding: 0.35rem 0.5rem;
   font-size: 0.85rem;
 }
+
+a.brand,
+a.btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-page {
+  max-width: 520px;
+}
+
+.auth-shell {
+  text-align: center;
+}
+
+.auth-shell h1 {
+  margin: 1rem 0 1.5rem;
+  font-size: 1.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.auth-form input {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--sy-border);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+}
+
+.auth-error {
+  color: var(--sy-danger, #d64545);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.auth-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--sy-ink-muted);
+}
+
+.auth-switch a {
+  color: var(--sy-aether);
+  font-weight: 600;
+}
+
+.dashboard {
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+.dashboard-kicker {
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sy-gold);
+  margin: 0 0 0.5rem;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.dashboard-handle {
+  color: var(--sy-ink-muted);
+  margin: 0.25rem 0 1.5rem;
+}
+
+.dashboard-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}

@@ -9,6 +9,24 @@ on:
 jobs:
   api:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sylora
+          POSTGRES_PASSWORD: sylora
+          POSTGRES_DB: sylora
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sylora"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     defaults:
       run:
         working-directory: services/platform-api
@@ -18,6 +36,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -e ".[dev]"
+        env:
+          DATABASE_URL: postgresql://sylora:sylora@localhost:5432/sylora
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
+      - run: alembic upgrade head
         env:
           DATABASE_URL: postgresql://sylora:sylora@localhost:5432/sylora
           REDIS_URL: redis://localhost:6379/0

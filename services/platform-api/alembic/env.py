@@ -4,6 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from platform_api.config import get_settings
+from platform_api.domains import *  # noqa: F403 — register models for metadata
 from platform_api.infrastructure.database import Base
 
 config = context.config

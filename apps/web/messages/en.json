@@ -28,6 +28,29 @@
     "offline": "Unavailable"
   },
   "footer": {
-    "phase": "Phase 0 foundation — production build in progress."
+    "phase": "Phase 1 — Auth & profiles are live. Social feed next."
+  },
+  "auth": {
+    "registerTitle": "Create your SYLORA account",
+    "loginTitle": "Welcome back",
+    "email": "Email",
+    "password": "Password",
+    "handle": "Username",
+    "displayName": "Display name",
+    "registerSubmit": "Create account",
+    "loginSubmit": "Sign in",
+    "submitting": "Please wait…",
+    "hasAccount": "Already have an account?",
+    "noAccount": "New to SYLORA?",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "errorGeneric": "Something went wrong. Please try again."
+  },
+  "home": {
+    "welcome": "Your SYLORA home",
+    "logout": "Sign out",
+    "emailVerified": "Email verified",
+    "emailUnverified": "Email not verified yet",
+    "phaseNote": "Posts, feed, and notifications arrive in the next Phase 1 slice."
   }
 }

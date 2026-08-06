@@ -28,6 +28,29 @@
     "offline": "Niedostępne"
   },
   "footer": {
-    "phase": "Faza 0 — fundament. Trwa budowa produkcyjna."
+    "phase": "Faza 1 — logowanie i profile działają. Następnie feed."
+  },
+  "auth": {
+    "registerTitle": "Utwórz konto SYLORA",
+    "loginTitle": "Witaj ponownie",
+    "email": "Email",
+    "password": "Hasło",
+    "handle": "Nazwa użytkownika",
+    "displayName": "Wyświetlana nazwa",
+    "registerSubmit": "Utwórz konto",
+    "loginSubmit": "Zaloguj się",
+    "submitting": "Proszę czekać…",
+    "hasAccount": "Masz już konto?",
+    "noAccount": "Pierwszy raz w SYLORA?",
+    "signIn": "Zaloguj się",
+    "createAccount": "Utwórz konto",
+    "errorGeneric": "Coś poszło nie tak. Spróbuj ponownie."
+  },
+  "home": {
+    "welcome": "Twój dom w SYLORA",
+    "logout": "Wyloguj",
+    "emailVerified": "Email zweryfikowany",
+    "emailUnverified": "Email jeszcze niezweryfikowany",
+    "phaseNote": "Posty, feed i powiadomienia — w kolejnym kroku Fazy 1."
   }
 }
