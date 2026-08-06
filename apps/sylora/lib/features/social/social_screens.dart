@@ -24,6 +24,19 @@ final recommendationsProvider = FutureProvider.autoDispose<List<PostModel>>(
   (ref) => ref.watch(socialRepositoryProvider).recommendations(),
 );
 
+/// Moments (stories) feed. Degrades to an empty list — rather than an error
+/// state — while the backend endpoint is rolling out, so the rail always
+/// shows the living "Add moment" entry point.
+final storiesFeedProvider = FutureProvider.autoDispose<List<StoryModel>>((
+  ref,
+) async {
+  try {
+    return await ref.watch(socialRepositoryProvider).storiesFeed();
+  } on Object {
+    return const <StoryModel>[];
+  }
+});
+
 final notificationsProvider =
     FutureProvider.autoDispose<CursorPage<AppNotification>>(
       (ref) => ref.watch(socialRepositoryProvider).notifications(),
@@ -298,23 +311,16 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
       subtitle: l10n.feedSubtitle,
       intensity: 1,
       showOrbits: !wide,
-      showAuraPresence: false,
+      showAuraPresence: true,
       auraPresenceController: _aura,
       auraPresencePreset: SyloraAuraContextPreset.feed,
+      auraPresenceMode: SyloraAuraPresenceMode.summon,
       showAuraDock: false,
       auraEmotion: AuraEmotion.greeting,
       maxContentWidth: 1080,
+      // Notifications / friends are covered by the global top chrome — keep
+      // only the page-local compose shortcut here.
       actions: <Widget>[
-        IconButton(
-          tooltip: l10n.settingsNotifications,
-          onPressed: () => context.pushNamed('notifications'),
-          icon: const Icon(Icons.notifications_outlined),
-        ),
-        IconButton(
-          tooltip: l10n.navFriends,
-          onPressed: () => context.goNamed('friends'),
-          icon: const Icon(Icons.group_outlined),
-        ),
         IconButton(
           tooltip: l10n.feedCreatePost,
           onPressed: () => _showComposer(context, ref),
@@ -341,6 +347,8 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
+                const _MomentsRail(),
+                const SizedBox(height: 18),
                 LumenEmptyView(
                   title: l10n.feedEmpty,
                   message: l10n.feedEmptyMessage,
@@ -357,6 +365,8 @@ final class _FeedScreenState extends ConsumerState<FeedScreen> {
           }
           return Column(
             children: <Widget>[
+              const _MomentsRail(),
+              const SizedBox(height: 18),
               if (!wide) ...<Widget>[
                 const _HomeDiscoverRail(),
                 const SizedBox(height: 18),
@@ -689,6 +699,346 @@ final class _HomeUniverseHero extends ConsumerWidget {
                     ],
                   ),
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Moments (stories) rail — living avatar rings above the feed. Unviewed
+/// moments carry a gold gradient ring; the leading chip always opens the
+/// create sheet, which also stands in for the "API empty" state.
+final class _MomentsRail extends ConsumerWidget {
+  const _MomentsRail();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final value = ref.watch(storiesFeedProvider);
+    final stories = value.asData?.value ?? const <StoryModel>[];
+    return SizedBox(
+      height: 96,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: <Widget>[
+          _MomentAddChip(
+            label: l10n.momentsAdd,
+            onTap: () => _showCreateMomentSheet(context, ref),
+          ),
+          for (final story in stories) ...<Widget>[
+            const SizedBox(width: 14),
+            _MomentAvatar(
+              story: story,
+              onTap: () => context.pushNamed(
+                'story-viewer',
+                pathParameters: <String, String>{'id': story.id},
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+final class _MomentAddChip extends StatelessWidget {
+  const _MomentAddChip({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
+          child: SizedBox(
+            width: 76,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: SyloraTokens.glassStrong,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: SyloraTokens.goldDeep,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: SyloraTokens.body(11, color: SyloraTokens.inkSoft),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _MomentAvatar extends StatelessWidget {
+  const _MomentAvatar({required this.story, required this.onTap});
+
+  final StoryModel story;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '@${story.authorHandle}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(SyloraTokens.radiusLg),
+          child: SizedBox(
+            width: 68,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(
+                  width: 62,
+                  height: 62,
+                  padding: const EdgeInsets.all(2.5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: story.viewed
+                        ? null
+                        : const LinearGradient(
+                            colors: <Color>[
+                              SyloraTokens.goldLight,
+                              SyloraTokens.gold,
+                              SyloraTokens.goldDeep,
+                            ],
+                          ),
+                    border: story.viewed
+                        ? Border.all(
+                            color: SyloraTokens.inkMute.withValues(alpha: 0.3),
+                          )
+                        : null,
+                    boxShadow: story.viewed
+                        ? null
+                        : SyloraTokens.glow(
+                            SyloraTokens.gold,
+                            blur: 14,
+                            opacity: 0.28,
+                          ),
+                  ),
+                  child: SyloraAvatarOrb(
+                    label: story.authorHandle,
+                    imageUrl: story.avatarUrl,
+                    size: 57,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '@${story.authorHandle}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: SyloraTokens.body(11, color: SyloraTokens.inkSoft),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showCreateMomentSheet(BuildContext context, WidgetRef ref) async {
+  final l10n = AppLocalizations.of(context);
+  final body = TextEditingController();
+  final created = await showDialog<bool>(
+    context: context,
+    barrierColor: SyloraTokens.ink.withValues(alpha: 0.28),
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setLocal) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: SyloraGlass(
+            radius: SyloraTokens.radiusXl,
+            padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(l10n.momentsCreateTitle, style: SyloraTokens.display(26)),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.momentsEmptyHint,
+                  style: SyloraTokens.body(14, color: SyloraTokens.inkSoft),
+                ),
+                const SizedBox(height: 16),
+                SyloraTextField(
+                  controller: body,
+                  label: l10n.momentsCreateHint,
+                  minLines: 3,
+                  maxLines: 6,
+                  autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                SyloraButton(
+                  label: l10n.momentsShare,
+                  onPressed: () async {
+                    if (body.text.trim().isEmpty) {
+                      return;
+                    }
+                    try {
+                      await ref
+                          .read(socialRepositoryProvider)
+                          .createStory(body.text.trim());
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext, true);
+                      }
+                    } on Object catch (error) {
+                      if (dialogContext.mounted) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(content: Text(messageFor(error))),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                SyloraButton(
+                  label: l10n.commonCancel,
+                  variant: SyloraButtonVariant.secondary,
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  body.dispose();
+  if (created ?? false) {
+    ref.invalidate(storiesFeedProvider);
+  }
+}
+
+/// Full-screen moment viewer — minimal glass card over the living canvas.
+final class StoryViewerScreen extends ConsumerStatefulWidget {
+  const StoryViewerScreen({required this.storyId, super.key});
+
+  final String storyId;
+
+  @override
+  ConsumerState<StoryViewerScreen> createState() => _StoryViewerScreenState();
+}
+
+final class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      ref
+          .read(socialRepositoryProvider)
+          .viewStory(widget.storyId)
+          .catchError((Object _) {}),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final stories = ref.watch(storiesFeedProvider).asData?.value;
+    StoryModel? story;
+    if (stories != null) {
+      for (final candidate in stories) {
+        if (candidate.id == widget.storyId) {
+          story = candidate;
+          break;
+        }
+      }
+    }
+    return SyloraLivingScaffold(
+      intensity: 0.85,
+      child: Stack(
+        children: <Widget>[
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: SyloraGlass(
+                  radius: SyloraTokens.radiusXl,
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          SyloraAvatarOrb(
+                            label: story?.authorHandle ?? '?',
+                            imageUrl: story?.avatarUrl,
+                            size: 40,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              story != null ? '@${story.authorHandle}' : '',
+                              style: SyloraTokens.title(16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        story?.primaryBody ?? l10n.momentsUnavailable,
+                        style: SyloraTokens.body(16, color: SyloraTokens.ink),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 12,
+            right: 12,
+            child: SafeArea(
+              child: IconButton(
+                tooltip: l10n.momentsViewerClose,
+                style: IconButton.styleFrom(
+                  backgroundColor: SyloraTokens.glassStrong.withValues(
+                    alpha: 0.9,
+                  ),
+                ),
+                onPressed: () => Navigator.maybePop(context),
+                icon: const Icon(Icons.close_rounded),
               ),
             ),
           ),
@@ -1520,7 +1870,8 @@ final class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     return SyloraModuleScaffold(
       title: l10n.friendsTitle,
       subtitle: l10n.friendsSubtitle,
-      showAuraPresence: false,
+      showAuraPresence: true,
+      auraPresenceMode: SyloraAuraPresenceMode.summon,
       auraPresencePreset: SyloraAuraContextPreset.feed,
       actions: <Widget>[
         IconButton(
