@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sylora/core/api.dart';
 import 'package:sylora/core/lumen_theme.dart';
 import 'package:sylora/core/lumen_widgets.dart';
+import 'package:sylora/core/shell_navigation.dart';
 import 'package:sylora/core/models.dart';
 import 'package:sylora/features/auth/auth.dart';
 import 'package:sylora/features/auth/auth_screens.dart';
@@ -56,27 +57,22 @@ void main() {
   testWidgets('responsive shell switches bottom navigation to rail', (
     tester,
   ) async {
-    const destinations = <ShellDestination>[
-      ShellDestination(
-        label: 'Home',
-        icon: Icons.home_outlined,
-        selectedIcon: Icons.home,
-        path: '/home',
-      ),
-      ShellDestination(
-        label: 'Search',
-        icon: Icons.search_outlined,
-        selectedIcon: Icons.search,
-        path: '/search',
-      ),
-    ];
-    Widget shell() => _material(
-      LumenResponsiveShell(
-        destinations: destinations,
-        selectedIndex: 0,
-        onDestinationSelected: (_) {},
-        body: const Text('Body'),
-        contextPanel: const Text('Context'),
+    final navItems = primaryNavItemsForRoles(const <String>['user']);
+    Widget shell() => ProviderScope(
+      child: _material(
+        SizedBox(
+          width: 600,
+          height: 800,
+          child: LumenResponsiveShell(
+            navItems: navItems,
+            selectedIndex: 0,
+            onDestinationSelected: (_) {},
+            primaryItems: navItems,
+            primarySelectedIndex: 0,
+            body: const Text('Body'),
+            contextPanel: const Text('Context'),
+          ),
+        ),
       ),
     );
 
@@ -86,7 +82,25 @@ void main() {
     expect(find.byType(NavigationRail), findsNothing);
 
     await tester.binding.setSurfaceSize(const Size(1300, 800));
-    await tester.pumpWidget(shell());
+    await tester.pumpWidget(
+      ProviderScope(
+        child: _material(
+          SizedBox(
+            width: 1300,
+            height: 800,
+            child: LumenResponsiveShell(
+              navItems: navItems,
+              selectedIndex: 0,
+              onDestinationSelected: (_) {},
+              primaryItems: navItems,
+              primarySelectedIndex: 0,
+              body: const Text('Body'),
+              contextPanel: const Text('Context'),
+            ),
+          ),
+        ),
+      ),
+    );
     await tester.pump();
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.text('Context'), findsOneWidget);

@@ -129,6 +129,17 @@ class RelationResponse(StrictSchema):
     target_handle: str
 
 
+class FriendRequestItem(StrictSchema):
+    id: uuid.UUID
+    status: str
+    profile: PublicProfileResponse
+    requested_by_me: bool = False
+
+
+class FriendRequestsResponse(StrictSchema):
+    items: list[FriendRequestItem]
+
+
 class CommunityCreate(StrictSchema):
     slug: str = Field(min_length=3, max_length=64)
     name: str = Field(min_length=1, max_length=100)

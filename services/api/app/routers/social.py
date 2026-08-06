@@ -76,6 +76,8 @@ from app.social_schemas import (
     PostPatch,
     PostResponse,
     PostSearchResponse,
+    FriendRequestItem,
+    FriendRequestsResponse,
     PublicProfileResponse,
     ReactionRequest,
     ReactionResponse,
@@ -551,6 +553,87 @@ async def remove_friendship(
     )
     await db.commit()
     return MessageResponse(status="removed")
+
+
+@router.get("/friends", response_model=UserSearchResponse)
+async def list_friends(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=100),
+) -> UserSearchResponse:
+    await require_handle(db, auth.user.id)
+    statement = (
+        select(Profile)
+        .join(
+            Friendship,
+            or_(
+                and_(
+                    Friendship.user_low_id == auth.user.id,
+                    Friendship.user_high_id == Profile.user_id,
+                ),
+                and_(
+                    Friendship.user_high_id == auth.user.id,
+                    Friendship.user_low_id == Profile.user_id,
+                ),
+            ),
+        )
+        .where(
+            Friendship.status == RelationStatus.accepted,
+            Profile.handle.is_not(None),
+            not_blocked_condition(auth.user.id, Profile.user_id),
+        )
+        .order_by(Profile.display_name.asc())
+        .offset((page - 1) * page_size)
+        .limit(page_size + 1)
+    )
+    profiles = (await db.scalars(statement)).all()
+    has_more = len(profiles) > page_size
+    visible = profiles[:page_size]
+    items = [
+        await public_profile_response(db, auth.user.id, profile) for profile in visible
+    ]
+    return UserSearchResponse(items=items, page=page, has_more=has_more)
+
+
+@router.get("/friend-requests", response_model=FriendRequestsResponse)
+async def list_friend_requests(
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> FriendRequestsResponse:
+    await require_handle(db, auth.user.id)
+    friendships = (
+        await db.scalars(
+            select(Friendship).where(
+                Friendship.status == RelationStatus.pending,
+                or_(
+                    Friendship.user_low_id == auth.user.id,
+                    Friendship.user_high_id == auth.user.id,
+                ),
+            )
+        )
+    ).all()
+    items: list[FriendRequestItem] = []
+    for friendship in friendships:
+        other_id = (
+            friendship.user_high_id
+            if friendship.user_low_id == auth.user.id
+            else friendship.user_low_id
+        )
+        profile = await db.scalar(select(Profile).where(Profile.user_id == other_id))
+        if profile is None or profile.handle is None:
+            continue
+        if not await can_view_profile(db, auth.user.id, profile.user_id):
+            continue
+        items.append(
+            FriendRequestItem(
+                id=friendship.id,
+                status="pending",
+                profile=await public_profile_response(db, auth.user.id, profile),
+                requested_by_me=friendship.requested_by_id == auth.user.id,
+            )
+        )
+    return FriendRequestsResponse(items=items)
 
 
 @router.post("/blocks/{handle}", response_model=MessageResponse)

@@ -1,96 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/aura_overlay.dart';
+import 'core/l10n/sylora_localizations.dart';
+import 'core/lumen_effects.dart';
 import 'core/lumen_theme.dart';
 import 'core/lumen_widgets.dart';
+import 'core/shell_navigation.dart';
 import 'features/admin/admin_screens.dart';
 import 'features/auth/auth.dart';
 import 'features/auth/auth_screens.dart';
 import 'features/business/business_screens.dart';
+import 'features/creator/analytics_screen.dart';
 import 'features/creator/creator_screens.dart';
 import 'features/learning/learning_screens.dart';
 import 'features/marketplace/marketplace_screens.dart';
 import 'features/more/more_screen.dart';
+import 'features/music/music_screen.dart';
 import 'features/platform/platform_screens.dart';
+import 'features/profile/profile_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/social/friends_screen.dart';
 import 'features/social/social_screens.dart';
 
-const _homeDestination = ShellDestination(
-  label: 'Home',
-  icon: Icons.home_outlined,
-  selectedIcon: Icons.home_rounded,
-  path: '/home',
-);
-const _searchDestination = ShellDestination(
-  label: 'Search',
-  icon: Icons.search_outlined,
-  selectedIcon: Icons.search_rounded,
-  path: '/search',
-);
-const _messagesDestination = ShellDestination(
-  label: 'Messages',
-  icon: Icons.chat_bubble_outline_rounded,
-  selectedIcon: Icons.chat_bubble_rounded,
-  path: '/messages',
-);
-const _marketplaceDestination = ShellDestination(
-  label: 'Market',
-  icon: Icons.storefront_outlined,
-  selectedIcon: Icons.storefront_rounded,
-  path: '/marketplace',
-);
-const _creatorDestination = ShellDestination(
-  label: 'Creator',
-  icon: Icons.edit_note_outlined,
-  selectedIcon: Icons.edit_note_rounded,
-  path: '/creator',
-);
-const _businessDestination = ShellDestination(
-  label: 'Workspace',
-  icon: Icons.business_outlined,
-  selectedIcon: Icons.business_rounded,
-  path: '/business',
-);
-const _adminDestination = ShellDestination(
-  label: 'Admin',
-  icon: Icons.admin_panel_settings_outlined,
-  selectedIcon: Icons.admin_panel_settings_rounded,
-  path: '/admin',
-);
-const _moreDestination = ShellDestination(
-  label: 'More',
-  icon: Icons.apps_outlined,
-  selectedIcon: Icons.apps_rounded,
-  path: '/more',
-);
-
-const _compactDestinations = <ShellDestination>[
-  _homeDestination,
-  _searchDestination,
-  _messagesDestination,
-  _marketplaceDestination,
-  _moreDestination,
-];
-
-List<ShellDestination> shellDestinationsForRoles(Iterable<String> roles) {
-  final roleSet = roles.toSet();
-  return <ShellDestination>[
-    _homeDestination,
-    _searchDestination,
-    _messagesDestination,
-    _marketplaceDestination,
-    if (roleSet.contains('creator') || roleSet.contains('admin'))
-      _creatorDestination,
-    if (roleSet.contains('business') || roleSet.contains('admin'))
-      _businessDestination,
-    if (roleSet.contains('admin')) _adminDestination,
-    _moreDestination,
-  ];
-}
 
 bool canAccessRoleRoute(Iterable<String> roles, String path) {
   final roleSet = roles.toSet();
+  if (path == '/analytics' || path.startsWith('/analytics/')) {
+    return true;
+  }
+  if (path == '/friends' || path.startsWith('/friends/')) {
+    return true;
+  }
+  if (path == '/music' || path.startsWith('/music/')) {
+    return true;
+  }
+  if (path == '/profile' || path.startsWith('/profile/')) {
+    return true;
+  }
   if (path == '/marketplace/seller') {
     return roleSet.contains('creator') || roleSet.contains('admin');
   }
@@ -109,7 +58,8 @@ bool canAccessRoleRoute(Iterable<String> roles, String path) {
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
   final roles = auth.user?.roles ?? const <String>[];
-  final destinations = shellDestinationsForRoles(roles);
+  final navItems = navItemsForRoles(roles);
+  final primaryItems = primaryNavItemsForRoles(roles);
   final reducedMotion = ref.watch(
     visualSettingsProvider.select((value) => value.reducedMotion),
   );
@@ -130,8 +80,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         name: 'auth',
-        pageBuilder: (context, state) =>
-            _page(state, const AuthScreen(), reducedMotion),
+        pageBuilder: (context, state) => _page(
+          state,
+          AuthScreen(
+            initialCreateAccount: state.uri.queryParameters['create'] == '1',
+          ),
+          reducedMotion,
+        ),
       ),
       GoRoute(
         path: '/mfa',
@@ -165,22 +120,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       ShellRoute(
         builder: (context, state, child) {
-          final index = _destinationIndex(state.uri.path, destinations);
-          final compactIndex = _destinationIndex(
-            state.uri.path,
-            _compactDestinations,
-          );
-          return LumenResponsiveShell(
-            destinations: destinations,
-            selectedIndex: index,
-            onDestinationSelected: (value) =>
-                context.go(destinations[value].path),
-            compactDestinations: _compactDestinations,
-            compactSelectedIndex: compactIndex,
-            onCompactDestinationSelected: (value) =>
-                context.go(_compactDestinations[value].path),
-            contextPanel: index == 0 ? const RecommendationsPanel() : null,
-            body: child,
+          final index = navIndexForPath(state.uri.path, navItems);
+          final primaryIndex = navIndexForPath(state.uri.path, primaryItems);
+          return AuraOverlay(
+            child: LumenResponsiveShell(
+              navItems: navItems,
+              selectedIndex: index,
+              onDestinationSelected: (value) =>
+                  context.goNamed(navItems[value].routeName),
+              primaryItems: primaryItems,
+              primarySelectedIndex: primaryIndex,
+              onPrimaryDestinationSelected: (value) =>
+                  context.goNamed(primaryItems[value].routeName),
+              contextPanel: index == 0 ? const RecommendationsPanel() : null,
+              body: child,
+            ),
           );
         },
         routes: <RouteBase>[
@@ -261,6 +215,30 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'live',
             pageBuilder: (context, state) =>
                 _page(state, const LiveScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/friends',
+            name: 'friends',
+            pageBuilder: (context, state) =>
+                _page(state, const FriendsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/music',
+            name: 'music',
+            pageBuilder: (context, state) =>
+                _page(state, const MusicScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/analytics',
+            name: 'analytics',
+            pageBuilder: (context, state) =>
+                _page(state, const AnalyticsScreen(), reducedMotion),
+          ),
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            pageBuilder: (context, state) =>
+                _page(state, const ProfileScreen(), reducedMotion),
           ),
           GoRoute(
             path: '/settings',
@@ -518,7 +496,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ? '/home'
               : canAccessRoleRoute(roles, location)
               ? null
-              : '/more',
+              : '/home',
       };
     },
   );
@@ -544,25 +522,13 @@ Page<void> _page(GoRouterState state, Widget child, bool reducedMotion) {
   );
 }
 
-int _destinationIndex(String path, List<ShellDestination> destinations) {
-  var index = destinations.indexWhere(
-    (destination) =>
-        path == destination.path || path.startsWith('${destination.path}/'),
-  );
-  if (index < 0) {
-    index = destinations.indexWhere(
-      (destination) => destination.path == '/more',
-    );
-  }
-  return index < 0 ? 0 : index;
-}
-
 final class SyloraApp extends ConsumerWidget {
   const SyloraApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final visual = ref.watch(visualSettingsProvider);
+    final locale = ref.watch(localeProvider);
     final router = ref.watch(routerProvider);
     final mode = switch (visual.themeMode) {
       LumenThemeMode.system => ThemeMode.system,
@@ -575,6 +541,15 @@ final class SyloraApp extends ConsumerWidget {
       themeMode: mode,
       theme: LumenTheme.light(highContrast: visual.highContrast),
       darkTheme: LumenTheme.dark(highContrast: visual.highContrast),
+      locale: locale.flutterLocale,
+      supportedLocales: SyloraLocale.values
+          .map((value) => value.flutterLocale)
+          .toList(growable: false),
+      localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: router,
       builder: (context, child) {
         final media = MediaQuery.of(context);
@@ -591,20 +566,37 @@ final class SyloraApp extends ConsumerWidget {
   }
 }
 
-final class _SplashScreen extends StatelessWidget {
+final class _SplashScreen extends ConsumerWidget {
   const _SplashScreen();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          SyloraLogo(size: 72),
-          SizedBox(height: 20),
-          CircularProgressIndicator(),
-        ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reducedMotion = ref.watch(
+      visualSettingsProvider.select((value) => value.reducedMotion),
+    );
+    return Scaffold(
+      body: LumenLivingBackground(
+        reducedMotion: reducedMotion,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              AnimatedSyloraLogo(
+                size: 88,
+                intro: true,
+                reducedMotion: reducedMotion,
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'SYLORA',
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -125,6 +125,10 @@ abstract interface class SocialRepository {
   Future<String> follow(String handle);
   Future<void> unfollow(String handle);
   Future<String> friend(String handle);
+  Future<List<ProfileModel>> friends();
+  Future<List<FriendRequestModel>> friendRequests();
+  Future<void> acceptFriendRequest(String id);
+  Future<void> rejectFriendRequest(String id);
   Future<void> block(String handle, bool value);
   Future<void> mute(String handle, bool value);
   Future<SocialSearchBundle> search(String query);
@@ -287,6 +291,48 @@ final class DioSocialRepository implements SocialRepository {
     return requireString(
       requireObject(response.data, 'friend relationship'),
       'status',
+    );
+  }
+
+  @override
+  Future<List<ProfileModel>> friends() async {
+    final response = await _client.request('social/friends');
+    final body = requireObject(response.data, 'friends');
+    return requireList(body, 'items')
+        .map(
+          (value) => ProfileModel.fromPublicJson(
+            requireObject(value, 'friend profile'),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<FriendRequestModel>> friendRequests() async {
+    final response = await _client.request('social/friend-requests');
+    final body = requireObject(response.data, 'friend requests');
+    return requireList(body, 'items')
+        .map(
+          (value) => FriendRequestModel.fromJson(
+            requireObject(value, 'friend request'),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> acceptFriendRequest(String id) async {
+    await _client.request(
+      'social/friend-requests/$id/accept',
+      method: 'POST',
+    );
+  }
+
+  @override
+  Future<void> rejectFriendRequest(String id) async {
+    await _client.request(
+      'social/friend-requests/$id/reject',
+      method: 'POST',
     );
   }
 

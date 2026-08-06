@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'api.dart';
+import 'l10n/sylora_localizations.dart';
+import 'lumen_effects.dart';
 import 'lumen_theme.dart';
+import 'shell_navigation.dart';
 
 final class LumenSurface extends StatelessWidget {
   const LumenSurface({
@@ -272,99 +276,319 @@ final class ShellDestination {
   final String path;
 }
 
-final class LumenResponsiveShell extends StatelessWidget {
+final class LumenResponsiveShell extends ConsumerWidget {
   const LumenResponsiveShell({
     required this.body,
-    required this.destinations,
+    required this.navItems,
     required this.selectedIndex,
     required this.onDestinationSelected,
     super.key,
-    this.compactDestinations,
-    this.compactSelectedIndex,
-    this.onCompactDestinationSelected,
     this.contextPanel,
+    this.primaryItems,
+    this.primarySelectedIndex,
+    this.onPrimaryDestinationSelected,
   });
 
   final Widget body;
-  final List<ShellDestination> destinations;
+  final List<SyloraNavItem> navItems;
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
-  final List<ShellDestination>? compactDestinations;
-  final int? compactSelectedIndex;
-  final ValueChanged<int>? onCompactDestinationSelected;
   final Widget? contextPanel;
+  final List<SyloraNavItem>? primaryItems;
+  final int? primarySelectedIndex;
+  final ValueChanged<int>? onPrimaryDestinationSelected;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      if (width < 768) {
-        final mobileDestinations = compactDestinations ?? destinations;
-        final mobileIndex = compactSelectedIndex ?? selectedIndex;
-        return Scaffold(
-          body: body,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: mobileIndex.clamp(0, mobileDestinations.length - 1),
-            onDestinationSelected:
-                onCompactDestinationSelected ?? onDestinationSelected,
-            destinations: <NavigationDestination>[
-              for (final destination in mobileDestinations)
-                NavigationDestination(
-                  icon: Icon(destination.icon),
-                  selectedIcon: Icon(destination.selectedIcon),
-                  label: destination.label,
-                ),
-            ],
-          ),
-        );
-      }
-      final expanded = width >= 1280;
-      return Scaffold(
-        body: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            NavigationRail(
-              extended: expanded,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final primary = primaryItems ?? navItems;
+    final primaryIndex = primarySelectedIndex ?? selectedIndex;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final isMobile = width < 768;
+        final expanded = width >= 1280;
+
+        if (isMobile) {
+          return Scaffold(
+            drawer: _SyloraDrawer(
+              items: navItems,
+              locale: locale,
               selectedIndex: selectedIndex,
-              onDestinationSelected: onDestinationSelected,
-              leading: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: expanded
-                    ? const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          SyloraLogo(),
-                          SizedBox(width: 12),
-                          Text('SYLORA'),
-                        ],
-                      )
-                    : const SyloraLogo(),
-              ),
-              destinations: <NavigationRailDestination>[
-                for (final destination in destinations)
-                  NavigationRailDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.selectedIcon),
-                    label: Text(destination.label),
+              onSelected: onDestinationSelected,
+            ),
+            appBar: SyloraTopBar(locale: locale),
+            body: body,
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: primaryIndex.clamp(0, primary.length - 1),
+              onDestinationSelected:
+                  onPrimaryDestinationSelected ?? onDestinationSelected,
+              destinations: <NavigationDestination>[
+                for (final item in primary)
+                  NavigationDestination(
+                    icon: Icon(item.icon),
+                    selectedIcon: Icon(item.selectedIcon),
+                    label: item.label(locale),
                   ),
               ],
             ),
-            VerticalDivider(
-              width: 1,
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            Expanded(child: body),
-            if (expanded && contextPanel != null) ...<Widget>[
+          );
+        }
+
+        return Scaffold(
+          appBar: SyloraTopBar(locale: locale, showMenuButton: false),
+          body: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              NavigationRail(
+                extended: expanded,
+                selectedIndex: selectedIndex.clamp(0, navItems.length - 1),
+                onDestinationSelected: onDestinationSelected,
+                labelType: expanded
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.selected,
+                leading: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: expanded
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            AnimatedSyloraLogo(
+                              size: 36,
+                              reducedMotion: ref.watch(
+                                visualSettingsProvider.select(
+                                  (value) => value.reducedMotion,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              SyloraStrings.t(locale, 'app_name'),
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ],
+                        )
+                      : AnimatedSyloraLogo(
+                          size: 32,
+                          reducedMotion: ref.watch(
+                            visualSettingsProvider.select(
+                              (value) => value.reducedMotion,
+                            ),
+                          ),
+                        ),
+                ),
+                destinations: <NavigationRailDestination>[
+                  for (final item in navItems)
+                    NavigationRailDestination(
+                      icon: Icon(item.icon),
+                      selectedIcon: Icon(item.selectedIcon),
+                      label: Text(item.label(locale)),
+                    ),
+                ],
+              ),
               VerticalDivider(
                 width: 1,
                 color: Theme.of(context).colorScheme.outlineVariant,
               ),
-              SizedBox(width: 340, child: contextPanel),
+              Expanded(child: body),
+              if (expanded && contextPanel != null) ...<Widget>[
+                VerticalDivider(
+                  width: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+                SizedBox(width: 340, child: contextPanel),
+              ],
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+final class SyloraTopBar extends StatelessWidget implements PreferredSizeWidget {
+  const SyloraTopBar({
+    required this.locale,
+    super.key,
+    this.showMenuButton = true,
+  });
+
+  final SyloraLocale locale;
+  final bool showMenuButton;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(64);
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: scheme.surface.withValues(alpha: 0.85),
+      leading: showMenuButton
+          ? Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu_rounded),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            )
+          : null,
+      title: InkWell(
+        onTap: () => context.goNamed('search'),
+        borderRadius: BorderRadius.circular(12),
+        child: LumenVellum(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          radius: 12,
+          sigma: 12,
+          child: Row(
+            children: <Widget>[
+              Icon(Icons.search_rounded, color: scheme.onSurfaceVariant, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                SyloraStrings.t(locale, 'search'),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        IconButton(
+          tooltip: SyloraStrings.t(locale, 'create'),
+          icon: const Icon(Icons.add_circle_outline_rounded),
+          onPressed: () => _showCreateSheet(context),
+        ),
+        IconButton(
+          tooltip: SyloraStrings.t(locale, 'notifications'),
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: () => context.pushNamed('notifications'),
+        ),
+        IconButton(
+          tooltip: SyloraStrings.t(locale, 'chat'),
+          icon: const Icon(Icons.chat_bubble_outline_rounded),
+          onPressed: () => context.goNamed('messages'),
+        ),
+        IconButton(
+          tooltip: SyloraStrings.t(locale, 'nav_wallet'),
+          icon: const Icon(Icons.account_balance_wallet_outlined),
+          onPressed: () => context.goNamed('wallet'),
+        ),
+        IconButton(
+          tooltip: SyloraStrings.t(locale, 'nav_profile'),
+          icon: const Icon(Icons.person_outline_rounded),
+          onPressed: () => context.goNamed('profile'),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+
+  void _showCreateSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.edit_note_rounded),
+              title: const Text('New post'),
+              onTap: () {
+                Navigator.pop(context);
+                context.goNamed('home');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.sensors_rounded),
+              title: const Text('Go live'),
+              onTap: () {
+                Navigator.pop(context);
+                context.goNamed('live');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.card_giftcard_outlined),
+              title: const Text('Send a gift'),
+              onTap: () {
+                Navigator.pop(context);
+                context.goNamed('gifts');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.auto_awesome_rounded),
+              title: const Text('Ask Aura'),
+              onTap: () {
+                Navigator.pop(context);
+                context.goNamed('ai');
+              },
+            ),
           ],
         ),
-      );
-    },
+      ),
+    );
+  }
+}
+
+final class _SyloraDrawer extends StatelessWidget {
+  const _SyloraDrawer({
+    required this.items,
+    required this.locale,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final List<SyloraNavItem> items;
+  final SyloraLocale locale;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) => Drawer(
+    child: SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: <Widget>[
+                const AnimatedSyloraLogo(size: 40),
+                const SizedBox(width: 12),
+                Text(
+                  SyloraStrings.t(locale, 'app_name'),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return ListTile(
+                  selected: index == selectedIndex,
+                  leading: Icon(
+                    index == selectedIndex ? item.selectedIcon : item.icon,
+                  ),
+                  title: Text(item.label(locale)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onSelected(index);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    ),
   );
 }
 

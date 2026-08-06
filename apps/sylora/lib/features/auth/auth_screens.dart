@@ -4,45 +4,196 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/l10n/sylora_localizations.dart';
+import '../../core/lumen_effects.dart';
 import '../../core/lumen_theme.dart';
 import '../../core/lumen_widgets.dart';
 import 'auth.dart';
 
-final class WelcomeScreen extends StatelessWidget {
+final class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              children: <Widget>[
-                const SyloraLogo(size: 92),
-                const SizedBox(height: 28),
-                Text(
-                  'A brighter place to create together.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final reducedMotion = ref.watch(
+      visualSettingsProvider.select((value) => value.reducedMotion),
+    );
+    return Scaffold(
+      body: LumenLivingBackground(
+        reducedMotion: reducedMotion,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 960),
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        _LanguageMenu(locale: locale),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    AnimatedSyloraLogo(
+                      size: 92,
+                      intro: true,
+                      reducedMotion: reducedMotion,
+                    ),
+                    const SizedBox(height: 28),
+                    LumenBadge(
+                      label: 'Creator OS · 2.0',
+                      color: LumenColors.pulse,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      SyloraStrings.t(locale, 'tagline_long'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      SyloraStrings.t(locale, 'welcome_lede'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 32),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: <Widget>[
+                        LumenPrimaryButton(
+                          label: SyloraStrings.t(locale, 'create_account'),
+                          onPressed: () => context.goNamed(
+                            'auth',
+                            queryParameters: <String, String>{'create': '1'},
+                          ),
+                        ),
+                        LumenSecondaryButton(
+                          label: SyloraStrings.t(locale, 'sign_in'),
+                          onPressed: () => context.goNamed('auth'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      SyloraStrings.t(locale, 'free_tier_note'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 36),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final columns = constraints.maxWidth > 720 ? 2 : 1;
+                        return GridView.count(
+                          crossAxisCount: columns,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: columns == 2 ? 2.4 : 2.8,
+                          children: <Widget>[
+                            _ValueProp(
+                              icon: Icons.sensors_rounded,
+                              title: SyloraStrings.t(locale, 'prop_live'),
+                              body: SyloraStrings.t(locale, 'prop_live_body'),
+                            ),
+                            _ValueProp(
+                              icon: Icons.auto_awesome_rounded,
+                              title: SyloraStrings.t(locale, 'prop_aura'),
+                              body: SyloraStrings.t(locale, 'prop_aura_body'),
+                            ),
+                            _ValueProp(
+                              icon: Icons.payments_outlined,
+                              title: SyloraStrings.t(locale, 'prop_income'),
+                              body: SyloraStrings.t(locale, 'prop_income_body'),
+                            ),
+                            _ValueProp(
+                              icon: Icons.groups_rounded,
+                              title: SyloraStrings.t(locale, 'prop_rooms'),
+                              body: SyloraStrings.t(locale, 'prop_rooms_body'),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Your community, conversations, gifts, AI tools, and live control plane—connected to your SYLORA account.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 32),
-                LumenPrimaryButton(
-                  label: 'Continue',
-                  onPressed: () => context.goNamed('auth'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+final class _ValueProp extends StatelessWidget {
+  const _ValueProp({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) => LumenVellum(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(body, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+final class _LanguageMenu extends ConsumerWidget {
+  const _LanguageMenu({required this.locale});
+
+  final SyloraLocale locale;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => PopupMenuButton<SyloraLocale>(
+    tooltip: 'Language',
+    initialValue: locale,
+    onSelected: (value) => ref.read(localeProvider.notifier).setLocale(value),
+    itemBuilder: (context) => SyloraLocale.values
+        .map(
+          (value) => PopupMenuItem<SyloraLocale>(
+            value: value,
+            child: Text('${value.flag} ${value.label}'),
+          ),
+        )
+        .toList(growable: false),
+    child: LumenVellum(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      radius: 999,
+      sigma: 10,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(locale.flag),
+          const SizedBox(width: 6),
+          Text(locale.label, style: Theme.of(context).textTheme.labelLarge),
+          const Icon(Icons.expand_more_rounded, size: 18),
+        ],
       ),
     ),
   );

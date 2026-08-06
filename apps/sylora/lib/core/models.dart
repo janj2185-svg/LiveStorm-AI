@@ -88,6 +88,30 @@ final class ProfileModel {
 }
 
 @immutable
+final class FriendRequestModel {
+  const FriendRequestModel({
+    required this.id,
+    required this.status,
+    required this.profile,
+    this.requestedByMe = false,
+  });
+
+  factory FriendRequestModel.fromJson(JsonObject json) => FriendRequestModel(
+    id: requireString(json, 'id'),
+    status: requireString(json, 'status'),
+    profile: ProfileModel.fromPublicJson(
+      requireObject(json, 'profile'),
+    ),
+    requestedByMe: requireBool(json, 'requested_by_me'),
+  );
+
+  final String id;
+  final String status;
+  final ProfileModel profile;
+  final bool requestedByMe;
+}
+
+@immutable
 final class AccountSettingsModel {
   const AccountSettingsModel({
     required this.productEmails,
