@@ -12,6 +12,7 @@
       line: 'Живий ефір, творчість, звʼязок і інтелект — одна преміальна платформа.',
       cta: 'Увійти',
       ctaSecondary: 'Створити акаунт',
+      ctaLearn: 'Дізнатися більше',
       markAria: 'Символ SYLORA — Liquid S у скляній сфері',
       loading: 'Відкриваємо світ…',
       launching: 'Запуск SYLORA…',
@@ -38,6 +39,7 @@
       line: 'Live, create, connect, and think — one premium platform.',
       cta: 'Sign in',
       ctaSecondary: 'Create account',
+      ctaLearn: 'Learn more',
       markAria: 'SYLORA mark — Liquid S in glass sphere',
       loading: 'Opening your world…',
       launching: 'Launching SYLORA…',
@@ -537,6 +539,12 @@
       if (label) label.textContent = copy.cta;
       else if (!el.classList.contains('aether-portal')) el.textContent = copy.signIn;
     });
+    const learnBtn = qs('[data-aether-learn]');
+    if (learnBtn) {
+      const label = learnBtn.querySelector('span');
+      if (label) label.textContent = copy.ctaLearn;
+      else learnBtn.textContent = copy.ctaLearn;
+    }
     const fp = qs('[data-feat-protect]');
     if (fp) fp.textContent = copy.featProtect;
     const ff = qs('[data-feat-fast]');
@@ -698,6 +706,9 @@
                 <button type="button" class="aether-portal aether-portal--glass" data-aether-enter>
                   <span>${copy.ctaSecondary}</span>
                 </button>
+                <button type="button" class="aether-link aether-learn" data-aether-learn>
+                  <span>${copy.ctaLearn}</span>
+                </button>
               </div>
               <div class="aether-feat-strip" aria-label="SYLORA">
                 <div class="aether-feat">
@@ -752,6 +763,15 @@
     `;
     qs('[data-aether-enter]', root).addEventListener('click', () => enterApp(true));
     qs('[data-aether-signin]', root).addEventListener('click', () => enterApp(false));
+    const learnEl = qs('[data-aether-learn]', root);
+    if (learnEl) {
+      learnEl.addEventListener('click', () => {
+        const chapters = qs('.aether-chapters', root);
+        if (chapters) {
+          chapters.scrollIntoView({ behavior: state.reduced ? 'auto' : 'smooth', block: 'start' });
+        }
+      });
+    }
     root.querySelectorAll('[data-aether-lang]').forEach((btn) => {
       btn.addEventListener('click', () => setLang(btn.getAttribute('data-aether-lang')));
     });
