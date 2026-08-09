@@ -138,7 +138,10 @@ async def public_stand_status(request: Request) -> dict[str, Any]:
         ),
         "live_studio": _feature("PARTIAL", "studio UI + adapters; platform feeds vary"),
         "tts": _feature("PARTIAL", "orchestrator hooks; voice provider may be unset"),
-        "avatar": _feature("PARTIAL", "reaction hooks; avatar runtime may be unset"),
+        "avatar": _feature(
+            "READY",
+            "Living female avatar runtime + GET /v1/live/avatar/presence + OBS /avatar-overlay.html",
+        ),
         "obs_mediamtx": _feature(
             "PARTIAL" if settings.mediamtx_control_url else "BLOCKED",
             "MediaMTX control configured"

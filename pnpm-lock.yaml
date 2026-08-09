@@ -17,6 +17,9 @@ importers:
       '@fontsource/instrument-serif':
         specifier: ^5.3.0
         version: 5.3.0
+      '@sylora/avatar-runtime':
+        specifier: file:./packages/avatar-runtime
+        version: file:packages/avatar-runtime
       react:
         specifier: ^19.2.7
         version: 19.2.7
@@ -334,6 +337,9 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@sylora/avatar-runtime@file:packages/avatar-runtime':
+    resolution: {directory: packages/avatar-runtime, type: directory}
 
   '@tybys/wasm-util@0.10.3':
     resolution: {integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==}
@@ -976,6 +982,8 @@ snapshots:
   '@rolldown/pluginutils@1.0.1': {}
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@sylora/avatar-runtime@file:packages/avatar-runtime': {}
 
   '@tybys/wasm-util@0.10.3':
     dependencies:

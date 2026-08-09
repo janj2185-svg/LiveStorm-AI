@@ -30,6 +30,7 @@
 
 import { useState } from 'react';
 
+import { LivingAvatar } from '../../design-system/avatar/LivingAvatar';
 import { AiOrb } from '../../design-system/brand/Logo';
 import {
   Avatar,
@@ -97,7 +98,14 @@ export function AssistantScreen() {
             The scope note wraps onto its own line rather than squeezing the
             title row, so it survives a 393px surface without truncation. */}
         <header className="sy-assistant__head">
-          <AiOrb size={40} state="thinking" />
+          <LivingAvatar
+            className="sy-assistant__presence"
+            name="Sylora"
+            size={72}
+            reaction="think"
+            utterance="Дивлюсь вашу аналітику і готую відповідь."
+            showMeta={false}
+          />
           <h1 className="sy-title-3 sy-grow">Assistant</h1>
           <Badge tone="accent" variant="soft" icon="brain">
             Reason 3

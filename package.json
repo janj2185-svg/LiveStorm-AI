@@ -11,6 +11,7 @@
     "typecheck": "tsc -b",
     "tokens": "tsx scripts/build-tokens.ts",
     "test": "vitest run",
+    "test:avatar": "pnpm --dir packages/avatar-runtime test",
     "test:backend": "cd services/api && python3 -m pytest -q",
     "test:flutter": "cd apps/sylora && flutter test",
     "test:watch": "vitest",
@@ -21,6 +22,7 @@
     "@fontsource-variable/instrument-sans": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
+    "@sylora/avatar-runtime": "file:./packages/avatar-runtime",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

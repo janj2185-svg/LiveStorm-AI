@@ -1332,6 +1332,34 @@ async def admin_integrations(
     return [integration_response(item) for item in records]
 
 
+@router.get("/avatar/presence")
+async def avatar_presence() -> dict[str, Any]:
+    """Current living-avatar pose/reaction for overlays and studio UIs."""
+    from app.live_platforms.common.living_avatar import GLOBAL_LIVING_AVATAR
+
+    return GLOBAL_LIVING_AVATAR.snapshot()
+
+
+@router.post("/avatar/react", status_code=status.HTTP_202_ACCEPTED)
+async def avatar_react(
+    payload: dict[str, Any],
+    auth: ManageAuth,
+) -> dict[str, Any]:
+    """Drive the living avatar from studio controls or automation."""
+    del auth
+    from app.live_platforms.common.living_avatar import GLOBAL_LIVING_AVATAR
+
+    reaction = str(payload.get("reaction") or "idle")
+    utterance = payload.get("utterance")
+    sync_token = payload.get("sync_token")
+    await GLOBAL_LIVING_AVATAR.react(
+        reaction,
+        sync_token=str(sync_token) if sync_token else None,
+        utterance=str(utterance) if utterance is not None else None,
+    )
+    return GLOBAL_LIVING_AVATAR.snapshot()
+
+
 @websocket_router.websocket("/ws/live/{session_id}")
 async def live_websocket(websocket: WebSocket, session_id: uuid.UUID) -> None:
     try:

@@ -30,6 +30,7 @@
 @import './design-system/styles/tokens.css';
 @import './design-system/styles/base.css';
 @import './design-system/styles/brand.css';
+@import './design-system/avatar/living-avatar.css';
 @import './design-system/styles/components.css';
 @import './design-system/styles/patterns.css';
 @import './design-system/styles/screens.css';

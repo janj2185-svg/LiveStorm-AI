@@ -18,7 +18,13 @@ class SpeechSynthesizer(Protocol):
 
 
 class AvatarController(Protocol):
-    async def react(self, reaction: str, *, sync_token: str | None = None) -> None: ...
+    async def react(
+        self,
+        reaction: str,
+        *,
+        sync_token: str | None = None,
+        utterance: str | None = None,
+    ) -> None: ...
 
 
 class ObsOverlayController(Protocol):
@@ -58,7 +64,13 @@ class NullAvatarController:
     def __init__(self) -> None:
         self.reactions: list[str] = []
 
-    async def react(self, reaction: str, *, sync_token: str | None = None) -> None:
+    async def react(
+        self,
+        reaction: str,
+        *,
+        sync_token: str | None = None,
+        utterance: str | None = None,
+    ) -> None:
         self.reactions.append(reaction)
 
 
@@ -116,7 +128,11 @@ class CoHostOutputOrchestrator:
             )
             self.tts_latency_ms.append(int((time.perf_counter() - started) * 1000))
         if decision.avatar_reaction:
-            await self.avatar.react(decision.avatar_reaction, sync_token=sync_token)
+            await self.avatar.react(
+                decision.avatar_reaction,
+                sync_token=sync_token,
+                utterance=reply_text if decision.should_respond else None,
+            )
         obs_event = None
         if decision.should_respond:
             obs_event = "cohost.reply"

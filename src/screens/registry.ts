@@ -13,6 +13,7 @@ import { CORE_SCREENS } from './core';
 import { ASSISTANT_SCREENS } from './assistant';
 import { MEDIA_SCREENS } from './media';
 import { LIVE_SCREENS } from './live';
+import { AVATAR_SCREENS } from './avatar';
 import { COMMS_SCREENS } from './comms';
 import { CREATOR_SCREENS } from './creator';
 import { COMMERCE_SCREENS } from './commerce';
@@ -27,6 +28,7 @@ export const SCREENS: ScreenDefinition[] = [
   ...ASSISTANT_SCREENS,
   ...MEDIA_SCREENS,
   ...LIVE_SCREENS,
+  ...AVATAR_SCREENS,
   ...COMMS_SCREENS,
   ...CREATOR_SCREENS,
   ...COMMERCE_SCREENS,

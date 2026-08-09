@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SYLORA Living Avatar Overlay</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: "Instrument Sans", "Segoe UI", sans-serif;
+      }
+      #stage {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: end center;
+        padding: 4vh 2vw;
+      }
+      .plate {
+        position: relative;
+        width: min(42vh, 360px);
+        aspect-ratio: 3 / 4;
+        transform-origin: 50% 80%;
+        will-change: transform;
+      }
+      .plate img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 18%;
+        opacity: 0;
+        border-radius: 28% 28% 32% 32% / 18% 18% 28% 28%;
+      }
+      .caption {
+        margin-top: 0.75rem;
+        text-align: center;
+        color: rgba(255, 248, 240, 0.92);
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+      }
+      .caption strong {
+        display: block;
+        font-family: "Instrument Serif", Georgia, serif;
+        font-size: 1.35rem;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+      }
+      .caption span {
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div>
+        <div class="plate" id="plate">
+          <img data-frame="neutral" src="/avatars/neutral.jpg" alt="" />
+          <img data-frame="warm" src="/avatars/warm.jpg" alt="" />
+          <img data-frame="listen" src="/avatars/listen.jpg" alt="" />
+          <img data-frame="speak" src="/avatars/speak.jpg" alt="" />
+          <img data-frame="blink" src="/avatars/blink.jpg" alt="" />
+        </div>
+        <div class="caption">
+          <strong>Sylora</strong>
+          <span id="status">present</span>
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      import {
+        AvatarLifeController,
+        normalizeReaction,
+      } from '/avatars/life.js';
+
+      const life = new AvatarLifeController({ name: 'Sylora' });
+      const plate = document.getElementById('plate');
+      const status = document.getElementById('status');
+      const frames = Object.fromEntries(
+        [...plate.querySelectorAll('img')].map((img) => [img.dataset.frame, img]),
+      );
+
+      const labels = {
+        idle: 'present',
+        talk: 'speaking',
+        listen: 'listening',
+        think: 'thinking',
+        wave: 'greeting',
+        glance: 'glancing',
+        gift_react: 'delighted',
+      };
+
+      function paint(state) {
+        const { pose, frames: weights, reaction } = state;
+        plate.style.transform = [
+          `translate3d(0, ${(-pose.breath * 2.2 - pose.shoulder * 4).toFixed(2)}px, 0)`,
+          `rotateX(${(pose.headPitch + pose.gazeY * 4).toFixed(2)}deg)`,
+          `rotateY(${(pose.headYaw + pose.gazeX * 6).toFixed(2)}deg)`,
+          `rotateZ(${pose.headRoll.toFixed(2)}deg)`,
+          `scale(${(1 + pose.breath * 0.008 + pose.shoulder * 0.01).toFixed(4)})`,
+        ].join(' ');
+        for (const [key, img] of Object.entries(frames)) {
+          img.style.opacity = String(Math.max(0, Math.min(1, weights[key] ?? 0)));
+        }
+        status.textContent = labels[reaction] ?? 'present';
+      }
+
+      function loop(now) {
+        paint(life.tick(now));
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+
+      async function pollPresence() {
+        try {
+          const res = await fetch('/v1/live/avatar/presence', { cache: 'no-store' });
+          if (!res.ok) return;
+          const body = await res.json();
+          const state = body.state;
+          if (!state) return;
+          life.react({
+            reaction: normalizeReaction(state.reaction),
+            syncToken: state.sync_token,
+            utterance: state.utterance,
+            at: performance.now(),
+          });
+        } catch {
+          /* overlay stays alive on local physiology even if API is down */
+        }
+      }
+
+      pollPresence();
+      setInterval(pollPresence, 1200);
+
+      // Demo idle life when opened without API: gentle listen every ~20s.
+      setInterval(() => {
+        if (life.state.reaction === 'idle') {
+          life.react({ reaction: 'listen', at: performance.now() });
+        }
+      }, 20000);
+    </script>
+  </body>
+</html>

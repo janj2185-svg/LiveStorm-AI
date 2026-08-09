@@ -48,6 +48,17 @@
   padding-block: var(--sy-space-5) var(--sy-space-4);
   border-block-end: 1px solid var(--sy-border-subtle);
 }
+
+.sy-assistant__presence {
+  flex: 0 0 auto;
+}
+
+.sy-assistant__presence .sy-living-avatar__stage {
+  border-radius: 22px;
+  box-shadow:
+    0 10px 24px rgba(28, 18, 12, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
 /* No max-inline-size here: a maximum would clamp the flex base size and let
    the note squeeze back onto the title row instead of taking its own. */
 .sy-assistant__scope {
