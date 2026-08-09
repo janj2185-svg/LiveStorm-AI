@@ -101,9 +101,13 @@ export function AssistantScreen() {
     'Also check whether the drop is worse for viewers who joined from Discover rather than from a follow.',
   );
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
-  const [presence, setPresence] = useState<AvatarReaction>('think');
+  const [presence, setPresence] = useState<AvatarReaction>('idle');
 
-  useEffect(() => livingAvatarBus.subscribe((reaction) => setPresence(reaction)), []);
+  useEffect(() => {
+    const unsubscribe = livingAvatarBus.subscribe((reaction) => setPresence(reaction));
+    void livingAvatarBus.react('wave', { syncToken: 'assist-hello' });
+    return unsubscribe;
+  }, []);
 
   const decide = (action: string, decision: Decision) =>
     setDecisions((current) => ({ ...current, [action]: decision }));
