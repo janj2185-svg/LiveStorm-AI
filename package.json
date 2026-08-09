@@ -11,6 +11,7 @@
     "typecheck": "tsc -b",
     "tokens": "tsx scripts/build-tokens.ts",
     "test": "vitest run",
+    "test:avatar": "pnpm --dir packages/avatar-runtime test",
     "test:backend": "cd services/api && python3 -m pytest -q",
     "test:flutter": "cd apps/sylora && flutter test",
     "test:watch": "vitest",
@@ -25,6 +26,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",

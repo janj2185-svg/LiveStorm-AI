@@ -48,6 +48,18 @@
   padding-block: var(--sy-space-5) var(--sy-space-4);
   border-block-end: 1px solid var(--sy-border-subtle);
 }
+
+.sy-assistant__avatar .sy-living-avatar__stage,
+.sy-turn__avatar .sy-living-avatar__stage {
+  border-radius: 50%;
+  box-shadow:
+    0 8px 20px color-mix(in oklab, var(--sy-ink) 12%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, white 50%, transparent);
+}
+
+.sy-turn__avatar {
+  flex-shrink: 0;
+}
 /* No max-inline-size here: a maximum would clamp the flex base size and let
    the note squeeze back onto the title row instead of taking its own. */
 .sy-assistant__scope {

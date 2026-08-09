@@ -16,7 +16,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "*": ["./*"],
+      "@sylora/avatar-runtime": ["./packages/avatar-runtime/src/index.ts"],
+      "@sylora/avatar-runtime/*": ["./packages/avatar-runtime/src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "packages/avatar-runtime/src"]
 }

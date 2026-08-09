@@ -62,6 +62,58 @@ class NullAvatarController:
         self.reactions.append(reaction)
 
 
+# Human-life reaction vocabulary consumed by packages/avatar-runtime (Liora).
+LIORA_REACTIONS = frozenset(
+    {
+        "idle",
+        "listen",
+        "talk",
+        "wave",
+        "nod",
+        "glance",
+        "gift_react",
+        "think",
+        "smile",
+    }
+)
+
+
+@dataclass
+class AvatarLifeEvent:
+    reaction: str
+    sync_token: str | None
+    persona_id: str
+    at: float
+
+
+class LocalAvatarLifeController:
+    """Records co-host reactions for the Liora living-avatar runtime.
+
+    The browser AvatarLifeEngine consumes the same reaction ids. This controller
+    is the server-side ledger so Live Hub / OBS overlays can replay or fan out
+    gesture cues without inventing a separate vocabulary.
+    """
+
+    def __init__(self, *, persona_id: str = "liora") -> None:
+        self.persona_id = persona_id
+        self.reactions: list[str] = []
+        self.events: list[AvatarLifeEvent] = []
+
+    async def react(self, reaction: str, *, sync_token: str | None = None) -> None:
+        normalized = reaction.strip().lower() if reaction else "idle"
+        if normalized not in LIORA_REACTIONS:
+            normalized = "idle"
+        self.reactions.append(normalized)
+        self.events.append(
+            AvatarLifeEvent(
+                reaction=normalized,
+                sync_token=sync_token,
+                persona_id=self.persona_id,
+                at=time.time(),
+            )
+        )
+
+
 class NullObsOverlayController:
     def __init__(self) -> None:
         self.events: list[tuple[str, dict[str, Any]]] = []
@@ -90,7 +142,7 @@ class CoHostOutputOrchestrator:
         gifts: GiftRuntimeController | None = None,
     ) -> None:
         self.tts = tts or NullSpeechSynthesizer()
-        self.avatar = avatar or NullAvatarController()
+        self.avatar = avatar or LocalAvatarLifeController()
         self.obs = obs or NullObsOverlayController()
         self.gifts = gifts or NullGiftRuntimeController()
         self.last_plan: OutputSyncPlan | None = None
@@ -126,6 +178,8 @@ class CoHostOutputOrchestrator:
                     "text": reply_text if decision.show_text else None,
                     "user": decision.target_username,
                     "sync_token": sync_token,
+                    "avatar_reaction": decision.avatar_reaction,
+                    "persona_id": getattr(self.avatar, "persona_id", "liora"),
                 },
             )
         gift_effect = None

@@ -35,6 +35,7 @@
 
 import { useState } from 'react';
 
+import { LivingAvatar } from '../../design-system/avatar';
 import {
   Avatar,
   Badge,
@@ -193,6 +194,10 @@ export function LiveStudioScreen() {
                   </span>
                   <span className="sy-monitor__clock sy-mono">{stream.duration}</span>
                   <span className="sy-monitor__safe" aria-hidden="true" />
+                  <div className="sy-monitor__cohost" aria-label="Liora AI co-host">
+                    <LivingAvatar size={112} reaction="listen" label="Liora" />
+                    <span className="sy-monitor__cohost-tag">Liora · co-host</span>
+                  </div>
                 </Media>
               </div>
               <figcaption className="sy-monitor__caption">
