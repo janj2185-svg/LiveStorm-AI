@@ -16,7 +16,13 @@ from app.live_platforms.common.connection import LivePlatformConnectionManager
 from app.live_platforms.common.events import NormalizedLiveEventType
 from app.live_platforms.common.hub_bridge import to_adapter_inbound
 from app.live_platforms.common.interfaces import LiveAuthMaterial, LiveConnectRequest
-from app.live_platforms.common.output import CoHostOutputOrchestrator
+from app.live_platforms.common.output import (
+    CoHostOutputOrchestrator,
+    NullAvatarController,
+    NullSpeechSynthesizer,
+)
+from app.live_platforms.common.living_avatar import LivingAvatarController
+
 from app.live_platforms.common.reliability import (
     CircuitBreaker,
     EventDeduplicator,
@@ -285,6 +291,33 @@ async def test_output_orchestrator_tts_interrupt_and_sync() -> None:
     assert interrupt is not None
     await orch.apply(interrupt, reply_text="")
     assert orch.tts.interrupted is True  # type: ignore[attr-defined]
+
+
+@pytest.mark.asyncio
+async def test_living_avatar_controller_records_cohost_reactions() -> None:
+    avatar = LivingAvatarController()
+    orch = CoHostOutputOrchestrator(avatar=avatar, tts=NullSpeechSynthesizer())
+    scheduler = DialogueScheduler()
+    normalizer = DefaultTikTokEventNormalizer()
+    gift = normalizer.normalize(
+        {
+            "type": "gift",
+            "msgId": "g-avatar",
+            "giftId": "rose",
+            "giftName": "Rose",
+            "repeatCount": 1,
+            "user": {"userId": "u", "uniqueId": "gifter", "nickname": "Gifter"},
+        },
+        sequence_number=3,
+    )
+    assert gift is not None
+    decision = scheduler.evaluate(gift, now=time.time())
+    plan = await orch.apply(decision, reply_text="Thank you Gifter!")
+    assert plan.avatar_reaction == "gift_react"
+    assert avatar.reactions == ["gift_react"]
+    assert avatar.latest() is not None
+    await avatar.react("not-a-real-reaction", sync_token="x")
+    assert avatar.reactions[-1] == "idle"
 
 
 @pytest.mark.asyncio

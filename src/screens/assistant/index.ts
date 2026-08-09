@@ -8,7 +8,7 @@ export const ASSISTANT_SCREENS: ScreenDefinition[] = [
     group: 'Core',
     navId: 'home',
     purpose:
-      'The conversational surface where the assistant answers with cited sources and proposes actions that only run once the creator approves them.',
+      'Living presence for Lira, the photoreal AI assistant — natural blink, breath, gaze and lip cadence — with cited answers and actions that only run once the creator approves them.',
     component: AssistantScreen,
     contextPanel: AssistantContextPanel,
     contextPanelTitle: 'Assistant',

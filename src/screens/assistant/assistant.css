@@ -48,6 +48,87 @@
   padding-block: var(--sy-space-5) var(--sy-space-4);
   border-block-end: 1px solid var(--sy-border-subtle);
 }
+
+.sy-assistant__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.sy-assistant__face {
+  --sy-living-avatar-size: 44px;
+}
+
+.sy-assistant__face--turn {
+  --sy-living-avatar-size: 30px;
+}
+
+.sy-assistant__presence {
+  display: grid;
+  gap: var(--sy-space-3);
+  padding-block: var(--sy-space-5) var(--sy-space-2);
+}
+
+.sy-assistant__stage {
+  max-inline-size: 320px;
+  margin-inline: auto;
+}
+
+.sy-assistant__context-stage {
+  max-inline-size: 100%;
+}
+
+.sy-assistant__presence-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sy-space-1_5);
+}
+
+.sy-assistant__react {
+  appearance: none;
+  border: 1px solid var(--sy-border-subtle);
+  background: var(--sy-bg-surface);
+  color: var(--sy-fg-muted);
+  border-radius: var(--sy-radius-md);
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: var(--sy-text-caption, 0.75rem);
+  cursor: pointer;
+  transition:
+    background var(--sy-transition-hover, 140ms ease),
+    color var(--sy-transition-hover, 140ms ease),
+    border-color var(--sy-transition-hover, 140ms ease);
+}
+
+.sy-assistant__react:hover {
+  color: var(--sy-fg-default);
+  border-color: var(--sy-border-strong, var(--sy-border-subtle));
+}
+
+.sy-assistant__react.is-active {
+  color: var(--sy-fg-default);
+  border-color: color-mix(in oklab, var(--sy-aether-8) 55%, var(--sy-border-subtle));
+  background: color-mix(in oklab, var(--sy-aether-4) 45%, var(--sy-bg-surface));
+}
+
+@container screen (min-width: 760px) {
+  .sy-assistant__presence {
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .sy-assistant__stage {
+    margin-inline: 0;
+  }
+
+  .sy-assistant__presence-controls {
+    justify-content: flex-start;
+    padding-block-end: var(--sy-space-4);
+  }
+}
+
 /* No max-inline-size here: a maximum would clamp the flex base size and let
    the note squeeze back onto the title row instead of taking its own. */
 .sy-assistant__scope {

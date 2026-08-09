@@ -1,0 +1,290 @@
+/**
+ * Living avatar motion surface.
+ *
+ * The photoreal plates do the identity work. Everything else here is the
+ * biological noise that keeps a still photograph from reading as a poster:
+ * breath, irregular blinks, gaze drift, and gesture-shaped head turns.
+ */
+
+.sy-living-avatar {
+  --sy-avatar-yaw: 0deg;
+  --sy-avatar-pitch: 0deg;
+  --sy-avatar-roll: 0deg;
+  --sy-avatar-breath: 0.5;
+  --sy-avatar-blink: 0;
+  --sy-avatar-gaze-x: 0;
+  --sy-avatar-gaze-y: 0;
+  --sy-avatar-lip: 0;
+  --sy-avatar-warmth: 0.15;
+  --sy-avatar-mix: 0;
+  position: relative;
+  margin: 0;
+  isolation: isolate;
+  user-select: none;
+}
+
+.sy-living-avatar__stage {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      120% 80% at 50% 18%,
+      color-mix(in oklab, var(--sy-aether-4) 55%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--sy-porcelain-2) 88%, var(--sy-bloom-3)),
+      var(--sy-porcelain-3) 48%,
+      color-mix(in oklab, var(--sy-porcelain-4) 82%, var(--sy-aether-3))
+    );
+}
+
+.sy-living-avatar__rig {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  transform-origin: 50% 62%;
+  transform: perspective(900px) rotateX(calc(var(--sy-avatar-pitch) * -1))
+    rotateY(var(--sy-avatar-yaw)) rotateZ(var(--sy-avatar-roll))
+    scale(calc(1 + var(--sy-avatar-breath) * 0.012));
+  will-change: transform;
+}
+
+.sy-living-avatar__plates {
+  position: absolute;
+  inset: 0;
+}
+
+.sy-living-avatar__plate {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  object-position: 50% 18%;
+  /* Gaze drift is applied as a sub-pixel pan on the face plate. */
+  transform: translate3d(
+    calc(var(--sy-avatar-gaze-x) * 1.4%),
+    calc(var(--sy-avatar-gaze-y) * 0.9%),
+    0
+  );
+  transition: opacity 160ms var(--sy-ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+  pointer-events: none;
+}
+
+.sy-living-avatar__plate--base {
+  z-index: 0;
+}
+
+.sy-living-avatar__plate--active {
+  z-index: 1;
+}
+
+.sy-living-avatar__mouth {
+  position: absolute;
+  left: 32%;
+  right: 32%;
+  top: 58%;
+  bottom: 22%;
+  z-index: 2;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    color-mix(in oklab, var(--sy-rose-8) 18%, transparent),
+    transparent 70%
+  );
+  opacity: calc(var(--sy-avatar-lip) * 0.45);
+  transform: scaleY(calc(0.7 + var(--sy-avatar-lip) * 0.55))
+    translateY(calc(var(--sy-avatar-lip) * 2%));
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.sy-living-avatar__lids {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.sy-living-avatar__lid {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  height: 18%;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--sy-porcelain-8) 55%, transparent),
+    color-mix(in oklab, var(--sy-porcelain-9) 22%, transparent) 70%,
+    transparent
+  );
+  transform-origin: 50% 0%;
+  transform: scaleY(var(--sy-avatar-blink));
+  opacity: calc(0.15 + var(--sy-avatar-blink) * 0.85);
+  filter: blur(0.4px);
+}
+
+.sy-living-avatar__lid--left {
+  top: 29%;
+  left: 24%;
+  right: 48%;
+  transform: scaleY(var(--sy-avatar-blink)) rotate(-1.5deg);
+}
+
+.sy-living-avatar__lid--right {
+  top: 29%;
+  left: 48%;
+  right: 24%;
+  /* Right lid lags slightly — biological asymmetry. */
+  transform: scaleY(calc(var(--sy-avatar-blink) * 0.96)) rotate(1.2deg);
+}
+
+.sy-living-avatar__gaze {
+  position: absolute;
+  z-index: 4;
+  width: 18%;
+  height: 8%;
+  left: calc(41% + var(--sy-avatar-gaze-x) * 4%);
+  top: calc(36% + var(--sy-avatar-gaze-y) * 2%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, white 55%, transparent),
+    transparent 68%
+  );
+  opacity: calc(0.18 + var(--sy-avatar-warmth) * 0.12);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.sy-living-avatar__atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to top,
+      color-mix(in oklab, var(--sy-bg-canvas) 72%, transparent) 0%,
+      transparent 28%
+    ),
+    radial-gradient(
+      80% 55% at 50% 100%,
+      color-mix(in oklab, var(--sy-bloom-5) calc(var(--sy-avatar-warmth) * 28%), transparent),
+      transparent 70%
+    );
+}
+
+.sy-living-avatar__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-block: var(--sy-space-3) 0;
+}
+
+.sy-living-avatar__name {
+  font-family: var(--sy-font-display, 'Instrument Serif', serif);
+  font-size: var(--sy-text-title-3, 1.25rem);
+  letter-spacing: -0.02em;
+  color: var(--sy-fg-default);
+}
+
+.sy-living-avatar__meta {
+  font-size: var(--sy-text-caption, 0.75rem);
+  color: var(--sy-fg-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Stage variant — presence plane                                      */
+/* ------------------------------------------------------------------ */
+
+.sy-living-avatar--stage {
+  inline-size: 100%;
+}
+
+.sy-living-avatar--stage .sy-living-avatar__stage {
+  aspect-ratio: 4 / 5;
+  border-radius: var(--sy-radius-xl);
+  /* Refraction hairline marks assistant-authored presence. */
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--sy-border-subtle) 80%, transparent),
+    var(--sy-elevation-raised, 0 12px 40px color-mix(in oklab, black 8%, transparent));
+}
+
+.sy-living-avatar--stage .sy-living-avatar__stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--sy-bg-surface), var(--sy-bg-surface)) padding-box,
+    var(--sy-gradient-prism, linear-gradient(120deg, var(--sy-aether-8), var(--sy-pulse-8), var(--sy-bloom-8)))
+      border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.55;
+}
+
+/* ------------------------------------------------------------------ */
+/* Compact variant — turn header / rail                                */
+/* ------------------------------------------------------------------ */
+
+.sy-living-avatar--compact {
+  inline-size: var(--sy-living-avatar-size, 36px);
+  block-size: var(--sy-living-avatar-size, 36px);
+  flex-shrink: 0;
+}
+
+.sy-living-avatar--compact .sy-living-avatar__stage {
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--sy-aether-7) 45%, transparent);
+}
+
+.sy-living-avatar--compact .sy-living-avatar__plate {
+  object-position: 50% 12%;
+}
+
+.sy-living-avatar--compact .sy-living-avatar__atmosphere {
+  background: radial-gradient(
+    circle at 50% 20%,
+    transparent 45%,
+    color-mix(in oklab, var(--sy-bg-surface) 35%, transparent) 100%
+  );
+}
+
+.sy-living-avatar--compact .sy-living-avatar__mouth,
+.sy-living-avatar--compact .sy-living-avatar__gaze {
+  display: none;
+}
+
+.sy-living-avatar--compact .sy-living-avatar__lid--left {
+  top: 32%;
+  left: 18%;
+  right: 48%;
+  height: 22%;
+}
+
+.sy-living-avatar--compact .sy-living-avatar__lid--right {
+  top: 32%;
+  left: 48%;
+  right: 18%;
+  height: 22%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sy-living-avatar__rig,
+  .sy-living-avatar__plate {
+    transition: none;
+  }
+}

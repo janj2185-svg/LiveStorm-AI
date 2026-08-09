@@ -28,9 +28,14 @@
  * the eye can always separate generated content from the user's own.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { AiOrb } from '../../design-system/brand/Logo';
+import {
+  LivingAvatar,
+  LIRA_PERSONA,
+  livingAvatarBus,
+  type AvatarReaction,
+} from '../../design-system/avatar';
 import {
   Avatar,
   Badge,
@@ -46,6 +51,17 @@ import {
 } from '../../design-system/primitives';
 import { AI_CONVERSATION, ME } from '../data';
 import { ListRow } from '../components';
+
+const PRESENCE_REACTIONS: { id: AvatarReaction; label: string }[] = [
+  { id: 'idle', label: 'Спокій' },
+  { id: 'listen', label: 'Слухає' },
+  { id: 'talk', label: 'Говорить' },
+  { id: 'nod', label: 'Кивок' },
+  { id: 'wave', label: 'Привіт' },
+  { id: 'smile', label: 'Посмішка' },
+  { id: 'think', label: 'Думає' },
+  { id: 'gift_react', label: 'Подарунок' },
+];
 
 type Turn = (typeof AI_CONVERSATION)[number];
 type AssistantTurn = Extract<Turn, { role: 'assistant' }>;
@@ -85,20 +101,29 @@ export function AssistantScreen() {
     'Also check whether the drop is worse for viewers who joined from Discover rather than from a follow.',
   );
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
+  const [presence, setPresence] = useState<AvatarReaction>('think');
+
+  useEffect(() => livingAvatarBus.subscribe((reaction) => setPresence(reaction)), []);
 
   const decide = (action: string, decision: Decision) =>
     setDecisions((current) => ({ ...current, [action]: decision }));
 
+  const drivePresence = (reaction: AvatarReaction) => {
+    void livingAvatarBus.react(reaction, { syncToken: `ui-${reaction}` });
+  };
+
   return (
     <div className="sy-screen sy-assistant">
       <div className="sy-assistant__inner sy-screen__inner">
-        {/* The orb here is the assistant's live status, not decoration: a turn
-            is in flight further down the thread, so it must not sit at rest.
-            The scope note wraps onto its own line rather than squeezing the
-            title row, so it survives a 393px surface without truncation. */}
+        {/* Lira is the assistant's body, not a status icon. The presence stage
+            carries identity; compact crops in the thread keep continuity while
+            reading without competing with the document answer. */}
         <header className="sy-assistant__head">
-          <AiOrb size={40} state="thinking" />
-          <h1 className="sy-title-3 sy-grow">Assistant</h1>
+          <LivingAvatar variant="compact" reaction={presence} className="sy-assistant__face" />
+          <div className="sy-assistant__identity sy-grow">
+            <h1 className="sy-title-3">{LIRA_PERSONA.name}</h1>
+            <p className="sy-caption sy-fg-muted">SYLORA Assistant · живий аватар</p>
+          </div>
           <Badge tone="accent" variant="soft" icon="brain">
             Reason 3
           </Badge>
@@ -107,6 +132,23 @@ export function AssistantScreen() {
             Reads your analytics, encoder logs and ledger. Nothing outside your own account.
           </p>
         </header>
+
+        <section className="sy-assistant__presence" aria-label={`${LIRA_PERSONA.name} presence`}>
+          <LivingAvatar variant="stage" reaction={presence} className="sy-assistant__stage" />
+          <div className="sy-assistant__presence-controls" role="group" aria-label="Avatar reactions">
+            {PRESENCE_REACTIONS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`sy-assistant__react${presence === item.id ? ' is-active' : ''}`}
+                aria-pressed={presence === item.id}
+                onClick={() => drivePresence(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </section>
 
         <div className="sy-thread">
           {AI_CONVERSATION.map((turn) =>
@@ -200,22 +242,33 @@ function AssistantAnswer({
   return (
     <article className="sy-turn sy-turn--assistant" aria-label="Assistant answer">
       <header className="sy-turn__head">
-        <AiOrb size={30} state={readingAloud ? 'speaking' : 'idle'} />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LivingAvatar
+          variant="compact"
+          reaction={readingAloud ? 'talk' : 'idle'}
+          ambientLife={false}
+          className="sy-assistant__face sy-assistant__face--turn"
+        />
+        <h2 className="sy-label">{LIRA_PERSONA.name}</h2>
         <span className="sy-caption sy-fg-quiet">
           {readingAloud ? 'Reading aloud · 09:41' : '09:41 · 2.4s'}
         </span>
         <span className="sy-grow" />
-        {/* The orb is the read-aloud indicator as well as the toggle's state,
-            so someone who has scrolled past the button can still tell which
-            answer is being spoken. */}
+        {/* The living face is the read-aloud indicator as well as the toggle's
+            state, so someone who has scrolled past the button can still tell
+            which answer is being spoken. */}
         <IconButton
           icon="volume"
           label={readingAloud ? 'Stop reading aloud' : 'Read this answer aloud'}
           aria-pressed={readingAloud}
           variant="ghost"
           size="xs"
-          onClick={() => setReadingAloud((value) => !value)}
+          onClick={() => {
+            setReadingAloud((value) => {
+              const next = !value;
+              void livingAvatarBus.react(next ? 'talk' : 'idle');
+              return next;
+            });
+          }}
         />
         <IconButton icon="bookmark" label="Save this answer" variant="ghost" size="xs" />
         <IconButton icon="share" label="Share this answer" variant="ghost" size="xs" />
@@ -344,8 +397,13 @@ function GeneratingAnswer() {
       aria-label="Assistant is answering"
     >
       <header className="sy-turn__head">
-        <AiOrb size={30} state="thinking" />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LivingAvatar
+          variant="compact"
+          reaction="think"
+          ambientLife={false}
+          className="sy-assistant__face sy-assistant__face--turn"
+        />
+        <h2 className="sy-label">{LIRA_PERSONA.name}</h2>
         <span className="sy-caption sy-fg-accent" aria-live="polite">
           Reading encoder logs · 12 Jan – 2 Feb
         </span>
@@ -377,8 +435,20 @@ function GeneratingAnswer() {
  * condition for living in a panel that only exists above 1280px.
  */
 export function AssistantContextPanel() {
+  const [presence, setPresence] = useState<AvatarReaction>('idle');
+  useEffect(() => livingAvatarBus.subscribe((reaction) => setPresence(reaction)), []);
+
   return (
     <div className="sy-stack sy-gap-6">
+      <section className="sy-stack sy-gap-3">
+        <h3 className="sy-label sy-assistant-context__title">Presence</h3>
+        <LivingAvatar variant="stage" reaction={presence} className="sy-assistant__context-stage" />
+        <p className="sy-caption sy-fg-quiet">
+          {LIRA_PERSONA.name} mirrors co-host reactions — blink, breath, gaze and lip cadence stay
+          alive even when idle.
+        </p>
+      </section>
+
       <section className="sy-stack sy-gap-3">
         <h3 className="sy-label sy-assistant-context__title">Usage this month</h3>
         <Stat label="Assistant requests" value="3,412" delta="+18.2%" icon="sparkles" />
