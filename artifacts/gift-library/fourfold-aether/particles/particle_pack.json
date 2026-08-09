@@ -1,0 +1,29 @@
+{
+  "equal_budget_per_act": 2000,
+  "systems": [
+    {
+      "name": "spire_volume",
+      "max": 2000,
+      "rate": 140,
+      "act": 1
+    },
+    {
+      "name": "ribbon_filaments",
+      "max": 2000,
+      "rate": 140,
+      "act": 2
+    },
+    {
+      "name": "chamber_fog",
+      "max": 2000,
+      "rate": 140,
+      "act": 3
+    },
+    {
+      "name": "seal_constellation",
+      "max": 2000,
+      "rate": 140,
+      "act": 4
+    }
+  ]
+}

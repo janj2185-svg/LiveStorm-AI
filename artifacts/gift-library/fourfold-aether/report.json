@@ -1,0 +1,30 @@
+{
+  "slug": "fourfold-aether",
+  "status": "PARTIAL_PRODUCTION_CANDIDATE",
+  "honest_claim": "Assets built (procedural multi-act volumetric GLB, original audio, ffmpeg preview, runtime manifest). NOT product READY. Not TikTok-clone; not Pixar parity.",
+  "equal_volumetric_scenes": 4,
+  "act_duration_ms": 4000,
+  "sizes": {
+    "model.glb": 36104,
+    "model_mobile_lod.glb": 14968,
+    "main.wav": 2822444,
+    "preview.mp4": 571279,
+    "poster.png": 589770
+  },
+  "checks": {
+    "glb_has_animations": true,
+    "four_particle_systems": true,
+    "four_act_timelines": true,
+    "preview_ok": true,
+    "anti_tiktok_documented": true,
+    "blender_art_pass": false,
+    "sylora_wallet_e2e": false,
+    "device_fps_measured": false
+  },
+  "quality_gate": {
+    "pixar_blizzard_parity": false,
+    "production_ready_claim": false,
+    "better_than_tiktok_cliche_intent": true,
+    "reason": "Equal-act volumetric design beats fireworks/rocket clich\u00e9s on concept. Final wow still needs DCC art/lighting/comp before READY."
+  }
+}

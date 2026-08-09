@@ -1,0 +1,29 @@
+{
+  "name": "Fourfold Aether",
+  "slug": "fourfold-aether",
+  "tagline": "Four equal volumes. One wow.",
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "price_minor": 1250000,
+  "duration_ms": 16000,
+  "equal_acts": [
+    "Spire Ascension",
+    "Ribbon Orbit",
+    "Listening Chamber",
+    "Seal of Craft"
+  ],
+  "anti_tiktok": true,
+  "reactions": {
+    "ai": "Fourfold Aether \u2014 four equal acts of craft light. Seal noted.",
+    "avatar": "Avatar pulses equal glow on each act boundary.",
+    "streamer": "Stage lumen boost \u00d74, no screen-shake spam.",
+    "viewer": "Volumetric wash per act on viewer overlays.",
+    "combo": "sylora.gift.fourfold-aether combo window 180s."
+  },
+  "sha256": {
+    "glb": "c03c969de0d135ff3e384aeb5019d427ec98e19edd80ac43c590e95769233016",
+    "glb_mobile": "e85f0a40896ab4d250ec44872625e4842c66a652386f9648ea0c98d138ceb8cd",
+    "audio": "7e7caa2b2939d790968e4e0895df68b1f2482f7aa5dc3164afc0853bba8c960d",
+    "poster": "bfda1a8b88225a63c9ae9047d154621d618dc577bdad00418cf704142b332a78"
+  }
+}

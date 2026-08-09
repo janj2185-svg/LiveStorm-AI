@@ -1212,8 +1212,24 @@
       "status": "SPEC_ONLY",
       "form_family": "eternal_hearth",
       "vfx_family": "safe_hearth"
+    },
+    {
+      "index": 101,
+      "name": "Fourfold Aether",
+      "slug": "fourfold-aether",
+      "rarity": "Divine",
+      "api_tier": "ultra_premium",
+      "cost": 1250000,
+      "duration_ms": 16000,
+      "status": "ASSETS_BUILT_NOT_READY",
+      "form_family": "fourfold_volumetric",
+      "vfx_family": "equal_act_lumen_volume",
+      "note": "Showcase equal-act volumetric wow gift (anti-TikTok). Extra beyond base 100."
     }
   ],
   "assets_built_not_ready_count": 10,
-  "partial_assets_count": 0
+  "partial_assets_count": 0,
+  "showcase_extras": [
+    "fourfold-aether"
+  ]
 }

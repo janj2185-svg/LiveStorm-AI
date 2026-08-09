@@ -1,0 +1,128 @@
+{
+  "index": 101,
+  "name": "Fourfold Aether",
+  "slug": "fourfold-aether",
+  "cost": 1250000,
+  "price_minor": 1250000,
+  "rarity": "Divine",
+  "api_tier": "ultra_premium",
+  "duration_ms": 16000,
+  "duration_sec": 16.0,
+  "main_idea": "Four equal volumetric acts fill the stage with the same wow energy \u2014 Spire Ascension, Ribbon Orbit, Listening Chamber, Seal of Craft \u2014 no TikTok rose/rocket/lion clich\u00e9s; pure SYLORA lumen craft.",
+  "model_description": "Four equal volumetric lumen columns, ribbon orbit mesh, chamber ring, central craft-seal diamond; multi-node animated GLB.",
+  "environment_description": "Porcelain Ethereal void with four equal volume shafts.",
+  "animation_phases": [
+    "act_i_spire_ascension",
+    "act_ii_ribbon_orbit",
+    "act_iii_listening_chamber",
+    "act_iv_seal_of_craft"
+  ],
+  "equal_volumetric_scenes": [
+    {
+      "act": 1,
+      "name": "Spire Ascension",
+      "duration_ms": 4000,
+      "volume_budget": "equal"
+    },
+    {
+      "act": 2,
+      "name": "Ribbon Orbit",
+      "duration_ms": 4000,
+      "volume_budget": "equal"
+    },
+    {
+      "act": 3,
+      "name": "Listening Chamber",
+      "duration_ms": 4000,
+      "volume_budget": "equal"
+    },
+    {
+      "act": 4,
+      "name": "Seal of Craft",
+      "duration_ms": 4000,
+      "volume_budget": "equal"
+    }
+  ],
+  "vfx": [
+    "volumetric shafts",
+    "equal particle density per act",
+    "ribbon filaments",
+    "chamber fog",
+    "constellation seal (anti-fireworks)"
+  ],
+  "lighting": {
+    "hdri": true,
+    "bloom": true,
+    "motion_blur": false,
+    "depth_of_field": true,
+    "lens_flare": "justified",
+    "equal_point_lights": 4
+  },
+  "particles": "2000 max \u00d7 4 equal systems (spire/ribbon/chamber/seal)",
+  "shaders": [
+    "lumen PBR columns",
+    "emissive seal",
+    "soft fog ring"
+  ],
+  "camera": "Four equal act beats with gentle orbit; no cheap zoom spam",
+  "music": "original four-hit cinematic lumen bed",
+  "spatial_sound": "stereo spatial bed with equal act imaging",
+  "voice_effects": "none (craft silence between acts)",
+  "ai_reaction": "AI names each act once, equal weight, never fabricates delivery; closes with \u2018Seal of Craft noted.\u2019",
+  "streamer_reaction": "Equal lumen boost pulse on each act boundary.",
+  "avatar_reaction": "Soft equal glow pulse \u00d74 synced to acts.",
+  "viewer_reaction": "Fullscreen volumetric wash scoped per act.",
+  "chat_reaction": "Chat badge Fourfold Aether \u00b7 Divine \u00b7 4 equal acts.",
+  "combo_reaction": "sylora.gift.fourfold-aether window 180s.",
+  "anti_tiktok": [
+    "no roses",
+    "no rockets",
+    "no lions",
+    "no sports cars",
+    "no yacht",
+    "no fireworks-only finale"
+  ],
+  "performance_targets": {
+    "mobile_fps_min": 24,
+    "desktop_fps_min": 45,
+    "max_memory_mb": 280,
+    "max_load_ms": 5500
+  },
+  "mobile_lod": "fewer segs/rings, same 4-act structure",
+  "desktop_ultra": "full equal particle budgets + bloom",
+  "form_family": "fourfold_volumetric",
+  "vfx_family": "equal_act_lumen_volume",
+  "asset_ids": {
+    "glb": "372ac0a2-216b-51b6-83cc-4ac6d8013abf",
+    "audio": "2b5986b3-fc65-549a-9f57-9b00d1ca74db",
+    "poster": "f7d5d70a-b198-5819-b546-90de400e4227",
+    "blend": "272c95ba-6d47-5fc0-a258-1ed8adcdbf4e"
+  },
+  "paths": {
+    "glb": "artifacts/gift-library/fourfold-aether/model.glb",
+    "runtime_manifest": "artifacts/gift-library/fourfold-aether/runtime-manifest.json",
+    "metadata": "artifacts/gift-library/fourfold-aether/metadata.json",
+    "preview_video": "artifacts/gift-library/fourfold-aether/preview.mp4",
+    "gif_preview": "artifacts/gift-library/fourfold-aether/preview.gif",
+    "thumbnail": "artifacts/gift-library/fourfold-aether/poster.png",
+    "sound_pack": "artifacts/gift-library/fourfold-aether/sound/",
+    "particle_pack": "artifacts/gift-library/fourfold-aether/particles/",
+    "report": "artifacts/gift-library/fourfold-aether/report.json"
+  },
+  "status": "ASSETS_BUILT_NOT_READY",
+  "ready_checklist": {
+    "real_3d_model": false,
+    "real_animation": false,
+    "real_vfx": false,
+    "real_sound": false,
+    "runtime_preview": false,
+    "sylora_integration": false,
+    "video_proof": false,
+    "performance_check": false
+  },
+  "known_limitations": [
+    "PARTIAL_PRODUCTION_CANDIDATE \u2014 procedural multi-act volumetric pipeline, not Pixar parity.",
+    "No Blender hand-authored art pass in this environment.",
+    "Device FPS/RAM and wallet/WS E2E not verified here."
+  ]
+}

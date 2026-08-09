@@ -1,0 +1,418 @@
+{
+  "schema_version": "1.0",
+  "renderer_targets": [
+    "threejs",
+    "flutter"
+  ],
+  "source_metadata": {
+    "application": "blender",
+    "version": "4.0.2-proc",
+    "source_asset_id": "272c95ba-6d47-5fc0-a258-1ed8adcdbf4e",
+    "license_reference": "SYLORA-original-IP-fourfold-aether"
+  },
+  "duration_ms": 16000,
+  "assets": [
+    {
+      "asset_id": "372ac0a2-216b-51b6-83cc-4ac6d8013abf",
+      "role": "primary_model"
+    },
+    {
+      "asset_id": "3ccde208-1d46-5da5-99e5-7ca029cf2978",
+      "role": "low_end_fallback"
+    },
+    {
+      "asset_id": "2b5986b3-fc65-549a-9f57-9b00d1ca74db",
+      "role": "primary_audio"
+    },
+    {
+      "asset_id": "f7d5d70a-b198-5819-b546-90de400e4227",
+      "role": "poster"
+    }
+  ],
+  "layers": [
+    {
+      "kind": "model",
+      "name": "fourfold_aether",
+      "asset_id": "372ac0a2-216b-51b6-83cc-4ac6d8013abf",
+      "transform": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation_degrees": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    }
+  ],
+  "timelines": [
+    {
+      "name": "main",
+      "duration_ms": 16000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "fourfold_aether",
+          "property": "visible",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": true,
+              "easing": "step"
+            },
+            {
+              "time_ms": 16000,
+              "value": true,
+              "easing": "step"
+            }
+          ]
+        },
+        {
+          "target": "fourfold_aether",
+          "property": "rotation_degrees",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "easing": "ease_in_out"
+            },
+            {
+              "time_ms": 4000,
+              "value": {
+                "x": 0,
+                "y": 90,
+                "z": 0
+              },
+              "easing": "ease_in_out"
+            },
+            {
+              "time_ms": 8000,
+              "value": {
+                "x": 0,
+                "y": 180,
+                "z": 0
+              },
+              "easing": "ease_in_out"
+            },
+            {
+              "time_ms": 12000,
+              "value": {
+                "x": 0,
+                "y": 270,
+                "z": 0
+              },
+              "easing": "ease_in_out"
+            },
+            {
+              "time_ms": 16000,
+              "value": {
+                "x": 0,
+                "y": 360,
+                "z": 0
+              },
+              "easing": "ease_in_out"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "act_i_spire",
+      "duration_ms": 4000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "fourfold_aether",
+          "property": "visible",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": true,
+              "easing": "step"
+            },
+            {
+              "time_ms": 4000,
+              "value": true,
+              "easing": "step"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "act_ii_ribbon",
+      "duration_ms": 4000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "fourfold_aether",
+          "property": "visible",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": true,
+              "easing": "step"
+            },
+            {
+              "time_ms": 4000,
+              "value": true,
+              "easing": "step"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "act_iii_chamber",
+      "duration_ms": 4000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "fourfold_aether",
+          "property": "visible",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": true,
+              "easing": "step"
+            },
+            {
+              "time_ms": 4000,
+              "value": true,
+              "easing": "step"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "act_iv_seal",
+      "duration_ms": 4000,
+      "loop": false,
+      "tracks": [
+        {
+          "target": "fourfold_aether",
+          "property": "visible",
+          "keyframes": [
+            {
+              "time_ms": 0,
+              "value": true,
+              "easing": "step"
+            },
+            {
+              "time_ms": 4000,
+              "value": true,
+              "easing": "step"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "particle_systems": [
+    {
+      "name": "spire_volume",
+      "max_particles": 2000,
+      "spawn_rate_per_second": 140,
+      "texture_asset_id": null,
+      "deterministic_seed": 2608091
+    },
+    {
+      "name": "ribbon_filaments",
+      "max_particles": 2000,
+      "spawn_rate_per_second": 140,
+      "texture_asset_id": null,
+      "deterministic_seed": 2608092
+    },
+    {
+      "name": "chamber_fog",
+      "max_particles": 2000,
+      "spawn_rate_per_second": 140,
+      "texture_asset_id": null,
+      "deterministic_seed": 2608093
+    },
+    {
+      "name": "seal_constellation",
+      "max_particles": 2000,
+      "spawn_rate_per_second": 140,
+      "texture_asset_id": null,
+      "deterministic_seed": 2608094
+    }
+  ],
+  "shaders": [],
+  "lighting": [
+    {
+      "kind": "ambient",
+      "color_hex": "#0E1420",
+      "intensity": 0.4,
+      "position": null
+    },
+    {
+      "kind": "directional",
+      "color_hex": "#C8E8FF",
+      "intensity": 2.8,
+      "position": {
+        "x": 2,
+        "y": 7,
+        "z": 3
+      }
+    },
+    {
+      "kind": "point",
+      "color_hex": "#7AD7FF",
+      "intensity": 3.2,
+      "position": {
+        "x": 0.75,
+        "y": 2.2,
+        "z": 0
+      }
+    },
+    {
+      "kind": "point",
+      "color_hex": "#B89CFF",
+      "intensity": 3.2,
+      "position": {
+        "x": 0,
+        "y": 2.2,
+        "z": 0.75
+      }
+    },
+    {
+      "kind": "point",
+      "color_hex": "#F0C96A",
+      "intensity": 3.2,
+      "position": {
+        "x": -0.75,
+        "y": 2.2,
+        "z": 0
+      }
+    },
+    {
+      "kind": "point",
+      "color_hex": "#7DFFC8",
+      "intensity": 3.2,
+      "position": {
+        "x": 0,
+        "y": 2.2,
+        "z": -0.75
+      }
+    }
+  ],
+  "audio": [
+    {
+      "asset_id": "2b5986b3-fc65-549a-9f57-9b00d1ca74db",
+      "spatial": true,
+      "peak_dbfs": -6,
+      "autoplay": true
+    }
+  ],
+  "interaction_hooks": [
+    {
+      "hook": "arrival",
+      "action": "sylora.gift.fourfold_aether.play"
+    },
+    {
+      "hook": "completion",
+      "action": "sylora.gift.fourfold_aether.complete"
+    },
+    {
+      "hook": "tap",
+      "action": "sylora.gift.fourfold_aether.replay"
+    }
+  ],
+  "combinations": [
+    {
+      "combination_id": "sylora.gift.fourfold-aether",
+      "compatible_combination_ids": [
+        "sylora.gift.combo.any",
+        "sylora.gift.combo.divine",
+        "sylora.gift.combo.volumetric"
+      ],
+      "window_seconds": 180
+    }
+  ],
+  "procedural_parameters": [
+    {
+      "name": "seed",
+      "source": "deterministic",
+      "value_type": "seed",
+      "minimum": null,
+      "maximum": null,
+      "allowed_values": []
+    },
+    {
+      "name": "act_index",
+      "source": "deterministic",
+      "value_type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "allowed_values": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "name": "act_i_spire_ascension",
+      "scope": "full_screen",
+      "timeline_name": "act_i_spire"
+    },
+    {
+      "name": "act_ii_ribbon_orbit",
+      "scope": "full_screen",
+      "timeline_name": "act_ii_ribbon"
+    },
+    {
+      "name": "act_iii_listening_chamber",
+      "scope": "full_screen",
+      "timeline_name": "act_iii_chamber"
+    },
+    {
+      "name": "act_iv_seal_of_craft",
+      "scope": "full_screen",
+      "timeline_name": "act_iv_seal"
+    },
+    {
+      "name": "streamer_lumen_boost",
+      "scope": "streamer",
+      "timeline_name": "main"
+    },
+    {
+      "name": "avatar_equal_act_glow",
+      "scope": "avatar",
+      "timeline_name": "main"
+    },
+    {
+      "name": "viewer_volume_wash",
+      "scope": "viewer",
+      "timeline_name": "main"
+    }
+  ],
+  "fallbacks": {
+    "low_end_asset_id": "3ccde208-1d46-5da5-99e5-7ca029cf2978",
+    "reduced_motion_asset_id": "f7d5d70a-b198-5819-b546-90de400e4227",
+    "no_audio_asset_id": "372ac0a2-216b-51b6-83cc-4ac6d8013abf"
+  },
+  "quality_budgets": {
+    "max_download_bytes": 50000000,
+    "max_duration_ms": 17000,
+    "max_particles": 8000,
+    "max_shader_instructions": 1024,
+    "max_audio_peak_dbfs": -1
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "slug": "fourfold-aether",
+  "tracks": [
+    "main.wav",
+    "spatial_bed.wav"
+  ],
+  "original": true,
+  "license": "SYLORA-original-synthesis",
+  "structure": "four equal act hits @ 2/6/10/14s + soft seal bloom",
+  "anti_tiktok": true,
+  "spatial": true
+}
