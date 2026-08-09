@@ -1,0 +1,148 @@
+/**
+ * Live avatar styles — photorealistic assistant presence.
+ */
+
+.sy-live-avatar {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--sy-porcelain-3);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--sy-border-subtle) 80%, transparent),
+    0 8px 24px color-mix(in oklab, var(--sy-ink-12) 12%, transparent);
+}
+
+.sy-live-avatar__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Live ring — same language as Avatar ring="live". */
+.sy-live-avatar--live::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  padding: 2px;
+  background: var(--sy-rose-9);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sy-live-avatar--thinking {
+  animation: sy-live-avatar-think 3.2s ease-in-out infinite;
+}
+
+.sy-live-avatar--speaking .sy-live-avatar__canvas {
+  animation: sy-live-avatar-speak 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes sy-live-avatar-think {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--sy-border-subtle) 80%, transparent),
+      0 8px 24px color-mix(in oklab, var(--sy-ink-12) 12%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--sy-aether-8) 35%, transparent),
+      0 10px 28px color-mix(in oklab, var(--sy-aether-9) 18%, transparent);
+  }
+}
+
+@keyframes sy-live-avatar-speak {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.012);
+  }
+}
+
+/* Assistant screen presence panel */
+.sy-assistant__presence {
+  display: flex;
+  align-items: center;
+  gap: var(--sy-space-4);
+  padding: var(--sy-space-4);
+  margin-block-end: var(--sy-space-2);
+  border-radius: var(--sy-radius-xl);
+  background: color-mix(in oklab, var(--sy-bg-surface) 92%, var(--sy-aether-3));
+  border: 1px solid var(--sy-border-subtle);
+}
+
+.sy-assistant__presence-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-1);
+  min-inline-size: 0;
+}
+
+.sy-assistant__presence-name {
+  font-family: var(--sy-font-sans);
+  font-size: var(--sy-text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.sy-assistant__presence-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sy-space-1);
+}
+
+.sy-assistant__presence-status::before {
+  content: '';
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: var(--sy-verdigris-9);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--sy-verdigris-9) 25%, transparent);
+  animation: sy-live-avatar-pulse 2s ease-in-out infinite;
+}
+
+.sy-assistant__presence-status.is-thinking::before {
+  background: var(--sy-aether-9);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--sy-aether-9) 25%, transparent);
+}
+
+.sy-assistant__presence-status.is-speaking::before {
+  background: var(--sy-pulse-9);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--sy-pulse-9) 25%, transparent);
+}
+
+@keyframes sy-live-avatar-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.88);
+  }
+}
+
+.sy-turn__avatar {
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sy-live-avatar--thinking,
+  .sy-live-avatar--speaking .sy-live-avatar__canvas,
+  .sy-assistant__presence-status::before {
+    animation: none;
+  }
+}

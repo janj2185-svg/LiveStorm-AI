@@ -30,7 +30,7 @@
 
 import { useState } from 'react';
 
-import { AiOrb } from '../../design-system/brand/Logo';
+import { LiveAvatar } from '../../design-system/avatar';
 import {
   Avatar,
   Badge,
@@ -92,12 +92,21 @@ export function AssistantScreen() {
   return (
     <div className="sy-screen sy-assistant">
       <div className="sy-assistant__inner sy-screen__inner">
-        {/* The orb here is the assistant's live status, not decoration: a turn
-            is in flight further down the thread, so it must not sit at rest.
+        {/* The live avatar is the assistant's presence: a photorealistic woman whose
+            micro-motion (breathing, blinking, lip-sync) reads as a living person.
             The scope note wraps onto its own line rather than squeezing the
             title row, so it survives a 393px surface without truncation. */}
+        <div className="sy-assistant__presence">
+          <LiveAvatar size={88} state="thinking" liveRing label="Аріа — живий аватар AI-асистентки SYLORA" />
+          <div className="sy-assistant__presence-copy">
+            <span className="sy-assistant__presence-name">Аріа</span>
+            <span className="sy-assistant__presence-status is-thinking sy-caption sy-fg-muted">
+              Аналізує ваші дані
+            </span>
+          </div>
+        </div>
+
         <header className="sy-assistant__head">
-          <AiOrb size={40} state="thinking" />
           <h1 className="sy-title-3 sy-grow">Assistant</h1>
           <Badge tone="accent" variant="soft" icon="brain">
             Reason 3
@@ -200,13 +209,19 @@ function AssistantAnswer({
   return (
     <article className="sy-turn sy-turn--assistant" aria-label="Assistant answer">
       <header className="sy-turn__head">
-        <AiOrb size={30} state={readingAloud ? 'speaking' : 'idle'} />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LiveAvatar
+          className="sy-turn__avatar"
+          size={44}
+          state={readingAloud ? 'speaking' : 'idle'}
+          speaking={readingAloud}
+          label="Аріа відповідає"
+        />
+        <h2 className="sy-label">Аріа · SYLORA Assistant</h2>
         <span className="sy-caption sy-fg-quiet">
           {readingAloud ? 'Reading aloud · 09:41' : '09:41 · 2.4s'}
         </span>
         <span className="sy-grow" />
-        {/* The orb is the read-aloud indicator as well as the toggle's state,
+        {/* The avatar is the read-aloud indicator as well as the toggle's state,
             so someone who has scrolled past the button can still tell which
             answer is being spoken. */}
         <IconButton
@@ -344,8 +359,13 @@ function GeneratingAnswer() {
       aria-label="Assistant is answering"
     >
       <header className="sy-turn__head">
-        <AiOrb size={30} state="thinking" />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LiveAvatar
+          className="sy-turn__avatar"
+          size={44}
+          state="thinking"
+          label="Аріа думає"
+        />
+        <h2 className="sy-label">Аріа · SYLORA Assistant</h2>
         <span className="sy-caption sy-fg-accent" aria-live="polite">
           Reading encoder logs · 12 Jan – 2 Feb
         </span>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-31T18:22:58.465Z",
+  "generatedAt": "2026-08-09T07:33:39.988Z",
   "standard": "WCAG 2.2",
   "note": "Ratios computed from gamut-mapped sRGB hex, which is what a display actually renders. Wide-gamut OKLCH rendering has equal or greater separation.",
   "summary": {
