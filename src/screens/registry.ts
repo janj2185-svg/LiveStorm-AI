@@ -11,6 +11,7 @@ import type { ScreenDefinition, ScreenGroup } from './types';
 import { ENTRY_SCREENS } from './entry';
 import { CORE_SCREENS } from './core';
 import { ASSISTANT_SCREENS } from './assistant';
+import { AVATAR_SCREENS } from './avatar';
 import { MEDIA_SCREENS } from './media';
 import { LIVE_SCREENS } from './live';
 import { COMMS_SCREENS } from './comms';
@@ -25,6 +26,7 @@ export const SCREENS: ScreenDefinition[] = [
   ...ENTRY_SCREENS,
   ...CORE_SCREENS,
   ...ASSISTANT_SCREENS,
+  ...AVATAR_SCREENS,
   ...MEDIA_SCREENS,
   ...LIVE_SCREENS,
   ...COMMS_SCREENS,

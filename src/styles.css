@@ -33,11 +33,13 @@
 @import './design-system/styles/components.css';
 @import './design-system/styles/patterns.css';
 @import './design-system/styles/screens.css';
+@import './design-system/avatar/living-avatar.css';
 
 /* 8 — Screen groups. */
 @import './screens/entry/entry.css';
 @import './screens/core/core.css';
 @import './screens/assistant/assistant.css';
+@import './screens/avatar/avatar.css';
 @import './screens/media/media.css';
 @import './screens/live/live.css';
 @import './screens/comms/comms.css';

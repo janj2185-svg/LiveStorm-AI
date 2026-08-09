@@ -1,0 +1,117 @@
+/**
+ * Living Avatar screen
+ */
+
+.sy-living-avatar-screen {
+  background:
+    radial-gradient(90% 60% at 50% -10%, rgba(255, 250, 240, 0.9), transparent 55%),
+    radial-gradient(70% 50% at 100% 20%, rgba(214, 228, 238, 0.45), transparent 60%),
+    var(--sy-bg-canvas, #f4f3f0);
+}
+
+.sy-living-avatar-screen__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-6);
+  padding-block: var(--sy-space-6) var(--sy-space-8);
+}
+
+.sy-living-avatar-screen__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sy-space-4);
+}
+
+.sy-living-avatar-screen__stage {
+  display: grid;
+  place-items: center;
+  padding-block: var(--sy-space-4);
+}
+
+.sy-living-avatar-screen__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sy-space-4);
+}
+
+.sy-living-avatar-screen__controls-head {
+  display: grid;
+  gap: 4px;
+}
+
+.sy-living-avatar-screen__reactions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sy-space-2);
+}
+
+@media (min-width: 720px) {
+  .sy-living-avatar-screen__reactions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sy-living-avatar-screen__reaction {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: var(--sy-space-3);
+  border-radius: var(--sy-radius-lg, 14px);
+  border: 1px solid var(--sy-stroke-subtle, rgba(40, 36, 30, 0.1));
+  background: var(--sy-bg-surface, #fff);
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--sy-transition-hover, 140ms ease),
+    background var(--sy-transition-hover, 140ms ease),
+    transform var(--sy-transition-press, 80ms ease);
+}
+
+.sy-living-avatar-screen__reaction:hover {
+  border-color: var(--sy-stroke-strong, rgba(40, 36, 30, 0.22));
+}
+
+.sy-living-avatar-screen__reaction:active {
+  transform: scale(0.98);
+}
+
+.sy-living-avatar-screen__reaction.is-active {
+  border-color: color-mix(in oklab, var(--sy-accent, #3d6b8c) 55%, transparent);
+  background: color-mix(in oklab, var(--sy-accent, #3d6b8c) 8%, white);
+}
+
+.sy-living-avatar-screen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sy-space-3);
+}
+
+.sy-living-avatar-screen__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sy-living-avatar-screen__hint code,
+.sy-living-avatar-screen .sy-caption code {
+  font-family: var(--sy-font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.85em;
+}
+
+.sy-living-avatar-screen__facts {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 6px;
+  color: var(--sy-fg-muted, #6b655c);
+  font-size: 0.875rem;
+}
+
+.sy-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sy-fg-quiet, #8a8378);
+  margin: 0 0 6px;
+}

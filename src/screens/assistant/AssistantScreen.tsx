@@ -30,7 +30,7 @@
 
 import { useState } from 'react';
 
-import { AiOrb } from '../../design-system/brand/Logo';
+import { LivingAvatar } from '../../design-system/avatar';
 import {
   Avatar,
   Badge,
@@ -92,15 +92,15 @@ export function AssistantScreen() {
   return (
     <div className="sy-screen sy-assistant">
       <div className="sy-assistant__inner sy-screen__inner">
-        {/* The orb here is the assistant's live status, not decoration: a turn
-            is in flight further down the thread, so it must not sit at rest.
+        {/* Liora is the assistant's live presence: physiology keeps her face
+            alive while a turn is in flight further down the thread.
             The scope note wraps onto its own line rather than squeezing the
             title row, so it survives a 393px surface without truncation. */}
         <header className="sy-assistant__head">
-          <AiOrb size={40} state="thinking" />
+          <LivingAvatar size="sm" reaction="thinking" className="sy-assistant__presence" />
           <h1 className="sy-title-3 sy-grow">Assistant</h1>
           <Badge tone="accent" variant="soft" icon="brain">
-            Reason 3
+            Liora · Reason 3
           </Badge>
           <IconButton icon="plus" label="Start a new conversation" variant="ghost" />
           <p className="sy-caption sy-fg-muted sy-assistant__scope">
@@ -200,15 +200,20 @@ function AssistantAnswer({
   return (
     <article className="sy-turn sy-turn--assistant" aria-label="Assistant answer">
       <header className="sy-turn__head">
-        <AiOrb size={30} state={readingAloud ? 'speaking' : 'idle'} />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LivingAvatar
+          size="sm"
+          reaction={readingAloud ? 'talk' : 'smile'}
+          audioLevel={readingAloud ? 0.55 : 0}
+          className="sy-assistant__presence"
+        />
+        <h2 className="sy-label">Liora</h2>
         <span className="sy-caption sy-fg-quiet">
-          {readingAloud ? 'Reading aloud · 09:41' : '09:41 · 2.4s'}
+          {readingAloud ? 'Speaking · 09:41' : '09:41 · 2.4s'}
         </span>
         <span className="sy-grow" />
-        {/* The orb is the read-aloud indicator as well as the toggle's state,
-            so someone who has scrolled past the button can still tell which
-            answer is being spoken. */}
+        {/* The living avatar is the read-aloud indicator as well as the toggle's
+            state, so someone who has scrolled past the button can still tell
+            which answer is being spoken. */}
         <IconButton
           icon="volume"
           label={readingAloud ? 'Stop reading aloud' : 'Read this answer aloud'}
@@ -344,8 +349,8 @@ function GeneratingAnswer() {
       aria-label="Assistant is answering"
     >
       <header className="sy-turn__head">
-        <AiOrb size={30} state="thinking" />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LivingAvatar size="sm" reaction="thinking" className="sy-assistant__presence" />
+        <h2 className="sy-label">Liora</h2>
         <span className="sy-caption sy-fg-accent" aria-live="polite">
           Reading encoder logs · 12 Jan – 2 Feb
         </span>
@@ -379,6 +384,10 @@ function GeneratingAnswer() {
 export function AssistantContextPanel() {
   return (
     <div className="sy-stack sy-gap-6">
+      <section className="sy-stack sy-gap-3 sy-assistant-context__presence">
+        <LivingAvatar size="lg" reaction="listen" showIdentity />
+      </section>
+
       <section className="sy-stack sy-gap-3">
         <h3 className="sy-label sy-assistant-context__title">Usage this month</h3>
         <Stat label="Assistant requests" value="3,412" delta="+18.2%" icon="sparkles" />

@@ -1,0 +1,10 @@
+export { LivingAvatar } from './LivingAvatar';
+export type { LivingAvatarProps, LivingAvatarSize } from './LivingAvatar';
+export { LIORA_PERSONA, LIORA_FRAMES, LIORA_LANDMARKS } from './persona';
+export type { AvatarExpression, AvatarReaction, LivingPersona, AvatarLandmark } from './persona';
+export { PhysiologyEngine, reactionProfile, expectedBlinkIntervalSec } from './physiology';
+export type { PhysiologySample, PhysiologyOptions } from './physiology';
+export { useLivingAvatar } from './useLivingAvatar';
+export type { UseLivingAvatarOptions, LivingAvatarController } from './useLivingAvatar';
+export { livingAvatarBridge } from './bridge';
+export type { AvatarBridgeEventMap } from './bridge';

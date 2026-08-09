@@ -1,0 +1,211 @@
+/**
+ * Living Avatar — Liora
+ * ---------------------------------------------------------------------------
+ * Photoreal portrait stage with physiology-driven motion. The face is a stack
+ * of expression stills; lids, gaze and mouth are soft overlays so blink and
+ * speech read as continuous rather than cut edits.
+ */
+
+.sy-living-avatar {
+  --sy-avatar-radius: 28%;
+  --sy-avatar-w: 168px;
+  --sy-gaze-x: 50%;
+  --sy-gaze-y: 42%;
+  --sy-blink: 0;
+  --sy-mouth: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sy-space-3);
+  margin: 0;
+  width: var(--sy-avatar-w);
+  perspective: 900px;
+}
+
+.sy-living-avatar--sm {
+  --sy-avatar-w: 48px;
+  --sy-avatar-radius: 50%;
+}
+
+.sy-living-avatar--sm .sy-living-avatar__stage {
+  aspect-ratio: 1;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 8px 18px -12px rgba(40, 48, 62, 0.4);
+}
+
+.sy-living-avatar--sm .sy-living-avatar__frame {
+  object-position: center 22%;
+  transform: scale(1.35);
+  transform-origin: center 28%;
+}
+
+.sy-living-avatar--md {
+  --sy-avatar-w: 168px;
+}
+
+.sy-living-avatar--lg {
+  --sy-avatar-w: 240px;
+}
+
+.sy-living-avatar--hero {
+  --sy-avatar-w: min(420px, 100%);
+  --sy-avatar-radius: 18%;
+}
+
+.sy-living-avatar__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--sy-avatar-radius);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+  background:
+    radial-gradient(120% 90% at 50% 18%, rgba(255, 252, 245, 0.9), transparent 55%),
+    linear-gradient(165deg, #efe8dc 0%, #d9e2ea 48%, #c9d5e0 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65) inset,
+    0 18px 40px -24px rgba(40, 48, 62, 0.45);
+  isolation: isolate;
+}
+
+.sy-living-avatar__light {
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(50% 40% at 30% 18%, rgba(255, 248, 235, 0.55), transparent 70%),
+    radial-gradient(40% 35% at 78% 30%, rgba(210, 230, 245, 0.35), transparent 75%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  z-index: 4;
+  animation: sy-avatar-light var(--sy-duration-ambient, 900ms) var(--sy-ease-linear, linear) infinite alternate;
+}
+
+.sy-living-avatar__frames {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.sy-living-avatar__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  opacity: 0;
+  transition: opacity 90ms linear;
+  pointer-events: none;
+  user-select: none;
+}
+
+.sy-living-avatar__lids {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(42, 28, 22, 0.0) 0%,
+      rgba(42, 28, 22, 0.0) 34%,
+      rgba(42, 28, 22, calc(var(--sy-blink) * 0.72)) 41%,
+      rgba(42, 28, 22, calc(var(--sy-blink) * 0.72)) 46%,
+      rgba(42, 28, 22, 0.0) 54%,
+      rgba(42, 28, 22, 0.0) 100%
+    );
+  opacity: calc(0.15 + var(--sy-blink) * 0.85);
+  mix-blend-mode: multiply;
+}
+
+.sy-living-avatar__gaze {
+  position: absolute;
+  width: 18%;
+  height: 8%;
+  left: var(--sy-gaze-x);
+  top: var(--sy-gaze-y);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 68%);
+  opacity: calc(0.35 * (1 - var(--sy-blink)));
+  pointer-events: none;
+  z-index: 2;
+  filter: blur(1px);
+}
+
+.sy-living-avatar__mouth {
+  position: absolute;
+  left: 50%;
+  top: 64%;
+  width: 22%;
+  height: 10%;
+  transform: translate(-50%, -50%) scaleY(calc(0.85 + var(--sy-mouth) * 0.55));
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(90, 30, 35, calc(var(--sy-mouth) * 0.18)), transparent 70%);
+  pointer-events: none;
+  z-index: 2;
+  opacity: calc(var(--sy-mouth) * 0.9);
+}
+
+.sy-living-avatar__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 65% at 50% 42%, transparent 45%, rgba(55, 48, 40, 0.14) 100%);
+  mix-blend-mode: multiply;
+}
+
+.sy-living-avatar__identity {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.sy-living-avatar__name {
+  font-family: var(--sy-font-display, 'Instrument Serif', serif);
+  font-size: 1.25rem;
+  letter-spacing: 0.01em;
+  color: var(--sy-fg-primary, #1c1a17);
+}
+
+.sy-living-avatar__role {
+  font-size: 0.75rem;
+  color: var(--sy-fg-muted, #6b655c);
+}
+
+.sy-living-avatar__status {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sy-fg-accent, #3d6b8c);
+}
+
+@keyframes sy-avatar-light {
+  from {
+    opacity: 0.75;
+    transform: translate3d(-1%, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(1.5%, 0.5%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sy-living-avatar__stage {
+    transform: none !important;
+  }
+
+  .sy-living-avatar__light {
+    animation: none;
+  }
+
+  .sy-living-avatar__frame {
+    transition: none;
+  }
+}
