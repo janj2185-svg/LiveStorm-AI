@@ -32,7 +32,7 @@
 
 import { useState } from 'react';
 
-import { AiOrb } from '../../design-system/brand/Logo';
+import { LivingAvatar } from '../../design-system/avatar';
 import {
   Avatar,
   Badge,
@@ -99,16 +99,25 @@ export function AssistantScreen() {
             The scope note wraps onto its own line rather than squeezing the
             title row, so it survives a 393px surface without truncation. */}
         <header className="sy-assistant__head">
-          <AiOrb size={40} state="thinking" />
-          <h1 className="sy-title-3 sy-grow">Assistant</h1>
+          <LivingAvatar
+            variant="compact"
+            reaction="think"
+            ambientLife
+            className="sy-assistant__presence"
+          />
+          <h1 className="sy-title-3 sy-grow">Sylora</h1>
           <Badge tone="accent" variant="soft" icon="brain">
-            Reason 3
+            Personal AI
           </Badge>
           <IconButton icon="plus" label="Start a new conversation" variant="ghost" />
           <p className="sy-caption sy-fg-muted sy-assistant__scope">
-            Reads your analytics, encoder logs and ledger. Nothing outside your own account.
+            Жива компаньйонка з однією памʼяттю. Читає лише те, на що ти дала згоду.
           </p>
         </header>
+
+        <div className="sy-assistant__presence-stage" aria-hidden="false">
+          <LivingAvatar variant="stage" reaction="idle" ambientLife />
+        </div>
 
         <div className="sy-thread">
           {AI_CONVERSATION.map((turn) =>
@@ -202,8 +211,12 @@ function AssistantAnswer({
   return (
     <article className="sy-turn sy-turn--assistant" aria-label="Assistant answer">
       <header className="sy-turn__head">
-        <AiOrb size={30} state={readingAloud ? 'speaking' : 'idle'} />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LivingAvatar
+          variant="compact"
+          reaction={readingAloud ? 'talk' : 'smile'}
+          ambientLife={false}
+        />
+        <h2 className="sy-label">Sylora</h2>
         <span className="sy-caption sy-fg-quiet">
           {readingAloud ? 'Reading aloud · 09:41' : '09:41 · 2.4s'}
         </span>
@@ -346,8 +359,8 @@ function GeneratingAnswer() {
       aria-label="Assistant is answering"
     >
       <header className="sy-turn__head">
-        <AiOrb size={30} state="thinking" />
-        <h2 className="sy-label">SYLORA Assistant</h2>
+        <LivingAvatar variant="compact" reaction="think" ambientLife={false} />
+        <h2 className="sy-label">Sylora</h2>
         <span className="sy-caption sy-fg-accent" aria-live="polite">
           Reading encoder logs · 12 Jan – 2 Feb
         </span>

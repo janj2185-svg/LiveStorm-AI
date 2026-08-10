@@ -60,6 +60,7 @@ from app.routers import (
     business_operations,
     creator_platform,
     diagnostics,
+    ecosystem,
     gift_authoring,
     gifts,
     health,
@@ -270,6 +271,7 @@ def create_app(
     app.include_router(admin_operations.router, prefix=resolved_settings.api_prefix)
     app.include_router(admin_ai.router, prefix=resolved_settings.api_prefix)
     app.include_router(ai.router, prefix=resolved_settings.api_prefix)
+    app.include_router(ecosystem.router, prefix=resolved_settings.api_prefix)
     app.include_router(social.router, prefix=resolved_settings.api_prefix)
     app.include_router(messaging.router, prefix=resolved_settings.api_prefix)
     app.include_router(ledger.router, prefix=resolved_settings.api_prefix)

@@ -96,6 +96,7 @@ class AccountSettings(Base):
     marketing_emails: Mapped[bool] = mapped_column(Boolean, default=False)
     security_emails: Mapped[bool] = mapped_column(Boolean, default=True)
     profile_visibility: Mapped[str] = mapped_column(String(16), default="private")
+    identity_privacy_level: Mapped[str] = mapped_column(String(24), default="private")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
