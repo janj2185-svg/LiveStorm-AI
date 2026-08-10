@@ -54,6 +54,20 @@
   flex-basis: 100%;
 }
 
+.sy-assistant__presence {
+  --sy-living-avatar-size: 44px;
+}
+
+.sy-assistant__presence-stage {
+  margin-block: var(--sy-space-3) var(--sy-space-4);
+  max-inline-size: 280px;
+}
+
+.sy-assistant__presence-stage .sy-living-avatar--stage .sy-living-avatar__stage {
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+}
+
 /* ------------------------------------------------------------------ */
 /* Thread                                                              */
 /* ------------------------------------------------------------------ */
