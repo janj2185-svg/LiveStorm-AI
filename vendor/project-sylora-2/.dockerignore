@@ -1,0 +1,10 @@
+**/.git
+**/.next
+**/node_modules
+**/.env
+**/.env.*
+**/coverage
+**/*.log
+infrastructure/nginx/certs/*
+!infrastructure/nginx/certs/.gitkeep
+apps/web/.env*

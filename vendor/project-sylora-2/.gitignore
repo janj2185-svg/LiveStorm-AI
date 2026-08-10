@@ -1,0 +1,16 @@
+.env
+.env.local
+*.pyc
+__pycache__/
+.venv/
+node_modules/
+dist/
+build/
+.DS_Store
+*.log
+.idea/
+.vscode/
+infrastructure/nginx/certs/*
+!infrastructure/nginx/certs/.gitkeep
+infrastructure/nginx/certbot/
+!infrastructure/nginx/certbot/.gitkeep
