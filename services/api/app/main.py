@@ -15,6 +15,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.ai_providers import ProviderRegistry
 from app.ai_service import AIEventHub, seed_ai_tool_definitions
+from app.sylora_persona import seed_sylora_persona_prompts
 from app.business_service import (
     AccountingProvider,
     CalendarSyncProvider,
@@ -142,6 +143,7 @@ def create_app(
             await seed_rbac(session)
             await seed_platform_accounts(session)
             await seed_ai_tool_definitions(session)
+            await seed_sylora_persona_prompts(session)
             if ai_provider_registry is None:
                 await resolved_ai_registry.refresh_from_database(session, resolved_settings)
             if resolved_settings.is_public_test_stand or os.environ.get(

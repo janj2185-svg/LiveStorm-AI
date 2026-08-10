@@ -475,7 +475,16 @@ class OpenAICompatibleProvider:
                 f"[{source.source_type}:{source.source_id}] {source.context}"
                 for source in request.grounding_sources
             )
-            messages.insert(0, {"role": "system", "content": grounding})
+            messages.insert(
+                0,
+                {
+                    "role": "system",
+                    "content": (
+                        "Use only these authorized sources when grounding factual account claims. "
+                        f"Cite source identifiers exactly.\n{grounding}"
+                    ),
+                },
+            )
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,

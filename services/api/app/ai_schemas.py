@@ -126,6 +126,33 @@ class AISettingsPatch(StrictSchema):
         return self
 
 
+class AIEmotionResponse(StrictSchema):
+    persona: str
+    display_name: str
+    mood: str
+    energy: float
+    playfulness: float
+    warmth: float
+    laughter_ready: bool
+    wants_follow_up: bool
+    reason: str
+    locale: str
+    user_id: uuid.UUID
+    conversation_id: uuid.UUID | None = None
+    tagline_uk: str
+    tagline_en: str
+    updated_at: datetime
+
+
+class AIEmotionProbeRequest(StrictSchema):
+    text: str = Field(min_length=1, max_length=4000)
+    conversation_id: uuid.UUID | None = None
+    locale: str | None = None
+
+    _plain = field_validator("text")(lambda value: validate_plain_text(value))
+    _locale = field_validator("locale")(lambda value: valid_locale(value) if value else value)
+
+
 class AIConversationCreate(StrictSchema):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     mode: AIConversationMode = AIConversationMode.copilot

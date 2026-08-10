@@ -1045,10 +1045,10 @@ final class AiScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final value = ref.watch(aiProvider);
     return LumenPage(
-      title: 'AI',
+      title: 'Sylora AI',
       actions: <Widget>[
         IconButton(
-          tooltip: 'AI memory',
+          tooltip: 'Памʼять Sylora',
           onPressed: () => context.pushNamed('ai-memory'),
           icon: const Icon(Icons.psychology_alt_outlined),
         ),
@@ -1069,20 +1069,27 @@ final class AiScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'AI requires your consent',
+                    'Познайомся з Sylora',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Consent enables provider-backed AI requests. Memory remains off unless you enable it separately.',
+                    'Sylora — жива, емоційна і грайлива AI-компаньйонка. '
+                    'Згода вмикає чат, памʼять і персоналізацію, щоб вона могла '
+                    'підтримувати розмову і памʼятати важливе.',
                   ),
                   const SizedBox(height: 20),
                   LumenPrimaryButton(
-                    label: 'Grant AI consent',
+                    label: 'Увімкнути Sylora',
                     icon: Icons.verified_user_outlined,
                     onPressed: () async {
                       await ref.read(aiRepositoryProvider).updateSettings(
-                        <String, dynamic>{'consent_granted': true},
+                        <String, dynamic>{
+                          'consent_granted': true,
+                          'memory_enabled': true,
+                          'personalization_enabled': true,
+                          'preferred_locale': 'uk',
+                        },
                       );
                       ref.invalidate(aiProvider);
                     },
@@ -1367,7 +1374,7 @@ final class _AiConversationScreenState
   Widget build(BuildContext context) {
     final messages = ref.watch(aiMessagesProvider(widget.conversationId));
     return Scaffold(
-      appBar: AppBar(title: const Text('AI conversation')),
+      appBar: AppBar(title: const Text('Sylora · я поруч')),
       body: Column(
         children: <Widget>[
           Expanded(
@@ -1377,10 +1384,10 @@ final class _AiConversationScreenState
                   ref.invalidate(aiMessagesProvider(widget.conversationId)),
               data: (page) => page.items.isEmpty
                   ? LumenEmptyView(
-                      title: 'Start the conversation',
+                      title: 'Скажи щось Sylora',
                       message:
-                          'No messages were returned. Your first request will be sent to the configured provider.',
-                      actionLabel: 'Focus message field',
+                          'Вона жива, емоційна й сама підтримує розмову — з іскоркою сміху і розуму.',
+                      actionLabel: 'Написати',
                       onAction: _messageFocus.requestFocus,
                       icon: Icons.auto_awesome_outlined,
                     )
@@ -1411,13 +1418,13 @@ final class _AiConversationScreenState
                       minLines: 1,
                       maxLines: 6,
                       decoration: const InputDecoration(
-                        labelText: 'Ask SYLORA',
+                        labelText: 'Поговорити з Sylora',
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    tooltip: 'Send to AI provider',
+                    tooltip: 'Надіслати Sylora',
                     onPressed: _sending ? null : _send,
                     icon: _sending
                         ? const SizedBox.square(

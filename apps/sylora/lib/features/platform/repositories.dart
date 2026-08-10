@@ -1041,7 +1041,10 @@ abstract interface class AiRepository {
   Future<AiSettingsModel> updateSettings(JsonObject patch);
   Future<AiProviderStatus> providerStatus();
   Future<CursorPage<AiConversationModel>> conversations({String? cursor});
-  Future<AiConversationModel> createConversation({String? title});
+  Future<AiConversationModel> createConversation({
+    String? title,
+    String locale = 'uk',
+  });
   Future<CursorPage<AiMessageModel>> messages(
     String conversationId, {
     String? cursor,
@@ -1116,11 +1119,18 @@ final class DioAiRepository implements AiRepository {
   }
 
   @override
-  Future<AiConversationModel> createConversation({String? title}) async {
+  Future<AiConversationModel> createConversation({
+    String? title,
+    String locale = 'uk',
+  }) async {
     final response = await _client.request(
       'ai/conversations',
       method: 'POST',
-      data: <String, dynamic>{'title': title, 'mode': 'copilot'},
+      data: <String, dynamic>{
+        'title': title,
+        'mode': 'copilot',
+        'locale': locale,
+      },
     );
     return AiConversationModel.fromJson(
       requireObject(response.data, 'AI conversation'),

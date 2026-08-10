@@ -420,6 +420,7 @@ final class AiSettingsModel {
   const AiSettingsModel({
     required this.consentGranted,
     required this.memoryEnabled,
+    required this.personalizationEnabled,
     required this.preferredLocale,
     required this.capabilityFlags,
   });
@@ -427,6 +428,7 @@ final class AiSettingsModel {
   factory AiSettingsModel.fromJson(JsonObject json) => AiSettingsModel(
     consentGranted: requireBool(json, 'consent_granted'),
     memoryEnabled: requireBool(json, 'memory_enabled'),
+    personalizationEnabled: requireBool(json, 'personalization_enabled'),
     preferredLocale: requireString(json, 'preferred_locale'),
     capabilityFlags: requireObject(json['capability_flags'], 'capability_flags')
         .map(
@@ -443,6 +445,7 @@ final class AiSettingsModel {
 
   final bool consentGranted;
   final bool memoryEnabled;
+  final bool personalizationEnabled;
   final String preferredLocale;
   final Map<String, bool> capabilityFlags;
 }

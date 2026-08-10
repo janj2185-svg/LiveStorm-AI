@@ -24,8 +24,10 @@
  * composer's mode selector is the only place that contract can be changed, and
  * it states the consequence of each mode in text.
  *
- * The refraction hairline is reserved for surfaces the assistant authored, so
- * the eye can always separate generated content from the user's own.
+ * SYLORA Assistant is framed as a living companion: emotional, playful, and
+ * self-sustaining in conversation — while still showing citations and requiring
+ * approval for tool actions. The asymmetry between user bubbles and assistant
+ * documents remains intentional.
  */
 
 import { useState } from 'react';

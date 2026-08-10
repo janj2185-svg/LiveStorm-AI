@@ -156,8 +156,9 @@ final class FakeAiRepository implements AiRepository {
   @override
   Future<AiSettingsModel> settings() async => AiSettingsModel(
     consentGranted: consent,
-    memoryEnabled: false,
-    preferredLocale: 'en',
+    memoryEnabled: consent,
+    personalizationEnabled: consent,
+    preferredLocale: 'uk',
     capabilityFlags: const <String, bool>{},
   );
 
@@ -190,12 +191,15 @@ final class FakeAiRepository implements AiRepository {
   };
 
   @override
-  Future<AiConversationModel> createConversation({String? title}) async =>
-      const AiConversationModel(
+  Future<AiConversationModel> createConversation({
+    String? title,
+    String locale = 'uk',
+  }) async =>
+      AiConversationModel(
         id: 'conversation-id',
-        title: null,
+        title: title,
         mode: 'copilot',
-        locale: 'en',
+        locale: locale,
       );
 
   @override

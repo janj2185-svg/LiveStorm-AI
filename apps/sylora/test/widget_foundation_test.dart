@@ -171,8 +171,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('AI requires your consent'), findsOneWidget);
-    await tester.tap(find.text('Grant AI consent'));
+    expect(find.text('Познайомся з Sylora'), findsOneWidget);
+    await tester.tap(find.text('Увімкнути Sylora'));
     await tester.pumpAndSettle();
     expect(repository.settingsUpdates, 1);
   });

@@ -26,6 +26,8 @@ from app.ai_schemas import (
     AIConversationPage,
     AIConversationPatch,
     AIConversationResponse,
+    AIEmotionProbeRequest,
+    AIEmotionResponse,
     AIJobCreate,
     AIJobPage,
     AIJobResponse,
@@ -79,6 +81,11 @@ from app.rate_limit import rate_limit
 from app.schemas import MessageResponse
 from app.security import utcnow
 from app.social_service import apply_cursor, decode_cursor, encode_cursor
+from app.sylora_persona import (
+    conversation_emotion_snapshot,
+    infer_companion_emotion,
+    recent_conversation_transcript,
+)
 
 router = APIRouter(prefix="/ai", tags=["AI Brain"])
 
@@ -199,6 +206,11 @@ async def patch_ai_settings(
         setattr(record, key, value)
     if payload.consent_granted is True and record.consented_at is None:
         record.consented_at = utcnow()
+        # Companion mode needs recall + personalization to feel alive.
+        if "memory_enabled" not in values:
+            record.memory_enabled = True
+        if "personalization_enabled" not in values:
+            record.personalization_enabled = True
     if payload.consent_granted is False:
         record.consented_at = None
         record.memory_enabled = False
@@ -221,6 +233,68 @@ async def patch_ai_settings(
     await db.commit()
     await db.refresh(record)
     return AISettingsResponse.model_validate(record)
+
+
+@router.get("/emotion", response_model=AIEmotionResponse)
+async def get_ai_emotion(
+    conversation_id: uuid.UUID | None = None,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> AIEmotionResponse:
+    user_settings = await settings_for(db, auth.user.id)
+    recent: list[dict[str, str]] = []
+    locale = user_settings.preferred_locale or "uk"
+    if conversation_id is not None:
+        conversation = await owned_conversation(db, conversation_id, auth.user.id)
+        locale = conversation.locale or locale
+        recent = await recent_conversation_transcript(db, conversation.id)
+    snapshot = conversation_emotion_snapshot(
+        user_id=auth.user.id,
+        locale=locale,
+        conversation_id=conversation_id,
+        recent_messages=recent,
+    )
+    return AIEmotionResponse.model_validate(
+        {
+            **snapshot,
+            "user_id": auth.user.id,
+            "conversation_id": conversation_id,
+            "updated_at": datetime.fromisoformat(snapshot["updated_at"]),
+        }
+    )
+
+
+@router.post("/emotion", response_model=AIEmotionResponse)
+async def probe_ai_emotion(
+    payload: AIEmotionProbeRequest,
+    auth: AuthContext = Depends(current_auth),
+    db: AsyncSession = Depends(get_session),
+) -> AIEmotionResponse:
+    user_settings = await settings_for(db, auth.user.id)
+    locale = payload.locale or user_settings.preferred_locale or "uk"
+    recent: list[dict[str, str]] = []
+    conversation_id = payload.conversation_id
+    if conversation_id is not None:
+        conversation = await owned_conversation(db, conversation_id, auth.user.id)
+        locale = conversation.locale or locale
+        recent = await recent_conversation_transcript(db, conversation.id)
+    emotion = infer_companion_emotion(user_text=payload.text, recent_messages=recent)
+    snapshot = conversation_emotion_snapshot(
+        user_id=auth.user.id,
+        locale=locale,
+        conversation_id=conversation_id,
+        recent_messages=[*recent, {"role": "user", "content": payload.text}],
+        user_text=payload.text,
+    )
+    snapshot.update(emotion.as_dict())
+    return AIEmotionResponse.model_validate(
+        {
+            **snapshot,
+            "user_id": auth.user.id,
+            "conversation_id": conversation_id,
+            "updated_at": datetime.fromisoformat(snapshot["updated_at"]),
+        }
+    )
 
 
 @router.post(

@@ -82,6 +82,7 @@ from app.models import AccountSettings, Profile
 from app.security import decrypt_secret, encrypt_secret, utcnow
 from app.social_models import Follow, Notification, Post, PostKind, PostLifecycle
 from app.storage import S3ObjectStorage
+from app.sylora_persona import build_companion_system_messages
 
 ToolInput = (
     ProfileToolInput
@@ -733,8 +734,16 @@ async def send_chat_message(
 
     history = await _chat_history(db, conversation.id)
     prompt_template = await _latest_prompt(db, conversation.locale, AICapability.chat)
-    if prompt_template is not None:
-        history.insert(0, {"role": "system", "content": prompt_template.content})
+    companion_messages, _emotion = build_companion_system_messages(
+        locale=conversation.locale,
+        user_text=payload.content,
+        recent_messages=history,
+        published_overlay=prompt_template.content if prompt_template is not None else None,
+    )
+    # Keep prior system rows from history after the living companion layer.
+    non_system = [message for message in history if message.get("role") != "system"]
+    prior_system = [message for message in history if message.get("role") == "system"]
+    history = [*companion_messages, *prior_system, *non_system]
     history.append({"role": "user", "content": payload.content})
     sources = await resolve_grounding_context(db, user_id, user_settings, settings)
     contracts = await _tool_contracts(db)
